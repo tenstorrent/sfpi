@@ -1,0 +1,3 @@
+[submodule "tt-gcc"]
+	path = tt-gcc
+	url = https://yyz-gitlab.local.tenstorrent.com/tenstorrent/tt-gcc
