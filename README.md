@@ -23,7 +23,7 @@ instructions.
 3) Configure the compiler:
     export SFPI_ROOT=<path to sfpi top level>
     cd tt-gcc
-    ./configure --prefix=$SFPI_ROOT/.. -enable-multilib
+    ./configure --prefix=$SFPI_ROOT/compiler -enable-multilib
     SFPI_ROOT must be an absolute path, I suggest the parent of sfpi
 
 4) Build the compiler:

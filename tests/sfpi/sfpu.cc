@@ -122,7 +122,7 @@ void SFPUCC::deferred_commit()
 void SFPUCC::push()
 {
     if (stack_ptr == SFPU_CC_DEPTH) {
-        fprintf(stderr, "CC stack overflow on push");
+        fprintf(stderr, "CC stack overflow on push, aborting");
         exit(-1);
    }
     for (int i = 0; i < SFPU_WIDTH; i++) {
@@ -136,7 +136,7 @@ void SFPUCC::push()
 void SFPUCC::pop()
 {
     if (stack_ptr == 0) {
-        fprintf(stderr, "CC stack underflow on pop");
+        fprintf(stderr, "CC stack underflow on pop, aborting");
         exit(-1);
     }
     stack_ptr--;
@@ -258,27 +258,12 @@ __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-__rvtt_vec_t sfpu_rvtt_sfploadl0(unsigned int dummy)
+__rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr)
 {
-    return sfpu_lreg[0];
+    return (lr < 4) ? sfpu_lreg[lr] : kCRegInternal[lr];
 }
 
-__rvtt_vec_t sfpu_rvtt_sfploadl1(unsigned int dummy)
-{
-    return sfpu_lreg[1];
-}
-
-__rvtt_vec_t sfpu_rvtt_sfploadl2(unsigned int dummy)
-{
-    return sfpu_lreg[2];
-}
-
-__rvtt_vec_t sfpu_rvtt_sfploadl3(unsigned int dummy)
-{
-    return sfpu_lreg[3];
-}
-
-void sfpu_rvtt_sfpstore_v(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr)
+void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr)
 {
     sfpu_cc.deferred_commit();
     if (mod0 & SFPSTORE_MOD0_INT) {
@@ -286,11 +271,6 @@ void sfpu_rvtt_sfpstore_v(const __rvtt_vec_t& v, unsigned int mod0, unsigned int
     } else {
         sfpu_dreg.store_float(v.get_data_read(), addr);
     }
-}
-
-void sfpu_rvtt_sfpstore_r(int creg, unsigned int mod0, unsigned int addr)
-{
-    sfpu_rvtt_sfpstore_v(kCRegInternal[creg], mod0, addr);
 }
 
 __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value)
@@ -304,7 +284,14 @@ __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value)
         break;
 
     case SFPLOADI_MOD0_FLOATA:
-        converted = 0.0; // XXXXXX TTFIXME
+        {
+            unsigned int val32 = static_cast<unsigned int>(value);
+            converted =
+                ((val32 & FP16A_SGN_MASK) << 3) |
+                (((val32 & FP16A_EXP_MASK) - ((FP16A_EXP_BIAS - TF32_EXP_BIAS) << FP16A_EXP_SHIFT)) << (TF32_EXP_SHIFT - FP16A_EXP_SHIFT)) |
+                (val32 & FP16A_MAN_MASK);
+
+        }
         break;
 
     case SFPLOADI_MOD0_USHORT:
@@ -354,7 +341,7 @@ __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1)
     return t;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpmad_vvv(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpmad(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
     float offset = 0.0F;
@@ -375,43 +362,14 @@ __rvtt_vec_t sfpu_rvtt_sfpmad_vvv(const __rvtt_vec_t& a, const __rvtt_vec_t& b, 
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpmad_vvr(const __rvtt_vec_t& a, const __rvtt_vec_t& b, int c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(a, b, kCRegInternal[c], mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_vrv(const __rvtt_vec_t& a, int b, const __rvtt_vec_t& c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(a, kCRegInternal[b], c, mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_vrr(const __rvtt_vec_t& a, int b, int c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(a, kCRegInternal[b], kCRegInternal[c], mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_rvv(int a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(kCRegInternal[a], b, c, mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_rvr(int a, const __rvtt_vec_t& b, int c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(kCRegInternal[a], b, kCRegInternal[c], mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_rrv(int a, int b, const __rvtt_vec_t& c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(kCRegInternal[a], kCRegInternal[b], c, mod1);
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpmad_rrr(int a, int b, int c, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpmad_vvv(kCRegInternal[a], kCRegInternal[b], kCRegInternal[c], mod1);
-}
-
 void sfpu_rvtt_sfpnop()
 {
+}
+
+void sfpu_rvtt_sfpillegal()
+{
+    fprintf(stderr, "Too many SFP conditionals in an if, aborting\n");
+    exit(-1);
 }
 
 void sfpu_rvtt_sfpencc(unsigned int imm12, unsigned int mod1)
@@ -828,10 +786,10 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, uns
         if (sfpu_cc.enabled(i)) {
             int val;
             if (mod1 & SFPIADD_MOD1_ARG_2SCOMP_LREG_DST) {
-                val = dst.get_uint(i) - src.get_uint(i);
+                val = src.get_uint(i) - dst.get_uint(i);
             } else {
                 // Positive LREG_DST
-                val = dst.get_uint(i) + src.get_uint(i);
+                val = src.get_uint(i) + dst.get_uint(i);
             }
 
             dst.set_uint(i, val);
@@ -846,11 +804,6 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, uns
     }
 
     return dst;
-}
-
-__rvtt_vec_t sfpu_rvtt_sfpiadd_r(__rvtt_vec_t& dst, int creg, unsigned int mod1)
-{
-    return sfpu_rvtt_sfpiadd_v(dst, kCRegInternal[creg], mod1);
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src)

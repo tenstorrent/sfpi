@@ -17,16 +17,14 @@ namespace sfpi {
 
 #define __builtin_rvtt_sfpload(mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
 #define __builtin_rvtt_sfpload_lv(dst, mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
-#define __builtin_rvtt_sfploadl0(dummy) sfpu_rvtt_sfploadl0(dummy)
-#define __builtin_rvtt_sfploadl1(dummy) sfpu_rvtt_sfploadl1(dummy)
-#define __builtin_rvtt_sfploadl2(dummy) sfpu_rvtt_sfploadl2(dummy)
-#define __builtin_rvtt_sfploadl3(dummy) sfpu_rvtt_sfploadl3(dummy)
+#define __builtin_rvtt_sfpassignlr(lr) sfpu_rvtt_sfpassignlr(lr)
+#define __builtin_rvtt_sfpkeepalive(x, n)
 #define __builtin_rvtt_sfploadi(mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
 #define __builtin_rvtt_sfploadi_lv(dst, mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
-#define __builtin_rvtt_sfpstore_v(src, mod0, addr) sfpu_rvtt_sfpstore_v(src, mod0, addr)
-#define __builtin_rvtt_sfpstore_r(creg, mod0, addr) sfpu_rvtt_sfpstore_r(creg, mod0, addr)
+#define __builtin_rvtt_sfpstore(src, mod0, addr) sfpu_rvtt_sfpstore(src, mod0, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) sfpu_rvtt_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() sfpu_rvtt_sfpnop()
+#define __builtin_rvtt_sfpillegal() sfpu_rvtt_sfpillegal()
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) sfpu_rvtt_sfpencc(imm12, mod1)
 #define __builtin_rvtt_sfppushc() sfpu_rvtt_sfppushc()
@@ -35,14 +33,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) sfpu_rvtt_sfpsetcc_i(imm12, mod1)
 #define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
 
-#define __builtin_rvtt_sfpmad_vvv(va, vb, vc, mod1) sfpu_rvtt_sfpmad_vvv(va, vb, vc, mod1)
-#define __builtin_rvtt_sfpmad_vvr(va, vb, rc, mod1) sfpu_rvtt_sfpmad_vvr(va, vb, rc, mod1)
-#define __builtin_rvtt_sfpmad_vrv(va, rb, vc, mod1) sfpu_rvtt_sfpmad_vrv(va, rb, vc, mod1)
-#define __builtin_rvtt_sfpmad_vrr(va, rb, rc, mod1) sfpu_rvtt_sfpmad_vrr(va, rb, rc, mod1)
-#define __builtin_rvtt_sfpmad_rvv(ra, vb, vc, mod1) sfpu_rvtt_sfpmad_rvv(ra, vb, vc, mod1)
-#define __builtin_rvtt_sfpmad_rvr(ra, vb, rc, mod1) sfpu_rvtt_sfpmad_rvr(ra, vb, rc, mod1)
-#define __builtin_rvtt_sfpmad_rrv(ra, rb, vc, mod1) sfpu_rvtt_sfpmad_rrv(ra, rb, vc, mod1)
-#define __builtin_rvtt_sfpmad_rrr(ra, rb, rc, mod1) sfpu_rvtt_sfpmad_rrr(ra, rb, rc, mod1)
+#define __builtin_rvtt_sfpmad(va, vb, vc, mod1) sfpu_rvtt_sfpmad(va, vb, vc, mod1)
 
 #define __builtin_rvtt_sfpexexp(src, mod1) sfpu_rvtt_sfpexexp(src, mod1)
 #define __builtin_rvtt_sfpexman(src, mod1) sfpu_rvtt_sfpexman(src, mod1)
@@ -71,7 +62,6 @@ namespace sfpi {
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpiadd_i_lv(dst, imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) sfpu_rvtt_sfpiadd_v(dst, src, mod1)
-#define __builtin_rvtt_sfpiadd_r(dst, creg, mod1) sfpu_rvtt_sfpiadd_r(dst, creg, mod1)
 
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) sfpu_rvtt_sfpsetsgn_i(imm12, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) sfpu_rvtt_sfpsetsgn_v(dst, src)
@@ -102,17 +92,15 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfpload(mod0, addr) __builtin_riscv_sfpload((void *)ckernel::instrn_buffer, mod0, addr)
 #define __builtin_rvtt_sfpload_lv(dst, mod0, addr) __builtin_riscv_sfpload_lv((void *)ckernel::instrn_buffer, dst, mod0, addr)
-#define __builtin_rvtt_sfploadl0(dummy) __builtin_riscv_sfploadl0(dummy)
-#define __builtin_rvtt_sfploadl1(dummy) __builtin_riscv_sfploadl1(dummy)
-#define __builtin_rvtt_sfploadl2(dummy) __builtin_riscv_sfploadl2(dummy)
-#define __builtin_rvtt_sfploadl3(dummy) __builtin_riscv_sfploadl3(dummy)
+#define __builtin_rvtt_sfpassignlr(lr) __builtin_riscv_sfpassignlr(lr)
+#define __builtin_rvtt_sfpkeepalive(x, n) __builtin_riscv_sfpkeepalive(x, n)
 
 #define __builtin_rvtt_sfploadi(mod0, imm16) __builtin_riscv_sfploadi((void *)ckernel::instrn_buffer, mod0, imm16)
 #define __builtin_rvtt_sfploadi_lv(dst, mod0, imm16) __builtin_riscv_sfploadi_lv((void *)ckernel::instrn_buffer, dst, mod0, imm16)
-#define __builtin_rvtt_sfpstore_v(src, mod0, addr) __builtin_riscv_sfpstore_v((void *)ckernel::instrn_buffer, src, mod0, addr)
-#define __builtin_rvtt_sfpstore_r(creg, mod0, addr) __builtin_riscv_sfpstore_r((void *)ckernel::instrn_buffer, creg, mod0, addr)
+#define __builtin_rvtt_sfpstore(src, mod0, addr) __builtin_riscv_sfpstore((void *)ckernel::instrn_buffer, src, mod0, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) __builtin_riscv_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() __builtin_riscv_sfpnop()
+#define __builtin_rvtt_sfpillegal() __builtin_riscv_sfpillegal()
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_riscv_sfpencc(imm12, mod1)
 #define __builtin_rvtt_sfppushc() __builtin_riscv_sfppushc()
@@ -121,22 +109,15 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_riscv_sfpsetcc_i(imm12, mod1)
 #define __builtin_rvtt_sfpcompc() __builtin_riscv_sfpcompc()
 
-#define __builtin_rvtt_sfpmad_vvv(va, vb, vc, mod1) __builtin_riscv_sfpmad_vvv(va, vb, vc, mod1)
-#define __builtin_rvtt_sfpmad_vvr(va, vb, rc, mod1) __builtin_riscv_sfpmad_vvr(va, vb, rc, mod1)
-#define __builtin_rvtt_sfpmad_vrv(va, rb, vc, mod1) __builtin_riscv_sfpmad_vrv(va, rb, vc, mod1)
-#define __builtin_rvtt_sfpmad_vrr(va, rb, rc, mod1) __builtin_riscv_sfpmad_vrr(va, rb, rc, mod1)
-#define __builtin_rvtt_sfpmad_rvv(ra, vb, vc, mod1) __builtin_riscv_sfpmad_rvv(ra, vb, vc, mod1)
-#define __builtin_rvtt_sfpmad_rvr(ra, vb, rc, mod1) __builtin_riscv_sfpmad_rvr(ra, vb, rc, mod1)
-#define __builtin_rvtt_sfpmad_rrv(ra, rb, vc, mod1) __builtin_riscv_sfpmad_rrv(ra, rb, vc, mod1)
-#define __builtin_rvtt_sfpmad_rrr(ra, rb, rc, mod1) __builtin_riscv_sfpmad_rrr(ra, rb, rc, mod1)
+#define __builtin_rvtt_sfpmad(va, vb, vc, mod1) __builtin_riscv_sfpmad(va, vb, vc, mod1)
 
 #define __builtin_rvtt_sfpexexp(src, mod1) __builtin_riscv_sfpexexp(src, mod1)
 #define __builtin_rvtt_sfpexman(src, mod1) __builtin_riscv_sfpexman(src, mod1)
 
-#define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_riscv_sfpsetexp_i(imm12, src)
+#define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_riscv_sfpsetexp_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetexp_v(dst, src) __builtin_riscv_sfpsetexp_v(dst, src)
 
-#define __builtin_rvtt_sfpsetman_i(imm12, src) __builtin_riscv_sfpsetman_i(imm12, src)
+#define __builtin_rvtt_sfpsetman_i(imm12, src) __builtin_riscv_sfpsetman_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetman_v(dst, src) __builtin_riscv_sfpsetman_v(dst, src)
 
 #define __builtin_rvtt_sfpabs(src, mod1) __builtin_riscv_sfpabs(src, mod1)
@@ -144,22 +125,21 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpor(dst, src) __builtin_riscv_sfpor(dst, src)
 #define __builtin_rvtt_sfpnot(src) __builtin_riscv_sfpnot(src)
 
-#define __builtin_rvtt_sfpmuli(dst, imm12, mod1) __builtin_riscv_sfpmuli(dst, imm12, mod1)
+#define __builtin_rvtt_sfpmuli(dst, imm12, mod1) __builtin_riscv_sfpmuli((void *)ckernel::instrn_buffer, dst, imm12, mod1)
 #define __builtin_rvtt_sfpaddi(dst, imm12, mod1) __builtin_riscv_sfpaddi((void *)ckernel::instrn_buffer, dst, imm12, mod1)
 
-#define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_riscv_sfpdivp2(imm12, src, mod1)
+#define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_riscv_sfpdivp2((void *)ckernel::instrn_buffer, imm12, src, mod1)
 
 #define __builtin_rvtt_sfplz(src, mod1) __builtin_riscv_sfplz(src, mod1)
 
-#define __builtin_rvtt_sfpshft_i(dst, imm12) __builtin_riscv_sfpshft_i(dst, imm12)
+#define __builtin_rvtt_sfpshft_i(dst, imm12) __builtin_riscv_sfpshft_i((void *)ckernel::instrn_buffer, dst, imm12)
 #define __builtin_rvtt_sfpshft_v(dst, src) __builtin_riscv_sfpshft_v(dst, src)
 
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) __builtin_riscv_sfpiadd_i((void *)ckernel::instrn_buffer, src, imm12, mod1)
 #define __builtin_rvtt_sfpiadd_i_lv(dst, imm12, src, mod1) __builtin_riscv_sfpiadd_i_lv((void *)ckernel::instrn_buffer, dst, src, imm12, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) __builtin_riscv_sfpiadd_v(dst, src, mod1)
-#define __builtin_rvtt_sfpiadd_r(dst, creg, mod1) __builtin_riscv_sfpiadd_r(dst, creg, mod1)
 
-#define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_riscv_sfpsetsgn_i(imm12, src)
+#define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_riscv_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) __builtin_riscv_sfpsetsgn_v(dst, src)
 
 #define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod1) __builtin_riscv_sfplut(l0, l1, l2, dst, mod1)

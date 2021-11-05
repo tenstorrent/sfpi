@@ -89,6 +89,9 @@ void test_add()
     dregs[14] = CReg_Neg_1 + dregs[12];
     dregs[15] = dregs[12] + CReg_0p001953125 + kHalf;
     dregs[16] = c + CReg_Neg_0p67480469 - kHalf;
+
+    //TTFIXME XXXX 
+    //    dregs[17] = a + b + c;
 }
 
 void test_sub()
@@ -156,12 +159,16 @@ void test_mul()
     a *= dregs[0];
 
     dregs[11] = c;
+    dregs[12] = a * b;
     dregs[12] = a * b + kHalf;
 
     dregs[13] = CReg_0 * CReg_Neg_1;
     dregs[14] = CReg_Neg_1 * dregs[12];
     dregs[15] = dregs[12] * CReg_0p001953125 + kHalf;
     dregs[15] = c * CReg_Neg_0p67480469 - kHalf;
+
+    dregs[16] = a * b * c;
+    dregs[17] = CReg_0 * b * c;
 }
 
 // test_mad
@@ -232,28 +239,29 @@ void test_permute_ops()
     dregs[19] = a * b + c;
 }
 
-void test_loadi()
+void test_loadi(int32_t i, uint32_t ui)
 {
     VecShort a;
-
     a.loadi(-255);
+    a = 255;
+    a = -255;
     dregs[0] = a;
 
     VecUShort b;
+    b = 255;
+    b = -255;
     b.loadi(255U);
     dregs[1] = b;
 
     VecHalf c;
-    c.loadi_f16a(1.0F);
-    dregs[2] = c;
-
-    VecHalf d;
-    d.loadi_f16b(1.0F);
-    dregs[3] = d;
-
-    VecHalf e;
-    e.loadi_bits_16b(0x3F80);
-    dregs[4] = e;
+    c = ScalarFP16a(1.0F);
+    c = ScalarFP16a(0x3F80);
+    c = ScalarFP16a(0x3F80U);
+    c = ScalarFP16b(1.0F);
+    c = ScalarFP16b(0x3F80);
+    c = ScalarFP16b(0x3F80U);
+    c = ScalarFP16b(i);
+    c = ScalarFP16b(ui);
 
     VecHalf f;
     f = 3.0f;
@@ -311,7 +319,7 @@ void test_man_exp()
     dregs[4] = v4;
 }
 
-void test_conditional()
+void test_dreg_conditional()
 {
     VecHalf v = dregs[0];
 
@@ -339,7 +347,92 @@ void test_conditional()
     dregs[8] = v;
 }
 
-void test_bool()
+void test_vhalf_conditional()
+{
+    VecHalf v = dregs[0];
+    VecHalf x = 5.0F;
+
+    p_if(v < x) {
+        p_if(v >= x) {
+            dregs[2] = v;
+        } p_elseif(v != x) {
+            dregs[3] = v;
+        }
+        p_endif;
+
+        dregs[4] = v;
+    } p_elseif(v >= x) {
+        p_if(v == x); {
+            dregs[5] = v;
+        }
+        p_endif;
+    } p_elseif(!(v >= x)) {
+        dregs[6] = v;
+    } p_else {
+        dregs[7] = v;
+    }
+    p_endif;
+
+    dregs[8] = v;
+}
+
+void test_creg_conditional1()
+{
+    VecHalf v = dregs[0];
+
+    p_if(v < CReg_Neg_1) {
+        p_if(v >= CReg_Neg_1) {
+            dregs[2] = v;
+        } p_elseif(v != CReg_Neg_1) {
+            dregs[3] = v;
+        }
+        p_endif;
+
+        dregs[4] = v;
+    } p_elseif(v >= CReg_Neg_1) {
+        p_if(v == CReg_Neg_1); {
+            dregs[5] = v;
+        }
+        p_endif;
+    } p_elseif(!(v >= CReg_Neg_1)) {
+        dregs[6] = v;
+    } p_else {
+        dregs[7] = v;
+    }
+    p_endif;
+
+    dregs[8] = v;
+}
+
+void test_creg_conditional2()
+{
+    VecHalf v = dregs[0];
+
+    p_if(CReg_Neg_1 < v) {
+        p_if(CReg_Neg_1 >= v) {
+            dregs[2] = v;
+        } p_elseif(CReg_Neg_1 != v) {
+            dregs[3] = v;
+        }
+        p_endif;
+
+        dregs[4] = v;
+    } p_elseif(CReg_Neg_1 >= v) {
+        p_if(CReg_Neg_1 == v); {
+            dregs[5] = v;
+        }
+        p_endif;
+    } p_elseif(!(CReg_Neg_1 >= v)) {
+        dregs[6] = v;
+    } p_else {
+        dregs[7] = v;
+    }
+    p_endif;
+
+    dregs[8] = v;
+}
+
+void test_bitwise()
 {
     VecShort v1, v2;
 
@@ -347,8 +440,10 @@ void test_bool()
     v2 = 2;
 
     v1 |= v2;
+    v1 |= 0xAA;
     dregs[2] = v1;
     v1 &= v2;
+    v1 &= 0xAA;
     dregs[3] = v2;
     dregs[4] = ~v1;
 
@@ -359,8 +454,10 @@ void test_bool()
     v3 = 3;
     v4 = 4;
     v3 |= v4;
+    v3 |= 0xAA;
     dregs[2] = v3;
     v3 &= v4;
+    v3 &= 0xAA;
     dregs[3] = v4;
     dregs[4] = ~v3;
 
@@ -378,6 +475,7 @@ void test_abs_lz_shft()
     v3 = v3 << 4;
     v3 = v3.shft(v2);
     VecShort v4 = v3.lz();
+    v3 <<= 4;
 
     dregs[2] = v1;
     dregs[3] = v2.abs();
@@ -386,6 +484,10 @@ void test_abs_lz_shft()
 
     VecUShort v5 = v3 << 5;
     v5 = v3 >> 5;
+    v5 >>= 3;
+    v5 = v5 >> 3;
+    v5 <<= 3;
+    v5 = v5 << 3;
     dregs[6] = v5;
 }
 
@@ -432,16 +534,41 @@ void test_iadd()
     v1 = 12;
     v2 = v1 + 10;
     v2 += v1;
+    v2 += 10;
     VecShort v3 = v1 + v2;
     v2 -= v3;
+    v2 -= 10;
     v3 = v1 - v2;
     v3 += CReg_TileId;
     v2 = v1 + CReg_TileId;
+    //    v2 = v1 - CReg_TileId;
     dregs[1] = v1;
     dregs[2] = v2;
     dregs[3] = v3;
 
     p_if (v1.add_cc(CReg_TileId, IAddCCGTE0)) {
+        dregs[4] = 0.0F;
+    }
+    p_endif;
+
+    VecUShort v4, v5;
+
+    v4 = 12;
+    v5 = v4 + 10;
+    v5 += v4;
+    v5 += 10;
+    VecUShort v6 = v4 + v5;
+    v5 -= v6;
+    v5 -= 10;
+    v6 = v4 - v5;
+    v6 += CReg_TileId;
+    v5 = v4 + CReg_TileId;
+    //    v5 = v4 - CReg_TileId;
+    dregs[1] = v4;
+    dregs[2] = v5;
+    dregs[3] = v6;
+
+    p_if (v4.add_cc(CReg_TileId, IAddCCGTE0)) {
         dregs[4] = 0.0F;
     }
     p_endif;
@@ -500,18 +627,10 @@ void test_intrinsics()
     __rvtt_vec_t v1 = __builtin_rvtt_sfpload(SFPLOAD_MOD0_REBIAS_EXP, 3);
     __rvtt_vec_t v2 = __builtin_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 12);
 
-    v1 = __builtin_rvtt_sfpmad_vvv(v1, v1, v1, 1);
-    v1 = __builtin_rvtt_sfpmad_vvr(v1, v1, 12, 1);
-    v1 = __builtin_rvtt_sfpmad_vrv(v1, 8, v1, 1);
-    v1 = __builtin_rvtt_sfpmad_vrr(v1, 4, 5, 1);
-    v1 = __builtin_rvtt_sfpmad_rvv(5, v1, v1, 1);
-    v1 = __builtin_rvtt_sfpmad_rvr(6, v1, 7, 1);
-    v1 = __builtin_rvtt_sfpmad_rrv(8, 9, v1, 1);
-    v1 = __builtin_rvtt_sfpmad_rrr(10, 11, 12, 1);
+    v1 = __builtin_rvtt_sfpmad(v1, v1, v1, 1);
 
-    __builtin_rvtt_sfpstore_v(v1, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
-    __builtin_rvtt_sfpstore_r(13, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
-    __builtin_rvtt_sfpstore_r(CReg_Neg_1.get(), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
+    __builtin_rvtt_sfpstore(v1, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
+    __builtin_rvtt_sfpstore(__builtin_rvtt_sfpassignlr(CReg_Neg_1.get()), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
 
     v2 = __builtin_rvtt_sfpmov(v1, SFPMOV_MOD1_COMPSIGN);
 
@@ -550,6 +669,24 @@ void test_intrinsics()
     v2 = __builtin_rvtt_sfpsetsgn_v(v2, v1);
 }
 
+void lots_of_conditionals()
+{
+    VecHalf x = 1.0f;
+    p_if(((x >= 0.0f && x < 0.0f) ||
+          (x == 0.0f && x != 0.0f)) ||
+         ((x == 0.0f && x != 0.0f) ||
+          (x == 0.0f && x != 0.0f))) {
+    }
+    p_endif;
+
+    p_if(((x >= 0.0f && x < 0.0f) ||
+          (x == 0.0f || x != 0.0f)) &&
+         (!(x == 0.0f && x != 0.0f) ||
+          !(x == 0.0f || x != 0.0f))) {
+    }
+    p_endif;
+}
+
 void stupid_example()
 {
     // dregs[n] loads into a temporary LREG
@@ -584,6 +721,23 @@ void stupid_example()
     p_endif;
 }
 
+void test_operator_equals()
+{
+    VecHalf x, y, z;
+
+    y = (x = 1.0F);
+    x = (y *= x);
+    z = (x -= y);
+
+    dregs[0] = x;
+    dregs[1] = y;
+    dregs[2] = z;
+
+    VecShort a, b;
+    a = (b = 1);
+    dregs[0] = a;
+}
+
 int main(int argc, char* argv[])
 {
     test_load_store();
@@ -592,12 +746,15 @@ int main(int argc, char* argv[])
     test_mul();
     test_mad();
     test_permute_ops();
-    test_loadi();
+    test_loadi(10, 20);
     test_control_flow(5);
     test_mad_imm();
     test_man_exp();
-    test_conditional();
-    test_bool();
+    test_dreg_conditional();
+    test_vhalf_conditional();
+    test_creg_conditional1();
+    test_creg_conditional2();
+    test_bitwise();
     test_abs_lz_shft();
     test_complex();
     test_muli_addi();
@@ -606,4 +763,5 @@ int main(int argc, char* argv[])
     test_short_cond();
     test_intrinsics();
     stupid_example();
+    test_operator_equals();
 }

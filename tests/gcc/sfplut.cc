@@ -3,9 +3,7 @@
 
 typedef float v64sf __attribute__((vector_size(64*4)));
 
-void sfplut()  __attribute__((naked));
-
-void sfplut()
+int main(int argc, char* argv[])
 {
     v64sf l0, l1, l2, l3;
 

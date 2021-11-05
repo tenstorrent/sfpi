@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include "test.h"
 
 using namespace sfpi;
@@ -13,6 +12,13 @@ using namespace sfpi;
 #include <ckernel_ops.h>
 
 #endif
+
+// Fake out semaphores
+#undef TTI_SEMINIT
+#undef TTI_SEMWAIT
+#define TTI_SEMINIT(x, y, z)
+#define TTI_SEMWAIT(x, y, z)
+#define semaphore_post(x)
 
 // Make this global, may keep compiler from optimizing it away
 int param_global;
@@ -62,6 +68,7 @@ void test2()
 void test3()
 {
     // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI
+    // Also, load after store (NOP)
     p_if(dregs[0] == 0.0F) {
         dregs[3] = 10.0F;
     } p_else {
@@ -99,13 +106,20 @@ void test3()
     }
     p_endif;
 
+    p_if(dregs[0] == 6.0F) {
+        VecHalf a = 120.0F;
+        dregs[3] = a;
+    }
+    p_endif;
+
     // [0] = 10.0
     // [1] = 20.0
     // [2] = 30.0
-    // [3] = 1.0
-    // [4] = 1.0
+    // [3] = 1.0 on emule, 0x403f on grayskull versim
+    // [4] = 1.0 on emule, 0x403f on grayskull versim
     // [5] = 0xFFFF
-    // [6] on 20.0F
+    // [6] = 120.0F
+    // [7] on 20.0F
     // except [62] = .001953
 
     copy_result_to_dreg0(3);
@@ -214,6 +228,25 @@ void test4()
     }
     p_endif;
 
+    p_if (v == 29.0F || v == 30.0F || v == 31.0F) {
+        VecHalf x = 30.0F;
+        VecHalf y = 280.0F;
+        p_if (v < x) {
+            y += 10.0F;
+        }
+        p_endif;
+        p_if (v == x) {
+            y += 20.0F;
+        }
+        p_endif;
+        p_if (v >= x) {
+            y += 40.0F;
+        }
+        p_endif;
+        dregs[4] = y;
+    }
+    p_endif;
+
     // [7] = 69.0
     // [8] = 70.0
     // [9] = 71.0
@@ -230,12 +263,15 @@ void test4()
     // [20] = 180.0
     // [21] = 160.0
     // [22] = 180.0
-    // [23] = 200.0F
-    // [24] = 220.0F
-    // [25] = 240.0F
-    // [26] = 270.0F
-    // [27] = 260.0F
-    // [28] = 270.0F
+    // [23] = 200.0
+    // [24] = 220.0
+    // [25] = 240.0
+    // [26] = 270.0
+    // [27] = 260.0
+    // [28] = 270.0
+    // [29] = 290.0
+    // [30] = 340.0
+    // [31] = 320.0
 
     // Remainder is -ramp
     copy_result_to_dreg0(4);
@@ -268,6 +304,7 @@ void test5()
     // [4] = 0.836914063
     // [5] = -0.5
     // [6] = 1.0
+
     p_if(dregs[0] == 7.0F) {
         dregs[5] = CReg_0 * CReg_0 + CReg_Neg_1;
     } p_elseif(dregs[0] == 8.0F) {
@@ -380,8 +417,8 @@ void test5()
 
 void test6()
 {
-    // Note: set_expected_result uses SFPIADD so can't really be used in this
-    // routine w/o confusing things
+    // Note: set_expected_result uses SFPIADD so can't really be used early in
+    // this routine w/o confusing things
 
     // SFPIADD
 
@@ -403,6 +440,7 @@ void test6()
             p_endif;
 
             VecShort b;
+            // IADD imm
             p_if(b.add_cc(a, -29, IAddCCGTE0)) {
                 dregs[6] = 1024.0F;
             }
@@ -427,6 +465,7 @@ void test6()
             p_endif;
 
             VecShort b = -29;
+            // IADD reg
             p_if(b.add_cc(a, IAddCCLT0)) {
                 dregs[6] = 1024.0F;
             }
@@ -503,6 +542,79 @@ void test6()
     }
     p_endif;
 
+    p_if (dregs[0] == 12.0F) {
+        VecShort v = 25;
+        set_expected_result(6, 4.0F, 25, v);
+    } p_elseif(dregs[0] == 13.0F) {
+        VecShort a = 20;
+        a = a + 12;
+        set_expected_result(6, 8.0F, 32, a);
+    } p_elseif(dregs[0] == 14.0F) {
+        VecShort a = 18;
+        VecShort b = -6;
+        a = a + b;
+        set_expected_result(6, 16.0F, 12, a);
+    } p_elseif(dregs[0] == 15.0F) {
+        VecShort a = 14;
+        VecShort b = -5;
+        a = b + a;
+        set_expected_result(6, 32.0F, 9, a);
+    }
+    p_endif;
+
+    p_if (dregs[0] == 16.0F) {
+        VecShort v = 25;
+        set_expected_result(6, 4.0F, 25, v);
+    } p_elseif(dregs[0] == 17.0F) {
+        VecShort a = 20;
+        a = a - 12;
+        set_expected_result(6, 8.0F, 8, a);
+    } p_elseif(dregs[0] == 18.0F) {
+        VecShort a = 18;
+        VecShort b = 6;
+        a = a - b;
+        set_expected_result(6, 16.0F, 12, a);
+    } p_elseif(dregs[0] == 19.0F) {
+        VecShort a = 14;
+        VecShort b = 5;
+        a = b - a;
+        set_expected_result(6, 32.0F, -9, a);
+    }
+    p_endif;
+
+    p_if (dregs[0] == 20.0F) {
+        VecUShort v = 25;
+        set_expected_result(6, 4.0F, 25, v.reinterpret<VecShort>());
+    } p_elseif(dregs[0] == 21.0F) {
+        VecUShort a = 20;
+        a = a - 12;
+        set_expected_result(6, 8.0F, 8, a.reinterpret<VecShort>());
+    } p_elseif(dregs[0] == 22.0F) {
+        VecUShort a = 18;
+        VecUShort b = 6;
+        a = a - b;
+        set_expected_result(6, 16.0F, 12, a.reinterpret<VecShort>());
+    } p_elseif(dregs[0] == 23.0F) {
+        VecUShort a = 14;
+        VecUShort b = 5;
+        a = b - a;
+        set_expected_result(6, 32.0F, -9, a.reinterpret<VecShort>());
+    }
+    p_endif;
+
+    p_if (dregs[0] == 24.0F) {
+        VecShort a = 10;
+        VecShort b = 20;
+        a -= b;
+        set_expected_result(6, 64.0F, -10, a);
+    } p_elseif (dregs[0] == 25.0F) {
+        VecShort a = 10;
+        VecShort b = 20;
+        a += b;
+        set_expected_result(6, 128.0F, 30, a);
+    }
+    p_endif;
+
     // [0] = 256.0
     // [1] = 1024.0
     // [2] = 1024.0
@@ -515,6 +627,21 @@ void test6()
     // [9] = 512.0
     // [10] = 256.0
     // [11] = 1024.0
+    // [12] = 4.0
+    // [13] = 8.0
+    // [14] = 16.0
+    // [15] = 32.0
+    // [16] = 4.0
+    // [17] = 8.0
+    // [18] = 16.0
+    // [19] = 32.0
+    // [20] = 4.0
+    // [21] = 8.0
+    // [22] = 16.0
+    // [23] = 32.0
+    // [24] = 64.0
+    // [25] = 128.0
+
     copy_result_to_dreg0(6);
 }
 
@@ -550,7 +677,7 @@ void test7()
             dregs[7] = 32.0F;
         } p_else {
             dregs[7] = 64.0F;
-        }            
+        }
         p_endif;
 
         p_if (dregs[0] == 7.0F) {
@@ -604,7 +731,7 @@ void test8()
     // SFPAND, SFPOR, SFPNOT, SFPABS
 
     dregs[8] = -dregs[0];
-    po_if(dregs[0] == 1.0F) {
+    p_if(dregs[0] == 1.0F) {
         VecUShort a = 0x05FF;
         VecUShort b = 0x0AAA;
         b &= a;
@@ -627,7 +754,7 @@ void test8()
     }
     p_endif;
 
-    po_if(dregs[0] == 5.0F) {
+    p_if(dregs[0] == 5.0F) {
         VecUShort a = 0x0111;
         VecUShort b = 0x0444;
         b |= a;
@@ -650,7 +777,7 @@ void test8()
     }
     p_endif;
 
-    po_if(dregs[0] == 9.0F) {
+    p_if(dregs[0] == 9.0F) {
         VecUShort a = 0x0AAA;
         a = ~a;
         a &= 0x0FFF; // Tricky since ~ flips upper bits that immediates can't access
@@ -750,6 +877,30 @@ void test9()
     }
     p_endif;
 
+    p_if(dregs[0] == 13.0F) {
+        VecHalf x = 1.0F;
+
+        x *= 2.0f;
+        x *= -3.0f;
+        x += 4.0f;
+        x += -4.0f;
+
+        dregs[9] = x;
+    } p_elseif(dregs[0] == 14.0F) {
+        // MULI/ADDI don't accept fp16a
+        // Ensure this goes to MAD
+
+        VecHalf x = 1.0F;
+
+        x *= ScalarFP16a(2.0);
+        x *= ScalarFP16a(-3.0);
+        x += ScalarFP16a(4.0);
+        x += ScalarFP16a(-4.0);
+
+        dregs[9] = x;
+    }
+    p_endif;
+
     // [1] = 600.0
     // [2] = 800.0
     // [3] = 50.0
@@ -762,6 +913,8 @@ void test9()
     // [10] = 60.0
     // [11] = 40.0
     // [12] = 60.0
+    // [13] = -6.0
+    // [14] = -6.0
     copy_result_to_dreg0(9);
 }
 
@@ -815,6 +968,7 @@ void test10()
         dregs[10] = a.set_sgn(0);
     } p_elseif(dregs[0] == 10.0F) {
         VecHalf a = dregs[0];
+        a += 20.0f;
         VecHalf b = -512.0F;
         VecHalf r = a.set_sgn(b);
 
@@ -831,7 +985,7 @@ void test10()
     // [7] = -7.0
     // [8] = 128.0
     // [9] = 256.0
-    // [10] = -10.0
+    // [10] = -30.0
     copy_result_to_dreg0(10);
 }
 
@@ -890,8 +1044,8 @@ void test11()
     TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
     TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
     VecUShort l0b, l1b;
-    l0b.load_lreg(0);
-    l1b.load_lreg(1);
+    l0b.assign_lreg(0);
+    l1b.assign_lreg(1);
 
     p_if(dregs[0] == 7.0F) {
         // Use L0
@@ -951,58 +1105,171 @@ void test12(int imm)
 {
     // imm is 35
     // Test immediate forms of SFPLOAD, SFPLOADI, SFPSTORE, SFPIADD_I, SFPADDI
+    // SFPMULI, SFPSHFT, SFPDIVP2, SFPSETEXP, SFPSETMAN, SFPSETSGN,
+    // Tries to cover both positive and negative params (sign extension)
     dregs[12] = -dregs[0];
 
     p_if(dregs[0] == 1.0F) {
         dregs[12] = static_cast<float>(imm); // SFPLOADI
     } p_elseif(dregs[0] == 2.0F) {
+        dregs[12] = static_cast<float>(-imm); // SFPLOADI
+    } p_elseif(dregs[0] == 3.0F) {
         VecShort a = 5;
         a += imm; // SFPIADD_I
         set_expected_result(12, 25.0F, 40, a);
-    } p_elseif(dregs[0] == 3.0F) {
+    } p_elseif(dregs[0] == 4.0F) {
+        VecShort a = 5;
+        a -= imm; // SFPIADD_I
+        set_expected_result(12, -25.0F, -30, a);
+    } p_elseif(dregs[0] == 5.0F) {
         VecHalf a = 3.0F;
         a += static_cast<float>(imm); // SFPADDI
+        dregs[12] = a;
+    } p_elseif(dregs[0] == 6.0F) {
+        VecHalf a = 3.0F;
+        a += static_cast<float>(-imm); // SFPADDI
         dregs[12] = a;
     }
     p_endif;
 
-    dregs[imm] = 30.0F; // SFPSTORE
+    p_if(dregs[0] == 7.0F) {
+        VecUShort a = 0x4000;
+        a >>= imm - 25;
+        set_expected_result(12, 64.0F, 0x0010, a.reinterpret<VecShort>());
+    } p_elseif(dregs[0] == 8.0F) {
+        VecUShort a = 1;
+        a <<= imm - 25;
+        set_expected_result(12, 128.0F, 0x0400, a.reinterpret<VecShort>());
+    } p_elseif(dregs[0] == 9.0F) {
+        VecHalf a = 256.0F;
+        VecHalf b;
+        b = 3.3f;
+        b.add_exp(a, imm - 31);
+        dregs[12] = b;
+    } p_elseif(dregs[0] == 10.0F) {
+        VecHalf a = 256.0F;
+        VecHalf b;
+        b = 3.3f;
+        b.add_exp(a, imm - 39);
+        dregs[12] = b;
+    }
+    p_endif;
 
-    p_if(dregs[0] == 4.0F) {
-        dregs[12] = dregs[imm]; // SFPLOAD
+    p_if(dregs[0] == 11.0F) {
+        VecHalf a = 128.0;
+        VecHalf r = a.set_sgn(imm - 36);
+        dregs[12] = r;
+    } p_elseif(dregs[0] == 12.0F) {
+        VecHalf tmp = 1024.0F;
+        int man = 0xBBB + 35 - imm;
+        VecHalf tmp2 = tmp.set_man(man);
+        dregs[12] = tmp2;
+    } p_elseif(dregs[0] == 13.0F) {
+        int exp = 0x007F + 35 - imm; // Exponent in low bits
+        VecHalf sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
+        sgn_man = sgn_man.set_exp(exp);
+        dregs[12] = sgn_man;
+    }
+    p_endif;
+
+    dregs[30 + 35 - imm] = 30.0F; // SFPSTORE
+    dregs[30 + 35 - imm + 1] = CReg_Neg_1;
+
+    p_if(dregs[0] == 14.0F) {
+        dregs[12] = dregs[30 + 35 - imm]; // SFPLOAD
+    }
+    p_endif;
+    p_if(dregs[0] == 15.0F) {
+        dregs[12] = dregs[30 + 35 - imm + 1]; // SFPLOAD
+    }
+    p_endif;
+
+    // Test for store/load nops, imm store non-imm load
+    // Need to use the semaphores to get TRISC to run ahead for non-imm loads
+
+    p_if(dregs[0] == 16.0F) {
+        // imm store, non-imm load
+        VecHalf a = 120.0F;
+
+        TTI_SEMINIT(1, 0, p_stall::SEMAPHORE_3);
+        TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
+
+        dregs[12] = a;
+        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
+        a = dregs[imm - 23];
+
+        semaphore_post(3);
+
+        dregs[12] = a + 1.0F;
+    }
+    p_endif;
+
+    p_if(dregs[0] == 17.0F) {
+        // non-imm store, imm load
+        VecHalf a = 130.0F;
+        dregs[imm - 23] = a;
+        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
+        a = dregs[12];
+        dregs[12] = a + 1.0F;
+    }
+    p_endif;
+
+    p_if(dregs[0] == 18.0F) {
+        // non-imm store, non-imm load
+        VecHalf a = 140.0F;
+
+        TTI_SEMINIT(1, 0, p_stall::SEMAPHORE_3);
+        TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
+
+        dregs[imm - 23] = a;
+        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
+        a = dregs[imm - 23];
+
+        semaphore_post(3);
+
+        dregs[12] = a + 1.0F;
+    }
+    p_endif;
+
+    p_if(dregs[0] == 19.0F) {
+        VecHalf a = 3.0F;
+        a *= static_cast<float>(imm); // SFPADDI
+        dregs[12] = a;
+    } p_elseif(dregs[0] == 20.0F) {
+        VecHalf a = 3.0F;
+        a *= static_cast<float>(-imm); // SFPADDI
+        dregs[12] = a;
     }
     p_endif;
 
     // [1] = 35.0F
-    // [2] = 25.0F
-    // [3] = 38.0F
-    // [4] = 30.0F
+    // [2] = -35.0F
+    // [3] = 25.0F
+    // [4] = -25.0F
+    // [5] = 38.0F
+    // [6] = -32.0F
+    // [7] = 64.0F
+    // [8] = 128.0F
+    // [9] = 4096.0F
+    // [10] = 16.0F
+    // [11] = -128.0F
+    // [12] = 1976.0 // due to grayskull bug, other would be 1024.0F
+    // [13] = -1.625
+    // [14] = 30.0F
+    // [15] = -1.0
+    // [16] = 121.0F
+    // [17] = 131.0F
+    // [18] = 141.0F
+    // [19] = 105.0F
+    // [20] = -105.0F
 
     copy_result_to_dreg0(12);
 }
 
-// Here's the full list of grayskull instructions subject to the CC liveness issue
-// I think the wrapper will hide some of these
-// sfplut
-// sfpdivp2
-// sfpexexp
-// sfpexman
-// setexp_i
-// setman_i
-// setsgn_i
-
-
-// sfpmov
-// sfpload
-// sfploadi
-// sfpiadd_i
-// abs X
-// not X
-// lz X
-// mad
-
-
-void test13()
+// Test 13 covers variable liveness, ie, keeping a variable "alive" across a
+// CC narrowing instruction.  Touches every affected instruction except LOAD,
+// LOADI, IADD (those are covered in random tests above) across a SETCC
+void test13(int imm)
 {
     // Test variable liveness
 
@@ -1012,127 +1279,241 @@ void test13()
     {
         VecHalf x = -20.0F;
         VecHalf y = -30.0F;
-        p_if (dregs[0] == 1.0F) {
+        p_if (dregs[0] == 0.0F) {
             y = x.abs();
         }
         p_endif;
-        p_if (dregs[0] == 1.0F || dregs[0] == 2.0F) {
+        p_if (dregs[0] == 0.0F || dregs[0] == 1.0F) {
             dregs[13] = y;
         }
         p_endif;
     }
-    // [1] = 20.0F
-    // [2] = -30.0F
+    // [0] = 20.0F
+    // [1] = -30.0F
 
     // NOT liveness across SETCC
     {
         VecShort a = 0xFAAA;
         VecShort b = 0x07BB;
-        p_if (dregs[0] == 3.0F) {
+        p_if (dregs[0] == 2.0F) {
             b = ~a;
         }
         p_endif;
-        p_if (dregs[0] == 3.0F || dregs[0] == 4.0F) {
-            p_if (dregs[0] == 3.0F) {
+        p_if (dregs[0] == 2.0F || dregs[0] == 3.0F) {
+            p_if (dregs[0] == 2.0F) {
                 set_expected_result(13, 40.0F, 0x0555, b);
             }
             p_endif;
-            p_if (dregs[0] == 4.0F) {
+            p_if (dregs[0] == 3.0F) {
                 set_expected_result(13, 50.0F, 0x07BB, b);
             }
             p_endif;
         }
         p_endif;
     }
-    // [3] = 40.0F
-    // [4] = 50.0F
+    // [2] = 40.0F
+    // [3] = 50.0F
 
     // LZ liveness across SETCC
     {
         VecShort a = 0x0080;
         VecShort b = 0x07BB;
-        p_if (dregs[0] == 5.0F) {
+        p_if (dregs[0] == 4.0F) {
             b = a.lz();
         }
         p_endif;
-        p_if (dregs[0] == 5.0F || dregs[0] == 6.0F) {
-            p_if (dregs[0] == 5.0F) {
+        p_if (dregs[0] == 4.0F || dregs[0] == 5.0F) {
+            p_if (dregs[0] == 4.0F) {
                 set_expected_result(13, 60.0F, 11, b);
             }
             p_endif;
-            p_if (dregs[0] == 6.0F) {
+            p_if (dregs[0] == 5.0F) {
                 set_expected_result(13, 70.0F, 0x07BB, b);
             }
             p_endif;
         }
         p_endif;
     }
-    // [5] = 60.0F
-    // [6] = 70.0F
-
-    // IADD_I liveness across SETCC
-    {
-        VecShort a = 10;
-        VecShort b = 20;
-        p_if (dregs[0] == 7.0F) {
-            b = a + 30;
-        }
-        p_endif;
-        p_if (dregs[0] == 7.0F || dregs[0] == 8.0F) {
-            p_if (dregs[0] == 7.0F) {
-                set_expected_result(13, 80.0F, 40, b);
-            }
-            p_endif;
-            p_if (dregs[0] == 8.0F) {
-                set_expected_result(13, 90.0F, 20, b);
-            }
-            p_endif;
-        }
-        p_endif;
-    }
-    // [7] = 80.0F
-    // [8] = 90.0F
+    // [4] = 60.0F
+    // [5] = 70.0F
 
     // MAD liveness across SETCC
     {
         VecHalf a = 90.0F;
         VecHalf b = 110.0F;
-        p_if (dregs[0] == 9.0F) {
-            b = a + 10;
+        p_if (dregs[0] == 6.0F) {
+            b = a * a + 10.0;
         }
         p_endif;
-        p_if (dregs[0] == 9.0F || dregs[0] == 10.0F) {
+        p_if (dregs[0] == 6.0F || dregs[0] == 7.0F) {
             dregs[13] = b;
         }
         p_endif;
     }
-    // [9] = 100.0F
-    // [10] = 110.0F
+    // [6] = 8096.0
+    // [7] = 110.0F
 
     // MOV liveness across SETCC
     {
         VecHalf a = 120.0F;
         VecHalf b = 130.0F;
-        p_if (dregs[0] == 11.0F) {
+        p_if (dregs[0] == 8.0F) {
             b = -a;
         }
         p_endif;
-        p_if (dregs[0] == 11.0F || dregs[0] == 12.0F) {
+        p_if (dregs[0] == 8.0F || dregs[0] == 9.0F) {
             dregs[13] = b;
         }
         p_endif;
     }
-    // [11] = -120.0F
-    // [12] = 130.0F;
+    // [8] = -120.0F
+    // [9] = 130.0F;
 
-    // Above test various builtins for liveness across a SETCC
-    // Below test MOV liveness across COMPC, LZ, IADD, EXEXP
-
-    // MOV liveness across COMPC
+    // DIVP2 liveness across SETCC
     {
         VecHalf a = 140.0F;
         VecHalf b = 150.0F;
-        p_if (dregs[0] != 13.0F) {
+        p_if (dregs[0] == 10.0F) {
+            b.add_exp(a, 1);
+        }
+        p_endif;
+        p_if (dregs[0] == 10.0F || dregs[0] == 11.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [10] = 280.0F
+    // [11] = 150.0F
+
+    // EXEXP liveness across SETCC
+    {
+        VecHalf a = 160.0F;
+        VecShort b = 128;
+        p_if (dregs[0] == 12.0F) {
+            b = a.ex_exp(ExExpNoDebias);
+        }
+        p_endif;
+        p_if (dregs[0] == 12.0F || dregs[0] == 13.0F) {
+            VecHalf tmp = 1.0F;
+            dregs[13] = tmp.set_exp(b);
+        }
+        p_endif;
+    }
+    // [12] = 128.0F
+    // [13] = 2.0F
+
+    // EXMAN liveness across SETCC
+    {
+        VecHalf a = 160.0F;
+        VecShort b = 128;
+        p_if (dregs[0] == 14.0F) {
+            b = a.ex_man(ExManPad8);
+        }
+        p_endif;
+        p_if (dregs[0] == 14.0F || dregs[0] == 15.0F) {
+            VecHalf tmp = 128.0F;
+            b = b << 9;
+            dregs[13] = tmp.set_man(b);
+        }
+        p_endif;
+    }
+    // [14] = 160.0F
+    // [15] = 144.0F
+
+    // SETEXP_I liveness across SETCC
+    {
+        VecHalf a = 170.0F;
+        VecHalf b = 180.0F;
+        p_if (dregs[0] == 16.0F) {
+            b = a.set_exp(132);
+        }
+        p_endif;
+        p_if (dregs[0] == 16.0F || dregs[0] == 17.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [16] = 42.5F
+    // [17] = 180.0F
+
+    // SETMAN_I liveness across SETCC
+    {
+        VecHalf a = 190.0F;
+        VecHalf b = 200.0F;
+        p_if (dregs[0] == 18.0F) {
+            b = a.set_man(0x3AB);
+        }
+        p_endif;
+        p_if (dregs[0] == 18.0F || dregs[0] == 19.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [18] = 245.0F
+    // [19] = 200.0F
+
+    // SETSGN_I liveness across SETCC
+    {
+        VecHalf a = 210.0F;
+        VecHalf b = 220.0F;
+        p_if (dregs[0] == 20.0F) {
+            b = a.set_sgn(1);
+        }
+        p_endif;
+        p_if (dregs[0] == 20.0F || dregs[0] == 21.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [20] = -210.0F
+    // [21] = 220.0F
+
+    // nonimm_dst_src using DIVP2 liveness across SETCC
+    {
+        VecHalf a = 140.0F;
+        VecHalf b = 150.0F;
+        p_if (dregs[0] == 22.0F) {
+            b.add_exp(a, imm - 34);
+        }
+        p_endif;
+        p_if (dregs[0] == 22.0F || dregs[0] == 23.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [22] = 280.0F
+    // [23] = 150.0F
+
+    // nonimm_dst using LOADI liveness across SETCC
+    {
+        VecHalf b = 240.0F;
+        p_if (dregs[0] == 24.0F) {
+            b = static_cast<float>(-imm);
+        }
+        p_endif;
+        p_if (dregs[0] == 24.0F || dregs[0] == 25.0F) {
+            dregs[13] = b;
+        }
+        p_endif;
+    }
+    // [24] = -35.0F
+    // [25] = 240.0F
+
+    copy_result_to_dreg0(13);
+}
+
+void test14(int imm)
+{
+    // Test13 tests various builtins for liveness across a SETCC
+    // Below test MOV liveness across COMPC, LZ, EXEXP, IADD
+
+    dregs[14] = -dregs[0];
+
+    // MOV liveness across COMPC
+    {
+        VecHalf a = 250.0F;
+        VecHalf b = 260.0F;
+        p_if (dregs[0] != 0.0F) {
             b = 160.0F;
         } p_else {
             VecHalf c = CReg_0 * CReg_0 + CReg_0;
@@ -1140,15 +1521,273 @@ void test13()
             a = c;
         }
         p_endif;
-        p_if (dregs[0] == 13.0F || dregs[0] == 14.0F) {
-            dregs[13] = b;
+        p_if (dregs[0] == 0.0F || dregs[0] == 1.0F) {
+            dregs[14] = b;
         }
         p_endif;
     }
-    // [13] = -140.0F
-    // [14] = 160.0F;
+    // [0] = -250.0F
+    // [1] = 160.0F;
 
-    copy_result_to_dreg0(13);
+    // MOV liveness across LZ
+    {
+        VecHalf a = 250.0F;
+        VecHalf b = 260.0F;
+        VecShort tmp;
+
+        p_if (dregs[0] == 2.0F) {
+            p_if (tmp.lz_cc(a, LzCCNE0)) {
+                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+                b = -a;
+                a = c;
+            }
+            p_endif;
+        }
+        p_endif;
+        p_if (dregs[0] == 2.0F || dregs[0] == 3.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [2] = -250.0F;
+    // [3] = 260.0F
+
+    // MOV liveness across EXEXP
+    {
+        VecHalf a = 270.0F;
+        VecHalf b = 280.0F;
+        VecShort tmp;
+
+        p_if (dregs[0] == 4.0F) {
+            p_if (tmp.ex_exp_cc(a, ExExpDoDebias, ExExpCCGTE0)) {
+                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+                b = -a;
+                a = c;
+            }
+            p_endif;
+        }
+        p_endif;
+        p_if (dregs[0] == 4.0F || dregs[0] == 5.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [4] = -270.0F;
+    // [5] = 280.0F
+
+    // Below 2 tests are incidentally covered by tests 1..12
+
+    // MOV liveness across IADD
+    {
+        VecHalf a = 290.0F;
+        VecHalf b = 300.0F;
+        VecShort tmp = 5;
+
+        p_if (dregs[0] == 6.0F) {
+            p_if (tmp >= 2) {
+                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+                b = -a;
+                a = c;
+            }
+            p_endif;
+        }
+        p_endif;
+        p_if (dregs[0] == 6.0F || dregs[0] == 7.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [6] = -290.0F
+    // [7] = 300.0F
+
+    // IADD_I liveness
+    {
+        VecShort a = 10;
+        VecShort b = 20;
+        p_if (dregs[0] == 8.0F) {
+            b = a + 30;
+        }
+        p_endif;
+        p_if (dregs[0] == 8.0F || dregs[0] == 9.0F) {
+            p_if (dregs[0] == 8.0F) {
+                set_expected_result(14, -310.0F, 40, b);
+            }
+            p_endif;
+            p_if (dregs[0] == 9.0F) {
+                set_expected_result(14, 320.0F, 20, b);
+            }
+            p_endif;
+        }
+        p_endif;
+    }
+    // [8] = -310.0F
+    // [9] = 320.0F
+
+    // Test various issues with move/assign. Unfortunately, compiler generated
+    // moves are hard/impossible to induce and not all scenarios are testable
+    // w/ explicit code afaict.  The case #s below come from the Predicated
+    // Variable Liveness document and similar code exists in live.cc
+
+    // Case 2a
+    // Assignment resulting in register rename
+    {
+        VecHalf a = -20.0f;
+        VecHalf b = 30.0f;
+        p_if (dregs[0] == 10.0f) {
+            b = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 10.0F || dregs[0] == 11.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [10] = -20.0
+    // [11] = 30.0
+
+    // Case 2b
+    // Assignment requiring move
+    // This straddles case 2a and 3 - both values need to be preserved but the
+    // compiler doesn't know that, solving case2a will solve this case as well
+    {
+        VecHalf a = -40.0f;
+        VecHalf b = 50.0f;
+        p_if (dregs[0] == 12.0f) {
+            b = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 100.0f) { // always fail
+            dregs[14] = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 12.0F || dregs[0] == 13.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [12] = -40.0
+    // [13] = 50.0
+
+    // Case 3
+    // Assignment requiring move (both a and b need to be preserved)
+    {
+        VecHalf a = -60.0f;
+        VecHalf b = 70.0f;
+        p_if (dregs[0] == 14.0f) {
+            b = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 100.0f) { // always fail
+            dregs[14] = a + 1.0f;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 14.0F || dregs[0] == 15.0F) {
+            dregs[14] = b + 1.0f;
+        }
+        p_endif;
+    }
+    // [14] = -59.0
+    // [15] = 71.0
+
+    // Case 4
+    // Destination as source, 2 arguments in the wrong order
+    {
+        VecShort a = 10;
+        VecShort b = 20;
+        p_if (dregs[0] == 16.0f) {
+            b = b - a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 100.0f) { // always fail
+            dregs[14] = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 16.0F) {
+            set_expected_result(14, -80.0F, 10, b);
+        }
+        p_endif;
+
+        p_if (dregs[0] == 17.0F) {
+            set_expected_result(14, 90.0F, 20, b);
+        }
+        p_endif;
+    }
+    // [16] = -80.0
+    // [17] = 90.0
+
+    // Destination as source 3 arguments
+    {
+        VecShort a = 10;
+        VecShort b = 20;
+        VecShort c = 30;
+        p_if (dregs[0] == 18.0f) {
+            c = a - b;
+        }
+        p_endif;
+
+        p_if (CReg_0p836914063 == dregs[0]) { // always fail
+            dregs[14] = a;
+            dregs[14] = b;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 18.0F) {
+            set_expected_result(14, -90.0F, -10, c);
+        }
+        p_endif;
+
+        p_if (dregs[0] == 19.0F) {
+            set_expected_result(14, 100.0F, 30, c);
+        }
+        p_endif;
+    }
+    // [18] = -90.0
+    // [19] = 100.0
+
+    // The code below tests the case where we descend down a CC cascade, pop
+    // back up, then back down w/ different CC bits set.  Does the variable
+    // stay live when assigned at the same CC level but in a different
+    // cascade?
+    {
+        VecHalf a;
+        VecHalf b;
+
+        p_if (dregs[0] == 20.0F || dregs[0] == 21.0F) {
+            b = -90.0F;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 20.0F) {
+            a = 100.0F;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 21.0F) {
+            a = 110.0F;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 21.0F) {
+            b = a;
+        }
+        p_endif;
+
+        p_if (dregs[0] == 20.0F || dregs[0] == 21.0F) {
+            dregs[14] = b;
+        }
+        p_endif;
+    }
+    // [20] = -90.0F
+    // [21] = 110.0F;
+
+    copy_result_to_dreg0(14);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1230,12 +1869,13 @@ void test_kernel(unsigned int row, bool exact)
 
     if ((!exact && row >= 13) || row == 13) {
         printf("Testing 13\n");
-        test13();
+        test13(param_global);
     }
-#if 0
-    // TODO:
-    //   test || w/ add_cc, lz_cc and ex_exp_cc.
-#endif
+
+    if ((!exact && row >= 14) || row == 14) {
+        printf("Testing 14\n");
+        test14(param_global);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -1250,6 +1890,10 @@ int main(int argc, char* argv[])
         exact = true;
     }
 
+    if (row > 15) {
+        fprintf(stderr, "Row too large\n");
+        exit(-1);
+    }
     bool printint = (argc > 2);
 
     param_global = 35;

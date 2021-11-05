@@ -58,6 +58,12 @@ constexpr unsigned int FP16B_EXP_MASK = 0x7F80;
 constexpr unsigned int FP16B_MAN_MASK = 0x007F;
 constexpr unsigned int FP16B_EXP_SHIFT = 7;
 
+constexpr unsigned int FP16A_SGN_MASK = 0x8000;
+constexpr unsigned int FP16A_EXP_MASK = 0x7C00;
+constexpr unsigned int FP16A_MAN_MASK = 0x03FF;
+ constexpr unsigned int FP16A_EXP_SHIFT = 10;
+ constexpr unsigned int FP16A_EXP_BIAS = 15;
+
 constexpr unsigned int FP32_SGN_SHIFT = 31;
 constexpr unsigned int FP32_EXP_SHIFT = 23;
 constexpr unsigned int FP32_MAN_SHIFT = 0;
@@ -244,23 +250,13 @@ extern __rvtt_vec_t sfpu_lreg[4];
 
 ///////////////////////////////////////////////////////////////////////////////
 extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr);
-extern __rvtt_vec_t sfpu_rvtt_sfploadl0(unsigned int dummy);
-extern __rvtt_vec_t sfpu_rvtt_sfploadl1(unsigned int dummy);
-extern __rvtt_vec_t sfpu_rvtt_sfploadl2(unsigned int dummy);
-extern __rvtt_vec_t sfpu_rvtt_sfploadl3(unsigned int dummy);
-extern void sfpu_rvtt_sfpstore_v(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
-extern void sfpu_rvtt_sfpstore_r(int creg, unsigned int mod0, unsigned int addr);
+extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
+extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value);
 extern __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_vvv(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_vvr(const __rvtt_vec_t& a, const __rvtt_vec_t& b, int c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_vrv(const __rvtt_vec_t& a, int b, const __rvtt_vec_t& c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_vrr(const __rvtt_vec_t& a, int b, int c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_rvv(int a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_rvr(int a, const __rvtt_vec_t& b, int c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_rrv(int a, int b, const __rvtt_vec_t& c, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpmad_rrr(int a, int b, int c, unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpmad(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1);
 extern void sfpu_rvtt_sfpnop();
+extern void sfpu_rvtt_sfpillegal();
 extern void sfpu_rvtt_sfpencc(unsigned int imm12, unsigned int mod1);
 extern void sfpu_rvtt_sfpcompc();
 extern void sfpu_rvtt_sfppushc();
@@ -285,7 +281,6 @@ extern __rvtt_vec_t sfpu_rvtt_sfpshft_i(__rvtt_vec_t& dst, int shift);
 extern __rvtt_vec_t sfpu_rvtt_sfpshft_v(__rvtt_vec_t& dst, const __rvtt_vec_t&src);
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpiadd_r(__rvtt_vec_t& dst, int creg, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src);
 extern float lut_to_fp32(unsigned short v);
