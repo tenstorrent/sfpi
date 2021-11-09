@@ -37,10 +37,12 @@ void smoke()
     d = __builtin_riscv_sfpadd(lr8, lr7, 1);
 
     __builtin_riscv_sfpencc(2, 8);
+
     __builtin_riscv_sfppushc();
-    __builtin_riscv_sfppopc();
     __builtin_riscv_sfpsetcc_v(a, 12);
     __builtin_riscv_sfpsetcc_i(3, 12);
+    __builtin_riscv_sfpcompc();
+    __builtin_riscv_sfppopc();
 
     a = __builtin_riscv_sfploadi(nullptr, 0, 12);
     a = __builtin_riscv_sfploadi(nullptr, 0, -12);
@@ -49,7 +51,6 @@ void smoke()
     v64sf lr13 = __builtin_riscv_sfpassignlr(13);
     __builtin_riscv_sfpstore(nullptr, lr13, 2, 4);
     v64sf e = __builtin_riscv_sfpmad(a, b, c, 1);
-    __builtin_riscv_sfpcompc();
     __builtin_riscv_sfpstore(nullptr, e, 2, 4);
 
     __builtin_riscv_sfpnop();
@@ -122,7 +123,6 @@ void smoke_live()
     a = __builtin_riscv_sfpexman_lv(a, d, SFPEXMAN_MOD1_PAD8);
 
     a = __builtin_riscv_sfpsetexp_i_lv(nullptr, a, 23, d);
-
     a = __builtin_riscv_sfpsetman_i_lv(nullptr, a, 23, d);
 
     a = __builtin_riscv_sfpabs_lv(a, d, SFPABS_MOD1_FLOAT);
