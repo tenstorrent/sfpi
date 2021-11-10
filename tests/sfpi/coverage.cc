@@ -721,6 +721,12 @@ void stupid_example()
     p_endif;
 }
 
+#if 0
+// XXXXX bug
+// This behavior was removed because it doesn't play w/ predicated
+// execution, e.g.:
+//  p_if (x == 0 && (y = y + 1) < 0)
+// So just precluding it for now
 void test_operator_equals()
 {
     VecHalf x, y, z;
@@ -737,6 +743,7 @@ void test_operator_equals()
     a = (b = 1);
     dregs[0] = a;
 }
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -763,5 +770,5 @@ int main(int argc, char* argv[])
     test_short_cond();
     test_intrinsics();
     stupid_example();
-    test_operator_equals();
+    //    test_operator_equals();
 }

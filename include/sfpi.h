@@ -299,8 +299,8 @@ public:
 
     // Assign operations to VecHalf
     template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>* = nullptr>
-    sfpi_inline VecHalf operator=(const opType& op);
-    sfpi_inline VecHalf operator=(const float f);
+    sfpi_inline void operator=(const opType& op);
+    sfpi_inline void operator=(const float f);
 
     // Conversion
     template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
@@ -313,18 +313,18 @@ public:
     sfpi_inline VecHalf operator+(const float val) const;
     sfpi_inline VecHalf operator+(const ScalarFP16b val) const;
     sfpi_inline AddOp operator+(const VecHalf b) const;
-    sfpi_inline VecHalf operator+=(const float val);
-    sfpi_inline VecHalf operator+=(const ScalarFP16b val);
-    sfpi_inline VecHalf operator+=(const VecHalf);
+    sfpi_inline void operator+=(const float val);
+    sfpi_inline void operator+=(const ScalarFP16b val);
+    sfpi_inline void operator+=(const VecHalf);
     sfpi_inline SubOp operator-(const VecHalf b) const;
-    sfpi_inline VecHalf operator-=(const VecHalf);
+    sfpi_inline void operator-=(const VecHalf);
     sfpi_inline VecHalf operator-() const;
     sfpi_inline VecHalf operator*(const float val) const;
     sfpi_inline VecHalf operator*(const ScalarFP16b val) const;
     sfpi_inline MulOp operator*(const VecHalf b) const;
-    sfpi_inline VecHalf operator*=(const float val);
-    sfpi_inline VecHalf operator*=(const ScalarFP16b val);
-    sfpi_inline VecHalf operator*=(const VecHalf);
+    sfpi_inline void operator*=(const float val);
+    sfpi_inline void operator*=(const ScalarFP16b val);
+    sfpi_inline void operator*=(const VecHalf);
 
     // Conditionals
     sfpi_inline CondComp operator==(const float x) const;
@@ -391,13 +391,13 @@ class VecShortBase : public Vec {
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
     sfpi_inline vType operator-(const VecShortBase& val) const;
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator+=(int32_t val);
+    sfpi_inline void operator+=(int32_t val);
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator+=(const VecShortBase& val);
+    sfpi_inline void operator+=(const VecShortBase& val);
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator-=(int32_t val);
+    sfpi_inline void operator-=(int32_t val);
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator-=(const VecShortBase& val);
+    sfpi_inline void operator-=(const VecShortBase& val);
 
     // Shifts
     template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
@@ -422,8 +422,8 @@ public:
     sfpi_inline explicit operator VecUShort() const;
 
     // Assignment
-    sfpi_inline VecShort operator=(int32_t val) { loadi(val); return v; }
-    sfpi_inline VecShort operator=(const AddShortOp& op);
+    sfpi_inline void operator=(int32_t val) { loadi(val); }
+    sfpi_inline void operator=(const AddShortOp& op);
 
     // Operations
     sfpi_inline VecShort operator&=(const VecShort b) { return this->VecShortBase::operator&=(b); }
@@ -434,10 +434,10 @@ public:
     sfpi_inline VecShort operator+(const VecShort& val) const { return this->VecShortBase::operator+<VecShort>(val); }
     sfpi_inline VecShort operator-(int32_t val) const { return this->VecShortBase::operator-<VecShort>(val); }
     sfpi_inline VecShort operator-(const VecShort& val) const { return this->VecShortBase::operator-<VecShort>(val); }
-    sfpi_inline VecShort operator+=(int32_t val) { return this->VecShortBase::operator+=<VecShort>(val); }
-    sfpi_inline VecShort operator+=(const VecShort& val) { return this->VecShortBase::operator+=<VecShort>(val); }
-    sfpi_inline VecShort operator-=(int32_t val) { return this->VecShortBase::operator-=<VecShort>(val); }
-    sfpi_inline VecShort operator-=(const VecShort& val) { return this->VecShortBase::operator-=<VecShort>(val); }
+    sfpi_inline void operator+=(int32_t val) { return this->VecShortBase::operator+=<VecShort>(val); }
+    sfpi_inline void operator+=(const VecShort& val) { return this->VecShortBase::operator+=<VecShort>(val); }
+    sfpi_inline void operator-=(int32_t val) { return this->VecShortBase::operator-=<VecShort>(val); }
+    sfpi_inline void operator-=(const VecShort& val) { return this->VecShortBase::operator-=<VecShort>(val); }
 
     sfpi_inline VecShort operator<<(uint32_t amt) const { return this->VecShortBase::operator<<<VecShort>(amt); }
     sfpi_inline VecShort operator<<=(uint32_t amt) { return this->VecShortBase::operator<<=<VecShort>(amt); }
@@ -474,7 +474,7 @@ public:
 
     // Assignment
     sfpi_inline VecUShort(uint32_t val) { loadi(val); }
-    sfpi_inline VecUShort operator=(const AddShortOp& op);
+    sfpi_inline void operator=(const AddShortOp& op);
 
     // Operations
     sfpi_inline VecUShort operator~() const { return this->VecShortBase::operator~<VecUShort>(); }
@@ -485,10 +485,10 @@ public:
     sfpi_inline VecUShort operator+(const VecUShort& val) const { return this->VecShortBase::operator+<VecUShort>(val); }
     sfpi_inline VecUShort operator-(int32_t val) const { return this->VecShortBase::operator-<VecUShort>(val); }
     sfpi_inline VecUShort operator-(const VecUShort& val) const { return this->VecShortBase::operator-<VecUShort>(val); }
-    sfpi_inline VecUShort operator+=(int32_t val) { return this->VecShortBase::operator+=<VecUShort>(val); }
-    sfpi_inline VecUShort operator+=(const VecUShort& val) { return this->VecShortBase::operator+=<VecUShort>(val); }
-    sfpi_inline VecUShort operator-=(int32_t val) { return this->VecShortBase::operator-=<VecUShort>(val); }
-    sfpi_inline VecUShort operator-=(const VecUShort& val) { return this->VecShortBase::operator-=<VecUShort>(val); }
+    sfpi_inline void operator+=(int32_t val) { return this->VecShortBase::operator+=<VecUShort>(val); }
+    sfpi_inline void operator+=(const VecUShort& val) { return this->VecShortBase::operator+=<VecUShort>(val); }
+    sfpi_inline void operator-=(int32_t val) { return this->VecShortBase::operator-=<VecUShort>(val); }
+    sfpi_inline void operator-=(const VecUShort& val) { return this->VecShortBase::operator-=<VecUShort>(val); }
 
     // Immediate load
     sfpi_inline void loadi(uint32_t val);
@@ -1029,35 +1029,30 @@ sfpi_inline CondComp VecHalf::operator<(const VecHalf x) const { return CondComp
 sfpi_inline CondComp VecHalf::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE0, *this, x); }
 
 template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>*>
-sfpi_inline VecHalf VecHalf::operator=(const opType& op)
+sfpi_inline void VecHalf::operator=(const opType& op)
 {
     initialized = true;
     v = op.get_result();
-    return v;
 }
 
-sfpi_inline VecHalf VecHalf::operator=(const float f)
+sfpi_inline void VecHalf::operator=(const float f)
 {
     loadi(f);
-    return v;
 }
 
-sfpi_inline VecHalf VecHalf::operator*=(const VecHalf m)
+sfpi_inline void VecHalf::operator*=(const VecHalf m)
 {
     v = __builtin_rvtt_sfpmad(v, m.get(), __builtin_rvtt_sfpassignlr(CReg_0.get()), SFPMAD_MOD1_OFFSET_NONE);
-    return v;
 }
 
-sfpi_inline VecHalf VecHalf::operator+=(const VecHalf a)
+sfpi_inline void VecHalf::operator+=(const VecHalf a)
 {
     v = __builtin_rvtt_sfpmad(v, __builtin_rvtt_sfpassignlr(CReg_1.get()), a.get(), SFPMAD_MOD1_OFFSET_NONE);
-    return v;
 }
 
-sfpi_inline VecHalf VecHalf::operator-=(const VecHalf a)
+sfpi_inline void VecHalf::operator-=(const VecHalf a)
 {
     v = __builtin_rvtt_sfpmad(v, __builtin_rvtt_sfpassignlr(CReg_1.get()), (-a).get(), SFPMAD_MOD1_OFFSET_NONE);
-    return v;
 }
 
 sfpi_inline VecHalf::VecHalf(const DReg dreg)
@@ -1087,10 +1082,9 @@ sfpi_inline VecHalf VecHalf::operator+(const ScalarFP16b val) const
     return tmp;
 }
 
-sfpi_inline VecHalf VecHalf::operator+=(const ScalarFP16b val)
+sfpi_inline void VecHalf::operator+=(const ScalarFP16b val)
 {
     v = __builtin_rvtt_sfpaddi(v, val.get(), 0);
-    return v;
 }
 
 sfpi_inline VecHalf VecHalf::operator*(const ScalarFP16b val) const
@@ -1099,10 +1093,9 @@ sfpi_inline VecHalf VecHalf::operator*(const ScalarFP16b val) const
     return result;
 }
 
-sfpi_inline VecHalf VecHalf::operator*=(const ScalarFP16b val)
+sfpi_inline void VecHalf::operator*=(const ScalarFP16b val)
 {
     v = __builtin_rvtt_sfpmuli(v, val.get(), 0);
-    return v;
 }
 
 sfpi_inline VecHalf VecHalf::operator+(const float val) const
@@ -1110,9 +1103,9 @@ sfpi_inline VecHalf VecHalf::operator+(const float val) const
     return operator+(ScalarFP16b(val));
 }
 
-sfpi_inline VecHalf VecHalf::operator+=(const float val)
+sfpi_inline void VecHalf::operator+=(const float val)
 {
-    return operator+=(ScalarFP16b(val));
+    operator+=(ScalarFP16b(val));
 }
 
 sfpi_inline VecHalf VecHalf::operator*(const float val) const
@@ -1120,9 +1113,9 @@ sfpi_inline VecHalf VecHalf::operator*(const float val) const
     return operator*(ScalarFP16b(val));
 }
 
-sfpi_inline VecHalf VecHalf::operator*=(const float val)
+sfpi_inline void VecHalf::operator*=(const float val)
 {
-    return operator*=(ScalarFP16b(val));
+    operator*=(ScalarFP16b(val));
 }
 
 sfpi_inline void VecHalf::loadi(const ScalarFP16 val)
@@ -1305,33 +1298,29 @@ sfpi_inline vType VecShortBase::operator-(const VecShortBase& val) const
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>*>
-sfpi_inline vType VecShortBase::operator+=(int32_t val)
+sfpi_inline void VecShortBase::operator+=(int32_t val)
 {
     v = __builtin_rvtt_sfpiadd_i(val, v, SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_IMM);
-    return v;
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>*>
-sfpi_inline vType VecShortBase::operator+=(const VecShortBase& val)
+sfpi_inline void VecShortBase::operator+=(const VecShortBase& val)
 {
     v = __builtin_rvtt_sfpiadd_v(v, val.get(), SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_LREG_DST);
-    return v;
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>*>
-sfpi_inline vType VecShortBase::operator-=(int32_t val)
+sfpi_inline void VecShortBase::operator-=(int32_t val)
 {
     v = __builtin_rvtt_sfpiadd_i(-val, v, SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_IMM);
-    return v;
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>*>
-sfpi_inline vType VecShortBase::operator-=(const VecShortBase& val)
+sfpi_inline void VecShortBase::operator-=(const VecShortBase& val)
 {
     __rvtt_vec_t tmp = val.get();
     tmp = __builtin_rvtt_sfpiadd_v(tmp, v, SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_2SCOMP_LREG_DST);
     v = tmp;
-    return tmp;
 }
 
 sfpi_inline const CondOpLz VecShortBase::lz_cc(const Vec src, LzCC cc)
@@ -1346,10 +1335,9 @@ sfpi_inline VecShort VecShortBase::lz() const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline VecShort VecShort::operator=(const AddShortOp& op)
+sfpi_inline void VecShort::operator=(const AddShortOp& op)
 {
     op.emit(v, initialized);
-    return v;
 }
 
 sfpi_inline AddShortOp VecShort::operator+(int32_t val) const { return AddShortOp(v, val); }
@@ -1387,10 +1375,9 @@ sfpi_inline void VecShort::loadi(int32_t val)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline VecUShort VecUShort::operator=(const AddShortOp& op)
+sfpi_inline void VecUShort::operator=(const AddShortOp& op)
 {
     op.emit(v, initialized);
-    return v;
 }
 
 sfpi_inline AddShortOp VecUShort::operator+(uint32_t val) const { return AddShortOp(v, val); }
