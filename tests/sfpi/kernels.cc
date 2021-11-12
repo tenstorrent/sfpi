@@ -441,7 +441,8 @@ void test6()
 
             VecShort b;
             // IADD imm
-            p_if(b.add_cc(a, -29, IAddCCGTE0)) {
+            b = a - 29;
+            p_if(b >= 0) {
                 dregs[6] = 1024.0F;
             }
             p_endif;
@@ -466,7 +467,8 @@ void test6()
 
             VecShort b = -29;
             // IADD reg
-            p_if(b.add_cc(a, IAddCCLT0)) {
+            b = a + b;
+            p_if(b < 0) {
                 dregs[6] = 1024.0F;
             }
             p_endif;
@@ -673,7 +675,8 @@ void test7()
         p_endif;
 
         VecShort v;
-        p_if(v.ex_exp_cc(tmp, ExExpDoDebias, ExExpCCLT0)) {
+        v = tmp.ex_exp(ExExpDoDebias);
+        p_if(v < 0) {
             dregs[7] = 32.0F;
         } p_else {
             dregs[7] = 64.0F;
@@ -866,7 +869,8 @@ void test9()
 
         // Relies on if chain above...
         p_if(dregs[0] >= 7.0F) {
-            p_if(b.lz_cc(a, LzCCNE0)) {
+            b = a.lz().reinterpret<VecUShort>();
+            p_if (b != 19) {
                 dregs[9] = 60.0F;
             } p_else {
                 dregs[9] = 40.0F;

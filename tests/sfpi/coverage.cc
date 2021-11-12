@@ -465,30 +465,56 @@ void test_bitwise()
     dregs[6] = v3 & v4;
 }
 
-void test_abs_lz_shft()
+void test_abs()
+{
+    VecShort v1 = -5;
+    VecShort v2 = v1.abs();
+
+    v2 = v2.abs() + 1;
+
+    dregs[0] = v1;
+    dregs[1] = v2;
+
+    VecHalf v3 = -6.0f;
+    VecHalf v4 = v3.abs();
+    v4 = v4.abs() + 1.0f;
+
+    dregs[2] = v3;
+    dregs[3] = v4;
+}
+
+void test_lz()
 {
     VecShort v1;
-    v1 = -5;
-    VecShort v2 = v1.abs();
+    VecUShort v2;
+    VecHalf v3;
+
+    v3 = 10.0f;
+    v1 = v3.lz() + 1;
+    v2 = v3.lz() + 1;
+    v1 = v1.lz() + 1;
+    v2 = v2.lz() + 1;
+    dregs[0] = v1;
+    dregs[1] = v2;
+    dregs[2] = v3;
+}
+
+void test_shft()
+{
+    VecShort v1 = 1;
+    VecUShort v2 = 2;
     VecUShort v3;
-    v3 = 10;
-    v3 = v3 << 4;
-    v3 = v3.shft(v2);
-    VecShort v4 = v3.lz();
-    v3 <<= 4;
 
-    dregs[2] = v1;
-    dregs[3] = v2.abs();
-    dregs[4] = v3;
-    dregs[5] = v4;
+    v3 = v2 >> 3;
+    v3 = v2 << 4;
+    v1 = v1 << 5;
+    v3 <<= 6;
+    v3 >>= 7;
+    v2 = v3.shft(v1);
 
-    VecUShort v5 = v3 << 5;
-    v5 = v3 >> 5;
-    v5 >>= 3;
-    v5 = v5 >> 3;
-    v5 <<= 3;
-    v5 = v5 << 3;
-    dregs[6] = v5;
+    dregs[0] = v1;
+    dregs[1] = v2;
+    dregs[2] = v3;
 }
 
 // Had issues w/ implict copy/move, test some of that here
@@ -762,7 +788,9 @@ int main(int argc, char* argv[])
     test_creg_conditional1();
     test_creg_conditional2();
     test_bitwise();
-    test_abs_lz_shft();
+    test_abs();
+    test_lz();
+    test_shft();
     test_complex();
     test_muli_addi();
     test_iadd();
