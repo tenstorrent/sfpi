@@ -5,6 +5,18 @@
 
 using namespace sfpi;
 
+void abs_setcc()
+// ABS liveness across SETCC
+{
+    VecHalf x = -20.0F;
+    VecHalf y = -30.0F;
+    p_if (dregs[0] == 0.0F) {
+        y = x.abs();
+    }
+    p_endif;
+    dregs[13] = y;
+}
+
 // Assignment resulting in register rename
 void rename_move_case2a()
 {
@@ -88,6 +100,7 @@ void internal_move_case5()
 
 int main(int argc, char* argv[])
 {
+    abs_setcc();
     rename_move_case2a();
     copy_move_case2b();
     copy_move_case3();
