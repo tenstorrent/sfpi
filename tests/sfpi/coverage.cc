@@ -242,7 +242,6 @@ void test_permute_ops()
 void test_loadi(int32_t i, uint32_t ui)
 {
     VecShort a;
-    a.loadi(-255);
     a = 255;
     a = -255;
     dregs[0] = a;
@@ -250,7 +249,6 @@ void test_loadi(int32_t i, uint32_t ui)
     VecUShort b;
     b = 255;
     b = -255;
-    b.loadi(255U);
     dregs[1] = b;
 
     VecHalf c;
@@ -298,8 +296,8 @@ void test_man_exp()
     VecHalf v1;
 
     v1 = dregs[0];
-    VecShort v2 = v1.ex_man(ExManPad9);
-    VecShort v3 = v1.ex_exp(ExExpNoDebias);
+    VecShort v2 = exman9(v1);
+    VecShort v3 = exexp(v1);
     dregs[3] = v3;
 
     CCCtrl cco(true);
@@ -308,12 +306,12 @@ void test_man_exp()
     }
 
     //    v1.set_man(v2);
-    v1.set_exp(v2);
+    v1 = setexp(v1, v2);
 
     VecHalf v5 = dregs[1];
-    v1.add_exp(v5, 20);
-    v5 = v1.set_exp(10);
-    v5 = v1.set_man(10);
+    v1 = addexp(v5, 20);
+    v5 = setexp(v1, 10);
+    v5 = setman(v1, 10);
 
     dregs[2] = v2;
     dregs[4] = v4;
@@ -468,16 +466,16 @@ void test_bitwise()
 void test_abs()
 {
     VecShort v1 = -5;
-    VecShort v2 = v1.abs();
+    VecShort v2 = abs(v1);
 
-    v2 = v2.abs() + 1;
+    v2 = abs(v2) + 1;
 
     dregs[0] = v1;
     dregs[1] = v2;
 
     VecHalf v3 = -6.0f;
-    VecHalf v4 = v3.abs();
-    v4 = v4.abs() + 1.0f;
+    VecHalf v4 = abs(v3);
+    v4 = abs(v4) + 1.0f;
 
     dregs[2] = v3;
     dregs[3] = v4;
@@ -490,10 +488,10 @@ void test_lz()
     VecHalf v3;
 
     v3 = 10.0f;
-    v1 = v3.lz() + 1;
-    v2 = v3.lz() + 1;
-    v1 = v1.lz() + 1;
-    v2 = v2.lz() + 1;
+    v1 = lz(v3) + 1;
+    v2 = lz(v3) + 1;
+    v1 = lz(v1) + 1;
+    v2 = lz(v2) + 1;
     dregs[0] = v1;
     dregs[1] = v2;
     dregs[2] = v3;
@@ -510,7 +508,7 @@ void test_shft()
     v1 = v1 << 5;
     v3 <<= 6;
     v3 >>= 7;
-    v2 = v3.shft(v1);
+    v2 = shft(v3, v1);
 
     dregs[0] = v1;
     dregs[1] = v2;
@@ -606,8 +604,8 @@ void test_set_sgn()
     
     v1 = dregs[0];
 
-    v2 = v1.set_sgn(1);
-    v2 = v2.set_sgn(v1);
+    v2 = setsgn(v1, 1);
+    v2 = setsgn(v2, v1);
 }
 
 void test_short_cond()
@@ -636,7 +634,7 @@ void test_short_cond()
     }
     p_endif;
 
-    dregs[1] = b.reinterpret<VecHalf>();
+    dregs[1] = reinterpret<VecHalf>(b);
 }
 
 // test_intrinsics
@@ -732,17 +730,17 @@ void stupid_example()
     dregs[5] = a * tmp + 1.2F;
     
     p_if ((a >= 4.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
-        VecShort b = a.ex_exp(ExExpNoDebias);
+        VecShort b = exexp_nodebias(a);
         b &= 0xAA;
         p_tail_if (b >= 130) {
-            dregs[6] = a.set_exp(127);
+            dregs[6] = setexp(a, 127);
         }
     } p_elseif (a == 20.0F) {
-        dregs[7] = a.abs();
+        dregs[7] = abs(a);
     } p_else {
-        VecShort exp = a.lz() - 19;
+        VecShort exp = lz(a) - 19;
         exp = ~exp;
-        dregs[8] = -a.set_exp(exp);
+        dregs[8] = -setexp(a, exp);
     }
     p_endif;
 }

@@ -131,10 +131,6 @@ enum ExExpCC {
     ExExpCCComp = SFPEXEXP_MOD1_SET_CC_COMP_EXP,
     ExExpCCGTE0 = SFPEXEXP_MOD1_SET_CC_SGN_COMP_EXP,
 };
-enum ExManPad {
-    ExManPad9 = SFPEXMAN_MOD1_PAD9,
-    ExManPad8 = SFPEXMAN_MOD1_PAD8,
-};
 enum LzCC {
     LzCCNE0 = SFPLZ_MOD1_CC_NE0,
     LzCCEQ0 = SFPLZ_MOD1_CC_EQ0
@@ -142,15 +138,6 @@ enum LzCC {
 enum IAddCC {
     IAddCCLT0 = SFPIADD_MOD1_CC_LT0,
     IAddCCGTE0 = SFPIADD_MOD1_CC_GTE0
-};
-enum LUTOffset {
-    LUTOffsetNone = SFPLUT_MOD0_BIAS_NONE,
-    LUTOffsetPos = SFPLUT_MOD0_BIAS_POS,
-    LUTOffsetNeg = SFPLUT_MOD0_BIAS_NEG
-};
-enum LUTSgn {
-    LUTSgnUpdate = SFPLUT_MOD0_SGN_UPDATE,
-    LUTSgnRetain = SFPLUT_MOD0_SGN_RETAIN,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -285,6 +272,9 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////
 class VecHalf : public Vec {
+private:
+    sfpi_inline void loadi(const ScalarFP16 val);
+
 public:
     VecHalf() = default;
 
@@ -299,17 +289,11 @@ public:
     sfpi_inline VecHalf(const opType& op) { initialized = true; v = op.get_result(); }
 
     // Assignment
-    sfpi_inline void operator=(const VecHalf in) { v = in.v; }
+    sfpi_inline void operator=(const VecHalf in) { initialized = true; v = in.v; }
     template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>* = nullptr>
     sfpi_inline void operator=(const opType& op);
-    sfpi_inline void operator=(const float f);
-
-    // Conversion
-    template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
-    sfpi_inline vType reinterpret() const { return vType(v); }
-
-    // Immediate loads
-    sfpi_inline void loadi(const ScalarFP16 val);
+    sfpi_inline void operator=(const ScalarFP16 f) { loadi(f); }
+    sfpi_inline void operator=(const float f) { loadi(f); }
 
     // Construct operator from operations
     sfpi_inline VecHalf operator+(const float val) const;
@@ -341,33 +325,11 @@ public:
     sfpi_inline CondComp operator>=(const float x) const;
     sfpi_inline CondComp operator>=(const ScalarFP16 x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
-
-    // More complex operations
-    sfpi_inline VecShort ex_exp(const ExExpDebias debias) const;
-    sfpi_inline VecShort ex_man(ExManPad pad) const;
-
-    sfpi_inline VecHalf set_exp(const uint32_t exp) const;
-    sfpi_inline VecHalf set_exp(const VecShort src) const;
-    sfpi_inline VecHalf set_man(const uint32_t man) const;
-    sfpi_inline VecHalf set_man(const VecShort src) const; // Grayskull HW bug, is this useful?
-    sfpi_inline VecHalf set_sgn(const int32_t sgn) const;
-    sfpi_inline VecHalf set_sgn(const VecHalf src) const;
-    sfpi_inline VecHalf set_sgn(const VecShort src) const;
-
-    // Misc
-    sfpi_inline void add_exp(const VecHalf src, const int32_t exp);
-    sfpi_inline void lut(const VecUShort l0, const VecUShort l1, const VecUShort l2, LUTSgn sgn = LUTSgnUpdate, LUTOffset offset = LUTOffsetNone);
-    sfpi_inline VecHalf abs() const;
-    sfpi_inline VecShort lz() const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 class VecShortBase : public Vec {
  public:
-    // Conversion
-    template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
-    sfpi_inline vType reinterpret() const { return vType(v); }
-
     template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
     sfpi_inline explicit operator vType() const { return vType(v); }
 
@@ -413,14 +375,13 @@ class VecShortBase : public Vec {
     sfpi_inline const CondOpIAddI operator<(int32_t val) const;
     sfpi_inline const CondOpIAddI operator>=(int32_t val) const;
 
-    // lz
+    // Misc
     sfpi_inline const CondOpLz lz_cc(const Vec src, LzCC cc);
-    template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>* = nullptr>
-    sfpi_inline vType lz() const;
 };
 
 class VecShort : public VecShortBase {
 private:
+    sfpi_inline void loadi(int32_t val);
 
 public:
     VecShort() = default;
@@ -451,9 +412,6 @@ public:
     sfpi_inline VecShort operator<<(uint32_t amt) const { return this->VecShortBase::operator<<<VecShort>(amt); }
     sfpi_inline void operator<<=(uint32_t amt) { return this->VecShortBase::operator<<=<VecShort>(amt); }
 
-    // Immediate load
-    sfpi_inline void loadi(int32_t val);
-
     // Conditionals.  Note: compare is against 12 bit sign extended value
     sfpi_inline const CondComp operator==(int32_t val) const;
     sfpi_inline const CondComp operator!=(int32_t val) const;
@@ -465,14 +423,12 @@ public:
     sfpi_inline const CondOpLz lz_cc(const Vec src, LzCC cc);
     sfpi_inline const CondOpIAddI add_cc(const VecShort src, int32_t val, IAddCC cc);
     sfpi_inline const CondOpIAddV add_cc(const VecShort src, IAddCC cc);
-
-    sfpi_inline VecShort abs() const;
-    sfpi_inline VecShort lz() const { return this->VecShortBase::lz<VecShort>(); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
 class VecUShort : public VecShortBase {
 private:
+    sfpi_inline void loadi(uint32_t val);
 
 public:
     VecUShort() = default;
@@ -498,9 +454,6 @@ public:
     sfpi_inline void operator-=(int32_t val) { return this->VecShortBase::operator-=<VecUShort>(val); }
     sfpi_inline void operator-=(const VecUShort& val) { return this->VecShortBase::operator-=<VecUShort>(val); }
 
-    // Immediate load
-    sfpi_inline void loadi(uint32_t val);
-
     // Conditionals
     sfpi_inline const CondOpIAddI add_cc(const VecUShort src, int32_t val, IAddCC cc);
     sfpi_inline const CondOpIAddV add_cc(const VecUShort src, IAddCC cc);
@@ -509,8 +462,6 @@ public:
     sfpi_inline VecUShort operator>>(uint32_t amt) const;
     sfpi_inline void operator<<=(uint32_t amt) { this->VecShortBase::operator<<=<VecUShort>(amt); }
     sfpi_inline void operator>>=(uint32_t amt);
-    sfpi_inline VecUShort shft(const VecShort amt) const;
-    sfpi_inline VecShort lz() const { return this->VecShortBase::lz<VecShort>(); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -967,8 +918,7 @@ sfpi_inline void DReg::operator=(float f) const
 
 sfpi_inline void DReg::operator=(int32_t i) const
 {
-    VecShort v;
-    v.loadi(i);
+    VecShort v = i;
     *this = v;
 }
 
@@ -1042,11 +992,6 @@ sfpi_inline void VecHalf::operator=(const opType& op)
 {
     initialized = true;
     v = op.get_result();
-}
-
-sfpi_inline void VecHalf::operator=(const float f)
-{
-    loadi(f);
 }
 
 sfpi_inline void VecHalf::operator*=(const VecHalf m)
@@ -1133,98 +1078,6 @@ sfpi_inline void VecHalf::loadi(const ScalarFP16 val)
         __builtin_rvtt_sfploadi_lv(v, val.get_format(), val.get()) :
         __builtin_rvtt_sfploadi(val.get_format(), val.get());
     initialized = true;
-}
-
-sfpi_inline VecShort VecHalf::ex_exp(ExExpDebias debias) const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpexexp(v, debias);
-    return result;
-}
-
-sfpi_inline VecShort VecHalf::ex_man(ExManPad pad) const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpexman(v, pad);
-    return result;
-}
-
-sfpi_inline VecHalf VecHalf::set_exp(const uint32_t exp) const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpsetexp_i(exp, v);
-    return result;
-}
-
-sfpi_inline VecHalf VecHalf::set_exp(const VecShort exp) const
-{
-    // Odd: dst is both exponent and result so undergoes a type change
-    // If exp is not used later, compiler renames tmp and doesn't issue a mov
-    __rvtt_vec_t tmp = exp.get();
-    tmp = __builtin_rvtt_sfpsetexp_v(tmp, v);
-    return tmp;
-}
-
-sfpi_inline void VecHalf::add_exp(const VecHalf in, const int32_t exp)
-{
-    initialized = true;
-    v = __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
-}
-
-sfpi_inline VecHalf VecHalf::set_man(const uint32_t man) const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpsetman_i(man, v);
-    return result;
-}
-
-sfpi_inline VecHalf VecHalf::set_man(const VecShort man) const
-{
-    // Grayskull HW bug, is this useful?  Should there be a "Half" form?
-    // Odd: dst is both man and result so undergoes a type change
-    // If man is not used later, compiler renames tmp and doesn't issue a mov
-    __rvtt_vec_t tmp = man.get();
-    tmp = __builtin_rvtt_sfpsetman_v(tmp, v);
-    return tmp;
-}
-
-sfpi_inline VecHalf VecHalf::set_sgn(const int32_t sgn) const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpsetsgn_i(sgn, v);
-    return result;
-}
-
-sfpi_inline VecHalf VecHalf::set_sgn(const VecHalf sgn) const
-{
-    // Odd: dst is both sgn and result so undergoes a type change
-    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
-    __rvtt_vec_t tmp = sgn.get();
-    tmp = __builtin_rvtt_sfpsetsgn_v(tmp, v);
-    return tmp;
-}
-
-sfpi_inline VecHalf VecHalf::set_sgn(const VecShort sgn) const
-{
-    // Odd: dst is both sgn and result so undergoes a type change
-    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
-    __rvtt_vec_t tmp = sgn.get();
-    tmp = __builtin_rvtt_sfpsetsgn_v(tmp, v);
-    return tmp;
-}
-
-sfpi_inline VecShort VecHalf::lz() const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfplz(v, SFPLZ_MOD1_CC_NONE);
-    return VecShort(result);
-}
-
-sfpi_inline VecHalf VecHalf::abs() const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpabs(v, SFPABS_MOD1_FLOAT);
-    return result;
-}
-
-sfpi_inline void VecHalf::lut(const VecUShort l0, const VecUShort l1, const VecUShort l2,
-                         LUTSgn sgn, LUTOffset offset)
-{
-    initialized = true;
-    v = __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v, sgn | offset);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1334,13 +1187,6 @@ sfpi_inline const CondOpLz VecShortBase::lz_cc(const Vec src, LzCC cc)
     return CondOpLz(this, src, cc);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<VecShortBase, vType>::value>*>
-sfpi_inline vType VecShortBase::lz() const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfplz(v, SFPLZ_MOD1_CC_NONE);
-    return vType(result);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline void VecShort::operator=(const AddShortOp& op)
@@ -1366,12 +1212,6 @@ sfpi_inline const CondComp VecShortBase::operator!=(int32_t val) const {return C
 // The flipped conditionals are correct, see comment in emit()
 sfpi_inline const CondOpIAddV VecShort::operator<(const VecShort src) const { return CondOpIAddV(*this, src, IAddCCGTE0); }
 sfpi_inline const CondOpIAddV VecShort::operator>=(const VecShort src) const { return CondOpIAddV(*this, src, IAddCCLT0); }
-
-sfpi_inline VecShort VecShort::abs() const
-{
-    __rvtt_vec_t result = __builtin_rvtt_sfpabs(v, SFPABS_MOD1_INT);
-    return result;
-}
 
 sfpi_inline void VecShort::loadi(int32_t val)
 {
@@ -1402,13 +1242,6 @@ sfpi_inline VecUShort VecUShort::operator>>(uint32_t amt) const
 sfpi_inline void VecUShort::operator>>=(uint32_t amt)
 {
     v = (*this >> amt).get();
-}
-
-sfpi_inline VecUShort VecUShort::shft(const VecShort amt) const
-{
-    __rvtt_vec_t tmp = v;
-    tmp = __builtin_rvtt_sfpshft_v(tmp, amt.get());
-    return tmp;
 }
 
 sfpi_inline void VecUShort::loadi(uint32_t val)
@@ -1611,6 +1444,7 @@ sfpi_inline void CondOp::emit(bool negate) const
                                                 __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
                                                 0);
                 } else {
+                    // ADDI is faster if l_op_a is not re-used
                     __rvtt_vec_t neg_op_b = __builtin_rvtt_sfploadi(op_b.get_scalarfp().get_format(),
                                                                     l_op_b ^ 0x8000);
                     tmp = __builtin_rvtt_sfpmad(l_op_a, __builtin_rvtt_sfpassignlr(CREG_IDX_1), neg_op_b, 0);
@@ -1627,10 +1461,9 @@ sfpi_inline void CondOp::emit(bool negate) const
         {
             __rvtt_vec_t l_op_a = op_a.get_vec().get();
             __rvtt_vec_t l_op_b = op_b.get_vec().get();
-            __rvtt_vec_t neg_b = __builtin_rvtt_sfpmov(l_op_b, SFPMOV_MOD1_COMPSIGN);
-            __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(l_op_a,
-                                                     __builtin_rvtt_sfpassignlr(CREG_IDX_1),
-                                                     neg_b,
+            __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(l_op_b,
+                                                     __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
+                                                     l_op_a,
                                                      0);
             __builtin_rvtt_sfpsetcc_v(tmp, use_mod1);
         }
@@ -1787,6 +1620,119 @@ sfpi_inline void CCCtrl::pop()
 sfpi_inline void CCCtrl::enable_cc()
 {
     __builtin_rvtt_sfpencc(SFPENCC_IMM12_BOTH, SFPENCC_MOD1_EI_RI);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Functional math library
+//////////////////////////////////////////////////////////////////////////////
+ sfpi_inline VecHalf lut(const VecHalf v, const VecUShort l0, const VecUShort l1, const VecUShort l2, const int offset = 0)
+{
+    unsigned int bias_mask = (offset == 1) ? SFPLUT_MOD0_BIAS_POS :
+        ((offset == -1) ? SFPLUT_MOD0_BIAS_NEG : SFPLUT_MOD0_BIAS_NONE);
+    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_RETAIN | bias_mask);
+}
+
+sfpi_inline VecHalf lut_sign(const VecHalf v, const VecUShort l0, const VecUShort l1, const VecUShort l2, const int offset = 0)
+{
+    unsigned int bias_mask = (offset == 1) ? SFPLUT_MOD0_BIAS_POS :
+        ((offset == -1) ? SFPLUT_MOD0_BIAS_NEG : SFPLUT_MOD0_BIAS_NONE);
+    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_UPDATE | bias_mask);
+}
+
+sfpi_inline VecShort exexp(const VecHalf v)
+{
+    return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_DEBIAS);
+}
+
+sfpi_inline VecShort exexp_nodebias(const VecHalf v)
+{
+    return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_NODEBIAS);
+}
+
+sfpi_inline VecShort exman8(const VecHalf v)
+{
+    return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
+}
+
+sfpi_inline VecShort exman9(const VecHalf v)
+{
+    return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
+}
+
+sfpi_inline VecHalf setexp(const VecHalf v, const uint32_t exp)
+{
+    return __builtin_rvtt_sfpsetexp_i(exp, v.get());
+}
+
+sfpi_inline VecHalf setexp(const VecHalf v, const VecShort exp)
+{
+    // Odd: dst is both exponent and result so undergoes a type change
+    // If exp is not used later, compiler renames tmp and doesn't issue a mov
+    return __builtin_rvtt_sfpsetexp_v(exp.get(), v.get());
+}
+
+sfpi_inline VecHalf setman(const VecHalf v, const uint32_t man)
+{
+    return __builtin_rvtt_sfpsetman_i(man, v.get());
+}
+
+sfpi_inline VecHalf setman(const VecHalf v, const VecShort man)
+{
+    // Grayskull HW bug, is this useful?  Should there be a "Half" form?
+    // Odd: dst is both man and result so undergoes a type change
+    // If man is not used later, compiler renames tmp and doesn't issue a mov
+    return __builtin_rvtt_sfpsetman_v(man.get(), v.get());
+}
+
+sfpi_inline VecHalf addexp(const VecHalf in, const int32_t exp)
+{
+    return __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
+}
+
+sfpi_inline VecHalf setsgn(const VecHalf v, const int32_t sgn)
+{
+    return __builtin_rvtt_sfpsetsgn_i(sgn, v.get());
+}
+
+sfpi_inline VecHalf setsgn(const VecHalf v, const VecHalf sgn)
+{
+    // Odd: dst is both sgn and result so undergoes a type change
+    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
+    return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
+}
+
+sfpi_inline VecHalf setsgn(const VecHalf v, const VecShort sgn)
+{
+    // Odd: dst is both sgn and result so undergoes a type change
+    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
+    return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
+}
+
+template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
+sfpi_inline VecShort lz(const vType v)
+{
+    return VecShort(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_CC_NONE));
+}
+
+sfpi_inline VecHalf abs(const VecHalf v)
+{
+    return __builtin_rvtt_sfpabs(v.get(), SFPABS_MOD1_FLOAT);
+}
+
+sfpi_inline VecShort abs(const VecShort v)
+{
+    return __builtin_rvtt_sfpabs(v.get(), SFPABS_MOD1_INT);
+}
+
+sfpi_inline VecUShort shft(const VecUShort v, const VecShort amt)
+{
+    return __builtin_rvtt_sfpshft_v(v.get(), amt.get());
+}
+
+template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
+sfpi_inline vType reinterpret(const Vec v)
+{
+    return vType(v.get());
 }
 
 } // namespace sfpi

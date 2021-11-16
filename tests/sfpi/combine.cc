@@ -322,7 +322,7 @@ void lz_yes1()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.lz();
+    b = lz(a);
     p_if (a == 0) {
         dregs[0] = CReg_1;
     }
@@ -336,7 +336,7 @@ void lz_yes2()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.lz();
+    b = lz(a);
     p_if (a != 0) {
         dregs[0] = CReg_1;
     }
@@ -350,7 +350,7 @@ void lz_no1()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.lz();
+    b = lz(a);
     p_if (b != 0) {
         dregs[0] = CReg_1;
     }
@@ -364,7 +364,7 @@ void lz_no2()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.lz();
+    b = lz(a);
     p_if (a >= 0) {
         dregs[0] = CReg_1;
     }
@@ -378,7 +378,7 @@ void lz_no3()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.lz();
+    b = lz(a);
     p_if (a < 0) {
         dregs[0] = CReg_1;
     }
@@ -392,7 +392,7 @@ void exexp_yes1()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.ex_exp(ExExpDoDebias);
+    b = exexp(a);
     p_if (b >= 0) {
         dregs[0] = CReg_1;
     }
@@ -406,7 +406,7 @@ void exexp_yes2()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.ex_exp(ExExpDoDebias);
+    b = exexp(a);
     p_if (b < 0) {
         dregs[0] = CReg_1;
     }
@@ -419,8 +419,8 @@ void exexp_yes3()
 {
     VecHalf a = 3.0f;
 
-    a = a.ex_exp(ExExpDoDebias).reinterpret<VecHalf>();
-    p_if (a.reinterpret<VecShort>() < 0) {
+    a = reinterpret<VecHalf>(exexp(a));
+    p_if (reinterpret<VecShort>(a) < 0) {
         dregs[0] = CReg_1;
     }
     p_endif;
@@ -432,7 +432,7 @@ void exexp_no1()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.ex_exp(ExExpDoDebias);
+    b = exexp(a);
     p_if (b < 5) {
         dregs[0] = CReg_1;
     }
@@ -446,7 +446,7 @@ void exexp_no2()
     VecHalf a = 3.0f;
     VecShort b;
 
-    b = a.ex_exp(ExExpNoDebias);
+    b = exexp_nodebias(a);
     p_if (b >= 0) {
         dregs[0] = CReg_1;
     }

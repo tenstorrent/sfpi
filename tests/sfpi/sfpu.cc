@@ -519,17 +519,19 @@ __rvtt_vec_t sfpu_rvtt_sfpsetexp_i(unsigned int imm, const __rvtt_vec_t& v)
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpsetexp_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
+__rvtt_vec_t sfpu_rvtt_sfpsetexp_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             // Keep sign bit and mantissa
-            dst.set_uint(i, (src.get_uint(i) & TF32_SGN_MAN_MASK) | ((dst.get_uint(i) & 0xFF) << TF32_EXP_SHIFT));
+            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_MAN_MASK) | ((dst.get_uint(i) & 0xFF) << TF32_EXP_SHIFT));
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpsetman_i(unsigned int imm, const __rvtt_vec_t& v)
@@ -547,8 +549,10 @@ __rvtt_vec_t sfpu_rvtt_sfpsetman_i(unsigned int imm, const __rvtt_vec_t& v)
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpsetman_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
+__rvtt_vec_t sfpu_rvtt_sfpsetman_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -556,14 +560,14 @@ __rvtt_vec_t sfpu_rvtt_sfpsetman_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
 #ifdef ARCH_GRAYSKULL
             // Grayskull bug, bits come from the exponent section
             // wonder if this instruction is even used
-            dst.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | ((dst.get_uint(i) >> 9) & 0x1FF));
+            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | ((dst.get_uint(i) >> 9) & 0x1FF));
 #else
-            dst.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | (dst.get_uint(i) & TF32_MAN_MASK));
+            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | (dst.get_uint(i) & TF32_MAN_MASK));
 #endif
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpabs(const __rvtt_vec_t& v, unsigned int mod1)
@@ -736,21 +740,23 @@ __rvtt_vec_t sfpu_rvtt_sfpshft_i(__rvtt_vec_t& dst, int shift)
     return dst;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpshft_v(__rvtt_vec_t& dst, const __rvtt_vec_t&src)
+__rvtt_vec_t sfpu_rvtt_sfpshft_v(const __rvtt_vec_t& dst, const __rvtt_vec_t&src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             int shift = src.get_uint(i);
             if (shift < 0) {
-                dst.set_uint(i, dst.get_uint(i) >> -shift);
+                tmp.set_uint(i, dst.get_uint(i) >> -shift);
             } else {
-                dst.set_uint(i, dst.get_uint(i) << shift);
+                tmp.set_uint(i, dst.get_uint(i) << shift);
             }
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned int mod1)
@@ -821,17 +827,19 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src)
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
+__rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             unsigned int sign = dst.get_uint(i) & TF32_SGN_MASK;
-            dst.set_uint(i, (src.get_uint(i) & (TF32_EXP_MASK | TF32_MAN_MASK)) | sign);
+            tmp.set_uint(i, (src.get_uint(i) & (TF32_EXP_MASK | TF32_MAN_MASK)) | sign);
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 inline float lut_to_fp32(unsigned short v)
@@ -857,13 +865,14 @@ inline float lut_to_fp32(unsigned short v)
 __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
                               const __rvtt_vec_t& l1,
                               const __rvtt_vec_t& l2,
-                               __rvtt_vec_t& dst,
+                              const __rvtt_vec_t& dst,
                                unsigned short mod0)
 {
     unsigned short bias_flag = (mod0 & SFPLUT_MOD0_BIAS_MASK);
     float bias = (bias_flag == SFPLUT_MOD0_BIAS_NEG) ? -0.5F : (bias_flag == SFPLUT_MOD0_BIAS_POS) ? 0.5F : 0.0F;
     bool retain_sgn = ((mod0 & SFPLUT_MOD0_SGN_RETAIN) != 0);
 
+    __rvtt_vec_t tmp;
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -893,9 +902,9 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
                 result = fval;
             }
 
-            dst.set_float(i, result);
+            tmp.set_float(i, result);
         }
     }
 
-    return dst;
+    return tmp;
 }

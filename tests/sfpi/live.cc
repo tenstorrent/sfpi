@@ -11,7 +11,7 @@ void abs_setcc()
     VecHalf x = -20.0F;
     VecHalf y = -30.0F;
     p_if (dregs[0] == 0.0F) {
-        y = x.abs();
+        y = abs(x);
     }
     p_endif;
     dregs[13] = y;

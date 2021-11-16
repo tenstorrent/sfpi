@@ -586,21 +586,21 @@ void test6()
 
     p_if (dregs[0] == 20.0F) {
         VecUShort v = 25;
-        set_expected_result(6, 4.0F, 25, v.reinterpret<VecShort>());
+        set_expected_result(6, 4.0F, 25, reinterpret<VecShort>(v));
     } p_elseif(dregs[0] == 21.0F) {
         VecUShort a = 20;
         a = a - 12;
-        set_expected_result(6, 8.0F, 8, a.reinterpret<VecShort>());
+        set_expected_result(6, 8.0F, 8, reinterpret<VecShort>(a));
     } p_elseif(dregs[0] == 22.0F) {
         VecUShort a = 18;
         VecUShort b = 6;
         a = a - b;
-        set_expected_result(6, 16.0F, 12, a.reinterpret<VecShort>());
+        set_expected_result(6, 16.0F, 12, reinterpret<VecShort>(a));
     } p_elseif(dregs[0] == 23.0F) {
         VecUShort a = 14;
         VecUShort b = 5;
         a = b - a;
-        set_expected_result(6, 32.0F, -9, a.reinterpret<VecShort>());
+        set_expected_result(6, 32.0F, -9, reinterpret<VecShort>(a));
     }
     p_endif;
 
@@ -653,16 +653,16 @@ void test7()
     dregs[7] = -dregs[0];
     p_if(dregs[0] == 1.0F) {
         VecHalf tmp = 124.0F;
-        set_expected_result(7, 30.0F, 0x7C0, tmp.ex_man(ExManPad8));
+        set_expected_result(7, 30.0F, 0x7C0, exman8(tmp));
     } p_elseif(dregs[0] == 2.0F) {
         VecHalf tmp = 124.0F;
-        set_expected_result(7, 32.0F, 0x3C0, tmp.ex_man(ExManPad9));
+        set_expected_result(7, 32.0F, 0x3C0, exman9(tmp));
     } p_elseif(dregs[0] == 3.0F) {
         VecHalf tmp = 65536.0F * 256.0F;
-        set_expected_result(7, 33.0F, 0x18, tmp.ex_exp(ExExpDoDebias));
+        set_expected_result(7, 33.0F, 0x18, exexp(tmp));
     } p_elseif(dregs[0] == 4.0F) {
         VecHalf tmp = 65536.0F * 256.0F;
-        set_expected_result(7, 34.0F, 0x97, tmp.ex_exp(ExExpNoDebias));
+        set_expected_result(7, 34.0F, 0x97, exexp_nodebias(tmp));
     } p_elseif(dregs[0] < 8.0F) {
         VecHalf tmp;
         p_if(dregs[0] == 5.0F) {
@@ -675,7 +675,7 @@ void test7()
         p_endif;
 
         VecShort v;
-        v = tmp.ex_exp(ExExpDoDebias);
+        v = exexp(tmp);
         p_if(v < 0) {
             dregs[7] = 32.0F;
         } p_else {
@@ -698,12 +698,12 @@ void test7()
         // [7] = 35.0 (exponent(512) = 8)
     } p_elseif(dregs[0] == 8.0F) {
         VecHalf tmp = 1.0F;
-        VecHalf v = tmp.set_exp(137);
+        VecHalf v = setexp(tmp, 137);
         dregs[7] = v;
     } p_elseif(dregs[0] == 9.0F) {
         VecShort exp = 0x007F; // Exponent in low bits
         VecHalf sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
-        sgn_man = sgn_man.set_exp(exp);
+        sgn_man = setexp(sgn_man, exp);
         dregs[7] = sgn_man;
     }
     p_endif;
@@ -713,12 +713,12 @@ void test7()
 
     p_if(dregs[0] == 10.0F) {
         VecHalf tmp = 1024.0F;
-        VecHalf b = tmp.set_man(0x3AB);
+        VecHalf b = setman(tmp, 0x3AB);
         dregs[7] = b;
     } p_elseif(dregs[0] == 11.0F) {
         VecHalf tmp = 1024.0F;
         VecShort man = 0xBBB;
-        VecHalf tmp2 = tmp.set_man(man);
+        VecHalf tmp2 = setman(tmp, man);
         dregs[7] = tmp2;
     }
     p_endif;
@@ -787,16 +787,16 @@ void test8()
         set_expected_result(8, 22.0F, 0x0555, static_cast<VecShort>(a));
     } p_elseif(dregs[0] == 10.0F) {
         VecHalf a = 100.0F;
-        dregs[8] = a.abs();
+        dregs[8] = abs(a);
     } p_elseif(dregs[0] == 11.0F) {
         VecHalf a = -100.0F;
-        dregs[8] = a.abs();
+        dregs[8] = abs(a);
     } p_elseif(dregs[0] == 12.0F) {
         VecShort a = 100;
-        set_expected_result(8, 24.0F, 100, a.abs());
+        set_expected_result(8, 24.0F, 100, abs(a));
     } p_elseif(dregs[0] == 13.0F) {
         VecShort a = -100;
-        set_expected_result(8, 26.0F, 100, a.abs());
+        set_expected_result(8, 26.0F, 100, abs(a));
     }
     p_endif;
 
@@ -838,29 +838,24 @@ void test9()
         dregs[9] = a;
     } p_elseif(dregs[0] == 5.0F) {
         VecHalf a = 16.0F;
-        VecHalf b;
-        b.add_exp(a, 4);
-        dregs[9] = b;
+        dregs[9] = addexp(a, 4);
     } p_elseif(dregs[0] == 6.0F) {
         VecHalf a = 256.0F;
-        VecHalf b;
-        b = 3.3f;
-        b.add_exp(a, -4);
-        dregs[9] = b;
+        dregs[9] = addexp(a, -4);
     }
     p_endif;
 
     p_if(dregs[0] == 7.0F) {
         VecShort a = 0;
-        VecShort b = a.lz();
+        VecShort b = lz(a);
         set_expected_result(9, 38.0F, 0x13, b);
     } p_elseif(dregs[0] == 8.0F) {
         VecShort a = 0xFFFF;
-        VecShort b = a.lz();
+        VecShort b = lz(a);
         set_expected_result(9, 55.0F, 0x0, b);
     } p_elseif(dregs[0] == 9.0F) {
         VecUShort a = 0xFFFF;
-        VecShort b = a.lz();
+        VecShort b = lz(a);
         dregs[9] = 14.0f;
         set_expected_result(9, 30.0F, 0x3, b);
     } p_elseif(dregs[0] < 13.0F) {
@@ -869,7 +864,7 @@ void test9()
 
         // Relies on if chain above...
         p_if(dregs[0] >= 7.0F) {
-            b = a.lz().reinterpret<VecUShort>();
+            b = reinterpret<VecUShort>(lz(a));
             p_if (b != 19) {
                 dregs[9] = 60.0F;
             } p_else {
@@ -928,22 +923,22 @@ void test10()
     dregs[10] = -dregs[0];
     p_if(dregs[0] == 1.0F) {
         VecUShort a = 0x015;
-        VecShort shft = 6;
-        VecUShort b = a.shft(shft);
+        VecShort shift = 6;
+        VecUShort b = shft(a, shift);
         // Could write better tests if we could return and test the int result
         set_expected_result(10, 20.0F, 0x0540, static_cast<VecShort>(b));
     } p_elseif(dregs[0] == 2.0F) {
         VecUShort a = 0x2AAA;
-        VecUShort b = a.shft(-4);
+        VecUShort b = shft(a, -4);
         set_expected_result(10, 22.0F, 0x02AA, static_cast<VecShort>(b));
     } p_elseif(dregs[0] == 3.0F) {
         VecUShort a = 0xAAAA;
-        VecShort shft = -6;
-        VecUShort b = a.shft(shft);
+        VecShort shift = -6;
+        VecUShort b = shft(a, shift);
         set_expected_result(10, 24.0F, 0x02AA, static_cast<VecShort>(b));
     } p_elseif(dregs[0] == 4.0F) {
         VecUShort a = 0x005A;
-        VecUShort b = a.shft(4);
+        VecUShort b = shft(a, 4);
         set_expected_result(10, 26.0F, 0x05A0, static_cast<VecShort>(b));
     } p_elseif(dregs[0] == 5.0F) {
         VecShort a = 25;
@@ -960,21 +955,21 @@ void test10()
 
     p_if(dregs[0] == 7.0F) {
         VecHalf a = dregs[0];
-        dregs[10] = a.set_sgn(1);
+        dregs[10] = setsgn(a, 1);
     } p_elseif(dregs[0] == 8.0F) {
         VecHalf a = dregs[0];
         VecHalf b = -128.0;
-        VecHalf r = b.set_sgn(a);
+        VecHalf r = setsgn(b, a);
 
         dregs[10] = r;
     } p_elseif(dregs[0] == 9.0F) {
         VecHalf a = -256.0F;
-        dregs[10] = a.set_sgn(0);
+        dregs[10] = setsgn(a, 0);
     } p_elseif(dregs[0] == 10.0F) {
         VecHalf a = dregs[0];
         a += 20.0f;
         VecHalf b = -512.0F;
-        VecHalf r = a.set_sgn(b);
+        VecHalf r = setsgn(a, b);
 
         dregs[10] = r;
     }
@@ -1004,37 +999,37 @@ void test11()
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a);
+        h = lut_sign(h, l0a, l1a, l2a);
         dregs[11] = h;
     } p_elseif(dregs[0] == 2.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a, LUTSgnRetain);
+        h = lut(h, l0a, l1a, l2a);
         dregs[11] = h;
     } p_elseif(dregs[0] == 3.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a, LUTSgnUpdate, LUTOffsetNeg);
+        h = lut_sign(h, l0a, l1a, l2a, -1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 4.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a, LUTSgnRetain, LUTOffsetPos);
+        h = lut(h, l0a, l1a, l2a, 1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 5.0F) {
         // Use L1
         VecHalf h = 1.0F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a, LUTSgnRetain, LUTOffsetPos);
+        h = lut(h, l0a, l1a, l2a, 1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 6.0F) {
         // Use L2
         VecHalf h = 4.0F;
         VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h.lut(l0a, l1a, l2a, LUTSgnUpdate);
+        h = lut_sign(h, l0a, l1a, l2a);
         dregs[11] = h;
     }
     p_endif;
@@ -1055,37 +1050,37 @@ void test11()
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b);
+        h = lut_sign(h, l0b, l1b, l2b);
         dregs[11] = h;
     } p_elseif(dregs[0] == 8.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b, LUTSgnRetain);
+        h = lut(h, l0b, l1b, l2b);
         dregs[11] = h;
     } p_elseif(dregs[0] == 9.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b, LUTSgnUpdate, LUTOffsetNeg);
+        h = lut_sign(h, l0b, l1b, l2b, -1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 10.0F) {
         // Use L0
         VecHalf h = -0.3F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b, LUTSgnRetain, LUTOffsetPos);
+        h = lut(h, l0b, l1b, l2b, 1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 11.0F) {
         // Use L1
         VecHalf h = 1.0F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b, LUTSgnRetain, LUTOffsetPos);
+        h = lut(h, l0b, l1b, l2b, 1);
         dregs[11] = h;
     } p_elseif(dregs[0] == 12.0F) {
         // Use L2
         VecHalf h = 4.0F;
         VecUShort l2b = 0x9000;
-        h.lut(l0b, l1b, l2b, LUTSgnUpdate);
+        h = lut_sign(h, l0b, l1b, l2b);
         dregs[11] = h;
     }
     p_endif;
@@ -1139,39 +1134,33 @@ void test12(int imm)
     p_if(dregs[0] == 7.0F) {
         VecUShort a = 0x4000;
         a >>= imm - 25;
-        set_expected_result(12, 64.0F, 0x0010, a.reinterpret<VecShort>());
+        set_expected_result(12, 64.0F, 0x0010, reinterpret<VecShort>(a));
     } p_elseif(dregs[0] == 8.0F) {
         VecUShort a = 1;
         a <<= imm - 25;
-        set_expected_result(12, 128.0F, 0x0400, a.reinterpret<VecShort>());
+        set_expected_result(12, 128.0F, 0x0400, reinterpret<VecShort>(a));
     } p_elseif(dregs[0] == 9.0F) {
         VecHalf a = 256.0F;
-        VecHalf b;
-        b = 3.3f;
-        b.add_exp(a, imm - 31);
-        dregs[12] = b;
+        dregs[12] = addexp(a, imm - 31);
     } p_elseif(dregs[0] == 10.0F) {
         VecHalf a = 256.0F;
-        VecHalf b;
-        b = 3.3f;
-        b.add_exp(a, imm - 39);
-        dregs[12] = b;
+        dregs[12] = addexp(a, imm - 39);
     }
     p_endif;
 
     p_if(dregs[0] == 11.0F) {
         VecHalf a = 128.0;
-        VecHalf r = a.set_sgn(imm - 36);
+        VecHalf r = setsgn(a, imm - 36);
         dregs[12] = r;
     } p_elseif(dregs[0] == 12.0F) {
         VecHalf tmp = 1024.0F;
         int man = 0xBBB + 35 - imm;
-        VecHalf tmp2 = tmp.set_man(man);
+        VecHalf tmp2 = setman(tmp, man);
         dregs[12] = tmp2;
     } p_elseif(dregs[0] == 13.0F) {
         int exp = 0x007F + 35 - imm; // Exponent in low bits
         VecHalf sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
-        sgn_man = sgn_man.set_exp(exp);
+        sgn_man = setexp(sgn_man, exp);
         dregs[12] = sgn_man;
     }
     p_endif;
@@ -1284,7 +1273,7 @@ void test13(int imm)
         VecHalf x = -20.0F;
         VecHalf y = -30.0F;
         p_if (dregs[0] == 0.0F) {
-            y = x.abs();
+            y = abs(x);
         }
         p_endif;
         p_if (dregs[0] == 0.0F || dregs[0] == 1.0F) {
@@ -1323,7 +1312,7 @@ void test13(int imm)
         VecShort a = 0x0080;
         VecShort b = 0x07BB;
         p_if (dregs[0] == 4.0F) {
-            b = a.lz();
+            b = lz(a);
         }
         p_endif;
         p_if (dregs[0] == 4.0F || dregs[0] == 5.0F) {
@@ -1378,7 +1367,7 @@ void test13(int imm)
         VecHalf a = 140.0F;
         VecHalf b = 150.0F;
         p_if (dregs[0] == 10.0F) {
-            b.add_exp(a, 1);
+            b = addexp(a, 1);
         }
         p_endif;
         p_if (dregs[0] == 10.0F || dregs[0] == 11.0F) {
@@ -1394,12 +1383,12 @@ void test13(int imm)
         VecHalf a = 160.0F;
         VecShort b = 128;
         p_if (dregs[0] == 12.0F) {
-            b = a.ex_exp(ExExpNoDebias);
+            b = exexp_nodebias(a);
         }
         p_endif;
         p_if (dregs[0] == 12.0F || dregs[0] == 13.0F) {
             VecHalf tmp = 1.0F;
-            dregs[13] = tmp.set_exp(b);
+            dregs[13] = setexp(tmp, b);
         }
         p_endif;
     }
@@ -1411,13 +1400,13 @@ void test13(int imm)
         VecHalf a = 160.0F;
         VecShort b = 128;
         p_if (dregs[0] == 14.0F) {
-            b = a.ex_man(ExManPad8);
+            b = exman8(a);
         }
         p_endif;
         p_if (dregs[0] == 14.0F || dregs[0] == 15.0F) {
             VecHalf tmp = 128.0F;
             b = b << 9;
-            dregs[13] = tmp.set_man(b);
+            dregs[13] = setman(tmp, b);
         }
         p_endif;
     }
@@ -1429,7 +1418,7 @@ void test13(int imm)
         VecHalf a = 170.0F;
         VecHalf b = 180.0F;
         p_if (dregs[0] == 16.0F) {
-            b = a.set_exp(132);
+            b = setexp(a, 132);
         }
         p_endif;
         p_if (dregs[0] == 16.0F || dregs[0] == 17.0F) {
@@ -1445,7 +1434,7 @@ void test13(int imm)
         VecHalf a = 190.0F;
         VecHalf b = 200.0F;
         p_if (dregs[0] == 18.0F) {
-            b = a.set_man(0x3AB);
+            b = setman(a, 0x3AB);
         }
         p_endif;
         p_if (dregs[0] == 18.0F || dregs[0] == 19.0F) {
@@ -1461,7 +1450,7 @@ void test13(int imm)
         VecHalf a = 210.0F;
         VecHalf b = 220.0F;
         p_if (dregs[0] == 20.0F) {
-            b = a.set_sgn(1);
+            b = setsgn(a, 1);
         }
         p_endif;
         p_if (dregs[0] == 20.0F || dregs[0] == 21.0F) {
@@ -1477,7 +1466,7 @@ void test13(int imm)
         VecHalf a = 140.0F;
         VecHalf b = 150.0F;
         p_if (dregs[0] == 22.0F) {
-            b.add_exp(a, imm - 34);
+            b = addexp(a, imm - 34);
         }
         p_endif;
         p_if (dregs[0] == 22.0F || dregs[0] == 23.0F) {
