@@ -16,7 +16,7 @@ void iadd_i_yes1()
 
     a = a - 5;
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -27,7 +27,7 @@ void iadd_i_yes2()
     VecShort a = 3;
     VecShort b ((a = a - 5));
     p_if ((a = a - 7) < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -38,7 +38,7 @@ void iadd_i_yes3a()
     VecShort b = 4;
 
     p_if ((a = a - 5) < 0 && b == 6) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -49,7 +49,7 @@ void iadd_i_yes3b()
     VecShort b = 4;
 
     p_if (b == 6 && (a = a - 5) < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -61,7 +61,7 @@ void iadd_i_yes3c()
     VecShort b = 4;
 
     p_if (b == 6 && a.add_cc(a, -5, IAddCCLT0)) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -73,7 +73,7 @@ void iadd_i_yes4a()
 
     a = a - 5;
     p_if (a < 0 && b == 6) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -86,7 +86,7 @@ void iadd_i_yes4b()
     // Eventually.  Can't use peephole
     a = a - 5;
     p_if (b == 6 && a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -98,7 +98,7 @@ void iadd_i_yes5()
     // Testing 2 things...
     a = a + 5;
     p_if (a >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -110,7 +110,7 @@ void iadd_i_yes6()
 
     a = b + 6;
     p_if (a >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -122,7 +122,7 @@ void iadd_i_yes7()
     VecShort b = 4;
 
     p_if ((a = b + 6) >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -136,11 +136,11 @@ void iadd_i_yes8()
     // Not live
     b = a + 5;
     p_if (b < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void iadd_i_no1()
@@ -150,7 +150,7 @@ void iadd_i_no1()
 
     b = b - 6;
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -162,7 +162,7 @@ void iadd_i_no2()
 
     b = a - 5;
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -175,7 +175,7 @@ void iadd_i_no3()
     a = a - 5;
     // No then yes
     p_if ((a = a - 7) < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -190,7 +190,7 @@ void iadd_i_no4()
     a = a - 7;
     a = b - 6;
     a = a - 9;
-    dregs[0] = a;
+    dst_reg[0] = a;
 }
 
 void iadd_i_no5()
@@ -199,7 +199,7 @@ void iadd_i_no5()
     VecShort b = 4;
 
     p_if (a < 0 && b < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -220,7 +220,7 @@ void iadd_v_yes1()
 
     a = b - a;
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -232,7 +232,7 @@ void iadd_v_yes2()
 
     a = a - b;
     p_if (a >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -244,7 +244,7 @@ void iadd_v_yes3()
 
     a = a + b;
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -256,7 +256,7 @@ void iadd_v_yes4a()
 
     // No move requried to save the dst
     p_if (a - b >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -268,7 +268,7 @@ void iadd_v_yes4b()
 
     // Requires a move to save the dst
     p_if (a + b < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -280,7 +280,7 @@ void iadd_v_no1()
 
     a = b + a;
     p_if (a < 5) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -291,7 +291,7 @@ void iadd_v_no2()
     VecShort b = 4;
 
     p_if (a - b < 5) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -312,7 +312,7 @@ void iadd_v_no4()
 
     p_if (a - b < 0) {
         a = a - 5;
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
 }
@@ -324,11 +324,11 @@ void lz_yes1()
 
     b = lz(a);
     p_if (a == 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void lz_yes2()
@@ -338,11 +338,11 @@ void lz_yes2()
 
     b = lz(a);
     p_if (a != 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void lz_no1()
@@ -352,11 +352,11 @@ void lz_no1()
 
     b = lz(a);
     p_if (b != 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void lz_no2()
@@ -366,11 +366,11 @@ void lz_no2()
 
     b = lz(a);
     p_if (a >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void lz_no3()
@@ -380,11 +380,11 @@ void lz_no3()
 
     b = lz(a);
     p_if (a < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void exexp_yes1()
@@ -394,11 +394,11 @@ void exexp_yes1()
 
     b = exexp(a);
     p_if (b >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void exexp_yes2()
@@ -408,11 +408,11 @@ void exexp_yes2()
 
     b = exexp(a);
     p_if (b < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void exexp_yes3()
@@ -421,10 +421,10 @@ void exexp_yes3()
 
     a = reinterpret<VecHalf>(exexp(a));
     p_if (reinterpret<VecShort>(a) < 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
+    dst_reg[0] = a;
 }
 
 void exexp_no1()
@@ -434,11 +434,11 @@ void exexp_no1()
 
     b = exexp(a);
     p_if (b < 5) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void exexp_no2()
@@ -448,9 +448,9 @@ void exexp_no2()
 
     b = exexp_nodebias(a);
     p_if (b >= 0) {
-        dregs[0] = CReg_1;
+        dst_reg[0] = CReg_1;
     }
     p_endif;
-    dregs[0] = a;
-    dregs[0] = b;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }

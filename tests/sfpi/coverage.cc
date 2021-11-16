@@ -21,21 +21,21 @@ void test_load_store()
 {
     VecHalf a, b;
 
-    a = dregs[0];
-    b = dregs[1];
-    VecHalf c = dregs[2];
+    a = dst_reg[0];
+    b = dst_reg[1];
+    VecHalf c = dst_reg[2];
 
-    dregs[3] = a;
+    dst_reg[3] = a;
 
-    dregs[4] = b;
-    dregs[5] = c;
+    dst_reg[4] = b;
+    dst_reg[5] = c;
 
-    dregs[6] = dregs[7];
+    dst_reg[6] = dst_reg[7];
 
     a = b;
-    dregs[8] = a;
+    dst_reg[8] = a;
 
-    //    dregs[9] = CReg_Neg_1;
+    //    dst_reg[9] = CReg_Neg_1;
 }
 
 // test_add
@@ -71,47 +71,47 @@ void test_load_store()
 //      SFPSTORE        L0, 0, 15
 void test_add()
 {
-    dregs[0] = dregs[1] + dregs[2];
-    dregs[3] = dregs[4] + dregs[5] + kHalf;
-    dregs[6] = dregs[7] + dregs[8] - kHalf;
+    dst_reg[0] = dst_reg[1] + dst_reg[2];
+    dst_reg[3] = dst_reg[4] + dst_reg[5] + kHalf;
+    dst_reg[6] = dst_reg[7] + dst_reg[8] - kHalf;
 
-    VecHalf a = dregs[9];
-    VecHalf b = dregs[10];
+    VecHalf a = dst_reg[9];
+    VecHalf b = dst_reg[10];
     VecHalf c = a + b - kHalf;
 
     a += b;
-    a += dregs[0];
+    a += dst_reg[0];
 
-    dregs[11] = c;
-    dregs[12] = a + b + kHalf;
+    dst_reg[11] = c;
+    dst_reg[12] = a + b + kHalf;
 
-    dregs[13] = CReg_0 + CReg_Neg_1;
-    dregs[14] = CReg_Neg_1 + dregs[12];
-    dregs[15] = dregs[12] + CReg_0p001953125 + kHalf;
-    dregs[16] = c + CReg_Neg_0p67480469 - kHalf;
+    dst_reg[13] = CReg_0 + CReg_Neg_1;
+    dst_reg[14] = CReg_Neg_1 + dst_reg[12];
+    dst_reg[15] = dst_reg[12] + CReg_0p001953125 + kHalf;
+    dst_reg[16] = c + CReg_Neg_0p67480469 - kHalf;
 
     //TTFIXME XXXX 
-    //    dregs[17] = a + b + c;
+    //    dst_reg[17] = a + b + c;
 }
 
 void test_sub()
 {
-    dregs[0] = dregs[1] - dregs[2];
-    dregs[3] = dregs[4] - dregs[5] + kHalf;
+    dst_reg[0] = dst_reg[1] - dst_reg[2];
+    dst_reg[3] = dst_reg[4] - dst_reg[5] + kHalf;
 
-    VecHalf a = dregs[6];
-    VecHalf b = dregs[7];
+    VecHalf a = dst_reg[6];
+    VecHalf b = dst_reg[7];
 
     a -= b;
-    a -= dregs[0];
+    a -= dst_reg[0];
 
-    dregs[8] = -b;
-    dregs[9] = a - b - kHalf;
+    dst_reg[8] = -b;
+    dst_reg[9] = a - b - kHalf;
 
-    dregs[10] = CReg_Neg_1 - b;
+    dst_reg[10] = CReg_Neg_1 - b;
 
-    dregs[11] = CReg_Neg_1 * a - b;
-    dregs[14] = -dregs[12] * -a - dregs[13];
+    dst_reg[11] = CReg_Neg_1 * a - b;
+    dst_reg[14] = -dst_reg[12] * -a - dst_reg[13];
 }
 
 // test_mul
@@ -147,28 +147,28 @@ void test_sub()
 //      SFPSTORE        L0, 0, 15
 void test_mul()
 {
-    dregs[0] = dregs[1] * dregs[2];
-    dregs[3] = dregs[4] * dregs[5] + kHalf;
-    dregs[6] = dregs[7] * dregs[8] - kHalf;
+    dst_reg[0] = dst_reg[1] * dst_reg[2];
+    dst_reg[3] = dst_reg[4] * dst_reg[5] + kHalf;
+    dst_reg[6] = dst_reg[7] * dst_reg[8] - kHalf;
 
-    VecHalf a = dregs[9];
-    VecHalf b = dregs[10];
+    VecHalf a = dst_reg[9];
+    VecHalf b = dst_reg[10];
     VecHalf c = a * b - kHalf;
 
     a *= b;
-    a *= dregs[0];
+    a *= dst_reg[0];
 
-    dregs[11] = c;
-    dregs[12] = a * b;
-    dregs[12] = a * b + kHalf;
+    dst_reg[11] = c;
+    dst_reg[12] = a * b;
+    dst_reg[12] = a * b + kHalf;
 
-    dregs[13] = CReg_0 * CReg_Neg_1;
-    dregs[14] = CReg_Neg_1 * dregs[12];
-    dregs[15] = dregs[12] * CReg_0p001953125 + kHalf;
-    dregs[15] = c * CReg_Neg_0p67480469 - kHalf;
+    dst_reg[13] = CReg_0 * CReg_Neg_1;
+    dst_reg[14] = CReg_Neg_1 * dst_reg[12];
+    dst_reg[15] = dst_reg[12] * CReg_0p001953125 + kHalf;
+    dst_reg[15] = c * CReg_Neg_0p67480469 - kHalf;
 
-    dregs[16] = a * b * c;
-    dregs[17] = CReg_0 * b * c;
+    dst_reg[16] = a * b * c;
+    dst_reg[17] = CReg_0 * b * c;
 }
 
 // test_mad
@@ -202,41 +202,41 @@ void test_mul()
 //      SFPSTORE        L0, 0, 18
 void test_mad()
 {
-    dregs[0] = dregs[1] * dregs[2] + dregs[3];
-    dregs[4] = dregs[5] * dregs[6] + dregs[7] + kHalf;
-    dregs[8] = dregs[9] * dregs[10] + dregs[11] - kHalf;
+    dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
+    dst_reg[4] = dst_reg[5] * dst_reg[6] + dst_reg[7] + kHalf;
+    dst_reg[8] = dst_reg[9] * dst_reg[10] + dst_reg[11] - kHalf;
 
-    VecHalf a = dregs[12];
-    VecHalf b = dregs[13];
-    VecHalf c = dregs[14];
+    VecHalf a = dst_reg[12];
+    VecHalf b = dst_reg[13];
+    VecHalf c = dst_reg[14];
     VecHalf d = a * b + c - kHalf;
-    dregs[15] = d;
-    dregs[16] = a * b + c + kHalf;
+    dst_reg[15] = d;
+    dst_reg[16] = a * b + c + kHalf;
 
-    dregs[17] = a * b + CReg_Neg_1 - kHalf;
-    dregs[18] = CReg_0 * b + CReg_Neg_1 + kHalf;
+    dst_reg[17] = a * b + CReg_Neg_1 - kHalf;
+    dst_reg[18] = CReg_0 * b + CReg_Neg_1 + kHalf;
 }
 
 // test_permute_ops
 //
 void test_permute_ops()
 {
-    VecHalf b = dregs[1];
-    VecHalf c = dregs[2];
+    VecHalf b = dst_reg[1];
+    VecHalf c = dst_reg[2];
 
-    dregs[3] = dregs[4] * dregs[5] + c;
-    dregs[6] = dregs[7] * b + dregs[8];
-    dregs[9] = dregs[10] * b + c;
+    dst_reg[3] = dst_reg[4] * dst_reg[5] + c;
+    dst_reg[6] = dst_reg[7] * b + dst_reg[8];
+    dst_reg[9] = dst_reg[10] * b + c;
 
     // Use reloads below to address register pressure
-    VecHalf a = dregs[0];
-    dregs[11] = a * dregs[12] + dregs[13];
+    VecHalf a = dst_reg[0];
+    dst_reg[11] = a * dst_reg[12] + dst_reg[13];
 
-    b = dregs[1];
-    c = dregs[2];
+    b = dst_reg[1];
+    c = dst_reg[2];
 
-    dregs[14] = a * dregs[15] + c;
-    dregs[19] = a * b + c;
+    dst_reg[14] = a * dst_reg[15] + c;
+    dst_reg[19] = a * b + c;
 }
 
 void test_loadi(int32_t i, uint32_t ui)
@@ -244,12 +244,12 @@ void test_loadi(int32_t i, uint32_t ui)
     VecShort a;
     a = 255;
     a = -255;
-    dregs[0] = a;
+    dst_reg[0] = a;
 
     VecUShort b;
     b = 255;
     b = -255;
-    dregs[1] = b;
+    dst_reg[1] = b;
 
     VecHalf c;
     c = ScalarFP16a(1.0F);
@@ -263,10 +263,10 @@ void test_loadi(int32_t i, uint32_t ui)
 
     VecHalf f;
     f = 3.0f;
-    dregs[5] = f;
+    dst_reg[5] = f;
 
     VecHalf g = 3.1f;
-    dregs[6] = g;
+    dst_reg[6] = g;
 }
 
 void test_control_flow(int count)
@@ -276,29 +276,29 @@ void test_control_flow(int count)
     v = 1.5F;
     for (int i = 0; i < count; i++) {
         if (i & 1) {
-            v = dregs[1];
+            v = dst_reg[1];
         } else {
-            dregs[2] = v;
+            dst_reg[2] = v;
         }
     }
 }
 
 void test_mad_imm()
 {
-    VecHalf x = dregs[0];
+    VecHalf x = dst_reg[0];
     VecHalf a = 0.34F;
     VecHalf c = x * (x * a + -0.3F) + .5F;
-    dregs[2] = c;
+    dst_reg[2] = c;
 }
 
 void test_man_exp()
 {
     VecHalf v1;
 
-    v1 = dregs[0];
+    v1 = dst_reg[0];
     VecShort v2 = exman9(v1);
     VecShort v3 = exexp(v1);
-    dregs[3] = v3;
+    dst_reg[3] = v3;
 
     CCCtrl cco(true);
     VecShort v4;
@@ -308,126 +308,126 @@ void test_man_exp()
     //    v1.set_man(v2);
     v1 = setexp(v1, v2);
 
-    VecHalf v5 = dregs[1];
+    VecHalf v5 = dst_reg[1];
     v1 = addexp(v5, 20);
     v5 = setexp(v1, 10);
     v5 = setman(v1, 10);
 
-    dregs[2] = v2;
-    dregs[4] = v4;
+    dst_reg[2] = v2;
+    dst_reg[4] = v4;
 }
 
 void test_dreg_conditional()
 {
-    VecHalf v = dregs[0];
+    VecHalf v = dst_reg[0];
 
     p_if(v < 5.0F) {
         p_if(v >= 2.0F) {
-            dregs[2] = v;
+            dst_reg[2] = v;
         } p_elseif(v != 4) {
-            dregs[3] = v;
+            dst_reg[3] = v;
         }
         p_endif;
 
-        dregs[4] = v;
+        dst_reg[4] = v;
     } p_elseif(v >= 6.0F) {
         p_if(v == 0.0F); {
-            dregs[5] = v;
+            dst_reg[5] = v;
         }
         p_endif;
     } p_elseif(!(v >= 6.0F)) {
-        dregs[6] = v;
+        dst_reg[6] = v;
     } p_else {
-        dregs[7] = v;
+        dst_reg[7] = v;
     }
     p_endif;
 
-    dregs[8] = v;
+    dst_reg[8] = v;
 }
 
 void test_vhalf_conditional()
 {
-    VecHalf v = dregs[0];
+    VecHalf v = dst_reg[0];
     VecHalf x = 5.0F;
 
     p_if(v < x) {
         p_if(v >= x) {
-            dregs[2] = v;
+            dst_reg[2] = v;
         } p_elseif(v != x) {
-            dregs[3] = v;
+            dst_reg[3] = v;
         }
         p_endif;
 
-        dregs[4] = v;
+        dst_reg[4] = v;
     } p_elseif(v >= x) {
         p_if(v == x); {
-            dregs[5] = v;
+            dst_reg[5] = v;
         }
         p_endif;
     } p_elseif(!(v >= x)) {
-        dregs[6] = v;
+        dst_reg[6] = v;
     } p_else {
-        dregs[7] = v;
+        dst_reg[7] = v;
     }
     p_endif;
 
-    dregs[8] = v;
+    dst_reg[8] = v;
 }
 
 void test_creg_conditional1()
 {
-    VecHalf v = dregs[0];
+    VecHalf v = dst_reg[0];
 
     p_if(v < CReg_Neg_1) {
         p_if(v >= CReg_Neg_1) {
-            dregs[2] = v;
+            dst_reg[2] = v;
         } p_elseif(v != CReg_Neg_1) {
-            dregs[3] = v;
+            dst_reg[3] = v;
         }
         p_endif;
 
-        dregs[4] = v;
+        dst_reg[4] = v;
     } p_elseif(v >= CReg_Neg_1) {
         p_if(v == CReg_Neg_1); {
-            dregs[5] = v;
+            dst_reg[5] = v;
         }
         p_endif;
     } p_elseif(!(v >= CReg_Neg_1)) {
-        dregs[6] = v;
+        dst_reg[6] = v;
     } p_else {
-        dregs[7] = v;
+        dst_reg[7] = v;
     }
     p_endif;
 
-    dregs[8] = v;
+    dst_reg[8] = v;
 }
 
 void test_creg_conditional2()
 {
-    VecHalf v = dregs[0];
+    VecHalf v = dst_reg[0];
 
     p_if(CReg_Neg_1 < v) {
         p_if(CReg_Neg_1 >= v) {
-            dregs[2] = v;
+            dst_reg[2] = v;
         } p_elseif(CReg_Neg_1 != v) {
-            dregs[3] = v;
+            dst_reg[3] = v;
         }
         p_endif;
 
-        dregs[4] = v;
+        dst_reg[4] = v;
     } p_elseif(CReg_Neg_1 >= v) {
         p_if(CReg_Neg_1 == v); {
-            dregs[5] = v;
+            dst_reg[5] = v;
         }
         p_endif;
     } p_elseif(!(CReg_Neg_1 >= v)) {
-        dregs[6] = v;
+        dst_reg[6] = v;
     } p_else {
-        dregs[7] = v;
+        dst_reg[7] = v;
     }
     p_endif;
 
-    dregs[8] = v;
+    dst_reg[8] = v;
 }
 
 void test_bitwise()
@@ -439,28 +439,28 @@ void test_bitwise()
 
     v1 |= v2;
     v1 |= 0xAA;
-    dregs[2] = v1;
+    dst_reg[2] = v1;
     v1 &= v2;
     v1 &= 0xAA;
-    dregs[3] = v2;
-    dregs[4] = ~v1;
+    dst_reg[3] = v2;
+    dst_reg[4] = ~v1;
 
-    dregs[5] = v1 | v2;
-    dregs[6] = v1 & v2;
+    dst_reg[5] = v1 | v2;
+    dst_reg[6] = v1 & v2;
 
     VecUShort v3, v4;
     v3 = 3;
     v4 = 4;
     v3 |= v4;
     v3 |= 0xAA;
-    dregs[2] = v3;
+    dst_reg[2] = v3;
     v3 &= v4;
     v3 &= 0xAA;
-    dregs[3] = v4;
-    dregs[4] = ~v3;
+    dst_reg[3] = v4;
+    dst_reg[4] = ~v3;
 
-    dregs[5] = v3 | v4;
-    dregs[6] = v3 & v4;
+    dst_reg[5] = v3 | v4;
+    dst_reg[6] = v3 & v4;
 }
 
 void test_abs()
@@ -470,15 +470,15 @@ void test_abs()
 
     v2 = abs(v2) + 1;
 
-    dregs[0] = v1;
-    dregs[1] = v2;
+    dst_reg[0] = v1;
+    dst_reg[1] = v2;
 
     VecHalf v3 = -6.0f;
     VecHalf v4 = abs(v3);
     v4 = abs(v4) + 1.0f;
 
-    dregs[2] = v3;
-    dregs[3] = v4;
+    dst_reg[2] = v3;
+    dst_reg[3] = v4;
 }
 
 void test_lz()
@@ -492,9 +492,9 @@ void test_lz()
     v2 = lz(v3) + 1;
     v1 = lz(v1) + 1;
     v2 = lz(v2) + 1;
-    dregs[0] = v1;
-    dregs[1] = v2;
-    dregs[2] = v3;
+    dst_reg[0] = v1;
+    dst_reg[1] = v2;
+    dst_reg[2] = v3;
 }
 
 void test_shft()
@@ -510,45 +510,45 @@ void test_shft()
     v3 >>= 7;
     v2 = shft(v3, v1);
 
-    dregs[0] = v1;
-    dregs[1] = v2;
-    dregs[2] = v3;
+    dst_reg[0] = v1;
+    dst_reg[1] = v2;
+    dst_reg[2] = v3;
 }
 
 // Had issues w/ implict copy/move, test some of that here
 void test_complex()
 {
-    VecHalf a = dregs[0];
-    VecHalf b = dregs[1];
-    VecHalf c = dregs[2];
-    c = dregs[2];
+    VecHalf a = dst_reg[0];
+    VecHalf b = dst_reg[1];
+    VecHalf c = dst_reg[2];
+    c = dst_reg[2];
     c = a + b;
-    dregs[2] = a + b;
-    dregs[2] = a + b;
+    dst_reg[2] = a + b;
+    dst_reg[2] = a + b;
 
     // Do we want to support this? Presently operator= is defined to return void
-    // dregs[2] = (c = a + b);
+    // dst_reg[2] = (c = a + b);
 }
 
 void test_muli_addi()
 {
-    VecHalf a = dregs[0];
+    VecHalf a = dst_reg[0];
 
     a *= 16;
     a += 12;
 
-    dregs[1] = a;
+    dst_reg[1] = a;
 
     VecHalf b, c;
 
     b = a * 16;
     c = a + 12;
 
-    dregs[2] = b;
-    dregs[3] = c;
+    dst_reg[2] = b;
+    dst_reg[3] = c;
 
     // Do we want to support this? Presently operator= is defined to return void
-    // dregs[2] = (c = a + b);
+    // dst_reg[2] = (c = a + b);
 }
 
 void test_iadd()
@@ -566,12 +566,12 @@ void test_iadd()
     v3 += CReg_TileId;
     v2 = v1 + CReg_TileId;
     //    v2 = v1 - CReg_TileId;
-    dregs[1] = v1;
-    dregs[2] = v2;
-    dregs[3] = v3;
+    dst_reg[1] = v1;
+    dst_reg[2] = v2;
+    dst_reg[3] = v3;
 
     p_if (v1.add_cc(CReg_TileId, IAddCCGTE0)) {
-        dregs[4] = 0.0F;
+        dst_reg[4] = 0.0F;
     }
     p_endif;
 
@@ -588,12 +588,12 @@ void test_iadd()
     v6 += CReg_TileId;
     v5 = v4 + CReg_TileId;
     //    v5 = v4 - CReg_TileId;
-    dregs[1] = v4;
-    dregs[2] = v5;
-    dregs[3] = v6;
+    dst_reg[1] = v4;
+    dst_reg[2] = v5;
+    dst_reg[3] = v6;
 
     p_if (v4.add_cc(CReg_TileId, IAddCCGTE0)) {
-        dregs[4] = 0.0F;
+        dst_reg[4] = 0.0F;
     }
     p_endif;
 }
@@ -602,7 +602,7 @@ void test_set_sgn()
 {
     VecHalf v1, v2;
     
-    v1 = dregs[0];
+    v1 = dst_reg[0];
 
     v2 = setsgn(v1, 1);
     v2 = setsgn(v2, v1);
@@ -634,7 +634,7 @@ void test_short_cond()
     }
     p_endif;
 
-    dregs[1] = reinterpret<VecHalf>(b);
+    dst_reg[1] = reinterpret<VecHalf>(b);
 }
 
 // test_intrinsics
@@ -713,34 +713,34 @@ void lots_of_conditionals()
 
 void stupid_example()
 {
-    // dregs[n] loads into a temporary LREG
-    VecHalf a = dregs[0] + 2.0F;
+    // dst_reg[n] loads into a temporary LREG
+    VecHalf a = dst_reg[0] + 2.0F;
 
     // This emits a load, move, mad
-    dregs[3] = a * -dregs[1] + CReg_0p692871094 + kHalf;
+    dst_reg[3] = a * -dst_reg[1] + CReg_0p692871094 + kHalf;
 
-    // This emits a load, loadi, mad (a * dregs[] goes down the mad path)
-    dregs[4] = a * dregs[1] + 1.2F;
+    // This emits a load, loadi, mad (a * dst_reg[] goes down the mad path)
+    dst_reg[4] = a * dst_reg[1] + 1.2F;
 
     // Carefull, this emits a muli followed by an addi (a * const goes down the muli path)
-    dregs[4] = a * 1.5F + 1.2F;
+    dst_reg[4] = a * 1.5F + 1.2F;
 
     // This emits a loadi (into tmp), loadi (as a temp for 1.2F) and a mad
     VecHalf tmp = 1.5F;
-    dregs[5] = a * tmp + 1.2F;
+    dst_reg[5] = a * tmp + 1.2F;
     
     p_if ((a >= 4.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
         VecShort b = exexp_nodebias(a);
         b &= 0xAA;
         p_tail_if (b >= 130) {
-            dregs[6] = setexp(a, 127);
+            dst_reg[6] = setexp(a, 127);
         }
     } p_elseif (a == 20.0F) {
-        dregs[7] = abs(a);
+        dst_reg[7] = abs(a);
     } p_else {
         VecShort exp = lz(a) - 19;
         exp = ~exp;
-        dregs[8] = -setexp(a, exp);
+        dst_reg[8] = -setexp(a, exp);
     }
     p_endif;
 }
@@ -759,13 +759,13 @@ void test_operator_equals()
     x = (y *= x);
     z = (x -= y);
 
-    dregs[0] = x;
-    dregs[1] = y;
-    dregs[2] = z;
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
 
     VecShort a, b;
     a = (b = 1);
-    dregs[0] = a;
+    dst_reg[0] = a;
 }
 #endif
 

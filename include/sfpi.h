@@ -41,12 +41,12 @@
 //
 // Destination Register:
 //   class DReg
-//   constexpr RegFile<DReg, 64> dregs;
+//   constexpr RegFile<DReg, 64> dst_reg;
 //
 //   The Destination Register is modeled by a global variable which is
 //   essentially an array of class Dreg.  DRegs provide much the same
 //   functionality as LRegs, eg, the following is legal:
-//       dregs[0] = dregs[1] * dregs[2] + dregs[3];
+//       dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
 //   The above is expanded out to load local registers, perform the operation
 //   and store back into the destination register.  Any missing functionality
 //   (eg, there is no load immediate) can be added later if needed or accessed
@@ -69,7 +69,7 @@
 //   enable predicated execution.  By convention the test infastructure indents
 //   the code as if executing if/then/else in C++, for example:
 //     CCCtrl cc;
-//     VecHalf v = dregs[0];
+//     VecHalf v = dst_reg[0];
 //     cc.cc_if(v < 5.0F); {
 //         // if side
 //     } cc.cc_else(); {
@@ -854,7 +854,7 @@ constexpr CReg CReg_Neg_0p67480469(CREG_IDX_NEG_0P67480469);
 constexpr CReg CReg_Neg_0p34472656(CREG_IDX_NEG_0P34472656);
 constexpr CReg CReg_TileId(CREG_IDX_TILEID);
 
-constexpr RegFile<DReg, 64> dregs;
+constexpr RegFile<DReg, 64> dst_reg;
 constexpr OffsetOperand kHalf;
 
 //////////////////////////////////////////////////////////////////////////////

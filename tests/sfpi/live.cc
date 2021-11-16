@@ -10,11 +10,11 @@ void abs_setcc()
 {
     VecHalf x = -20.0F;
     VecHalf y = -30.0F;
-    p_if (dregs[0] == 0.0F) {
+    p_if (dst_reg[0] == 0.0F) {
         y = abs(x);
     }
     p_endif;
-    dregs[13] = y;
+    dst_reg[13] = y;
 }
 
 // Assignment resulting in register rename
@@ -22,11 +22,11 @@ void rename_move_case2a()
 {
     VecHalf a = 1.0f;  // LOADI
     VecHalf b = 2.0f;  // LOADI
-    p_if (dregs[0] == 0.0f) {  // PUSHC, ..., SETCC
+    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
     p_endif;           // POPC
-    dregs[0] = b;      // STORE
+    dst_reg[0] = b;      // STORE
 }
 
 // Assignment requiring move
@@ -36,12 +36,12 @@ void copy_move_case2b()
 {
     VecHalf a = 1.0f;  // LOADI
     VecHalf b = 2.0f;  // LOADI
-    p_if (dregs[0] == 0.0f) {  // PUSHC, ..., SETCC
+    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
     p_endif;           // POPC
-    dregs[0] = a; // STORE
-    dregs[0] = b; // STORE
+    dst_reg[0] = a; // STORE
+    dst_reg[0] = b; // STORE
 }
 
 // Assignment requiring move (both a and b need to be preserved)
@@ -49,12 +49,12 @@ void copy_move_case3()
 {
     VecHalf a = 1.0f;  // LOADI
     VecHalf b = 2.0f;  // LOADI
-    p_if (dregs[0] == 0.0f) {  // PUSHC, ..., SETCC
+    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
     p_endif;           // POPC
-    dregs[0] = a + 1.0f; // STORE
-    dregs[0] = b + 1.0f; // STORE
+    dst_reg[0] = a + 1.0f; // STORE
+    dst_reg[0] = b + 1.0f; // STORE
 }
 
 // Destination as source, 2 arguments in the wrong order
@@ -62,7 +62,7 @@ void internal_move_case4()
 {
     VecShort a = 10; // LOADI
     VecShort b = 20; // LOADI
-    p_if (dregs[0] == 0.0f) {      // PUSHC, ..., SETCC
+    p_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
         a = a - b;   // CCMOV, IADD
         // Wrapper emits:
         //   tmp = b;
@@ -70,8 +70,8 @@ void internal_move_case4()
         //   a = tmp;
     }
     p_endif;         // POPC
-    dregs[0] = a;    // STORE
-    dregs[0] = b;    // STORE
+    dst_reg[0] = a;    // STORE
+    dst_reg[0] = b;    // STORE
 }
 
 // Destination as source 3 arguments
@@ -80,7 +80,7 @@ void internal_move_case5()
     VecShort a = 10; // LOADI
     VecShort b = 20; // LOADI
     VecShort c = 30; // LOADI
-    p_if (dregs[0] == 0.0f) {      // PUSHC, ..., SETCC
+    p_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
         c = a - b;   // MOV, IADD
 
         // Wrapper emits:
@@ -93,9 +93,9 @@ void internal_move_case5()
         // c = a - c
     }
     p_endif;         // POPC
-    dregs[0] = a;    // STORE
-    dregs[0] = b;    // STORE
-    dregs[0] = c;    // STORE
+    dst_reg[0] = a;    // STORE
+    dst_reg[0] = b;    // STORE
+    dst_reg[0] = c;    // STORE
 }
 
 int main(int argc, char* argv[])
