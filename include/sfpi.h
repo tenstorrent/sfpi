@@ -1664,7 +1664,7 @@ sfpi_inline VecHalf setexp(const VecHalf v, const uint32_t exp)
     return __builtin_rvtt_sfpsetexp_i(exp, v.get());
 }
 
-sfpi_inline VecHalf setexp(const VecHalf v, const VecShort exp)
+sfpi_inline VecHalf setexp(const VecHalf v, const VecShortBase exp)
 {
     // Odd: dst is both exponent and result so undergoes a type change
     // If exp is not used later, compiler renames tmp and doesn't issue a mov
@@ -1676,7 +1676,7 @@ sfpi_inline VecHalf setman(const VecHalf v, const uint32_t man)
     return __builtin_rvtt_sfpsetman_i(man, v.get());
 }
 
-sfpi_inline VecHalf setman(const VecHalf v, const VecShort man)
+sfpi_inline VecHalf setman(const VecHalf v, const VecShortBase man)
 {
     // Grayskull HW bug, is this useful?  Should there be a "Half" form?
     // Odd: dst is both man and result so undergoes a type change
