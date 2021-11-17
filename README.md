@@ -24,7 +24,8 @@ instructions.
     export SFPI_ROOT=<path to sfpi top level>
     cd tt-gcc
     ./configure --prefix=$SFPI_ROOT/compiler -enable-multilib
-    SFPI_ROOT must be an absolute path, I suggest the parent of sfpi
+    SFPI_ROOT must be an absolute path.  Note: the install script and the
+    steps below assume the path used above
 
 4) Build the compiler:
   The compiler is based on: https://github.com/riscv-collab/riscv-gnu-toolchain
@@ -37,8 +38,34 @@ instructions.
   to build from scratch w/ a "make clean".
 
 5) Build the tests:
-    cd ..
+    cd $SFPI_ROOT/sfpi/tests
     make all
 
-  If this builds, the compiler is at least exports the right intrinsics for use
-  w/ the synced sfpi.
+  If this builds, the compiler at least exports the right intrinsics for use
+  w/ the synced sfpi.  If it fails to build, there is likely a sync error
+  (submodule out of date) between what the compiler is exposing and what sfpi
+  is calling.
+
+  The tests in the gcc directory just build some code to be sure gcc is sane.
+  The tests in sfpi use the SFPI wrapper and are more complex.
+
+6) Run the tests
+    cd sfpi
+    make test
+
+   This will run the built x86/kernels and diff the results against a file in
+   gold.  That tests the simulator and sfpi.  It will also build a few files
+   and diff the assembly (.S files) against those in gold.  This is likely
+   brittle, but provides some sanity that the compiler and sfpi are doing at
+   least what they used to do.
+
+7) Create a release
+    cd $SFPI_ROOT
+    bin/release.sh <path to release compiler>
+
+  Note: the release script assumes you are overwriting a release (it looks
+  for a directory as a sanity check)
+
+  The above will copy lots of files and strip the results which spews tons of
+  errors.  This could be cleaned up, but seems to work (strip fails when it
+  doesn't recognized the file type).
