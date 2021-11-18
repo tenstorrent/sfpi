@@ -122,10 +122,6 @@
 
 namespace sfpi {
 
-enum ExExpDebias {
-    ExExpDoDebias = SFPEXEXP_MOD1_DEBIAS,
-    ExExpNoDebias = SFPEXEXP_MOD1_NODEBIAS,
-};
 enum ExExpCC {
     ExExpCCLT0 = SFPEXEXP_MOD1_SET_CC_SGN_EXP,
     ExExpCCComp = SFPEXEXP_MOD1_SET_CC_COMP_EXP,
@@ -419,7 +415,8 @@ public:
     sfpi_inline const CondOpIAddI operator>=(int32_t val) const;
     sfpi_inline const CondOpIAddV operator<(const VecShort src) const;
     sfpi_inline const CondOpIAddV operator>=(const VecShort src) const;
-    sfpi_inline const CondOpExExp ex_exp_cc(VecHalf src, const ExExpDebias debias, const ExExpCC cc);
+    sfpi_inline const CondOpExExp exexp_cc(VecHalf src, const ExExpCC cc);
+    sfpi_inline const CondOpExExp exexp_nodebias_cc(VecHalf src, const ExExpCC cc);
     sfpi_inline const CondOpLz lz_cc(const Vec src, LzCC cc);
     sfpi_inline const CondOpIAddI add_cc(const VecShort src, int32_t val, IAddCC cc);
     sfpi_inline const CondOpIAddV add_cc(const VecShort src, IAddCC cc);
@@ -779,7 +776,7 @@ class CondOpExExp : public CondOp {
     sfpi_inline ExExpCC not_cond(ExExpCC cc) const;
 
 public:
-    sfpi_inline CondOpExExp(Vec* const d, const Vec s, ExExpDebias debias, ExExpCC cc) : CondOp(CondOpType::ExExp, s, d, 0, debias | cc, debias | not_cond(cc)) {}
+    sfpi_inline CondOpExExp(Vec* const d, const Vec s, unsigned short debias, ExExpCC cc) : CondOp(CondOpType::ExExp, s, d, 0, debias | cc, debias | not_cond(cc)) {}
 };
 
 class CondOpLz : public CondOp {
@@ -1196,7 +1193,8 @@ sfpi_inline void VecShort::operator=(const AddShortOp& op)
 
 sfpi_inline AddShortOp VecShort::operator+(int32_t val) const { return AddShortOp(v, val); }
 
-sfpi_inline const CondOpExExp VecShort::ex_exp_cc(VecHalf src, const ExExpDebias debias, const ExExpCC cc) { return CondOpExExp(this, src, debias, cc); }
+sfpi_inline const CondOpExExp VecShort::exexp_cc(VecHalf src, const ExExpCC cc) { return CondOpExExp(this, src, SFPEXEXP_MOD1_DEBIAS, cc); }
+sfpi_inline const CondOpExExp VecShort::exexp_nodebias_cc(VecHalf src, const ExExpCC cc) { return CondOpExExp(this, src, SFPEXEXP_MOD1_NODEBIAS, cc); }
 sfpi_inline const CondOpLz VecShort::lz_cc(const Vec src, LzCC cc) { return CondOpLz(this, src, cc); }
 sfpi_inline const CondOpIAddI VecShort::add_cc(const VecShort src, int32_t val, IAddCC cc) { return CondOpIAddI(this, src, cc, val); }
 sfpi_inline const CondOpIAddV VecShort::add_cc(const VecShort src, IAddCC cc) { return CondOpIAddV(this, src, cc); }

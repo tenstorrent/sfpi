@@ -1552,7 +1552,7 @@ void test14(int imm)
         VecShort tmp;
 
         p_if (dst_reg[0] == 4.0F) {
-            p_if (tmp.ex_exp_cc(a, ExExpDoDebias, ExExpCCGTE0)) {
+            p_if (tmp.exexp_cc(a, ExExpCCGTE0)) {
                 VecHalf c = CReg_0 * CReg_0 + CReg_0;
                 b = -a;
                 a = c;
