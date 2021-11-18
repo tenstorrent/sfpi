@@ -592,28 +592,32 @@ __rvtt_vec_t sfpu_rvtt_sfpabs(const __rvtt_vec_t& v, unsigned int mod1)
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpand(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
+__rvtt_vec_t sfpu_rvtt_sfpand(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            dst.set_uint(i, src.get_uint(i) & dst.get_uint(i));
+            tmp.set_uint(i, src.get_uint(i) & dst.get_uint(i));
         }
     }
 
-    return dst;
+    return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpor(__rvtt_vec_t& dst, const __rvtt_vec_t& src)
+__rvtt_vec_t sfpu_rvtt_sfpor(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            dst.set_uint(i, src.get_uint(i) | dst.get_uint(i));
+            tmp.set_uint(i, src.get_uint(i) | dst.get_uint(i));
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpnot(const __rvtt_vec_t& v)
@@ -648,17 +652,19 @@ __rvtt_vec_t sfpu_rvtt_sfpmuli(const __rvtt_vec_t& v, unsigned short imm, unsign
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpaddi(__rvtt_vec_t& v, unsigned short imm, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpaddi(const __rvtt_vec_t& v, unsigned short imm, unsigned int mod1)
 {
+    __rvtt_vec_t tmp;
+
     float f = SFPUDReg::fp16b_to_float(imm);
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            v.set_float(i, v.get_float(i) + f);
+            tmp.set_float(i, v.get_float(i) + f);
         }
     }
 
-    return v;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpdivp2(unsigned short imm, const __rvtt_vec_t& v, unsigned int mod1)
@@ -724,20 +730,22 @@ __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1)
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpshft_i(__rvtt_vec_t& dst, int shift)
+__rvtt_vec_t sfpu_rvtt_sfpshft_i(const __rvtt_vec_t& dst, int shift)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             if (shift < 0) {
-                dst.set_uint(i, dst.get_uint(i) >> -shift);
+                tmp.set_uint(i, dst.get_uint(i) >> -shift);
             } else {
-                dst.set_uint(i, dst.get_uint(i) << shift);
+                tmp.set_uint(i, dst.get_uint(i) << shift);
             }
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpshft_v(const __rvtt_vec_t& dst, const __rvtt_vec_t&src)
@@ -784,8 +792,10 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned in
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
 {
+    __rvtt_vec_t tmp;
+
     sfpu_cc.deferred_commit();
     sfpu_cc.deferred_init();
     for (int i = 0; i < SFPU_WIDTH; i++) {
@@ -798,7 +808,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, uns
                 val = src.get_uint(i) + dst.get_uint(i);
             }
 
-            dst.set_uint(i, val);
+            tmp.set_uint(i, val);
 
             if (mod1 & SFPIADD_MOD1_CC_GTE0) {
                 sfpu_cc.deferred_and_result(i, val >= 0);
@@ -809,7 +819,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(__rvtt_vec_t& dst, const __rvtt_vec_t& src, uns
         }
     }
 
-    return dst;
+    return tmp;
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src)
