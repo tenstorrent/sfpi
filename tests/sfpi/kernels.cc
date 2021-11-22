@@ -47,6 +47,15 @@ sfpi_inline void set_expected_result(int addr, float sentinel, int expected, Vec
     p_endif;
 }
 
+sfpi_inline VecCond test_interleaved_scalar_vector_cond(bool scalar_bool, VecHalf vec, float a, float b)
+{
+    if (scalar_bool) {
+        return vec == a;
+    } else {
+        return vec == b;
+    }
+}
+
 void test1()
 {
     // Test SFPLOAD, SFPSTORE
@@ -732,6 +741,7 @@ void test7()
 void test8()
 {
     // SFPAND, SFPOR, SFPNOT, SFPABS
+    // Atypical usage of conditionals
 
     dst_reg[8] = -dst_reg[0];
     p_if(dst_reg[0] == 1.0F) {
@@ -800,6 +810,13 @@ void test8()
     }
     p_endif;
 
+    p_if (test_interleaved_scalar_vector_cond(true, dst_reg[0], 14.0F, 15.0F)) {
+        dst_reg[8] = 32.0F;
+    } p_elseif(test_interleaved_scalar_vector_cond(false, dst_reg[0], 14.0F, 15.0F)) {
+        dst_reg[8] = 16.0F;
+    }
+    p_endif;
+
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -814,6 +831,8 @@ void test8()
     // [11] = 100.0
     // [12] = 24.0
     // [13] = 26.0
+    // [14] = 32.0
+    // [15] = 16.0
     copy_result_to_dreg0(8);
 }
 

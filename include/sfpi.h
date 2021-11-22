@@ -136,13 +136,6 @@ enum IAddCC {
 };
 
 //////////////////////////////////////////////////////////////////////////////
-enum class OpType {
-    Add,
-    Sub,
-    Mul
-};
-
-//////////////////////////////////////////////////////////////////////////////
 // Forward declarations
 class CReg;
 class Vec;
@@ -150,6 +143,8 @@ class VecHalf;
 class VecShortBase;
 class VecShort;
 class VecUShort;
+class VecCond;
+class VecBool;
 class SubBaseOp;
 class AddShortOp;
 class MulOp;
@@ -158,9 +153,14 @@ class CondOpExExp;
 class CondOpIAddI;
 class CondOpIAddV;
 class CondOpLz;
-class CondBool;
-class CondOp;
 class CCCtrlBase;
+
+//////////////////////////////////////////////////////////////////////////////
+enum class OpType {
+    Add,
+    Sub,
+    Mul
+};
 
 template <OpType opType> class BinaryOp;
 typedef BinaryOp<OpType::Add> AddOp;
@@ -646,29 +646,28 @@ class AddShortOp {
 };
 
 //////////////////////////////////////////////////////////////////////////////
-// Handle conditionals.  Leaves are CondOp, CondBool builds trees of Bools and
-// CondOp
+// Handle conditionals.  Leaves are VecCond, VecBool.
 class CondOperand {
 public:
     enum class Type {
-        CondOp,
-        CondBool,
+        VecCond,
+        VecBool,
     };
 
 private:
     const Type type;
     union {
-        const CondOp* const op;
-        const CondBool* const cond;
+        const VecCond* const op;
+        const VecBool* const cond;
     };
 
 public:
-    sfpi_inline CondOperand(const CondOp& a) : type(Type::CondOp), op(&a) {}
-    sfpi_inline CondOperand(const CondBool& a) : type(Type::CondBool), cond(&a) {}
+    sfpi_inline CondOperand(const VecCond& a) : type(Type::VecCond), op(&a) {}
+    sfpi_inline CondOperand(const VecBool& a) : type(Type::VecBool), cond(&a) {}
 
     sfpi_inline Type get_type() const { return type; }
-    sfpi_inline const CondBool& get_cond() const { return *cond; }
-    sfpi_inline const CondOp& get_op() const { return *op; }
+    sfpi_inline const VecBool& get_cond() const { return *cond; }
+    sfpi_inline const VecCond& get_op() const { return *op; }
 
     sfpi_inline void emit() const;
 };
@@ -676,34 +675,34 @@ public:
 //////////////////////////////////////////////////////////////////////////////
 // Build a tree of conditionals as the compiler parses them
 // Traverse the tree at emit time to generate the code
-class CondBool {
+class VecBool {
 public:
-    enum class CondBoolType {
+    enum class VecBoolType {
         Or,
         And,
     };
 
 private:
-    const CondBoolType type;
+    const VecBoolType type;
     CondOperand op_a;
     CondOperand op_b;
     bool negate;
 
 public:
-    sfpi_inline CondBool(CondBoolType t, const CondOp& a, const CondOp& b) : type(t), op_a(a), op_b(b), negate(false) {}
-    sfpi_inline CondBool(CondBoolType t, const CondOp& a, const CondBool& b) : type(t), op_a(a), op_b(b), negate(false) {}
-    sfpi_inline CondBool(CondBoolType t, const CondBool& a, const CondOp& b) : type(t), op_a(a), op_b(b), negate(false) {}
-    sfpi_inline CondBool(CondBoolType t, const CondBool& a, const CondBool& b) : type(t), op_a(a), op_b(b), negate(false) {}
+    sfpi_inline VecBool(VecBoolType t, const VecCond& a, const VecCond& b) : type(t), op_a(a), op_b(b), negate(false) {}
+    sfpi_inline VecBool(VecBoolType t, const VecCond& a, const VecBool& b) : type(t), op_a(a), op_b(b), negate(false) {}
+    sfpi_inline VecBool(VecBoolType t, const VecBool& a, const VecCond& b) : type(t), op_a(a), op_b(b), negate(false) {}
+    sfpi_inline VecBool(VecBoolType t, const VecBool& a, const VecBool& b) : type(t), op_a(a), op_b(b), negate(false) {}
 
-    sfpi_inline const CondBool operator!() const;
+    sfpi_inline const VecBool operator!() const;
 
-    sfpi_inline const CondBool operator&&(const CondOp& b) const { return CondBool(CondBoolType::And, *this, b); }
-    sfpi_inline const CondBool operator||(const CondOp& b) const { return CondBool(CondBoolType::Or, *this, b); }
-    sfpi_inline const CondBool operator&&(const CondBool& b) const { return CondBool(CondBoolType::And, *this, b); }
-    sfpi_inline const CondBool operator||(const CondBool& b) const { return CondBool(CondBoolType::Or, *this, b); }
+    sfpi_inline const VecBool operator&&(const VecCond& b) const { return VecBool(VecBoolType::And, *this, b); }
+    sfpi_inline const VecBool operator||(const VecCond& b) const { return VecBool(VecBoolType::Or, *this, b); }
+    sfpi_inline const VecBool operator&&(const VecBool& b) const { return VecBool(VecBoolType::And, *this, b); }
+    sfpi_inline const VecBool operator||(const VecBool& b) const { return VecBool(VecBoolType::Or, *this, b); }
 
-    sfpi_inline CondBoolType get_type() const { return type; }
-    sfpi_inline CondBoolType get_neg_type() const { return (type == CondBoolType::Or) ? CondBoolType::And : CondBoolType::Or; }
+    sfpi_inline VecBoolType get_type() const { return type; }
+    sfpi_inline VecBoolType get_neg_type() const { return (type == VecBoolType::Or) ? VecBoolType::And : VecBoolType::Or; }
     sfpi_inline const CondOperand& get_op_a() const { return op_a; }
     sfpi_inline const CondOperand& get_op_b() const { return op_b; }
 
@@ -711,10 +710,9 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class CondOp {
+class VecCond {
 protected:
     enum class CondOpType {
-        Evaluated,
         CompareFloat,
         CompareVecHalf,
         CompareShort,
@@ -733,37 +731,37 @@ private:
     uint32_t neg_mod1;
 
 public:
-    sfpi_inline CondOp(CondOpType t) : type(t), op_a(), op_b(), imm(0), mod1(0), neg_mod1(0) {}
+    sfpi_inline VecCond(CondOpType t) : type(t), op_a(), op_b(), imm(0), mod1(0), neg_mod1(0) {}
 
     template <class typeA, class typeB>
-    sfpi_inline CondOp(CondOpType t, const typeA a, const typeB b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, const typeB b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
 
     template <class typeA>
-    sfpi_inline CondOp(CondOpType t, const typeA a, Vec* const b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, Vec* const b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
 
     template <class typeA>
-    sfpi_inline CondOp(CondOpType t, const typeA a, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(), imm(i), mod1(m), neg_mod1(nm) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(), imm(i), mod1(m), neg_mod1(nm) {}
 
     template <class typeA>
-    sfpi_inline CondOp(CondOpType t, const typeA a, const ScalarFP16 b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, const ScalarFP16 b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm) {}
 
-    sfpi_inline CondOp(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm);
+    sfpi_inline VecCond(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm);
 
     // Negate
-    sfpi_inline const CondOp operator!() const;
+    sfpi_inline const VecCond operator!() const;
 
     // Create boolean operations from conditional operations
-    sfpi_inline const CondBool operator&&(const CondOp& b) const { return CondBool(CondBool::CondBoolType::And, *this, b); }
-    sfpi_inline const CondBool operator||(const CondOp& b) const { return CondBool(CondBool::CondBoolType::Or, *this, b); }
-    sfpi_inline const CondBool operator&&(const CondBool& b) const { return CondBool(CondBool::CondBoolType::And, *this, b); }
-    sfpi_inline const CondBool operator||(const CondBool& b) const { return CondBool(CondBool::CondBoolType::Or, *this, b); }
+    sfpi_inline const VecBool operator&&(const VecCond& b) const { return VecBool(VecBool::VecBoolType::And, *this, b); }
+    sfpi_inline const VecBool operator||(const VecCond& b) const { return VecBool(VecBool::VecBoolType::Or, *this, b); }
+    sfpi_inline const VecBool operator&&(const VecBool& b) const { return VecBool(VecBool::VecBoolType::And, *this, b); }
+    sfpi_inline const VecBool operator||(const VecBool& b) const { return VecBool(VecBool::VecBoolType::Or, *this, b); }
 
     sfpi_inline void emit(bool negate) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 // Conditional Comparison
-class CondComp : public CondOp {
+class CondComp : public VecCond {
 public:
     enum CondCompOpType {
         CompLT0 = SFPSETCC_MOD1_LREG_SIGN,
@@ -777,50 +775,45 @@ private:
 
 public:
     template <class type>
-    sfpi_inline CondComp(const CondCompOpType t, const type a, const ScalarFP16 b) : CondOp(CondOpType::CompareFloat, a, b, 0, t, not_cond(t)) {}
+    sfpi_inline CondComp(const CondCompOpType t, const type a, const ScalarFP16 b) : VecCond(CondOpType::CompareFloat, a, b, 0, t, not_cond(t)) {}
 
-    sfpi_inline CondComp(const CondCompOpType t, const VecHalf a, const VecHalf b) : CondOp(CondOpType::CompareVecHalf, a, b, 0, t, not_cond(t)) {}
+    sfpi_inline CondComp(const CondCompOpType t, const VecHalf a, const VecHalf b) : VecCond(CondOpType::CompareVecHalf, a, b, 0, t, not_cond(t)) {}
 
     template <class type>
-    sfpi_inline CondComp(const CondCompOpType t, const type a, const int32_t b) : CondOp(CondOpType::CompareShort, a, b, t, not_cond(t)) {}
+    sfpi_inline CondComp(const CondCompOpType t, const type a, const int32_t b) : VecCond(CondOpType::CompareShort, a, b, t, not_cond(t)) {}
 };
 
 //////////////////////////////////////////////////////////////////////////////
 // Conditional Operations
 
-class CondOpExExp : public CondOp {
+class CondOpExExp : public VecCond {
     sfpi_inline ExExpCC not_cond(ExExpCC cc) const;
 
 public:
-    sfpi_inline CondOpExExp(Vec* const d, const Vec s, unsigned short debias, ExExpCC cc) : CondOp(CondOpType::ExExp, s, d, 0, debias | cc, debias | not_cond(cc)) {}
+    sfpi_inline CondOpExExp(Vec* const d, const Vec s, unsigned short debias, ExExpCC cc) : VecCond(CondOpType::ExExp, s, d, 0, debias | cc, debias | not_cond(cc)) {}
 };
 
-class CondOpLz : public CondOp {
+class CondOpLz : public VecCond {
     sfpi_inline LzCC not_cond(LzCC cc) const;
 
 public:
-    sfpi_inline CondOpLz(Vec* const d, const Vec s, LzCC cc) : CondOp(CondOpType::Lz, s, d, 0, cc, not_cond(cc)) {}
+    sfpi_inline CondOpLz(Vec* const d, const Vec s, LzCC cc) : VecCond(CondOpType::Lz, s, d, 0, cc, not_cond(cc)) {}
 };
 
-class CondOpIAddI : public CondOp {
+class CondOpIAddI : public VecCond {
     sfpi_inline IAddCC not_cond(IAddCC cc) const;
 
 public:
-    sfpi_inline CondOpIAddI(const Vec s, IAddCC cc, int32_t imm) : CondOp(CondOpType::IAddI, s, imm, cc | SFPIADD_MOD1_ARG_IMM, not_cond(cc) | SFPIADD_MOD1_ARG_IMM) {}
-    sfpi_inline CondOpIAddI(Vec* const d, const Vec s, IAddCC cc, int32_t imm) : CondOp(CondOpType::IAddI, s, d, imm, cc | SFPIADD_MOD1_ARG_IMM, not_cond(cc) | SFPIADD_MOD1_ARG_IMM) {}
+    sfpi_inline CondOpIAddI(const Vec s, IAddCC cc, int32_t imm) : VecCond(CondOpType::IAddI, s, imm, cc | SFPIADD_MOD1_ARG_IMM, not_cond(cc) | SFPIADD_MOD1_ARG_IMM) {}
+    sfpi_inline CondOpIAddI(Vec* const d, const Vec s, IAddCC cc, int32_t imm) : VecCond(CondOpType::IAddI, s, d, imm, cc | SFPIADD_MOD1_ARG_IMM, not_cond(cc) | SFPIADD_MOD1_ARG_IMM) {}
 };
 
-class CondOpIAddV : public CondOp {
+class CondOpIAddV : public VecCond {
     sfpi_inline IAddCC not_cond(IAddCC cc) const;
 
 public:
-    sfpi_inline CondOpIAddV(Vec* d, const Vec s, IAddCC cc) : CondOp(CondOpType::IAddV, s, d, 0, cc | SFPIADD_MOD1_ARG_LREG_DST, not_cond(cc) | SFPIADD_MOD1_ARG_LREG_DST) {}
-    sfpi_inline CondOpIAddV(Vec d, const Vec s, IAddCC cc) : CondOp(CondOpType::IAddV, s, d, 0, cc | SFPIADD_MOD1_ARG_LREG_DST, not_cond(cc) | SFPIADD_MOD1_ARG_LREG_DST) {}
-};
-
-class CondOpEvaluated : public CondOp {
-public:
-    sfpi_inline CondOpEvaluated(const CondOp& op) : CondOp(CondOpType::Evaluated) { op.emit(false); }
+    sfpi_inline CondOpIAddV(Vec* d, const Vec s, IAddCC cc) : VecCond(CondOpType::IAddV, s, d, 0, cc | SFPIADD_MOD1_ARG_LREG_DST, not_cond(cc) | SFPIADD_MOD1_ARG_LREG_DST) {}
+    sfpi_inline CondOpIAddV(Vec d, const Vec s, IAddCC cc) : VecCond(CondOpType::IAddV, s, d, 0, cc | SFPIADD_MOD1_ARG_LREG_DST, not_cond(cc) | SFPIADD_MOD1_ARG_LREG_DST) {}
 };
 
 
@@ -834,11 +827,11 @@ protected:
 public:
     sfpi_inline CCCtrl(bool dopush);
 
-    sfpi_inline void cc_if(const CondOperand& op) const;
-    sfpi_inline void cc_if(const CondOp& op) const;
+    sfpi_inline void cc_if(const VecBool& op) const;
+    sfpi_inline void cc_if(const VecCond& op) const;
     sfpi_inline void cc_else() const;
-    sfpi_inline void cc_elseif(const CondOperand& cond);
-    sfpi_inline void cc_elseif(const CondOp& cond);
+    sfpi_inline void cc_elseif(const VecBool& cond);
+    sfpi_inline void cc_elseif(const VecCond& cond);
     sfpi_inline void cc_endif();
 
     sfpi_inline void push();
@@ -1322,16 +1315,16 @@ sfpi_inline void AddShortOp::emit(__rvtt_vec_t& dst, bool& initialized) const
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void CondOperand::emit() const
 {
-    if (type == Type::CondOp) {
+    if (type == Type::VecCond) {
         op->emit(false);
     } else {
         cond->emit();
     }
 }
 
-sfpi_inline const CondBool CondBool::operator!() const
+sfpi_inline const VecBool VecBool::operator!() const
 {
-    CondBool result(*this);
+    VecBool result(*this);
     result.negate = true;
     return result;
 }
@@ -1346,17 +1339,17 @@ sfpi_inline const CondBool CondBool::operator!() const
 // always negates itself and upates the propagated negate by flipping it
 #define __sfpi_cond_emit_loop(leftside, rightside)                                  \
 {                                                                       \
-    const CondBool* local_node = node;                                  \
+    const VecBool* local_node = node;                                  \
     bool negate_node = node->negate;                                    \
     bool negate_child = negate;                                         \
                                                                         \
-    CondBool::CondBoolType node_type = negate ? node->get_neg_type() : node->get_type(); \
-    if (node_type == CondBool::CondBoolType::Or) {                      \
+    VecBool::VecBoolType node_type = negate ? node->get_neg_type() : node->get_type(); \
+    if (node_type == VecBool::VecBoolType::Or) {                      \
         negate_node = !negate_node;                                     \
         negate_child = !negate;                                         \
     }                                                                   \
                                                                         \
-    if (node->op_a.get_type() == CondOperand::Type::CondBool) {         \
+    if (node->op_a.get_type() == CondOperand::Type::VecBool) {         \
         node = &node->op_a.get_cond();                                  \
         leftside;                                                       \
         node = local_node;                                              \
@@ -1364,7 +1357,7 @@ sfpi_inline const CondBool CondBool::operator!() const
         node->op_a.get_op().emit(negate_child);                         \
     }                                                                   \
                                                                         \
-    if (node->op_b.get_type() == CondOperand::Type::CondBool) {         \
+    if (node->op_b.get_type() == CondOperand::Type::VecBool) {         \
         node = &node->op_b.get_cond();                                  \
         rightside;                                                      \
         node = local_node;                                              \
@@ -1382,9 +1375,9 @@ sfpi_inline const CondBool CondBool::operator!() const
     __sfpi_cond_emit_loop(leftside, rightside)
 
 #define __sfpi_cond_emit_error __builtin_rvtt_sfpillegal();
-sfpi_inline void CondBool::emit(bool negate) const
+sfpi_inline void VecBool::emit(bool negate) const
 {
-    const CondBool* node = this;
+    const VecBool* node = this;
 
     __sfpi_cond_emit_loop(
         __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error),
@@ -1393,14 +1386,14 @@ sfpi_inline void CondBool::emit(bool negate) const
                                   __sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error)));
 }
 
-sfpi_inline CondOp::CondOp(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm) :
+sfpi_inline VecCond::VecCond(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm) :
     type(t), op_a(a), op_b(), imm(i), mod1(m), neg_mod1(nm)
 {
 }
 
-sfpi_inline const CondOp CondOp::operator!() const
+sfpi_inline const VecCond VecCond::operator!() const
 {
-    CondOp result(*this);
+    VecCond result(*this);
 
     result.mod1 = neg_mod1;
     result.neg_mod1 = mod1;
@@ -1408,15 +1401,12 @@ sfpi_inline const CondOp CondOp::operator!() const
     return result;
 }
 
-sfpi_inline void CondOp::emit(bool negate) const
+sfpi_inline void VecCond::emit(bool negate) const
 {
     uint32_t use_mod1 = negate ? neg_mod1 : mod1;
 
     switch (type) {
-    case CondOp::CondOpType::Evaluated:
-        break;
-
-    case CondOp::CondOpType::CompareFloat:
+    case VecCond::CondOpType::CompareFloat:
         {
             __rvtt_vec_t l_op_a = op_a.get_vec().get();
             int32_t l_op_b = op_b.get_scalarfp().get();
@@ -1442,7 +1432,7 @@ sfpi_inline void CondOp::emit(bool negate) const
         }
         break;
 
-    case CondOp::CondOpType::CompareVecHalf:
+    case VecCond::CondOpType::CompareVecHalf:
         {
             __rvtt_vec_t l_op_a = op_a.get_vec().get();
             __rvtt_vec_t l_op_b = op_b.get_vec().get();
@@ -1454,7 +1444,7 @@ sfpi_inline void CondOp::emit(bool negate) const
         }
         break;
 
-    case CondOp::CondOpType::CompareShort:
+    case VecCond::CondOpType::CompareShort:
         {
             // If comparing >= n or <= n, use iadd_i
             // If comparing == 0 or != 0, use setcc
@@ -1479,15 +1469,15 @@ sfpi_inline void CondOp::emit(bool negate) const
         }
         break;
 
-    case CondOp::CondOpType::ExExp:
+    case VecCond::CondOpType::ExExp:
         op_b.get_vec_ptr()->get() = __builtin_rvtt_sfpexexp(op_a.get_vec().get(), use_mod1);
         break;
 
-    case CondOp::CondOpType::Lz:
+    case VecCond::CondOpType::Lz:
         op_b.get_vec_ptr()->get() = __builtin_rvtt_sfplz(op_a.get_vec().get(), use_mod1);
         break;
 
-    case CondOp::CondOpType::IAddI:
+    case VecCond::CondOpType::IAddI:
         if (op_b.get_type() == Operand::Type::Null) {
             __builtin_rvtt_sfpiadd_i(imm, op_a.get_vec().get(), use_mod1);
         } else {
@@ -1495,7 +1485,7 @@ sfpi_inline void CondOp::emit(bool negate) const
         }
         break;
 
-    case CondOp::CondOpType::IAddV:
+    case VecCond::CondOpType::IAddV:
         if (op_b.get_type() == Operand::Type::Vec) {
             // This is the "no assignment" form
             // Grayskull has no integer move to invert a
@@ -1558,22 +1548,22 @@ sfpi_inline CCCtrl::CCCtrl(bool dopush) : push_count(0)
     }
 }
 
-sfpi_inline void CCCtrl::cc_if(const CondOperand& op) const
+sfpi_inline void CCCtrl::cc_if(const VecBool& op) const
 {
     op.emit();
 }
 
-sfpi_inline void CCCtrl::cc_if(const CondOp& op) const
+sfpi_inline void CCCtrl::cc_if(const VecCond& op) const
 {
     op.emit(false);
 }
 
-sfpi_inline void CCCtrl::cc_elseif(const CondOperand& op)
+sfpi_inline void CCCtrl::cc_elseif(const VecBool& op)
 {
     cc_if(op);
 }
 
-sfpi_inline void CCCtrl::cc_elseif(const CondOp& op)
+sfpi_inline void CCCtrl::cc_elseif(const VecCond& op)
 {
     cc_if(op);
 }
