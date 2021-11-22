@@ -1732,3 +1732,14 @@ sfpi_inline vType reinterpret(const Vec v)
 #define p_endif             \
     __cc.cc_endif();        \
 }
+
+#define p_block             \
+{                           \
+    CCCtrl __cc(true);
+
+#define p_and(x)            \
+    __cc.cc_if(x)
+
+#define p_endblock          \
+    __cc.cc_endif();        \
+}

@@ -817,6 +817,18 @@ void test8()
     }
     p_endif;
 
+    VecHalf tmp = dst_reg[8];
+    p_block {
+        p_and(dst_reg[0] >= 16.0F);
+
+        for (int x = 0; x < 4; x++) {
+            p_and(dst_reg[0] < 20.0F - x);
+            tmp += 16.0F;
+        }
+    }
+    p_endblock;
+    dst_reg[8] = tmp;
+
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -833,6 +845,10 @@ void test8()
     // [13] = 26.0
     // [14] = 32.0
     // [15] = 16.0
+    // [16] = 48.0
+    // [17] = 31.0
+    // [18] = 14.0
+    // [19] = -3.0
     copy_result_to_dreg0(8);
 }
 
