@@ -58,9 +58,14 @@ rv32ltoo/%.elf: lto/%.o $(INCLUDES) | rv32lto
 
 test: rv32/combine.S rv32/coverage.S x86/kernels | results
 	x86/kernels 14 b > results/kernels_int
-	cmp results/kernels_int gold/kernels_int
+	diff results/kernels_int gold/kernels_int
 	cmp rv32/combine.S gold/combine.S
 	cmp rv32/coverage.S gold/coverage.S
+
+promote:
+	cp results/kernels_int gold/kernels_int
+	cp rv32/combine.S gold/combine.S
+	cp rv32/coverage.S gold/coverage.S
 
 clean:
 	@rm -rf x86
