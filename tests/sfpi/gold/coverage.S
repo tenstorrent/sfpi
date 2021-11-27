@@ -1217,98 +1217,6 @@ _Z15test_short_condv:
 	ret
 	.size	_Z15test_short_condv, .-_Z15test_short_condv
 	.align	1
-	.globl	_Z15test_intrinsicsv
-	.type	_Z15test_intrinsicsv, @function
-_Z15test_intrinsicsv:
-	SFPNOP
-	SFPNOP
-	SFPLOAD	L0, 1, 3
-	SFPLOADI	L1, 4, 12
-	SFPMAD	L0, L0, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 0, 6
-	SFPSTORE	L11, 0, 6
-	SFPMOV	L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPPUSHC
-	SFPPOPC
-	SFPNOP
-	SFPSETCC	1, L0, 1
-	SFPNOP
-	SFPSETCC	0, L0, 2
-	SFPNOP
-	SFPEXEXP	L0, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPEXMAN	L0, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	23, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	0, L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	23, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	0, L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPAND	L0, L1
-	SFPNOP
-	SFPNOP
-	SFPOR	L0, L1
-	SFPNOP
-	SFPNOP
-	SFPNOT	L0, L1
-	SFPNOP
-	SFPNOP
-	SFPABS	L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPMULI	32, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPADDI	32, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPDIVP2	32, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPLZ	L0, L1, 2
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPSHFT	-10, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSHFT	0, L0, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPIADD	10, L0, L1, 2
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPIADD	0, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	10, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	0, L0, L1, 0
-	SFPNOP
-	SFPNOP
-	ret
-	.size	_Z15test_intrinsicsv, .-_Z15test_intrinsicsv
-	.align	1
 	.globl	_Z20lots_of_conditionalsv
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
@@ -1555,7 +1463,6 @@ main:
 	SFPNOP
 	SFPNOP
 	call	_Z15test_short_condv
-	call	_Z15test_intrinsicsv
 	call	_Z14stupid_examplev
 	lw	ra,12(sp)
 	li	a0,0

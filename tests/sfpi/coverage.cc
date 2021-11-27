@@ -640,62 +640,6 @@ void test_short_cond()
     dst_reg[1] = reinterpret<VecHalf>(b);
 }
 
-// test_intrinsics
-//
-// Generates the following:
-//      SFPLOAD L0, 1, 3
-//      SFPMAD  L0, L0, L0, L0, 1
-//      SFPSTORE        L0, 0, 6
-void test_intrinsics()
-{
-    __builtin_rvtt_sfpnop();
-    __builtin_rvtt_sfpnop();
-
-    __rvtt_vec_t v1 = __builtin_rvtt_sfpload(SFPLOAD_MOD0_REBIAS_EXP, 3);
-    __rvtt_vec_t v2 = __builtin_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 12);
-
-    v1 = __builtin_rvtt_sfpmad(v1, v1, v1, 1);
-
-    __builtin_rvtt_sfpstore(v1, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
-    __builtin_rvtt_sfpstore(__builtin_rvtt_sfpassignlr(CReg_Neg_1.get()), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, 6);
-
-    v2 = __builtin_rvtt_sfpmov(v1, SFPMOV_MOD1_COMPSIGN);
-
-    __builtin_rvtt_sfpencc(3, 10);
-    __builtin_rvtt_sfpcompc();
-    __builtin_rvtt_sfppushc();
-    __builtin_rvtt_sfppopc();
-    __builtin_rvtt_sfpsetcc_i(1, 1);
-    __builtin_rvtt_sfpsetcc_v(v1, 2);
-
-    v2 = __builtin_rvtt_sfpexexp(v1, SFPEXEXP_MOD1_DEBIAS);
-    v2 = __builtin_rvtt_sfpexman(v1, SFPEXMAN_MOD1_PAD8);
-    v1 = __builtin_rvtt_sfpsetexp_i(23, v1);
-    v1 = __builtin_rvtt_sfpsetexp_v(v1, v2);
-    v1 = __builtin_rvtt_sfpsetman_i(23, v1);
-    v1 = __builtin_rvtt_sfpsetman_v(v1, v2);
-
-    v2 = __builtin_rvtt_sfpand(v2, v1);
-    v2 = __builtin_rvtt_sfpor(v2, v1);
-    v2 = __builtin_rvtt_sfpnot(v1);
-
-    v2 = __builtin_rvtt_sfpabs(v1, SFPABS_MOD1_FLOAT);
-    v2 = __builtin_rvtt_sfpmuli(v2, 32, 1);
-    v2 = __builtin_rvtt_sfpaddi(v2, 32, 0);
-    v2 = __builtin_rvtt_sfpdivp2(32, v1, 1);
-
-    v2 = __builtin_rvtt_sfplz(v1, 2);
-
-    v2 = __builtin_rvtt_sfpshft_i(v2, -10);
-    v2 = __builtin_rvtt_sfpshft_v(v2, v1);
-
-    v2 = __builtin_rvtt_sfpiadd_i(10, v1, 2);
-    v2 = __builtin_rvtt_sfpiadd_v(v2, v1, 1);
-
-    v2 = __builtin_rvtt_sfpsetsgn_i(10, v1);
-    v2 = __builtin_rvtt_sfpsetsgn_v(v2, v1);
-}
-
 void lots_of_conditionals()
 {
     VecHalf x = 1.0f;
@@ -797,7 +741,6 @@ int main(int argc, char* argv[])
     test_iadd();
     test_set_sgn();
     test_short_cond();
-    test_intrinsics();
     stupid_example();
     //    test_operator_equals();
 }
