@@ -826,13 +826,13 @@ protected:
 
 public:
     sfpi_inline CCCtrl(bool dopush);
+    sfpi_inline ~CCCtrl();
 
     sfpi_inline void cc_if(const VecBool& op) const;
     sfpi_inline void cc_if(const VecCond& op) const;
     sfpi_inline void cc_else() const;
     sfpi_inline void cc_elseif(const VecBool& cond);
     sfpi_inline void cc_elseif(const VecCond& cond);
-    sfpi_inline void cc_endif();
 
     sfpi_inline void push();
 
@@ -1573,7 +1573,7 @@ sfpi_inline void CCCtrl::cc_else() const
     __builtin_rvtt_sfpcompc();
 }
 
-sfpi_inline void CCCtrl::cc_endif()
+sfpi_inline CCCtrl::~CCCtrl()
 {
     while (push_count != 0) {
         pop();
@@ -1730,7 +1730,6 @@ sfpi_inline vType reinterpret(const Vec v)
     __cc.cc_else();
 
 #define p_endif             \
-    __cc.cc_endif();        \
 }
 
 #define p_block             \
@@ -1741,5 +1740,4 @@ sfpi_inline vType reinterpret(const Vec v)
     __cc.cc_if(x)
 
 #define p_endblock          \
-    __cc.cc_endif();        \
 }

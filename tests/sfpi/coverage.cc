@@ -302,11 +302,13 @@ void test_man_exp()
 
     CCCtrl cco(true);
     VecShort v4;
-    cco.cc_if(v4.exexp_cc(v1, ExExpCCLT0)); {
+    p_if (v4.exexp_cc(v1, ExExpCCLT0)); {
     }
+    p_endif;
 
-    cco.cc_if(v4.exexp_nodebias_cc(v1, ExExpCCLT0)); {
+    p_if (v4.exexp_nodebias_cc(v1, ExExpCCLT0)); {
     }
+    p_endif;
 
     //    v1.set_man(v2);
     v1 = setexp(v1, v2);

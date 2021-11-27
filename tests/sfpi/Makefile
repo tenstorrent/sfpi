@@ -13,7 +13,7 @@ RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc fp16c.cc
 
-ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S
+ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
 LTOS = $(addprefix rv32lto/,$(SRCS:.cc=))
 SIMS = $(addprefix x86/,$(SRCS:.cc=))
@@ -60,11 +60,13 @@ test: rv32/combine.S rv32/coverage.S x86/kernels | results
 	x86/kernels 14 b > results/kernels_int
 	diff results/kernels_int gold/kernels_int
 	cmp rv32/combine.S gold/combine.S
+	cmp rv32/pushpop.S gold/pushpop.S
 	cmp rv32/coverage.S gold/coverage.S
 
 promote:
 	cp results/kernels_int gold/kernels_int
 	cp rv32/combine.S gold/combine.S
+	cp rv32/pushpop.S gold/pushpop.S
 	cp rv32/coverage.S gold/coverage.S
 
 clean:
