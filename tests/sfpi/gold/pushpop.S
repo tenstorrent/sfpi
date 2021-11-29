@@ -9,20 +9,16 @@
 	.type	_Z10simple_yesv, @function
 _Z10simple_yesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 3
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10simple_yesv, .-_Z10simple_yesv
@@ -31,28 +27,21 @@ _Z10simple_yesv:
 	.type	_Z10double_yesv, @function
 _Z10double_yesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 3
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10double_yesv, .-_Z10double_yesv
@@ -61,7 +50,6 @@ _Z10double_yesv:
 	.type	_Z10both_noyesv, @function
 _Z10both_noyesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -74,15 +62,12 @@ _Z10both_noyesv:
 	SFPLOADI	L0, 4, 3
 	SFPPOPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10both_noyesv, .-_Z10both_noyesv
@@ -91,35 +76,27 @@ _Z10both_noyesv:
 	.type	_Z15consecutive_yesv, @function
 _Z15consecutive_yesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 3
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-5, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z15consecutive_yesv, .-_Z15consecutive_yesv
@@ -128,7 +105,6 @@ _Z15consecutive_yesv:
 	.type	_Z8else_yesv, @function
 _Z8else_yesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -136,17 +112,13 @@ _Z8else_yesv:
 	SFPLOADI	L0, 4, 2
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-3, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 4
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPUSHC
 	SFPIADD	-5, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -154,22 +126,16 @@ _Z8else_yesv:
 	SFPLOADI	L0, 4, 6
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-7, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-8, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 9
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z8else_yesv, .-_Z8else_yesv
@@ -178,21 +144,17 @@ _Z8else_yesv:
 	.type	_Z9block_yesv, @function
 _Z9block_yesv:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 2
-	SFPPUSHC
 	SFPIADD	-3, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 4
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z9block_yesv, .-_Z9block_yesv
@@ -201,12 +163,10 @@ _Z9block_yesv:
 	.type	_Z16no_yes_no_yes_nov, @function
 _Z16no_yes_no_yes_nov:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -216,7 +176,6 @@ _Z16no_yes_no_yes_nov:
 	SFPNOP
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -232,12 +191,8 @@ _Z16no_yes_no_yes_nov:
 	SFPLOADI	L0, 4, 7
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
-	SFPNOP
 	SFPLOADI	L0, 4, 8
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z16no_yes_no_yes_nov, .-_Z16no_yes_no_yes_nov
@@ -290,11 +245,33 @@ _Z6bb_yesi:
 	ret
 	.size	_Z6bb_yesi, .-_Z6bb_yesi
 	.align	1
+	.globl	_Z9func_callv
+	.type	_Z9func_callv, @function
+_Z9func_callv:
+	addi	sp,sp,-16
+	sw	ra,12(sp)
+	SFPLOADI	L0, 4, 0
+	SFPIADD	-1, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	call	rand
+	SFPIADD	-2, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 3
+	SFPENCC	3, 10
+	SFPNOP
+	lw	ra,12(sp)
+	addi	sp,sp,16
+	jr	ra
+	.size	_Z9func_callv, .-_Z9func_callv
+	.align	1
 	.globl	_Z8compc_nov
 	.type	_Z8compc_nov, @function
 _Z8compc_nov:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -310,16 +287,66 @@ _Z8compc_nov:
 	SFPLOADI	L0, 4, 4
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z8compc_nov, .-_Z8compc_nov
+	.align	1
+	.globl	_Z10cascade_nov
+	.type	_Z10cascade_nov, @function
+_Z10cascade_nov:
+	SFPLOADI	L0, 4, 0
+	SFPIADD	-1, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 2
+	SFPCOMPC
+	SFPNOP
+	SFPPUSHC
+	SFPIADD	-3, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 4
+	SFPCOMPC
+	SFPNOP
+	SFPPUSHC
+	SFPIADD	-5, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 6
+	SFPCOMPC
+	SFPNOP
+	SFPPUSHC
+	SFPIADD	-7, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 7
+	SFPCOMPC
+	SFPNOP
+	SFPIADD	-8, L0, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 8
+	SFPPOPC
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	ret
+	.size	_Z10cascade_nov, .-_Z10cascade_nov
 	.align	1
 	.globl	_Z12intervene_nov
 	.type	_Z12intervene_nov, @function
 _Z12intervene_nov:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -333,7 +360,7 @@ _Z12intervene_nov:
 	SFPPOPC
 	SFPNOP
 	SFPLOADI	L0, 4, 4
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12intervene_nov, .-_Z12intervene_nov
@@ -342,7 +369,6 @@ _Z12intervene_nov:
 	.type	_Z18compc_intervene_nov, @function
 _Z18compc_intervene_nov:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -359,7 +385,7 @@ _Z18compc_intervene_nov:
 	SFPPOPC
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z18compc_intervene_nov, .-_Z18compc_intervene_nov
@@ -370,7 +396,6 @@ _Z10fn_call_nov:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -383,8 +408,8 @@ _Z10fn_call_nov:
 	SFPLOADI	L0, 4, 3
 	SFPPOPC
 	SFPNOP
-	call	_Z11make_a_callv
-	SFPPOPC
+	call	rand
+	SFPENCC	3, 10
 	SFPNOP
 	lw	ra,12(sp)
 	addi	sp,sp,16
@@ -396,15 +421,15 @@ _Z10fn_call_nov:
 _Z24control_flow_p_if_switchii:
 	SFPLOADI	L0, 4, 1
 	li	a5,20
-	beq	a0,a5,.L23
+	beq	a0,a5,.L26
 	li	a5,30
-	beq	a0,a5,.L24
-	li	a5,10
 	beq	a0,a5,.L27
+	li	a5,10
+	beq	a0,a5,.L30
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
-.L23:
+.L26:
 	SFPPUSHC
 	SFPIADD	-4, L0, L1, 1
 	SFPNOP
@@ -416,7 +441,7 @@ _Z24control_flow_p_if_switchii:
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
-.L27:
+.L30:
 	SFPPUSHC
 	SFPIADD	-2, L0, L1, 1
 	SFPNOP
@@ -428,7 +453,7 @@ _Z24control_flow_p_if_switchii:
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
-.L24:
+.L27:
 	SFPPUSHC
 	SFPIADD	-8, L0, L1, 1
 	SFPNOP
@@ -436,7 +461,7 @@ _Z24control_flow_p_if_switchii:
 	SFPNOP
 	SFPLOADI	L0, 4, 9
 	li	a5,40
-	bgt	a1,a5,.L26
+	bgt	a1,a5,.L29
 	SFPCOMPC
 	SFPNOP
 	SFPPUSHC
@@ -452,7 +477,7 @@ _Z24control_flow_p_if_switchii:
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
-.L26:
+.L29:
 	SFPPOPC
 	SFPNOP
 	SFPLOADI	L0, 4, 8
@@ -468,10 +493,10 @@ _Z25control_flow_pif_continuei:
 	sw	s0,8(sp)
 	sw	s1,4(sp)
 	SFPLOADI	L0, 4, 1
-	ble	a0,zero,.L28
+	ble	a0,zero,.L31
 	mv	s1,a0
 	li	s0,0
-.L32:
+.L35:
 	SFPPUSHC
 	SFPIADD	-2, L0, L1, 1
 	SFPNOP
@@ -485,7 +510,7 @@ _Z25control_flow_pif_continuei:
 	SFPNOP
 	SFPLOADI	L0, 4, 4
 	call	rand
-	beq	a0,s1,.L34
+	beq	a0,s1,.L37
 	SFPCOMPC
 	SFPNOP
 	SFPLOADI	L0, 4, 5
@@ -496,20 +521,20 @@ _Z25control_flow_pif_continuei:
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	addi	s0,s0,1
-	bne	s1,s0,.L32
-.L28:
+	bne	s1,s0,.L35
+.L31:
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
 	addi	sp,sp,16
 	jr	ra
-.L34:
+.L37:
 	SFPPOPC
 	SFPNOP
 	SFPPOPC
 	SFPNOP
 	addi	s0,s0,1
-	bne	s0,s1,.L32
+	bne	s0,s1,.L35
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
@@ -537,8 +562,8 @@ _Z21control_flow_pif_gotoi:
 	SFPLOADI	L0, 4, 4
 	call	rand
 	li	a5,1
-	beq	a0,a5,.L39
-.L37:
+	beq	a0,a5,.L42
+.L40:
 	SFPCOMPC
 	SFPNOP
 	SFPLOADI	L0, 4, 5
@@ -551,7 +576,7 @@ _Z21control_flow_pif_gotoi:
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
-.L39:
+.L42:
 	SFPPOPC
 	SFPNOP
 	SFPPOPC

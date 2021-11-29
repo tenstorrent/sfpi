@@ -427,7 +427,6 @@ _Z12test_man_expv:
 	SFPNOP
 	SFPSTORE	L2, 2, 12
 	SFPPUSHC
-	SFPPUSHC
 	SFPEXEXP	L0, L2, 2
 	SFPNOP
 	SFPNOP
@@ -464,7 +463,7 @@ _Z12test_man_expv:
 	SFPNOP
 	SFPSTORE	L1, 2, 8
 	SFPSTORE	L2, 2, 16
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12test_man_expv, .-_Z12test_man_expv
@@ -473,7 +472,6 @@ _Z12test_man_expv:
 	.type	_Z21test_dreg_conditionalv, @function
 _Z21test_dreg_conditionalv:
 	SFPLOAD	L0, 1, 0
-	SFPPUSHC
 	SFPLOADI	L1, 0, 49312
 	SFPMAD	L0, L10, L1, L1, 0
 	SFPNOP
@@ -490,7 +488,6 @@ _Z21test_dreg_conditionalv:
 	SFPSTORE	L0, 0, 8
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPLOADI	L1, 0, 49280
 	SFPMAD	L0, L10, L1, L1, 0
 	SFPNOP
@@ -498,8 +495,6 @@ _Z21test_dreg_conditionalv:
 	SFPSETCC	0, L1, 2
 	SFPNOP
 	SFPSTORE	L0, 0, 12
-	SFPPOPC
-	SFPNOP
 	SFPPOPC
 	SFPNOP
 	SFPSTORE	L0, 0, 16
@@ -535,7 +530,7 @@ _Z21test_dreg_conditionalv:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
@@ -546,7 +541,6 @@ _Z21test_dreg_conditionalv:
 _Z22test_vhalf_conditionalv:
 	SFPLOAD	L0, 1, 0
 	SFPLOADI	L1, 0, 16544
-	SFPPUSHC
 	SFPMAD	L1, L11, L0, L2, 0
 	SFPNOP
 	SFPNOP
@@ -561,15 +555,12 @@ _Z22test_vhalf_conditionalv:
 	SFPSTORE	L0, 0, 8
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPMAD	L1, L11, L0, L2, 0
 	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L2, 2
 	SFPNOP
 	SFPSTORE	L0, 0, 12
-	SFPPOPC
-	SFPNOP
 	SFPPOPC
 	SFPNOP
 	SFPSTORE	L0, 0, 16
@@ -606,7 +597,7 @@ _Z22test_vhalf_conditionalv:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
@@ -616,7 +607,6 @@ _Z22test_vhalf_conditionalv:
 	.type	_Z22test_creg_conditional1v, @function
 _Z22test_creg_conditional1v:
 	SFPLOAD	L0, 1, 0
-	SFPPUSHC
 	SFPMAD	L11, L11, L0, L1, 0
 	SFPNOP
 	SFPNOP
@@ -631,15 +621,12 @@ _Z22test_creg_conditional1v:
 	SFPSTORE	L0, 0, 8
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPMAD	L11, L11, L0, L1, 0
 	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L1, 2
 	SFPNOP
 	SFPSTORE	L0, 0, 12
-	SFPPOPC
-	SFPNOP
 	SFPPOPC
 	SFPNOP
 	SFPSTORE	L0, 0, 16
@@ -676,7 +663,7 @@ _Z22test_creg_conditional1v:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
@@ -686,7 +673,6 @@ _Z22test_creg_conditional1v:
 	.type	_Z22test_creg_conditional2v, @function
 _Z22test_creg_conditional2v:
 	SFPLOAD	L0, 1, 0
-	SFPPUSHC
 	SFPMAD	L0, L11, L11, L1, 0
 	SFPNOP
 	SFPNOP
@@ -701,15 +687,12 @@ _Z22test_creg_conditional2v:
 	SFPSTORE	L0, 0, 8
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPMAD	L0, L11, L11, L1, 0
 	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L1, 2
 	SFPNOP
 	SFPSTORE	L0, 0, 12
-	SFPPOPC
-	SFPNOP
 	SFPPOPC
 	SFPNOP
 	SFPSTORE	L0, 0, 16
@@ -746,7 +729,7 @@ _Z22test_creg_conditional2v:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
@@ -1044,14 +1027,13 @@ _Z9test_iaddv:
 	SFPSTORE	L1, 2, 4
 	SFPSTORE	L2, 2, 8
 	SFPSTORE	L0, 2, 12
-	SFPPUSHC
 	SFPIADD	0, L15, L1, 8
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 0, 0
 	SFPSTORE	L0, 0, 16
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L1, 2, 12
 	SFPIADD	10, L1, L2, 5
@@ -1100,14 +1082,13 @@ _Z9test_iaddv:
 	SFPSTORE	L1, 2, 4
 	SFPSTORE	L2, 2, 8
 	SFPSTORE	L0, 2, 12
-	SFPPUSHC
 	SFPIADD	0, L15, L1, 8
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 0, 0
 	SFPSTORE	L0, 0, 16
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z9test_iaddv, .-_Z9test_iaddv
@@ -1129,7 +1110,6 @@ _Z12test_set_sgnv:
 	.type	_Z15test_short_condv, @function
 _Z15test_short_condv:
 	SFPLOADI	L0, 4, 16
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -1163,7 +1143,6 @@ _Z15test_short_condv:
 	SFPNOP
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -1175,11 +1154,8 @@ _Z15test_short_condv:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPUSHC
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPIADD	500, L0, L0, 5
@@ -1205,7 +1181,6 @@ _Z15test_short_condv:
 	SFPNOP
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	0, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -1217,9 +1192,7 @@ _Z15test_short_condv:
 	SFPNOP
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 4
 	ret
@@ -1229,7 +1202,6 @@ _Z15test_short_condv:
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
 	SFPLOADI	L0, 0, 16256
-	SFPPUSHC
 	SFPSETCC	0, L0, 4
 	SFPNOP
 	SFPSETCC	0, L0, 0
@@ -1256,9 +1228,8 @@ _Z20lots_of_conditionalsv:
 	SFPNOP
 	SFPCOMPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
-	SFPPUSHC
 	SFPSETCC	0, L0, 4
 	SFPNOP
 	SFPSETCC	0, L0, 0
@@ -1283,7 +1254,7 @@ _Z20lots_of_conditionalsv:
 	SFPNOP
 	SFPCOMPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z20lots_of_conditionalsv, .-_Z20lots_of_conditionalsv
@@ -1332,7 +1303,6 @@ _Z14stupid_examplev:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L1, 0, 20
-	SFPPUSHC
 	SFPLOADI	L1, 0, 49280
 	SFPMAD	L0, L10, L1, L1, 0
 	SFPNOP
@@ -1411,7 +1381,7 @@ _Z14stupid_examplev:
 	SFPSTORE	L0, 0, 32
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z14stupid_examplev, .-_Z14stupid_examplev

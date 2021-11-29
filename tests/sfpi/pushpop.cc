@@ -11,8 +11,6 @@
 #include <cstdio>
 #include "test.h"
 
-extern void make_a_call();
-
 using namespace sfpi;
 
 void simple_yes()
@@ -27,7 +25,6 @@ void simple_yes()
     }
     p_endif;
 }
-
 
 void double_yes()
 {
@@ -167,6 +164,20 @@ void bb_yes(int v)
     p_endif;
 }
 
+void func_call()
+{
+    VecShort a = 0;
+
+    p_if (a >= 1) {
+        rand();
+        p_if (a >= 2) {
+            a = 3;
+        }
+    p_endif;
+    }
+    p_endif;
+}
+
 void compc_no()
 {
     VecShort a = 0;
@@ -178,6 +189,24 @@ void compc_no()
             a = 4;
         }
         p_endif;
+    }
+    p_endif;
+}
+
+void cascade_no()
+{
+    VecShort a = 0;
+
+    p_if (a >= 1) {
+        a = 2;
+    } p_elseif (a >= 3) {
+        a = 4;
+    } p_elseif (a >= 5) {
+        a = 6;
+    } p_elseif (a >= 7) {
+        a = 7;
+    } p_elseif (a >= 8) {
+        a = 8;
     }
     p_endif;
 }
@@ -224,7 +253,7 @@ void fn_call_no()
         }
         p_endif;
 
-        make_a_call();
+        rand();
     }
     p_endif;
 }
@@ -276,8 +305,7 @@ void control_flow_pif_continue(int val)
                 if (val == rand()) {
                     continue;
                 }
-            }
-            p_else {
+            } p_else {
                 v = 5;
             }
             p_endif;

@@ -9,13 +9,12 @@
 	.type	_Z11iadd_i_yes1v, @function
 _Z11iadd_i_yes1v:
 	SFPLOADI	L0, 4, 3
-	SFPPUSHC
 	SFPIADD	-5, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_i_yes1v, .-_Z11iadd_i_yes1v
@@ -25,7 +24,6 @@ _Z11iadd_i_yes1v:
 _Z12iadd_i_yes3cv:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	-6, L0, L0, 1
 	SFPNOP
 	SFPNOP
@@ -37,7 +35,7 @@ _Z12iadd_i_yes3cv:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12iadd_i_yes3cv, .-_Z12iadd_i_yes3cv
@@ -47,7 +45,6 @@ _Z12iadd_i_yes3cv:
 _Z12iadd_i_yes4av:
 	SFPLOADI	L0, 4, 3
 	SFPLOADI	L1, 4, 4
-	SFPPUSHC
 	SFPIADD	-5, L0, L0, 1
 	SFPNOP
 	SFPNOP
@@ -59,7 +56,7 @@ _Z12iadd_i_yes4av:
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12iadd_i_yes4av, .-_Z12iadd_i_yes4av
@@ -72,7 +69,6 @@ _Z12iadd_i_yes4bv:
 	SFPIADD	-5, L0, L0, 5
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-6, L1, L1, 1
 	SFPNOP
 	SFPNOP
@@ -84,7 +80,7 @@ _Z12iadd_i_yes4bv:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12iadd_i_yes4bv, .-_Z12iadd_i_yes4bv
@@ -93,13 +89,12 @@ _Z12iadd_i_yes4bv:
 	.type	_Z11iadd_i_yes5v, @function
 _Z11iadd_i_yes5v:
 	SFPLOADI	L0, 4, 3
-	SFPPUSHC
 	SFPIADD	5, L0, L0, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_i_yes5v, .-_Z11iadd_i_yes5v
@@ -109,13 +104,12 @@ _Z11iadd_i_yes5v:
 _Z11iadd_i_yes6v:
 	SFPLOADI	L0, 4, 3
 	SFPLOADI	L1, 4, 4
-	SFPPUSHC
 	SFPIADD	6, L1, L0, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_i_yes6v, .-_Z11iadd_i_yes6v
@@ -124,13 +118,12 @@ _Z11iadd_i_yes6v:
 	.type	_Z11iadd_i_yes8v, @function
 _Z11iadd_i_yes8v:
 	SFPLOADI	L1, 4, 3
-	SFPPUSHC
 	SFPIADD	5, L1, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 0
@@ -145,13 +138,12 @@ _Z10iadd_i_no1v:
 	SFPIADD	-6, L1, L1, 5
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	0, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_i_no1v, .-_Z10iadd_i_no1v
@@ -163,13 +155,12 @@ _Z10iadd_i_no2v:
 	SFPIADD	-5, L0, L1, 5
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	0, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_i_no2v, .-_Z10iadd_i_no2v
@@ -200,7 +191,6 @@ _Z10iadd_i_no4v:
 _Z10iadd_i_no5v:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L1, 1
 	SFPNOP
 	SFPNOP
@@ -210,7 +200,7 @@ _Z10iadd_i_no5v:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_i_no5v, .-_Z10iadd_i_no5v
@@ -233,13 +223,12 @@ _Z10iadd_i_no6v:
 _Z11iadd_v_yes1v:
 	SFPLOADI	L0, 4, 3
 	SFPLOADI	L1, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 2
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_v_yes1v, .-_Z11iadd_v_yes1v
@@ -249,13 +238,12 @@ _Z11iadd_v_yes1v:
 _Z11iadd_v_yes2v:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 10
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_v_yes2v, .-_Z11iadd_v_yes2v
@@ -265,13 +253,12 @@ _Z11iadd_v_yes2v:
 _Z11iadd_v_yes3v:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z11iadd_v_yes3v, .-_Z11iadd_v_yes3v
@@ -281,13 +268,12 @@ _Z11iadd_v_yes3v:
 _Z12iadd_v_yes4av:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 10
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12iadd_v_yes4av, .-_Z12iadd_v_yes4av
@@ -297,13 +283,12 @@ _Z12iadd_v_yes4av:
 _Z12iadd_v_yes4bv:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z12iadd_v_yes4bv, .-_Z12iadd_v_yes4bv
@@ -316,13 +301,12 @@ _Z10iadd_v_no1v:
 	SFPIADD	0, L1, L0, 4
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-5, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_v_no1v, .-_Z10iadd_v_no1v
@@ -332,7 +316,6 @@ _Z10iadd_v_no1v:
 _Z10iadd_v_no2v:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 6
 	SFPNOP
 	SFPNOP
@@ -341,7 +324,7 @@ _Z10iadd_v_no2v:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_v_no2v, .-_Z10iadd_v_no2v
@@ -365,7 +348,6 @@ _Z10iadd_v_no3v:
 _Z10iadd_v_no4v:
 	SFPLOADI	L1, 4, 3
 	SFPLOADI	L0, 4, 4
-	SFPPUSHC
 	SFPIADD	0, L1, L0, 2
 	SFPNOP
 	SFPNOP
@@ -374,7 +356,7 @@ _Z10iadd_v_no4v:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z10iadd_v_no4v, .-_Z10iadd_v_no4v
@@ -383,13 +365,12 @@ _Z10iadd_v_no4v:
 	.type	_Z7lz_yes1v, @function
 _Z7lz_yes1v:
 	SFPLOADI	L0, 0, 16448
-	SFPPUSHC
 	SFPLZ	L0, L1, 10
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPSTORE	L1, 2, 0
@@ -400,13 +381,12 @@ _Z7lz_yes1v:
 	.type	_Z7lz_yes2v, @function
 _Z7lz_yes2v:
 	SFPLOADI	L0, 0, 16448
-	SFPPUSHC
 	SFPLZ	L0, L1, 2
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPSTORE	L1, 2, 0
@@ -420,11 +400,10 @@ _Z6lz_no1v:
 	SFPLZ	L1, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPSETCC	0, L0, 2
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 0, 0
 	SFPSTORE	L0, 2, 0
@@ -438,11 +417,10 @@ _Z6lz_no2v:
 	SFPLZ	L0, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPSETCC	0, L0, 4
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPSTORE	L1, 2, 0
@@ -456,11 +434,10 @@ _Z6lz_no3v:
 	SFPLZ	L0, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPSETCC	0, L0, 0
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPSTORE	L1, 2, 0
@@ -471,13 +448,12 @@ _Z6lz_no3v:
 	.type	_Z10exexp_yes1v, @function
 _Z10exexp_yes1v:
 	SFPLOADI	L1, 0, 16448
-	SFPPUSHC
 	SFPEXEXP	L1, L0, 10
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 0, 0
 	SFPSTORE	L0, 2, 0
@@ -488,13 +464,12 @@ _Z10exexp_yes1v:
 	.type	_Z10exexp_yes2v, @function
 _Z10exexp_yes2v:
 	SFPLOADI	L1, 0, 16448
-	SFPPUSHC
 	SFPEXEXP	L1, L0, 2
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 0, 0
 	SFPSTORE	L0, 2, 0
@@ -505,13 +480,12 @@ _Z10exexp_yes2v:
 	.type	_Z10exexp_yes3v, @function
 _Z10exexp_yes3v:
 	SFPLOADI	L0, 0, 16448
-	SFPPUSHC
 	SFPEXEXP	L0, L0, 2
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	ret
@@ -524,13 +498,12 @@ _Z9exexp_no1v:
 	SFPEXEXP	L1, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-5, L0, L2, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 0, 0
 	SFPSTORE	L0, 2, 0
@@ -544,13 +517,12 @@ _Z9exexp_no2v:
 	SFPEXEXP	L1, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	0, L0, L2, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L1, 0, 0
 	SFPSTORE	L0, 2, 0
