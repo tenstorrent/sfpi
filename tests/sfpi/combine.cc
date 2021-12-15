@@ -112,9 +112,12 @@ void iadd_i_yes6()
     VecShort b = 4;
 
     // Make sure registers in new iadd are correct
-    a = b + 6;
-    p_if (a >= 0) {
-        dst_reg[0] = CReg_1;
+    p_if (a >= 5) {
+        a = b + 6;
+        p_if (a >= 0) {
+            dst_reg[0] = CReg_1;
+        }
+        p_endif;
     }
     p_endif;
 }

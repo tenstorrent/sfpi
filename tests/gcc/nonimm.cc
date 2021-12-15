@@ -233,9 +233,9 @@ void iadd_i_imm(short int value)
     v64sf y = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, 1, 1);
-    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, 2, 2);
-    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, 3, 4);
+    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, 1, 5);
+    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, 2, 5);
+    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, 3, 5);
     a = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, a, 4, 5);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);
@@ -249,9 +249,9 @@ void iadd_i_reg(short int value)
     v64sf y = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, value+0, 1);
-    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, value+1, 2);
-    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, value+2, 4);
+    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, value+0, 5);
+    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, value+1, 5);
+    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, value+2, 5);
     a = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, a, value+3, 5);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);
@@ -265,9 +265,9 @@ void iadd_i_both(short int value)
     v64sf y = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_riscv_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, 1,       1);
-    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, 2,       2);
-    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, value+0, 4);
+    x = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, x, 1,       5);
+    y = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, y, 2,       5);
+    z = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, z, value+0, 5);
     a = __builtin_riscv_sfpiadd_i((void *)instrn_buffer, a, value+1, 5);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);

@@ -15,6 +15,7 @@ namespace sfpi {
 
 #define sfpi_inline inline
 
+#define __builtin_rvtt_sfpassign_lv(v, in) (in)
 #define __builtin_rvtt_sfpload(mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
 #define __builtin_rvtt_sfpload_lv(dst, mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
 #define __builtin_rvtt_sfpassignlr(lr) sfpu_rvtt_sfpassignlr(lr)
@@ -60,7 +61,6 @@ namespace sfpi {
 #define __builtin_rvtt_sfpshft_v(dst, src) sfpu_rvtt_sfpshft_v(dst, src)
 
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
-#define __builtin_rvtt_sfpiadd_i_lv(dst, imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) sfpu_rvtt_sfpiadd_v(dst, src, mod1)
 
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) sfpu_rvtt_sfpsetsgn_i(imm12, src)
@@ -90,6 +90,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
+#define __builtin_rvtt_sfpassign_lv(v, in) __builtin_riscv_sfpassign_lv(v, in)
 #define __builtin_rvtt_sfpload(mod0, addr) __builtin_riscv_sfpload((void *)ckernel::instrn_buffer, mod0, addr)
 #define __builtin_rvtt_sfpload_lv(dst, mod0, addr) __builtin_riscv_sfpload_lv((void *)ckernel::instrn_buffer, dst, mod0, addr)
 #define __builtin_rvtt_sfpassignlr(lr) __builtin_riscv_sfpassignlr(lr)
@@ -136,7 +137,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpshft_v(dst, src) __builtin_riscv_sfpshft_v(dst, src)
 
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) __builtin_riscv_sfpiadd_i((void *)ckernel::instrn_buffer, src, imm12, mod1)
-#define __builtin_rvtt_sfpiadd_i_lv(dst, imm12, src, mod1) __builtin_riscv_sfpiadd_i_lv((void *)ckernel::instrn_buffer, dst, src, imm12, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) __builtin_riscv_sfpiadd_v(dst, src, mod1)
 
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_riscv_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, src)

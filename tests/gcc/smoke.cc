@@ -89,8 +89,8 @@ void smoke()
     v2 = __builtin_riscv_sfpshft_i(nullptr, v2, 10);
     v2 = __builtin_riscv_sfpshft_v(v2, v1);
 
-    v1 = __builtin_riscv_sfpiadd_i(nullptr, v1, 10, 4);
-    v2 = __builtin_riscv_sfpiadd_v(v2, v1, 8);
+    v1 = __builtin_riscv_sfpiadd_i(nullptr, v1, 10, 5);
+    v2 = __builtin_riscv_sfpiadd_v(v2, v1, 5);
 
     v2 = __builtin_riscv_sfpsetsgn_i(nullptr, 10, v1);
     v2 = __builtin_riscv_sfpsetsgn_v(v2, v1);
@@ -119,7 +119,6 @@ void smoke_live()
 
     a = __builtin_riscv_sfpmov_lv(a, d, SFPMOV_MOD1_COMPSIGN);
 
-    a = __builtin_riscv_sfpexexp_lv(a, d, SFPEXEXP_MOD1_DEBIAS);
     a = __builtin_riscv_sfpexman_lv(a, d, SFPEXMAN_MOD1_PAD8);
 
     a = __builtin_riscv_sfpsetexp_i_lv(nullptr, a, 23, d);
@@ -130,9 +129,15 @@ void smoke_live()
 
     a = __builtin_riscv_sfpdivp2_lv(nullptr, a, 32, d, 1);
 
+    __builtin_riscv_sfppushc();
+
     a = __builtin_riscv_sfplz_lv(a, d, 2);
 
+    a = __builtin_riscv_sfpexexp_lv(a, d, SFPEXEXP_MOD1_DEBIAS);
+
     a = __builtin_riscv_sfpiadd_i_lv(nullptr, a, d, 10, 4);
+
+    __builtin_riscv_sfppopc();
 
     a = __builtin_riscv_sfpsetsgn_i_lv(nullptr, a, 10, d);
 }

@@ -1604,14 +1604,13 @@ void test14(int imm)
     // [5] = 280.0F
 
     // Below 2 tests are incidentally covered by tests 1..12
-
     // MOV liveness across IADD
     {
-        VecHalf a = 290.0F;
         VecHalf b = 300.0F;
         VecShort tmp = 5;
 
         p_if (dst_reg[0] == 6.0F) {
+            VecHalf a = 290.0F;
             p_if (tmp >= 2) {
                 VecHalf c = CReg_0 * CReg_0 + CReg_0;
                 b = -a;
@@ -1722,8 +1721,9 @@ void test14(int imm)
     // [14] = -59.0
     // [15] = 71.0
 
-    // Case 4
+    // Case 4a
     // Destination as source, 2 arguments in the wrong order
+    // Confirm b is correct
     {
         VecShort a = 10;
         VecShort b = 20;
@@ -1750,12 +1750,46 @@ void test14(int imm)
     // [16] = -80.0
     // [17] = 90.0
 
-    // Destination as source 3 arguments
+    // Case 4b
+    // Destination as source, 2 arguments in the wrong order
+    // Confirm a is correct
     {
         VecShort a = 10;
         VecShort b = 20;
+        p_if (dst_reg[0] == 16.0f) {
+            b = b - a;
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 100.0f) { // always fail
+            dst_reg[14] = b;
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 18.0F) {
+            set_expected_result(14, -90.0F, 10, a);
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 19.0F) {
+            set_expected_result(14, 100.0F, 10, a);
+        }
+        p_endif;
+    }
+    // [18] = -90.0
+    // [19] = 100.0
+
+    // Case 4c
+    // Destination as source 3 arguments
+    // Confirm c is correct
+    {
+        // Out of regs doing this the typical way
+        VecHalf condition = dst_reg[0] - 20.0F;
+        VecShort a = 10;
+        VecShort b = 20;
         VecShort c = 30;
-        p_if (dst_reg[0] == 18.0f) {
+
+        p_if (condition == 0.0F) {
             c = a - b;
         }
         p_endif;
@@ -1766,54 +1800,170 @@ void test14(int imm)
         }
         p_endif;
 
-        p_if (dst_reg[0] == 18.0F) {
-            set_expected_result(14, -90.0F, -10, c);
+        p_if (dst_reg[0] == 20.0F) {
+            set_expected_result(14, -100.0F, -10, c);
         }
         p_endif;
 
-        p_if (dst_reg[0] == 19.0F) {
-            set_expected_result(14, 100.0F, 30, c);
+        p_if (dst_reg[0] == 21.0F) {
+            set_expected_result(14, 110.0F, 30, c);
         }
         p_endif;
     }
-    // [18] = -90.0
-    // [19] = 100.0
+    // [20] = -100.0
+    // [21] = 110.0
+
+    // Case 4c
+    // Destination as source 3 arguments
+    // Confirm a is correct
+    {
+        // Out of regs doing this the typical way
+        VecHalf condition = dst_reg[0] - 22.0F;
+        VecShort a = 10;
+        VecShort b = 20;
+        VecShort c = 30;
+
+        p_if (condition == 0.0F) {
+            c = a - b;
+        }
+        p_endif;
+
+        p_if (CReg_0p836914063 == dst_reg[0]) { // always fail
+            dst_reg[14] = a;
+            dst_reg[14] = c;
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 22.0F) {
+            set_expected_result(14, -110.0F, 10, a);
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 23.0F) {
+            set_expected_result(14, 120.0F, 10, a);
+        }
+        p_endif;
+    }
+    // [22] = -110.0
+    // [23] = 120.0
+
+    // Case 4c
+    // Destination as source 3 arguments
+    // Confirm b is correct
+    {
+        // Out of regs doing this the typical way
+        VecHalf condition = dst_reg[0] - 24.0F;
+        VecShort a = 10;
+        VecShort b = 20;
+        VecShort c = 30;
+
+        p_if (condition == 0.0F) {
+            c = a - b;
+        }
+        p_endif;
+
+        p_if (CReg_0p836914063 == dst_reg[0]) { // always fail
+            dst_reg[14] = c;
+            dst_reg[14] = b;
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 24.0F) {
+            set_expected_result(14, -120.0F, 20, b);
+        }
+        p_endif;
+
+        p_if (dst_reg[0] == 25.0F) {
+            set_expected_result(14, 130.0F, 20, b);
+        }
+        p_endif;
+    }
+    // [24] = -120.0
+    // [25] = 130.0
 
     // The code below tests the case where we descend down a CC cascade, pop
     // back up, then back down w/ different CC bits set.  Does the variable
     // stay live when assigned at the same CC level but in a different
-    // cascade?
+    // cascade, ie, across generations?
     {
         VecHalf a;
         VecHalf b;
+        VecHalf dr = dst_reg[0];
 
-        p_if (dst_reg[0] == 20.0F || dst_reg[0] == 21.0F) {
+        p_if (dr == 26.0F || dr == 27.0F) {
             b = -90.0F;
         }
         p_endif;
 
-        p_if (dst_reg[0] == 20.0F) {
+        p_if (dr == 26.0F) {
             a = 100.0F;
         }
         p_endif;
 
-        p_if (dst_reg[0] == 21.0F) {
+        p_if (dr == 27.0F) {
             a = 110.0F;
         }
         p_endif;
 
-        p_if (dst_reg[0] == 21.0F) {
+        p_if (dr == 27.0F) {
             b = a;
         }
         p_endif;
 
-        p_if (dst_reg[0] == 20.0F || dst_reg[0] == 21.0F) {
+        p_if (dr == 26.0F || dr == 27.0F) {
             dst_reg[14] = b;
         }
         p_endif;
+
+        p_if (dr == 500.0F) {
+            dst_reg[14] = a;
+        }
+        p_endif;
     }
-    // [20] = -90.0F
-    // [21] = 110.0F;
+    // [26] = -90.0F
+    // [27] = 110.0F;
+
+    // Test a little basic block liveness madness
+    {
+        VecHalf a = 200.0F;
+        VecHalf b = 1.0F;
+
+        for (int i = 0; i < imm - 30; i++) { // 0..4
+            p_if (dst_reg[0] == 28.0F) {
+                switch (i) {
+                case 0:
+                    b = 2.0f;
+                    break;
+                case 1:
+                    b = 4.0f;
+                    break;
+                case 2:
+                    b = 8.0f;
+                    break;
+                default:
+                    b = b * 4.0F;
+                }
+            } p_elseif (dst_reg[0] >= 30.0 - i) {
+                if (i % 2 == 0) {
+                    b = 10.0F;
+                } else {
+                    b = 20.0F;
+                }
+            }
+            p_endif;
+
+            a = a + a * b;
+        }
+
+        p_if (dst_reg[0] == 28.0F || dst_reg[0] == 29.0F) {
+            dst_reg[14] = a;
+        }
+        p_endif;
+    }
+    // [28] = 200+200*2, 600+600*4, 3000+3000*8, 27000+27000*32, 89100+89100*128 =
+    //        114939000.0F or 114819072.0F when rounded
+    // [29] = 200+200*1, 400+400*20, 4400+4400*20, 92400+92400*10, 1016400+1016400*20 =
+    //        21344400.0F or 21233664.0F when rounded
 
     copy_result_to_dreg0(14);
 }

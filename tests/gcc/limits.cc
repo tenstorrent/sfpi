@@ -38,9 +38,11 @@ int main(int argc, char* argv[])
     a = __builtin_riscv_sfpdivp2(nullptr, -2048 + offset, a, 1);
 
     // Signed 12 bit
+    __builtin_riscv_sfppushc();
     a = __builtin_riscv_sfpiadd_i(nullptr, a, 0x07FF + offset, 1);
     a = __builtin_riscv_sfpiadd_i(nullptr, a, -1 + offset, 1);
     a = __builtin_riscv_sfpiadd_i(nullptr, a, -2048 + offset, 1);
+    __builtin_riscv_sfppopc();
 
     // Signed 12 bit
     a = __builtin_riscv_sfpshft_i(nullptr, a, 0x07FF + offset);
