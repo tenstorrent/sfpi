@@ -813,7 +813,7 @@ protected:
     sfpi_inline void pop();
 
 public:
-    sfpi_inline CCCtrl(bool dopush);
+    sfpi_inline CCCtrl();
     sfpi_inline ~CCCtrl();
 
     sfpi_inline void cc_if(const VecBool& op) const;
@@ -825,13 +825,6 @@ public:
     sfpi_inline void push();
 
     static sfpi_inline void enable_cc();
-};
-
-class CCCtrlOpt : public CCCtrl {
-public:
-    sfpi_inline CCCtrlOpt();
-
-    sfpi_inline ~CCCtrlOpt();
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1515,11 +1508,9 @@ sfpi_inline IAddCC CondOpIAddV::not_cond(const IAddCC t) const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline CCCtrl::CCCtrl(bool dopush) : push_count(0)
+sfpi_inline CCCtrl::CCCtrl() : push_count(0)
 {
-    if (dopush) {
-        push();
-    }
+    push();
 }
 
 sfpi_inline void CCCtrl::cc_if(const VecBool& op) const
@@ -1689,7 +1680,7 @@ sfpi_inline vType reinterpret(const Vec v)
 
 #define p_if(x)             \
 {                           \
-    CCCtrl __cc(true);      \
+    CCCtrl __cc;            \
     __cc.cc_if(x);
 
 #define p_tail_if(x)        \
@@ -1708,7 +1699,7 @@ sfpi_inline vType reinterpret(const Vec v)
 
 #define p_block             \
 {                           \
-    CCCtrl __cc(true);
+    CCCtrl __cc;
 
 #define p_and(x)            \
     __cc.cc_if(x)

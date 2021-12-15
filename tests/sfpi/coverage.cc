@@ -300,7 +300,6 @@ void test_man_exp()
     VecShort v3 = exexp(v1);
     dst_reg[3] = v3;
 
-    CCCtrl cco(true);
     VecShort v4;
     p_if (v4.exexp_cc(v1, ExExpCCLT0)); {
     }
