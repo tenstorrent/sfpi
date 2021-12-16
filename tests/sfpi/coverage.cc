@@ -680,9 +680,10 @@ void stupid_example()
     p_if ((a >= 4.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
         VecShort b = exexp_nodebias(a);
         b &= 0xAA;
-        p_tail_if (b >= 130) {
+        p_if (b >= 130) {
             dst_reg[6] = setexp(a, 127);
         }
+        p_endif;
     } p_elseif (a == 20.0F) {
         dst_reg[7] = abs(a);
     } p_else {

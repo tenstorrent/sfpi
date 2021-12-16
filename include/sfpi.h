@@ -1676,9 +1676,6 @@ sfpi_inline vType reinterpret(const Vec v)
     CCCtrl __cc;            \
     __cc.cc_if(x);
 
-#define p_tail_if(x)        \
-    __cc.cc_if(x);
-
 #define p_elseif(x)         \
     __cc.cc_else();         \
     __cc.push();            \
