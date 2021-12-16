@@ -152,7 +152,6 @@ _Z4bb_1v:
 	li	s0,0
 	j	.L13
 .L17:
-	SFPPUSHC
 	SFPIADD	-3, L0, L2, 9
 	SFPNOP
 	SFPNOP
@@ -177,7 +176,7 @@ _Z4bb_1v:
 	SFPPOPC
 	SFPNOP
 .L15:
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 .L13:
@@ -191,7 +190,7 @@ _Z4bb_1v:
 .L16:
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 2, 0
 	lw	ra,12(sp)
@@ -221,7 +220,6 @@ _Z4bb_2v:
 	addi	sp,sp,16
 	jr	ra
 .L25:
-	SFPPUSHC
 	beq	s0,zero,.L20
 	bne	s0,s1,.L22
 	SFPIADD	-4, L0, L0, 9
@@ -232,7 +230,7 @@ _Z4bb_2v:
 	SFPIADD	-5, L1, L0, 5
 	SFPNOP
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 	j	.L23
@@ -243,7 +241,7 @@ _Z4bb_2v:
 	SFPIADD	-5, L1, L0, 5
 	SFPNOP
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 	j	.L23
@@ -265,7 +263,6 @@ _Z4bb_3v:
 .L35:
 	call	rand
 	beq	a0,zero,.L27
-	SFPPUSHC
 	SFPIADD	-3, L0, L2, 9
 	SFPNOP
 	SFPNOP
@@ -277,7 +274,6 @@ _Z4bb_3v:
 	SFPNOP
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-5, L0, L2, 9
 	SFPNOP
 	SFPNOP
@@ -285,9 +281,7 @@ _Z4bb_3v:
 	SFPIADD	-6, L1, L0, 5
 	SFPNOP
 	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 .L36:
@@ -304,7 +298,7 @@ _Z4bb_3v:
 	SFPIADD	-6, L1, L0, 5
 	SFPNOP
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 	j	.L36
@@ -318,7 +312,6 @@ _Z4bb_4v:
 	sw	s0,8(sp)
 	SFPLOADI	L0, 4, 1
 	SFPLOADI	L0, 4, 2
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -338,7 +331,7 @@ _Z4bb_4v:
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 2, 0
 	lw	ra,12(sp)
@@ -355,7 +348,7 @@ _Z4bb_4v:
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 2, 0
 	lw	ra,12(sp)

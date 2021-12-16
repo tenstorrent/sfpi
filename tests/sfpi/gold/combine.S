@@ -330,25 +330,23 @@ _Z11iadd_i_no10v:
 	addi	sp,sp,16
 	jr	ra
 .L24:
-	SFPPUSHC
 	SFPIADD	0, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L9, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
 .L23:
-	SFPPUSHC
 	SFPIADD	0, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L10, 0, 0
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	lw	ra,12(sp)
 	addi	sp,sp,16

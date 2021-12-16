@@ -201,13 +201,12 @@ _Z16no_yes_no_yes_nov:
 	.type	_Z6bb_yesi, @function
 _Z6bb_yesi:
 	SFPLOADI	L0, 4, 0
-	SFPPUSHC
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	bgt	a0,zero,.L15
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 .L15:
@@ -224,11 +223,10 @@ _Z6bb_yesi:
 	SFPNOP
 	addi	a5,a5,1
 	bne	a0,a5,.L13
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 .L16:
-	SFPPUSHC
 	SFPIADD	-3, L0, L1, 9
 	SFPNOP
 	SFPNOP
@@ -236,11 +234,9 @@ _Z6bb_yesi:
 	SFPLOADI	L0, 4, 4
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
-	SFPNOP
 	addi	a5,a5,1
 	bne	a5,a0,.L13
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	ret
 	.size	_Z6bb_yesi, .-_Z6bb_yesi
@@ -430,31 +426,28 @@ _Z24control_flow_p_if_switchii:
 	SFPSTORE	L0, 2, 0
 	ret
 .L26:
-	SFPPUSHC
 	SFPIADD	-4, L0, L1, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 5
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
 .L30:
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 3
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
 .L27:
-	SFPPUSHC
 	SFPIADD	-8, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -464,21 +457,18 @@ _Z24control_flow_p_if_switchii:
 	bgt	a1,a5,.L29
 	SFPCOMPC
 	SFPNOP
-	SFPPUSHC
 	SFPIADD	-10, L0, L1, 1
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L0, 4, 11
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
 .L29:
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
@@ -497,7 +487,6 @@ _Z25control_flow_pif_continuei:
 	mv	s1,a0
 	li	s0,0
 .L35:
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -517,7 +506,7 @@ _Z25control_flow_pif_continuei:
 	SFPPOPC
 	SFPNOP
 	SFPLOADI	L0, 4, 7
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	addi	s0,s0,1
@@ -531,7 +520,7 @@ _Z25control_flow_pif_continuei:
 .L37:
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	addi	s0,s0,1
 	bne	s0,s1,.L35
@@ -548,7 +537,6 @@ _Z21control_flow_pif_gotoi:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
 	SFPLOADI	L0, 4, 1
-	SFPPUSHC
 	SFPIADD	-2, L0, L1, 1
 	SFPNOP
 	SFPNOP
@@ -570,7 +558,7 @@ _Z21control_flow_pif_gotoi:
 	SFPPOPC
 	SFPNOP
 	SFPLOADI	L0, 4, 7
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	lw	ra,12(sp)
@@ -579,7 +567,7 @@ _Z21control_flow_pif_gotoi:
 .L42:
 	SFPPOPC
 	SFPNOP
-	SFPPOPC
+	SFPENCC	3, 10
 	SFPNOP
 	SFPLOADI	L0, 4, 8
 	lw	ra,12(sp)
