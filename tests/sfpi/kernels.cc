@@ -111,7 +111,7 @@ void test3()
 
     p_if(dst_reg[0] == 62.0F) {
         // Store into [62] so the compared value isn't close to the expected value
-        dst_reg[3] = CReg_0p001953125;
+        dst_reg[3] = CReg_0p0020;
     }
     p_endif;
 
@@ -291,15 +291,15 @@ void test5()
     // Test SFPMAD, SFPMOV, CRegs
 
     p_if(dst_reg[0] == 0.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p692871094;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p6929;
     } p_elseif(dst_reg[0] == 1.0F) {
         dst_reg[5] = CReg_0 * CReg_0 + CReg_0;
     } p_elseif(dst_reg[0] == 2.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_1p00683594;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_1p0068;
     } p_elseif(dst_reg[0] == 3.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_1p442382813;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_1p4424;
     } p_elseif(dst_reg[0] == 4.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p836914063;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p8369;
     } p_elseif(dst_reg[0] == 5.0F) {
         dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p5;
     } p_elseif(dst_reg[0] == 6.0F) {
@@ -317,11 +317,11 @@ void test5()
     p_if(dst_reg[0] == 7.0F) {
         dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_1;
     } p_elseif(dst_reg[0] == 8.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p001953125;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p0020;
     } p_elseif(dst_reg[0] == 9.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p67480469;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p6748;
     } p_elseif(dst_reg[0] == 10.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p34472656;
+        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p3447;
     } p_elseif(dst_reg[0] >= 11.0F) { // NOTE THIS IS >= TO FILL REMAINDER W/ TILE ID
         // Bogus test - low bits get lopped off by treating the int as a float
         dst_reg[5] = CReg_0 * CReg_0 + CReg_TileId;
@@ -1794,7 +1794,7 @@ void test14(int imm)
         }
         p_endif;
 
-        p_if (CReg_0p836914063 == dst_reg[0]) { // always fail
+        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = b;
         }
@@ -1828,7 +1828,7 @@ void test14(int imm)
         }
         p_endif;
 
-        p_if (CReg_0p836914063 == dst_reg[0]) { // always fail
+        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = c;
         }
@@ -1862,7 +1862,7 @@ void test14(int imm)
         }
         p_endif;
 
-        p_if (CReg_0p836914063 == dst_reg[0]) { // always fail
+        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = c;
             dst_reg[14] = b;
         }

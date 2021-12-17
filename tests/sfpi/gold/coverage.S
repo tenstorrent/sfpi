@@ -1255,9 +1255,9 @@ _Z20lots_of_conditionalsv:
 	ret
 	.size	_Z20lots_of_conditionalsv, .-_Z20lots_of_conditionalsv
 	.align	1
-	.globl	_Z14stupid_examplev
-	.type	_Z14stupid_examplev, @function
-_Z14stupid_examplev:
+	.globl	_Z14stupid_examplej
+	.type	_Z14stupid_examplej, @function
+_Z14stupid_examplej:
 	SFPLOADI	L1, 0, 16384
 	SFPLOAD	L0, 1, 0
 	SFPMAD	L0, L10, L1, L0, 0
@@ -1293,7 +1293,13 @@ _Z14stupid_examplev:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L1, 0, 16
-	SFPLOADI	L1, 0, 16320
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a0,a0,16
+	srli	a0,a0,16
+	li	a4,1896939520
+	add	a4, a4, a0
+	sw	a4,0(a5)
 	SFPLOADI	L2, 0, 16281
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP
@@ -1350,7 +1356,7 @@ _Z14stupid_examplev:
 	SFPCOMPC
 	SFPNOP
 	SFPPUSHC
-	SFPLOADI	L1, 0, 49568
+	SFPLOADI	L1, 1, 49664
 	SFPMAD	L0, L10, L1, L1, 0
 	SFPNOP
 	SFPNOP
@@ -1383,7 +1389,7 @@ _Z14stupid_examplev:
 	SFPENCC	3, 10
 	SFPNOP
 	ret
-	.size	_Z14stupid_examplev, .-_Z14stupid_examplev
+	.size	_Z14stupid_examplej, .-_Z14stupid_examplej
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main
@@ -1391,6 +1397,8 @@ _Z14stupid_examplev:
 main:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
+	sw	s0,8(sp)
+	mv	s0,a0
 	call	_Z15test_load_storev
 	call	_Z8test_addv
 	call	_Z8test_subv
@@ -1440,8 +1448,10 @@ main:
 	SFPNOP
 	SFPNOP
 	call	_Z15test_short_condv
-	call	_Z14stupid_examplev
+	mv	a0,s0
+	call	_Z14stupid_examplej
 	lw	ra,12(sp)
+	lw	s0,8(sp)
 	li	a0,0
 	addi	sp,sp,16
 	jr	ra

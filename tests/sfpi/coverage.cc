@@ -87,8 +87,8 @@ void test_add()
 
     dst_reg[13] = CReg_0 + CReg_Neg_1;
     dst_reg[14] = CReg_Neg_1 + dst_reg[12];
-    dst_reg[15] = dst_reg[12] + CReg_0p001953125 + kHalf;
-    dst_reg[16] = c + CReg_Neg_0p67480469 - kHalf;
+    dst_reg[15] = dst_reg[12] + CReg_0p0020 + kHalf;
+    dst_reg[16] = c + CReg_Neg_0p6748 - kHalf;
 
     //TTFIXME XXXX 
     //    dst_reg[17] = a + b + c;
@@ -164,8 +164,8 @@ void test_mul()
 
     dst_reg[13] = CReg_0 * CReg_Neg_1;
     dst_reg[14] = CReg_Neg_1 * dst_reg[12];
-    dst_reg[15] = dst_reg[12] * CReg_0p001953125 + kHalf;
-    dst_reg[15] = c * CReg_Neg_0p67480469 - kHalf;
+    dst_reg[15] = dst_reg[12] * CReg_0p0020 + kHalf;
+    dst_reg[15] = c * CReg_Neg_0p6748 - kHalf;
 
     dst_reg[16] = a * b * c;
     dst_reg[17] = CReg_0 * b * c;
@@ -659,13 +659,13 @@ void lots_of_conditionals()
     p_endif;
 }
 
-void stupid_example()
+void stupid_example(unsigned int value)
 {
     // dst_reg[n] loads into a temporary LREG
     VecHalf a = dst_reg[0] + 2.0F;
 
     // This emits a load, move, mad
-    dst_reg[3] = a * -dst_reg[1] + CReg_0p692871094 + kHalf;
+    dst_reg[3] = a * -dst_reg[1] + CReg_0p6929 + kHalf;
 
     // This emits a load, loadi, mad (a * dst_reg[] goes down the mad path)
     dst_reg[4] = a * dst_reg[1] + 1.2F;
@@ -674,7 +674,7 @@ void stupid_example()
     dst_reg[4] = a * 1.5F + 1.2F;
 
     // This emits a loadi (into tmp), loadi (as a temp for 1.2F) and a mad
-    VecHalf tmp = 1.5F;
+    VecHalf tmp = ScalarFP16a(value);
     dst_reg[5] = a * tmp + 1.2F;
     
     p_if ((a >= 4.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
@@ -684,7 +684,7 @@ void stupid_example()
             dst_reg[6] = setexp(a, 127);
         }
         p_endif;
-    } p_elseif (a == 20.0F) {
+    } p_elseif (a == ScalarFP16a(3.0F)) {
         dst_reg[7] = abs(a);
     } p_else {
         VecShort exp = lz(a) - 19;
@@ -743,6 +743,6 @@ int main(int argc, char* argv[])
     test_iadd();
     test_set_sgn();
     test_short_cond();
-    stupid_example();
+    stupid_example(argc);
     //    test_operator_equals();
 }

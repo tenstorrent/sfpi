@@ -56,11 +56,11 @@
 //
 // Constant Local Registers:
 //   class CReg
-//   constexpr CReg CReg_0p692871094(5);
+//   constexpr CReg CReg_0p6928(5);
 //
 //   The constant value local registers are used in expressions by referencing
 //   one of the names above and using them in mathematical operations such as:
-//       a = b * c + CReg_0p692871094;
+//       a = b * c + CReg_0p6928;
 //
 // Predicated Execution:
 //   class CCCtrl
@@ -834,16 +834,16 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////
 constexpr CReg CReg_0(CREG_IDX_0);
-constexpr CReg CReg_0p692871094(CREG_IDX_0P692871094);
-constexpr CReg CReg_Neg_1p00683594(CREG_IDX_NEG_1P00683594);
-constexpr CReg CReg_1p442382813(CREG_IDX_1P442382813);
-constexpr CReg CReg_0p836914063(CREG_IDX_0P836914063);
+constexpr CReg CReg_0p6929(CREG_IDX_0P692871094);
+constexpr CReg CReg_Neg_1p0068(CREG_IDX_NEG_1P00683594);
+constexpr CReg CReg_1p4424(CREG_IDX_1P442382813);
+constexpr CReg CReg_0p8369(CREG_IDX_0P836914063);
 constexpr CReg CReg_Neg_0p5(CREG_IDX_NEG_0P5);
 constexpr CReg CReg_1(CREG_IDX_1);
 constexpr CReg CReg_Neg_1(CREG_IDX_NEG_1);
-constexpr CReg CReg_0p001953125(CREG_IDX_0P001953125);
-constexpr CReg CReg_Neg_0p67480469(CREG_IDX_NEG_0P67480469);
-constexpr CReg CReg_Neg_0p34472656(CREG_IDX_NEG_0P34472656);
+constexpr CReg CReg_0p0020(CREG_IDX_0P001953125);
+constexpr CReg CReg_Neg_0p6748(CREG_IDX_NEG_0P67480469);
+constexpr CReg CReg_Neg_0p3447(CREG_IDX_NEG_0P34472656);
 constexpr CReg CReg_TileId(CREG_IDX_TILEID);
 
 constexpr RegFile<DReg, 64> dst_reg;
