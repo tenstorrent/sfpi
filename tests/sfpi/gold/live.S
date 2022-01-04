@@ -669,6 +669,24 @@ _Z21prop_thru_pseudo_livev:
 	SFPSTORE	L0, 2, 0
 	ret
 	.size	_Z21prop_thru_pseudo_livev, .-_Z21prop_thru_pseudo_livev
+	.align	1
+	.globl	_Z18do_not_fold_assignv
+	.type	_Z18do_not_fold_assignv, @function
+_Z18do_not_fold_assignv:
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPIADD	0, L0, L2, 1
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z18do_not_fold_assignv, .-_Z18do_not_fold_assignv
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main
@@ -711,6 +729,18 @@ main:
 	call	_Z18double_assign_evenv
 	call	_Z10generationv
 	call	_Z21prop_thru_pseudo_livev
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPIADD	0, L0, L2, 1
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSTORE	L0, 2, 0
 	lw	ra,12(sp)
 	li	a0,0
 	addi	sp,sp,16

@@ -339,6 +339,19 @@ void prop_thru_pseudo_live()
     dst_reg[0] = a;
 }
 
+void do_not_fold_assign()
+{
+    VecShort a = 1;
+    VecShort b = 2;
+
+    p_if (a < 0) {
+        a = b;
+    }
+    p_endif;
+
+    dst_reg[0] = a;
+}
+
 int main(int argc, char* argv[])
 {
     abs_setcc();
@@ -356,4 +369,5 @@ int main(int argc, char* argv[])
     double_assign_even();
     generation();
     prop_thru_pseudo_live();
+    do_not_fold_assign();
 }

@@ -57,7 +57,7 @@ rv32lto/%.o: %.cc $(INCLUDES) | rv32lto
 rv32ltoo/%.elf: lto/%.o $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
 
-test: rv32/combine.S rv32/coverage.S x86/kernels | results
+test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S | results
 	x86/kernels 14 b > results/kernels_int
 	x86/kernels 14 > results/kernels_float
 	diff results/kernels_float gold/kernels_float
