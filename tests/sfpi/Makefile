@@ -28,7 +28,6 @@ rv32:
 	mkdir rv32
 rv32lto:
 	mkdir rv32lto
-
 results:
 	mkdir results
 

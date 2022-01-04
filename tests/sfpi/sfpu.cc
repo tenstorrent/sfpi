@@ -771,8 +771,8 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned in
 {
     __rvtt_vec_t tmp;
 
-    // 12 bit imm
-    imm = (imm & 0x0800) ? (imm | 0xF000) : (imm & 0x0FFF);
+    // Note: the instruction for iadd uses a 12 bit imm, but the builtin
+    // supports 16 bit imms using loadi
     sfpu_cc.deferred_commit();
     sfpu_cc.deferred_init();
     for (int i = 0; i < SFPU_WIDTH; i++) {

@@ -626,6 +626,22 @@ void test6()
     }
     p_endif;
 
+    // Pseudo-16 bit via hidden loadi
+    p_if (dst_reg[0] == 26.0F) {
+        VecShort a = 10;
+        a += 4096;
+        set_expected_result(6, 256.0F, 4106, a);
+    } p_elseif (dst_reg[0] == 27.0F) {
+        VecShort a = 4096;
+        p_if (a >= 4096) {
+            dst_reg[6] = 512.0f;
+        } p_else {
+            dst_reg[6] = 0.0f;
+        }
+        p_endif;
+    }
+    p_endif;
+
     // [0] = 256.0
     // [1] = 1024.0
     // [2] = 1024.0
@@ -652,6 +668,8 @@ void test6()
     // [23] = 32.0
     // [24] = 64.0
     // [25] = 128.0
+    // [26] = 256.0
+    // [27] = 512.0
 
     copy_result_to_dreg0(6);
 }
@@ -889,9 +907,8 @@ void test9()
         VecShort b = lz(a);
         set_expected_result(9, 55.0F, 0x0, b);
     } p_elseif(dst_reg[0] == 9.0F) {
-        VecUShort a = 0xFFFF;
+        VecUShort a = 0xFFFFU;
         VecShort b = lz(a);
-        dst_reg[9] = 14.0f;
         set_expected_result(9, 30.0F, 0x3, b);
     } p_elseif(dst_reg[0] < 13.0F) {
         VecHalf a = dst_reg[0] - 11.0F;
@@ -967,7 +984,7 @@ void test10()
         VecUShort b = shft(a, -4);
         set_expected_result(10, 22.0F, 0x02AA, static_cast<VecShort>(b));
     } p_elseif(dst_reg[0] == 3.0F) {
-        VecUShort a = 0xAAAA;
+        VecUShort a = 0xAAAAU;
         VecShort shift = -6;
         VecUShort b = shft(a, shift);
         set_expected_result(10, 24.0F, 0x02AA, static_cast<VecShort>(b));

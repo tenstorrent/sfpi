@@ -247,8 +247,8 @@ void test_loadi(int32_t i, uint32_t ui)
     dst_reg[0] = a;
 
     VecUShort b;
-    b = 255;
-    b = -255;
+    b = 255U;
+    b = -255U;
     dst_reg[1] = b;
 
     VecHalf c;
@@ -453,13 +453,13 @@ void test_bitwise()
     dst_reg[6] = v1 & v2;
 
     VecUShort v3, v4;
-    v3 = 3;
-    v4 = 4;
+    v3 = 3U;
+    v4 = 4U;
     v3 |= v4;
-    v3 |= 0xAA;
+    v3 |= 0xAAU;
     dst_reg[2] = v3;
     v3 &= v4;
-    v3 &= 0xAA;
+    v3 &= 0xAAU;
     dst_reg[3] = v4;
     dst_reg[4] = ~v3;
 
@@ -504,7 +504,7 @@ void test_lz()
 void test_shft()
 {
     VecShort v1 = 1;
-    VecUShort v2 = 2;
+    VecUShort v2 = 2U;
     VecUShort v3;
 
     v3 = v2 >> 3;
@@ -581,13 +581,13 @@ void test_iadd()
 
     VecUShort v4, v5;
 
-    v4 = 12;
-    v5 = v4 + 10;
+    v4 = 12U;
+    v5 = v4 + 10U;
     v5 += v4;
-    v5 += 10;
+    v5 += 10U;
     VecUShort v6 = v4 + v5;
     v5 -= v6;
-    v5 -= 10;
+    v5 -= 10U;
     v6 = v4 - v5;
     v6 += CReg_TileId;
     v5 = v4 + CReg_TileId;
@@ -600,6 +600,84 @@ void test_iadd()
         dst_reg[4] = 0.0F;
     }
     p_endif;
+}
+
+void test_icmp()
+{
+    VecShort a = 1;
+    VecShort b = 2;
+
+    p_if (a < b) {
+    }
+    p_endif;
+    p_if (a >= b) {
+    }
+    p_endif;
+#if 0
+    p_if (a == b) {
+    }
+    p_endif;
+    p_if (a != b) {
+    }
+    p_endif;
+#endif
+
+    p_if (a < 3) {
+    }
+    p_endif;
+    p_if (a == 4) {
+    }
+    p_endif;
+    p_if (a != 5) {
+    }
+    p_endif;
+    p_if (a >= 6) {
+    }
+    p_endif;
+
+    VecUShort c = 10;
+    VecUShort d = 11;
+
+    p_if (c < d) {
+    }
+    p_endif;
+    p_if (c >= d) {
+    }
+    p_endif;
+#if 0
+    p_if (c == d) {
+    }
+    p_endif;
+    p_if (c != d) {
+    }
+    p_endif;
+#endif
+
+    p_if (c < 13) {
+    }
+    p_endif;
+    p_if (c == 14) {
+    }
+    p_endif;
+    p_if (c != 15) {
+    }
+    p_endif;
+    p_if (c >= 16) {
+    }
+    p_endif;
+}
+
+void test_iadd2()
+{
+#if 0
+    int32_t x = 0; //3343343;
+
+    VecUShort a = x;
+
+    p_if (a < 0x801) {
+    }
+    p_endif;
+#endif
 }
 
 void test_set_sgn()
