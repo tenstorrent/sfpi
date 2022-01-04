@@ -284,36 +284,36 @@ void double_assign_even()
 // cascade, ie, across generations?
 void generation()
 {
-    VecHalf a;
-    VecHalf b;
-    VecHalf dr = dst_reg[0];
+    VecShort a;
+    VecShort b;
+    VecShort dr = 1;
 
-    p_if (dr == 20.0F || dr == 21.0F) {
-        b = -90.0F;
+    p_if (dr == 2.0 || dr == 3.0) {
+        b = 4;
     }
     p_endif;
 
-    p_if (dr == 20.0F) {
-        a = 100.0F;
+    p_if (dr == 5.0) {
+        b = -6;
     }
     p_endif;
 
-    p_if (dr == 21.0F) {
-        a = 110.0F;
+    p_if (dr == 7) {
+        a = 8;
     }
     p_endif;
 
-    p_if (dr == 21.0F) {
-        b = a;
+    p_if (dr == 9) {
+        a = 10;
     }
     p_endif;
 
-    p_if (dr == 20.0F || dr == 21.0F) {
+    p_if (dr == 11 || dr == 12) {
         dst_reg[14] = b;
     }
     p_endif;
 
-    p_if (dr == 500.0F) {
+    p_if (dr == 13) {
         dst_reg[14] = a;
     }
     p_endif;
