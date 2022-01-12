@@ -504,14 +504,23 @@ void test_lz()
 void test_shft()
 {
     VecShort v1 = 1;
-    VecUShort v2 = 2U;
-    VecUShort v3;
+    VecShort v2 = 2;
+    VecUShort v3 = 3;
+    VecUShort v4;
 
-    v3 = v2 >> 3;
-    v3 = v2 << 4;
-    v1 = v1 << 5;
-    v3 <<= 6;
-    v3 >>= 7;
+    v1 = v1 << -4;
+    v1 = v2 << 5;
+    v1 <<= 6;
+
+    v4 = v3 >> -7;
+    v4 = v3 << 8;
+
+    v3 = v3 >> -9;
+    v3 = v3 << 10;
+
+    v3 <<= -11;
+    v3 >>= 12;
+
     v2 = shft(v3, v1);
 
     dst_reg[0] = v1;

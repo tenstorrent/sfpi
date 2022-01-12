@@ -23,6 +23,20 @@ void iadd_i_yes1()
     p_endif;
 }
 
+void iadd_i_yes1_live()
+{
+    VecShort a = 3;
+
+    p_if (a < 0) {
+        a = a - 5;
+        p_if (a < 0) {
+            dst_reg[0] = CReg_1;
+        }
+        p_endif;
+    }
+    p_endif;
+}
+
 #if ASSIGNMENTS_IN_COND
 void iadd_i_yes2()
 {
@@ -521,6 +535,23 @@ void exexp_yes1()
     b = exexp(a);
     p_if (b >= 0) {
         dst_reg[0] = CReg_1;
+    }
+    p_endif;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
+}
+
+void exexp_yes1_live()
+{
+    VecHalf a = 3.0f;
+    VecShort b = 1;
+
+    p_if (a < 0) {
+        b = exexp(a);
+        p_if (b >= 0) {
+            dst_reg[0] = CReg_1;
+        }
+        p_endif;
     }
     p_endif;
     dst_reg[0] = a;

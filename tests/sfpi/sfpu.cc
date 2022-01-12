@@ -11,6 +11,17 @@ __rvtt_vec_t sfpu_lreg[4];
 
 };
 
+static unsigned int cmp_ex_to_setcc_mod1_map[] = {
+  0,
+  SFPSETCC_MOD1_LREG_LT0,
+  0,
+  SFPSETCC_MOD1_LREG_EQ0,
+  0,
+  SFPSETCC_MOD1_LREG_GTE0,
+  0,
+  SFPSETCC_MOD1_LREG_NE0,
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 SFPUDReg::SFPUDReg()
 { 
@@ -215,7 +226,7 @@ constexpr __rvtt_vec_t::__rvtt_vec_t(const unsigned int v) : values()
 
 void __rvtt_vec_t::dump(int start, int stop) const
 {
-    char enabled_string[2] = { 'E', 'd' };
+    char enabled_string[2] = { 'd', 'E' };
     for (int i = start; i < stop; i++) {
         printf("reg[%d]: (%c) 0x%x %f\n", i, enabled_string[sfpu_cc.enabled(i)], get_uint(i), get_float(i));
     }
@@ -223,7 +234,7 @@ void __rvtt_vec_t::dump(int start, int stop) const
 
 void __rvtt_vec_t::dump(int i) const
 {
-    char enabled_string[2] = { 'E', 'd' };
+    char enabled_string[2] = { 'd', 'E' };
     printf("reg[%d]: (%c) 0x%x %f\n", i, enabled_string[sfpu_cc.enabled(i)], get_uint(i), get_float(i));
 }
 
@@ -438,7 +449,7 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         switch (mod1) {
-        case SFPSETCC_MOD1_LREG_SIGN:
+        case SFPSETCC_MOD1_LREG_LT0:
             sfpu_cc.and_result(i, (v.get_uint(i) & BIT_18_MASK) != 0);
             break;
         case SFPSETCC_MOD1_LREG_NE0:
@@ -457,6 +468,29 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
             throw;
         }
     }
+}
+
+void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1)
+{
+    if (b != 0) {
+        __rvtt_vec_t tmp;
+        int loadi_mod = ((mod1 & SFPSCMP_EX_MOD1_FMT_A) == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
+        __rvtt_vec_t op_b = __builtin_rvtt_sfploadi(loadi_mod, b);
+        tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
+
+        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
+    } else {
+        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[mod1]);
+    }
+}
+
+void sfpu_rvtt_sfpvcmp_ex(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
+{
+    __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(b,
+                                             __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
+                                             a,
+                                             0);
+   __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
 }
 
 __rvtt_vec_t sfpu_rvtt_sfpexexp(const __rvtt_vec_t& v, unsigned int mod1)
@@ -792,6 +826,40 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned in
     return tmp;
 }
 
+__rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+
+    // Note: the instruction for iadd uses a 12 bit imm, but the builtin
+    // supports 16 bit imms using loadi
+    sfpu_cc.deferred_commit();
+    sfpu_cc.deferred_init();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            int val = src.get_uint(i);
+            val += (mod1 & SFPIADD_EX_MOD1_IS_SUB) ? -imm : imm;
+            tmp.set_uint(i, val);
+
+            switch (mod1 & SFPCMP_EX_MOD1_CC_MASK) {
+            case SFPCMP_EX_MOD1_CC_GTE0:
+                sfpu_cc.deferred_and_result(i, val >= 0);
+                break;
+            case SFPCMP_EX_MOD1_CC_LT0:
+                sfpu_cc.deferred_and_result(i, val < 0);
+                break;
+            case SFPCMP_EX_MOD1_CC_EQ0:
+                sfpu_cc.deferred_and_result(i, val == 0);
+                break;
+            case SFPCMP_EX_MOD1_CC_NE0:
+                sfpu_cc.deferred_and_result(i, val != 0);
+                break;
+            }
+        }
+    }
+
+    return tmp;
+}
+
 __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
@@ -816,6 +884,29 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& sr
                 // LT0
                 sfpu_cc.deferred_and_result(i, val < 0);
             }
+        }
+    }
+
+    return tmp;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+
+    unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
+    bool is_sub = ((mod1 & SFPIADD_EX_MOD1_IS_SUB) != 0);
+    unsigned int mod = is_sub ? SFPIADD_MOD1_ARG_2SCOMP_LREG_DST : SFPIADD_MOD1_ARG_LREG_DST;
+    if (cmp == SFPCMP_EX_MOD1_CC_LT0 || cmp == SFPCMP_EX_MOD1_CC_GTE0) {
+        // Perform op w/ compare
+        mod |= (cmp == SFPCMP_EX_MOD1_CC_LT0) ? SFPIADD_MOD1_CC_LT0 : SFPIADD_MOD1_CC_GTE0;
+        tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
+    } else {
+        // Perform op w/o compare, compare with SETCC
+        mod |= SFPIADD_MOD1_CC_NONE;
+        tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
+        if (cmp != 0) {
+            sfpu_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
         }
     }
 

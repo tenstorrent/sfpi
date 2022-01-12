@@ -52,14 +52,32 @@ int main(int argc, char* argv[])
     a = __builtin_riscv_sfpdivp2(nullptr, -2048 + offset12, a, 1);
 
     // Signed 12 bit
-    a = __builtin_riscv_sfpiadd_i(nullptr, a, 0x07FF + offset12, 5);
+    a = __builtin_riscv_sfpiadd_i(nullptr, a, 2047 + offset12, 5);
     a = __builtin_riscv_sfpiadd_i(nullptr, a, -1 + offset12, 5);
     a = __builtin_riscv_sfpiadd_i(nullptr, a, -2048 + offset12, 5);
 
     // Signed 16 bit
-    a = __builtin_riscv_sfpiadd_i(nullptr, a, 0x7FFF + offset12, 5);
+    a = __builtin_riscv_sfpiadd_i(nullptr, a, 32767 + offset12, 5);
     a = __builtin_riscv_sfpiadd_i(nullptr, a, -1 + offset12, 5);
-    a = __builtin_riscv_sfpiadd_i(nullptr, a, -2048 + offset12, 5);
+    a = __builtin_riscv_sfpiadd_i(nullptr, a, -32768 + offset12, 5);
+
+    // Signed 12 bit
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 2047 + offset12, 8);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, -1 + offset12, 8);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, -2048 + offset12, 8);
+
+    // Signed 16 bit
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 32767 + offset12, 8);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, -1 + offset12, 8);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, -32768 + offset12, 8);
+
+    // Unsigned 12 bit
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 0 + offset12, 0);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 4095 + offset12, 0);
+
+    // Unsigned 16 bit
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 0 + offset12, 0);
+    a = __builtin_riscv_sfpiadd_i_ex(nullptr, a, 65535 + offset12, 0);
 
     // Signed 12 bit
     a = __builtin_riscv_sfpshft_i(nullptr, a, 0x07FF + offset12);

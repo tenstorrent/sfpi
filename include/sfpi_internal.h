@@ -32,6 +32,8 @@ namespace sfpi {
 #define __builtin_rvtt_sfppopc() sfpu_rvtt_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) sfpu_rvtt_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) sfpu_rvtt_sfpsetcc_i(imm12, mod1)
+#define __builtin_rvtt_sfpscmp_ex(v, f, mod1) sfpu_rvtt_sfpscmp_ex(v, f, mod1)
+#define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) sfpu_rvtt_sfpvcmp_ex(v1, v2, mod1)
 #define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
 
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) sfpu_rvtt_sfpmad(va, vb, vc, mod1)
@@ -61,7 +63,9 @@ namespace sfpi {
 #define __builtin_rvtt_sfpshft_v(dst, src) sfpu_rvtt_sfpshft_v(dst, src)
 
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
+#define __builtin_rvtt_sfpiadd_i_ex(src, imm12, mod1) sfpu_rvtt_sfpiadd_i_ex(imm12, src, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) sfpu_rvtt_sfpiadd_v(dst, src, mod1)
+#define __builtin_rvtt_sfpiadd_v_ex(dst, src, mod1) sfpu_rvtt_sfpiadd_v_ex(dst, src, mod1)
 
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) sfpu_rvtt_sfpsetsgn_i(imm12, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) sfpu_rvtt_sfpsetsgn_v(dst, src)
@@ -108,6 +112,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfppopc() __builtin_riscv_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_riscv_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_riscv_sfpsetcc_i(imm12, mod1)
+#define __builtin_rvtt_sfpscmp_ex(v, f, mod1) __builtin_riscv_sfpscmp_ex((void*)ckernel::instrn_buffer, v, f, mod1)
+#define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) __builtin_riscv_sfpvcmp_ex(v1, v2, mod1)
 #define __builtin_rvtt_sfpcompc() __builtin_riscv_sfpcompc()
 
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) __builtin_riscv_sfpmad(va, vb, vc, mod1)
@@ -137,7 +143,9 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpshft_v(dst, src) __builtin_riscv_sfpshft_v(dst, src)
 
 #define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) __builtin_riscv_sfpiadd_i((void *)ckernel::instrn_buffer, src, imm12, mod1)
+#define __builtin_rvtt_sfpiadd_i_ex(src, imm12, mod1) __builtin_riscv_sfpiadd_i_ex((void *)ckernel::instrn_buffer, src, imm12, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) __builtin_riscv_sfpiadd_v(dst, src, mod1)
+#define __builtin_rvtt_sfpiadd_v_ex(dst, src, mod1) __builtin_riscv_sfpiadd_v_ex(dst, src, mod1)
 
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_riscv_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) __builtin_riscv_sfpsetsgn_v(dst, src)
@@ -186,7 +194,21 @@ constexpr unsigned int SFPIADD_MOD1_CC_LT0 = 0;
 constexpr unsigned int SFPIADD_MOD1_CC_NONE = 4;
 constexpr unsigned int SFPIADD_MOD1_CC_GTE0 = 8;
 
-constexpr unsigned int SFPSETCC_MOD1_LREG_SIGN = 0;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_NONE = 0;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_LT0 = 1;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_EQ0 = 3;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_GTE0 = 5;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_NE0 = 7;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_MASK = 7;
+
+constexpr unsigned int SFPSCMP_EX_MOD1_FMT_A = 8;
+
+constexpr unsigned int SFPIADD_EX_MOD1_IS_SUB = 16;
+
+constexpr unsigned int SFPIADD_I_EX_MOD1_SIGNED = 8;
+constexpr unsigned int SFPIADD_I_EX_MOD1_IS_12BITS = 32;
+
+constexpr unsigned int SFPSETCC_MOD1_LREG_LT0 = 0;
 constexpr unsigned int SFPSETCC_MOD1_IMM_BIT0 = 1;
 constexpr unsigned int SFPSETCC_MOD1_LREG_NE0 = 2;
 constexpr unsigned int SFPSETCC_MOD1_LREG_GTE0 = 4;
