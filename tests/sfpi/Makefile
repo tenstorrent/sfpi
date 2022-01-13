@@ -15,7 +15,7 @@ RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc fp16c.cc
 
-ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S
+ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regmov.S
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
 LTOS = $(addprefix rv32lto/,$(SRCS:.cc=))
 SIMS = $(addprefix x86/,$(SRCS:.cc=))
@@ -57,7 +57,7 @@ rv32lto/%.o: %.cc $(INCLUDES) | rv32lto
 rv32ltoo/%.elf: lto/%.o $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
 
-test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S | results
+test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S rv32/regmov.S | results
 	x86/kernels 14 b > results/kernels_int
 	x86/kernels 14 > results/kernels_float
 	diff results/kernels_float gold/kernels_float
@@ -66,6 +66,7 @@ test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S | re
 	cmp rv32/pushpop.S gold/pushpop.S
 	cmp rv32/coverage.S gold/coverage.S
 	cmp rv32/live.S gold/live.S
+	cmp rv32/regmov.S gold/regmov.S
 
 promote:
 	cp results/kernels_int gold/kernels_int
@@ -74,6 +75,7 @@ promote:
 	cp rv32/pushpop.S gold/pushpop.S
 	cp rv32/coverage.S gold/coverage.S
 	cp rv32/live.S gold/live.S
+	cp rv32/regmov.S gold/regmov.S
 
 clean:
 	@rm -rf x86
