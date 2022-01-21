@@ -5,9 +5,9 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.globl	_Z15remove_add1_yesv
-	.type	_Z15remove_add1_yesv, @function
-_Z15remove_add1_yesv:
+	.globl	_Z11remove_add1v
+	.type	_Z11remove_add1v, @function
+_Z11remove_add1v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L0, 4, 2
 	SFPIADD	0, L1, L0, 4
@@ -16,7 +16,7 @@ _Z15remove_add1_yesv:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z15remove_add1_yesv, .-_Z15remove_add1_yesv
+	.size	_Z11remove_add1v, .-_Z11remove_add1v
 	.align	1
 	.globl	_Z15remove_add2_nopv
 	.type	_Z15remove_add2_nopv, @function
@@ -31,9 +31,9 @@ _Z15remove_add2_nopv:
 	ret
 	.size	_Z15remove_add2_nopv, .-_Z15remove_add2_nopv
 	.align	1
-	.globl	_Z14remove_add1_nov
-	.type	_Z14remove_add1_nov, @function
-_Z14remove_add1_nov:
+	.globl	_Z12replace_add3v
+	.type	_Z12replace_add3v, @function
+_Z12replace_add3v:
 	SFPLOADI	L2, 4, 1
 	SFPLOADI	L1, 4, 2
 	SFPMOV	L1, L0, 0
@@ -46,11 +46,11 @@ _Z14remove_add1_nov:
 	SFPSTORE	L1, 2, 4
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z14remove_add1_nov, .-_Z14remove_add1_nov
+	.size	_Z12replace_add3v, .-_Z12replace_add3v
 	.align	1
-	.globl	_Z14remove_sub1_nov
-	.type	_Z14remove_sub1_nov, @function
-_Z14remove_sub1_nov:
+	.globl	_Z12replace_sub1v
+	.type	_Z12replace_sub1v, @function
+_Z12replace_sub1v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L2, 4, 2
 	SFPMOV	L1, L0, 0
@@ -62,11 +62,11 @@ _Z14remove_sub1_nov:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z14remove_sub1_nov, .-_Z14remove_sub1_nov
+	.size	_Z12replace_sub1v, .-_Z12replace_sub1v
 	.align	1
-	.globl	_Z15remove_and1_yesv
-	.type	_Z15remove_and1_yesv, @function
-_Z15remove_and1_yesv:
+	.globl	_Z11remove_and1v
+	.type	_Z11remove_and1v, @function
+_Z11remove_and1v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L0, 4, 2
 	SFPAND	L1, L0
@@ -75,7 +75,7 @@ _Z15remove_and1_yesv:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z15remove_and1_yesv, .-_Z15remove_and1_yesv
+	.size	_Z11remove_and1v, .-_Z11remove_and1v
 	.align	1
 	.globl	_Z15remove_and2_nopv
 	.type	_Z15remove_and2_nopv, @function
@@ -90,9 +90,9 @@ _Z15remove_and2_nopv:
 	ret
 	.size	_Z15remove_and2_nopv, .-_Z15remove_and2_nopv
 	.align	1
-	.globl	_Z14remove_and1_nov
-	.type	_Z14remove_and1_nov, @function
-_Z14remove_and1_nov:
+	.globl	_Z12replace_and3v
+	.type	_Z12replace_and3v, @function
+_Z12replace_and3v:
 	SFPLOADI	L2, 4, 1
 	SFPLOADI	L1, 4, 2
 	SFPMOV	L2, L0, 0
@@ -105,11 +105,11 @@ _Z14remove_and1_nov:
 	SFPSTORE	L1, 2, 4
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z14remove_and1_nov, .-_Z14remove_and1_nov
+	.size	_Z12replace_and3v, .-_Z12replace_and3v
 	.align	1
-	.globl	_Z14remove_or1_yesv
-	.type	_Z14remove_or1_yesv, @function
-_Z14remove_or1_yesv:
+	.globl	_Z10remove_or1v
+	.type	_Z10remove_or1v, @function
+_Z10remove_or1v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L0, 4, 2
 	SFPOR	L1, L0
@@ -118,7 +118,7 @@ _Z14remove_or1_yesv:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z14remove_or1_yesv, .-_Z14remove_or1_yesv
+	.size	_Z10remove_or1v, .-_Z10remove_or1v
 	.align	1
 	.globl	_Z14remove_or2_nopv
 	.type	_Z14remove_or2_nopv, @function
@@ -133,9 +133,9 @@ _Z14remove_or2_nopv:
 	ret
 	.size	_Z14remove_or2_nopv, .-_Z14remove_or2_nopv
 	.align	1
-	.globl	_Z13remove_or1_nov
-	.type	_Z13remove_or1_nov, @function
-_Z13remove_or1_nov:
+	.globl	_Z11replace_or3v
+	.type	_Z11replace_or3v, @function
+_Z11replace_or3v:
 	SFPLOADI	L2, 4, 1
 	SFPLOADI	L1, 4, 2
 	SFPMOV	L2, L0, 0
@@ -148,11 +148,11 @@ _Z13remove_or1_nov:
 	SFPSTORE	L1, 2, 4
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z13remove_or1_nov, .-_Z13remove_or1_nov
+	.size	_Z11replace_or3v, .-_Z11replace_or3v
 	.align	1
-	.globl	_Z14remove_cmp_yesv
-	.type	_Z14remove_cmp_yesv, @function
-_Z14remove_cmp_yesv:
+	.globl	_Z11remove_cmp1v
+	.type	_Z11remove_cmp1v, @function
+_Z11remove_cmp1v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L0, 4, 2
 	SFPIADD	0, L1, L0, 0
@@ -164,11 +164,11 @@ _Z14remove_cmp_yesv:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z14remove_cmp_yesv, .-_Z14remove_cmp_yesv
+	.size	_Z11remove_cmp1v, .-_Z11remove_cmp1v
 	.align	1
-	.globl	_Z13remove_cmp_nov
-	.type	_Z13remove_cmp_nov, @function
-_Z13remove_cmp_nov:
+	.globl	_Z12replace_cmp2v
+	.type	_Z12replace_cmp2v, @function
+_Z12replace_cmp2v:
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L2, 4, 2
 	SFPMOV	L1, L0, 0
@@ -183,7 +183,52 @@ _Z13remove_cmp_nov:
 	SFPSTORE	L1, 2, 0
 	SFPSTORE	L0, 2, 8
 	ret
-	.size	_Z13remove_cmp_nov, .-_Z13remove_cmp_nov
+	.size	_Z12replace_cmp2v, .-_Z12replace_cmp2v
+	.align	1
+	.globl	_Z12replace_muliv
+	.type	_Z12replace_muliv, @function
+_Z12replace_muliv:
+	SFPLOADI	L1, 0, 16256
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMULI	16384, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 0
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z12replace_muliv, .-_Z12replace_muliv
+	.align	1
+	.globl	_Z12replace_addiv
+	.type	_Z12replace_addiv, @function
+_Z12replace_addiv:
+	SFPLOADI	L1, 0, 16256
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPADDI	16384, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 0
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z12replace_addiv, .-_Z12replace_addiv
+	.align	1
+	.globl	_Z12replace_shftv
+	.type	_Z12replace_shftv, @function
+_Z12replace_shftv:
+	SFPLOADI	L1, 4, 1
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSHFT	1, L0, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L0, 2, 8
+	ret
+	.size	_Z12replace_shftv, .-_Z12replace_shftv
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
 	.align	2

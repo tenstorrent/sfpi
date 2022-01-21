@@ -7,7 +7,7 @@ CFLAGS = -I../inc -I$(SFPI_ROOT)/include -DARCH_GRAYSKULL -O3 -std=c++17 -Wall
 RV32_CC ?= $(CC_PATH)/bin/riscv64-unknown-elf-g++
 RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
 
-SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.c
+SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.cc
 
 ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/limits_low.S rv32/limits_high.S
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
