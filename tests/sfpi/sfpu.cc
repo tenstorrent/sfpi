@@ -352,6 +352,48 @@ __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1)
     return t;
 }
 
+__rvtt_vec_t sfpu_rvtt_sfpadd(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+    float offset = 0.0F;
+
+    if (mod1 == SFPMAD_MOD1_OFFSET_POSH) {
+        offset = 0.5F;
+    } else if (mod1 == SFPMAD_MOD1_OFFSET_NEGH) {
+        offset = -0.5F;
+    }
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            tmp.set_float(i, a.get_float(i) + b.get_float(i) + offset);
+        }
+    }
+
+    return tmp;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpmul(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+    float offset = 0.0F;
+
+    if (mod1 == SFPMAD_MOD1_OFFSET_POSH) {
+        offset = 0.5F;
+    } else if (mod1 == SFPMAD_MOD1_OFFSET_NEGH) {
+        offset = -0.5F;
+    }
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            tmp.set_float(i, a.get_float(i) * b.get_float(i) + offset);
+        }
+    }
+
+    return tmp;
+}
+
 __rvtt_vec_t sfpu_rvtt_sfpmad(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1)
 {
     __rvtt_vec_t tmp;

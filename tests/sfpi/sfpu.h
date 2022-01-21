@@ -254,6 +254,8 @@ extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
 extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value);
 extern __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpadd(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpmul(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpmad(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1);
 extern void sfpu_rvtt_sfpnop();
 extern void sfpu_rvtt_sfpillegal();

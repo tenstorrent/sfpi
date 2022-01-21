@@ -188,11 +188,9 @@ _Z12replace_cmp2v:
 	.globl	_Z12replace_muliv
 	.type	_Z12replace_muliv, @function
 _Z12replace_muliv:
-	SFPLOADI	L1, 0, 16256
-	SFPMOV	L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPMULI	16384, L0, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 0, 16384
+	SFPMUL	L1, L0, L4, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L1, 0, 0
@@ -203,11 +201,9 @@ _Z12replace_muliv:
 	.globl	_Z12replace_addiv
 	.type	_Z12replace_addiv, @function
 _Z12replace_addiv:
-	SFPLOADI	L1, 0, 16256
-	SFPMOV	L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPADDI	16384, L0, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 0, 16384
+	SFPADD	L10, L1, L0, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L1, 0, 0

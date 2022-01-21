@@ -53,8 +53,8 @@ void copy_move_case3()
         b = a;         // should generate MOV
     }
     p_endif;           // POPC
-    dst_reg[0] = a + 1.0f; // STORE
-    dst_reg[0] = b + 1.0f; // STORE
+    dst_reg[0] = a + 3.0f; // STORE
+    dst_reg[0] = b + 4.0f; // STORE
 }
 
 // Destination as source, 2 arguments in the wrong order

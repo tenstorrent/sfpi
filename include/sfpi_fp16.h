@@ -29,6 +29,8 @@ class ScalarFP16 {
     sfpi_inline ScalarFP16(const int32_t in, const Format f = fp16b);
     sfpi_inline ScalarFP16(const uint32_t in, const Format f = fp16b);
 
+    sfpi_inline ScalarFP16 negate() const { return ScalarFP16(value ^ 0x8000, format); }
+
     sfpi_inline uint32_t get() const { return value; }
     sfpi_inline uint32_t get_format() const { return format; }
 };

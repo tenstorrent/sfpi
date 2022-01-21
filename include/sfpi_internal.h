@@ -36,6 +36,8 @@ namespace sfpi {
 #define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) sfpu_rvtt_sfpvcmp_ex(v1, v2, mod1)
 #define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
 
+#define __builtin_rvtt_sfpadd(va, vb, mod1) sfpu_rvtt_sfpadd(va, vb, mod1)
+#define __builtin_rvtt_sfpmul(va, vb, mod1) sfpu_rvtt_sfpmul(va, vb, mod1)
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) sfpu_rvtt_sfpmad(va, vb, vc, mod1)
 
 #define __builtin_rvtt_sfpexexp(src, mod1) sfpu_rvtt_sfpexexp(src, mod1)
@@ -116,6 +118,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) __builtin_riscv_sfpvcmp_ex(v1, v2, mod1)
 #define __builtin_rvtt_sfpcompc() __builtin_riscv_sfpcompc()
 
+#define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_riscv_sfpadd(va, vb, mod1)
+#define __builtin_rvtt_sfpmul(va, vb, mod1) __builtin_riscv_sfpmul(va, vb, mod1)
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) __builtin_riscv_sfpmad(va, vb, vc, mod1)
 
 #define __builtin_rvtt_sfpexexp(src, mod1) __builtin_riscv_sfpexexp(src, mod1)

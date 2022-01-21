@@ -407,6 +407,7 @@ _Z10fn_call_nov:
 	call	rand
 	SFPENCC	3, 10
 	SFPNOP
+	SFPSTORE	L0, 2, 0
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra

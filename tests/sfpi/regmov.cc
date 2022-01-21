@@ -163,9 +163,14 @@ void replace_cmp2()
     dst_reg[2] = z;
 }
 
+// These next two tests used to generate muli/addi which trashed the
+// src register require the compiler to generate a mov to preserve the src.
+// However, after moving mad/addi/addhalf generation into the compiler, the
+// compiler won't emit the instructions that this used to test (uses loadi to
+// avoid the mov which is faster).  I'm leaving the tests just the same
 void replace_muli()
 {
-    VecHalf x = 1.0f;
+    VecHalf x = dst_reg[0];
     VecHalf y;
 
     y = x * 2.0f;
@@ -174,9 +179,10 @@ void replace_muli()
     dst_reg[0] = y;
 }
 
+// See comment above
 void replace_addi()
 {
-    VecHalf x = 1.0f;
+    VecHalf x = dst_reg[0];
     VecHalf y;
 
     y = x + 2.0f;

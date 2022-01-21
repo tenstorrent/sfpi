@@ -256,6 +256,8 @@ void fn_call_no()
         rand();
     }
     p_endif;
+
+    dst_reg[0] = a;
 }
 
 void control_flow_p_if_switch(int v1, int v2)

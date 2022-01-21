@@ -344,13 +344,13 @@ void test5()
     } p_elseif(dst_reg[0] == 13.0F) {
         dst_reg[5] = a + b;
     } p_elseif(dst_reg[0] == 14.0F) {
-        dst_reg[5] = a * b + kHalf;
+        dst_reg[5] = a * b + 0.5F;
     } p_elseif(dst_reg[0] == 15.0F) {
-        dst_reg[5] = a + b + kHalf;
+        dst_reg[5] = a + b + 0.5F;
     } p_elseif(dst_reg[0] == 16.0F) {
-        dst_reg[5] = a * b - kHalf;
+        dst_reg[5] = a * b - 0.5F;
     } p_elseif(dst_reg[0] == 17.0F) {
-        dst_reg[5] = a + b - kHalf;
+        dst_reg[5] = a + b - 0.5F;
     } p_elseif(dst_reg[0] == 18.0F) {
         VecHalf c = -5.0F;
         dst_reg[5] = a * b + c;
@@ -366,14 +366,14 @@ void test5()
 
     p_if(dst_reg[0] == 19.0F) {
         VecHalf c = -5.0F;
-        dst_reg[5] = a * b + c + kHalf;
+        dst_reg[5] = a * b + c + 0.5F;
     } p_elseif(dst_reg[0] == 20.0F) {
         VecHalf c = -5.0F;
-        dst_reg[5] = a * b + c - kHalf;
+        dst_reg[5] = a * b + c - 0.5F;
     } p_elseif(dst_reg[0] == 21.0F) {
         VecHalf c = -5.0F;
         VecHalf d;
-        d = a * b + c - kHalf;
+        d = a * b + c - 0.5F;
         dst_reg[5] = d;
     } p_elseif(dst_reg[0] == 22.0F) {
         VecHalf c = -5.0F;
@@ -411,9 +411,9 @@ void test5()
     p_if(dst_reg[0] == 29.0F) {
         dst_reg[5] = a - b;
     } p_elseif(dst_reg[0] == 30.0F) {
-        dst_reg[5] = a - b - kHalf;
+        dst_reg[5] = a - b - 0.5F;
     } p_elseif(dst_reg[0] == 31.0F) {
-        dst_reg[5] = dst_reg[0] - b + kHalf;
+        dst_reg[5] = dst_reg[0] - b + 0.5F;
     }
     p_endif;
     // [29] = 9.0

@@ -157,25 +157,12 @@ class VecShort;
 class VecUShort;
 class VecCond;
 class VecBool;
-class SubBaseOp;
-class MulOp;
 class CondComp;
 class CondOpExExp;
 class CondOpIAddI;
 class CondOpIAddV;
 class CondOpLz;
 class CCCtrlBase;
-
-//////////////////////////////////////////////////////////////////////////////
-enum class OpType {
-    Add,
-    Sub,
-    Mul
-};
-
-template <OpType opType> class BinaryOp;
-typedef BinaryOp<OpType::Add> AddOp;
-typedef BinaryOp<OpType::Sub> SubOp;
 
 //////////////////////////////////////////////////////////////////////////////
 template<class Type, int N>
@@ -221,10 +208,12 @@ public:
     sfpi_inline void operator=(const int32_t i) const;
 
     // Construct operator classes from operations
-    sfpi_inline AddOp operator+(const VecHalf b) const;
-    sfpi_inline SubOp operator-(const VecHalf b) const;
+    sfpi_inline VecHalf operator+(const VecHalf b) const;
+    sfpi_inline VecHalf operator-(const VecHalf b) const;
+    sfpi_inline VecHalf operator-(const float f) const;
+    sfpi_inline VecHalf operator-(const ScalarFP16 i) const;
     sfpi_inline VecHalf operator-() const;
-    sfpi_inline MulOp operator*(const VecHalf b) const;
+    sfpi_inline VecHalf operator*(const VecHalf b) const;
 
     // Conditionals
     sfpi_inline CondComp operator==(const float x) const;
@@ -239,10 +228,6 @@ public:
     sfpi_inline CondComp operator!=(const VecHalf x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
-
-    // Decompose and assign operations to destination register
-    template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>* = nullptr>
-    sfpi_inline void operator=(const opType& op) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -251,9 +236,9 @@ public:
     constexpr explicit CReg(int r) : RegBase(r) {}
 
     // Construct operator classes from operations
-    sfpi_inline AddOp operator+(const VecHalf b) const;
-    sfpi_inline SubOp operator-(const VecHalf b) const;
-    sfpi_inline MulOp operator*(const VecHalf b) const;
+    sfpi_inline VecHalf operator+(const VecHalf b) const;
+    sfpi_inline VecHalf operator-(const VecHalf b) const;
+    sfpi_inline VecHalf operator*(const VecHalf b) const;
     sfpi_inline CondComp operator==(const VecHalf x) const;
     sfpi_inline CondComp operator!=(const VecHalf x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
@@ -292,27 +277,19 @@ public:
     sfpi_inline VecHalf(const ScalarFP16 f) { loadi(f); }
     sfpi_inline VecHalf(const float f) { loadi(f); }
     sfpi_inline VecHalf(const __rvtt_vec_t& t) { assign(t); }
-    template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>* = nullptr>
-    sfpi_inline VecHalf(const opType& op);
 
     // Assignment
     sfpi_inline void operator=(const VecHalf in) { assign(in.v); }
 
     // Construct operator from operations
-    sfpi_inline VecHalf operator+(const float val) const;
-    sfpi_inline VecHalf operator+(const ScalarFP16b val) const;
-    sfpi_inline AddOp operator+(const VecHalf b) const;
-    sfpi_inline void operator+=(const float val);
-    sfpi_inline void operator+=(const ScalarFP16b val);
+    sfpi_inline VecHalf operator+(const VecHalf b) const;
     sfpi_inline void operator+=(const VecHalf);
-    sfpi_inline SubOp operator-(const VecHalf b) const;
+    sfpi_inline VecHalf operator-(const VecHalf b) const;
+    sfpi_inline VecHalf operator-(const float b) const;
+    sfpi_inline VecHalf operator-(const ScalarFP16 b) const;
     sfpi_inline void operator-=(const VecHalf);
     sfpi_inline VecHalf operator-() const;
-    sfpi_inline VecHalf operator*(const float val) const;
-    sfpi_inline VecHalf operator*(const ScalarFP16b val) const;
-    sfpi_inline MulOp operator*(const VecHalf b) const;
-    sfpi_inline void operator*=(const float val);
-    sfpi_inline void operator*=(const ScalarFP16b val);
+    sfpi_inline VecHalf operator*(const VecHalf b) const;
     sfpi_inline void operator*=(const VecHalf);
 
     // Conditionals
@@ -563,124 +540,6 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class OffsetOperand {};
-
-//////////////////////////////////////////////////////////////////////////////
-// All Ops inherit from this to conditionally enable template instances
-// based on if the type is an Op
-class SubBaseOp {
-protected:
-    static sfpi_inline const __rvtt_vec_t mad_helper(const Operand opA, const Operand opB, const Operand opC, uint32_t offset);
-};
-
-//////////////////////////////////////////////////////////////////////////////
-template <int num_ops>
-class BaseOp : protected SubBaseOp {
-public:
-    enum OperandIdx {
-        OperandIdxA,
-        OperandIdxB,
-        OperandIdxC
-    };
-
-protected:
-    const Operand operands[num_ops];
-
-public:
-    template <class typeA, class typeB>
-    sfpi_inline BaseOp(const typeA a, const typeB b, bool negB = false) : operands{Operand(a), Operand(b, negB)} {}
-
-    sfpi_inline BaseOp(const Operand a, const Operand b) : operands{a, b} {}
-
-    template <class typeA, class typeB, class typeC>
-    sfpi_inline BaseOp(const typeA a, const typeB b, const typeC c) : operands{a, b, c} {}
-
-    sfpi_inline BaseOp(const Operand a, const Operand b, const Operand c) : operands{a, b, c} {}
-
-    template <class typeC>
-    sfpi_inline BaseOp(const Operand a, const Operand b, const typeC c, bool negC = false) : operands{a, b, Operand(c, negC)} {}
-};
-
-//////////////////////////////////////////////////////////////////////////////
-class MadOp : public BaseOp<3> {
-protected:
-    uint32_t offset;
-
-    sfpi_inline MadOp(const Operand a, const Operand b, const Operand c, const uint32_t off) : BaseOp(a, b, c), offset(off) {}
-
-public:
-    template <class typeA, class typeB, class typeC>
-    sfpi_inline MadOp(const typeA a, const typeB b, const typeC c, const uint32_t off = SFPMAD_MOD1_OFFSET_NONE) : BaseOp(a, b, c), offset(off) {}
-
-    template <class typeA, class typeB, class typeC>
-    sfpi_inline MadOp(const typeA a, const typeB b, const typeC c, const bool negC) : BaseOp(a, b, c, negC), offset(SFPMAD_MOD1_OFFSET_NONE) {}
-
-    sfpi_inline MadOp operator+(OffsetOperand offset) const { return MadOp(this->operands[OperandIdxA], this->operands[OperandIdxB], this->operands[OperandIdxC], SFPMAD_MOD1_OFFSET_POSH); }
-    sfpi_inline MadOp operator-(OffsetOperand offset) const { return MadOp(this->operands[OperandIdxA], this->operands[OperandIdxB], this->operands[OperandIdxC], SFPMAD_MOD1_OFFSET_NEGH); }
-
-    sfpi_inline uint32_t get_offset() const { return offset; };
-    sfpi_inline const __rvtt_vec_t get_result() const;
-};
-
-//////////////////////////////////////////////////////////////////////////////
-template <OpType opType>
-class BinaryOp : public BaseOp<2> {
-private:
-
-protected:
-    uint32_t offset;
-
-public:
-    template <class typeA, class typeB, OpType thisOp = opType, typename std::enable_if_t<thisOp != OpType::Sub>* = nullptr>
-    sfpi_inline BinaryOp<opType>(const typeA a, const typeB b) : BaseOp(a, b), offset(SFPMAD_MOD1_OFFSET_NONE) {}
-
-    template <class typeA, class typeB, OpType thisOp = opType, typename std::enable_if_t<thisOp == OpType::Sub>* = nullptr>
-    sfpi_inline BinaryOp<opType>(const typeA a, const typeB b) : BaseOp(a, b, true), offset(SFPMAD_MOD1_OFFSET_NONE) {}
-
-    template <class typeA, class typeB>
-    sfpi_inline BinaryOp<opType>(const typeA a, const typeB b, const uint32_t off) : BaseOp(a, b), offset(off) {}
-
-    sfpi_inline BinaryOp<opType> operator+(OffsetOperand offset) const { return BinaryOp<opType>(this->operands[OperandIdxA], this->operands[OperandIdxB], SFPMAD_MOD1_OFFSET_POSH); }
-    sfpi_inline BinaryOp<opType> operator-(OffsetOperand offset) const { return BinaryOp<opType>(this->operands[OperandIdxA], this->operands[OperandIdxB], SFPMAD_MOD1_OFFSET_NEGH); }
-
-    sfpi_inline uint32_t get_offset() const { return offset; };
-    sfpi_inline const __rvtt_vec_t get_result() const;
-};
-
-#if 0
-// TTSFPI XXXXX
-// Causes problems w/ BaseOp constructor ambiguity, figure out later
-//////////////////////////////////////////////////////////////////////////////
-class AddOp : public BinaryOp<OpType::Add> {
- public:
-    template <class typeA, class typeB>
-    sfpi_inline AddOp(const typeA a, const typeB b, const uint32_t off = SFPMAD_MOD1_OFFSET_NONE) : BinaryOp<OpType::Add>(a, b, off, false) {}
-};
-
-//////////////////////////////////////////////////////////////////////////////
-class SubOp : public BinaryOp<OpType::Sub> {
- public:
-    template <class typeA, class typeB>
-    sfpi_inline SubOp(const typeA a, const typeB b, const uint32_t off = SFPMAD_MOD1_OFFSET_NONE) : BinaryOp<OpType::Sub>(a, b, off, true) {}
-};
-#endif
-
-//////////////////////////////////////////////////////////////////////////////
-// Multiply operations (require extra methods to build the Mad Ops)
-class MulOp : public BinaryOp<OpType::Mul> {
-public:
-    template <class typeA, class typeB>
-    sfpi_inline MulOp(const typeA a, const typeB b, const uint32_t off = SFPMAD_MOD1_OFFSET_NONE) : BinaryOp<OpType::Mul>(a, b, off) {}
-
-    sfpi_inline MulOp operator+(OffsetOperand offset) const { return MulOp(this->operands[OperandIdxA], this->operands[OperandIdxB], SFPMAD_MOD1_OFFSET_POSH); }
-    sfpi_inline MulOp operator-(OffsetOperand offset) const { return MulOp(this->operands[OperandIdxA], this->operands[OperandIdxB], SFPMAD_MOD1_OFFSET_NEGH); }
-
-    sfpi_inline MadOp operator+(const VecHalf c) const;
-    sfpi_inline MadOp operator-(const VecHalf c) const;
-    sfpi_inline MulOp operator*(const VecHalf c) const;
-};
-
-//////////////////////////////////////////////////////////////////////////////
 // Handle conditionals.  Leaves are VecCond, VecBool.
 class CondOperand {
 public:
@@ -894,7 +753,27 @@ constexpr CReg CReg_Neg_0p3447(CREG_IDX_NEG_0P34472656);
 constexpr CReg CReg_TileId(CREG_IDX_TILEID);
 
 constexpr RegFile<DReg, 64> dst_reg;
-constexpr OffsetOperand kHalf;
+
+//////////////////////////////////////////////////////////////////////////////
+namespace sfpi_int {
+
+sfpi_inline VecHalf fp_add(const VecHalf a, const VecHalf b)
+{
+    return __builtin_rvtt_sfpadd(a.get(), b.get(), 0);
+}
+
+sfpi_inline VecHalf fp_sub(const VecHalf a, const VecHalf b)
+{
+    __rvtt_vec_t tmp = __builtin_rvtt_sfpmov(b.get(), SFPMOV_MOD1_COMPSIGN);
+    return __builtin_rvtt_sfpadd(a.get(), tmp, 0);
+}
+
+sfpi_inline VecHalf fp_mul(const VecHalf a, const VecHalf b)
+{
+    return __builtin_rvtt_sfpmul(a.get(), b.get(), 0);
+}
+
+}
 
 //////////////////////////////////////////////////////////////////////////////
 template<class TYPE, int N>
@@ -902,9 +781,11 @@ constexpr TYPE RegFile<TYPE, N>::operator[](const int x) const {
     return TYPE(RegBaseInitializer(x));
 }
 
-sfpi_inline AddOp DReg::operator+(const VecHalf b) const {return AddOp(VecHalf(*this), b); }
-sfpi_inline SubOp DReg::operator-(const VecHalf b) const { return SubOp(VecHalf(*this), b); }
-sfpi_inline MulOp DReg::operator*(const VecHalf b) const  { return MulOp(VecHalf(*this), b); }
+sfpi_inline VecHalf DReg::operator+(const VecHalf b) const {return sfpi_int::fp_add(VecHalf(*this), b); }
+sfpi_inline VecHalf DReg::operator-(const VecHalf b) const { return sfpi_int::fp_sub(VecHalf(*this), b); }
+sfpi_inline VecHalf DReg::operator-(const float b) const { return sfpi_int::fp_add(VecHalf(*this), VecHalf(-b)); }
+sfpi_inline VecHalf DReg::operator-(const ScalarFP16 b) const { return sfpi_int::fp_add(VecHalf(*this), b.negate()); }
+sfpi_inline VecHalf DReg::operator*(const VecHalf b) const  { return sfpi_int::fp_mul(VecHalf(*this), b); }
 sfpi_inline CondComp DReg::operator==(const float x) const {return CondComp(CondComp::CompEQ0, VecHalf(*this), ScalarFP16(x)); }
 sfpi_inline CondComp DReg::operator!=(const float x) const { return CondComp(CondComp::CompNE0, VecHalf(*this), ScalarFP16(x)); }
 sfpi_inline CondComp DReg::operator<(const float x) const { return CondComp(CondComp::CompLT0, VecHalf(*this), ScalarFP16(x)); }
@@ -961,12 +842,6 @@ sfpi_inline void DReg::operator=(int32_t i) const
     *this = v;
 }
 
-template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>*>
-sfpi_inline void DReg::operator=(const opType& op) const
-{
-    __builtin_rvtt_sfpstore(op.get_result(), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
-}
-
 sfpi_inline VecHalf DReg::operator-() const
 {
     VecHalf tmp = *this;
@@ -975,9 +850,9 @@ sfpi_inline VecHalf DReg::operator-() const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline AddOp CReg::operator+(const VecHalf b) const { return AddOp(VecHalf(*this), b); }
-sfpi_inline SubOp CReg::operator-(const VecHalf b) const { return SubOp(VecHalf(*this), b); }
-sfpi_inline MulOp CReg::operator*(const VecHalf b) const { return MulOp(VecHalf(*this), b); }
+sfpi_inline VecHalf CReg::operator+(const VecHalf b) const { return sfpi_int::fp_add(VecHalf(*this), b); }
+sfpi_inline VecHalf CReg::operator-(const VecHalf b) const { return sfpi_int::fp_sub(VecHalf(*this), b); }
+sfpi_inline VecHalf CReg::operator*(const VecHalf b) const { return sfpi_int::fp_mul(VecHalf(*this), b); }
 sfpi_inline CondComp CReg::operator==(const VecHalf x) const { return CondComp(CondComp::CompEQ0, *this, x); }
 sfpi_inline CondComp CReg::operator!=(const VecHalf x) const { return CondComp(CondComp::CompNE0, *this, x); }
 sfpi_inline CondComp CReg::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT0, *this, x); }
@@ -1002,9 +877,11 @@ sfpi_inline void Vec::keep_alive(int n) const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline AddOp VecHalf::operator+(const VecHalf b) const { return AddOp(*this, b); }
-sfpi_inline SubOp VecHalf::operator-(const VecHalf b) const { return SubOp(*this, b); }
-sfpi_inline MulOp VecHalf::operator*(const VecHalf b) const { return MulOp(*this, b); }
+sfpi_inline VecHalf VecHalf::operator+(const VecHalf b) const { return sfpi_int::fp_add(*this, b); }
+sfpi_inline VecHalf VecHalf::operator-(const VecHalf b) const { return sfpi_int::fp_sub(*this, b); }
+sfpi_inline VecHalf VecHalf::operator-(const float b) const { return sfpi_int::fp_add(*this, VecHalf(-b)); }
+sfpi_inline VecHalf VecHalf::operator-(const ScalarFP16 b) const { return sfpi_int::fp_add(*this, b.negate()); }
+sfpi_inline VecHalf VecHalf::operator*(const VecHalf b) const { return sfpi_int::fp_mul(*this, b); }
 sfpi_inline CondComp VecHalf::operator==(const float x) const { return CondComp(CondComp::CompEQ0, *this, ScalarFP16(x)); }
 sfpi_inline CondComp VecHalf::operator!=(const float x) const { return CondComp(CondComp::CompNE0, *this, ScalarFP16(x)); }
 sfpi_inline CondComp VecHalf::operator<(const float x) const { return CondComp(CondComp::CompLT0, *this, ScalarFP16(x)); }
@@ -1018,26 +895,19 @@ sfpi_inline CondComp VecHalf::operator!=(const VecHalf x) const { return CondCom
 sfpi_inline CondComp VecHalf::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT0, *this, x); }
 sfpi_inline CondComp VecHalf::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE0, *this, x); }
 
-template <typename opType, typename std::enable_if_t<std::is_base_of<SubBaseOp, opType>::value>*>
-sfpi_inline VecHalf::VecHalf(const opType& op)
-{
-    v = op.get_result();
-    initialized = true;
-}
-
 sfpi_inline void VecHalf::operator*=(const VecHalf m)
 {
-    v = __builtin_rvtt_sfpmad(v, m.get(), __builtin_rvtt_sfpassignlr(CReg_0.get()), SFPMAD_MOD1_OFFSET_NONE);
+    v = __builtin_rvtt_sfpmul(v, m.get(), SFPMAD_MOD1_OFFSET_NONE);
 }
 
 sfpi_inline void VecHalf::operator+=(const VecHalf a)
 {
-    v = __builtin_rvtt_sfpmad(v, __builtin_rvtt_sfpassignlr(CReg_1.get()), a.get(), SFPMAD_MOD1_OFFSET_NONE);
+    v = __builtin_rvtt_sfpadd(v, a.get(), SFPMAD_MOD1_OFFSET_NONE);
 }
 
 sfpi_inline void VecHalf::operator-=(const VecHalf a)
 {
-    v = __builtin_rvtt_sfpmad(v, __builtin_rvtt_sfpassignlr(CReg_1.get()), (-a).get(), SFPMAD_MOD1_OFFSET_NONE);
+    v = __builtin_rvtt_sfpadd(v, (-a).get(), SFPMAD_MOD1_OFFSET_NONE);
 }
 
 sfpi_inline VecHalf::VecHalf(const DReg dreg)
@@ -1055,46 +925,6 @@ sfpi_inline VecHalf::VecHalf(const CReg creg)
 sfpi_inline VecHalf VecHalf::operator-() const
 {
     return __builtin_rvtt_sfpmov(v, SFPMOV_MOD1_COMPSIGN);
-}
-
-sfpi_inline VecHalf VecHalf::operator+(const ScalarFP16b val) const
-{
-    return __builtin_rvtt_sfpaddi(v, val.get(), 0);
-}
-
-sfpi_inline void VecHalf::operator+=(const ScalarFP16b val)
-{
-    v = __builtin_rvtt_sfpaddi(v, val.get(), 0);
-}
-
-sfpi_inline VecHalf VecHalf::operator*(const ScalarFP16b val) const
-{
-    return __builtin_rvtt_sfpmuli(v, val.get(), 0);
-}
-
-sfpi_inline void VecHalf::operator*=(const ScalarFP16b val)
-{
-    v = __builtin_rvtt_sfpmuli(v, val.get(), 0);
-}
-
-sfpi_inline VecHalf VecHalf::operator+(const float val) const
-{
-    return operator+(ScalarFP16b(val));
-}
-
-sfpi_inline void VecHalf::operator+=(const float val)
-{
-    operator+=(ScalarFP16b(val));
-}
-
-sfpi_inline VecHalf VecHalf::operator*(const float val) const
-{
-    return operator*(ScalarFP16b(val));
-}
-
-sfpi_inline void VecHalf::operator*=(const float val)
-{
-    operator*=(ScalarFP16b(val));
 }
 
 sfpi_inline void VecHalf::loadi(const ScalarFP16 val)
@@ -1274,63 +1104,6 @@ sfpi_inline VecUShort VecUShort::operator>>(uint32_t amt) const
 sfpi_inline void VecUShort::operator>>=(uint32_t amt)
 {
     v = (*this >> amt).get();
-}
-
-//////////////////////////////////////////////////////////////////////////////
-sfpi_inline __rvtt_vec_t prep_neg(const __rvtt_vec_t v, bool neg)
-{
-    if (neg) {
-        return __builtin_rvtt_sfpmov(v, SFPMOV_MOD1_COMPSIGN);
-    } else {
-        return v;
-    }
-}
-
-sfpi_inline const __rvtt_vec_t SubBaseOp::mad_helper(const Operand op_a, const Operand op_b, const Operand op_c, uint32_t offset)
-{
-    return __builtin_rvtt_sfpmad(op_a.get_vec().get(),
-                                 op_b.get_vec().get(),
-                                 prep_neg(op_c.get_vec().get(), op_c.is_neg()),
-                                 offset);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-sfpi_inline MadOp MulOp::operator+(const VecHalf c) const { return MadOp(this->operands[OperandIdxA], this->operands[OperandIdxB], c); }
-sfpi_inline MadOp MulOp::operator-(const VecHalf c) const { return MadOp(this->operands[OperandIdxA], this->operands[OperandIdxB], c, true); }
-
-template<>
-sfpi_inline const __rvtt_vec_t BinaryOp<OpType::Add>::get_result() const
-{
-    const VecHalf oneh(CReg_1);
-    const Operand one(oneh);
-    return mad_helper(operands[BaseOp::OperandIdxA], one, operands[BaseOp::OperandIdxB], offset);
-}
-
-template<>
-sfpi_inline const __rvtt_vec_t BinaryOp<OpType::Sub>::get_result() const
-{
-    const VecHalf oneh(CReg_1);
-    const Operand one(oneh);
-    return mad_helper(operands[BaseOp::OperandIdxA], one, operands[BaseOp::OperandIdxB], offset);
-}
-
-template<>
-sfpi_inline const __rvtt_vec_t BinaryOp<OpType::Mul>::get_result() const
-{
-    const VecHalf zeroh(CReg_0);
-    const Operand zero(zeroh);
-    return mad_helper(operands[BaseOp::OperandIdxA], operands[BaseOp::OperandIdxB], zero, offset);
-}
-
-sfpi_inline const __rvtt_vec_t MadOp::get_result() const
-{
-    return mad_helper(operands[BaseOp::OperandIdxA], operands[BaseOp::OperandIdxB], operands[BaseOp::OperandIdxC], offset);
-}
-
-sfpi_inline MulOp MulOp::operator*(const VecHalf c) const
-{
-    __rvtt_vec_t tmp = get_result();
-    return MulOp(VecHalf(tmp), c);
 }
 
 //////////////////////////////////////////////////////////////////////////////

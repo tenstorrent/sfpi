@@ -4,7 +4,6 @@
 
 using namespace sfpi;
 
-
 // test_load_store
 //
 // Generates the following:
@@ -72,23 +71,23 @@ void test_load_store()
 void test_add()
 {
     dst_reg[0] = dst_reg[1] + dst_reg[2];
-    dst_reg[3] = dst_reg[4] + dst_reg[5] + kHalf;
-    dst_reg[6] = dst_reg[7] + dst_reg[8] - kHalf;
+    dst_reg[3] = dst_reg[4] + dst_reg[5] + 0.5F;
+    dst_reg[6] = dst_reg[7] + dst_reg[8] - 0.5F;
 
     VecHalf a = dst_reg[9];
     VecHalf b = dst_reg[10];
-    VecHalf c = a + b - kHalf;
+    VecHalf c = a + b - 0.5F;
 
     a += b;
     a += dst_reg[0];
 
     dst_reg[11] = c;
-    dst_reg[12] = a + b + kHalf;
+    dst_reg[12] = a + b + 0.5F;
 
     dst_reg[13] = CReg_0 + CReg_Neg_1;
     dst_reg[14] = CReg_Neg_1 + dst_reg[12];
-    dst_reg[15] = dst_reg[12] + CReg_0p0020 + kHalf;
-    dst_reg[16] = c + CReg_Neg_0p6748 - kHalf;
+    dst_reg[15] = dst_reg[12] + CReg_0p0020 + 0.5F;
+    dst_reg[16] = c + CReg_Neg_0p6748 - 0.5F;
 
     //TTFIXME XXXX 
     //    dst_reg[17] = a + b + c;
@@ -97,7 +96,7 @@ void test_add()
 void test_sub()
 {
     dst_reg[0] = dst_reg[1] - dst_reg[2];
-    dst_reg[3] = dst_reg[4] - dst_reg[5] + kHalf;
+    dst_reg[3] = dst_reg[4] - dst_reg[5] + 0.5F;
 
     VecHalf a = dst_reg[6];
     VecHalf b = dst_reg[7];
@@ -106,7 +105,7 @@ void test_sub()
     a -= dst_reg[0];
 
     dst_reg[8] = -b;
-    dst_reg[9] = a - b - kHalf;
+    dst_reg[9] = a - b - 0.5F;
 
     dst_reg[10] = CReg_Neg_1 - b;
 
@@ -148,24 +147,24 @@ void test_sub()
 void test_mul()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2];
-    dst_reg[3] = dst_reg[4] * dst_reg[5] + kHalf;
-    dst_reg[6] = dst_reg[7] * dst_reg[8] - kHalf;
+    dst_reg[3] = dst_reg[4] * dst_reg[5] + 0.5F;
+    dst_reg[6] = dst_reg[7] * dst_reg[8] - 0.5F;
 
     VecHalf a = dst_reg[9];
     VecHalf b = dst_reg[10];
-    VecHalf c = a * b - kHalf;
+    VecHalf c = a * b - 0.5F;
 
     a *= b;
     a *= dst_reg[0];
 
     dst_reg[11] = c;
     dst_reg[12] = a * b;
-    dst_reg[12] = a * b + kHalf;
+    dst_reg[12] = a * b + 0.5F;
 
     dst_reg[13] = CReg_0 * CReg_Neg_1;
     dst_reg[14] = CReg_Neg_1 * dst_reg[12];
-    dst_reg[15] = dst_reg[12] * CReg_0p0020 + kHalf;
-    dst_reg[15] = c * CReg_Neg_0p6748 - kHalf;
+    dst_reg[15] = dst_reg[12] * CReg_0p0020 + 0.5F;
+    dst_reg[15] = c * CReg_Neg_0p6748 - 0.5F;
 
     dst_reg[16] = a * b * c;
     dst_reg[17] = CReg_0 * b * c;
@@ -203,18 +202,18 @@ void test_mul()
 void test_mad()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
-    dst_reg[4] = dst_reg[5] * dst_reg[6] + dst_reg[7] + kHalf;
-    dst_reg[8] = dst_reg[9] * dst_reg[10] + dst_reg[11] - kHalf;
+    dst_reg[4] = dst_reg[5] * dst_reg[6] + dst_reg[7] + 0.5F;
+    dst_reg[8] = dst_reg[9] * dst_reg[10] + dst_reg[11] - 0.5F;
 
     VecHalf a = dst_reg[12];
     VecHalf b = dst_reg[13];
     VecHalf c = dst_reg[14];
-    VecHalf d = a * b + c - kHalf;
+    VecHalf d = a * b + c - 0.5F;
     dst_reg[15] = d;
-    dst_reg[16] = a * b + c + kHalf;
+    dst_reg[16] = a * b + c + 0.5F;
 
-    dst_reg[17] = a * b + CReg_Neg_1 - kHalf;
-    dst_reg[18] = CReg_0 * b + CReg_Neg_1 + kHalf;
+    dst_reg[17] = a * b + CReg_Neg_1 - 0.5F;
+    dst_reg[18] = CReg_0 * b + CReg_Neg_1 + 0.5F;
 }
 
 // test_permute_ops
@@ -752,12 +751,12 @@ void stupid_example(unsigned int value)
     VecHalf a = dst_reg[0] + 2.0F;
 
     // This emits a load, move, mad
-    dst_reg[3] = a * -dst_reg[1] + CReg_0p6929 + kHalf;
+    dst_reg[3] = a * -dst_reg[1] + CReg_0p6929 + 0.5F;
 
     // This emits a load, loadi, mad (a * dst_reg[] goes down the mad path)
     dst_reg[4] = a * dst_reg[1] + 1.2F;
 
-    // Carefull, this emits a muli followed by an addi (a * const goes down the muli path)
+    // This emits a 2 loadis and a mad
     dst_reg[4] = a * 1.5F + 1.2F;
 
     // This emits a loadi (into tmp), loadi (as a temp for 1.2F) and a mad
