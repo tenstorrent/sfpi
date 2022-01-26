@@ -5,17 +5,6 @@
 using namespace sfpi;
 
 // test_load_store
-//
-// Generates the following:
-//      SFPLOAD L0, 1, 0
-//      SFPLOAD L1, 1, 1
-//      SFPLOAD L2, 1, 2
-//      SFPSTORE        L0, 0, 3
-//      SFPSTORE        L1, 0, 4
-//      SFPSTORE        L2, 0, 5
-//      SFPLOAD L0, 1, 7
-//      SFPSTORE        L0, 0, 6
-//      SFPSTORE        L1, 0, 8
 void test_load_store()
 {
     VecHalf a, b;
@@ -38,36 +27,6 @@ void test_load_store()
 }
 
 // test_add
-//
-// Generates the following:
-//      SFPLOAD L0, 1, 1
-//      SFPLOAD L1, 1, 2
-//      SFPMAD  L0, L10, L1, L0, 0
-//      SFPSTORE        L0, 0, 0
-//      SFPLOAD L0, 1, 4
-//      SFPLOAD L1, 1, 5
-//      SFPMAD  L0, L10, L1, L0, 1
-//      SFPSTORE        L0, 0, 3
-//      SFPLOAD L0, 1, 7
-//      SFPLOAD L1, 1, 8
-//      SFPMAD  L0, L10, L1, L0, 3
-//      SFPSTORE        L0, 0, 6
-//      SFPLOAD L0, 1, 9
-//      SFPLOAD L1, 1, 10
-//      SFPMAD  L0, L10, L1, L2, 3
-//      SFPSTORE        L2, 0, 11
-//      SFPMAD  L0, L10, L1, L0, 1
-//      SFPSTORE        L0, 0, 12
-//      SFPMAD  L4, L10, L11, L1, 0
-//      SFPSTORE        L1, 0, 13
-//      SFPLOAD L1, 1, 12
-//      SFPMAD  L11, L10, L1, L1, 0
-//      SFPSTORE        L1, 0, 14
-//      SFPLOAD L1, 1, 12
-//      SFPMAD  L1, L10, L12, L1, 1
-//      SFPSTORE        L1, 0, 15
-//      SFPMAD  L0, L10, L13, L0, 3
-//      SFPSTORE        L0, 0, 15
 void test_add()
 {
     dst_reg[0] = dst_reg[1] + dst_reg[2];
@@ -114,36 +73,6 @@ void test_sub()
 }
 
 // test_mul
-//
-// Generates the following:
-//      SFPLOAD L0, 1, 1
-//      SFPLOAD L1, 1, 2
-//      SFPMAD  L0, L1, L4, L0, 0
-//      SFPSTORE        L0, 0, 0
-//      SFPLOAD L0, 1, 4
-//      SFPLOAD L1, 1, 5
-//      SFPMAD  L0, L1, L4, L0, 1
-//      SFPSTORE        L0, 0, 3
-//      SFPLOAD L0, 1, 7
-//      SFPLOAD L1, 1, 8
-//      SFPMAD  L0, L1, L4, L0, 3
-//      SFPSTORE        L0, 0, 6
-//      SFPLOAD L0, 1, 9
-//      SFPLOAD L1, 1, 10
-//      SFPMAD  L0, L1, L4, L2, 3
-//      SFPSTORE        L2, 0, 11
-//      SFPMAD  L0, L1, L4, L0, 1
-//      SFPSTORE        L0, 0, 12
-//      SFPMAD  L4, L11, L4, L1, 0
-//      SFPSTORE        L1, 0, 13
-//      SFPLOAD L1, 1, 12
-//      SFPMAD  L11, L1, L4, L1, 0
-//      SFPSTORE        L1, 0, 14
-//      SFPLOAD L1, 1, 12
-//      SFPMAD  L1, L12, L4, L1, 1
-//      SFPSTORE        L1, 0, 15
-//      SFPMAD  L0, L13, L4, L0, 3
-//      SFPSTORE        L0, 0, 15
 void test_mul()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2];
@@ -171,34 +100,6 @@ void test_mul()
 }
 
 // test_mad
-//
-// Generates the following:
-//      SFPLOAD L0, 1, 1
-//      SFPLOAD L1, 1, 2
-//      SFPLOAD L2, 1, 3
-//      SFPMAD  L0, L1, L2, L0, 0
-//      SFPSTORE        L0, 0, 0
-//      SFPLOAD L0, 1, 5
-//      SFPLOAD L1, 1, 6
-//      SFPLOAD L2, 1, 7
-//      SFPMAD  L0, L1, L2, L0, 1
-//      SFPSTORE        L0, 0, 4
-//      SFPLOAD L0, 1, 9
-//      SFPLOAD L1, 1, 10
-//      SFPLOAD L2, 1, 11
-//      SFPMAD  L0, L1, L2, L0, 3
-//      SFPSTORE        L0, 0, 8
-//      SFPLOAD L0, 1, 12
-//      SFPLOAD L1, 1, 13
-//      SFPLOAD L2, 1, 14
-//      SFPMAD  L0, L1, L2, L3, 3
-//      SFPSTORE        L3, 0, 15
-//      SFPMAD  L0, L1, L2, L0, 1
-//      SFPSTORE        L0, 0, 16
-//      SFPMAD  L0, L1, L11, L0, 3
-//      SFPSTORE        L0, 0, 17
-//      SFPMAD  L4, L1, L11, L0, 1
-//      SFPSTORE        L0, 0, 18
 void test_mad()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
@@ -763,10 +664,9 @@ void stupid_example(unsigned int value)
     VecHalf tmp = ScalarFP16a(value);
     dst_reg[5] = a * tmp + 1.2F;
     
-    p_if ((a >= 4.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
+    p_if ((a >= 1.0F && a < 8.0F) || (a >= 12.0F && a < 16.0F)) {
         VecShort b = exexp_nodebias(a);
-        b &= 0xAA;
-        p_if (b >= 130) {
+        p_if (b >= 0) {
             dst_reg[6] = setexp(a, 127);
         }
         p_endif;
@@ -775,6 +675,7 @@ void stupid_example(unsigned int value)
     } p_else {
         VecShort exp = lz(a) - 19;
         exp = ~exp;
+        exp &= 0xAA;
         dst_reg[8] = -setexp(a, exp);
     }
     p_endif;
