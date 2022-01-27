@@ -150,6 +150,7 @@ enum IAddCC {
 //////////////////////////////////////////////////////////////////////////////
 // Forward declarations
 class CReg;
+class LReg;
 class Vec;
 class VecHalf;
 class VecShortBase;
@@ -230,6 +231,30 @@ public:
     sfpi_inline CondComp operator>=(const VecHalf x) const;
 };
 
+enum class LRegs {
+    LReg0 = 0,
+    LReg1 = 1,
+    LReg2 = 2,
+    LReg3 = 3,
+};
+
+//////////////////////////////////////////////////////////////////////////////
+class LReg {
+    friend Vec;
+
+private:
+    const LRegs lreg;
+    const __rvtt_vec_t* v;
+
+    sfpi_inline const int get() const { return static_cast<std::underlying_type<LRegs>::type>(lreg); }
+
+public:
+    sfpi_inline LReg(LRegs lr) : lreg(lr), v(nullptr) {}
+    sfpi_inline ~LReg();
+
+    sfpi_inline void assign(__rvtt_vec_t& in) { v = &in; }
+};
+
 //////////////////////////////////////////////////////////////////////////////
 class CReg : public RegBase {
 public:
@@ -260,8 +285,7 @@ public:
     sfpi_inline __rvtt_vec_t& get() { return v; }
 
     // Associate variable w/ a value pre-loaded into a particular lreg
-    sfpi_inline void assign_lreg(int32_t i);
-    sfpi_inline void keep_alive(int n) const;
+    sfpi_inline void operator=(LReg& lr);
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -280,6 +304,7 @@ public:
 
     // Assignment
     sfpi_inline void operator=(const VecHalf in) { assign(in.v); }
+    sfpi_inline void operator=(LReg& lr) { Vec::operator=(lr); }
 
     // Construct operator from operations
     sfpi_inline VecHalf operator+(const VecHalf b) const;
@@ -389,6 +414,7 @@ public:
 
     // Assignment
     sfpi_inline void operator=(const VecShort in) { assign(in.v); }
+    sfpi_inline void operator=(LReg& lr) { Vec::operator=(lr); }
 
     // Operations
     sfpi_inline void operator&=(const VecShort b) { return this->VecShortBase::operator&=(b); }
@@ -457,6 +483,7 @@ public:
 
     // Assignment
     sfpi_inline void operator=(const VecUShort in ) { assign(in.v); }
+    sfpi_inline void operator=(LReg& lr) { Vec::operator=(lr); }
 
     // Operations
     sfpi_inline void operator&=(const VecUShort b) { return this->VecShortBase::operator&=(b); }
@@ -715,7 +742,6 @@ public:
     sfpi_inline CondOpIAddV(Vec* d, const Vec s, IAddCC cc) : VecCond(CondOpType::IAddV, s, d, 0, cc, not_cond(cc)) {}
 };
 
-
 //////////////////////////////////////////////////////////////////////////////
 class CCCtrl {
 protected:
@@ -845,8 +871,7 @@ sfpi_inline void DReg::operator=(int32_t i) const
 sfpi_inline VecHalf DReg::operator-() const
 {
     VecHalf tmp = *this;
-    __rvtt_vec_t result = __builtin_rvtt_sfpmov(tmp.get(), SFPMOV_MOD1_COMPSIGN);
-    return result;
+    return __builtin_rvtt_sfpmov(tmp.get(), SFPMOV_MOD1_COMPSIGN);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -859,21 +884,25 @@ sfpi_inline CondComp CReg::operator<(const VecHalf x) const { return CondComp(Co
 sfpi_inline CondComp CReg::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE0, *this, x); }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline void Vec::assign_lreg(int32_t val)
+sfpi_inline LReg::~LReg()
 {
-    v = __builtin_rvtt_sfpassignlr(val);
-    initialized = true;
+    if (v != nullptr) {
+        __builtin_rvtt_sfpkeepalive(*v, get());
+    }
 }
 
+//////////////////////////////////////////////////////////////////////////////
 sfpi_inline void Vec::assign(const __rvtt_vec_t in)
 {
     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
     initialized = true;
 }
 
-sfpi_inline void Vec::keep_alive(int n) const
+sfpi_inline void Vec::operator=(LReg& lr)
 {
-    __builtin_rvtt_sfpkeepalive(v, n);
+    v = __builtin_rvtt_sfpassignlr(lr.get());
+    lr.assign(v);
+    initialized = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////

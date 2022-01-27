@@ -1095,8 +1095,10 @@ void test11()
     TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
     TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
     VecUShort l0b, l1b;
-    l0b.assign_lreg(0);
-    l1b.assign_lreg(1);
+    LReg lr0(LRegs::LReg0);
+    LReg lr1(LRegs::LReg1);
+    l0b = lr0;
+    l1b = lr1;
 
     p_if(dst_reg[0] == 7.0F) {
         // Use L0
