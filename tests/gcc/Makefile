@@ -41,7 +41,8 @@ rv32lto/limits_low: limits.cc $(INCLUDES) | rv32lto
 rv32lto/limits_high: limits.cc $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -DLIMIT_OFFSET12=1 -flto -o $@ $<
 
-test: rv32/limits.S rv32/limits_low.S rv32/limits_high.S
+test: rv32/smoke.S rv32/limits.S rv32/limits_low.S rv32/limits_high.S rv32/nonimm.S rv32/unnecessarymov.S
+	cmp rv32/smoke.S gold/smoke.S
 	cmp rv32/limits.S gold/limits.S
 	cmp rv32/limits_low.S gold/limits_low.S
 	cmp rv32/limits_high.S gold/limits_high.S
@@ -49,6 +50,7 @@ test: rv32/limits.S rv32/limits_low.S rv32/limits_high.S
 	cmp rv32/unnecessarymov.S gold/unnecessarymov.S
 
 promote:
+	cp rv32/smoke.S gold/smoke.S
 	cp rv32/limits.S gold/limits.S
 	cp rv32/limits_low.S gold/limits_low.S
 	cp rv32/limits_high.S gold/limits_high.S

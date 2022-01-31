@@ -923,16 +923,16 @@ _Z7mad_no3v:
 	.globl	_Z12mad_live_no1v
 	.type	_Z12mad_live_no1v, @function
 _Z12mad_live_no1v:
-	SFPLOAD	L2, 1, 0
+	SFPLOAD	L3, 1, 0
 	SFPLOAD	L1, 1, 4
-	SFPLOAD	L3, 1, 8
+	SFPLOAD	L2, 1, 8
 	SFPLOAD	L0, 1, 12
-	SFPMUL	L2, L1, L4, L1, 0
+	SFPMUL	L3, L1, L4, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPSETCC	0, L2, 6
+	SFPSETCC	0, L3, 6
 	SFPNOP
-	SFPADD	L10, L1, L3, L0, 0
+	SFPADD	L10, L1, L2, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPENCC	3, 10
@@ -944,16 +944,16 @@ _Z12mad_live_no1v:
 	.globl	_Z12mad_live_no2v
 	.type	_Z12mad_live_no2v, @function
 _Z12mad_live_no2v:
-	SFPLOAD	L2, 1, 0
+	SFPLOAD	L3, 1, 0
 	SFPLOAD	L0, 1, 4
-	SFPLOAD	L3, 1, 8
+	SFPLOAD	L2, 1, 8
 	SFPLOAD	L1, 1, 12
-	SFPMUL	L2, L0, L4, L0, 0
+	SFPMUL	L3, L0, L4, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSETCC	0, L2, 6
+	SFPSETCC	0, L3, 6
 	SFPNOP
-	SFPADD	L10, L0, L3, L1, 0
+	SFPADD	L10, L0, L2, L1, 0
 	SFPNOP
 	SFPNOP
 	SFPENCC	3, 10
@@ -1165,14 +1165,14 @@ _Z13addi_live_no2v:
 	.globl	_Z13addi_live_no3v
 	.type	_Z13addi_live_no3v, @function
 _Z13addi_live_no3v:
-	SFPLOADI	L0, 0, 16256
-	SFPLOADI	L2, 0, 16384
 	SFPLOADI	L1, 0, 16256
+	SFPLOADI	L2, 0, 16384
+	SFPLOADI	L0, 0, 16256
 	SFPLOAD	L3, 1, 0
 	SFPSETCC	0, L3, 6
 	SFPNOP
-	SFPLOADI	L0, 0, 16448
-	SFPADD	L10, L0, L2, L0, 0
+	SFPLOADI	L1, 0, 16448
+	SFPADD	L10, L1, L2, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPENCC	3, 10
@@ -1184,14 +1184,14 @@ _Z13addi_live_no3v:
 	.globl	_Z13addi_live_no4v
 	.type	_Z13addi_live_no4v, @function
 _Z13addi_live_no4v:
-	SFPLOADI	L0, 0, 16256
-	SFPLOAD	L2, 1, 0
 	SFPLOADI	L1, 0, 16256
+	SFPLOAD	L2, 1, 0
+	SFPLOADI	L0, 0, 16256
 	SFPLOAD	L3, 1, 0
 	SFPSETCC	0, L3, 6
 	SFPNOP
-	SFPLOADI	L0, 0, 16448
-	SFPADD	L10, L0, L2, L0, 0
+	SFPLOADI	L1, 0, 16448
+	SFPADD	L10, L1, L2, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPENCC	3, 10
