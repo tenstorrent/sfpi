@@ -364,11 +364,13 @@ _Z10test_loadilm:
 	srli	a0,a0,16
 	li	a4,1895825408
 	add	a4, a4, a0
+# Op(71) - d(0)
 	sw	a4,0(a5)
 	slli	a1,a1,16
 	srli	a1,a1,16
 	li	a4,1895825408
 	add	a4, a4, a1
+# Op(71) - d(0)
 	sw	a4,0(a5)
 	SFPLOADI	L0, 0, 16448
 	SFPSTORE	L0, 0, 20
@@ -1369,6 +1371,7 @@ _Z14stupid_examplej:
 	srli	a0,a0,16
 	li	a4,1896939520
 	add	a4, a4, a0
+# Op(71) - d(1)
 	sw	a4,0(a5)
 	SFPLOADI	L2, 0, 16281
 	SFPMAD	L0, L1, L2, L1, 0
