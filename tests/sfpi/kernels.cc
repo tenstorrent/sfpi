@@ -20,6 +20,12 @@ using namespace sfpi;
 #define TTI_SEMWAIT(x, y, z)
 #define semaphore_post(x)
 
+#if defined(__GNUC__) && !defined(__clang__)
+#define sfpi_test_noinline __attribute__ ((noinline)) 
+#else
+#define sfpi_test_noinline
+#endif
+
 // Make this global, may keep compiler from optimizing it away
 int param_global;
 
@@ -56,7 +62,7 @@ sfpi_inline VecCond test_interleaved_scalar_vector_cond(bool scalar_bool, VecHal
     }
 }
 
-void test1()
+sfpi_test_noinline void test1()
 {
     // Test SFPLOAD, SFPSTORE
     dst_reg[1] = dst_reg[0];
@@ -65,7 +71,7 @@ void test1()
     copy_result_to_dreg0(1);
 }
 
-void test2()
+sfpi_test_noinline void test2()
 {
     // Test SFPMOV
     dst_reg[2] = -dst_reg[0];
@@ -74,7 +80,7 @@ void test2()
     copy_result_to_dreg0(2);
 }
 
-void test3()
+sfpi_test_noinline void test3()
 {
     // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI
     // Also, load after store (NOP)
@@ -134,7 +140,7 @@ void test3()
     copy_result_to_dreg0(3);
 }
 
-void test4()
+sfpi_test_noinline void test4()
 {
     // Test SFPPUSHCC, SFPPOPCC, SFPMAD (in conditionals)
     // Test vector loads
@@ -286,9 +292,10 @@ void test4()
     copy_result_to_dreg0(4);
 }
 
-void test5()
+sfpi_test_noinline void test5()
 {
     // Test SFPMAD, SFPMOV, CRegs
+    dst_reg[5] = -dst_reg[0];
 
     p_if(dst_reg[0] == 0.0F) {
         dst_reg[5] = CReg_0 * CReg_0 + CReg_0p6929;
@@ -322,16 +329,15 @@ void test5()
         dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p6748;
     } p_elseif(dst_reg[0] == 10.0F) {
         dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p3447;
-    } p_elseif(dst_reg[0] >= 11.0F) { // NOTE THIS IS >= TO FILL REMAINDER W/ TILE ID
-        // Bogus test - low bits get lopped off by treating the int as a float
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_TileId;
+    } p_elseif(dst_reg[0] == 11.0F) {
+        dst_reg[5] = CReg_Neg_0p6748 * CReg_Neg_0p3447 + CReg_Neg_1;
     }
     p_endif;
     // [7] = -1.0
     // [8] = 0.001953125
     // [9] = -0.67480469
     // [10] = -0.34472656
-    // [11] = TileId = 11
+    // [11] = -0.765625
 
     VecHalf a = dst_reg[0];
     VecHalf b = 20.0F;
@@ -419,12 +425,12 @@ void test5()
     // [29] = 9.0
     // [30] = 9.5
     // [31] = 11.5
-    // [32+] = TileID
+    // [32+] = ramp
 
     copy_result_to_dreg0(5);
 }
 
-void test6()
+sfpi_test_noinline void test6()
 {
     // Note: set_expected_result uses SFPIADD so can't really be used early in
     // this routine w/o confusing things
@@ -642,6 +648,19 @@ void test6()
     }
     p_endif;
 
+    p_if (dst_reg[0] >= 28.0F) {
+        VecShort a = CReg_TileId;
+        p_if (dst_reg[0] == 28.0F) {
+            set_expected_result(6, 256.0F, 28, a);
+        } p_elseif (dst_reg[0] == 29.0F) {
+            set_expected_result(6, 256.0F, 29, a);
+        } p_elseif (dst_reg[0] == 30.0F) {
+            set_expected_result(6, 256.0F, 30, a);
+        }
+        p_endif;
+    }
+    p_endif;
+
     // [0] = 256.0
     // [1] = 1024.0
     // [2] = 1024.0
@@ -670,11 +689,14 @@ void test6()
     // [25] = 128.0
     // [26] = 256.0
     // [27] = 512.0
+    // [28] = 256.0
+    // [29] = 256.0
+    // [30] = 256.0
 
     copy_result_to_dreg0(6);
 }
 
-void test7()
+sfpi_test_noinline void test7()
 {
     // SFPEXMAN, SFPEXEXP, SFPSETEXP, SFPSETMAN
     dst_reg[7] = -dst_reg[0];
@@ -756,7 +778,7 @@ void test7()
     copy_result_to_dreg0(7);
 }
 
-void test8()
+sfpi_test_noinline void test8()
 {
     // SFPAND, SFPOR, SFPNOT, SFPABS
     // Atypical usage of conditionals
@@ -815,16 +837,16 @@ void test8()
         set_expected_result(8, 22.0F, 0x0555, static_cast<VecShort>(a));
     } p_elseif(dst_reg[0] == 10.0F) {
         VecHalf a = 100.0F;
-        dst_reg[8] = abs(a);
+        dst_reg[8] = sfpi::abs(a);
     } p_elseif(dst_reg[0] == 11.0F) {
         VecHalf a = -100.0F;
-        dst_reg[8] = abs(a);
+        dst_reg[8] = sfpi::abs(a);
     } p_elseif(dst_reg[0] == 12.0F) {
         VecShort a = 100;
-        set_expected_result(8, 24.0F, 100, abs(a));
+        set_expected_result(8, 24.0F, 100, sfpi::abs(a));
     } p_elseif(dst_reg[0] == 13.0F) {
         VecShort a = -100;
-        set_expected_result(8, 26.0F, 100, abs(a));
+        set_expected_result(8, 26.0F, 100, sfpi::abs(a));
     }
     p_endif;
 
@@ -870,7 +892,7 @@ void test8()
     copy_result_to_dreg0(8);
 }
 
-void test9()
+sfpi_test_noinline void test9()
 {
     // SFPMULI, SFPADDI, SFPDIVP2, SFPLZ
 
@@ -969,7 +991,7 @@ void test9()
     copy_result_to_dreg0(9);
 }
 
-void test10()
+sfpi_test_noinline void test10()
 {
     // SFPSHFT, SFTSETSGN
     dst_reg[10] = -dst_reg[0];
@@ -1040,7 +1062,7 @@ void test10()
     copy_result_to_dreg0(10);
 }
 
-void test11()
+sfpi_test_noinline void test11()
 {
     // SFPLUT, SFPLOADL<n>
     dst_reg[11] = -dst_reg[0];
@@ -1148,12 +1170,12 @@ void test11()
     // [8] = -0.25
     // [9] = -0.25
     // [10] = -0.75
-    // [11] = 1.25
+    // [11] = 0.75
     // [12] = -1.0
     copy_result_to_dreg0(11);
 }
 
-void test12(int imm)
+sfpi_test_noinline void test12(int imm)
 {
     // imm is 35
     // Test immediate forms of SFPLOAD, SFPLOADI, SFPSTORE, SFPIADD_I, SFPADDI
@@ -1315,7 +1337,7 @@ void test12(int imm)
 // Test 13 covers variable liveness, ie, keeping a variable "alive" across a
 // CC narrowing instruction.  Touches every affected instruction except LOAD,
 // LOADI, IADD (those are covered in random tests above) across a SETCC
-void test13(int imm)
+sfpi_test_noinline void test13(int imm)
 {
     // Test variable liveness
 
@@ -1326,7 +1348,7 @@ void test13(int imm)
         VecHalf x = -20.0F;
         VecHalf y = -30.0F;
         p_if (dst_reg[0] == 0.0F) {
-            y = abs(x);
+            y = sfpi::abs(x);
         }
         p_endif;
         p_if (dst_reg[0] == 0.0F || dst_reg[0] == 1.0F) {
@@ -1548,7 +1570,7 @@ void test13(int imm)
     copy_result_to_dreg0(13);
 }
 
-void test14(int imm)
+sfpi_test_noinline void test14(int imm)
 {
     // Test13 tests various builtins for liveness across a SETCC
     // Below test MOV liveness across COMPC, LZ, EXEXP, IADD
@@ -1942,10 +1964,18 @@ void test14(int imm)
     // [27] = 110.0F;
 
     // Test a little basic block liveness madness
+    // NOTE: the test below hit a riscv gcc compiler bug where the float
+    // library conversions were wrong where:
+    //    (30.0f - i) != static_cast<float>(30 - i)
+    // and not just due to rounding (off by orders of magnitude)
     {
         VecHalf a = 200.0F;
         VecHalf b = 1.0F;
 
+        // unroll forces the compiler into multiple basic blocks
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC unroll 0
+#endif
         for (int i = 0; i < imm - 30; i++) { // 0..4
             p_if (dst_reg[0] == 28.0F) {
                 switch (i) {
@@ -1961,7 +1991,7 @@ void test14(int imm)
                 default:
                     b = b * 4.0F;
                 }
-            } p_elseif (dst_reg[0] >= 30.0 - i) {
+            } p_elseif (dst_reg[0] >= static_cast<float>(30 - i)) {
                 if (i % 2 == 0) {
                     b = 10.0F;
                 } else {
@@ -1987,12 +2017,12 @@ void test14(int imm)
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// These tests are designed to be incremental so that if a test fails the
+// earlier tests should be examined/fixed prior to the latter tests.
 //
-// The test is designed to be incremental so that if, eg, a hang occurs it
-// can be narrowed down (mostly) w/o modifying the code.  Rows contains how
-// many rows in the destination register will be written, ie, how far the test
-// will progress before terminating.  If the MSB is set, only that one row
-// will be written.
+// Rows contains how many rows in the destination register will be written,
+// ie, how far the test will progress before terminating.  If the MSB is set,
+// only that one row will be written.
 //
 // It is really hard to write tests w/o relying on lots of functionality...
 //
