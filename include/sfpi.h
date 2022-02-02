@@ -272,6 +272,10 @@ public:
     sfpi_inline CondComp operator!=(const VecHalf x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
+
+    // Shifts
+    sfpi_inline VecShortBase operator<<(uint32_t amt) const;
+    sfpi_inline VecUShort operator>>(uint32_t amt) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -343,6 +347,8 @@ class VecShortBase : public Vec {
     sfpi_inline void loadui(uint32_t val);
 
  public:
+    VecShortBase() = default;
+    sfpi_inline VecShortBase(const __rvtt_vec_t& in) { assign(in); }
     template <typename vType, typename std::enable_if_t<std::is_base_of<Vec, vType>::value>* = nullptr>
     sfpi_inline explicit operator vType() const { return vType(v); }
 
@@ -886,6 +892,18 @@ sfpi_inline CondComp CReg::operator==(const VecHalf x) const { return CondComp(C
 sfpi_inline CondComp CReg::operator!=(const VecHalf x) const { return CondComp(CondComp::CompNE0, *this, x); }
 sfpi_inline CondComp CReg::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT0, *this, x); }
 sfpi_inline CondComp CReg::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE0, *this, x); }
+
+sfpi_inline VecShortBase CReg::operator<<(uint32_t amt) const
+{
+    __rvtt_vec_t v = __builtin_rvtt_sfpassignlr(reg);
+    return __builtin_rvtt_sfpshft_i(v, amt);
+}
+
+sfpi_inline VecUShort CReg::operator>>(uint32_t amt) const
+{
+    __rvtt_vec_t v = __builtin_rvtt_sfpassignlr(reg);
+    return __builtin_rvtt_sfpshft_i(v, -amt);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline LRegAssigner::~LRegAssigner()

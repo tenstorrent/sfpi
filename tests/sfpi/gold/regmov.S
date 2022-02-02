@@ -225,6 +225,33 @@ _Z12replace_shftv:
 	SFPSTORE	L0, 2, 8
 	ret
 	.size	_Z12replace_shftv, .-_Z12replace_shftv
+	.align	1
+	.globl	_Z12replace_cregv
+	.type	_Z12replace_cregv, @function
+_Z12replace_cregv:
+	SFPMOV	L10, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSHFT	1, L0, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	SFPMOV	L10, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPAND	L11, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	SFPMOV	L11, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPOR	L10, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z12replace_cregv, .-_Z12replace_cregv
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
 	.align	2

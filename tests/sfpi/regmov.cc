@@ -201,3 +201,12 @@ void replace_shft()
     dst_reg[0] = x;
     dst_reg[2] = y;
 }
+
+void replace_creg()
+{
+    VecShort x = CReg_1;
+    VecShort y = CReg_Neg_1;
+    dst_reg[0] = x << 1;
+    dst_reg[0] = x & y;
+    dst_reg[0] = y | x;
+}
