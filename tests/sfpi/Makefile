@@ -1,3 +1,4 @@
+BUDA_ROOT ?= ../../../ll-sw
 SFPI_ROOT ?= ../..
 CC_PATH ?= $(SFPI_ROOT)/compiler
 
@@ -19,6 +20,10 @@ ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regm
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
 LTOS = $(addprefix rv32lto/,$(SRCS:.cc=))
 SIMS = $(addprefix x86/,$(SRCS:.cc=))
+
+ifneq ("$(wildcard ckernel.cc)", "")
+ASMS += rv32/ckernel.S
+endif
 
 all: $(ASMS) $(EXES) $(LTOS) $(SIMS)
 
@@ -57,9 +62,11 @@ rv32lto/%.o: %.cc $(INCLUDES) | rv32lto
 rv32ltoo/%.elf: lto/%.o $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
 
-test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S rv32/regmov.S | results
+resultsx86/%: x86/kernels | results
 	x86/kernels 14 b > results/kernels_int
 	x86/kernels 14 > results/kernels_float
+
+test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS)
 	diff results/kernels_float gold/kernels_float
 	diff results/kernels_int gold/kernels_int
 	cmp rv32/combine.S gold/combine.S
@@ -67,6 +74,9 @@ test: x86/kernels rv32/combine.S rv32/pushpop.S rv32/coverage.S rv32/live.S rv32
 	cmp rv32/coverage.S gold/coverage.S
 	cmp rv32/live.S gold/live.S
 	cmp rv32/regmov.S gold/regmov.S
+ifneq ("$(wildcard ckernel.cc)", "")
+	cmp rv32/ckernel.S gold/ckernel.S
+endif
 
 promote:
 	cp results/kernels_int gold/kernels_int
@@ -76,6 +86,9 @@ promote:
 	cp rv32/coverage.S gold/coverage.S
 	cp rv32/live.S gold/live.S
 	cp rv32/regmov.S gold/regmov.S
+ifneq ("$(wildcard ckernel.cc)", "")
+	cp rv32/ckernel.S gold/ckernel.S
+endif
 
 clean:
 	@rm -rf x86
