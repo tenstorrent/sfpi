@@ -4,7 +4,6 @@
 
 using namespace sfpi;
 
-// test_load_store
 void test_load_store()
 {
     VecHalf a, b;
@@ -23,10 +22,9 @@ void test_load_store()
     a = b;
     dst_reg[8] = a;
 
-    //    dst_reg[9] = CReg_Neg_1;
+    dst_reg[9] = CReg_Neg_1;
 }
 
-// test_add
 void test_add()
 {
     dst_reg[0] = dst_reg[1] + dst_reg[2];
@@ -39,6 +37,7 @@ void test_add()
 
     a += b;
     a += dst_reg[0];
+    a += CReg_1;
 
     dst_reg[11] = c;
     dst_reg[12] = a + b + 0.5F;
@@ -48,31 +47,39 @@ void test_add()
     dst_reg[15] = dst_reg[12] + CReg_0p0020 + 0.5F;
     dst_reg[16] = c + CReg_Neg_0p6748 - 0.5F;
 
-    //TTFIXME XXXX 
-    //    dst_reg[17] = a + b + c;
+    dst_reg[17] = a + b + c;
+    dst_reg[18] = a + b + c + dst_reg[0] + CReg_Neg_1 + 5.0f + 0.5F;
 }
 
 void test_sub()
 {
     dst_reg[0] = dst_reg[1] - dst_reg[2];
     dst_reg[3] = dst_reg[4] - dst_reg[5] + 0.5F;
+    dst_reg[6] = dst_reg[7] - dst_reg[8] - 0.5F;
 
-    VecHalf a = dst_reg[6];
-    VecHalf b = dst_reg[7];
+    VecHalf a = dst_reg[9];
+    VecHalf b = dst_reg[10];
+    VecHalf c = a - b - 0.5F;
 
     a -= b;
     a -= dst_reg[0];
+    a -= CReg_1;
+    a -= b + c;
 
-    dst_reg[8] = -b;
-    dst_reg[9] = a - b - 0.5F;
+    dst_reg[11] = c;
+    dst_reg[12] = a - b + 0.5F;
 
-    dst_reg[10] = CReg_Neg_1 - b;
+    dst_reg[17] = a + b - c;
+    // Releive reg pressure...
+    a = dst_reg[9];
+    dst_reg[18] = a - b - c - dst_reg[0] - CReg_Neg_1 - 5.0f + 0.5F;
 
-    dst_reg[11] = CReg_Neg_1 * a - b;
-    dst_reg[14] = -dst_reg[12] * -a - dst_reg[13];
+    dst_reg[13] = CReg_0 - CReg_Neg_1;
+    dst_reg[14] = CReg_Neg_1 - dst_reg[12];
+    dst_reg[15] = dst_reg[12] - CReg_0p0020 + 0.5F;
+    dst_reg[16] = c - CReg_Neg_0p6748 - 0.5F;
 }
 
-// test_mul
 void test_mul()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2];
@@ -84,22 +91,23 @@ void test_mul()
     VecHalf c = a * b - 0.5F;
 
     a *= b;
+    a *= -b;
     a *= dst_reg[0];
+    a *= -dst_reg[0];
+    a *= CReg_1;
 
     dst_reg[11] = c;
-    dst_reg[12] = a * b;
     dst_reg[12] = a * b + 0.5F;
 
     dst_reg[13] = CReg_0 * CReg_Neg_1;
     dst_reg[14] = CReg_Neg_1 * dst_reg[12];
     dst_reg[15] = dst_reg[12] * CReg_0p0020 + 0.5F;
-    dst_reg[15] = c * CReg_Neg_0p6748 - 0.5F;
+    dst_reg[16] = c * CReg_Neg_0p6748 - 0.5F;
 
-    dst_reg[16] = a * b * c;
-    dst_reg[17] = CReg_0 * b * c;
+    dst_reg[17] = a * b * c;
+    dst_reg[18] = a * b * c * dst_reg[0] * CReg_Neg_1 * 5.0f + 0.5F;
 }
 
-// test_mad
 void test_mad()
 {
     dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
@@ -115,40 +123,23 @@ void test_mad()
 
     dst_reg[17] = a * b + CReg_Neg_1 - 0.5F;
     dst_reg[18] = CReg_0 * b + CReg_Neg_1 + 0.5F;
-}
-
-// test_permute_ops
-//
-void test_permute_ops()
-{
-    VecHalf b = dst_reg[1];
-    VecHalf c = dst_reg[2];
-
-    dst_reg[3] = dst_reg[4] * dst_reg[5] + c;
-    dst_reg[6] = dst_reg[7] * b + dst_reg[8];
-    dst_reg[9] = dst_reg[10] * b + c;
-
-    // Use reloads below to address register pressure
-    VecHalf a = dst_reg[0];
-    dst_reg[11] = a * dst_reg[12] + dst_reg[13];
-
-    b = dst_reg[1];
-    c = dst_reg[2];
-
-    dst_reg[14] = a * dst_reg[15] + c;
-    dst_reg[19] = a * b + c;
+    dst_reg[19] = CReg_0 * -b + -a + 0.5F;
 }
 
 void test_loadi(int32_t i, uint32_t ui)
 {
-    VecShort a;
+    VecShort a = 10;
     a = 255;
     a = -255;
+    a = i;
+    a = ui;
     dst_reg[0] = a;
 
-    VecUShort b;
+    VecUShort b = 20;
     b = 255U;
     b = -255U;
+    b = i;
+    b = ui;
     dst_reg[1] = b;
 
     VecHalf c;
@@ -160,13 +151,18 @@ void test_loadi(int32_t i, uint32_t ui)
     c = ScalarFP16b(0x3F80U);
     c = ScalarFP16b(i);
     c = ScalarFP16b(ui);
+    dst_reg[2] = c;
 
     VecHalf f;
     f = 3.0f;
+    f = -3.0f;
     dst_reg[5] = f;
 
     VecHalf g = 3.1f;
     dst_reg[6] = g;
+
+    VecHalf h = 3.0;
+    dst_reg[7] = h;
 }
 
 void test_control_flow(int count)
@@ -191,13 +187,15 @@ void test_mad_imm()
     dst_reg[2] = c;
 }
 
-void test_man_exp()
+void test_exman_exexp()
 {
     VecHalf v1;
 
     v1 = dst_reg[0];
-    VecShort v2 = exman9(v1);
+    VecShort v2 = exman8(v1);
+    v2 = exman9(v1);
     VecShort v3 = exexp(v1);
+    v3 = exexp_nodebias(v1);
     dst_reg[3] = v3;
 
     VecShort v4;
@@ -208,17 +206,33 @@ void test_man_exp()
     p_if (v4.exexp_nodebias_cc(v1, ExExpCCLT0)); {
     }
     p_endif;
+}
 
-    //    v1.set_man(v2);
+void test_setman_setexp_addexp_setsgn()
+{
+    VecHalf v1 = 1.0f;
+    VecShort v2 = 1;
+    VecShort v3 = 1;
+
+    v1 = setexp(v1, 0x3ff);
     v1 = setexp(v1, v2);
+    v1 = setexp(v1, v3);
+
+    v1 = setman(v1, 0x3ff);
+    v1 = setman(v1, v2);
+    v1 = setman(v1, v3);
 
     VecHalf v5 = dst_reg[1];
     v1 = addexp(v5, 20);
-    v5 = setexp(v1, 10);
-    v5 = setman(v1, 10);
+    v1 = addexp(v5, -20);
 
-    dst_reg[2] = v2;
-    dst_reg[4] = v4;
+    v1 = setsgn(v5, 1);
+    v1 = setsgn(v5, -1);
+    v1 = setsgn(v5, v2);
+    VecHalf v6 = dst_reg[2];
+    v1 = setsgn(v5, v6);
+
+    dst_reg[2] = v1;
 }
 
 void test_dreg_conditional()
@@ -278,7 +292,7 @@ void test_vhalf_conditional()
     dst_reg[8] = v;
 }
 
-void test_creg_conditional1()
+void test_creg_conditional()
 {
     VecHalf v = dst_reg[0];
 
@@ -306,7 +320,7 @@ void test_creg_conditional1()
     dst_reg[8] = v;
 }
 
-void test_creg_conditional2()
+void test_creg_conditional_rev()
 {
     VecHalf v = dst_reg[0];
 
@@ -351,20 +365,23 @@ void test_bitwise()
 
     dst_reg[5] = v1 | v2;
     dst_reg[6] = v1 & v2;
+    dst_reg[7] = ((v1 & v2) | VecShort(0xAA)) & ~v2;
 
     VecUShort v3, v4;
     v3 = 3U;
     v4 = 4U;
+
     v3 |= v4;
     v3 |= 0xAAU;
-    dst_reg[2] = v3;
+    dst_reg[8] = v3;
     v3 &= v4;
     v3 &= 0xAAU;
-    dst_reg[3] = v4;
-    dst_reg[4] = ~v3;
+    dst_reg[9] = v4;
+    dst_reg[10] = ~v3;
 
-    dst_reg[5] = v3 | v4;
-    dst_reg[6] = v3 & v4;
+    dst_reg[11] = v3 | v4;
+    dst_reg[12] = v3 & v4;
+    dst_reg[13] = ((v3 & v4) | VecShort(0xAA)) & ~v4;
 }
 
 void test_abs()
@@ -439,7 +456,7 @@ void test_complex()
     dst_reg[2] = a + b;
     dst_reg[2] = a + b;
 
-    // Do we want to support this? Presently operator= is defined to return void
+    // XXXX fix when operator= is no longer defined to return void
     // dst_reg[2] = (c = a + b);
 }
 
@@ -447,20 +464,29 @@ void test_muli_addi()
 {
     VecHalf a = dst_reg[0];
 
-    a *= 16;
     a += 12;
+    a += ScalarFP16b(16.0f);
+    a += ScalarFP16a(16.0f);
+    a *= 16;
+    a *= ScalarFP16b(16.0f);
+    a *= ScalarFP16a(16.0f);
 
     dst_reg[1] = a;
 
     VecHalf b, c;
 
-    b = a * 16;
     c = a + 12;
+    c = a + ScalarFP16b(16.0f);
+    c = a + ScalarFP16a(16.0f);
+
+    b = a * 16;
+    b = a * ScalarFP16b(16.0f);
+    b = a * ScalarFP16a(16.0f);
 
     dst_reg[2] = b;
     dst_reg[3] = c;
 
-    // Do we want to support this? Presently operator= is defined to return void
+    // XXXX fix when operator= is no longer defined to return void
     // dst_reg[2] = (c = a + b);
 }
 
@@ -478,7 +504,8 @@ void test_iadd()
     v3 = v1 - v2;
     v3 += CReg_TileId;
     v2 = v1 + CReg_TileId;
-    //    v2 = v1 - CReg_TileId;
+    v2 = v1 - CReg_TileId;
+    v2 -= CReg_TileId;
     dst_reg[1] = v1;
     dst_reg[2] = v2;
     dst_reg[3] = v3;
@@ -500,7 +527,8 @@ void test_iadd()
     v6 = v4 - v5;
     v6 += CReg_TileId;
     v5 = v4 + CReg_TileId;
-    //    v5 = v4 - CReg_TileId;
+    v5 = v4 - CReg_TileId;
+    v5 -= CReg_TileId;
     dst_reg[1] = v4;
     dst_reg[2] = v5;
     dst_reg[3] = v6;
@@ -576,58 +604,6 @@ void test_icmp()
     p_endif;
 }
 
-void test_iadd2()
-{
-#if 0
-    int32_t x = 0; //3343343;
-
-    VecUShort a = x;
-
-    p_if (a < 0x801) {
-    }
-    p_endif;
-#endif
-}
-
-void test_set_sgn()
-{
-    VecHalf v1, v2;
-    
-    v1 = dst_reg[0];
-
-    v2 = setsgn(v1, 1);
-    v2 = setsgn(v2, v1);
-}
-
-void test_short_cond()
-{
-    VecShort b = 16;
-
-    p_if (b == 1) {
-        b += 100;
-    } p_elseif (b != 2) {
-        b += 200;
-    } p_elseif (b >= 3) {
-        b += 300;
-    } p_elseif (b < 4) {
-        b += 400;
-    }
-    p_endif;
-
-    p_if (b == 0) {
-        b += 500;
-    } p_elseif (b != 0) {
-        b += 600;
-    } p_elseif (b >= 0) {
-        b += 700;
-    } p_elseif (b < 0) {
-        b += 800;
-    }
-    p_endif;
-
-    dst_reg[1] = reinterpret<VecHalf>(b);
-}
-
 void lots_of_conditionals()
 {
     VecHalf x = 1.0f;
@@ -644,6 +620,17 @@ void lots_of_conditionals()
           !(x == 0.0f || x != 0.0f))) {
     }
     p_endif;
+}
+
+void test_lut()
+{
+    VecShort a = 0;
+    VecShort b = 1;
+    VecShort c = 2;
+    VecHalf d = 1.0f;
+
+    d = lut(d, a, b, c, 1);
+    dst_reg[1] = lut_sign(d, a, b, c, -1);
 }
 
 void stupid_example(unsigned int value)
@@ -712,15 +699,14 @@ int main(int argc, char* argv[])
     test_sub();
     test_mul();
     test_mad();
-    test_permute_ops();
     test_loadi(10, 20);
     test_control_flow(5);
     test_mad_imm();
-    test_man_exp();
+    test_setman_setexp_addexp_setsgn();
     test_dreg_conditional();
     test_vhalf_conditional();
-    test_creg_conditional1();
-    test_creg_conditional2();
+    test_creg_conditional();
+    test_creg_conditional_rev();
     test_bitwise();
     test_abs();
     test_lz();
@@ -728,8 +714,7 @@ int main(int argc, char* argv[])
     test_complex();
     test_muli_addi();
     test_iadd();
-    test_set_sgn();
-    test_short_cond();
+    test_lut();
     stupid_example(argc);
     //    test_operator_equals();
 }

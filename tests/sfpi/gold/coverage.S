@@ -18,6 +18,7 @@ _Z15test_load_storev:
 	SFPLOAD	L1, 1, 28
 	SFPSTORE	L1, 0, 24
 	SFPSTORE	L0, 0, 32
+	SFPSTORE	L11, 0, 36
 	ret
 	.size	_Z15test_load_storev, .-_Z15test_load_storev
 	.align	1
@@ -45,42 +46,69 @@ _Z8test_addv:
 	SFPNOP
 	SFPSTORE	L0, 0, 24
 	SFPNOP
-	SFPLOAD	L0, 1, 36
-	SFPLOAD	L2, 1, 40
-	SFPADD	L10, L0, L2, L1, 3
+	SFPLOAD	L1, 1, 36
+	SFPLOAD	L3, 1, 40
+	SFPADD	L10, L1, L3, L2, 3
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L1, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L1, 1, 0
+	SFPADD	L10, L0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L10, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 0, 44
+	SFPADD	L10, L0, L3, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 48
+	SFPADD	L10, L4, L11, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 52
+	SFPNOP
+	SFPLOAD	L1, 1, 48
+	SFPADD	L10, L11, L1, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 56
+	SFPLOAD	L1, 1, 48
+	SFPADD	L10, L1, L12, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 60
+	SFPADD	L10, L2, L13, L1, 3
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 64
+	SFPADD	L10, L0, L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L1, L2, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 68
+	SFPADD	L10, L0, L3, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPADD	L10, L0, L2, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPLOAD	L3, 1, 0
-	SFPADD	L10, L0, L3, L0, 0
+	SFPLOAD	L1, 1, 0
+	SFPADD	L10, L0, L1, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 0, 44
-	SFPADD	L10, L0, L2, L0, 1
+	SFPADD	L10, L0, L11, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 48
-	SFPADD	L10, L4, L11, L0, 0
+	SFPADDI	16544, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 52
-	SFPNOP
-	SFPLOAD	L0, 1, 48
-	SFPADD	L10, L11, L0, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 0, 56
-	SFPLOAD	L0, 1, 48
-	SFPADD	L10, L0, L12, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 0, 60
-	SFPADD	L10, L1, L13, L1, 3
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L1, 0, 64
+	SFPSTORE	L0, 0, 72
 	ret
 	.size	_Z8test_addv, .-_Z8test_addv
 	.align	1
@@ -107,8 +135,78 @@ _Z8test_subv:
 	SFPNOP
 	SFPSTORE	L0, 0, 12
 	SFPNOP
-	SFPLOAD	L0, 1, 24
-	SFPLOAD	L1, 1, 28
+	SFPLOAD	L1, 1, 32
+	SFPLOAD	L0, 1, 28
+	SFPMOV	L1, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L1, L0, 3
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 24
+	SFPNOP
+	SFPLOAD	L0, 1, 36
+	SFPLOAD	L2, 1, 40
+	SFPMOV	L2, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L1, L1, 3
+	SFPNOP
+	SFPNOP
+	SFPMOV	L2, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L3, 1, 0
+	SFPMOV	L3, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMOV	L10, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L2, L1, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPMOV	L3, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 44
+	SFPMOV	L2, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L3, 0, 48
+	SFPADD	L10, L0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMOV	L1, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 68
+	SFPNOP
+	SFPLOAD	L0, 1, 36
+	SFPMOV	L2, L2, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L2, L0, 0
+	SFPNOP
+	SFPNOP
 	SFPMOV	L1, L2, 1
 	SFPNOP
 	SFPNOP
@@ -122,47 +220,47 @@ _Z8test_subv:
 	SFPADD	L10, L0, L2, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPMOV	L1, L2, 1
+	SFPMOV	L11, L2, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 0, 32
-	SFPMOV	L1, L2, 1
+	SFPADD	L10, L0, L2, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPADD	L10, L0, L2, L2, 3
+	SFPADDI	49312, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 0, 36
-	SFPMOV	L1, L2, 1
+	SFPSTORE	L0, 0, 72
+	SFPMOV	L11, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPADD	L10, L11, L2, L2, 0
+	SFPADD	L10, L4, L0, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 0, 40
-	SFPMOV	L1, L1, 1
+	SFPSTORE	L0, 0, 52
 	SFPNOP
-	SFPNOP
-	SFPMAD	L11, L0, L1, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L1, 0, 44
-	SFPNOP
-	SFPLOAD	L1, 1, 48
-	SFPMOV	L1, L1, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 48
 	SFPMOV	L0, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPLOAD	L2, 1, 52
-	SFPMOV	L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPMAD	L1, L0, L2, L0, 0
+	SFPADD	L10, L11, L0, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 56
+	SFPLOAD	L0, 1, 48
+	SFPMOV	L12, L2, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L0, L2, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 60
+	SFPMOV	L13, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L1, L0, L1, 3
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 64
 	ret
 	.size	_Z8test_subv, .-_Z8test_subv
 	.align	1
@@ -190,23 +288,35 @@ _Z8test_mulv:
 	SFPNOP
 	SFPSTORE	L0, 0, 24
 	SFPNOP
-	SFPLOAD	L0, 1, 36
+	SFPLOAD	L1, 1, 36
 	SFPLOAD	L3, 1, 40
-	SFPMUL	L0, L3, L4, L2, 3
+	SFPMUL	L1, L3, L4, L2, 3
 	SFPNOP
 	SFPNOP
-	SFPMUL	L0, L3, L4, L0, 0
+	SFPMUL	L1, L3, L4, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPMOV	L3, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPMUL	L1, L0, L4, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L0, 1, 0
+	SFPMUL	L1, L0, L4, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPLOAD	L1, 1, 0
+	SFPMOV	L1, L1, 1
+	SFPNOP
+	SFPNOP
 	SFPMUL	L0, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
+	SFPMUL	L0, L10, L4, L0, 0
+	SFPNOP
+	SFPNOP
 	SFPSTORE	L2, 0, 44
-	SFPMUL	L0, L3, L4, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L1, 0, 48
 	SFPMUL	L0, L3, L4, L1, 1
 	SFPNOP
 	SFPNOP
@@ -229,21 +339,31 @@ _Z8test_mulv:
 	SFPMUL	L2, L13, L4, L1, 3
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 0, 60
-	SFPMUL	L0, L3, L4, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPMUL	L0, L2, L4, L1, 0
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L1, 0, 64
-	SFPMUL	L4, L3, L4, L0, 0
+	SFPMUL	L0, L3, L4, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPMUL	L1, L2, L4, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 68
+	SFPMUL	L0, L3, L4, L0, 0
 	SFPNOP
 	SFPNOP
 	SFPMUL	L0, L2, L4, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 68
+	SFPLOAD	L1, 1, 0
+	SFPMUL	L0, L1, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMUL	L0, L11, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMULI	16544, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 72
 	ret
 	.size	_Z8test_mulv, .-_Z8test_mulv
 	.align	1
@@ -285,72 +405,63 @@ _Z8test_madv:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L2, 0, 64
-	SFPMAD	L1, L0, L11, L1, 3
+	SFPMAD	L1, L0, L11, L2, 3
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 0, 68
-	SFPMAD	L4, L0, L11, L0, 1
+	SFPSTORE	L2, 0, 68
+	SFPMAD	L4, L0, L11, L2, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 72
-	ret
-	.size	_Z8test_madv, .-_Z8test_madv
-	.align	1
-	.globl	_Z16test_permute_opsv
-	.type	_Z16test_permute_opsv, @function
-_Z16test_permute_opsv:
-	SFPLOAD	L2, 1, 4
-	SFPLOAD	L3, 1, 8
-	SFPLOAD	L1, 1, 20
-	SFPLOAD	L0, 1, 16
-	SFPMAD	L0, L1, L3, L0, 0
+	SFPSTORE	L2, 0, 72
+	SFPMOV	L0, L0, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 12
-	SFPNOP
-	SFPLOAD	L1, 1, 28
-	SFPLOAD	L0, 1, 32
-	SFPMAD	L1, L2, L0, L1, 0
+	SFPMOV	L1, L1, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 0, 24
-	SFPNOP
-	SFPLOAD	L0, 1, 40
-	SFPMAD	L0, L2, L3, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 0, 36
-	SFPNOP
-	SFPLOAD	L0, 1, 0
-	SFPLOAD	L1, 1, 48
-	SFPLOAD	L2, 1, 52
-	SFPMAD	L0, L1, L2, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L1, 0, 44
-	SFPNOP
-	SFPLOAD	L3, 1, 4
-	SFPLOAD	L2, 1, 8
-	SFPLOAD	L1, 1, 60
-	SFPMAD	L0, L1, L2, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L1, 0, 56
-	SFPMAD	L0, L3, L2, L0, 0
+	SFPMAD	L4, L0, L1, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 76
 	ret
-	.size	_Z16test_permute_opsv, .-_Z16test_permute_opsv
+	.size	_Z8test_madv, .-_Z8test_madv
 	.align	1
 	.globl	_Z10test_loadilm
 	.type	_Z10test_loadilm, @function
 _Z10test_loadilm:
+	SFPLOADI	L0, 4, 10
 	SFPLOADI	L0, 4, 255
 	SFPLOADI	L0, 4, -255
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a4,a0,16
+	srli	a4,a4,16
+	li	a3,1896087552
+	add	a3, a3, a4
+# Op(71) - d(0)
+	sw	a3,0(a5)
+	slli	a4,a1,16
+	srli	a4,a4,16
+	li	a3,1895956480
+	add	a3, a3, a4
+# Op(71) - d(0)
+	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 0
+	SFPLOADI	L0, 4, 20
 	SFPLOADI	L0, 2, 255
 	SFPLOADI	L0, 2, -255
+	slli	a4,a0,16
+	srli	a4,a4,16
+	li	a3,1896087552
+	add	a3, a3, a4
+# Op(71) - d(0)
+	sw	a3,0(a5)
+	slli	a4,a1,16
+	srli	a4,a4,16
+	li	a3,1895956480
+	add	a3, a3, a4
+# Op(71) - d(0)
+	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 4
 	SFPLOADI	L0, 1, 15360
 	SFPLOADI	L0, 1, 16256
@@ -358,8 +469,6 @@ _Z10test_loadilm:
 	SFPLOADI	L0, 0, 16256
 	SFPLOADI	L0, 0, 16256
 	SFPLOADI	L0, 0, 16256
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a0,a0,16
 	srli	a0,a0,16
 	li	a4,1895825408
@@ -372,10 +481,14 @@ _Z10test_loadilm:
 	add	a4, a4, a1
 # Op(71) - d(0)
 	sw	a4,0(a5)
+	SFPSTORE	L0, 0, 8
 	SFPLOADI	L0, 0, 16448
+	SFPLOADI	L0, 0, 49216
 	SFPSTORE	L0, 0, 20
 	SFPLOADI	L0, 0, 16454
 	SFPSTORE	L0, 0, 24
+	SFPLOADI	L0, 0, 16448
+	SFPSTORE	L0, 0, 28
 	ret
 	.size	_Z10test_loadilm, .-_Z10test_loadilm
 	.align	1
@@ -384,19 +497,19 @@ _Z10test_loadilm:
 _Z17test_control_flowi:
 	SFPLOADI	L0, 0, 16320
 	li	a5,0
-	bgt	a0,zero,.L10
-	j	.L9
-.L16:
+	bgt	a0,zero,.L9
+	j	.L8
+.L15:
 	SFPLOAD	L0, 1, 4
 	addi	a5,a5,1
-	beq	a0,a5,.L9
-.L10:
+	beq	a0,a5,.L8
+.L9:
 	andi	a4,a5,1
-	bne	a4,zero,.L16
+	bne	a4,zero,.L15
 	SFPSTORE	L0, 0, 8
 	addi	a5,a5,1
-	bne	a0,a5,.L10
-.L9:
+	bne	a0,a5,.L9
+.L8:
 	ret
 	.size	_Z17test_control_flowi, .-_Z17test_control_flowi
 	.align	1
@@ -416,28 +529,46 @@ _Z12test_mad_immv:
 	ret
 	.size	_Z12test_mad_immv, .-_Z12test_mad_immv
 	.align	1
-	.globl	_Z12test_man_expv
-	.type	_Z12test_man_expv, @function
-_Z12test_man_expv:
+	.globl	_Z16test_exman_exexpv
+	.type	_Z16test_exman_exexpv, @function
+_Z16test_exman_exexpv:
 	SFPLOAD	L0, 1, 0
+	SFPEXMAN	L0, L1, 0
+	SFPNOP
+	SFPNOP
 	SFPEXMAN	L0, L1, 1
 	SFPNOP
 	SFPNOP
-	SFPEXEXP	L0, L2, 0
+	SFPEXEXP	L0, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 2, 12
-	SFPEXEXP	L0, L2, 2
+	SFPEXEXP	L0, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 12
+	SFPEXEXP	L0, L1, 2
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPEXEXP	L0, L0, 3
 	SFPNOP
 	SFPNOP
 	SFPNOP
 	SFPENCC	3, 10
 	SFPNOP
-	SFPEXEXP	L0, L2, 3
+	ret
+	.size	_Z16test_exman_exexpv, .-_Z16test_exman_exexpv
+	.align	1
+	.globl	_Z32test_setman_setexp_addexp_setsgnv
+	.type	_Z32test_setman_setexp_addexp_setsgnv, @function
+_Z32test_setman_setexp_addexp_setsgnv:
+	SFPLOADI	L0, 0, 16256
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 1
+	SFPSETEXP	1023, L0, L0, 1
 	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPENCC	3, 10
 	SFPNOP
 	SFPMOV	L1, L3, 0
 	SFPNOP
@@ -445,20 +576,47 @@ _Z12test_man_expv:
 	SFPSETEXP	0, L0, L3, 0
 	SFPNOP
 	SFPNOP
+	SFPMOV	L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETEXP	0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	1023, L0, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPMOV	L1, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L0, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L3, L2, 0
+	SFPNOP
+	SFPNOP
 	SFPLOAD	L0, 1, 4
-	SFPDIVP2	20, L0, L0, 1
+	SFPDIVP2	20, L0, L2, 1
 	SFPNOP
 	SFPNOP
-	SFPSETEXP	10, L0, L3, 1
+	SFPDIVP2	-20, L0, L2, 1
 	SFPNOP
 	SFPNOP
-	SFPSETMAN	10, L0, L0, 1
+	SFPSETSGN	1, L0, L2, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 2, 8
-	SFPSTORE	L2, 2, 16
+	SFPSETSGN	4095, L0, L2, 1
+	SFPNOP
+	SFPNOP
+	SFPSETSGN	0, L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L1, 1, 8
+	SFPSETSGN	0, L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 8
 	ret
-	.size	_Z12test_man_expv, .-_Z12test_man_expv
+	.size	_Z32test_setman_setexp_addexp_setsgnv, .-_Z32test_setman_setexp_addexp_setsgnv
 	.align	1
 	.globl	_Z21test_dreg_conditionalv
 	.type	_Z21test_dreg_conditionalv, @function
@@ -595,9 +753,9 @@ _Z22test_vhalf_conditionalv:
 	ret
 	.size	_Z22test_vhalf_conditionalv, .-_Z22test_vhalf_conditionalv
 	.align	1
-	.globl	_Z22test_creg_conditional1v
-	.type	_Z22test_creg_conditional1v, @function
-_Z22test_creg_conditional1v:
+	.globl	_Z21test_creg_conditionalv
+	.type	_Z21test_creg_conditionalv, @function
+_Z21test_creg_conditionalv:
 	SFPLOAD	L0, 1, 0
 	SFPMAD	L11, L11, L0, L1, 0
 	SFPNOP
@@ -659,11 +817,11 @@ _Z22test_creg_conditional1v:
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
-	.size	_Z22test_creg_conditional1v, .-_Z22test_creg_conditional1v
+	.size	_Z21test_creg_conditionalv, .-_Z21test_creg_conditionalv
 	.align	1
-	.globl	_Z22test_creg_conditional2v
-	.type	_Z22test_creg_conditional2v, @function
-_Z22test_creg_conditional2v:
+	.globl	_Z25test_creg_conditional_revv
+	.type	_Z25test_creg_conditional_revv, @function
+_Z25test_creg_conditional_revv:
 	SFPLOAD	L0, 1, 0
 	SFPMAD	L0, L11, L11, L1, 0
 	SFPNOP
@@ -725,7 +883,7 @@ _Z22test_creg_conditional2v:
 	SFPNOP
 	SFPSTORE	L0, 0, 32
 	ret
-	.size	_Z22test_creg_conditional2v, .-_Z22test_creg_conditional2v
+	.size	_Z25test_creg_conditional_revv, .-_Z25test_creg_conditional_revv
 	.align	1
 	.globl	_Z12test_bitwisev
 	.type	_Z12test_bitwisev, @function
@@ -759,10 +917,27 @@ _Z12test_bitwisev:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L2, 2, 20
+	SFPMOV	L0, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPAND	L1, L2
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 2, 24
 	SFPAND	L1, L0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 2, 24
+	SFPLOADI	L2, 4, 170
+	SFPOR	L2, L0
+	SFPNOP
+	SFPNOP
+	SFPNOT	L1, L1
+	SFPNOP
+	SFPNOP
+	SFPAND	L1, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 28
 	SFPLOADI	L0, 2, 3
 	SFPLOADI	L1, 2, 4
 	SFPOR	L1, L0
@@ -772,7 +947,7 @@ _Z12test_bitwisev:
 	SFPOR	L2, L0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 2, 8
+	SFPSTORE	L0, 2, 32
 	SFPAND	L1, L0
 	SFPNOP
 	SFPNOP
@@ -780,22 +955,39 @@ _Z12test_bitwisev:
 	SFPAND	L2, L0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 2, 12
+	SFPSTORE	L1, 2, 36
 	SFPNOT	L0, L2
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 2, 16
+	SFPSTORE	L2, 2, 40
 	SFPMOV	L0, L2, 0
 	SFPNOP
 	SFPNOP
 	SFPOR	L1, L2
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L2, 2, 20
+	SFPSTORE	L2, 2, 44
+	SFPMOV	L0, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPAND	L1, L2
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 2, 48
 	SFPAND	L1, L0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 2, 24
+	SFPLOADI	L2, 4, 170
+	SFPOR	L2, L0
+	SFPNOP
+	SFPNOP
+	SFPNOT	L1, L1
+	SFPNOP
+	SFPNOP
+	SFPAND	L1, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 52
 	ret
 	.size	_Z12test_bitwisev, .-_Z12test_bitwisev
 	.align	1
@@ -939,68 +1131,112 @@ _Z12test_complexv:
 	.type	_Z14test_muli_addiv, @function
 _Z14test_muli_addiv:
 	SFPLOAD	L0, 1, 0
-	SFPLOADI	L1, 0, 16768
-	SFPLOADI	L2, 0, 16704
-	SFPMAD	L0, L1, L2, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 0, 4
-	SFPLOADI	L1, 0, 16768
-	SFPMUL	L0, L1, L4, L1, 0
-	SFPNOP
-	SFPNOP
 	SFPADDI	16704, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 0, 8
-	SFPSTORE	L0, 0, 12
+	SFPADDI	16768, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L1, 1, 19456
+	SFPADD	L10, L0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMULI	16768, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMULI	16768, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L1, 1, 19456
+	SFPMUL	L0, L1, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 4
+	SFPLOADI	L1, 0, 16704
+	SFPADD	L10, L0, L1, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L1, 0, 16768
+	SFPADD	L10, L0, L1, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L1, 1, 19456
+	SFPADD	L10, L0, L1, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 0, 16768
+	SFPMUL	L0, L2, L4, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 0, 16768
+	SFPMUL	L0, L2, L4, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 1, 19456
+	SFPMUL	L0, L2, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 8
+	SFPSTORE	L1, 0, 12
 	ret
 	.size	_Z14test_muli_addiv, .-_Z14test_muli_addiv
 	.align	1
 	.globl	_Z9test_iaddv
 	.type	_Z9test_iaddv, @function
 _Z9test_iaddv:
-	SFPLOADI	L1, 4, 12
-	SFPIADD	10, L1, L2, 5
+	SFPLOADI	L0, 4, 12
+	SFPIADD	10, L0, L2, 5
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L1, L2, 4
+	SFPIADD	0, L0, L2, 4
 	SFPNOP
 	SFPNOP
 	SFPIADD	10, L2, L2, 5
 	SFPNOP
 	SFPNOP
-	SFPMOV	L2, L0, 0
+	SFPMOV	L2, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L1, L0, 4
+	SFPIADD	0, L0, L1, 4
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L2, L0, 6
+	SFPIADD	0, L2, L1, 6
 	SFPNOP
 	SFPNOP
-	SFPIADD	-10, L0, L0, 5
+	SFPIADD	-10, L1, L1, 5
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L1, L0, 6
+	SFPIADD	0, L0, L1, 6
 	SFPNOP
 	SFPNOP
 	SFPMOV	L15, L2, 0
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L0, L2, 6
+	SFPIADD	0, L1, L2, 6
 	SFPNOP
 	SFPNOP
-	SFPMOV	L15, L0, 0
+	SFPMOV	L15, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L1, L0, 4
+	SFPIADD	0, L0, L1, 4
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 2, 4
-	SFPSTORE	L0, 2, 8
+	SFPMOV	L15, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L0, L3, 6
+	SFPNOP
+	SFPNOP
+	SFPMOV	L15, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L3, L1, 6
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 4
+	SFPSTORE	L1, 2, 8
 	SFPSTORE	L2, 2, 12
-	SFPIADD	0, L15, L1, 8
+	SFPIADD	0, L15, L0, 8
 	SFPNOP
 	SFPNOP
 	SFPNOP
@@ -1008,47 +1244,59 @@ _Z9test_iaddv:
 	SFPSTORE	L0, 0, 16
 	SFPENCC	3, 10
 	SFPNOP
-	SFPLOADI	L1, 2, 12
-	SFPIADD	10, L1, L2, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	0, L1, L2, 4
-	SFPNOP
-	SFPNOP
-	SFPIADD	10, L2, L2, 5
-	SFPNOP
-	SFPNOP
-	SFPMOV	L2, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
-	SFPIADD	0, L2, L0, 6
-	SFPNOP
-	SFPNOP
-	SFPIADD	-10, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	0, L1, L0, 6
-	SFPNOP
-	SFPNOP
-	SFPMOV	L15, L2, 0
+	SFPLOADI	L0, 2, 12
+	SFPIADD	10, L0, L2, 5
 	SFPNOP
 	SFPNOP
 	SFPIADD	0, L0, L2, 4
 	SFPNOP
 	SFPNOP
-	SFPMOV	L15, L0, 0
+	SFPIADD	10, L2, L2, 5
 	SFPNOP
 	SFPNOP
-	SFPIADD	0, L1, L0, 4
+	SFPMOV	L2, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L1, 2, 4
-	SFPSTORE	L0, 2, 8
+	SFPIADD	0, L0, L1, 4
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L2, L1, 6
+	SFPNOP
+	SFPNOP
+	SFPIADD	-10, L1, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L0, L1, 6
+	SFPNOP
+	SFPNOP
+	SFPMOV	L15, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L1, L2, 4
+	SFPNOP
+	SFPNOP
+	SFPMOV	L15, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L0, L1, 4
+	SFPNOP
+	SFPNOP
+	SFPMOV	L15, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L0, L3, 4
+	SFPNOP
+	SFPNOP
+	SFPMOV	L15, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	0, L3, L1, 6
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 4
+	SFPSTORE	L1, 2, 8
 	SFPSTORE	L2, 2, 12
-	SFPIADD	0, L15, L1, 8
+	SFPIADD	0, L15, L0, 8
 	SFPNOP
 	SFPNOP
 	SFPNOP
@@ -1151,111 +1399,6 @@ _Z9test_icmpv:
 	ret
 	.size	_Z9test_icmpv, .-_Z9test_icmpv
 	.align	1
-	.globl	_Z10test_iadd2v
-	.type	_Z10test_iadd2v, @function
-_Z10test_iadd2v:
-	ret
-	.size	_Z10test_iadd2v, .-_Z10test_iadd2v
-	.align	1
-	.globl	_Z12test_set_sgnv
-	.type	_Z12test_set_sgnv, @function
-_Z12test_set_sgnv:
-	SFPLOAD	L0, 1, 0
-	SFPSETSGN	1, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	0, L1, L0, 0
-	SFPNOP
-	SFPNOP
-	ret
-	.size	_Z12test_set_sgnv, .-_Z12test_set_sgnv
-	.align	1
-	.globl	_Z15test_short_condv
-	.type	_Z15test_short_condv, @function
-_Z15test_short_condv:
-	SFPLOADI	L0, 4, 16
-	SFPIADD	-1, L0, L1, 5
-	SFPNOP
-	SFPNOP
-	SFPSETCC	0, L1, 6
-	SFPNOP
-	SFPIADD	100, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPPUSHC
-	SFPIADD	-2, L0, L1, 5
-	SFPNOP
-	SFPNOP
-	SFPSETCC	0, L1, 2
-	SFPNOP
-	SFPIADD	200, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPPUSHC
-	SFPIADD	-3, L0, L1, 9
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPIADD	300, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPIADD	-4, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPIADD	400, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPSETCC	0, L0, 6
-	SFPNOP
-	SFPIADD	500, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPPUSHC
-	SFPSETCC	0, L0, 2
-	SFPNOP
-	SFPIADD	600, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPPUSHC
-	SFPSETCC	0, L0, 4
-	SFPNOP
-	SFPIADD	700, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPCOMPC
-	SFPNOP
-	SFPSETCC	0, L0, 0
-	SFPNOP
-	SFPIADD	800, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPPOPC
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPSTORE	L0, 0, 4
-	ret
-	.size	_Z15test_short_condv, .-_Z15test_short_condv
-	.align	1
 	.globl	_Z20lots_of_conditionalsv
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
@@ -1316,6 +1459,23 @@ _Z20lots_of_conditionalsv:
 	SFPNOP
 	ret
 	.size	_Z20lots_of_conditionalsv, .-_Z20lots_of_conditionalsv
+	.align	1
+	.globl	_Z8test_lutv
+	.type	_Z8test_lutv, @function
+_Z8test_lutv:
+	SFPLOADI	L0, 4, 0
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L3, 0, 16256
+	SFPLUT	L3, 5
+	SFPNOP
+	SFPNOP
+	SFPLUT	L3, 3
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L3, 0, 4
+	ret
+	.size	_Z8test_lutv, .-_Z8test_lutv
 	.align	1
 	.globl	_Z14stupid_examplej
 	.type	_Z14stupid_examplej, @function
@@ -1454,7 +1614,6 @@ main:
 	call	_Z8test_subv
 	call	_Z8test_mulv
 	call	_Z8test_madv
-	call	_Z16test_permute_opsv
 	li	a1,20
 	li	a0,10
 	call	_Z10test_loadilm
@@ -1467,21 +1626,21 @@ main:
 	SFPLOAD	L0, 1, 4
 	SFPSTORE	L0, 0, 8
 	SFPNOP
-	SFPLOAD	L0, 1, 0
-	SFPLOADI	L1, 0, 16046
-	SFPLOADI	L2, 0, 48793
-	SFPMAD	L0, L1, L2, L1, 0
+	SFPLOAD	L3, 1, 0
+	SFPLOADI	L0, 0, 16046
+	SFPLOADI	L1, 0, 48793
+	SFPMAD	L3, L0, L1, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPMUL	L0, L1, L4, L0, 1
+	SFPMUL	L3, L0, L4, L3, 1
 	SFPNOP
 	SFPNOP
-	SFPSTORE	L0, 0, 8
-	call	_Z12test_man_expv
+	SFPSTORE	L3, 0, 8
+	call	_Z32test_setman_setexp_addexp_setsgnv
 	call	_Z21test_dreg_conditionalv
 	call	_Z22test_vhalf_conditionalv
-	call	_Z22test_creg_conditional1v
-	call	_Z22test_creg_conditional2v
+	call	_Z21test_creg_conditionalv
+	call	_Z25test_creg_conditional_revv
 	call	_Z12test_bitwisev
 	call	_Z8test_absv
 	call	_Z7test_lzv
@@ -1489,14 +1648,17 @@ main:
 	call	_Z12test_complexv
 	call	_Z14test_muli_addiv
 	call	_Z9test_iaddv
-	SFPLOAD	L0, 1, 0
-	SFPSETSGN	1, L0, L1, 1
+	SFPLOADI	L0, 4, 0
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L3, 0, 16256
+	SFPLUT	L3, 5
 	SFPNOP
 	SFPNOP
-	SFPSETSGN	0, L1, L0, 0
+	SFPLUT	L3, 3
 	SFPNOP
 	SFPNOP
-	call	_Z15test_short_condv
+	SFPSTORE	L3, 0, 4
 	mv	a0,s0
 	call	_Z14stupid_examplej
 	lw	ra,12(sp)
