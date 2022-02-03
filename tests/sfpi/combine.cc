@@ -360,6 +360,22 @@ void iadd_i_no12(unsigned int imm)
     dst_reg[0] = a;
 }
 
+void iadd_i_no_bb1(int count)
+{
+    VecShort a = 1;
+
+    a = a - 5;
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        p_if (a < 0) {
+            a += 1;
+        }
+        p_endif;
+    }
+    dst_reg[0] = a;
+}
+
 void iadd_v_yes1()
 {
     VecShort a = 3;
@@ -470,6 +486,23 @@ void iadd_v_no4()
     p_endif;
 }
 
+void iadd_v_no_bb1(int count)
+{
+    VecShort a = 1;
+    VecShort b = 2;
+
+    a = b - a;
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        p_if (a < 0) {
+            a += 1;
+        }
+        p_endif;
+    }
+    dst_reg[0] = a;
+}
+
 void lz_yes1()
 {
     VecHalf a = 3.0f;
@@ -538,6 +571,23 @@ void lz_no3()
     p_endif;
     dst_reg[0] = a;
     dst_reg[0] = b;
+}
+
+void lz_no_bb1(int count)
+{
+    VecHalf a = 3.0f;
+    VecShort b;
+
+    b = lz(a);
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        p_if (a < 0) {
+            a += 1;
+        }
+        p_endif;
+    }
+    dst_reg[0] = a;
 }
 
 void exexp_yes1()
@@ -623,6 +673,25 @@ void exexp_no2()
         dst_reg[0] = CReg_1;
     }
     p_endif;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
+}
+
+void exexp_no_bb1(int count)
+{
+    VecHalf a = 3.0f;
+    VecShort b;
+
+    b = exexp(a);
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        p_if (b >= 0) {
+            dst_reg[0] = CReg_1;
+        }
+        p_endif;
+    }
+
     dst_reg[0] = a;
     dst_reg[0] = b;
 }
@@ -821,6 +890,22 @@ void mad_live_no2()
 
     dst_reg[0] = d;
     dst_reg[0] = e;
+}
+
+void mad_no_bb1(int count)
+{
+    VecHalf a = dst_reg[0];
+    VecHalf b = dst_reg[1];
+    VecHalf c = dst_reg[2];
+
+    VecHalf d = a * b;
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        d = d + c;
+    }
+
+    dst_reg[0] = d;
 }
 
 void addi_yes1()
@@ -1037,6 +1122,20 @@ void addi_no2()
     dst_reg[0] = c;
 }
 
+void addi_no_bb1(int count)
+{
+    VecHalf a = 1.0f;
+    VecHalf b = 2.0f;
+
+    VecHalf c;
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        c = a + b;
+    }
+
+    dst_reg[0] = c;
+}
+
 // Muli and addi are handled w/ the same code, don't need to heavily
 // test muli
 void muli_yes1()
@@ -1197,6 +1296,22 @@ void add_plus_half_no2()
 
     VecHalf half = 0.5f;
     dst_reg[1] = a * b + half + c + half;
+}
+
+// This could be handled fairly easily
+void add_plus_half_no_bb1(int count)
+{
+    VecHalf a = dst_reg[0];
+    VecHalf b = dst_reg[1];
+    VecHalf half = 0.5f;
+
+    VecHalf c = a + b;
+
+#pragma GCC unroll 0
+    for (int i = 0; i < count; i++) {
+        c = c + half;
+    }
+    dst_reg[0] = c;
 }
 
 void complexish()

@@ -401,6 +401,32 @@ _Z11iadd_i_no12j:
 	ret
 	.size	_Z11iadd_i_no12j, .-_Z11iadd_i_no12j
 	.align	1
+	.globl	_Z13iadd_i_no_bb1i
+	.type	_Z13iadd_i_no_bb1i, @function
+_Z13iadd_i_no_bb1i:
+	SFPLOADI	L0, 4, 1
+	SFPIADD	-5, L0, L0, 5
+	SFPNOP
+	SFPNOP
+	bgt	a0,zero,.L32
+	SFPSTORE	L0, 2, 0
+	ret
+.L32:
+	li	a5,0
+.L30:
+	SFPSETCC	0, L0, 0
+	SFPNOP
+	SFPIADD	1, L0, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L30
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z13iadd_i_no_bb1i, .-_Z13iadd_i_no_bb1i
+	.align	1
 	.globl	_Z11iadd_v_yes1v
 	.type	_Z11iadd_v_yes1v, @function
 _Z11iadd_v_yes1v:
@@ -545,6 +571,33 @@ _Z10iadd_v_no4v:
 	ret
 	.size	_Z10iadd_v_no4v, .-_Z10iadd_v_no4v
 	.align	1
+	.globl	_Z13iadd_v_no_bb1i
+	.type	_Z13iadd_v_no_bb1i, @function
+_Z13iadd_v_no_bb1i:
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPIADD	0, L1, L0, 6
+	SFPNOP
+	SFPNOP
+	bgt	a0,zero,.L46
+	SFPSTORE	L0, 2, 0
+	ret
+.L46:
+	li	a5,0
+.L44:
+	SFPSETCC	0, L0, 0
+	SFPNOP
+	SFPIADD	1, L0, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L44
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z13iadd_v_no_bb1i, .-_Z13iadd_v_no_bb1i
+	.align	1
 	.globl	_Z7lz_yes1v
 	.type	_Z7lz_yes1v, @function
 _Z7lz_yes1v:
@@ -627,6 +680,32 @@ _Z6lz_no3v:
 	SFPSTORE	L1, 2, 0
 	ret
 	.size	_Z6lz_no3v, .-_Z6lz_no3v
+	.align	1
+	.globl	_Z9lz_no_bb1i
+	.type	_Z9lz_no_bb1i, @function
+_Z9lz_no_bb1i:
+	SFPLOADI	L0, 0, 16448
+	SFPLZ	L0, L1, 0
+	SFPNOP
+	SFPNOP
+	bgt	a0,zero,.L56
+	SFPSTORE	L0, 0, 0
+	ret
+.L56:
+	li	a5,0
+.L54:
+	SFPSETCC	0, L0, 0
+	SFPNOP
+	SFPADDI	16256, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L54
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z9lz_no_bb1i, .-_Z9lz_no_bb1i
 	.align	1
 	.globl	_Z10exexp_yes1v
 	.type	_Z10exexp_yes1v, @function
@@ -729,6 +808,32 @@ _Z9exexp_no2v:
 	SFPSTORE	L0, 2, 0
 	ret
 	.size	_Z9exexp_no2v, .-_Z9exexp_no2v
+	.align	1
+	.globl	_Z12exexp_no_bb1i
+	.type	_Z12exexp_no_bb1i, @function
+_Z12exexp_no_bb1i:
+	SFPLOADI	L0, 0, 16448
+	SFPEXEXP	L0, L1, 0
+	SFPNOP
+	SFPNOP
+	bgt	a0,zero,.L67
+	SFPSTORE	L0, 0, 0
+	SFPSTORE	L1, 2, 0
+	ret
+.L67:
+	li	a5,0
+.L65:
+	SFPSETCC	0, L1, 4
+	SFPNOP
+	SFPSTORE	L10, 0, 0
+	SFPENCC	3, 10
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L65
+	SFPSTORE	L0, 0, 0
+	SFPSTORE	L1, 2, 0
+	ret
+	.size	_Z12exexp_no_bb1i, .-_Z12exexp_no_bb1i
 	.align	1
 	.globl	_Z8mad_yes1v
 	.type	_Z8mad_yes1v, @function
@@ -963,6 +1068,28 @@ _Z12mad_live_no2v:
 	SFPSTORE	L0, 0, 0
 	ret
 	.size	_Z12mad_live_no2v, .-_Z12mad_live_no2v
+	.align	1
+	.globl	_Z10mad_no_bb1i
+	.type	_Z10mad_no_bb1i, @function
+_Z10mad_no_bb1i:
+	SFPLOAD	L0, 1, 0
+	SFPLOAD	L2, 1, 4
+	SFPLOAD	L1, 1, 8
+	SFPMUL	L0, L2, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	ble	a0,zero,.L81
+	li	a5,0
+.L82:
+	SFPADD	L10, L0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L82
+.L81:
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z10mad_no_bb1i, .-_Z10mad_no_bb1i
 	.align	1
 	.globl	_Z9addi_yes1v
 	.type	_Z9addi_yes1v, @function
@@ -1235,6 +1362,28 @@ _Z8addi_no2v:
 	ret
 	.size	_Z8addi_no2v, .-_Z8addi_no2v
 	.align	1
+	.globl	_Z11addi_no_bb1i
+	.type	_Z11addi_no_bb1i, @function
+_Z11addi_no_bb1i:
+	SFPLOADI	L1, 0, 16256
+	SFPLOADI	L2, 0, 16384
+	ble	a0,zero,.L102
+	SFPADD	L10, L1, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	li	a5,1
+	beq	a0,a5,.L102
+.L103:
+	SFPADD	L10, L1, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L103
+.L102:
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z11addi_no_bb1i, .-_Z11addi_no_bb1i
+	.align	1
 	.globl	_Z9muli_yes1v
 	.type	_Z9muli_yes1v, @function
 _Z9muli_yes1v:
@@ -1483,6 +1632,28 @@ _Z17add_plus_half_no2v:
 	SFPSTORE	L0, 0, 4
 	ret
 	.size	_Z17add_plus_half_no2v, .-_Z17add_plus_half_no2v
+	.align	1
+	.globl	_Z20add_plus_half_no_bb1i
+	.type	_Z20add_plus_half_no_bb1i, @function
+_Z20add_plus_half_no_bb1i:
+	SFPLOAD	L0, 1, 0
+	SFPLOAD	L2, 1, 4
+	SFPLOADI	L1, 0, 16128
+	SFPADD	L10, L0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	ble	a0,zero,.L122
+	li	a5,0
+.L123:
+	SFPADD	L10, L0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	addi	a5,a5,1
+	bne	a0,a5,.L123
+.L122:
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z20add_plus_half_no_bb1i, .-_Z20add_plus_half_no_bb1i
 	.align	1
 	.globl	_Z10complexishv
 	.type	_Z10complexishv, @function
