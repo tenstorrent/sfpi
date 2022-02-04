@@ -162,6 +162,7 @@ class CondOpExExp;
 class CondOpIAddI;
 class CondOpIAddV;
 class CondOpLz;
+class CCCtrl;
 class CCCtrlBase;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -600,7 +601,7 @@ public:
     sfpi_inline const VecBool& get_cond() const { return *cond; }
     sfpi_inline const VecCond& get_op() const { return *op; }
 
-    sfpi_inline void emit() const;
+    sfpi_inline void emit(CCCtrl *cc) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -637,7 +638,7 @@ public:
     sfpi_inline const CondOperand& get_op_a() const { return op_a; }
     sfpi_inline const CondOperand& get_op_b() const { return op_b; }
 
-    sfpi_inline void emit(bool negate = false) const;
+    sfpi_inline void emit(CCCtrl* cc, bool negate = false) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -757,19 +758,18 @@ class CCCtrl {
 protected:
     int push_count;
 
-    sfpi_inline void pop();
-
 public:
     sfpi_inline CCCtrl();
     sfpi_inline ~CCCtrl();
 
-    sfpi_inline void cc_if(const VecBool& op) const;
-    sfpi_inline void cc_if(const VecCond& op) const;
+    sfpi_inline void cc_if(const VecBool& op);
+    sfpi_inline void cc_if(const VecCond& op);
     sfpi_inline void cc_else() const;
     sfpi_inline void cc_elseif(const VecBool& cond);
     sfpi_inline void cc_elseif(const VecCond& cond);
 
     sfpi_inline void push();
+    sfpi_inline void pop();
 
     static sfpi_inline void enable_cc();
 };
@@ -1178,12 +1178,12 @@ sfpi_inline void VecUShort::operator>>=(uint32_t amt)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline void CondOperand::emit() const
+sfpi_inline void CondOperand::emit(CCCtrl *cc) const
 {
     if (type == Type::VecCond) {
         op->emit(false);
     } else {
-        cond->emit();
+        cond->emit(cc);
     }
 }
 
@@ -1202,19 +1202,30 @@ sfpi_inline const VecBool VecBool::operator!() const
 // Use De Morgan's laws to convert || to !&& pass the ! down as we go
 // Each node may be negated from above, if the current node is an OR, then it
 // always negates itself and upates the propagated negate by flipping it
-#define __sfpi_cond_emit_loop(leftside, rightside)                                  \
+//
+// Descending the LHS uses the last PUSHC as the "gate" against which a COMPC
+// can be issued, however, descending the RHS would mess up the results from
+// the LHS w/o a new gate, hence the PUSHC prior to the RHS.  The POPC would
+// destroy the results of the RHS and so those results are saved/restored with
+// saved_enables.  This uses 1 reg per level for now, which could be optimized
+// to just 1 reg total w/ some compiler work to clean up unused LOADIs that
+// are set multiple times to the same register (this is a tradeoff of
+// imperfect performance for what is likely a rare case anyway).
+#define __sfpi_cond_emit_loop(leftside, rightside)                      \
 {                                                                       \
-    const VecBool* local_node = node;                                  \
+    const VecBool* local_node = node;                                   \
     bool negate_node = node->negate;                                    \
     bool negate_child = negate;                                         \
+    bool descended_right = false;                                       \
+    VecShort saved_enables = 1;                                         \
                                                                         \
     VecBool::VecBoolType node_type = negate ? node->get_neg_type() : node->get_type(); \
-    if (node_type == VecBool::VecBoolType::Or) {                      \
+    if (node_type == VecBool::VecBoolType::Or) {                        \
         negate_node = !negate_node;                                     \
-        negate_child = !negate;                                         \
+        negate_child = !negate_child;                                   \
     }                                                                   \
                                                                         \
-    if (node->op_a.get_type() == CondOperand::Type::VecBool) {         \
+    if (node->op_a.get_type() == CondOperand::Type::VecBool) {          \
         node = &node->op_a.get_cond();                                  \
         leftside;                                                       \
         node = local_node;                                              \
@@ -1222,33 +1233,40 @@ sfpi_inline const VecBool VecBool::operator!() const
         node->op_a.get_op().emit(negate_child);                         \
     }                                                                   \
                                                                         \
-    if (node->op_b.get_type() == CondOperand::Type::VecBool) {         \
+    if (node->op_b.get_type() == CondOperand::Type::VecBool) {          \
+        cc->push();                                                     \
         node = &node->op_b.get_cond();                                  \
         rightside;                                                      \
+        descended_right = true;                                         \
         node = local_node;                                              \
     } else {                                                            \
         node->op_b.get_op().emit(negate_child);                         \
     }                                                                   \
                                                                         \
+    if (descended_right) {                                              \
+        saved_enables = 0;                                              \
+        cc->pop();                                                      \
+        __builtin_rvtt_sfpsetcc_v(saved_enables.get(), SFPSETCC_MOD1_LREG_EQ0); \
+    }                                                                   \
     if (negate_node) {                                                  \
         __builtin_rvtt_sfpcompc();                                      \
     }                                                                   \
 }
 
-#define __sfpi_cond_emit_loop_mid(leftside, rightside)                              \
+#define __sfpi_cond_emit_loop_mid(leftside, rightside)                  \
     bool negate = negate_child;                                         \
     __sfpi_cond_emit_loop(leftside, rightside)
 
 #define __sfpi_cond_emit_error __builtin_rvtt_sfpillegal();
-sfpi_inline void VecBool::emit(bool negate) const
+sfpi_inline void VecBool::emit(CCCtrl *cc, bool negate) const
 {
     const VecBool* node = this;
 
     __sfpi_cond_emit_loop(
-        __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error),
-                                  __sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error)),
-        __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error),
-                                  __sfpi_cond_emit_loop(__sfpi_cond_emit_error, __sfpi_cond_emit_error)));
+        __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_loop_mid(__sfpi_cond_emit_error, __sfpi_cond_emit_error),
+                                  __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_error, __sfpi_cond_emit_error)),
+        __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_loop_mid(__sfpi_cond_emit_error, __sfpi_cond_emit_error),
+                                  __sfpi_cond_emit_loop_mid(__sfpi_cond_emit_error, __sfpi_cond_emit_error)));
 }
 
 sfpi_inline VecCond::VecCond(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm) :
@@ -1356,12 +1374,12 @@ sfpi_inline CCCtrl::CCCtrl() : push_count(0)
     push();
 }
 
-sfpi_inline void CCCtrl::cc_if(const VecBool& op) const
+sfpi_inline void CCCtrl::cc_if(const VecBool& op)
 {
-    op.emit();
+    op.emit(this);
 }
 
-sfpi_inline void CCCtrl::cc_if(const VecCond& op) const
+sfpi_inline void CCCtrl::cc_if(const VecCond& op)
 {
     op.emit(false);
 }

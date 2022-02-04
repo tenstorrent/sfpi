@@ -130,31 +130,45 @@ void test_loadi(int32_t i, uint32_t ui)
 {
     VecShort a = 10;
     a = 255;
+    dst_reg[0] = a;
     a = -255;
+    dst_reg[0] = a;
     a = i;
+    dst_reg[0] = a;
     a = ui;
     dst_reg[0] = a;
 
     VecUShort b = 20;
     b = 255U;
+    dst_reg[1] = b;
     b = -255U;
+    dst_reg[1] = b;
     b = i;
+    dst_reg[1] = b;
     b = ui;
     dst_reg[1] = b;
 
     VecHalf c;
     c = ScalarFP16a(1.0F);
+    dst_reg[2] = c;
     c = ScalarFP16a(0x3F80);
+    dst_reg[2] = c;
     c = ScalarFP16a(0x3F80U);
+    dst_reg[2] = c;
     c = ScalarFP16b(1.0F);
+    dst_reg[2] = c;
     c = ScalarFP16b(0x3F80);
+    dst_reg[2] = c;
     c = ScalarFP16b(0x3F80U);
+    dst_reg[2] = c;
     c = ScalarFP16b(i);
+    dst_reg[2] = c;
     c = ScalarFP16b(ui);
     dst_reg[2] = c;
 
     VecHalf f;
     f = 3.0f;
+    dst_reg[5] = f;
     f = -3.0f;
     dst_reg[5] = f;
 
@@ -607,6 +621,11 @@ void test_icmp()
 void lots_of_conditionals()
 {
     VecHalf x = 1.0f;
+
+    p_if ((x == 0.0f && x == 0.0f) || (x == 0.0f && x == 0.0f)) {
+    }
+    p_endif;
+
     p_if(((x >= 0.0f && x < 0.0f) ||
           (x == 0.0f && x != 0.0f)) ||
          ((x == 0.0f && x != 0.0f) ||
@@ -618,6 +637,10 @@ void lots_of_conditionals()
           (x == 0.0f || x != 0.0f)) &&
          (!(x == 0.0f && x != 0.0f) ||
           !(x == 0.0f || x != 0.0f))) {
+    }
+    p_endif;
+
+    p_if(!(x >= 0.0f && x < 0.0f) && !(x >= 0.0f && x < 0.0f)) {
     }
     p_endif;
 }

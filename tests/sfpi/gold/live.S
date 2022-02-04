@@ -300,7 +300,6 @@ _Z4bb_4v:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
 	sw	s0,8(sp)
-	SFPLOADI	L0, 4, 1
 	SFPLOADI	L0, 4, 2
 	SFPIADD	-1, L0, L1, 9
 	SFPNOP

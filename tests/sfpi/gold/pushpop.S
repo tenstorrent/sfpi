@@ -561,7 +561,6 @@ _Z21control_flow_pif_gotoi:
 	SFPLOADI	L0, 4, 7
 	SFPENCC	3, 10
 	SFPNOP
-	SFPLOADI	L0, 4, 8
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
@@ -570,7 +569,6 @@ _Z21control_flow_pif_gotoi:
 	SFPNOP
 	SFPENCC	3, 10
 	SFPNOP
-	SFPLOADI	L0, 4, 8
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra

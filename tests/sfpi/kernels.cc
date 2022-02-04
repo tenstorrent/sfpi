@@ -243,7 +243,8 @@ sfpi_test_noinline void test4()
     }
     p_endif;
 
-    p_if (v == 29.0F || v == 30.0F || v == 31.0F) {
+    // Test || after && to be sure PUSHC works properly
+    p_if ((v >= 28.0F) && (v == 29.0F || v == 30.0F || v == 31.0F)) {
         VecHalf x = 30.0F;
         VecHalf y = 280.0F;
         p_if (v < x) {
@@ -699,6 +700,8 @@ sfpi_test_noinline void test6()
 sfpi_test_noinline void test7()
 {
     // SFPEXMAN, SFPEXEXP, SFPSETEXP, SFPSETMAN
+    // Plus a little more && ||
+
     dst_reg[7] = -dst_reg[0];
     p_if(dst_reg[0] == 1.0F) {
         VecHalf tmp = 124.0F;
@@ -774,6 +777,43 @@ sfpi_test_noinline void test7()
 
     // [10] = 1960.0 (?)
     // [11] = 1024.0
+
+    VecHalf v = dst_reg[0];
+    p_if ((v >= 12.0f && v < 14.0f) || (v >= 15.0f && v < 17.0f)) {
+        dst_reg[7] = -128.0f;
+    }
+    p_endif;
+    // [12] = -128.0
+    // [13] = -128.0
+    // [14] = -14.0
+    // [15] = -128.0
+    // [16] = -128.0
+
+    p_if(((v >= 17.0f && v < 18.0f) || (v >= 19.0f && v < 20.0f)) ||
+         ((v >= 21.0f && v < 22.0f) || (v >= 23.0f && v < 24.0f))) {
+        dst_reg[7] = -256.0f;
+    }
+    p_endif;
+    // [17] = -256.0
+    // [18] = -18.0
+    // [19] = -256.0
+    // [20] = -20.0
+    // [21] = -256.0
+    // [22] = -22.0
+    // [23] = -256.0
+    // [24] = -24.0
+
+    p_if (v >= 25.0f && v < 29.0f) {
+        p_if(!(v >= 25.0f && v < 26.0f) && !(v >= 27.0f && v < 28.0f)) {
+            dst_reg[7] = -1024.0f;
+        }
+        p_endif;
+    }
+    p_endif;
+    // [25] = -25.0
+    // [26] = -1024.0
+    // [27] = -27.0
+    // [28] = -1024.0
 
     copy_result_to_dreg0(7);
 }
