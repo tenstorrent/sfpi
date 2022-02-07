@@ -59,7 +59,7 @@ rv32lto/%.S: %.cc $(INCLUDES) | rv32lto
 rv32lto/%.o: %.cc $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -c -o $@ $<
 
-rv32ltoo/%.elf: lto/%.o $(INCLUDES) | rv32lto
+rv32lto/%.elf: lto/%.o $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
 
 resultsx86/%: x86/kernels | results
