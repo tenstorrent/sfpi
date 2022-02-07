@@ -95,6 +95,7 @@ clean:
 	@rm -rf rv32
 	@rm -rf rv32lto
 	@rm -rf results
+	@rm -rf core.*
 	@rm -f *~*
 
 .PHONY: all clean

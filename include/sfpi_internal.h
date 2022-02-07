@@ -199,10 +199,12 @@ constexpr unsigned int SFPIADD_MOD1_CC_NONE = 4;
 constexpr unsigned int SFPIADD_MOD1_CC_GTE0 = 8;
 
 constexpr unsigned int SFPCMP_EX_MOD1_CC_NONE = 0;
-constexpr unsigned int SFPCMP_EX_MOD1_CC_LT0 = 1;
-constexpr unsigned int SFPCMP_EX_MOD1_CC_EQ0 = 3;
-constexpr unsigned int SFPCMP_EX_MOD1_CC_GTE0 = 5;
-constexpr unsigned int SFPCMP_EX_MOD1_CC_NE0 = 7;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_LT = 1;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_EQ = 2;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_GTE = 3;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_NE = 4;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_LTE = 5;
+constexpr unsigned int SFPCMP_EX_MOD1_CC_GT = 6;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_MASK = 7;
 
 constexpr unsigned int SFPSCMP_EX_MOD1_FMT_A = 8;

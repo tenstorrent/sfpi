@@ -815,6 +815,44 @@ sfpi_test_noinline void test7()
     // [27] = -27.0
     // [28] = -1024.0
 
+    // <= and > are compound statements in the compiler, <= uses a compc
+    // and things get flipped around when joined by ||
+    p_if (v >= 29.0f && v < 32.0f) {
+        VecShort t = CReg_TileId;
+        VecHalf total = 16.0F;
+
+        p_if (t <= 30) {
+            total += 32.0F;
+        }
+        p_endif;
+        p_if (t > 30) {
+            total += 64.0F;
+        }
+        p_endif;
+        p_if (!(t > 30)) {
+            total += 128.0F;
+        }
+        p_endif;
+        p_if (!(t <= 30)) {
+            total += 256.0F;
+        }
+        p_endif;
+        p_if (t <= 29 || t > 30) {
+            total += 512.0F;
+        }
+        p_endif;
+        p_if (t > 30 || t <= 29) {
+            total += 1024.0F;
+        }
+        p_endif;
+
+        dst_reg[7] = total;
+    }
+    p_endif;
+    // [29] = 1712.0
+    // [30] = 176.0
+    // [31] = 1872.0
+
     copy_result_to_dreg0(7);
 }
 
@@ -822,6 +860,7 @@ sfpi_test_noinline void test8()
 {
     // SFPAND, SFPOR, SFPNOT, SFPABS
     // Atypical usage of conditionals
+    // More conditionals (short v compares)
 
     dst_reg[8] = -dst_reg[0];
     p_if(dst_reg[0] == 1.0F) {
@@ -909,6 +948,42 @@ sfpi_test_noinline void test8()
     p_endblock;
     dst_reg[8] = tmp;
 
+    // <= and > are compound statements in the compiler, <= uses a compc
+    // and things get flipped around when joined by ||
+    p_if (dst_reg[0] >= 20.0f && dst_reg[0] < 23.0f) {
+        VecShort t = CReg_TileId;
+        VecShort low = 20;
+        VecShort high = 21;
+
+        dst_reg[8] = 16.0f;
+
+        p_if (t <= high) {
+            dst_reg[8] = dst_reg[8] + 32.0F;
+        }
+        p_endif;
+        p_if (t > high) {
+            dst_reg[8] = dst_reg[8] + 64.0F;
+        }
+        p_endif;
+        p_if (!(t > high)) {
+            dst_reg[8] = dst_reg[8] + 128.0F;
+        }
+        p_endif;
+        p_if (!(t <= high)) {
+            dst_reg[8] = dst_reg[8] + 256.0F;
+        }
+        p_endif;
+        p_if (t <= low || t > high) {
+            dst_reg[8] = dst_reg[8] + 512.0F;
+        }
+        p_endif;
+        p_if (t > 21 || t <= low) {
+            dst_reg[8] = dst_reg[8] + 1024.0F;
+        }
+        p_endif;
+    }
+    p_endif;
+
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -929,6 +1004,10 @@ sfpi_test_noinline void test8()
     // [17] = 31.0
     // [18] = 14.0
     // [19] = -3.0
+    // [20] = 1712.0
+    // [21] = 176.0
+    // [22] = 1872.0
+
     copy_result_to_dreg0(8);
 }
 

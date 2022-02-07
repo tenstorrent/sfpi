@@ -553,69 +553,86 @@ void test_iadd()
     p_endif;
 }
 
-void test_icmp()
+void test_icmp_i()
+{
+    VecShort a = 5;
+
+    p_if (a == 1) {
+        a += 100;
+    } p_elseif (a != 2) {
+        a += 200;
+    } p_elseif (a < 3) {
+        a += 300;
+    } p_elseif (a <= 4) {
+        a += 400;
+    } p_elseif (a > 5) {
+        a += 500;
+    } p_elseif (a >= 6) {
+        a += 600;
+    }
+    p_endif;
+
+    dst_reg[0] = a;
+
+    VecUShort b = 16;
+
+    p_if (b == 1) {
+        b += 100;
+    } p_elseif (b != 2) {
+        b += 200;
+    } p_elseif (b < 3) {
+        b += 300;
+    } p_elseif (b <= 4) {
+        b += 400;
+    } p_elseif (b > 5) {
+        b += 500;
+    } p_elseif (b >= 6) {
+        b += 600;
+    }
+    p_endif;
+
+    dst_reg[1] = b;
+}
+
+void test_icmp_v()
 {
     VecShort a = 1;
     VecShort b = 2;
 
-    p_if (a < b) {
-    }
-    p_endif;
-    p_if (a >= b) {
-    }
-    p_endif;
-#if 0
     p_if (a == b) {
+        b += 100;
+    } p_elseif (a != b) {
+        b += 200;
+    } p_elseif (a < b) {
+        b += 300;
+    } p_elseif (a <= b) {
+        b += 400;
+    } p_elseif (a > b) {
+        b += 500;
+    } p_elseif (a >= b) {
+        b += 600;
     }
     p_endif;
-    p_if (a != b) {
-    }
-    p_endif;
-#endif
-
-    p_if (a < 3) {
-    }
-    p_endif;
-    p_if (a == 4) {
-    }
-    p_endif;
-    p_if (a != 5) {
-    }
-    p_endif;
-    p_if (a >= 6) {
-    }
-    p_endif;
+    dst_reg[0] = b;
 
     VecUShort c = 10;
     VecUShort d = 11;
 
-    p_if (c < d) {
-    }
-    p_endif;
-    p_if (c >= d) {
-    }
-    p_endif;
-#if 0
     p_if (c == d) {
+        d += 700;
+    } p_elseif (c != d) {
+        d += 800;
+    } p_elseif (c < d) {
+        d += 900;
+    } p_elseif (c <= d) {
+        d += 1000;
+    } p_elseif (c > d) {
+        d += 1100;
+    } p_elseif (c >= d) {
+        d += 1200;
     }
     p_endif;
-    p_if (c != d) {
-    }
-    p_endif;
-#endif
-
-    p_if (c < 13) {
-    }
-    p_endif;
-    p_if (c == 14) {
-    }
-    p_endif;
-    p_if (c != 15) {
-    }
-    p_endif;
-    p_if (c >= 16) {
-    }
-    p_endif;
+    dst_reg[0] = b;
 }
 
 void lots_of_conditionals()
@@ -737,6 +754,8 @@ int main(int argc, char* argv[])
     test_complex();
     test_muli_addi();
     test_iadd();
+    test_icmp_i();
+    test_icmp_v();
     test_lut();
     stupid_example(argc);
     //    test_operator_equals();

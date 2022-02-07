@@ -14,11 +14,8 @@ __rvtt_vec_t sfpu_lreg[4];
 static unsigned int cmp_ex_to_setcc_mod1_map[] = {
   0,
   SFPSETCC_MOD1_LREG_LT0,
-  0,
   SFPSETCC_MOD1_LREG_EQ0,
-  0,
   SFPSETCC_MOD1_LREG_GTE0,
-  0,
   SFPSETCC_MOD1_LREG_NE0,
 };
 
@@ -883,17 +880,23 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned
             tmp.set_uint(i, val);
 
             switch (mod1 & SFPCMP_EX_MOD1_CC_MASK) {
-            case SFPCMP_EX_MOD1_CC_GTE0:
+            case SFPCMP_EX_MOD1_CC_GTE:
                 sfpu_cc.deferred_and_result(i, val >= 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_LT0:
+            case SFPCMP_EX_MOD1_CC_LT:
                 sfpu_cc.deferred_and_result(i, val < 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_EQ0:
+            case SFPCMP_EX_MOD1_CC_EQ:
                 sfpu_cc.deferred_and_result(i, val == 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_NE0:
+            case SFPCMP_EX_MOD1_CC_NE:
                 sfpu_cc.deferred_and_result(i, val != 0);
+                break;
+            case SFPCMP_EX_MOD1_CC_LTE:
+                sfpu_cc.deferred_and_result(i, val <= 0);
+                break;
+            case SFPCMP_EX_MOD1_CC_GT:
+                sfpu_cc.deferred_and_result(i, val > 0);
                 break;
             }
         }
@@ -937,12 +940,20 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t&
     __rvtt_vec_t tmp;
 
     unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
+
     bool is_sub = ((mod1 & SFPIADD_EX_MOD1_IS_SUB) != 0);
     unsigned int mod = is_sub ? SFPIADD_MOD1_ARG_2SCOMP_LREG_DST : SFPIADD_MOD1_ARG_LREG_DST;
-    if (cmp == SFPCMP_EX_MOD1_CC_LT0 || cmp == SFPCMP_EX_MOD1_CC_GTE0) {
+    if (cmp == SFPCMP_EX_MOD1_CC_LT || cmp == SFPCMP_EX_MOD1_CC_GTE) {
         // Perform op w/ compare
-        mod |= (cmp == SFPCMP_EX_MOD1_CC_LT0) ? SFPIADD_MOD1_CC_LT0 : SFPIADD_MOD1_CC_GTE0;
+        mod |= (cmp == SFPCMP_EX_MOD1_CC_LT) ? SFPIADD_MOD1_CC_LT0 : SFPIADD_MOD1_CC_GTE0;
         tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
+    } else if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
+        // Perform op w/o compare, compare w/ IADDI
+        tmp = sfpu_rvtt_sfpiadd_v_ex(dst, src, (mod1 & ~SFPCMP_EX_MOD1_CC_MASK) | SFPCMP_EX_MOD1_CC_GTE);
+        sfpu_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_NE0);
+        if (cmp == SFPCMP_EX_MOD1_CC_LTE) {
+            sfpu_rvtt_sfpcompc();
+        }
     } else {
         // Perform op w/o compare, compare with SETCC
         mod |= SFPIADD_MOD1_CC_NONE;
