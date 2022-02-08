@@ -977,7 +977,82 @@ sfpi_test_noinline void test8()
             dst_reg[8] = dst_reg[8] + 512.0F;
         }
         p_endif;
-        p_if (t > 21 || t <= low) {
+        p_if (t > high || t <= low) {
+            dst_reg[8] = dst_reg[8] + 1024.0F;
+        }
+        p_endif;
+    }
+    p_endif;
+
+    // Do the same tests as above, but for floats
+    p_if (dst_reg[0] >= 23.0f && dst_reg[0] < 26.0f) {
+        VecHalf t = dst_reg[0];
+        VecHalf total = 16.0F;
+
+        p_if (t <= 24.0f) {
+            total += 32.0F;
+        }
+        p_endif;
+        p_if (t > 24.0f) {
+            total += 64.0F;
+        }
+        p_endif;
+        p_if (!(t > 24.0f)) {
+            total += 128.0F;
+        }
+        p_endif;
+        p_if (!(t <= 24.0f)) {
+            total += 256.0F;
+        }
+        p_endif;
+        p_if (t <= 23.0f || t > 24.0f) {
+            total += 512.0F;
+        }
+        p_endif;
+        p_if (t > 24.0f || t <= 23.0f) {
+            total += 1024.0F;
+        }
+        p_endif;
+
+        dst_reg[8] = total;
+    }
+    p_endif;
+
+    // More of the same, again for floats.  Reloads for reg pressure
+    p_if (dst_reg[0] >= 26.0f && dst_reg[0] < 29.0f) {
+        VecHalf low = 26.0f;
+        VecHalf high = 27.0f;
+
+        dst_reg[8] = 16.0f;
+
+        VecHalf t = dst_reg[0];
+        p_if (t <= high) {
+            dst_reg[8] = dst_reg[8] + 32.0F;
+        }
+        p_endif;
+        t = dst_reg[0];
+        p_if (t > high) {
+            dst_reg[8] = dst_reg[8] + 64.0F;
+        }
+        p_endif;
+        t = dst_reg[0];
+        p_if (!(t > high)) {
+            dst_reg[8] = dst_reg[8] + 128.0F;
+        }
+        p_endif;
+        t = dst_reg[0];
+        p_if (!(t <= high)) {
+            dst_reg[8] = dst_reg[8] + 256.0F;
+        }
+        p_endif;
+        t = dst_reg[0];
+        p_if (t <= low || t > high) {
+            dst_reg[8] = dst_reg[8] + 512.0F;
+        }
+        p_endif;
+        t = dst_reg[0];
+        low = 26.0f;
+        p_if (t > high || t <= low) {
             dst_reg[8] = dst_reg[8] + 1024.0F;
         }
         p_endif;
@@ -1007,6 +1082,12 @@ sfpi_test_noinline void test8()
     // [20] = 1712.0
     // [21] = 176.0
     // [22] = 1872.0
+    // [23] = 1712.0
+    // [24] = 176.0
+    // [25] = 1872.0
+    // [26] = 1712.0
+    // [27] = 176.0
+    // [28] = 1872.0
 
     copy_result_to_dreg0(8);
 }

@@ -249,7 +249,46 @@ void test_setman_setexp_addexp_setsgn()
     dst_reg[2] = v1;
 }
 
-void test_dreg_conditional()
+void test_dreg_conditional_const()
+{
+    VecHalf v = dst_reg[0];
+
+    p_if(dst_reg[0] < 5.0F) {
+        p_if(dst_reg[0] >= 2.0F) {
+            dst_reg[2] = v;
+        } p_elseif(dst_reg[0] != 4) {
+            dst_reg[3] = v;
+        }
+        p_endif;
+
+        dst_reg[4] = v;
+    } p_elseif(dst_reg[0] >= 6.0F) {
+        p_if(dst_reg[0] == 0.0F); {
+            dst_reg[5] = v;
+        }
+        p_endif;
+    } p_elseif(!(dst_reg[0] >= 6.0F)) {
+        dst_reg[6] = v;
+    } p_else {
+        dst_reg[7] = v;
+    }
+    p_endif;
+
+    p_if(dst_reg[0] <= 7.0F) {
+        dst_reg[8] = v;
+    } p_elseif (!(dst_reg[0] <= 8.0F)) {
+        dst_reg[9] = v;
+    } p_elseif (dst_reg[0] > 9.0F) {
+        dst_reg[10] = v;
+    } p_elseif (!(dst_reg[0] > 10.0F)) {
+        dst_reg[11] = v;
+    }
+    p_endif;
+
+    dst_reg[8] = v;
+}
+
+void test_vhalf_conditional_const()
 {
     VecHalf v = dst_reg[0];
 
@@ -274,13 +313,24 @@ void test_dreg_conditional()
     }
     p_endif;
 
+    p_if(v <= 7.0F) {
+        dst_reg[8] = v;
+    } p_elseif (!(v <= 8.0F)) {
+        dst_reg[9] = v;
+    } p_elseif (v > 9.0F) {
+        dst_reg[10] = v;
+    } p_elseif (!(v > 10.0F)) {
+        dst_reg[11] = v;
+    }
+    p_endif;
+
     dst_reg[8] = v;
 }
 
 void test_vhalf_conditional()
 {
     VecHalf v = dst_reg[0];
-    VecHalf x = 5.0F;
+    VecHalf x = 1.0f;
 
     p_if(v < x) {
         p_if(v >= x) {
@@ -292,7 +342,7 @@ void test_vhalf_conditional()
 
         dst_reg[4] = v;
     } p_elseif(v >= x) {
-        p_if(v == x); {
+        p_if(v == 0.0F); {
             dst_reg[5] = v;
         }
         p_endif;
@@ -300,6 +350,17 @@ void test_vhalf_conditional()
         dst_reg[6] = v;
     } p_else {
         dst_reg[7] = v;
+    }
+    p_endif;
+
+    p_if(v <= x) {
+        dst_reg[8] = v;
+    } p_elseif (!(v <= x)) {
+        dst_reg[9] = v;
+    } p_elseif (v > x) {
+        dst_reg[10] = v;
+    } p_elseif (!(v > x)) {
+        dst_reg[11] = v;
     }
     p_endif;
 
@@ -331,6 +392,17 @@ void test_creg_conditional()
     }
     p_endif;
 
+    p_if(v <= CReg_Neg_1) {
+        dst_reg[8] = v;
+    } p_elseif (!(v <= CReg_Neg_1)) {
+        dst_reg[9] = v;
+    } p_elseif (v > CReg_Neg_1) {
+        dst_reg[10] = v;
+    } p_elseif (!(v > CReg_Neg_1)) {
+        dst_reg[11] = v;
+    }
+    p_endif;
+
     dst_reg[8] = v;
 }
 
@@ -356,6 +428,17 @@ void test_creg_conditional_rev()
         dst_reg[6] = v;
     } p_else {
         dst_reg[7] = v;
+    }
+    p_endif;
+
+    p_if(CReg_Neg_1 <= v) {
+        dst_reg[8] = v;
+    } p_elseif (!(CReg_Neg_1 <= v)) {
+        dst_reg[9] = v;
+    } p_elseif (CReg_Neg_1 > v) {
+        dst_reg[10] = v;
+    } p_elseif (!(CReg_Neg_1 > v)) {
+        dst_reg[11] = v;
     }
     p_endif;
 
@@ -743,7 +826,8 @@ int main(int argc, char* argv[])
     test_control_flow(5);
     test_mad_imm();
     test_setman_setexp_addexp_setsgn();
-    test_dreg_conditional();
+    test_dreg_conditional_const();
+    test_vhalf_conditional_const();
     test_vhalf_conditional();
     test_creg_conditional();
     test_creg_conditional_rev();

@@ -220,14 +220,22 @@ public:
     sfpi_inline CondComp operator==(const float x) const;
     sfpi_inline CondComp operator!=(const float x) const;
     sfpi_inline CondComp operator<(const float x) const;
+    sfpi_inline CondComp operator<=(const float x) const;
+    sfpi_inline CondComp operator>(const float x) const;
     sfpi_inline CondComp operator>=(const float x) const;
+
     sfpi_inline CondComp operator==(const ScalarFP16 x) const;
     sfpi_inline CondComp operator!=(const ScalarFP16 x) const;
     sfpi_inline CondComp operator<(const ScalarFP16 x) const;
+    sfpi_inline CondComp operator<=(const ScalarFP16 x) const;
+    sfpi_inline CondComp operator>(const ScalarFP16 x) const;
     sfpi_inline CondComp operator>=(const ScalarFP16 x) const;
+
     sfpi_inline CondComp operator==(const VecHalf x) const;
     sfpi_inline CondComp operator!=(const VecHalf x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
+    sfpi_inline CondComp operator<=(const VecHalf x) const;
+    sfpi_inline CondComp operator>(const VecHalf x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
 };
 
@@ -269,9 +277,12 @@ public:
     sfpi_inline VecHalf operator+(const VecHalf b) const;
     sfpi_inline VecHalf operator-(const VecHalf b) const;
     sfpi_inline VecHalf operator*(const VecHalf b) const;
+
     sfpi_inline CondComp operator==(const VecHalf x) const;
     sfpi_inline CondComp operator!=(const VecHalf x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
+    sfpi_inline CondComp operator<=(const VecHalf x) const;
+    sfpi_inline CondComp operator>(const VecHalf x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
 
     // Shifts
@@ -336,6 +347,12 @@ public:
     sfpi_inline CondComp operator<(const float x) const;
     sfpi_inline CondComp operator<(const ScalarFP16 x) const;
     sfpi_inline CondComp operator<(const VecHalf x) const;
+    sfpi_inline CondComp operator<=(const float x) const;
+    sfpi_inline CondComp operator<=(const ScalarFP16 x) const;
+    sfpi_inline CondComp operator<=(const VecHalf x) const;
+    sfpi_inline CondComp operator>(const float x) const;
+    sfpi_inline CondComp operator>(const ScalarFP16 x) const;
+    sfpi_inline CondComp operator>(const VecHalf x) const;
     sfpi_inline CondComp operator>=(const float x) const;
     sfpi_inline CondComp operator>=(const ScalarFP16 x) const;
     sfpi_inline CondComp operator>=(const VecHalf x) const;
@@ -683,10 +700,10 @@ public:
     sfpi_inline VecCond(CondOpType t) : type(t), op_a(), op_b(), imm(0), mod1(0), neg_mod1(0), comp(false), neg_comp(false) {}
 
     template <class typeA, class typeB>
-    sfpi_inline VecCond(CondOpType t, const typeA a, const typeB b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(false), neg_comp(false) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, const typeB b, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
 
     template <class typeA>
-    sfpi_inline VecCond(CondOpType t, const typeA a, Vec* const b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(false), neg_comp(false) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, Vec* const b, int32_t i, uint32_t m, uint32_t nm, bool c= false, bool nc = false) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
 
     template <class typeA>
     sfpi_inline VecCond(CondOpType t, const typeA a, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
@@ -695,9 +712,9 @@ public:
     sfpi_inline VecCond(CondOpType t, const typeA a, VecShortBase b, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(0), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
 
     template <class typeA>
-    sfpi_inline VecCond(CondOpType t, const typeA a, const ScalarFP16 b, int32_t i, uint32_t m, uint32_t nm) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(false), neg_comp(false) {}
+    sfpi_inline VecCond(CondOpType t, const typeA a, const ScalarFP16 b, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
 
-    sfpi_inline VecCond(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm, bool comp = false, bool neg_comp = false);
+    sfpi_inline VecCond(CondOpType t, const VecShort a, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool n = false);
 
     // Negate
     sfpi_inline const VecCond operator!() const;
@@ -731,9 +748,9 @@ private:
 
 public:
     template <class type>
-    sfpi_inline CondComp(const CondCompOpType t, const type a, const ScalarFP16 b) : VecCond(CondOpType::CompareFloat, a, b, 0, t, not_cond(t)) {}
+    sfpi_inline CondComp(const CondCompOpType t, const type a, const ScalarFP16 b, bool c = false, bool nc = false) : VecCond(CondOpType::CompareFloat, a, b, 0, t, not_cond(t), c, nc) {}
 
-    sfpi_inline CondComp(const CondCompOpType t, const VecHalf a, const VecHalf b) : VecCond(CondOpType::CompareVecHalf, a, b, 0, t, not_cond(t)) {}
+    sfpi_inline CondComp(const CondCompOpType t, const VecHalf a, const VecHalf b, bool c = false, bool nc = false) : VecCond(CondOpType::CompareVecHalf, a, b, 0, t, not_cond(t), c, nc) {}
 
     template <class type>
     sfpi_inline CondComp(const CondCompOpType t, const type a, const int32_t b, const unsigned int mod, bool c = false, bool nc = false) : VecCond(CondOpType::CompareShort, a, b, t | mod, not_cond(t) | mod, c, nc) {}
@@ -845,14 +862,20 @@ sfpi_inline VecHalf DReg::operator*(const VecHalf b) const  { return sfpi_int::f
 sfpi_inline CondComp DReg::operator==(const float x) const {return CondComp(CondComp::CompEQ, VecHalf(*this), ScalarFP16(x)); }
 sfpi_inline CondComp DReg::operator!=(const float x) const { return CondComp(CondComp::CompNE, VecHalf(*this), ScalarFP16(x)); }
 sfpi_inline CondComp DReg::operator<(const float x) const { return CondComp(CondComp::CompLT, VecHalf(*this), ScalarFP16(x)); }
+sfpi_inline CondComp DReg::operator<=(const float x) const { return CondComp(CondComp::CompLTE, VecHalf(*this), ScalarFP16(x), true, false); }
+sfpi_inline CondComp DReg::operator>(const float x) const { return CondComp(CondComp::CompGT, VecHalf(*this), ScalarFP16(x), false, true); }
 sfpi_inline CondComp DReg::operator>=(const float x) const { return CondComp(CondComp::CompGTE, VecHalf(*this), ScalarFP16(x)); }
 sfpi_inline CondComp DReg::operator==(const ScalarFP16 x) const {return CondComp(CondComp::CompEQ, VecHalf(*this), x); }
 sfpi_inline CondComp DReg::operator!=(const ScalarFP16 x) const { return CondComp(CondComp::CompNE, VecHalf(*this), x); }
 sfpi_inline CondComp DReg::operator<(const ScalarFP16 x) const { return CondComp(CondComp::CompLT, VecHalf(*this), x); }
+sfpi_inline CondComp DReg::operator<=(const ScalarFP16 x) const { return CondComp(CondComp::CompLTE, VecHalf(*this), x, true, false); }
+sfpi_inline CondComp DReg::operator>(const ScalarFP16 x) const { return CondComp(CondComp::CompGT, VecHalf(*this), x, false, true); }
 sfpi_inline CondComp DReg::operator>=(const ScalarFP16 x) const { return CondComp(CondComp::CompGTE, VecHalf(*this), x); }
 sfpi_inline CondComp DReg::operator==(const VecHalf x) const {return CondComp(CondComp::CompEQ, VecHalf(*this), x); }
 sfpi_inline CondComp DReg::operator!=(const VecHalf x) const { return CondComp(CondComp::CompNE, VecHalf(*this), x); }
 sfpi_inline CondComp DReg::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT, VecHalf(*this), x); }
+sfpi_inline CondComp DReg::operator<=(const VecHalf x) const { return CondComp(CondComp::CompLTE, VecHalf(*this), x, true, false); }
+sfpi_inline CondComp DReg::operator>(const VecHalf x) const { return CondComp(CondComp::CompGT, VecHalf(*this), x, false, true); }
 sfpi_inline CondComp DReg::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE, VecHalf(*this), x); }
 
 template <>
@@ -911,6 +934,8 @@ sfpi_inline VecHalf CReg::operator*(const VecHalf b) const { return sfpi_int::fp
 sfpi_inline CondComp CReg::operator==(const VecHalf x) const { return CondComp(CondComp::CompEQ, *this, x); }
 sfpi_inline CondComp CReg::operator!=(const VecHalf x) const { return CondComp(CondComp::CompNE, *this, x); }
 sfpi_inline CondComp CReg::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT, *this, x); }
+sfpi_inline CondComp CReg::operator<=(const VecHalf x) const { return CondComp(CondComp::CompLTE, VecHalf(*this), x, true, false); }
+sfpi_inline CondComp CReg::operator>(const VecHalf x) const { return CondComp(CondComp::CompGT, VecHalf(*this), x, false, true); }
 sfpi_inline CondComp CReg::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE, *this, x); }
 
 sfpi_inline VecShortBase CReg::operator<<(uint32_t amt) const
@@ -976,14 +1001,20 @@ sfpi_inline VecHalf VecHalf::operator*(const VecHalf b) const { return sfpi_int:
 sfpi_inline CondComp VecHalf::operator==(const float x) const { return CondComp(CondComp::CompEQ, *this, ScalarFP16(x)); }
 sfpi_inline CondComp VecHalf::operator!=(const float x) const { return CondComp(CondComp::CompNE, *this, ScalarFP16(x)); }
 sfpi_inline CondComp VecHalf::operator<(const float x) const { return CondComp(CondComp::CompLT, *this, ScalarFP16(x)); }
+sfpi_inline CondComp VecHalf::operator<=(const float x) const { return CondComp(CondComp::CompLTE, *this, ScalarFP16(x), true, false); }
+sfpi_inline CondComp VecHalf::operator>(const float x) const { return CondComp(CondComp::CompGT, *this, ScalarFP16(x), false, true); }
 sfpi_inline CondComp VecHalf::operator>=(const float x) const { return CondComp(CondComp::CompGTE, *this, ScalarFP16(x)); }
 sfpi_inline CondComp VecHalf::operator==(const ScalarFP16 x) const { return CondComp(CondComp::CompEQ, *this, x); }
 sfpi_inline CondComp VecHalf::operator!=(const ScalarFP16 x) const { return CondComp(CondComp::CompNE, *this, x); }
 sfpi_inline CondComp VecHalf::operator<(const ScalarFP16 x) const { return CondComp(CondComp::CompLT, *this, x); }
+sfpi_inline CondComp VecHalf::operator<=(const ScalarFP16 x) const { return CondComp(CondComp::CompLTE, *this, x, true, false); }
+sfpi_inline CondComp VecHalf::operator>(const ScalarFP16 x) const { return CondComp(CondComp::CompGT, *this, x, false, true); }
 sfpi_inline CondComp VecHalf::operator>=(const ScalarFP16 x) const { return CondComp(CondComp::CompGTE, *this, x); }
 sfpi_inline CondComp VecHalf::operator==(const VecHalf x) const { return CondComp(CondComp::CompEQ, *this, x); }
 sfpi_inline CondComp VecHalf::operator!=(const VecHalf x) const { return CondComp(CondComp::CompNE, *this, x); }
 sfpi_inline CondComp VecHalf::operator<(const VecHalf x) const { return CondComp(CondComp::CompLT, *this, x); }
+sfpi_inline CondComp VecHalf::operator<=(const VecHalf x) const { return CondComp(CondComp::CompLTE, *this, x, true, false); }
+sfpi_inline CondComp VecHalf::operator>(const VecHalf x) const { return CondComp(CondComp::CompGT, *this, x, false, true); }
 sfpi_inline CondComp VecHalf::operator>=(const VecHalf x) const { return CondComp(CondComp::CompGTE, *this, x); }
 
 sfpi_inline void VecHalf::operator*=(const VecHalf m)
