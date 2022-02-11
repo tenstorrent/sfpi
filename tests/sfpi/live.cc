@@ -8,24 +8,24 @@ using namespace sfpi;
 void abs_setcc()
 // ABS liveness across SETCC
 {
-    VecHalf x = -20.0F;
-    VecHalf y = -30.0F;
-    p_if (dst_reg[0] == 0.0F) {
+    vFloat x = -20.0F;
+    vFloat y = -30.0F;
+    v_if (dst_reg[0] == 0.0F) {
         y = abs(x);
     }
-    p_endif;
+    v_endif;
     dst_reg[13] = y;
 }
 
 // Assignment resulting in register rename
 void rename_move_case2a()
 {
-    VecHalf a = 1.0f;  // LOADI
-    VecHalf b = 2.0f;  // LOADI
-    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
+    vFloat a = 1.0f;  // LOADI
+    vFloat b = 2.0f;  // LOADI
+    v_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
-    p_endif;           // POPC
+    v_endif;           // POPC
     dst_reg[0] = b;      // STORE
 }
 
@@ -34,12 +34,12 @@ void rename_move_case2a()
 // compiler doesn't know that, solving case2a will solve this case as well
 void copy_move_case2b()
 {
-    VecHalf a = 1.0f;  // LOADI
-    VecHalf b = 2.0f;  // LOADI
-    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
+    vFloat a = 1.0f;  // LOADI
+    vFloat b = 2.0f;  // LOADI
+    v_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
-    p_endif;           // POPC
+    v_endif;           // POPC
     dst_reg[0] = a; // STORE
     dst_reg[0] = b; // STORE
 }
@@ -47,12 +47,12 @@ void copy_move_case2b()
 // Assignment requiring move (both a and b need to be preserved)
 void copy_move_case3()
 {
-    VecHalf a = 1.0f;  // LOADI
-    VecHalf b = 2.0f;  // LOADI
-    p_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
+    vFloat a = 1.0f;  // LOADI
+    vFloat b = 2.0f;  // LOADI
+    v_if (dst_reg[0] == 0.0f) {  // PUSHC, ..., SETCC
         b = a;         // should generate MOV
     }
-    p_endif;           // POPC
+    v_endif;           // POPC
     dst_reg[0] = a + 3.0f; // STORE
     dst_reg[0] = b + 4.0f; // STORE
 }
@@ -60,16 +60,16 @@ void copy_move_case3()
 // Destination as source, 2 arguments in the wrong order
 void internal_move_case4()
 {
-    VecShort a = 10; // LOADI
-    VecShort b = 20; // LOADI
-    p_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
+    vInt a = 10; // LOADI
+    vInt b = 20; // LOADI
+    v_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
         a = a - b;   // CCMOV, IADD
         // Wrapper emits:
         //   tmp = b;
         //   tmp = a - tmp;
         //   a = tmp;
     }
-    p_endif;         // POPC
+    v_endif;         // POPC
     dst_reg[0] = a;    // STORE
     dst_reg[0] = b;    // STORE
 }
@@ -77,10 +77,10 @@ void internal_move_case4()
 // Destination as source 3 arguments
 void internal_move_case5()
 {
-    VecShort a = 10; // LOADI
-    VecShort b = 20; // LOADI
-    VecShort c = 30; // LOADI
-    p_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
+    vInt a = 10; // LOADI
+    vInt b = 20; // LOADI
+    vInt c = 30; // LOADI
+    v_if (dst_reg[0] == 0.0f) {      // PUSHC, ..., SETCC
         c = a - b;   // MOV, IADD
 
         // Wrapper emits:
@@ -92,7 +92,7 @@ void internal_move_case5()
         // c = b
         // c = a - c
     }
-    p_endif;         // POPC
+    v_endif;         // POPC
     dst_reg[0] = a;    // STORE
     dst_reg[0] = b;    // STORE
     dst_reg[0] = c;    // STORE
@@ -100,22 +100,22 @@ void internal_move_case5()
 
 void bb_1()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
     for (int i = 0; i < rand(); i++) {
-        p_if (a >= 3) {
+        v_if (a >= 3) {
             if (rand()) {
                 continue;
             }
             a = b + 4;
-        } p_elseif (a >= 5) {
+        } v_elseif (a >= 5) {
             if (rand()) {
                 break;
             }
             a = b + 6;
         }
-        p_endif;
+        v_endif;
     }
 
     dst_reg[0] = a;
@@ -123,17 +123,17 @@ void bb_1()
 
 void bb_2()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
     for (int i = 0; i < rand(); i++) {
-        p_block {
+        v_block {
             switch (i) {
             case 0:
                 a = b - 3;
                 break;
             case 1:
-                p_and(a >= 4);
+                v_and(a >= 4);
                 break;
             default:
                 break;
@@ -151,24 +151,24 @@ void bb_2()
 
 void bb_3()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
     for (int i = 0; i < rand(); i++) {
         if (rand() == 0) {
             goto target2;
         }
 
-        p_if (a >= 3) {
+        v_if (a >= 3) {
             if (rand() > 2) {
                 goto target1;
             }
             a = b - 4;
-        } p_elseif(a >= 5) {
+        } v_elseif(a >= 5) {
         target1:
             a = b - 6;
         }
-        p_endif;
+        v_endif;
     }
  target2:
 
@@ -177,12 +177,12 @@ void bb_3()
 
 void bb_4()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
-    p_block {
+    v_block {
 
-        p_and(b >= 1);
+        v_and(b >= 1);
 
         if (rand() == 5)
             goto seq1;
@@ -194,17 +194,17 @@ void bb_4()
             goto seq2;
 
     seq1:
-        p_and(b >= 2);
+        v_and(b >= 2);
         goto join;
 
     seq2:
-        p_and(b >= 3);
-        p_and(b >= 4);
+        v_and(b >= 3);
+        v_and(b >= 4);
         
     join:
         a = 5;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = a;
 }
@@ -212,8 +212,8 @@ void bb_4()
 // Test cleaning up args in PHI nodes after deleting the live assignment
 void bb_not_live()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
     for (int i = 0; i < rand(); i++) {
         a = b - 3;
@@ -227,28 +227,28 @@ void bb_not_live()
 // Liveness pass (used to) handle unrolling the POPC loop
 void popc_unrolling()
 {
-    VecShort a = 1;
-    VecShort b = 1;
+    vInt a = 1;
+    vInt b = 1;
 
-    p_if (a >= 2) {
+    v_if (a >= 2) {
         a = b - 1;
-    } p_elseif (a >= 3) {
+    } v_elseif (a >= 3) {
         a = b - 1;
-    } p_elseif (a >= 4) {
+    } v_elseif (a >= 4) {
         a = b - 1;
-    } p_elseif (a >= 5) {
+    } v_elseif (a >= 5) {
         a = b - 1;
     }
-    p_endif;
+    v_endif;
 
-    p_if (a >= 6) {
+    v_if (a >= 6) {
         a = b - 1;
-    } p_elseif (a >= 7) {
+    } v_elseif (a >= 7) {
         a = b - 1;
-    } p_elseif (a >= 8) {
+    } v_elseif (a >= 8) {
         a = b - 1;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = a;
 }
@@ -259,21 +259,21 @@ void popc_unrolling()
 // liveness, but continues up the chain to the origin
 void double_assign_even()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
-    p_if (a == 3) {
+    v_if (a == 3) {
         a = b & a;
-        VecShort b = 5;
-        VecShort c = 7;
-        VecShort d = 8;
+        vInt b = 5;
+        vInt c = 7;
+        vInt d = 8;
         dst_reg[0] = b;
         dst_reg[0] = c;
         dst_reg[0] = d;
 
         a = ~a;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = a;
 }
@@ -284,48 +284,48 @@ void double_assign_even()
 // cascade, ie, across generations?
 void generation()
 {
-    VecShort a;
-    VecShort b;
-    VecShort dr = 1;
+    vInt a;
+    vInt b;
+    vInt dr = 1;
 
-    p_if (dr == 2.0 || dr == 3.0) {
+    v_if (dr == 2.0 || dr == 3.0) {
         b = 4;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dr == 5.0) {
+    v_if (dr == 5.0) {
         b = -6;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dr == 7) {
+    v_if (dr == 7) {
         a = 8;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dr == 9) {
+    v_if (dr == 9) {
         a = 10;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dr == 11 || dr == 12) {
+    v_if (dr == 11 || dr == 12) {
         dst_reg[14] = b;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dr == 13) {
+    v_if (dr == 13) {
         dst_reg[14] = a;
     }
-    p_endif;
+    v_endif;
 }
 
 // Can liveness be determined when there is an intervening pseudo live insn
 void prop_thru_pseudo_live()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
-    p_if (a == 4) {
+    v_if (a == 4) {
         a = b & a;
         a = b | a;
         a = b + a;
@@ -334,20 +334,20 @@ void prop_thru_pseudo_live()
         a = a | b;
         a = a + b;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = a;
 }
 
 void do_not_fold_assign()
 {
-    VecShort a = 1;
-    VecShort b = 2;
+    vInt a = 1;
+    vInt b = 2;
 
-    p_if (a < 0) {
+    v_if (a < 0) {
         a = b;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = a;
 }

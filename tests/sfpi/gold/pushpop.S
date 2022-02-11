@@ -413,9 +413,9 @@ _Z10fn_call_nov:
 	jr	ra
 	.size	_Z10fn_call_nov, .-_Z10fn_call_nov
 	.align	1
-	.globl	_Z24control_flow_p_if_switchii
-	.type	_Z24control_flow_p_if_switchii, @function
-_Z24control_flow_p_if_switchii:
+	.globl	_Z24control_flow_v_if_switchii
+	.type	_Z24control_flow_v_if_switchii, @function
+_Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 4, 1
 	li	a5,20
 	beq	a0,a5,.L26
@@ -474,7 +474,7 @@ _Z24control_flow_p_if_switchii:
 	SFPLOADI	L0, 4, 8
 	SFPSTORE	L0, 2, 0
 	ret
-	.size	_Z24control_flow_p_if_switchii, .-_Z24control_flow_p_if_switchii
+	.size	_Z24control_flow_v_if_switchii, .-_Z24control_flow_v_if_switchii
 	.align	1
 	.globl	_Z25control_flow_pif_continuei
 	.type	_Z25control_flow_pif_continuei, @function

@@ -50,8 +50,8 @@ int main(int argc, char* argv[])
         s.find("nan") != string::npos ||
         s.find("NAN") != string::npos) {
         float val = stof(s);
-        printf("fp16a: 0x%x (%d)\n", (unsigned int)ScalarFP16a(val).get(), (int)ScalarFP16a(val).get());
-        printf("fp16b: 0x%x (%d)\n", (unsigned int)ScalarFP16b(val).get(), (int)ScalarFP16b(val).get());
+        printf("fp16a: 0x%x (%d)\n", (unsigned int)s2vFloat16a(val).get(), (int)s2vFloat16a(val).get());
+        printf("fp16b: 0x%x (%d)\n", (unsigned int)s2vFloat16b(val).get(), (int)s2vFloat16b(val).get());
     } else {
         int val = stoi(s, nullptr, 0);
         printf("fp32 (from fp16a): %f\n", fp16a_to_fp32(val));

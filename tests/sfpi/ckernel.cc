@@ -59,7 +59,7 @@ namespace ckernel
 namespace sfpu
 {
     
-sfpi_inline VecCond sfpu_is_fp16_zero(const VecHalf& v, uint exponent_size_8)
+sfpi_inline vCond sfpu_is_fp16_zero(const vFloat& v, uint exponent_size_8)
 {
     if (exponent_size_8) {
         // fp16b
@@ -68,45 +68,45 @@ sfpi_inline VecCond sfpu_is_fp16_zero(const VecHalf& v, uint exponent_size_8)
         // fp16a
         // if math data format is fp16, SFPU will convert 5 bit exp to 8 bit exp
         // in grayskull, this unconditionally adds bias value to exp (even for zero)
-        VecShort tmp = 0x3800; // loads {0, 8'd112, 10'b0}
-        tmp += reinterpret<VecShort>(v);
+        vInt tmp = 0x3800; // loads {0, 8'd112, 10'b0}
+        tmp += reinterpret<vInt>(v);
 
         return tmp == 0;
     }
 }
 
-sfpi_inline VecHalf sfpu_exp(VecHalf val)
+sfpi_inline vFloat sfpu_exp(vFloat val)
 {
     // If exponent is > -1 extract it and replace with -1
-    VecShort exp = exexp(val);
-    p_if (exp >= 0) {
+    vInt exp = exexp(val);
+    v_if (exp >= 0) {
         val = setexp(val, 126);
     }
-    p_endif;
+    v_endif;
 
     // Run series in Horner form
-    VecHalf tmp = val * CReg_0p8369 + 0.8634F;
-    val = val * tmp + CReg_1;
+    vFloat tmp = val * vConst0p8369 + 0.8634F;
+    val = val * tmp + vConst1;
 
-    p_if (exp >= 0) {
+    v_if (exp >= 0) {
         val = val * val;
         #pragma GCC unroll 0
         for (int s_iter = 0; s_iter < 7; s_iter++) {
             exp = exp - 1;
             // Narrow predication on each loop
-            p_and(exp >= 0);
+            v_and(exp >= 0);
             val = val * val;
         }
     }
-    p_endif;
+    v_endif;
 
     return val;
 }
 
 template <bool save_reg, int max_iter = 3>
-sfpi_inline VecHalf sfpu_reciprocal(const VecHalf in)
+sfpi_inline vFloat sfpu_reciprocal(const vFloat in)
 {
-    VecShort orig_exp;
+    vInt orig_exp;
 
     if constexpr (max_iter == 1) {
         // If we are only doing one iteration of the MAD loop, then we only need to use one LREG for the MAD instructions because we have our "first guess" in a hard-coded register
@@ -115,21 +115,21 @@ sfpi_inline VecHalf sfpu_reciprocal(const VecHalf in)
     }
 
     // Force sign to 1 (make number negative)
-    VecHalf val = setsgn(in, 1);
+    vFloat val = setsgn(in, 1);
 
     val = setexp(val, 126); // Set exponent to 126 to make the number in 0.5-1
     // Use 1.44 as first guess at x, ideal value would be 1.33, but we happen to have 1.44 available, so use that to avoid a load
-    VecHalf two;
+    vFloat two;
     if (!save_reg) {
         two = 2.0f;
     }
-    VecHalf result = CReg_1p4424 * (val * CReg_1p4424 + (save_reg ? 2.0f : two));
+    vFloat result = vConst1p4424 * (val * vConst1p4424 + (save_reg ? 2.0f : two));
 
     for (int s_iter = 0; s_iter < (max_iter-1); s_iter++) {
         result = result * (val * result + (save_reg ? 2.0f : two));
     }
 
-    VecShort new_exp = exexp(result);
+    vInt new_exp = exexp(result);
     if constexpr (max_iter != 1) {
         orig_exp = exexp(dst_reg[0]);
     }
@@ -139,13 +139,13 @@ sfpi_inline VecHalf sfpu_reciprocal(const VecHalf in)
     new_exp -= orig_exp;
     new_exp += 126;
 
-    p_if (new_exp < 0) {
+    v_if (new_exp < 0) {
         // If rebiased exponent is negative, we need to saturate at 0.
         // This means the initial number was too big so reciprocal result should be 0
         result = 0.0F;
         new_exp = 0;
     }
-    p_endif;
+    v_endif;
 
     // Set newly denormalized exponent to result exponent field
     return setexp(result, new_exp);
@@ -164,12 +164,12 @@ inline void init_dropout_seed(uint16_t p2)
 
     FWLOG1("calculate_dropout() -- calculated seed:%x", per_tensix_input_seed);
     
-    VecShort result;
+    vInt result;
     LRegAssigner lra;
     result = lra.assign(LRegs::LReg3);
 
-    VecShort tmp = CReg_TileId << 13;
-    VecShort ptis = reinterpret<VecShort>(VecHalf(per_tensix_input_seed));
+    vInt tmp = vConstTileId << 13;
+    vInt ptis = reinterpret<vInt>(vFloat(per_tensix_input_seed));
     result = ~(tmp & ptis) & (tmp | ptis);
 }
 
@@ -226,9 +226,9 @@ inline void sfpu_init(SfpuType operation, uint param0 = 0)
 }
 
 template <bool APPROXIMATION_MODE>
-sfpi_inline VecHalf calculate_exponential_body(VecHalf in)
+sfpi_inline vFloat calculate_exponential_body(vFloat in)
 {
-    VecHalf out;
+    vFloat out;
 
     if constexpr (APPROXIMATION_MODE)
     {
@@ -236,34 +236,34 @@ sfpi_inline VecHalf calculate_exponential_body(VecHalf in)
         constexpr uint SP_BIAS = 127 << FRAC_BITS;
 
         // * by 1/ln2 and add convert to 7.3 FxP format
-        VecHalf conv = in * CReg_1p4424;
+        vFloat conv = in * vConst1p4424;
 
         // Clear exp bits
-        VecShort c23_73 = p_exp::C23_73;
-        VecShort tmp = reinterpret<VecShort>(conv) - c23_73;
+        vInt c23_73 = p_exp::C23_73;
+        vInt tmp = reinterpret<vInt>(conv) - c23_73;
 
         // Add bias
         tmp += SP_BIAS;
 
         // SHL to move integer bits to exponent
-        out = reinterpret<VecHalf>(tmp << (10 - FRAC_BITS));
+        out = reinterpret<vFloat>(tmp << (10 - FRAC_BITS));
     }
     else
     {
         // Force sign to 0 (make number positive)
-        VecHalf exp = sfpu_exp(setsgn(in, 0));
+        vFloat exp = sfpu_exp(setsgn(in, 0));
 
         // Load input value, to determine whether reciprocal needs to be run
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
         // store tentatively e^x
         // reciprocal function relies on reloading input
         dst_reg[0] = exp;
 
-        p_if (val < 0) {
+        v_if (val < 0) {
             out = sfpu_reciprocal<true>(exp);
         }
-        p_endif;
+        v_endif;
     }
 
     return out;
@@ -290,8 +290,8 @@ void calculate_cube(uint16_t exp_base_scale_factor = 0)
 template <bool APPROXIMATION_MODE, bool ZERO_NEGATIVE, bool SCALE_EN>
 inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
 {
-    VecHalf c23_73;
-    VecShort adj_exp;
+    vFloat c23_73;
+    vInt adj_exp;
 
     if constexpr (APPROXIMATION_MODE)
     {
@@ -303,9 +303,9 @@ inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
         if constexpr(SCALE_EN){
-            val = val * ScalarFP16a(exp_base_scale_factor);
+            val = val * s2vFloat16a(exp_base_scale_factor);
             // XXXX could in theory save a cycle by doing this store in the
             // shadow of the next operation.  hard to do, worth it?
             dst_reg[0] = val;
@@ -313,24 +313,24 @@ inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
         if constexpr (APPROXIMATION_MODE)
         {
             // * by 1/ln2 and add convert to 7.3 FxP format
-            val = val * CReg_1p4424 + c23_73;
+            val = val * vConst1p4424 + c23_73;
 
             // Remove Exponent of 7 and bias the Mantissa to 127.
             // LREG2 already holds 2's complement value so we simply do REG2 + REG3 
-            VecShort val_short = adj_exp + reinterpret<VecShort>(val);
+            vInt val_short = adj_exp + reinterpret<vInt>(val);
 
             // SHL to move integer bits to exponent
             val_short <<= 10 - p_exp::FRAC_BITS;
-            dst_reg[0] = reinterpret<VecHalf>(val_short);
+            dst_reg[0] = reinterpret<vFloat>(val_short);
 
             // Needed for fused kernels such as math_row_softmax_tables which call calculate_exponential()
             // without using Relu in Packer to clamp -ve Infinity to 0.
             if constexpr (ZERO_NEGATIVE)
             {
-                p_if (val_short < 0) {
-                    dst_reg[0] = CReg_0;
+                v_if (val_short < 0) {
+                    dst_reg[0] = vConst0;
                 }
-                p_endif;
+                v_endif;
             }
         }
         else
@@ -338,14 +338,14 @@ inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
             // Force sign to 0 (make number positive)
             val = sfpu_exp(setsgn(val, 0));
 
-            VecHalf orig = dst_reg[0];
+            vFloat orig = dst_reg[0];
 
             // Loaded by reciprocal
             dst_reg[0] = val;
-            p_if (orig < 0) {
+            v_if (orig < 0) {
                 dst_reg[0] = sfpu_reciprocal<false>(val);
             }
-            p_endif;
+            v_endif;
         }
 
         TTI_INCRWC(0, 4, 0, 0);
@@ -353,7 +353,7 @@ inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
 }
 
 template <bool APPROXIMATION_MODE>
-sfpi_inline VecHalf calculate_gelu_core(VecHalf in)
+sfpi_inline vFloat calculate_gelu_core(vFloat in)
 {
     constexpr uint imm0 = 0x18FF;
     constexpr uint imm1 = (APPROXIMATION_MODE)? 0x212C : 0x2010;
@@ -363,7 +363,7 @@ sfpi_inline VecHalf calculate_gelu_core(VecHalf in)
     // result = (APPROX_MODE == 1) 
     //   ? (1 + erf(x/sqrt(2)))
     //   : (1 + tanh( sqrt(2/pi) * (x + 0.044715*x^3) )
-    VecHalf result;
+    vFloat result;
     if constexpr (APPROXIMATION_MODE) {
         result = in;
     } else {
@@ -387,7 +387,7 @@ inline void calculate_gelu()
 {
     constexpr uint imm1 = (APPROXIMATION_MODE)? 0x212C : 0x2010;
     constexpr uint imm2 = 0xFF00;
-    VecUShort l0;
+    vUInt l0;
     LRegAssigner lra;
     l0 = lra.assign(LRegs::LReg0);
 
@@ -395,10 +395,10 @@ inline void calculate_gelu()
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
-        VecUShort l1;
-        VecUShort l2;
-        VecHalf result;
+        vFloat val = dst_reg[0];
+        vUInt l1;
+        vUInt l2;
+        vFloat result;
 
         if constexpr (APPROXIMATION_MODE)
         {
@@ -434,7 +434,7 @@ template <bool APPROXIMATION_MODE>
 inline void calculate_sigmoid()
 {
     // SFPU microcode
-    VecUShort l0, l1, l2;
+    vUInt l0, l1, l2;
     LRegAssigner lra;
     l0 = lra.assign(LRegs::LReg0);
     l1 = lra.assign(LRegs::LReg1);
@@ -442,7 +442,7 @@ inline void calculate_sigmoid()
 
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
         val = lut(val, l0, l1, l2);
 
@@ -456,7 +456,7 @@ template <bool APPROXIMATION_MODE>
 inline void calculate_tanh()
 {
     // SFPU microcode
-    VecUShort l0, l1, l2;
+    vUInt l0, l1, l2;
     LRegAssigner lra;
     l0 = lra.assign(LRegs::LReg0);
     l1 = lra.assign(LRegs::LReg1);
@@ -464,7 +464,7 @@ inline void calculate_tanh()
 
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
         val = lut(val, l0, l1, l2);
         dst_reg[0] = val;
 
@@ -481,26 +481,26 @@ inline void calculate_hardtanh(uint param0, uint param1, uint param2)
     // param2 = -(pos_threshold)
 
     // XXXX move these into loop when sfpi nonimmed load perf issue is fixed
-    VecHalf p0 = ScalarFP16(param0);
-    VecHalf p1 = ScalarFP16(param1);
-    VecHalf p2 = ScalarFP16(param2);
+    vFloat p0 = s2vFloat16(param0);
+    vFloat p1 = s2vFloat16(param1);
+    vFloat p2 = s2vFloat16(param2);
     // SFPU microcode
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
         val += p0;// 12 bits
-        p_if (val < 0.0f) {
+        v_if (val < 0.0f) {
             val = 0.0f;
         }
-        p_endif;
+        v_endif;
 
         val += p1;// 12 bits
-        p_if (val >= 0.0f) {
+        v_if (val >= 0.0f) {
             val = 0.0f;
         }
-        p_endif;
+        v_endif;
 
         val += p2;// 12 bits
 
@@ -513,7 +513,7 @@ inline void calculate_hardtanh(uint param0, uint param1, uint param2)
 template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
 inline void calculate_tanh_derivative()
 {
-    VecUShort l0, l1, l2;
+    vUInt l0, l1, l2;
     LRegAssigner lra;
     l0 = lra.assign(LRegs::LReg0);
     l1 = lra.assign(LRegs::LReg1);
@@ -522,14 +522,14 @@ inline void calculate_tanh_derivative()
     // tanh'(x) = 1 - (tanh(x))^2
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
         if constexpr (!WITH_PRECOMPUTED_TANH) {
             val = lut(val, l0, l1, l2);
         }
 
         val = val * val;
-        val = CReg_1 - val;
+        val = vConst1 - val;
         dst_reg[0] = val;
 
         TTI_INCRWC(0, 4, 0, 0);
@@ -543,14 +543,14 @@ inline void calculate_gelu_derivative()
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
-        VecHalf result = val * val * CReg_Neg_0p5;
+        vFloat val = dst_reg[0];
+        vFloat result = val * val * vConstNeg0p5;
 
         // Store intermediate result since exp(x) reloads value from dest
         dst_reg[0] = result;
 
         // exp = e^(val)
-        VecHalf exp = calculate_exponential_body<false>(result);
+        vFloat exp = calculate_exponential_body<false>(result);
 
         // exp = exp * 1/sqrt(2*pi)
         exp *= 0.39844F;
@@ -570,15 +570,15 @@ inline void calculate_reciprocal()
     #pragma GCC unroll 0
     for (int d = 0; d < ITERATIONS; d++)
     {
-        VecHalf in = dst_reg[0];
-        VecHalf out = sfpu_reciprocal<false, APPROXIMATION_MODE ? 2 : 3>(in);
+        vFloat in = dst_reg[0];
+        vFloat out = sfpu_reciprocal<false, APPROXIMATION_MODE ? 2 : 3>(in);
 
         // Reload to reduce register pressure
-        p_if (dst_reg[0] < 0.0F) {
+        v_if (dst_reg[0] < 0.0F) {
             // Invert sign on calculated value if CC=1 (number is negative)
             out = -out;
         }
-        p_endif;
+        v_endif;
 
         dst_reg[0] = out;
 
@@ -591,29 +591,29 @@ inline void calculate_sqrt()
 {
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
         if constexpr (APPROXIMATION_MODE)
         {
-            VecUShort magic;
+            vUInt magic;
             LRegAssigner lra;
             magic = lra.assign(LRegs::LReg2);
 
             //sqrt initial approximation
             // adjust bias
-            VecUShort val_s = magic + reinterpret<VecUShort>(val);
+            vUInt val_s = magic + reinterpret<vUInt>(val);
 
             // approximation of square root
             val_s >>= 1;
-            dst_reg[0] = reinterpret<VecHalf>(val_s);
+            dst_reg[0] = reinterpret<vFloat>(val_s);
         }
         else
         {
             // Recip root method
             //// Init approx
             //u.i = SQRT_MAGIC_F - (u.i >> 1);
-            VecUShort magic = reinterpret<VecUShort>(VecHalf(ScalarFP16b(0x5f37)));
-            VecHalf approx = reinterpret<VecHalf>(magic - (reinterpret<VecUShort>(val) >> 1));
+            vUInt magic = reinterpret<vUInt>(vFloat(s2vFloat16b(0x5f37)));
+            vFloat approx = reinterpret<vFloat>(magic - (reinterpret<vUInt>(val) >> 1));
 
             // Re-load to save a MOV
             val = dst_reg[0];
@@ -622,7 +622,7 @@ inline void calculate_sqrt()
             for (int r = 0; r < RECIPROCAL_ITERATIONS; r++)
             {
                 //x*r*(1.5f - xhalf*r*r);
-                approx = (approx * approx * val * CReg_Neg_0p5 + CReg_1 + 0.5F) * approx;
+                approx = (approx * approx * val * vConstNeg0p5 + vConst1 + 0.5F) * approx;
             }
 
             dst_reg[0] = approx * val;
@@ -640,26 +640,26 @@ inline void calculate_dropout(uint prob, uint scale)
     FWLOG1("calculate_dropout() -- prob:%x", prob);
     FWLOG1("calculate_dropout() -- scale:%x", scale);
 
-    VecUShort rand;
+    vUInt rand;
     LRegAssigner lra;
     rand = lra.assign(LRegs::LReg3);
-    VecUShort mask = reinterpret<VecUShort>(VecHalf(ScalarFP16b(0xa94b)));
+    vUInt mask = reinterpret<vUInt>(vFloat(s2vFloat16b(0xa94b)));
 
     #pragma GCC unroll 0
     for (int d=0; d<4; d++) {
         ////////////////////////
         // Scale samples
         ///////////////////////
-        dst_reg[0] = dst_reg[0] * ScalarFP16b(scale);
+        dst_reg[0] = dst_reg[0] * s2vFloat16b(scale);
 
         ////////////////////////
         // Drop samples
         ///////////////////////
-        VecUShort tmp = rand >> 3;
-        p_if (tmp < VecUShort(prob)) {
-            dst_reg[0] = CReg_0;
+        vUInt tmp = rand >> 3;
+        v_if (tmp < vUInt(prob)) {
+            dst_reg[0] = vConst0;
         }
-        p_endif;
+        v_endif;
 
         ////////////////////////
         // 16-bit PRNG update
@@ -669,12 +669,12 @@ inline void calculate_dropout(uint prob, uint scale)
         // Mask = 0x593CA -> 29e4d
         // Mask = 0xd295 -> a94b
         // PRNG SHL by one
-        p_if (tmp < 0) {
-            VecShort tmp2 = ~(mask & rand);
+        v_if (tmp < 0) {
+            vInt tmp2 = ~(mask & rand);
             rand |= mask;
             rand &= tmp2;
         }
-        p_endif;
+        v_endif;
 
         TTI_INCRWC(0, 4, 0, 0);
     }
@@ -684,16 +684,16 @@ template <bool APPROXIMATION_MODE>
 inline void calculate_lrelu(uint slope)
 {
     // SFPU microcode
-    VecHalf s = ScalarFP16b(slope); // XXXX Nonimm perf workaround, hoist conversion manually
+    vFloat s = s2vFloat16b(slope); // XXXX Nonimm perf workaround, hoist conversion manually
 
     #pragma GCC unroll 0
     for (int d=0; d<4; d++) {
-        VecHalf v = dst_reg[0];
+        vFloat v = dst_reg[0];
 
-        p_if (v < 0.0f) {
+        v_if (v < 0.0f) {
             v *= s;
         }
-        p_endif;
+        v_endif;
 
         dst_reg[0] = v;
 
@@ -706,8 +706,8 @@ inline void calculate_power(uint exponent)
 {
     for (int d = 0; d < 4; d++)
     {
-        VecHalf in = dst_reg[0];
-        VecHalf result = in * in;
+        vFloat in = dst_reg[0];
+        vFloat result = in * in;
         for (uint i = 2; i < exponent; i++) {
             result *= in;
         }
@@ -745,8 +745,8 @@ sfpi_inline void calculate_log_body(const int log_base_scale_factor)
     ////////////////////////////
     // Load From dest + "normalize to calculation range"
     ////////////////////////////
-    VecHalf in = dst_reg[0];
-    VecHalf x = setexp(in, 127);    // set exp to exp bias (put in range of 1-2)
+    vFloat in = dst_reg[0];
+    vFloat x = setexp(in, 127);    // set exp to exp bias (put in range of 1-2)
 
     ////////////////////////////
     // Calculate Cheby Approximation using Horner Form Multiplication: 3rd Order
@@ -760,54 +760,54 @@ sfpi_inline void calculate_log_body(const int log_base_scale_factor)
     // D' = -A + B - C + D
     // A':0.1058, B':-0.7116, C':2.0871, D':-1.4753
     ////////////////////////////
-    VecHalf a = ScalarFP16a(0.1058F);
-    VecHalf series_result = x * (x * (x * a + ScalarFP16a(-0.7122f)) + ScalarFP16a(2.0869)) + ScalarFP16a(-1.4753f);
+    vFloat a = s2vFloat16a(0.1058F);
+    vFloat series_result = x * (x * (x * a + s2vFloat16a(-0.7122f)) + s2vFloat16a(2.0869)) + s2vFloat16a(-1.4753f);
 
     ////////////////////////////
     // Convert exponent to float
     ////////////////////////////
     // Extract exponent and calculate abs value.  Save sign into partial reg
-    VecShort exp = 0;
-    p_if (in != 0.0F) {
+    vInt exp = 0;
+    v_if (in != 0.0F) {
         exp = exexp(in);
-        p_if (exp < 0) {
+        v_if (exp < 0) {
             exp = sfpi::abs(exp);
             in = setsgn(in, 1);
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // Calculate exponent of the exponent value. Done by using LZ
     // Get leading zero.  If not zero, we do 19 + ~LZ to get exponent value (mathematically == 19 - LZ - 1)
-    VecShort new_exp = 0;
-    p_if (exp != 0) {
+    vInt new_exp = 0;
+    v_if (exp != 0) {
         new_exp = lz(exp);
         new_exp = ~new_exp;
         new_exp += 19;
-        p_if (new_exp >= 0) {
+        v_if (new_exp >= 0) {
             new_exp += 127;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    VecHalf result = setexp(in, new_exp);
-    VecShort shift = lz(exp) + 1;
-    result = setman(result, shft(reinterpret<VecUShort>(exp), shift));
-    result = result * CReg_0p6929 + series_result; // exp correction: ln(1+x) + exp*ln(2)
+    vFloat result = setexp(in, new_exp);
+    vInt shift = lz(exp) + 1;
+    result = setman(result, shft(reinterpret<vUInt>(exp), shift));
+    result = result * vConst0p6929 + series_result; // exp correction: ln(1+x) + exp*ln(2)
 
     if constexpr (HAS_BASE_SCALING) {
-        result *= ScalarFP16a(log_base_scale_factor);
+        result *= s2vFloat16a(log_base_scale_factor);
     }
     
     ////////////////////////////
     // Base case when input is 0. ln(0) = -inf
     ////////////////////////////
-    p_if (dst_reg[0] == 0.0F) { // Reload for register pressure
+    v_if (dst_reg[0] == 0.0F) { // Reload for register pressure
         result = -std::numeric_limits<float>::infinity();
     }
-    p_endif;
+    v_endif;
 
     dst_reg[0] = result;
 
@@ -823,7 +823,7 @@ inline void calculate_log(uint log_base_scale_factor)
     }
 }
 
-sfpi_inline void calculate_comp_init_flag(bool check, VecHalf& flag1, VecHalf& flag2, float init)
+sfpi_inline void calculate_comp_init_flag(bool check, vFloat& flag1, vFloat& flag2, float init)
 {
     flag1 = init;
     if (check) {
@@ -853,28 +853,28 @@ inline void calculate_comp(uint exponent_size_8)
 
     for (int d = 0; d < 4; d++)
     {
-        VecHalf v = dst_reg[0];
-        VecHalf flag1, flag2;
+        vFloat v = dst_reg[0];
+        vFloat flag1, flag2;
         if constexpr(check_zero)
         {
-            p_if (sfpu_is_fp16_zero(v, exponent_size_8)) {
+            v_if (sfpu_is_fp16_zero(v, exponent_size_8)) {
                 calculate_comp_init_flag(second_check, flag1, flag2, output_0);
-            } p_else {
+            } v_else {
                 calculate_comp_init_flag(second_check, flag1, flag2, output_1);
             }
-            p_endif;
+            v_endif;
         }
         else
         {
-            p_if (v < 0.0F) {
+            v_if (v < 0.0F) {
                 calculate_comp_init_flag(second_check, flag1, flag2, output_0);
-            } p_else {
+            } v_else {
                 calculate_comp_init_flag(second_check, flag1, flag2, output_1);
             }
-            p_endif;
+            v_endif;
         }
 
-        VecHalf result;
+        vFloat result;
         if constexpr (second_check)
         {
             // SfpuType::less_than_equal_zero
@@ -884,7 +884,7 @@ inline void calculate_comp(uint exponent_size_8)
             // flag1 < 0 OR flag2 == 0 => DST is Less than or Equal to zero.
             // Result will be either 0x0000(0.0) or 0x3F80(1.0)
             if constexpr (COMP_MODE == SfpuType::less_than_equal_zero) {
-                result = reinterpret<VecHalf>(reinterpret<VecUShort>(flag1) | reinterpret<VecUShort>(flag2));
+                result = reinterpret<vFloat>(reinterpret<vUInt>(flag1) | reinterpret<vUInt>(flag2));
             }
             else
             {
@@ -894,7 +894,7 @@ inline void calculate_comp(uint exponent_size_8)
                 // Do a bitwise And (flag1 & flag2) to get > condition.
                 // flag2 >= 0 AND flag1 != 0 => DST is Greater than zero 
                 // Result will be either 0x0000(0.0) or 0x3F80(1.0)
-                result = reinterpret<VecHalf>(reinterpret<VecUShort>(flag1) & reinterpret<VecUShort>(flag2));
+                result = reinterpret<vFloat>(reinterpret<vUInt>(flag1) & reinterpret<vUInt>(flag2));
             }
         } else {
             result = flag1;
@@ -913,24 +913,24 @@ inline void calculate_clamp(uint param0, uint param1, uint param2)
     // param1 = max
 
     //uint format = (param0 >> 16)&0x1;
-    ScalarFP16::Format format = ScalarFP16::fp16a;
+    s2vFloat16::Format format = s2vFloat16::fp16a;
 
     // SFPU microcode
-    VecHalf min = ScalarFP16(param0, format);
-    VecHalf max = ScalarFP16(param1, format);
+    vFloat min = s2vFloat16(param0, format);
+    vFloat max = s2vFloat16(param1, format);
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++)
     {
-        VecHalf val = dst_reg[0];
+        vFloat val = dst_reg[0];
 
-        p_if (val < min) {
-            val = ScalarFP16(param0, format);
-        } p_elseif (val >= max) {
-            val = ScalarFP16(param1, format);
+        v_if (val < min) {
+            val = s2vFloat16(param0, format);
+        } v_elseif (val >= max) {
+            val = s2vFloat16(param1, format);
         }
-        p_endif;
+        v_endif;
 
-        dst_reg[0] = val + ScalarFP16b(param2); // 12 bits
+        dst_reg[0] = val + s2vFloat16b(param2); // 12 bits
 
         TTI_INCRWC(0, 4, 0, 0);
     }
@@ -942,7 +942,7 @@ inline void calculate_abs()
     // SFPU microcode
     for (int d = 0; d < 4; d++)
     {
-        VecHalf v = dst_reg[0];
+        vFloat v = dst_reg[0];
         dst_reg[0] = sfpi::abs(v);
         TTI_INCRWC(0, 4, 0, 0);
     }
@@ -955,19 +955,19 @@ inline void calculate_sign(uint exponent_size_8)
     // uint format = 1;
     for (int d = 0; d < 4; d++)
     {
-        VecHalf v = dst_reg[0];
-        dst_reg[0] = CReg_1;
-        p_if (v < 0.0F) {
-            dst_reg[0] = CReg_Neg_1;
+        vFloat v = dst_reg[0];
+        dst_reg[0] = vConst1;
+        v_if (v < 0.0F) {
+            dst_reg[0] = vConstNeg1;
         }
-        p_endif;
+        v_endif;
 
         //param0 == 0 is Bfp8 format. It does not require bias removal.
         //param0 != 0 is Float16 format and exp bias needs to be removed for zero check.
-        p_if (sfpu_is_fp16_zero(v, exponent_size_8)) {
-            dst_reg[0] = CReg_0;
+        v_if (sfpu_is_fp16_zero(v, exponent_size_8)) {
+            dst_reg[0] = vConst0;
         }
-        p_endif;
+        v_endif;
 
         TTI_INCRWC(0, 4, 0, 0);
     }

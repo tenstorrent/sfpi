@@ -38,22 +38,22 @@ inline void copy_result_to_dreg0(int addr)
 // Test infrastructure is set up to test float values, not ints
 // Viewing the ints as floats leads to a mess (eg, denorms)
 // Instead, compare in the kernel to the expected result and write a sentinal
-// value for "pass" and the VecShort v value for "fail"
+// value for "pass" and the vInt v value for "fail"
 // Assumes this code is called in an "inner" if
-sfpi_inline void set_expected_result(int addr, float sentinel, int expected, VecShort v)
+sfpi_inline void set_expected_result(int addr, float sentinel, int expected, vInt v)
 {
     // Poor man's equals
     // Careful, the register is 19 bits and the immediate is sign extended 12
     // bits so comparing bit patterns w/ the MSB set won't work
-    p_if (v >= expected && v < expected + 1) {
+    v_if (v >= expected && v < expected + 1) {
         dst_reg[addr] = sentinel;
-    } p_else {
+    } v_else {
         dst_reg[addr] = v;
     }
-    p_endif;
+    v_endif;
 }
 
-sfpi_inline VecCond test_interleaved_scalar_vector_cond(bool scalar_bool, VecHalf vec, float a, float b)
+sfpi_inline vCond test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat vec, float a, float b)
 {
     if (scalar_bool) {
         return vec == a;
@@ -84,48 +84,48 @@ sfpi_test_noinline void test3()
 {
     // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI
     // Also, load after store (NOP)
-    p_if(dst_reg[0] == 0.0F) {
+    v_if(dst_reg[0] == 0.0F) {
         dst_reg[3] = 10.0F;
-    } p_else {
+    } v_else {
         dst_reg[3] = 20.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 2.0F) {
-        VecHalf a = 30.0F;
+    v_if(dst_reg[0] == 2.0F) {
+        vFloat a = 30.0F;
         dst_reg[3] = a;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 3.0F) {
-        VecShort a = 0x3F80;
+    v_if(dst_reg[0] == 3.0F) {
+        vInt a = 0x3F80;
         dst_reg[3] = a;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 4.0F) {
-        VecUShort a = 0x3F80;
+    v_if(dst_reg[0] == 4.0F) {
+        vUInt a = 0x3F80;
         dst_reg[3] = a;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 5.0F) {
-        VecUShort a = 0xFFFF;
+    v_if(dst_reg[0] == 5.0F) {
+        vUInt a = 0xFFFF;
         dst_reg[3] = a;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 62.0F) {
+    v_if(dst_reg[0] == 62.0F) {
         // Store into [62] so the compared value isn't close to the expected value
-        dst_reg[3] = CReg_0p0020;
+        dst_reg[3] = vConst0p0020;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 6.0F) {
-        VecHalf a = 120.0F;
+    v_if(dst_reg[0] == 6.0F) {
+        vFloat a = 120.0F;
         dst_reg[3] = a;
     }
-    p_endif;
+    v_endif;
 
     // [0] = 10.0
     // [1] = 20.0
@@ -146,122 +146,122 @@ sfpi_test_noinline void test4()
     // Test vector loads
     // Operators &&, ||, !
 
-    VecHalf v = dst_reg[0];
+    vFloat v = dst_reg[0];
 
     dst_reg[4] = v;
 
-    p_if(v < 2.0F) {
+    v_if(v < 2.0F) {
         dst_reg[4] = 64.0F;
     }
-    p_endif;
+    v_endif;
     // [0,1] = 64.0
 
-    p_if(v < 6.0F) {
-        p_if(v >= 2.0F) {
-            p_if(v >= 3.0F) {
+    v_if(v < 6.0F) {
+        v_if(v >= 2.0F) {
+            v_if(v >= 3.0F) {
                 dst_reg[4] = 65.0F;
-            } p_else {
+            } v_else {
                 dst_reg[4] = 66.0F;
             }
-            p_endif;
+            v_endif;
 
-            p_if(v == 5.0F) {
+            v_if(v == 5.0F) {
                 dst_reg[4] = 67.0F;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
     // [2] = 66.0
     // [3, 4] = 65.0
     // [5] = 67.0
 
-    p_if(v >= 6.0F) {
-        p_if(v < 9.0F) {
-            p_if(v == 6.0F) {
+    v_if(v >= 6.0F) {
+        v_if(v < 9.0F) {
+            v_if(v == 6.0F) {
                 dst_reg[4] = 68.0F;
-            } p_elseif(v != 8.0F) {
+            } v_elseif(v != 8.0F) {
                 dst_reg[4] = 69.0F;
-            } p_else {
+            } v_else {
                 dst_reg[4] = 70.0F;
             }
-            p_endif;
-        } p_elseif(v == 9.0F) {
+            v_endif;
+        } v_elseif(v == 9.0F) {
             dst_reg[4] = 71.0F;
-        } p_elseif(v == 10.0F) {
+        } v_elseif(v == 10.0F) {
             dst_reg[4] = 72.0F;
         }
 
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(v >= 11.0F) {
-        p_if(v < 18.0F && v >= 12.0F && v != 15.0F) {
+    v_if(v >= 11.0F) {
+        v_if(v < 18.0F && v >= 12.0F && v != 15.0F) {
             dst_reg[4] = 120.0F;
-        } p_else {
+        } v_else {
             dst_reg[4] = -dst_reg[0];
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(v >= 18.0F && v < 23.0F) {
-        p_if(v == 19.0F || v == 21.0F) {
+    v_if(v >= 18.0F && v < 23.0F) {
+        v_if(v == 19.0F || v == 21.0F) {
             dst_reg[4] = 160.0F;
-        } p_else {
+        } v_else {
             dst_reg[4] = 180.0F;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // Test ! on OP
-    p_if(!(v != 23.0F)) {
+    v_if(!(v != 23.0F)) {
         dst_reg[4] = 200.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if(!(v >= 25.0F) && !(v < 24.0F)) {
+    v_if(!(v >= 25.0F) && !(v < 24.0F)) {
         dst_reg[4] = 220.0F;
     }
-    p_endif;
+    v_endif;
 
     // Test ! on Boolean
-    p_if(!((v < 25.0F) || (v >= 26.0F))) {
+    v_if(!((v < 25.0F) || (v >= 26.0F))) {
         dst_reg[4] = 240.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if((v >= 26.0F) && (v < 29.0F)) {
+    v_if((v >= 26.0F) && (v < 29.0F)) {
         dst_reg[4] = 260.0F;
-        p_if(!((v >= 27.0F) && (v < 28.0F))) {
+        v_if(!((v >= 27.0F) && (v < 28.0F))) {
             dst_reg[4] = 270.0F;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // Test || after && to be sure PUSHC works properly
-    p_if ((v >= 28.0F) && (v == 29.0F || v == 30.0F || v == 31.0F)) {
-        VecHalf x = 30.0F;
-        VecHalf y = 280.0F;
-        p_if (v < x) {
+    v_if ((v >= 28.0F) && (v == 29.0F || v == 30.0F || v == 31.0F)) {
+        vFloat x = 30.0F;
+        vFloat y = 280.0F;
+        v_if (v < x) {
             y += 10.0F;
         }
-        p_endif;
-        p_if (v == x) {
+        v_endif;
+        v_if (v == x) {
             y += 20.0F;
         }
-        p_endif;
-        p_if (v >= x) {
+        v_endif;
+        v_if (v >= x) {
             y += 40.0F;
         }
-        p_endif;
+        v_endif;
         dst_reg[4] = y;
     }
-    p_endif;
+    v_endif;
 
     // [7] = 69.0
     // [8] = 70.0
@@ -295,25 +295,25 @@ sfpi_test_noinline void test4()
 
 sfpi_test_noinline void test5()
 {
-    // Test SFPMAD, SFPMOV, CRegs
+    // Test SFPMAD, SFPMOV, vConsts
     dst_reg[5] = -dst_reg[0];
 
-    p_if(dst_reg[0] == 0.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p6929;
-    } p_elseif(dst_reg[0] == 1.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0;
-    } p_elseif(dst_reg[0] == 2.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_1p0068;
-    } p_elseif(dst_reg[0] == 3.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_1p4424;
-    } p_elseif(dst_reg[0] == 4.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p8369;
-    } p_elseif(dst_reg[0] == 5.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p5;
-    } p_elseif(dst_reg[0] == 6.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_1;
+    v_if(dst_reg[0] == 0.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst0p6929;
+    } v_elseif(dst_reg[0] == 1.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst0;
+    } v_elseif(dst_reg[0] == 2.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg1p0068;
+    } v_elseif(dst_reg[0] == 3.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst1p4424;
+    } v_elseif(dst_reg[0] == 4.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst0p8369;
+    } v_elseif(dst_reg[0] == 5.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p5;
+    } v_elseif(dst_reg[0] == 6.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst1;
     }
-    p_endif;
+    v_endif;
     // [0] = 0.0
     // [1] = 0.692871094
     // [2] = -1.00683594
@@ -322,47 +322,47 @@ sfpi_test_noinline void test5()
     // [5] = -0.5
     // [6] = 1.0
 
-    p_if(dst_reg[0] == 7.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_1;
-    } p_elseif(dst_reg[0] == 8.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_0p0020;
-    } p_elseif(dst_reg[0] == 9.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p6748;
-    } p_elseif(dst_reg[0] == 10.0F) {
-        dst_reg[5] = CReg_0 * CReg_0 + CReg_Neg_0p3447;
-    } p_elseif(dst_reg[0] == 11.0F) {
-        dst_reg[5] = CReg_Neg_0p6748 * CReg_Neg_0p3447 + CReg_Neg_1;
+    v_if(dst_reg[0] == 7.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg1;
+    } v_elseif(dst_reg[0] == 8.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConst0p0020;
+    } v_elseif(dst_reg[0] == 9.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p6748;
+    } v_elseif(dst_reg[0] == 10.0F) {
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p3447;
+    } v_elseif(dst_reg[0] == 11.0F) {
+        dst_reg[5] = vConstNeg0p6748 * vConstNeg0p3447 + vConstNeg1;
     }
-    p_endif;
+    v_endif;
     // [7] = -1.0
     // [8] = 0.001953125
     // [9] = -0.67480469
     // [10] = -0.34472656
     // [11] = -0.765625
 
-    VecHalf a = dst_reg[0];
-    VecHalf b = 20.0F;
+    vFloat a = dst_reg[0];
+    vFloat b = 20.0F;
 
     // Note: loading dst_reg[0] takes a reg and comparing against a float const
     // takes a reg so can't store A, B and C across the condtionals
 
-    p_if(dst_reg[0] == 12.0F) {
+    v_if(dst_reg[0] == 12.0F) {
         dst_reg[5] = a * b;
-    } p_elseif(dst_reg[0] == 13.0F) {
+    } v_elseif(dst_reg[0] == 13.0F) {
         dst_reg[5] = a + b;
-    } p_elseif(dst_reg[0] == 14.0F) {
+    } v_elseif(dst_reg[0] == 14.0F) {
         dst_reg[5] = a * b + 0.5F;
-    } p_elseif(dst_reg[0] == 15.0F) {
+    } v_elseif(dst_reg[0] == 15.0F) {
         dst_reg[5] = a + b + 0.5F;
-    } p_elseif(dst_reg[0] == 16.0F) {
+    } v_elseif(dst_reg[0] == 16.0F) {
         dst_reg[5] = a * b - 0.5F;
-    } p_elseif(dst_reg[0] == 17.0F) {
+    } v_elseif(dst_reg[0] == 17.0F) {
         dst_reg[5] = a + b - 0.5F;
-    } p_elseif(dst_reg[0] == 18.0F) {
-        VecHalf c = -5.0F;
+    } v_elseif(dst_reg[0] == 18.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = a * b + c;
     }
-    p_endif;
+    v_endif;
     // [12] = 240.0
     // [13] = 33.0
     // [14] = 280.5
@@ -371,26 +371,26 @@ sfpi_test_noinline void test5()
     // [17] = 36.5
     // [18] = 355.0
 
-    p_if(dst_reg[0] == 19.0F) {
-        VecHalf c = -5.0F;
+    v_if(dst_reg[0] == 19.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = a * b + c + 0.5F;
-    } p_elseif(dst_reg[0] == 20.0F) {
-        VecHalf c = -5.0F;
+    } v_elseif(dst_reg[0] == 20.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = a * b + c - 0.5F;
-    } p_elseif(dst_reg[0] == 21.0F) {
-        VecHalf c = -5.0F;
-        VecHalf d;
+    } v_elseif(dst_reg[0] == 21.0F) {
+        vFloat c = -5.0F;
+        vFloat d;
         d = a * b + c - 0.5F;
         dst_reg[5] = d;
-    } p_elseif(dst_reg[0] == 22.0F) {
-        VecHalf c = -5.0F;
+    } v_elseif(dst_reg[0] == 22.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = a * b - c;
-    } p_elseif(dst_reg[0] == 23.0F) {
-        dst_reg[5] = a * b + CReg_Neg_1;
-    } p_elseif(dst_reg[0] == 24.0F) {
-        dst_reg[5] = CReg_Neg_1 * b + CReg_Neg_1;
+    } v_elseif(dst_reg[0] == 23.0F) {
+        dst_reg[5] = a * b + vConstNeg1;
+    } v_elseif(dst_reg[0] == 24.0F) {
+        dst_reg[5] = vConstNeg1 * b + vConstNeg1;
     }
-    p_endif;
+    v_endif;
     // [19] = 375.5
     // [20] = 394.5
     // [21] = 414.5
@@ -398,31 +398,31 @@ sfpi_test_noinline void test5()
     // [23] = 459.0
     // [24] = -21.0
 
-    p_if(dst_reg[0] == 25.0F) {
-        VecHalf c = -5.0F;
+    v_if(dst_reg[0] == 25.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = dst_reg[0] * b + c;
-    } p_elseif(dst_reg[0] == 26.0F) {
-        VecHalf c = -5.0F;
+    } v_elseif(dst_reg[0] == 26.0F) {
+        vFloat c = -5.0F;
         dst_reg[5] = b * dst_reg[0] + c;
-    } p_elseif(dst_reg[0] == 27.0F) {
+    } v_elseif(dst_reg[0] == 27.0F) {
         dst_reg[5] = a * b + dst_reg[0];
-    } p_elseif(dst_reg[0] == 28.0F) {
+    } v_elseif(dst_reg[0] == 28.0F) {
         dst_reg[5] = a * b - dst_reg[0];
     }
-    p_endif;
+    v_endif;
     // [25] = 495.0
     // [26] = 515.0
     // [27] = 567.0
     // [28] = 532.0
 
-    p_if(dst_reg[0] == 29.0F) {
+    v_if(dst_reg[0] == 29.0F) {
         dst_reg[5] = a - b;
-    } p_elseif(dst_reg[0] == 30.0F) {
+    } v_elseif(dst_reg[0] == 30.0F) {
         dst_reg[5] = a - b - 0.5F;
-    } p_elseif(dst_reg[0] == 31.0F) {
+    } v_elseif(dst_reg[0] == 31.0F) {
         dst_reg[5] = dst_reg[0] - b + 0.5F;
     }
-    p_endif;
+    v_endif;
     // [29] = 9.0
     // [30] = 9.5
     // [31] = 11.5
@@ -440,227 +440,227 @@ sfpi_test_noinline void test6()
 
     dst_reg[6] = -dst_reg[0];
 
-    p_if(dst_reg[0] < 3.0F) {
-        p_if(dst_reg[0] >= 0.0F) {
+    v_if(dst_reg[0] < 3.0F) {
+        v_if(dst_reg[0] >= 0.0F) {
 
             dst_reg[6] = 256.0F;
 
-            VecShort a;
-            p_if(dst_reg[0] == 0.0F) {
+            vInt a;
+            v_if(dst_reg[0] == 0.0F) {
                 a = 28;
-            } p_elseif(dst_reg[0] == 1.0F) {
+            } v_elseif(dst_reg[0] == 1.0F) {
                 a = 29;
-            } p_elseif(dst_reg[0] == 2.0F) {
+            } v_elseif(dst_reg[0] == 2.0F) {
                 a = 30;
             }
-            p_endif;
+            v_endif;
 
-            VecShort b;
+            vInt b;
             // IADD imm
             b = a - 29;
-            p_if(b >= 0) {
+            v_if(b >= 0) {
                 dst_reg[6] = 1024.0F;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] < 6.0F) {
-        p_if(dst_reg[0] >= 3.0F) {
+    v_if(dst_reg[0] < 6.0F) {
+        v_if(dst_reg[0] >= 3.0F) {
             dst_reg[6] = 256.0F;
 
-            VecShort a;
-            p_if(dst_reg[0] == 3.0F) {
+            vInt a;
+            v_if(dst_reg[0] == 3.0F) {
                 a = 28;
-            } p_elseif(dst_reg[0] == 4.0F) {
+            } v_elseif(dst_reg[0] == 4.0F) {
                 a = 29;
-            } p_elseif(dst_reg[0] == 5.0F) {
+            } v_elseif(dst_reg[0] == 5.0F) {
                 a = 30;
             }
-            p_endif;
+            v_endif;
 
-            VecShort b = -29;
+            vInt b = -29;
             // IADD reg
             b = a + b;
-            p_if(b < 0) {
+            v_if(b < 0) {
                 dst_reg[6] = 1024.0F;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] < 9.0F) {
-        p_if(dst_reg[0] >= 6.0F) {
+    v_if(dst_reg[0] < 9.0F) {
+        v_if(dst_reg[0] >= 6.0F) {
             dst_reg[6] = 16.0F;
 
-            VecShort a = 3;
-            p_if(dst_reg[0] == 6.0F) {
+            vInt a = 3;
+            v_if(dst_reg[0] == 6.0F) {
                 a = 28;
-            } p_elseif(dst_reg[0] == 7.0F) {
+            } v_elseif(dst_reg[0] == 7.0F) {
                 a = 29;
-            } p_elseif(dst_reg[0] == 8.0F) {
+            } v_elseif(dst_reg[0] == 8.0F) {
                 a = 30;
             }
-            p_endif;
+            v_endif;
 
-            VecHalf b = 128.0F;
-            p_if(a >= 29) {
+            vFloat b = 128.0F;
+            v_if(a >= 29) {
                 b = 256.0F;
             }
-            p_endif;
+            v_endif;
 
-            p_if(a < 29) {
+            v_if(a < 29) {
                 b = 512.0F;
-            } p_elseif(a >= 30) {
+            } v_elseif(a >= 30) {
                 b = 1024.0F;
             }
-            p_endif;
+            v_endif;
 
             dst_reg[6] = b;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] < 12.0F) {
-        p_if(dst_reg[0] >= 9.0F) {
+    v_if(dst_reg[0] < 12.0F) {
+        v_if(dst_reg[0] >= 9.0F) {
             dst_reg[6] = 16.0F;
 
-            VecShort a = 3;
-            p_if(dst_reg[0] == 9.0F) {
+            vInt a = 3;
+            v_if(dst_reg[0] == 9.0F) {
                 a = 28;
-            } p_elseif(dst_reg[0] == 10.0F) {
+            } v_elseif(dst_reg[0] == 10.0F) {
                 a = 29;
-            } p_elseif(dst_reg[0] == 11.0F) {
+            } v_elseif(dst_reg[0] == 11.0F) {
                 a = 30;
             }
-            p_endif;
+            v_endif;
 
-            VecHalf b = 128.0F;
-            VecShort c = 29;
-            p_if(a >= c) {
+            vFloat b = 128.0F;
+            vInt c = 29;
+            v_if(a >= c) {
                 b = 256.0F;
             }
-            p_endif;
+            v_endif;
 
-            p_if(a < c) {
+            v_if(a < c) {
                 b = 512.0F;
-            } p_elseif(a >= 30) {
+            } v_elseif(a >= 30) {
                 b = 1024.0F;
             }
-            p_endif;
+            v_endif;
 
             dst_reg[6] = b;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dst_reg[0] == 12.0F) {
-        VecShort v = 25;
+    v_if (dst_reg[0] == 12.0F) {
+        vInt v = 25;
         set_expected_result(6, 4.0F, 25, v);
-    } p_elseif(dst_reg[0] == 13.0F) {
-        VecShort a = 20;
+    } v_elseif(dst_reg[0] == 13.0F) {
+        vInt a = 20;
         a = a + 12;
         set_expected_result(6, 8.0F, 32, a);
-    } p_elseif(dst_reg[0] == 14.0F) {
-        VecShort a = 18;
-        VecShort b = -6;
+    } v_elseif(dst_reg[0] == 14.0F) {
+        vInt a = 18;
+        vInt b = -6;
         a = a + b;
         set_expected_result(6, 16.0F, 12, a);
-    } p_elseif(dst_reg[0] == 15.0F) {
-        VecShort a = 14;
-        VecShort b = -5;
+    } v_elseif(dst_reg[0] == 15.0F) {
+        vInt a = 14;
+        vInt b = -5;
         a = b + a;
         set_expected_result(6, 32.0F, 9, a);
     }
-    p_endif;
+    v_endif;
 
-    p_if (dst_reg[0] == 16.0F) {
-        VecShort v = 25;
+    v_if (dst_reg[0] == 16.0F) {
+        vInt v = 25;
         set_expected_result(6, 4.0F, 25, v);
-    } p_elseif(dst_reg[0] == 17.0F) {
-        VecShort a = 20;
+    } v_elseif(dst_reg[0] == 17.0F) {
+        vInt a = 20;
         a = a - 12;
         set_expected_result(6, 8.0F, 8, a);
-    } p_elseif(dst_reg[0] == 18.0F) {
-        VecShort a = 18;
-        VecShort b = 6;
+    } v_elseif(dst_reg[0] == 18.0F) {
+        vInt a = 18;
+        vInt b = 6;
         a = a - b;
         set_expected_result(6, 16.0F, 12, a);
-    } p_elseif(dst_reg[0] == 19.0F) {
-        VecShort a = 14;
-        VecShort b = 5;
+    } v_elseif(dst_reg[0] == 19.0F) {
+        vInt a = 14;
+        vInt b = 5;
         a = b - a;
         set_expected_result(6, 32.0F, -9, a);
     }
-    p_endif;
+    v_endif;
 
-    p_if (dst_reg[0] == 20.0F) {
-        VecUShort v = 25;
-        set_expected_result(6, 4.0F, 25, reinterpret<VecShort>(v));
-    } p_elseif(dst_reg[0] == 21.0F) {
-        VecUShort a = 20;
+    v_if (dst_reg[0] == 20.0F) {
+        vUInt v = 25;
+        set_expected_result(6, 4.0F, 25, reinterpret<vInt>(v));
+    } v_elseif(dst_reg[0] == 21.0F) {
+        vUInt a = 20;
         a = a - 12;
-        set_expected_result(6, 8.0F, 8, reinterpret<VecShort>(a));
-    } p_elseif(dst_reg[0] == 22.0F) {
-        VecUShort a = 18;
-        VecUShort b = 6;
+        set_expected_result(6, 8.0F, 8, reinterpret<vInt>(a));
+    } v_elseif(dst_reg[0] == 22.0F) {
+        vUInt a = 18;
+        vUInt b = 6;
         a = a - b;
-        set_expected_result(6, 16.0F, 12, reinterpret<VecShort>(a));
-    } p_elseif(dst_reg[0] == 23.0F) {
-        VecUShort a = 14;
-        VecUShort b = 5;
+        set_expected_result(6, 16.0F, 12, reinterpret<vInt>(a));
+    } v_elseif(dst_reg[0] == 23.0F) {
+        vUInt a = 14;
+        vUInt b = 5;
         a = b - a;
-        set_expected_result(6, 32.0F, -9, reinterpret<VecShort>(a));
+        set_expected_result(6, 32.0F, -9, reinterpret<vInt>(a));
     }
-    p_endif;
+    v_endif;
 
-    p_if (dst_reg[0] == 24.0F) {
-        VecShort a = 10;
-        VecShort b = 20;
+    v_if (dst_reg[0] == 24.0F) {
+        vInt a = 10;
+        vInt b = 20;
         a -= b;
         set_expected_result(6, 64.0F, -10, a);
-    } p_elseif (dst_reg[0] == 25.0F) {
-        VecShort a = 10;
-        VecShort b = 20;
+    } v_elseif (dst_reg[0] == 25.0F) {
+        vInt a = 10;
+        vInt b = 20;
         a += b;
         set_expected_result(6, 128.0F, 30, a);
     }
-    p_endif;
+    v_endif;
 
     // Pseudo-16 bit via hidden loadi
-    p_if (dst_reg[0] == 26.0F) {
-        VecShort a = 10;
+    v_if (dst_reg[0] == 26.0F) {
+        vInt a = 10;
         a += 4096;
         set_expected_result(6, 256.0F, 4106, a);
-    } p_elseif (dst_reg[0] == 27.0F) {
-        VecShort a = 4096;
-        p_if (a >= 4096) {
+    } v_elseif (dst_reg[0] == 27.0F) {
+        vInt a = 4096;
+        v_if (a >= 4096) {
             dst_reg[6] = 512.0f;
-        } p_else {
+        } v_else {
             dst_reg[6] = 0.0f;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if (dst_reg[0] >= 28.0F) {
-        VecShort a = CReg_TileId;
-        p_if (dst_reg[0] == 28.0F) {
+    v_if (dst_reg[0] >= 28.0F) {
+        vInt a = vConstTileId;
+        v_if (dst_reg[0] == 28.0F) {
             set_expected_result(6, 256.0F, 28, a);
-        } p_elseif (dst_reg[0] == 29.0F) {
+        } v_elseif (dst_reg[0] == 29.0F) {
             set_expected_result(6, 256.0F, 29, a);
-        } p_elseif (dst_reg[0] == 30.0F) {
+        } v_elseif (dst_reg[0] == 30.0F) {
             set_expected_result(6, 256.0F, 30, a);
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // [0] = 256.0
     // [1] = 1024.0
@@ -703,43 +703,43 @@ sfpi_test_noinline void test7()
     // Plus a little more && ||
 
     dst_reg[7] = -dst_reg[0];
-    p_if(dst_reg[0] == 1.0F) {
-        VecHalf tmp = 124.0F;
+    v_if(dst_reg[0] == 1.0F) {
+        vFloat tmp = 124.0F;
         set_expected_result(7, 30.0F, 0x7C0, exman8(tmp));
-    } p_elseif(dst_reg[0] == 2.0F) {
-        VecHalf tmp = 124.0F;
+    } v_elseif(dst_reg[0] == 2.0F) {
+        vFloat tmp = 124.0F;
         set_expected_result(7, 32.0F, 0x3C0, exman9(tmp));
-    } p_elseif(dst_reg[0] == 3.0F) {
-        VecHalf tmp = 65536.0F * 256.0F;
+    } v_elseif(dst_reg[0] == 3.0F) {
+        vFloat tmp = 65536.0F * 256.0F;
         set_expected_result(7, 33.0F, 0x18, exexp(tmp));
-    } p_elseif(dst_reg[0] == 4.0F) {
-        VecHalf tmp = 65536.0F * 256.0F;
+    } v_elseif(dst_reg[0] == 4.0F) {
+        vFloat tmp = 65536.0F * 256.0F;
         set_expected_result(7, 34.0F, 0x97, exexp_nodebias(tmp));
-    } p_elseif(dst_reg[0] < 8.0F) {
-        VecHalf tmp;
-        p_if(dst_reg[0] == 5.0F) {
+    } v_elseif(dst_reg[0] < 8.0F) {
+        vFloat tmp;
+        v_if(dst_reg[0] == 5.0F) {
             // Exp < 0 for 5.0
             tmp = 0.5F;
-        } p_elseif(dst_reg[0] < 8.0F) {
+        } v_elseif(dst_reg[0] < 8.0F) {
             // Exp > 0 for 6.0, 7.0
             tmp = 512.0F;
         }
-        p_endif;
+        v_endif;
 
-        VecShort v;
+        vInt v;
         v = exexp(tmp);
-        p_if(v < 0) {
+        v_if(v < 0) {
             dst_reg[7] = 32.0F;
-        } p_else {
+        } v_else {
             dst_reg[7] = 64.0F;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 7.0F) {
+        v_if (dst_reg[0] == 7.0F) {
             // Exponent is 9, save it
             set_expected_result(7, 35.0F, 9, v);
         }
-        p_endif;
+        v_endif;
         // [0] = 64.0
         // [1] = 30.0
         // [2] = 32.0
@@ -748,52 +748,52 @@ sfpi_test_noinline void test7()
         // [5] = 32.0
         // [6] = 64.0
         // [7] = 35.0 (exponent(512) = 8)
-    } p_elseif(dst_reg[0] == 8.0F) {
-        VecHalf tmp = 1.0F;
-        VecHalf v = setexp(tmp, 137);
+    } v_elseif(dst_reg[0] == 8.0F) {
+        vFloat tmp = 1.0F;
+        vFloat v = setexp(tmp, 137);
         dst_reg[7] = v;
-    } p_elseif(dst_reg[0] == 9.0F) {
-        VecShort exp = 0x007F; // Exponent in low bits
-        VecHalf sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
+    } v_elseif(dst_reg[0] == 9.0F) {
+        vInt exp = 0x007F; // Exponent in low bits
+        vFloat sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
         sgn_man = setexp(sgn_man, exp);
         dst_reg[7] = sgn_man;
     }
-    p_endif;
+    v_endif;
 
     // [8] = 1024.0
     // [9] = -1.625
 
-    p_if(dst_reg[0] == 10.0F) {
-        VecHalf tmp = 1024.0F;
-        VecHalf b = setman(tmp, 0x3AB);
+    v_if(dst_reg[0] == 10.0F) {
+        vFloat tmp = 1024.0F;
+        vFloat b = setman(tmp, 0x3AB);
         dst_reg[7] = b;
-    } p_elseif(dst_reg[0] == 11.0F) {
-        VecHalf tmp = 1024.0F;
-        VecShort man = 0xBBB;
-        VecHalf tmp2 = setman(tmp, man);
+    } v_elseif(dst_reg[0] == 11.0F) {
+        vFloat tmp = 1024.0F;
+        vInt man = 0xBBB;
+        vFloat tmp2 = setman(tmp, man);
         dst_reg[7] = tmp2;
     }
-    p_endif;
+    v_endif;
 
     // [10] = 1960.0 (?)
     // [11] = 1024.0
 
-    VecHalf v = dst_reg[0];
-    p_if ((v >= 12.0f && v < 14.0f) || (v >= 15.0f && v < 17.0f)) {
+    vFloat v = dst_reg[0];
+    v_if ((v >= 12.0f && v < 14.0f) || (v >= 15.0f && v < 17.0f)) {
         dst_reg[7] = -128.0f;
     }
-    p_endif;
+    v_endif;
     // [12] = -128.0
     // [13] = -128.0
     // [14] = -14.0
     // [15] = -128.0
     // [16] = -128.0
 
-    p_if(((v >= 17.0f && v < 18.0f) || (v >= 19.0f && v < 20.0f)) ||
+    v_if(((v >= 17.0f && v < 18.0f) || (v >= 19.0f && v < 20.0f)) ||
          ((v >= 21.0f && v < 22.0f) || (v >= 23.0f && v < 24.0f))) {
         dst_reg[7] = -256.0f;
     }
-    p_endif;
+    v_endif;
     // [17] = -256.0
     // [18] = -18.0
     // [19] = -256.0
@@ -803,13 +803,13 @@ sfpi_test_noinline void test7()
     // [23] = -256.0
     // [24] = -24.0
 
-    p_if (v >= 25.0f && v < 29.0f) {
-        p_if(!(v >= 25.0f && v < 26.0f) && !(v >= 27.0f && v < 28.0f)) {
+    v_if (v >= 25.0f && v < 29.0f) {
+        v_if(!(v >= 25.0f && v < 26.0f) && !(v >= 27.0f && v < 28.0f)) {
             dst_reg[7] = -1024.0f;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
     // [25] = -25.0
     // [26] = -1024.0
     // [27] = -27.0
@@ -817,38 +817,38 @@ sfpi_test_noinline void test7()
 
     // <= and > are compound statements in the compiler, <= uses a compc
     // and things get flipped around when joined by ||
-    p_if (v >= 29.0f && v < 32.0f) {
-        VecShort t = CReg_TileId;
-        VecHalf total = 16.0F;
+    v_if (v >= 29.0f && v < 32.0f) {
+        vInt t = vConstTileId;
+        vFloat total = 16.0F;
 
-        p_if (t <= 30) {
+        v_if (t <= 30) {
             total += 32.0F;
         }
-        p_endif;
-        p_if (t > 30) {
+        v_endif;
+        v_if (t > 30) {
             total += 64.0F;
         }
-        p_endif;
-        p_if (!(t > 30)) {
+        v_endif;
+        v_if (!(t > 30)) {
             total += 128.0F;
         }
-        p_endif;
-        p_if (!(t <= 30)) {
+        v_endif;
+        v_if (!(t <= 30)) {
             total += 256.0F;
         }
-        p_endif;
-        p_if (t <= 29 || t > 30) {
+        v_endif;
+        v_if (t <= 29 || t > 30) {
             total += 512.0F;
         }
-        p_endif;
-        p_if (t > 30 || t <= 29) {
+        v_endif;
+        v_if (t > 30 || t <= 29) {
             total += 1024.0F;
         }
-        p_endif;
+        v_endif;
 
         dst_reg[7] = total;
     }
-    p_endif;
+    v_endif;
     // [29] = 1712.0
     // [30] = 176.0
     // [31] = 1872.0
@@ -863,85 +863,85 @@ sfpi_test_noinline void test8()
     // More conditionals (short v compares)
 
     dst_reg[8] = -dst_reg[0];
-    p_if(dst_reg[0] == 1.0F) {
-        VecUShort a = 0x05FF;
-        VecUShort b = 0x0AAA;
+    v_if(dst_reg[0] == 1.0F) {
+        vUInt a = 0x05FF;
+        vUInt b = 0x0AAA;
         b &= a;
-        set_expected_result(8, 16.0F, 0x00AA, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 2.0F) {
-        VecUShort a = 0x05FF;
-        VecUShort b = 0x0AAA;
-        VecUShort c = a & b;
-        set_expected_result(8, 16.0F, 0x00AA, static_cast<VecShort>(c));
-    } p_elseif(dst_reg[0] == 3.0F) {
-        VecShort a = 0x05FF;
-        VecShort b = 0x0AAA;
+        set_expected_result(8, 16.0F, 0x00AA, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 2.0F) {
+        vUInt a = 0x05FF;
+        vUInt b = 0x0AAA;
+        vUInt c = a & b;
+        set_expected_result(8, 16.0F, 0x00AA, static_cast<vInt>(c));
+    } v_elseif(dst_reg[0] == 3.0F) {
+        vInt a = 0x05FF;
+        vInt b = 0x0AAA;
         b &= a;
         set_expected_result(8, 16.0F, 0x00AA, b);
-    } p_elseif(dst_reg[0] == 4.0F) {
-        VecShort a = 0x05FF;
-        VecShort b = 0x0AAA;
-        VecShort c = a & b;
+    } v_elseif(dst_reg[0] == 4.0F) {
+        vInt a = 0x05FF;
+        vInt b = 0x0AAA;
+        vInt c = a & b;
         set_expected_result(8, 16.0F, 0x00AA, c);
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 5.0F) {
-        VecUShort a = 0x0111;
-        VecUShort b = 0x0444;
+    v_if(dst_reg[0] == 5.0F) {
+        vUInt a = 0x0111;
+        vUInt b = 0x0444;
         b |= a;
-        set_expected_result(8, 20.0F, 0x0555, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 6.0F) {
-        VecUShort a = 0x0111;
-        VecUShort b = 0x0444;
-        VecUShort c = b | a;
-        set_expected_result(8, 20.0F, 0x0555, static_cast<VecShort>(c));
-    } p_elseif(dst_reg[0] == 7.0F) {
-        VecShort a = 0x0111;
-        VecShort b = 0x0444;
+        set_expected_result(8, 20.0F, 0x0555, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 6.0F) {
+        vUInt a = 0x0111;
+        vUInt b = 0x0444;
+        vUInt c = b | a;
+        set_expected_result(8, 20.0F, 0x0555, static_cast<vInt>(c));
+    } v_elseif(dst_reg[0] == 7.0F) {
+        vInt a = 0x0111;
+        vInt b = 0x0444;
         b |= a;
         set_expected_result(8, 20.0F, 0x0555, b);
-    } p_elseif(dst_reg[0] == 8.0F) {
-        VecShort a = 0x0111;
-        VecShort b = 0x0444;
-        VecShort c = b | a;
+    } v_elseif(dst_reg[0] == 8.0F) {
+        vInt a = 0x0111;
+        vInt b = 0x0444;
+        vInt c = b | a;
         set_expected_result(8, 20.0F, 0x0555, c);
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 9.0F) {
-        VecUShort a = 0x0AAA;
+    v_if(dst_reg[0] == 9.0F) {
+        vUInt a = 0x0AAA;
         a = ~a;
         a &= 0x0FFF; // Tricky since ~ flips upper bits that immediates can't access
-        set_expected_result(8, 22.0F, 0x0555, static_cast<VecShort>(a));
-    } p_elseif(dst_reg[0] == 10.0F) {
-        VecHalf a = 100.0F;
+        set_expected_result(8, 22.0F, 0x0555, static_cast<vInt>(a));
+    } v_elseif(dst_reg[0] == 10.0F) {
+        vFloat a = 100.0F;
         dst_reg[8] = sfpi::abs(a);
-    } p_elseif(dst_reg[0] == 11.0F) {
-        VecHalf a = -100.0F;
+    } v_elseif(dst_reg[0] == 11.0F) {
+        vFloat a = -100.0F;
         dst_reg[8] = sfpi::abs(a);
-    } p_elseif(dst_reg[0] == 12.0F) {
-        VecShort a = 100;
+    } v_elseif(dst_reg[0] == 12.0F) {
+        vInt a = 100;
         set_expected_result(8, 24.0F, 100, sfpi::abs(a));
-    } p_elseif(dst_reg[0] == 13.0F) {
-        VecShort a = -100;
+    } v_elseif(dst_reg[0] == 13.0F) {
+        vInt a = -100;
         set_expected_result(8, 26.0F, 100, sfpi::abs(a));
     }
-    p_endif;
+    v_endif;
 
-    p_if (test_interleaved_scalar_vector_cond(true, dst_reg[0], 14.0F, 15.0F)) {
+    v_if (test_interleaved_scalar_vector_cond(true, dst_reg[0], 14.0F, 15.0F)) {
         dst_reg[8] = 32.0F;
-    } p_elseif(test_interleaved_scalar_vector_cond(false, dst_reg[0], 14.0F, 15.0F)) {
+    } v_elseif(test_interleaved_scalar_vector_cond(false, dst_reg[0], 14.0F, 15.0F)) {
         dst_reg[8] = 16.0F;
     }
-    p_endif;
+    v_endif;
 
-    VecHalf tmp = dst_reg[8];
-    p_block {
-        p_and(dst_reg[0] >= 16.0F);
+    vFloat tmp = dst_reg[8];
+    v_block {
+        v_and(dst_reg[0] >= 16.0F);
 
         for (int x = 0; x < 4; x++) {
-            p_and(dst_reg[0] < 20.0F - x);
+            v_and(dst_reg[0] < 20.0F - x);
             tmp += 16.0F;
         }
     }
@@ -950,114 +950,114 @@ sfpi_test_noinline void test8()
 
     // <= and > are compound statements in the compiler, <= uses a compc
     // and things get flipped around when joined by ||
-    p_if (dst_reg[0] >= 20.0f && dst_reg[0] < 23.0f) {
-        VecShort t = CReg_TileId;
-        VecShort low = 20;
-        VecShort high = 21;
+    v_if (dst_reg[0] >= 20.0f && dst_reg[0] < 23.0f) {
+        vInt t = vConstTileId;
+        vInt low = 20;
+        vInt high = 21;
 
         dst_reg[8] = 16.0f;
 
-        p_if (t <= high) {
+        v_if (t <= high) {
             dst_reg[8] = dst_reg[8] + 32.0F;
         }
-        p_endif;
-        p_if (t > high) {
+        v_endif;
+        v_if (t > high) {
             dst_reg[8] = dst_reg[8] + 64.0F;
         }
-        p_endif;
-        p_if (!(t > high)) {
+        v_endif;
+        v_if (!(t > high)) {
             dst_reg[8] = dst_reg[8] + 128.0F;
         }
-        p_endif;
-        p_if (!(t <= high)) {
+        v_endif;
+        v_if (!(t <= high)) {
             dst_reg[8] = dst_reg[8] + 256.0F;
         }
-        p_endif;
-        p_if (t <= low || t > high) {
+        v_endif;
+        v_if (t <= low || t > high) {
             dst_reg[8] = dst_reg[8] + 512.0F;
         }
-        p_endif;
-        p_if (t > high || t <= low) {
+        v_endif;
+        v_if (t > high || t <= low) {
             dst_reg[8] = dst_reg[8] + 1024.0F;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // Do the same tests as above, but for floats
-    p_if (dst_reg[0] >= 23.0f && dst_reg[0] < 26.0f) {
-        VecHalf t = dst_reg[0];
-        VecHalf total = 16.0F;
+    v_if (dst_reg[0] >= 23.0f && dst_reg[0] < 26.0f) {
+        vFloat t = dst_reg[0];
+        vFloat total = 16.0F;
 
-        p_if (t <= 24.0f) {
+        v_if (t <= 24.0f) {
             total += 32.0F;
         }
-        p_endif;
-        p_if (t > 24.0f) {
+        v_endif;
+        v_if (t > 24.0f) {
             total += 64.0F;
         }
-        p_endif;
-        p_if (!(t > 24.0f)) {
+        v_endif;
+        v_if (!(t > 24.0f)) {
             total += 128.0F;
         }
-        p_endif;
-        p_if (!(t <= 24.0f)) {
+        v_endif;
+        v_if (!(t <= 24.0f)) {
             total += 256.0F;
         }
-        p_endif;
-        p_if (t <= 23.0f || t > 24.0f) {
+        v_endif;
+        v_if (t <= 23.0f || t > 24.0f) {
             total += 512.0F;
         }
-        p_endif;
-        p_if (t > 24.0f || t <= 23.0f) {
+        v_endif;
+        v_if (t > 24.0f || t <= 23.0f) {
             total += 1024.0F;
         }
-        p_endif;
+        v_endif;
 
         dst_reg[8] = total;
     }
-    p_endif;
+    v_endif;
 
     // More of the same, again for floats.  Reloads for reg pressure
-    p_if (dst_reg[0] >= 26.0f && dst_reg[0] < 29.0f) {
-        VecHalf low = 26.0f;
-        VecHalf high = 27.0f;
+    v_if (dst_reg[0] >= 26.0f && dst_reg[0] < 29.0f) {
+        vFloat low = 26.0f;
+        vFloat high = 27.0f;
 
         dst_reg[8] = 16.0f;
 
-        VecHalf t = dst_reg[0];
-        p_if (t <= high) {
+        vFloat t = dst_reg[0];
+        v_if (t <= high) {
             dst_reg[8] = dst_reg[8] + 32.0F;
         }
-        p_endif;
+        v_endif;
         t = dst_reg[0];
-        p_if (t > high) {
+        v_if (t > high) {
             dst_reg[8] = dst_reg[8] + 64.0F;
         }
-        p_endif;
+        v_endif;
         t = dst_reg[0];
-        p_if (!(t > high)) {
+        v_if (!(t > high)) {
             dst_reg[8] = dst_reg[8] + 128.0F;
         }
-        p_endif;
+        v_endif;
         t = dst_reg[0];
-        p_if (!(t <= high)) {
+        v_if (!(t <= high)) {
             dst_reg[8] = dst_reg[8] + 256.0F;
         }
-        p_endif;
+        v_endif;
         t = dst_reg[0];
-        p_if (t <= low || t > high) {
+        v_if (t <= low || t > high) {
             dst_reg[8] = dst_reg[8] + 512.0F;
         }
-        p_endif;
+        v_endif;
         t = dst_reg[0];
         low = 26.0f;
-        p_if (t > high || t <= low) {
+        v_if (t > high || t <= low) {
             dst_reg[8] = dst_reg[8] + 1024.0F;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
     // [0] = 0
     // [1] = 16.0
@@ -1097,61 +1097,61 @@ sfpi_test_noinline void test9()
     // SFPMULI, SFPADDI, SFPDIVP2, SFPLZ
 
     dst_reg[9] = -dst_reg[0];
-    p_if(dst_reg[0] == 1.0F) {
-        VecHalf a = 20.0F;
+    v_if(dst_reg[0] == 1.0F) {
+        vFloat a = 20.0F;
         dst_reg[9] = a * 30.0F;
-    } p_elseif(dst_reg[0] == 2.0F) {
-        VecHalf a = 20.0F;
+    } v_elseif(dst_reg[0] == 2.0F) {
+        vFloat a = 20.0F;
         a *= 40.0F;
         dst_reg[9] = a;
-    } p_elseif(dst_reg[0] == 3.0F) {
-        VecHalf a = 20.0F;
+    } v_elseif(dst_reg[0] == 3.0F) {
+        vFloat a = 20.0F;
         dst_reg[9] = a + 30.0F;
-    } p_elseif(dst_reg[0] == 4.0F) {
-        VecHalf a = 20.0F;
+    } v_elseif(dst_reg[0] == 4.0F) {
+        vFloat a = 20.0F;
         a += 40.0F;
         dst_reg[9] = a;
-    } p_elseif(dst_reg[0] == 5.0F) {
-        VecHalf a = 16.0F;
+    } v_elseif(dst_reg[0] == 5.0F) {
+        vFloat a = 16.0F;
         dst_reg[9] = addexp(a, 4);
-    } p_elseif(dst_reg[0] == 6.0F) {
-        VecHalf a = 256.0F;
+    } v_elseif(dst_reg[0] == 6.0F) {
+        vFloat a = 256.0F;
         dst_reg[9] = addexp(a, -4);
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 7.0F) {
-        VecShort a = 0;
-        VecShort b = lz(a);
+    v_if(dst_reg[0] == 7.0F) {
+        vInt a = 0;
+        vInt b = lz(a);
         set_expected_result(9, 38.0F, 0x13, b);
-    } p_elseif(dst_reg[0] == 8.0F) {
-        VecShort a = 0xFFFF;
-        VecShort b = lz(a);
+    } v_elseif(dst_reg[0] == 8.0F) {
+        vInt a = 0xFFFF;
+        vInt b = lz(a);
         set_expected_result(9, 55.0F, 0x0, b);
-    } p_elseif(dst_reg[0] == 9.0F) {
-        VecUShort a = 0xFFFFU;
-        VecShort b = lz(a);
+    } v_elseif(dst_reg[0] == 9.0F) {
+        vUInt a = 0xFFFFU;
+        vInt b = lz(a);
         set_expected_result(9, 30.0F, 0x3, b);
-    } p_elseif(dst_reg[0] < 13.0F) {
-        VecHalf a = dst_reg[0] - 11.0F;
-        VecUShort b;
+    } v_elseif(dst_reg[0] < 13.0F) {
+        vFloat a = dst_reg[0] - 11.0F;
+        vUInt b;
 
         // Relies on if chain above...
-        p_if(dst_reg[0] >= 7.0F) {
-            b = reinterpret<VecUShort>(lz(a));
-            p_if (b != 19) {
+        v_if(dst_reg[0] >= 7.0F) {
+            b = reinterpret<vUInt>(lz(a));
+            v_if (b != 19) {
                 dst_reg[9] = 60.0F;
-            } p_else {
+            } v_else {
                 dst_reg[9] = 40.0F;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 13.0F) {
-        VecHalf x = 1.0F;
+    v_if(dst_reg[0] == 13.0F) {
+        vFloat x = 1.0F;
 
         x *= 2.0f;
         x *= -3.0f;
@@ -1159,20 +1159,20 @@ sfpi_test_noinline void test9()
         x += -4.0f;
 
         dst_reg[9] = x;
-    } p_elseif(dst_reg[0] == 14.0F) {
+    } v_elseif(dst_reg[0] == 14.0F) {
         // MULI/ADDI don't accept fp16a
         // Ensure this goes to MAD
 
-        VecHalf x = 1.0F;
+        vFloat x = 1.0F;
 
-        x *= ScalarFP16a(2.0);
-        x *= ScalarFP16a(-3.0);
-        x += ScalarFP16a(4.0);
-        x += ScalarFP16a(-4.0);
+        x *= s2vFloat16a(2.0);
+        x *= s2vFloat16a(-3.0);
+        x += s2vFloat16a(4.0);
+        x += s2vFloat16a(-4.0);
 
         dst_reg[9] = x;
     }
-    p_endif;
+    v_endif;
 
     // [1] = 600.0
     // [2] = 800.0
@@ -1195,59 +1195,59 @@ sfpi_test_noinline void test10()
 {
     // SFPSHFT, SFTSETSGN
     dst_reg[10] = -dst_reg[0];
-    p_if(dst_reg[0] == 1.0F) {
-        VecUShort a = 0x015;
-        VecShort shift = 6;
-        VecUShort b = shft(a, shift);
+    v_if(dst_reg[0] == 1.0F) {
+        vUInt a = 0x015;
+        vInt shift = 6;
+        vUInt b = shft(a, shift);
         // Could write better tests if we could return and test the int result
-        set_expected_result(10, 20.0F, 0x0540, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 2.0F) {
-        VecUShort a = 0x2AAA;
-        VecUShort b = shft(a, -4);
-        set_expected_result(10, 22.0F, 0x02AA, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 3.0F) {
-        VecUShort a = 0xAAAAU;
-        VecShort shift = -6;
-        VecUShort b = shft(a, shift);
-        set_expected_result(10, 24.0F, 0x02AA, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 4.0F) {
-        VecUShort a = 0x005A;
-        VecUShort b = shft(a, 4);
-        set_expected_result(10, 26.0F, 0x05A0, static_cast<VecShort>(b));
-    } p_elseif(dst_reg[0] == 5.0F) {
-        VecShort a = 25;
+        set_expected_result(10, 20.0F, 0x0540, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 2.0F) {
+        vUInt a = 0x2AAA;
+        vUInt b = shft(a, -4);
+        set_expected_result(10, 22.0F, 0x02AA, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 3.0F) {
+        vUInt a = 0xAAAAU;
+        vInt shift = -6;
+        vUInt b = shft(a, shift);
+        set_expected_result(10, 24.0F, 0x02AA, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 4.0F) {
+        vUInt a = 0x005A;
+        vUInt b = shft(a, 4);
+        set_expected_result(10, 26.0F, 0x05A0, static_cast<vInt>(b));
+    } v_elseif(dst_reg[0] == 5.0F) {
+        vInt a = 25;
         a = a + 5;
         a += 7;
         set_expected_result(10, 28.0F, 0x25, a);
-    } p_elseif(dst_reg[0] == 6.0F) {
-        VecShort a = 28;
-        VecShort b = 100;
+    } v_elseif(dst_reg[0] == 6.0F) {
+        vInt a = 28;
+        vInt b = 100;
         a += b;
         set_expected_result(10, 30.0F, 0x80, a);
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 7.0F) {
-        VecHalf a = dst_reg[0];
+    v_if(dst_reg[0] == 7.0F) {
+        vFloat a = dst_reg[0];
         dst_reg[10] = setsgn(a, 1);
-    } p_elseif(dst_reg[0] == 8.0F) {
-        VecHalf a = dst_reg[0];
-        VecHalf b = -128.0;
-        VecHalf r = setsgn(b, a);
+    } v_elseif(dst_reg[0] == 8.0F) {
+        vFloat a = dst_reg[0];
+        vFloat b = -128.0;
+        vFloat r = setsgn(b, a);
 
         dst_reg[10] = r;
-    } p_elseif(dst_reg[0] == 9.0F) {
-        VecHalf a = -256.0F;
+    } v_elseif(dst_reg[0] == 9.0F) {
+        vFloat a = -256.0F;
         dst_reg[10] = setsgn(a, 0);
-    } p_elseif(dst_reg[0] == 10.0F) {
-        VecHalf a = dst_reg[0];
+    } v_elseif(dst_reg[0] == 10.0F) {
+        vFloat a = dst_reg[0];
         a += 20.0f;
-        VecHalf b = -512.0F;
-        VecHalf r = setsgn(a, b);
+        vFloat b = -512.0F;
+        vFloat r = setsgn(a, b);
 
         dst_reg[10] = r;
     }
-    p_endif;
+    v_endif;
 
     // [1] = 20.0
     // [2] = 22.0
@@ -1267,46 +1267,46 @@ sfpi_test_noinline void test11()
     // SFPLUT, SFPLOADL<n>
     dst_reg[11] = -dst_reg[0];
 
-    VecUShort l0a = 0xFF30; // Multiply by 0.0, add 0.125
-    VecUShort l1a = 0X3020; // Multiply by 0.125, add 0.25
-    p_if(dst_reg[0] == 1.0F) {
+    vUInt l0a = 0xFF30; // Multiply by 0.0, add 0.125
+    vUInt l1a = 0X3020; // Multiply by 0.125, add 0.25
+    v_if(dst_reg[0] == 1.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = -0.3F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut_sign(h, l0a, l1a, l2a);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 2.0F) {
+    } v_elseif(dst_reg[0] == 2.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = -0.3F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut(h, l0a, l1a, l2a);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 3.0F) {
+    } v_elseif(dst_reg[0] == 3.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = -0.3F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut_sign(h, l0a, l1a, l2a, -1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 4.0F) {
+    } v_elseif(dst_reg[0] == 4.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = -0.3F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut(h, l0a, l1a, l2a, 1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 5.0F) {
+    } v_elseif(dst_reg[0] == 5.0F) {
         // Use L1
-        VecHalf h = 1.0F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = 1.0F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut(h, l0a, l1a, l2a, 1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 6.0F) {
+    } v_elseif(dst_reg[0] == 6.0F) {
         // Use L2
-        VecHalf h = 4.0F;
-        VecUShort l2a = 0xA010; // Mulitply by -0.25, add 0.5
+        vFloat h = 4.0F;
+        vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
         h = lut_sign(h, l0a, l1a, l2a);
         dst_reg[11] = h;
     }
-    p_endif;
+    v_endif;
 
     // Clear out the LUT, re-load it w/ ASM instructions, the pull it into
     // variables for the SFPLUT
@@ -1316,49 +1316,49 @@ sfpi_test_noinline void test11()
     // These are fakedout w/ emule
     TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
     TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
-    VecUShort l0b, l1b;
+    vUInt l0b, l1b;
     LRegAssigner lra;
     l0b = lra.assign(LRegs::LReg0);
     l1b = lra.assign(LRegs::LReg0);
 
-    p_if(dst_reg[0] == 7.0F) {
+    v_if(dst_reg[0] == 7.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2b = 0x9000;
+        vFloat h = -0.3F;
+        vUInt l2b = 0x9000;
         h = lut_sign(h, l0b, l1b, l2b);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 8.0F) {
+    } v_elseif(dst_reg[0] == 8.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2b = 0x9000;
+        vFloat h = -0.3F;
+        vUInt l2b = 0x9000;
         h = lut(h, l0b, l1b, l2b);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 9.0F) {
+    } v_elseif(dst_reg[0] == 9.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2b = 0x9000;
+        vFloat h = -0.3F;
+        vUInt l2b = 0x9000;
         h = lut_sign(h, l0b, l1b, l2b, -1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 10.0F) {
+    } v_elseif(dst_reg[0] == 10.0F) {
         // Use L0
-        VecHalf h = -0.3F;
-        VecUShort l2b = 0x9000;
+        vFloat h = -0.3F;
+        vUInt l2b = 0x9000;
         h = lut(h, l0b, l1b, l2b, 1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 11.0F) {
+    } v_elseif(dst_reg[0] == 11.0F) {
         // Use L1
-        VecHalf h = 1.0F;
-        VecUShort l2b = 0x9000;
+        vFloat h = 1.0F;
+        vUInt l2b = 0x9000;
         h = lut(h, l0b, l1b, l2b, 1);
         dst_reg[11] = h;
-    } p_elseif(dst_reg[0] == 12.0F) {
+    } v_elseif(dst_reg[0] == 12.0F) {
         // Use L2
-        VecHalf h = 4.0F;
-        VecUShort l2b = 0x9000;
+        vFloat h = 4.0F;
+        vUInt l2b = 0x9000;
         h = lut_sign(h, l0b, l1b, l2b);
         dst_reg[11] = h;
     }
-    p_endif;
+    v_endif;
 
     // [1] = 0.125
     // [2] = -0.125
@@ -1383,81 +1383,81 @@ sfpi_test_noinline void test12(int imm)
     // Tries to cover both positive and negative params (sign extension)
     dst_reg[12] = -dst_reg[0];
 
-    p_if(dst_reg[0] == 1.0F) {
+    v_if(dst_reg[0] == 1.0F) {
         dst_reg[12] = static_cast<float>(imm); // SFPLOADI
-    } p_elseif(dst_reg[0] == 2.0F) {
+    } v_elseif(dst_reg[0] == 2.0F) {
         dst_reg[12] = static_cast<float>(-imm); // SFPLOADI
-    } p_elseif(dst_reg[0] == 3.0F) {
-        VecShort a = 5;
+    } v_elseif(dst_reg[0] == 3.0F) {
+        vInt a = 5;
         a += imm; // SFPIADD_I
         set_expected_result(12, 25.0F, 40, a);
-    } p_elseif(dst_reg[0] == 4.0F) {
-        VecShort a = 5;
+    } v_elseif(dst_reg[0] == 4.0F) {
+        vInt a = 5;
         a -= imm; // SFPIADD_I
         set_expected_result(12, -25.0F, -30, a);
-    } p_elseif(dst_reg[0] == 5.0F) {
-        VecHalf a = 3.0F;
+    } v_elseif(dst_reg[0] == 5.0F) {
+        vFloat a = 3.0F;
         a += static_cast<float>(imm); // SFPADDI
         dst_reg[12] = a;
-    } p_elseif(dst_reg[0] == 6.0F) {
-        VecHalf a = 3.0F;
+    } v_elseif(dst_reg[0] == 6.0F) {
+        vFloat a = 3.0F;
         a += static_cast<float>(-imm); // SFPADDI
         dst_reg[12] = a;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 7.0F) {
-        VecUShort a = 0x4000;
+    v_if(dst_reg[0] == 7.0F) {
+        vUInt a = 0x4000;
         a >>= imm - 25;
-        set_expected_result(12, 64.0F, 0x0010, reinterpret<VecShort>(a));
-    } p_elseif(dst_reg[0] == 8.0F) {
-        VecUShort a = 1;
+        set_expected_result(12, 64.0F, 0x0010, reinterpret<vInt>(a));
+    } v_elseif(dst_reg[0] == 8.0F) {
+        vUInt a = 1;
         a <<= imm - 25;
-        set_expected_result(12, 128.0F, 0x0400, reinterpret<VecShort>(a));
-    } p_elseif(dst_reg[0] == 9.0F) {
-        VecHalf a = 256.0F;
+        set_expected_result(12, 128.0F, 0x0400, reinterpret<vInt>(a));
+    } v_elseif(dst_reg[0] == 9.0F) {
+        vFloat a = 256.0F;
         dst_reg[12] = addexp(a, imm - 31);
-    } p_elseif(dst_reg[0] == 10.0F) {
-        VecHalf a = 256.0F;
+    } v_elseif(dst_reg[0] == 10.0F) {
+        vFloat a = 256.0F;
         dst_reg[12] = addexp(a, imm - 39);
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 11.0F) {
-        VecHalf a = 128.0;
-        VecHalf r = setsgn(a, imm - 36);
+    v_if(dst_reg[0] == 11.0F) {
+        vFloat a = 128.0;
+        vFloat r = setsgn(a, imm - 36);
         dst_reg[12] = r;
-    } p_elseif(dst_reg[0] == 12.0F) {
-        VecHalf tmp = 1024.0F;
+    } v_elseif(dst_reg[0] == 12.0F) {
+        vFloat tmp = 1024.0F;
         int man = 0xBBB + 35 - imm;
-        VecHalf tmp2 = setman(tmp, man);
+        vFloat tmp2 = setman(tmp, man);
         dst_reg[12] = tmp2;
-    } p_elseif(dst_reg[0] == 13.0F) {
+    } v_elseif(dst_reg[0] == 13.0F) {
         int exp = 0x007F + 35 - imm; // Exponent in low bits
-        VecHalf sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
+        vFloat sgn_man = -1664.0F; // 1024 + 512 + 128 or 1101
         sgn_man = setexp(sgn_man, exp);
         dst_reg[12] = sgn_man;
     }
-    p_endif;
+    v_endif;
 
     dst_reg[30 + 35 - imm] = 30.0F; // SFPSTORE
-    dst_reg[30 + 35 - imm + 1] = CReg_Neg_1;
+    dst_reg[30 + 35 - imm + 1] = vConstNeg1;
 
-    p_if(dst_reg[0] == 14.0F) {
+    v_if(dst_reg[0] == 14.0F) {
         dst_reg[12] = dst_reg[30 + 35 - imm]; // SFPLOAD
     }
-    p_endif;
-    p_if(dst_reg[0] == 15.0F) {
+    v_endif;
+    v_if(dst_reg[0] == 15.0F) {
         dst_reg[12] = dst_reg[30 + 35 - imm + 1]; // SFPLOAD
     }
-    p_endif;
+    v_endif;
 
     // Test for store/load nops, imm store non-imm load
     // Need to use the semaphores to get TRISC to run ahead for non-imm loads
 
-    p_if(dst_reg[0] == 16.0F) {
+    v_if(dst_reg[0] == 16.0F) {
         // imm store, non-imm load
-        VecHalf a = 120.0F;
+        vFloat a = 120.0F;
 
         TTI_SEMINIT(1, 0, p_stall::SEMAPHORE_3);
         TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
@@ -1470,21 +1470,21 @@ sfpi_test_noinline void test12(int imm)
 
         dst_reg[12] = a + 1.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 17.0F) {
+    v_if(dst_reg[0] == 17.0F) {
         // non-imm store, imm load
-        VecHalf a = 130.0F;
+        vFloat a = 130.0F;
         dst_reg[imm - 23] = a;
         __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
         a = dst_reg[12];
         dst_reg[12] = a + 1.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 18.0F) {
+    v_if(dst_reg[0] == 18.0F) {
         // non-imm store, non-imm load
-        VecHalf a = 140.0F;
+        vFloat a = 140.0F;
 
         TTI_SEMINIT(1, 0, p_stall::SEMAPHORE_3);
         TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
@@ -1497,18 +1497,18 @@ sfpi_test_noinline void test12(int imm)
 
         dst_reg[12] = a + 1.0F;
     }
-    p_endif;
+    v_endif;
 
-    p_if(dst_reg[0] == 19.0F) {
-        VecHalf a = 3.0F;
+    v_if(dst_reg[0] == 19.0F) {
+        vFloat a = 3.0F;
         a *= static_cast<float>(imm); // SFPADDI
         dst_reg[12] = a;
-    } p_elseif(dst_reg[0] == 20.0F) {
-        VecHalf a = 3.0F;
+    } v_elseif(dst_reg[0] == 20.0F) {
+        vFloat a = 3.0F;
         a *= static_cast<float>(-imm); // SFPADDI
         dst_reg[12] = a;
     }
-    p_endif;
+    v_endif;
 
     // [1] = 35.0F
     // [2] = -35.0F
@@ -1545,224 +1545,224 @@ sfpi_test_noinline void test13(int imm)
 
     // ABS liveness across SETCC
     {
-        VecHalf x = -20.0F;
-        VecHalf y = -30.0F;
-        p_if (dst_reg[0] == 0.0F) {
+        vFloat x = -20.0F;
+        vFloat y = -30.0F;
+        v_if (dst_reg[0] == 0.0F) {
             y = sfpi::abs(x);
         }
-        p_endif;
-        p_if (dst_reg[0] == 0.0F || dst_reg[0] == 1.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 0.0F || dst_reg[0] == 1.0F) {
             dst_reg[13] = y;
         }
-        p_endif;
+        v_endif;
     }
     // [0] = 20.0F
     // [1] = -30.0F
 
     // NOT liveness across SETCC
     {
-        VecShort a = 0xFAAA;
-        VecShort b = 0x07BB;
-        p_if (dst_reg[0] == 2.0F) {
+        vInt a = 0xFAAA;
+        vInt b = 0x07BB;
+        v_if (dst_reg[0] == 2.0F) {
             b = ~a;
         }
-        p_endif;
-        p_if (dst_reg[0] == 2.0F || dst_reg[0] == 3.0F) {
-            p_if (dst_reg[0] == 2.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 2.0F || dst_reg[0] == 3.0F) {
+            v_if (dst_reg[0] == 2.0F) {
                 set_expected_result(13, 40.0F, 0x0555, b);
             }
-            p_endif;
-            p_if (dst_reg[0] == 3.0F) {
+            v_endif;
+            v_if (dst_reg[0] == 3.0F) {
                 set_expected_result(13, 50.0F, 0x07BB, b);
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
     // [2] = 40.0F
     // [3] = 50.0F
 
     // LZ liveness across SETCC
     {
-        VecShort a = 0x0080;
-        VecShort b = 0x07BB;
-        p_if (dst_reg[0] == 4.0F) {
+        vInt a = 0x0080;
+        vInt b = 0x07BB;
+        v_if (dst_reg[0] == 4.0F) {
             b = lz(a);
         }
-        p_endif;
-        p_if (dst_reg[0] == 4.0F || dst_reg[0] == 5.0F) {
-            p_if (dst_reg[0] == 4.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 4.0F || dst_reg[0] == 5.0F) {
+            v_if (dst_reg[0] == 4.0F) {
                 set_expected_result(13, 60.0F, 11, b);
             }
-            p_endif;
-            p_if (dst_reg[0] == 5.0F) {
+            v_endif;
+            v_if (dst_reg[0] == 5.0F) {
                 set_expected_result(13, 70.0F, 0x07BB, b);
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
     // [4] = 60.0F
     // [5] = 70.0F
 
     // MAD liveness across SETCC
     {
-        VecHalf a = 90.0F;
-        VecHalf b = 110.0F;
-        p_if (dst_reg[0] == 6.0F) {
+        vFloat a = 90.0F;
+        vFloat b = 110.0F;
+        v_if (dst_reg[0] == 6.0F) {
             b = a * a + 10.0;
         }
-        p_endif;
-        p_if (dst_reg[0] == 6.0F || dst_reg[0] == 7.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 6.0F || dst_reg[0] == 7.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [6] = 8096.0
     // [7] = 110.0F
 
     // MOV liveness across SETCC
     {
-        VecHalf a = 120.0F;
-        VecHalf b = 130.0F;
-        p_if (dst_reg[0] == 8.0F) {
+        vFloat a = 120.0F;
+        vFloat b = 130.0F;
+        v_if (dst_reg[0] == 8.0F) {
             b = -a;
         }
-        p_endif;
-        p_if (dst_reg[0] == 8.0F || dst_reg[0] == 9.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 8.0F || dst_reg[0] == 9.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [8] = -120.0F
     // [9] = 130.0F;
 
     // DIVP2 liveness across SETCC
     {
-        VecHalf a = 140.0F;
-        VecHalf b = 150.0F;
-        p_if (dst_reg[0] == 10.0F) {
+        vFloat a = 140.0F;
+        vFloat b = 150.0F;
+        v_if (dst_reg[0] == 10.0F) {
             b = addexp(a, 1);
         }
-        p_endif;
-        p_if (dst_reg[0] == 10.0F || dst_reg[0] == 11.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 10.0F || dst_reg[0] == 11.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [10] = 280.0F
     // [11] = 150.0F
 
     // EXEXP liveness across SETCC
     {
-        VecHalf a = 160.0F;
-        VecShort b = 128;
-        p_if (dst_reg[0] == 12.0F) {
+        vFloat a = 160.0F;
+        vInt b = 128;
+        v_if (dst_reg[0] == 12.0F) {
             b = exexp_nodebias(a);
         }
-        p_endif;
-        p_if (dst_reg[0] == 12.0F || dst_reg[0] == 13.0F) {
-            VecHalf tmp = 1.0F;
+        v_endif;
+        v_if (dst_reg[0] == 12.0F || dst_reg[0] == 13.0F) {
+            vFloat tmp = 1.0F;
             dst_reg[13] = setexp(tmp, b);
         }
-        p_endif;
+        v_endif;
     }
     // [12] = 128.0F
     // [13] = 2.0F
 
     // EXMAN liveness across SETCC
     {
-        VecHalf a = 160.0F;
-        VecShort b = 128;
-        p_if (dst_reg[0] == 14.0F) {
+        vFloat a = 160.0F;
+        vInt b = 128;
+        v_if (dst_reg[0] == 14.0F) {
             b = exman8(a);
         }
-        p_endif;
-        p_if (dst_reg[0] == 14.0F || dst_reg[0] == 15.0F) {
-            VecHalf tmp = 128.0F;
+        v_endif;
+        v_if (dst_reg[0] == 14.0F || dst_reg[0] == 15.0F) {
+            vFloat tmp = 128.0F;
             b = b << 9;
             dst_reg[13] = setman(tmp, b);
         }
-        p_endif;
+        v_endif;
     }
     // [14] = 160.0F
     // [15] = 144.0F
 
     // SETEXP_I liveness across SETCC
     {
-        VecHalf a = 170.0F;
-        VecHalf b = 180.0F;
-        p_if (dst_reg[0] == 16.0F) {
+        vFloat a = 170.0F;
+        vFloat b = 180.0F;
+        v_if (dst_reg[0] == 16.0F) {
             b = setexp(a, 132);
         }
-        p_endif;
-        p_if (dst_reg[0] == 16.0F || dst_reg[0] == 17.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 16.0F || dst_reg[0] == 17.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [16] = 42.5F
     // [17] = 180.0F
 
     // SETMAN_I liveness across SETCC
     {
-        VecHalf a = 190.0F;
-        VecHalf b = 200.0F;
-        p_if (dst_reg[0] == 18.0F) {
+        vFloat a = 190.0F;
+        vFloat b = 200.0F;
+        v_if (dst_reg[0] == 18.0F) {
             b = setman(a, 0x3AB);
         }
-        p_endif;
-        p_if (dst_reg[0] == 18.0F || dst_reg[0] == 19.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 18.0F || dst_reg[0] == 19.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [18] = 245.0F
     // [19] = 200.0F
 
     // SETSGN_I liveness across SETCC
     {
-        VecHalf a = 210.0F;
-        VecHalf b = 220.0F;
-        p_if (dst_reg[0] == 20.0F) {
+        vFloat a = 210.0F;
+        vFloat b = 220.0F;
+        v_if (dst_reg[0] == 20.0F) {
             b = setsgn(a, 1);
         }
-        p_endif;
-        p_if (dst_reg[0] == 20.0F || dst_reg[0] == 21.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 20.0F || dst_reg[0] == 21.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [20] = -210.0F
     // [21] = 220.0F
 
     // nonimm_dst_src using DIVP2 liveness across SETCC
     {
-        VecHalf a = 140.0F;
-        VecHalf b = 150.0F;
-        p_if (dst_reg[0] == 22.0F) {
+        vFloat a = 140.0F;
+        vFloat b = 150.0F;
+        v_if (dst_reg[0] == 22.0F) {
             b = addexp(a, imm - 34);
         }
-        p_endif;
-        p_if (dst_reg[0] == 22.0F || dst_reg[0] == 23.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 22.0F || dst_reg[0] == 23.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [22] = 280.0F
     // [23] = 150.0F
 
     // nonimm_dst using LOADI liveness across SETCC
     {
-        VecHalf b = 240.0F;
-        p_if (dst_reg[0] == 24.0F) {
+        vFloat b = 240.0F;
+        v_if (dst_reg[0] == 24.0F) {
             b = static_cast<float>(-imm);
         }
-        p_endif;
-        p_if (dst_reg[0] == 24.0F || dst_reg[0] == 25.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 24.0F || dst_reg[0] == 25.0F) {
             dst_reg[13] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [24] = -35.0F
     // [25] = 240.0F
@@ -1779,66 +1779,66 @@ sfpi_test_noinline void test14(int imm)
 
     // MOV liveness across COMPC
     {
-        VecHalf a = 250.0F;
-        VecHalf b = 260.0F;
-        p_if (dst_reg[0] != 0.0F) {
+        vFloat a = 250.0F;
+        vFloat b = 260.0F;
+        v_if (dst_reg[0] != 0.0F) {
             b = 160.0F;
-        } p_else {
-            VecHalf c = CReg_0 * CReg_0 + CReg_0;
+        } v_else {
+            vFloat c = vConst0 * vConst0 + vConst0;
             b = -a;
             a = c;
         }
-        p_endif;
-        p_if (dst_reg[0] == 0.0F || dst_reg[0] == 1.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 0.0F || dst_reg[0] == 1.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [0] = -250.0F
     // [1] = 160.0F;
 
     // MOV liveness across LZ
     {
-        VecHalf a = 250.0F;
-        VecHalf b = 260.0F;
-        VecShort tmp;
+        vFloat a = 250.0F;
+        vFloat b = 260.0F;
+        vInt tmp;
 
-        p_if (dst_reg[0] == 2.0F) {
-            p_if (tmp.lz_cc(a, LzCCNE0)) {
-                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+        v_if (dst_reg[0] == 2.0F) {
+            v_if (tmp.lz_cc(a, LzCCNE0)) {
+                vFloat c = vConst0 * vConst0 + vConst0;
                 b = -a;
                 a = c;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
-        p_if (dst_reg[0] == 2.0F || dst_reg[0] == 3.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 2.0F || dst_reg[0] == 3.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [2] = -250.0F;
     // [3] = 260.0F
 
     // MOV liveness across EXEXP
     {
-        VecHalf a = 270.0F;
-        VecHalf b = 280.0F;
-        VecShort tmp;
+        vFloat a = 270.0F;
+        vFloat b = 280.0F;
+        vInt tmp;
 
-        p_if (dst_reg[0] == 4.0F) {
-            p_if (tmp.exexp_cc(a, ExExpCCGTE0)) {
-                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+        v_if (dst_reg[0] == 4.0F) {
+            v_if (tmp.exexp_cc(a, ExExpCCGTE0)) {
+                vFloat c = vConst0 * vConst0 + vConst0;
                 b = -a;
                 a = c;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
-        p_if (dst_reg[0] == 4.0F || dst_reg[0] == 5.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 4.0F || dst_reg[0] == 5.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [4] = -270.0F;
     // [5] = 280.0F
@@ -1846,46 +1846,46 @@ sfpi_test_noinline void test14(int imm)
     // Below 2 tests are incidentally covered by tests 1..12
     // MOV liveness across IADD
     {
-        VecHalf b = 300.0F;
-        VecShort tmp = 5;
+        vFloat b = 300.0F;
+        vInt tmp = 5;
 
-        p_if (dst_reg[0] == 6.0F) {
-            VecHalf a = 290.0F;
-            p_if (tmp >= 2) {
-                VecHalf c = CReg_0 * CReg_0 + CReg_0;
+        v_if (dst_reg[0] == 6.0F) {
+            vFloat a = 290.0F;
+            v_if (tmp >= 2) {
+                vFloat c = vConst0 * vConst0 + vConst0;
                 b = -a;
                 a = c;
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
-        p_if (dst_reg[0] == 6.0F || dst_reg[0] == 7.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 6.0F || dst_reg[0] == 7.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [6] = -290.0F
     // [7] = 300.0F
 
     // IADD_I liveness
     {
-        VecShort a = 10;
-        VecShort b = 20;
-        p_if (dst_reg[0] == 8.0F) {
+        vInt a = 10;
+        vInt b = 20;
+        v_if (dst_reg[0] == 8.0F) {
             b = a + 30;
         }
-        p_endif;
-        p_if (dst_reg[0] == 8.0F || dst_reg[0] == 9.0F) {
-            p_if (dst_reg[0] == 8.0F) {
+        v_endif;
+        v_if (dst_reg[0] == 8.0F || dst_reg[0] == 9.0F) {
+            v_if (dst_reg[0] == 8.0F) {
                 set_expected_result(14, -310.0F, 40, b);
             }
-            p_endif;
-            p_if (dst_reg[0] == 9.0F) {
+            v_endif;
+            v_if (dst_reg[0] == 9.0F) {
                 set_expected_result(14, 320.0F, 20, b);
             }
-            p_endif;
+            v_endif;
         }
-        p_endif;
+        v_endif;
     }
     // [8] = -310.0F
     // [9] = 320.0F
@@ -1898,17 +1898,17 @@ sfpi_test_noinline void test14(int imm)
     // Case 2a
     // Assignment resulting in register rename
     {
-        VecHalf a = -20.0f;
-        VecHalf b = 30.0f;
-        p_if (dst_reg[0] == 10.0f) {
+        vFloat a = -20.0f;
+        vFloat b = 30.0f;
+        v_if (dst_reg[0] == 10.0f) {
             b = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 10.0F || dst_reg[0] == 11.0F) {
+        v_if (dst_reg[0] == 10.0F || dst_reg[0] == 11.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [10] = -20.0
     // [11] = 30.0
@@ -1918,22 +1918,22 @@ sfpi_test_noinline void test14(int imm)
     // This straddles case 2a and 3 - both values need to be preserved but the
     // compiler doesn't know that, solving case2a will solve this case as well
     {
-        VecHalf a = -40.0f;
-        VecHalf b = 50.0f;
-        p_if (dst_reg[0] == 12.0f) {
+        vFloat a = -40.0f;
+        vFloat b = 50.0f;
+        v_if (dst_reg[0] == 12.0f) {
             b = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 100.0f) { // always fail
+        v_if (dst_reg[0] == 100.0f) { // always fail
             dst_reg[14] = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 12.0F || dst_reg[0] == 13.0F) {
+        v_if (dst_reg[0] == 12.0F || dst_reg[0] == 13.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
     }
     // [12] = -40.0
     // [13] = 50.0
@@ -1941,22 +1941,22 @@ sfpi_test_noinline void test14(int imm)
     // Case 3
     // Assignment requiring move (both a and b need to be preserved)
     {
-        VecHalf a = -60.0f;
-        VecHalf b = 70.0f;
-        p_if (dst_reg[0] == 14.0f) {
+        vFloat a = -60.0f;
+        vFloat b = 70.0f;
+        v_if (dst_reg[0] == 14.0f) {
             b = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 100.0f) { // always fail
+        v_if (dst_reg[0] == 100.0f) { // always fail
             dst_reg[14] = a + 1.0f;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 14.0F || dst_reg[0] == 15.0F) {
+        v_if (dst_reg[0] == 14.0F || dst_reg[0] == 15.0F) {
             dst_reg[14] = b + 1.0f;
         }
-        p_endif;
+        v_endif;
     }
     // [14] = -59.0
     // [15] = 71.0
@@ -1965,27 +1965,27 @@ sfpi_test_noinline void test14(int imm)
     // Destination as source, 2 arguments in the wrong order
     // Confirm b is correct
     {
-        VecShort a = 10;
-        VecShort b = 20;
-        p_if (dst_reg[0] == 16.0f) {
+        vInt a = 10;
+        vInt b = 20;
+        v_if (dst_reg[0] == 16.0f) {
             b = b - a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 100.0f) { // always fail
+        v_if (dst_reg[0] == 100.0f) { // always fail
             dst_reg[14] = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 16.0F) {
+        v_if (dst_reg[0] == 16.0F) {
             set_expected_result(14, -80.0F, 10, b);
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 17.0F) {
+        v_if (dst_reg[0] == 17.0F) {
             set_expected_result(14, 90.0F, 20, b);
         }
-        p_endif;
+        v_endif;
     }
     // [16] = -80.0
     // [17] = 90.0
@@ -1994,27 +1994,27 @@ sfpi_test_noinline void test14(int imm)
     // Destination as source, 2 arguments in the wrong order
     // Confirm a is correct
     {
-        VecShort a = 10;
-        VecShort b = 20;
-        p_if (dst_reg[0] == 16.0f) {
+        vInt a = 10;
+        vInt b = 20;
+        v_if (dst_reg[0] == 16.0f) {
             b = b - a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 100.0f) { // always fail
+        v_if (dst_reg[0] == 100.0f) { // always fail
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 18.0F) {
+        v_if (dst_reg[0] == 18.0F) {
             set_expected_result(14, -90.0F, 10, a);
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 19.0F) {
+        v_if (dst_reg[0] == 19.0F) {
             set_expected_result(14, 100.0F, 10, a);
         }
-        p_endif;
+        v_endif;
     }
     // [18] = -90.0
     // [19] = 100.0
@@ -2024,31 +2024,31 @@ sfpi_test_noinline void test14(int imm)
     // Confirm c is correct
     {
         // Out of regs doing this the typical way
-        VecHalf condition = dst_reg[0] - 20.0F;
-        VecShort a = 10;
-        VecShort b = 20;
-        VecShort c = 30;
+        vFloat condition = dst_reg[0] - 20.0F;
+        vInt a = 10;
+        vInt b = 20;
+        vInt c = 30;
 
-        p_if (condition == 0.0F) {
+        v_if (condition == 0.0F) {
             c = a - b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 20.0F) {
+        v_if (dst_reg[0] == 20.0F) {
             set_expected_result(14, -100.0F, -10, c);
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 21.0F) {
+        v_if (dst_reg[0] == 21.0F) {
             set_expected_result(14, 110.0F, 30, c);
         }
-        p_endif;
+        v_endif;
     }
     // [20] = -100.0
     // [21] = 110.0
@@ -2058,31 +2058,31 @@ sfpi_test_noinline void test14(int imm)
     // Confirm a is correct
     {
         // Out of regs doing this the typical way
-        VecHalf condition = dst_reg[0] - 22.0F;
-        VecShort a = 10;
-        VecShort b = 20;
-        VecShort c = 30;
+        vFloat condition = dst_reg[0] - 22.0F;
+        vInt a = 10;
+        vInt b = 20;
+        vInt c = 30;
 
-        p_if (condition == 0.0F) {
+        v_if (condition == 0.0F) {
             c = a - b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = c;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 22.0F) {
+        v_if (dst_reg[0] == 22.0F) {
             set_expected_result(14, -110.0F, 10, a);
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 23.0F) {
+        v_if (dst_reg[0] == 23.0F) {
             set_expected_result(14, 120.0F, 10, a);
         }
-        p_endif;
+        v_endif;
     }
     // [22] = -110.0
     // [23] = 120.0
@@ -2092,31 +2092,31 @@ sfpi_test_noinline void test14(int imm)
     // Confirm b is correct
     {
         // Out of regs doing this the typical way
-        VecHalf condition = dst_reg[0] - 24.0F;
-        VecShort a = 10;
-        VecShort b = 20;
-        VecShort c = 30;
+        vFloat condition = dst_reg[0] - 24.0F;
+        vInt a = 10;
+        vInt b = 20;
+        vInt c = 30;
 
-        p_if (condition == 0.0F) {
+        v_if (condition == 0.0F) {
             c = a - b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (CReg_0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8369 == dst_reg[0]) { // always fail
             dst_reg[14] = c;
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 24.0F) {
+        v_if (dst_reg[0] == 24.0F) {
             set_expected_result(14, -120.0F, 20, b);
         }
-        p_endif;
+        v_endif;
 
-        p_if (dst_reg[0] == 25.0F) {
+        v_if (dst_reg[0] == 25.0F) {
             set_expected_result(14, 130.0F, 20, b);
         }
-        p_endif;
+        v_endif;
     }
     // [24] = -120.0
     // [25] = 130.0
@@ -2126,39 +2126,39 @@ sfpi_test_noinline void test14(int imm)
     // stay live when assigned at the same CC level but in a different
     // cascade, ie, across generations?
     {
-        VecHalf a;
-        VecHalf b;
-        VecHalf dr = dst_reg[0];
+        vFloat a;
+        vFloat b;
+        vFloat dr = dst_reg[0];
 
-        p_if (dr == 26.0F || dr == 27.0F) {
+        v_if (dr == 26.0F || dr == 27.0F) {
             b = -90.0F;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dr == 26.0F) {
+        v_if (dr == 26.0F) {
             a = 100.0F;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dr == 27.0F) {
+        v_if (dr == 27.0F) {
             a = 110.0F;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dr == 27.0F) {
+        v_if (dr == 27.0F) {
             b = a;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dr == 26.0F || dr == 27.0F) {
+        v_if (dr == 26.0F || dr == 27.0F) {
             dst_reg[14] = b;
         }
-        p_endif;
+        v_endif;
 
-        p_if (dr == 500.0F) {
+        v_if (dr == 500.0F) {
             dst_reg[14] = a;
         }
-        p_endif;
+        v_endif;
     }
     // [26] = -90.0F
     // [27] = 110.0F;
@@ -2169,15 +2169,15 @@ sfpi_test_noinline void test14(int imm)
     //    (30.0f - i) != static_cast<float>(30 - i)
     // and not just due to rounding (off by orders of magnitude)
     {
-        VecHalf a = 200.0F;
-        VecHalf b = 1.0F;
+        vFloat a = 200.0F;
+        vFloat b = 1.0F;
 
         // unroll forces the compiler into multiple basic blocks
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC unroll 0
 #endif
         for (int i = 0; i < imm - 30; i++) { // 0..4
-            p_if (dst_reg[0] == 28.0F) {
+            v_if (dst_reg[0] == 28.0F) {
                 switch (i) {
                 case 0:
                     b = 2.0f;
@@ -2191,22 +2191,22 @@ sfpi_test_noinline void test14(int imm)
                 default:
                     b = b * 4.0F;
                 }
-            } p_elseif (dst_reg[0] >= static_cast<float>(30 - i)) {
+            } v_elseif (dst_reg[0] >= static_cast<float>(30 - i)) {
                 if (i % 2 == 0) {
                     b = 10.0F;
                 } else {
                     b = 20.0F;
                 }
             }
-            p_endif;
+            v_endif;
 
             a = a + a * b;
         }
 
-        p_if (dst_reg[0] == 28.0F || dst_reg[0] == 29.0F) {
+        v_if (dst_reg[0] == 28.0F || dst_reg[0] == 29.0F) {
             dst_reg[14] = a;
         }
-        p_endif;
+        v_endif;
     }
     // [28] = 200+200*2, 600+600*4, 3000+3000*8, 27000+27000*32, 89100+89100*128 =
     //        114939000.0F or 114819072.0F when rounded
