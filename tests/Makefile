@@ -1,4 +1,4 @@
-TARGETS := all clean
+TARGETS := all clean test
 SUBDIRS := gcc/. sfpi/.
 
 $(TARGETS): $(SUBDIRS)
