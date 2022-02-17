@@ -17,6 +17,7 @@ RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
 SRCS = kernels.cc coverage.cc live.cc fp16c.cc
 
 ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regmov.S
+OTHR = rv32/warn.txt rv32/warn_push.txt rv32/warn_pop.txt rv32/warn_spill.txt
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
 LTOS = $(addprefix rv32lto/,$(SRCS:.cc=))
 SIMS = $(addprefix x86/,$(SRCS:.cc=))
@@ -25,7 +26,7 @@ ifneq ("$(wildcard ckernel.cc)", "")
 ASMS += rv32/ckernel.S
 endif
 
-all: $(ASMS) $(EXES) $(LTOS) $(SIMS)
+all: $(ASMS) $(EXES) $(LTOS) $(SIMS) $(OTHR)
 
 x86:
 	mkdir x86
@@ -43,6 +44,15 @@ x86/%.o: %.cc $(X86_INCLUDES) | x86
 
 x86/%: x86/%.o x86/sfpu.o | x86
 	$(X86_CC) $(X86_CFLAGS) x86/sfpu.o -o $@ $<
+
+rv32/warn.txt: warn.cc $(INCLUDES) | rv32
+	$(RV32_CC) $(RV32_CFLAGS) -S -o rv32/warn.S $< 2> $@ || true
+rv32/warn_push.txt: warn.cc $(INCLUDES) | rv32
+	$(RV32_CC) $(RV32_CFLAGS) -DPUSH_POP -S -o rv32/warn.S $< 2> $@ || true
+rv32/warn_pop.txt: warn.cc $(INCLUDES) | rv32
+	$(RV32_CC) $(RV32_CFLAGS) -DPOP_PUSH -S -o rv32/warn.S $< 2> $@ || true
+rv32/warn_spill.txt: warn.cc $(INCLUDES) | rv32
+	$(RV32_CC) $(RV32_CFLAGS) -DSPILL -S -o rv32/warn.S $< 2> $@ || true
 
 rv32/%.S: %.cc $(INCLUDES) | rv32
 	$(RV32_CC) $(RV32_CFLAGS) -S -o $@ $<
@@ -66,7 +76,7 @@ resultsx86/%: x86/kernels | results
 	x86/kernels 14 b > results/kernels_int
 	x86/kernels 14 > results/kernels_float
 
-test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS)
+test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS) $(OTHR)
 	diff results/kernels_float gold/kernels_float
 	diff results/kernels_int gold/kernels_int
 	cmp rv32/combine.S gold/combine.S
@@ -74,6 +84,10 @@ test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS)
 	cmp rv32/coverage.S gold/coverage.S
 	cmp rv32/live.S gold/live.S
 	cmp rv32/regmov.S gold/regmov.S
+	cmp rv32/warn.txt gold/warn.txt
+	cmp rv32/warn_push.txt gold/warn_push.txt
+	cmp rv32/warn_pop.txt gold/warn_pop.txt
+	cmp rv32/warn_spill.txt gold/warn_spill.txt
 ifneq ("$(wildcard ckernel.cc)", "")
 	cmp rv32/ckernel.S gold/ckernel.S
 endif
@@ -86,6 +100,10 @@ promote:
 	cp rv32/coverage.S gold/coverage.S
 	cp rv32/live.S gold/live.S
 	cp rv32/regmov.S gold/regmov.S
+	cp rv32/warn.txt gold/warn.txt
+	cp rv32/warn_push.txt gold/warn_push.txt
+	cp rv32/warn_pop.txt gold/warn_pop.txt
+	cp rv32/warn_spill.txt gold/warn_spill.txt
 ifneq ("$(wildcard ckernel.cc)", "")
 	cp rv32/ckernel.S gold/ckernel.S
 endif
