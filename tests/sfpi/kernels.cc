@@ -858,7 +858,7 @@ sfpi_test_noinline void test7()
 
 sfpi_test_noinline void test8()
 {
-    // SFPAND, SFPOR, SFPNOT, SFPABS
+    // SFPAND, SFPOR, SFPNOT, xor, SFPABS
     // Atypical usage of conditionals
     // More conditionals (short v compares)
 
@@ -1059,6 +1059,30 @@ sfpi_test_noinline void test8()
     }
     v_endif;
 
+    v_if(dst_reg[0] == 29.0F) {
+        vInt a = 0xA5A5;
+        vInt b = 0xFF00;
+        vInt c = a ^ b;
+        set_expected_result(8, 32.0F, 0x5AA5, c);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 30.0F) {
+        vUInt a = 0xA5A5;
+        vUInt b = 0xFF00;
+        vUInt c = a ^ b;
+        set_expected_result(8, 64.0F, 0x5AA5, c);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 31.0F) {
+        vInt a = 0xA5A5;
+        vInt b = 0xFF00;
+        b ^= a;
+        set_expected_result(8, 32.0F, 0x5AA5, b);
+    }
+    v_endif;
+
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -1088,6 +1112,9 @@ sfpi_test_noinline void test8()
     // [26] = 1712.0
     // [27] = 176.0
     // [28] = 1872.0
+    // [29] = 32.0
+    // [30] = 64.0
+    // [31] = 32.0
 
     copy_result_to_dreg0(8);
 }

@@ -78,11 +78,9 @@ namespace sfpi {
 
 #ifdef __clang__
 #if !__has_builtin(__builtin_rvtt_sfp_load)
-#error TT builtins not found: compile with --target=riscv32-unknown-elf
+#error TT builtins not found: clang not supported
 #include <fails to compile without extensions>
 #endif // !__has_builtin(__builtin_riscv_sfpload)
-
-// If you are reading this, note that the clang implementation is deprecated
 
 #define sfpi_inline inline
 
