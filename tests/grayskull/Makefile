@@ -1,5 +1,5 @@
 TARGETS := all clean test
-SUBDIRS := grayskull/. wormhole/.
+SUBDIRS := gcc/. sfpi/.
 
 $(TARGETS): $(SUBDIRS)
 $(SUBDIRS):

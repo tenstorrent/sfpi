@@ -33,8 +33,7 @@ void SFPUDReg::load(unsigned int out[SFPU_WIDTH], const int addr) const
 {
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            // XXXXX FIXME this is for fp16 only
-            out[i] = regs[addr][i] << 3;
+            out[i] = regs[addr][i];
         }
     }
 }
@@ -53,7 +52,7 @@ void SFPUDReg::store_float(const unsigned int data[SFPU_WIDTH], const int addr)
     // XXXXXFIXME handle rebias on format A
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            regs[addr][i] = data[i] >> 3;
+            regs[addr][i] = data[i];
         }
     }
 }
@@ -62,7 +61,7 @@ void SFPUDReg::store_float(const float data[SFPU_WIDTH], const int addr)
 {
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            regs[addr][i] = float_to_fp16b(data[i]) >> 3;
+            regs[addr][i] = float_to_int(data[i]);
         }
     }
 }
@@ -70,7 +69,7 @@ void SFPUDReg::store_float(const float data[SFPU_WIDTH], const int addr)
 void SFPUDReg::store_float(const float data, const int row, const int col)
 {
     if (sfpu_cc.enabled(col)) {
-        regs[row][col] = float_to_fp16b(data) >> 3;
+        regs[row][col] = float_to_int(data);
     }
 }
 
@@ -206,11 +205,12 @@ void SFPUCC::dump(int i)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-constexpr __rvtt_vec_t::__rvtt_vec_t(ConstructType unused_for_now) : values()
+constexpr __rvtt_vec_t::__rvtt_vec_t(ConstructType) : values()
 {
     // Default constructor is called to initialize Tile-ID for CRegs
     for (int i = 0; i < SFPU_WIDTH; i++) {
-        values[i] = i;
+        // TileId counts by 2 on wormhole!
+        values[i] = i * 2;
     }
 }
 
@@ -239,10 +239,10 @@ void __rvtt_vec_t::dump(int i) const
 class CRegInternal {
  private:
     static constexpr __rvtt_vec_t cregs[16] {
-        0xDEADBEEF >> 13, 0xDEADBEEF >> 13, 0xDEADBEEF >> 13, 0xDEADBEEF >> 13,
-        0x00000000 >> 13, 0x3F316000 >> 13, 0xBF80E000 >> 13, 0x3FB8A000 >> 13,
-        0x3F564000 >> 13, 0xBF000000 >> 13, 0x3F800000 >> 13, 0xBF800000 >> 13,
-        0x3B000000 >> 13, 0xBF2CC000 >> 13, 0xBEB08000 >> 13, __rvtt_vec_t::ConstructType::TileId
+        0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
+        0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
+        0x3F56594B, 0x00000000, 0x3F800000, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, __rvtt_vec_t::ConstructType::TileId
     };
 
  public:
@@ -281,24 +281,22 @@ void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int a
     }
 }
 
-__rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value)
+__rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned int value)
 {
     unsigned int converted;
 
     switch (mod0) {
 
     case SFPLOADI_MOD0_FLOATB:
-        converted = static_cast<unsigned int>(value) << 3;
+        converted = value << 16;
         break;
 
     case SFPLOADI_MOD0_FLOATA:
         {
-            unsigned int val32 = static_cast<unsigned int>(value);
             converted =
-                ((val32 & FP16A_SGN_MASK) << 3) |
-                (((val32 & FP16A_EXP_MASK) - ((FP16A_EXP_BIAS - TF32_EXP_BIAS) << FP16A_EXP_SHIFT)) << (TF32_EXP_SHIFT - FP16A_EXP_SHIFT)) |
-                (val32 & FP16A_MAN_MASK);
-
+                ((value & FP16A_SGN_MASK) << 16) |
+                (((value & FP16A_EXP_MASK) - ((FP16A_EXP_BIAS - FP32_EXP_BIAS) << FP16A_EXP_SHIFT)) << (FP32_EXP_SHIFT - FP16A_EXP_SHIFT)) |
+                ((value & FP16A_MAN_MASK) << 13);
         }
         break;
 
@@ -315,6 +313,12 @@ __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value)
         }
         break;
 
+    case SFPLOADI_EX_MOD0_UINT32:
+        converted = value;
+        break;
+
+    case SFPLOADI_MOD0_UPPER:
+    case SFPLOADI_MOD0_LOWER:
     default:
         throw;
     }
@@ -335,7 +339,7 @@ __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1)
     unsigned int mask = 0;
 
     if (mod1 == SFPMOV_MOD1_COMPSIGN) {
-        mask = BIT_18_MASK;
+        mask = BIT_31_MASK;
     }
 
     sfpu_cc.deferred_commit();
@@ -352,18 +356,11 @@ __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1)
 __rvtt_vec_t sfpu_rvtt_sfpadd(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
-    float offset = 0.0F;
-
-    if (mod1 == SFPMAD_MOD1_OFFSET_POSH) {
-        offset = 0.5F;
-    } else if (mod1 == SFPMAD_MOD1_OFFSET_NEGH) {
-        offset = -0.5F;
-    }
 
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            tmp.set_float(i, a.get_float(i) + b.get_float(i) + offset);
+            tmp.set_float(i, a.get_float(i) + b.get_float(i));
         }
     }
 
@@ -373,18 +370,11 @@ __rvtt_vec_t sfpu_rvtt_sfpadd(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsi
 __rvtt_vec_t sfpu_rvtt_sfpmul(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
-    float offset = 0.0F;
-
-    if (mod1 == SFPMAD_MOD1_OFFSET_POSH) {
-        offset = 0.5F;
-    } else if (mod1 == SFPMAD_MOD1_OFFSET_NEGH) {
-        offset = -0.5F;
-    }
 
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            tmp.set_float(i, a.get_float(i) * b.get_float(i) + offset);
+            tmp.set_float(i, a.get_float(i) * b.get_float(i));
         }
     }
 
@@ -394,18 +384,11 @@ __rvtt_vec_t sfpu_rvtt_sfpmul(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsi
 __rvtt_vec_t sfpu_rvtt_sfpmad(const __rvtt_vec_t& a, const __rvtt_vec_t& b, const __rvtt_vec_t& c, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
-    float offset = 0.0F;
-
-    if (mod1 == SFPMAD_MOD1_OFFSET_POSH) {
-        offset = 0.5F;
-    } else if (mod1 == SFPMAD_MOD1_OFFSET_NEGH) {
-        offset = -0.5F;
-    }
 
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            tmp.set_float(i, a.get_float(i) * b.get_float(i) + c.get_float(i) + offset);
+            tmp.set_float(i, a.get_float(i) * b.get_float(i) + c.get_float(i));
         }
     }
 
@@ -489,16 +472,16 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
     for (int i = 0; i < SFPU_WIDTH; i++) {
         switch (mod1) {
         case SFPSETCC_MOD1_LREG_LT0:
-            sfpu_cc.and_result(i, (v.get_uint(i) & BIT_18_MASK) != 0);
+            sfpu_cc.and_result(i, (v.get_uint(i) & BIT_31_MASK) != 0);
             break;
         case SFPSETCC_MOD1_LREG_NE0:
-            sfpu_cc.and_result(i, (v.get_uint(i) & BITS_0_TO_18_MASK) != 0);
+            sfpu_cc.and_result(i, (v.get_uint(i) & BITS_0_TO_31_MASK) != 0);
             break;
         case SFPSETCC_MOD1_LREG_GTE0:
-            sfpu_cc.and_result(i, (v.get_uint(i) & BIT_18_MASK) == 0);
+            sfpu_cc.and_result(i, (v.get_uint(i) & BIT_31_MASK) == 0);
             break;
         case SFPSETCC_MOD1_LREG_EQ0:
-            sfpu_cc.and_result(i, (v.get_uint(i) & BITS_0_TO_18_MASK) == 0);
+            sfpu_cc.and_result(i, (v.get_uint(i) & BITS_0_TO_31_MASK) == 0);
             break;
         case SFPSETCC_MOD1_COMP:
             sfpu_cc.and_result(i, !sfpu_cc.enabled(i));
@@ -528,7 +511,8 @@ void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mo
         __rvtt_vec_t tmp;
         int loadi_mod = ((mod1 & SFPSCMP_EX_MOD1_FMT_A) == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
         __rvtt_vec_t op_b = __builtin_rvtt_sfploadi_ex(loadi_mod, b);
-        tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
+        __rvtt_vec_t neg_op_b = __builtin_rvtt_sfpmov(op_b, SFPMOV_MOD1_COMPSIGN);
+        tmp = __builtin_rvtt_sfpmad(neg_op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_1), a, 0);
 
         __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
     } else {
@@ -540,11 +524,11 @@ void sfpu_rvtt_sfpvcmp_ex(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned
 {
     unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
 
-    __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(b,
-                                             __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
+    __rvtt_vec_t neg = __builtin_rvtt_sfpmov(b, SFPMOV_MOD1_COMPSIGN);
+    __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(neg,
+                                             __builtin_rvtt_sfpassignlr(CREG_IDX_1),
                                              a,
                                              0);
-
     if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
         __builtin_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_GTE0);
         __builtin_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_NE0);
@@ -564,9 +548,9 @@ __rvtt_vec_t sfpu_rvtt_sfpexexp(const __rvtt_vec_t& v, unsigned int mod1)
     sfpu_cc.deferred_init();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            int exp = (v.get_uint(i) >> TF32_EXP_SHIFT) & 0xFF;
+            int exp = (v.get_uint(i) >> FP32_EXP_SHIFT) & 0xFF;
             if ((mod1 & SFPEXEXP_MOD1_NODEBIAS) == 0) {
-                exp -= TF32_EXP_BIAS;
+                exp -= FP32_EXP_BIAS;
             }
 
             tmp.set_uint(i, exp);
@@ -589,11 +573,11 @@ __rvtt_vec_t sfpu_rvtt_sfpexman(const __rvtt_vec_t& v, unsigned int mod1)
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            unsigned int man = v.get_uint(i) & TF32_MAN_MASK;
+            unsigned int man = v.get_uint(i) & FP32_MAN_MASK;
             if (mod1 == SFPEXMAN_MOD1_PAD9) {
                 tmp.set_uint(i, man);
             } else if (mod1 == SFPEXMAN_MOD1_PAD8) {
-                tmp.set_uint(i, man | (TF32_MAN_MASK + 1));
+                tmp.set_uint(i, man | (FP32_MAN_MASK + 1));
             }
         }
     }
@@ -609,7 +593,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetexp_i(unsigned int imm, const __rvtt_vec_t& v)
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             // Keep sign bit and mantissa
-            tmp.set_uint(i, (v.get_uint(i) & TF32_SGN_MAN_MASK) | ((imm & 0xFF) << TF32_EXP_SHIFT));
+            tmp.set_uint(i, (v.get_uint(i) & FP32_SGN_MAN_MASK) | ((imm & 0xFF) << FP32_EXP_SHIFT));
         }
     }
 
@@ -624,7 +608,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetexp_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             // Keep sign bit and mantissa
-            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_MAN_MASK) | ((dst.get_uint(i) & 0xFF) << TF32_EXP_SHIFT));
+            tmp.set_uint(i, (src.get_uint(i) & FP32_SGN_MAN_MASK) | ((dst.get_uint(i) & 0xFF) << FP32_EXP_SHIFT));
         }
     }
 
@@ -639,7 +623,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetman_i(unsigned int imm, const __rvtt_vec_t& v)
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             // Keep sign bit and exponent
-            tmp.set_uint(i, (v.get_uint(i) & TF32_SGN_EXP_MASK) | (imm & TF32_MAN_MASK));
+            tmp.set_uint(i, (v.get_uint(i) & FP32_SGN_EXP_MASK) | (imm & FP32_MAN_MASK));
         }
     }
 
@@ -654,13 +638,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetman_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             // Keep sign bit and exponent
-#ifdef ARCH_GRAYSKULL
-            // Grayskull bug, bits come from the exponent section
-            // wonder if this instruction is even used
-            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | ((dst.get_uint(i) >> 9) & 0x1FF));
-#else
-            tmp.set_uint(i, (src.get_uint(i) & TF32_SGN_EXP_MASK) | (dst.get_uint(i) & TF32_MAN_MASK));
-#endif
+            tmp.set_uint(i, (src.get_uint(i) & FP32_SGN_EXP_MASK) | (dst.get_uint(i) & FP32_MAN_MASK));
         }
     }
 
@@ -680,8 +658,8 @@ __rvtt_vec_t sfpu_rvtt_sfpabs(const __rvtt_vec_t& v, unsigned int mod1)
                 if (n < 0) n = -n;
                 tmp.set_uint(i, n);
             } else {
-                // TF32, clear sign bit - 18
-                tmp.set_uint(i, v.get_uint(i) & BITS_0_TO_17_MASK);
+                // FP32, clear sign bit - 31
+                tmp.set_uint(i, v.get_uint(i) & BITS_0_TO_31_MASK);
             }
         }
     }
@@ -738,7 +716,7 @@ __rvtt_vec_t sfpu_rvtt_sfpmuli(const __rvtt_vec_t& v, unsigned short imm, unsign
 {
     __rvtt_vec_t tmp;
 
-    float f = SFPUDReg::fp16b_to_float(imm);
+    float f = fp16b_to_float(imm);
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -753,7 +731,7 @@ __rvtt_vec_t sfpu_rvtt_sfpaddi(const __rvtt_vec_t& v, unsigned short imm, unsign
 {
     __rvtt_vec_t tmp;
 
-    float f = SFPUDReg::fp16b_to_float(imm);
+    float f = fp16b_to_float(imm);
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -768,7 +746,7 @@ __rvtt_vec_t sfpu_rvtt_sfpdivp2(unsigned short imm, const __rvtt_vec_t& v, unsig
 {
     __rvtt_vec_t tmp;
 
-    unsigned int exp = (imm & 0xFF) << TF32_EXP_SHIFT;
+    unsigned int exp = (imm & 0xFF) << FP32_EXP_SHIFT;
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -776,11 +754,11 @@ __rvtt_vec_t sfpu_rvtt_sfpdivp2(unsigned short imm, const __rvtt_vec_t& v, unsig
 
             unsigned int setexp;
             if (mod1 == SFPSDIVP2_MOD1_ADD) {
-                setexp = ((old & TF32_EXP_MASK) + exp) & TF32_EXP_MASK;
+                setexp = ((old & FP32_EXP_MASK) + exp) & FP32_EXP_MASK;
             } else {
                 setexp = exp;
             }
-            tmp.set_uint(i, ((old & (TF32_SGN_MASK | TF32_MAN_MASK)) | setexp));
+            tmp.set_uint(i, ((old & (FP32_SGN_MASK | FP32_MAN_MASK)) | setexp));
         }
     }
 
@@ -798,13 +776,13 @@ __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1)
             unsigned int val = v.get_uint(i);
 
             int b;
-            for (b = TF32_BITS; b >= 0; b--) {
+            for (b = FP32_MAX_BIT; b >= 0; b--) {
                 if ((val & (1 << b)) != 0) {
                     break;
                 }
             }
 
-            tmp.set_uint(i, TF32_BITS - b);
+            tmp.set_uint(i, FP32_MAX_BIT - b);
 
             switch (mod1) {
             case SFPLZ_MOD1_CC_NONE:
@@ -889,7 +867,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned in
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(int imm, const __rvtt_vec_t& src, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
 
@@ -994,11 +972,11 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src)
 {
     __rvtt_vec_t tmp;
 
-    unsigned int sign = (static_cast<unsigned int>(imm) & 1) << TF32_SGN_SHIFT;
+    unsigned int sign = (static_cast<unsigned int>(imm) & 1) << FP32_SGN_SHIFT;
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            tmp.set_uint(i, (src.get_uint(i) & (TF32_EXP_MASK | TF32_MAN_MASK)) | sign);
+            tmp.set_uint(i, (src.get_uint(i) & (FP32_EXP_MASK | FP32_MAN_MASK)) | sign);
         }
     }
 
@@ -1012,8 +990,8 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            unsigned int sign = dst.get_uint(i) & TF32_SGN_MASK;
-            tmp.set_uint(i, (src.get_uint(i) & (TF32_EXP_MASK | TF32_MAN_MASK)) | sign);
+            unsigned int sign = dst.get_uint(i) & FP32_SGN_MASK;
+            tmp.set_uint(i, (src.get_uint(i) & (FP32_EXP_MASK | FP32_MAN_MASK)) | sign);
         }
     }
 
@@ -1054,7 +1032,7 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            int exp = ((dst.get_uint(i) & TF32_EXP_MASK) >> TF32_EXP_SHIFT) - TF32_EXP_BIAS;
+            int exp = ((dst.get_uint(i) & FP32_EXP_MASK) >> FP32_EXP_SHIFT) - FP32_EXP_BIAS;
 
             const __rvtt_vec_t& which = (exp < 0) ? l0 : (exp == 0) ? l1 : l2;
             unsigned int in = which.get_uint(i);

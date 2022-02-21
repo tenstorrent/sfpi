@@ -5,7 +5,12 @@
 #pragma once
 
 #include <cstdint>
-#include <sfpi_internal.h>
+
+#if defined(ARCH_GRAYSKULL)
+#include <grayskull/sfpi_hw.h>
+#elif defined(ARCH_WORMHOLE)
+#include <wormhole/sfpi_hw.h>
+#endif
 
 namespace sfpi {
 

@@ -3,8 +3,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#ifdef ARCH_GRAYSKULL
-
 namespace sfpi {
 
 // GCC implementation leverages the riscv specific code paths and so the
@@ -172,7 +170,6 @@ constexpr unsigned int SFPLOADI_MOD0_FLOATB = 0;
 constexpr unsigned int SFPLOADI_MOD0_FLOATA = 1;
 constexpr unsigned int SFPLOADI_MOD0_USHORT = 2;
 constexpr unsigned int SFPLOADI_MOD0_SHORT = 4;
-constexpr unsigned int SFPLOADIEX_MOD0_FLOAT = 16;
 
 constexpr unsigned int SFPEXMAN_MOD1_PAD8 = 0;
 constexpr unsigned int SFPEXMAN_MOD1_PAD9 = 1;
@@ -256,5 +253,3 @@ constexpr unsigned int CREG_IDX_NEG_0P34472656 = 14;
 constexpr unsigned int CREG_IDX_TILEID = 15;
 
 } // namespace sfpi
-
-#endif // ARCH_GRAYSKULL

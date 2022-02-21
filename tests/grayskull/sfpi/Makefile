@@ -1,9 +1,9 @@
-BUDA_ROOT ?= ../../../ll-sw
-SFPI_ROOT ?= ../..
+SFPI_ROOT ?= ../../..
 CC_PATH ?= $(SFPI_ROOT)/compiler
 
-INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/sfpi_internal.h $(SFPI_ROOT)/include/ckernel_ops.h
-CFLAGS = -I../inc -I$(SFPI_ROOT)/include -DARCH_GRAYSKULL -O3 -std=c++17 -Wall
+INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/grayskull/sfpi_hw.h $(SFPI_ROOT)/include/grayskull/sfpi_imp.h $(SFPI_ROOT)/include/grayskull/sfpi_lib.h $(SFPI_ROOT)/include/grayskull/ckernel_ops.h
+
+CFLAGS = -I$(SFPI_ROOT)/include -I$(SFPI_ROOT)/include/grayskull -DARCH_GRAYSKULL -O3 -std=c++17 -Wall
 # Note: Production uses -g which adds GIMPLE_DEBUG gimple statements that can affect optimization
 # Enabling -g here results in unreadable asm, but testing should occur both ways...
 
@@ -14,7 +14,7 @@ X86_CFLAGS = -DCOMPILE_FOR_EMULE $(CFLAGS)
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
 RV32_CFLAGS = $(CFLAGS) -mgrayskull -march=rv32iy -mabi=ilp32 -fno-exceptions
 
-SRCS = kernels.cc coverage.cc live.cc fp16c.cc
+SRCS = kernels.cc coverage.cc live.cc
 
 ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regmov.S
 OTHR = rv32/warn.txt rv32/warn_push.txt rv32/warn_pop.txt rv32/warn_spill.txt
@@ -37,7 +37,7 @@ rv32lto:
 results:
 	mkdir results
 
-x86/sfpu.o: sfpu.cc sfpu.h $(SFPI_ROOT)/include/sfpi_internal.h
+x86/sfpu.o: sfpu.cc sfpu.h $(INCLUDES)
 
 x86/%.o: %.cc $(X86_INCLUDES) | x86
 	$(X86_CC) $(X86_CFLAGS) -c -o $@ $<

@@ -26,24 +26,19 @@
 #include <cstdint>
 #include <stdexcept>
 #include <math.h>
-#include "sfpi_internal.h"
+#include "wormhole/sfpi_hw.h"
 
 namespace sfpu {
-
-constexpr int SFPU_WIDTH_GRAYSKULL = 64;
-constexpr int SFPU_SIZE_GRAYSKULL = 128;
-constexpr int SFPU_CC_DEPTH_GRAYSKULL = 7;    // Grayskull is 8 deep w/ a bug limiting it to 7
 
 constexpr int SFPU_WIDTH_WORMHOLE  = 32;
 constexpr int SFPU_SIZE_WORMHOLE = 128;
 constexpr int SFPU_CC_DEPTH_WORMHOLE = 16;
 
 constexpr unsigned int BIT_15_MASK = 0x08000;
-constexpr unsigned int BIT_18_MASK = 0x40000;
-constexpr unsigned int BITS_0_TO_17_MASK = 0x3FFFF;
-constexpr unsigned int BITS_0_TO_18_MASK = 0x7FFFF;
+constexpr unsigned int BIT_31_MASK = 0x80000000;
+constexpr unsigned int BITS_0_TO_31_MASK = 0x7FFFFFFF;
 
-constexpr unsigned int TF32_BITS = 18;
+constexpr unsigned int TF32_MAX_BIT = 18;
 constexpr unsigned int TF32_SGN_MASK = 0x40000;
 constexpr unsigned int TF32_EXP_MASK = 0x3FC00;
 constexpr unsigned int TF32_MAN_MASK = 0x003FF;
@@ -61,50 +56,29 @@ constexpr unsigned int FP16B_EXP_SHIFT = 7;
 constexpr unsigned int FP16A_SGN_MASK = 0x8000;
 constexpr unsigned int FP16A_EXP_MASK = 0x7C00;
 constexpr unsigned int FP16A_MAN_MASK = 0x03FF;
- constexpr unsigned int FP16A_EXP_SHIFT = 10;
- constexpr unsigned int FP16A_EXP_BIAS = 15;
+constexpr unsigned int FP16A_EXP_SHIFT = 10;
+constexpr unsigned int FP16A_EXP_BIAS = 15;
 
+constexpr unsigned int FP32_MAX_BIT = 31;
+constexpr unsigned int FP32_SGN_MASK = 0x80000000;
+constexpr unsigned int FP32_EXP_MASK = 0x7F800000;
+constexpr unsigned int FP32_MAN_MASK = 0x007FFFFF;
+constexpr unsigned int FP32_SGN_EXP_MASK = FP32_SGN_MASK | FP32_EXP_MASK;
+constexpr unsigned int FP32_SGN_MAN_MASK = FP32_SGN_MASK | FP32_MAN_MASK;
 constexpr unsigned int FP32_SGN_SHIFT = 31;
 constexpr unsigned int FP32_EXP_SHIFT = 23;
 constexpr unsigned int FP32_MAN_SHIFT = 0;
-constexpr unsigned int FP32_SGN_MASK = 0x80000000;
 constexpr unsigned int FP32_MAN_WIDTH = 23;
+constexpr unsigned int FP32_EXP_BIAS = 127;
 
 
-#ifdef ARCH_GRAYSKULL
-constexpr int SFPU_WIDTH = SFPU_WIDTH_GRAYSKULL;
-constexpr int SFPU_SIZE = SFPU_SIZE_GRAYSKULL;
-constexpr int SFPU_CC_DEPTH = SFPU_CC_DEPTH_GRAYSKULL;
-#elif ARCH_WORMHOLE
 constexpr int SFPU_WIDTH = SFPU_WIDTH_WORMHOLE;
 constexpr int SFPU_SIZE = SFPU_SIZE_WORMHOLE;
 constexpr int SFPU_CC_DEPTH = SFPU_CC_DEPTH_WORMHOLE;
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
-class SFPUDReg {
- private:
-    unsigned short regs[SFPU_SIZE][SFPU_WIDTH];
-
- public:
-    SFPUDReg();
-
-    static inline float fp16b_to_float(unsigned int i);
-    static inline int float_to_fp16b(float f);
-
-    void load(unsigned int out[SFPU_WIDTH], const int addr) const;
-    void store_int(const unsigned int data[SFPU_WIDTH], const int addr);
-    void store_float(const unsigned int data[SFPU_WIDTH], const int addr);
-    void store_float(const float data[SFPU_WIDTH], const int addr);
-    void store_float(const float data, const int row, const int col);
-
-    unsigned short get(const int row, const int col) const { return regs[row][col]; }
-    float get_float(const int row, const int col) const { return fp16b_to_float(regs[row][col]); }
-};
-
-
-inline float SFPUDReg::fp16b_to_float(unsigned int i)
+inline float fp16b_to_float(unsigned int i)
 {
     union Converter {
         const float f;
@@ -116,7 +90,7 @@ inline float SFPUDReg::fp16b_to_float(unsigned int i)
     return tmp.f;
 }
 
-inline int SFPUDReg::float_to_fp16b(float f)
+inline int float_to_fp16b(float f)
 {
     union Converter {
         const float f;
@@ -127,6 +101,48 @@ inline int SFPUDReg::float_to_fp16b(float f)
 
     return tmp.i >> 13;
 }
+
+inline float int_to_float(unsigned int i)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const unsigned int ini) : i(ini) {}
+    } tmp(i);
+
+    return tmp.f;
+}
+
+inline int float_to_int(float f)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const float inf) : f(inf) {}
+    } tmp(f);
+
+    return tmp.i;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+class SFPUDReg {
+ private:
+    unsigned int regs[SFPU_SIZE][SFPU_WIDTH];
+
+ public:
+    SFPUDReg();
+
+    void load(unsigned int out[SFPU_WIDTH], const int addr) const;
+    void store_int(const unsigned int data[SFPU_WIDTH], const int addr);
+    void store_float(const unsigned int data[SFPU_WIDTH], const int addr);
+    void store_float(const float data[SFPU_WIDTH], const int addr);
+    void store_float(const float data, const int row, const int col);
+
+    unsigned int get(const int row, const int col) const { return regs[row][col]; }
+    float get_float(const int row, const int col) const { return int_to_float(regs[row][col]); }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 class SFPUCC {
@@ -176,7 +192,7 @@ extern SFPUCC sfpu_cc;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Emulates an LREG
-// Data stored in values is in TF32 format
+// Data stored in values is in FP32 format
 ///////////////////////////////////////////////////////////////////////////////
 class __rvtt_vec_t {
  private:
@@ -198,10 +214,10 @@ class __rvtt_vec_t {
     inline unsigned int* get_data_write() { return values; }
     inline const unsigned int* get_data_read() const { return values; }
 
-    inline float get_float(const int i) const { return tf32_to_float(values[i]); }
+    inline float get_float(const int i) const { return sfpu::int_to_float(values[i]); }
     inline unsigned int get_uint(const int i) const { return values[i]; }
 
-    inline void set_float(const int i, const float f) { values[i] = float_to_tf32(f); }
+    inline void set_float(const int i, const float f) { values[i] = sfpu::float_to_int(f); }
     inline void set_uint(const int i, const int ini) { values[i] = ini; }
 
     inline void operator=(const __rvtt_vec_t& v);
@@ -252,7 +268,7 @@ extern __rvtt_vec_t sfpu_lreg[4];
 extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
 extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
-extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value);
+extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned int value);
 extern __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpadd(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpmul(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1);
@@ -284,7 +300,7 @@ extern __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpshft_i(const __rvtt_vec_t& dst, int shift);
 extern __rvtt_vec_t sfpu_rvtt_sfpshft_v(const __rvtt_vec_t& dst, const __rvtt_vec_t&src);
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned int mod1);
-extern __rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(int imm, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src);

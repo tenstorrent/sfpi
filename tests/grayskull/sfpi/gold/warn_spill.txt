@@ -1,0 +1,8 @@
+In file included from ../../../include/sfpi.h:1019,
+                 from test.h:11,
+                 from warn.cc:5:
+../../../include/grayskull/sfpi_imp.h: In function 'void spill()':
+../../../include/grayskull/sfpi_imp.h:206:11: fatal error: cannot store sfpu register (register spill)
+  206 |     assign(__builtin_rvtt_sfploadi_ex(val.get_format(), val.get()));
+      |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.

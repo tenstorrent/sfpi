@@ -82,60 +82,132 @@ sfpi_test_noinline void test2()
 
 sfpi_test_noinline void test3()
 {
-    // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI
-    // Also, load after store (NOP)
+    // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI, MAD (in conditionals)
+
     v_if(dst_reg[0] == 0.0F) {
+        // 1 load
         dst_reg[3] = 10.0F;
     } v_else {
+        // 1 load
         dst_reg[3] = 20.0F;
     }
     v_endif;
 
+    
     v_if(dst_reg[0] == 2.0F) {
+        // 1 load
         vFloat a = 30.0F;
         dst_reg[3] = a;
     }
     v_endif;
 
     v_if(dst_reg[0] == 3.0F) {
-        vInt a = 0x3F80;
-        dst_reg[3] = a;
+        // 2 loads
+        dst_reg[3] = 1.005f;
     }
     v_endif;
 
     v_if(dst_reg[0] == 4.0F) {
-        vUInt a = 0x3F80;
+        // 2 loads
+        vFloat a = 1.005f;
         dst_reg[3] = a;
     }
     v_endif;
 
     v_if(dst_reg[0] == 5.0F) {
-        vUInt a = 0xFFFF;
+        // This will be a short w/ 1 load
+        vInt a = 0x3F80;
         dst_reg[3] = a;
-    }
-    v_endif;
-
-    v_if(dst_reg[0] == 62.0F) {
-        // Store into [62] so the compared value isn't close to the expected value
-        dst_reg[3] = vConst0p0020;
     }
     v_endif;
 
     v_if(dst_reg[0] == 6.0F) {
-        vFloat a = 120.0F;
+        // This will be an int w/ 2 loads
+        vInt a = 0x3F80A3D7; // 1.005
         dst_reg[3] = a;
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 7.0F) {
+        // This will be an int w/ 1 load (not sign extended
+        dst_reg[3] = 0x8F80;
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 8.0F) {
+        // This will be a ushort w/ 1 load (not sign extended)
+        dst_reg[3] = 0x8F80U;
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 9.0F) {
+        // This will be an int w/ 2 loads
+        dst_reg[3] = 0x3F80A3D7; // 1.005
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 10.0F) {
+        dst_reg[3] = static_cast<unsigned short>(0x3f80);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 11.0F) {
+        // This will be a short w/ 1 load (sign extended)
+        dst_reg[3] = static_cast<short>(0x8f80);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 12.0F) {
+        vUInt a = 0x3F80A3D7;
+        dst_reg[3] = a;
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 13.0F) {
+        dst_reg[3] = s2vFloat16b(0x3f80);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 14.0F) {
+        dst_reg[3] = s2vFloat16a(0x3f80);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 15.0F) {
+        dst_reg[3] = 25.0; // double
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 16.0F) {
+        vFloat a = 28.0; // double
+        dst_reg[3] = a;
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 17.0F) {
+        dst_reg[3] = vConst0p8373;
     }
     v_endif;
 
     // [0] = 10.0
     // [1] = 20.0
     // [2] = 30.0
-    // [3] = 1.0 on emule, 0x403f on grayskull versim
-    // [4] = 1.0 on emule, 0x403f on grayskull versim
-    // [5] = 0xFFFF
-    // [6] = 120.0F
-    // [7] on 20.0F
-    // except [62] = .001953
+    // [3] = 1.005
+    // [4] = 1.005
+    // [5] = 0x3f80
+    // [6] = 1.005
+    // [7] = 0x8F80
+    // [8] = 0x8F80
+    // [9] = 1.005
+    // [10] = 0x3f80
+    // [11] = 0xFFFF8f80
+    // [12] = 1.005
+    // [13] = 1.0
+    // [14] = 1.875
+    // [15] = 25.0
+    // [16] = 28.0
+    // [17] = 0.837300003
+    // [18] on 20.0F
 
     copy_result_to_dreg0(3);
 }
@@ -299,46 +371,34 @@ sfpi_test_noinline void test5()
     dst_reg[5] = -dst_reg[0];
 
     v_if(dst_reg[0] == 0.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConst0p6929;
+        dst_reg[5] = vConst0 * vConst0 + vConst0p8373;
     } v_elseif(dst_reg[0] == 1.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst0;
     } v_elseif(dst_reg[0] == 2.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstNeg1p0068;
+        dst_reg[5] = vConst0 * vConst0 + vConstPrgm0;
     } v_elseif(dst_reg[0] == 3.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConst1p4424;
+        dst_reg[5] = vConst0 * vConst0 + vConstPrgm1;
     } v_elseif(dst_reg[0] == 4.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConst0p8369;
+        dst_reg[5] = vConst0 * vConst0 + vConstPrgm2;
     } v_elseif(dst_reg[0] == 5.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p5;
+        dst_reg[5] = vConst0 * vConst0 + vConstPrgm3;
     } v_elseif(dst_reg[0] == 6.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst1;
     }
     v_endif;
-    // [0] = 0.0
-    // [1] = 0.692871094
-    // [2] = -1.00683594
-    // [3] = 1.442382813
-    // [4] = 0.836914063
-    // [5] = -0.5
+    // [0] = 0.8373
+    // [1] = 0.0
+    // [2] = XXXX
+    // [3] = XXXX
+    // [4] = XXXX
+    // [5] = XXXX
     // [6] = 1.0
 
-    v_if(dst_reg[0] == 7.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstNeg1;
-    } v_elseif(dst_reg[0] == 8.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConst0p0020;
-    } v_elseif(dst_reg[0] == 9.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p6748;
-    } v_elseif(dst_reg[0] == 10.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstNeg0p3447;
-    } v_elseif(dst_reg[0] == 11.0F) {
-        dst_reg[5] = vConstNeg0p6748 * vConstNeg0p3447 + vConstNeg1;
-    }
-    v_endif;
-    // [7] = -1.0
-    // [8] = 0.001953125
-    // [9] = -0.67480469
-    // [10] = -0.34472656
-    // [11] = -0.765625
+    // [7] = -7.0
+    // [8] = -8.0
+    // [9] = -9.0
+    // [10] = -10.0
+    // [11] = -11.0
 
     vFloat a = dst_reg[0];
     vFloat b = 20.0F;
@@ -386,17 +446,17 @@ sfpi_test_noinline void test5()
         vFloat c = -5.0F;
         dst_reg[5] = a * b - c;
     } v_elseif(dst_reg[0] == 23.0F) {
-        dst_reg[5] = a * b + vConstNeg1;
+        dst_reg[5] = a * b + vConst1;
     } v_elseif(dst_reg[0] == 24.0F) {
-        dst_reg[5] = vConstNeg1 * b + vConstNeg1;
+        dst_reg[5] = vConst1 * b + vConst1;
     }
     v_endif;
     // [19] = 375.5
     // [20] = 394.5
     // [21] = 414.5
     // [22] = 445.0
-    // [23] = 459.0
-    // [24] = -21.0
+    // [23] = 461.0
+    // [24] = 21.0
 
     v_if(dst_reg[0] == 25.0F) {
         vFloat c = -5.0F;
@@ -426,7 +486,6 @@ sfpi_test_noinline void test5()
     // [29] = 9.0
     // [30] = 9.5
     // [31] = 11.5
-    // [32+] = ramp
 
     copy_result_to_dreg0(5);
 }
@@ -652,11 +711,11 @@ sfpi_test_noinline void test6()
     v_if (dst_reg[0] >= 28.0F) {
         vInt a = vConstTileId;
         v_if (dst_reg[0] == 28.0F) {
-            set_expected_result(6, 256.0F, 28, a);
+            set_expected_result(6, 256.0F, 56, a);
         } v_elseif (dst_reg[0] == 29.0F) {
-            set_expected_result(6, 256.0F, 29, a);
+            set_expected_result(6, 256.0F, 58, a);
         } v_elseif (dst_reg[0] == 30.0F) {
-            set_expected_result(6, 256.0F, 30, a);
+            set_expected_result(6, 256.0F, 60, a);
         }
         v_endif;
     }
@@ -704,11 +763,11 @@ sfpi_test_noinline void test7()
 
     dst_reg[7] = -dst_reg[0];
     v_if(dst_reg[0] == 1.0F) {
-        vFloat tmp = 124.0F;
-        set_expected_result(7, 30.0F, 0x7C0, exman8(tmp));
+        vFloat tmp = 124.05F;
+        set_expected_result(7, 30.0F, 0xF8199A, exman8(tmp));
     } v_elseif(dst_reg[0] == 2.0F) {
-        vFloat tmp = 124.0F;
-        set_expected_result(7, 32.0F, 0x3C0, exman9(tmp));
+        vFloat tmp = 124.05F;
+        set_expected_result(7, 32.0F, 0x78199A, exman9(tmp));
     } v_elseif(dst_reg[0] == 3.0F) {
         vFloat tmp = 65536.0F * 256.0F;
         set_expected_result(7, 33.0F, 0x18, exexp(tmp));
@@ -765,18 +824,18 @@ sfpi_test_noinline void test7()
 
     v_if(dst_reg[0] == 10.0F) {
         vFloat tmp = 1024.0F;
-        vFloat b = setman(tmp, 0x3AB);
+        vFloat b = setman(tmp, 0x75019a);
         dst_reg[7] = b;
     } v_elseif(dst_reg[0] == 11.0F) {
         vFloat tmp = 1024.0F;
-        vInt man = 0xBBB;
+        vInt man = 0x75019a;
         vFloat tmp2 = setman(tmp, man);
         dst_reg[7] = tmp2;
     }
     v_endif;
 
-    // [10] = 1960.0 (?)
-    // [11] = 1024.0
+    // [10] = 1960.050049
+    // [11] = 1960.050049
 
     vFloat v = dst_reg[0];
     v_if ((v >= 12.0f && v < 14.0f) || (v >= 15.0f && v < 17.0f)) {
@@ -818,7 +877,7 @@ sfpi_test_noinline void test7()
     // <= and > are compound statements in the compiler, <= uses a compc
     // and things get flipped around when joined by ||
     v_if (v >= 29.0f && v < 32.0f) {
-        vInt t = vConstTileId;
+        vInt t = vConstTileId >> 1;
         vFloat total = 16.0F;
 
         v_if (t <= 30) {
@@ -858,7 +917,7 @@ sfpi_test_noinline void test7()
 
 sfpi_test_noinline void test8()
 {
-    // SFPAND, SFPOR, SFPNOT, xor, SFPABS
+    // SFPAND, SFPOR, SFPNOT, SFPABS
     // Atypical usage of conditionals
     // More conditionals (short v compares)
 
@@ -951,7 +1010,7 @@ sfpi_test_noinline void test8()
     // <= and > are compound statements in the compiler, <= uses a compc
     // and things get flipped around when joined by ||
     v_if (dst_reg[0] >= 20.0f && dst_reg[0] < 23.0f) {
-        vInt t = vConstTileId;
+        vInt t = vConstTileId >> 1;
         vInt low = 20;
         vInt high = 21;
 
@@ -1059,30 +1118,6 @@ sfpi_test_noinline void test8()
     }
     v_endif;
 
-    v_if(dst_reg[0] == 29.0F) {
-        vInt a = 0xA5A5;
-        vInt b = 0xFF00;
-        vInt c = a ^ b;
-        set_expected_result(8, 32.0F, 0x5AA5, c);
-    }
-    v_endif;
-
-    v_if(dst_reg[0] == 30.0F) {
-        vUInt a = 0xA5A5;
-        vUInt b = 0xFF00;
-        vUInt c = a ^ b;
-        set_expected_result(8, 64.0F, 0x5AA5, c);
-    }
-    v_endif;
-
-    v_if(dst_reg[0] == 31.0F) {
-        vInt a = 0xA5A5;
-        vInt b = 0xFF00;
-        b ^= a;
-        set_expected_result(8, 32.0F, 0x5AA5, b);
-    }
-    v_endif;
-
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -1112,9 +1147,6 @@ sfpi_test_noinline void test8()
     // [26] = 1712.0
     // [27] = 176.0
     // [28] = 1872.0
-    // [29] = 32.0
-    // [30] = 64.0
-    // [31] = 32.0
 
     copy_result_to_dreg0(8);
 }
@@ -1150,15 +1182,15 @@ sfpi_test_noinline void test9()
     v_if(dst_reg[0] == 7.0F) {
         vInt a = 0;
         vInt b = lz(a);
-        set_expected_result(9, 38.0F, 0x13, b);
+        set_expected_result(9, 38.0F, 0x20, b);
     } v_elseif(dst_reg[0] == 8.0F) {
-        vInt a = 0xFFFF;
+        vInt a = 0xFFFFFFFF;
         vInt b = lz(a);
         set_expected_result(9, 55.0F, 0x0, b);
     } v_elseif(dst_reg[0] == 9.0F) {
         vUInt a = 0xFFFFU;
         vInt b = lz(a);
-        set_expected_result(9, 30.0F, 0x3, b);
+        set_expected_result(9, 30.0F, 0x10, b);
     } v_elseif(dst_reg[0] < 13.0F) {
         vFloat a = dst_reg[0] - 11.0F;
         vUInt b;
@@ -1166,7 +1198,7 @@ sfpi_test_noinline void test9()
         // Relies on if chain above...
         v_if(dst_reg[0] >= 7.0F) {
             b = reinterpret<vUInt>(lz(a));
-            v_if (b != 19) {
+            v_if (b != 32) {
                 dst_reg[9] = 60.0F;
             } v_else {
                 dst_reg[9] = 40.0F;
@@ -1456,7 +1488,7 @@ sfpi_test_noinline void test12(int imm)
         dst_reg[12] = r;
     } v_elseif(dst_reg[0] == 12.0F) {
         vFloat tmp = 1024.0F;
-        int man = 0xBBB + 35 - imm;
+        int man = 0x75019a + 35 - imm;
         vFloat tmp2 = setman(tmp, man);
         dst_reg[12] = tmp2;
     } v_elseif(dst_reg[0] == 13.0F) {
@@ -1468,7 +1500,7 @@ sfpi_test_noinline void test12(int imm)
     v_endif;
 
     dst_reg[30 + 35 - imm] = 30.0F; // SFPSTORE
-    dst_reg[30 + 35 - imm + 1] = vConstNeg1;
+    dst_reg[30 + 35 - imm + 1] = vConst1;
 
     v_if(dst_reg[0] == 14.0F) {
         dst_reg[12] = dst_reg[30 + 35 - imm]; // SFPLOAD
@@ -1548,10 +1580,10 @@ sfpi_test_noinline void test12(int imm)
     // [9] = 4096.0F
     // [10] = 16.0F
     // [11] = -128.0F
-    // [12] = 1976.0 // due to grayskull bug, other would be 1024.0F
+    // [12] = 1960.050049
     // [13] = -1.625
     // [14] = 30.0F
-    // [15] = -1.0
+    // [15] = 1.0
     // [16] = 121.0F
     // [17] = 131.0F
     // [18] = 141.0F
@@ -1596,7 +1628,7 @@ sfpi_test_noinline void test13(int imm)
         v_endif;
         v_if (dst_reg[0] == 2.0F || dst_reg[0] == 3.0F) {
             v_if (dst_reg[0] == 2.0F) {
-                set_expected_result(13, 40.0F, 0x0555, b);
+                set_expected_result(13, 40.0F, 0xFFFF0555, b);
             }
             v_endif;
             v_if (dst_reg[0] == 3.0F) {
@@ -1619,7 +1651,7 @@ sfpi_test_noinline void test13(int imm)
         v_endif;
         v_if (dst_reg[0] == 4.0F || dst_reg[0] == 5.0F) {
             v_if (dst_reg[0] == 4.0F) {
-                set_expected_result(13, 60.0F, 11, b);
+                set_expected_result(13, 60.0F, 24, b);
             }
             v_endif;
             v_if (dst_reg[0] == 5.0F) {
@@ -1645,7 +1677,7 @@ sfpi_test_noinline void test13(int imm)
         }
         v_endif;
     }
-    // [6] = 8096.0
+    // [6] = 8110.0F
     // [7] = 110.0F
 
     // MOV liveness across SETCC
@@ -1700,20 +1732,19 @@ sfpi_test_noinline void test13(int imm)
     // EXMAN liveness across SETCC
     {
         vFloat a = 160.0F;
-        vInt b = 128;
+        vInt b = 0x80000;
         v_if (dst_reg[0] == 14.0F) {
             b = exman8(a);
         }
         v_endif;
         v_if (dst_reg[0] == 14.0F || dst_reg[0] == 15.0F) {
             vFloat tmp = 128.0F;
-            b = b << 9;
             dst_reg[13] = setman(tmp, b);
         }
         v_endif;
     }
     // [14] = 160.0F
-    // [15] = 144.0F
+    // [15] = 136.0F
 
     // SETEXP_I liveness across SETCC
     {
@@ -1736,7 +1767,7 @@ sfpi_test_noinline void test13(int imm)
         vFloat a = 190.0F;
         vFloat b = 200.0F;
         v_if (dst_reg[0] == 18.0F) {
-            b = setman(a, 0x3AB);
+            b = setman(a, 0x75019a);
         }
         v_endif;
         v_if (dst_reg[0] == 18.0F || dst_reg[0] == 19.0F) {
@@ -1744,7 +1775,7 @@ sfpi_test_noinline void test13(int imm)
         }
         v_endif;
     }
-    // [18] = 245.0F
+    // [18] = 245.06256F
     // [19] = 200.0F
 
     // SETSGN_I liveness across SETCC
@@ -2061,7 +2092,7 @@ sfpi_test_noinline void test14(int imm)
         }
         v_endif;
 
-        v_if (vConst0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8373 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = b;
         }
@@ -2095,7 +2126,7 @@ sfpi_test_noinline void test14(int imm)
         }
         v_endif;
 
-        v_if (vConst0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8373 == dst_reg[0]) { // always fail
             dst_reg[14] = a;
             dst_reg[14] = c;
         }
@@ -2129,7 +2160,7 @@ sfpi_test_noinline void test14(int imm)
         }
         v_endif;
 
-        v_if (vConst0p8369 == dst_reg[0]) { // always fail
+        v_if (vConst0p8373 == dst_reg[0]) { // always fail
             dst_reg[14] = c;
             dst_reg[14] = b;
         }
@@ -2236,9 +2267,9 @@ sfpi_test_noinline void test14(int imm)
         v_endif;
     }
     // [28] = 200+200*2, 600+600*4, 3000+3000*8, 27000+27000*32, 89100+89100*128 =
-    //        114939000.0F or 114819072.0F when rounded
+    //        114939000.0F
     // [29] = 200+200*1, 400+400*20, 4400+4400*20, 92400+92400*10, 1016400+1016400*20 =
-    //        21344400.0F or 21233664.0F when rounded
+    //        21344400.0F
 
     copy_result_to_dreg0(14);
 }
@@ -2351,8 +2382,8 @@ int main(int argc, char* argv[])
 
     param_global = 35;
 
-    // Init ramp from 0..63
-    for (int i = 0; i < 64; i++) {
+    // Init ramp from 0..32
+    for (int i = 0; i < SFPU_WIDTH; i++) {
         sfpu_dreg.store_float(static_cast<float>(i), 0, i);
     }
 
@@ -2362,7 +2393,7 @@ int main(int argc, char* argv[])
     for (int j = 0; j <= row; j++) {
         if (!exact || j == row) {
             printf("Row: %d\n", j);
-            for (int i = 0; i < 64; i++) {
+            for (int i = 0; i < SFPU_WIDTH; i++) {
                 if (printint) {
                     printf("%04X ", sfpu_dreg.get(j * 4, i));
                 } else {

@@ -1,7 +1,0 @@
-In file included from test.h:11,
-                 from warn.cc:5:
-../../include/sfpi.h: In function 'void spill()':
-../../include/sfpi.h:1028:11: fatal error: cannot store sfpu register (register spill)
- 1028 |     assign(__builtin_rvtt_sfploadi_ex(c.get_format(), c.get()));
-      |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-compilation terminated.

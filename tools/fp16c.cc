@@ -16,7 +16,7 @@ inline float fp16b_to_fp32(const uint32_t val)
     return tmp.vfloat;
 }
 
-sfpi_inline float fp16a_to_fp32(const uint32_t val)
+inline float fp16a_to_fp32(const uint32_t val)
 {
     union {
         float vfloat;
@@ -27,6 +27,30 @@ sfpi_inline float fp16a_to_fp32(const uint32_t val)
 
     //((tmp.vui >> 16) & 0x8000) | ((((tmp.vui & 0x7F800000) - 0x38000000) >> 13) & 0x7c00) | ((tmp.vui >> 13) & 0x03FF);
     return tmp.vfloat;
+}
+
+inline float int_to_float(unsigned int i)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const unsigned int ini) : i(ini) {}
+    } tmp(i);
+
+    return tmp.f;
+}
+
+inline int float_to_int(float f)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const float inf) : f(inf) {}
+    } tmp(f);
+
+    return tmp.i;
 }
 
 // Inputs:
@@ -52,6 +76,7 @@ int main(int argc, char* argv[])
         float val = stof(s);
         printf("fp16a: 0x%x (%d)\n", (unsigned int)s2vFloat16a(val).get(), (int)s2vFloat16a(val).get());
         printf("fp16b: 0x%x (%d)\n", (unsigned int)s2vFloat16b(val).get(), (int)s2vFloat16b(val).get());
+        printf("fp32 : 0x%x (%d)\n", (unsigned int)float_to_int(val), (int)float_to_int(val));
     } else {
         int val = stoi(s, nullptr, 0);
         printf("fp32 (from fp16a): %f\n", fp16a_to_fp32(val));
