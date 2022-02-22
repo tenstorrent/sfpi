@@ -187,14 +187,10 @@ public:
     sfpi_inline void operator=(const vDReg dreg) const;
     sfpi_inline void operator=(const vConst creg) const;
     sfpi_inline void operator=(const s2vFloat16 f) const;
-    sfpi_inline void operator=(const float f) const;
-    sfpi_inline void operator=(const int32_t i) const;
 
     // Construct operator classes from operations
     sfpi_inline vFloat operator+(const vFloat b) const;
     sfpi_inline vFloat operator-(const vFloat b) const;
-    sfpi_inline vFloat operator-(const float f) const;
-    sfpi_inline vFloat operator-(const s2vFloat16 i) const;
     sfpi_inline vFloat operator-() const;
     sfpi_inline vFloat operator*(const vFloat b) const;
 
@@ -842,8 +838,6 @@ constexpr TYPE RegFile<TYPE, N>::operator[](const int x) const {
 
 sfpi_inline vFloat vDReg::operator+(const vFloat b) const {return sfpi_int::fp_add(vFloat(*this), b); }
 sfpi_inline vFloat vDReg::operator-(const vFloat b) const { return sfpi_int::fp_sub(vFloat(*this), b); }
-sfpi_inline vFloat vDReg::operator-(const float b) const { return sfpi_int::fp_add(vFloat(*this), vFloat(-b)); }
-sfpi_inline vFloat vDReg::operator-(const s2vFloat16 b) const { return sfpi_int::fp_add(vFloat(*this), b.negate()); }
 sfpi_inline vFloat vDReg::operator*(const vFloat b) const  { return sfpi_int::fp_mul(vFloat(*this), b); }
 sfpi_inline vCondComp vDReg::operator==(const float x) const {return vCondComp(vCondComp::CompEQ, vFloat(*this), s2vFloat16(x)); }
 sfpi_inline vCondComp vDReg::operator!=(const float x) const { return vCondComp(vCondComp::CompNE, vFloat(*this), s2vFloat16(x)); }
@@ -893,17 +887,6 @@ sfpi_inline void vDReg::operator=(const vConst creg) const
 sfpi_inline void vDReg::operator=(s2vFloat16 f) const
 {
     vFloat v(f);
-    *this = v;
-}
-
-sfpi_inline void vDReg::operator=(float f) const
-{
-    operator=(s2vFloat16(f));
-}
-
-sfpi_inline void vDReg::operator=(int32_t i) const
-{
-    vInt v = i;
     *this = v;
 }
 

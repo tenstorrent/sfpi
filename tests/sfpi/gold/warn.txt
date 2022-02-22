@@ -1,23 +1,23 @@
 In file included from test.h:11,
                  from warn.cc:5:
 ../../include/sfpi.h: In function 'void global()':
-../../include/sfpi.h:970:7: error: cannot write sfpu vector to memory
-  970 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
+../../include/sfpi.h:953:7: error: cannot write sfpu vector to memory
+  953 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../../include/sfpi.h: In function 'void pointeruse(sfpi::vFloat*)':
-../../include/sfpi.h:970:7: error: cannot write sfpu vector to memory
-  970 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
+../../include/sfpi.h:953:7: error: cannot write sfpu vector to memory
+  953 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ../../include/sfpi.h: In function 'void address()':
-../../include/sfpi.h:1040:7: error: cannot write sfpu vector to memory
- 1040 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
+../../include/sfpi.h:1023:7: error: cannot write sfpu vector to memory
+ 1023 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
 In function 'void unnit()':
 cc1plus: warning: 'vec.sfpi::vBase::v' is used uninitialized in this function [-Wuninitialized]
 In function 'void argcall(sfpi::vFloat)':
 cc1plus: error: invalid declaration for function 'argcall', sfpu types cannot be passed on the stack (missing sfpi_inline?)
 ../../include/sfpi.h: In function 'sfpi::vFloat ret()':
-../../include/sfpi.h:1040:7: error: cannot write sfpu vector to memory
- 1040 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
+../../include/sfpi.h:1023:7: error: cannot write sfpu vector to memory
+ 1023 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
 warn.cc: In function 'void setccnotinsidepushpop()':
 warn.cc:70:31: error: malformed program, sfpsetcc_v outside of pushc/popc
    70 |     __builtin_riscv_sfpsetcc_v(a, 12);
@@ -25,5 +25,5 @@ warn.cc:70:31: error: malformed program, sfpsetcc_v outside of pushc/popc
 In file included from test.h:11,
                  from warn.cc:5:
 ../../include/sfpi.h: In function '(static initializers for warn.cc)':
-../../include/sfpi.h:1040:7: error: cannot write sfpu vector to memory
- 1040 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
+../../include/sfpi.h:1023:7: error: cannot write sfpu vector to memory
+ 1023 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
