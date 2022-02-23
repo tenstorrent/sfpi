@@ -44,8 +44,8 @@ void test_add()
 
     dst_reg[13] = vConst0 + vConst1;
     dst_reg[14] = vConst1 + dst_reg[12];
-    dst_reg[15] = dst_reg[12] + vConst0p8737 + 0.5F;
-    dst_reg[16] = c + vConstPrgm0 - 0.5F;
+    dst_reg[15] = dst_reg[12] + vConst0p8373 + 0.5F;
+    dst_reg[16] = c + vConstFloatPrgm0 - 0.5F;
 
     dst_reg[17] = a + b + c;
     dst_reg[18] = a + b + c + dst_reg[0] + vConst1 + 5.0f + 0.5F;
@@ -76,8 +76,8 @@ void test_sub()
 
     dst_reg[13] = vConst0 - vConst1;
     dst_reg[14] = vConst1 - dst_reg[12];
-    dst_reg[15] = dst_reg[12] - vConstPrgm1 + 0.5F;
-    dst_reg[16] = c - vConstPrgm2 - 0.5F;
+    dst_reg[15] = dst_reg[12] - vConstFloatPrgm1 + 0.5F;
+    dst_reg[16] = c - vConstFloatPrgm2 - 0.5F;
 }
 
 void test_mul()
@@ -95,14 +95,13 @@ void test_mul()
     a *= dst_reg[0];
     a *= -dst_reg[0];
     a *= vConst1;
-
     dst_reg[11] = c;
     dst_reg[12] = a * b + 0.5F;
 
     dst_reg[13] = vConst0 * vConst1;
     dst_reg[14] = vConst1 * dst_reg[12];
-    dst_reg[15] = dst_reg[12] * vConstPrgm3 + 0.5F;
-    dst_reg[16] = c * vConstPrgm3 - 0.5F;
+    dst_reg[15] = dst_reg[12] * vConstFloatPrgm2 + 0.5F;
+    dst_reg[16] = c * vConstFloatPrgm1 - 0.5F;
 
     dst_reg[17] = a * b * c;
     dst_reg[18] = a * b * c * dst_reg[0] * vConst1 * 5.0f + 0.5F;
@@ -754,6 +753,47 @@ void test_lut()
 
     d = lut(d, a, b, c, 1);
     dst_reg[1] = lut_sign(d, a, b, c, -1);
+}
+
+void test_cast()
+{
+    vInt a = 1;
+    vFloat b;
+    b = int2float(a, 0);
+    dst_reg[0] = b;
+    b = int2float(a, 1);
+    dst_reg[1] = b;
+}
+
+void test_stochrnd()
+{
+    vInt a = 1;
+    vFloat b;
+    b = int2float(a, 0);
+    dst_reg[0] = b;
+    b = int2float(a, 1);
+    dst_reg[1] = b;
+}
+
+void many_regs()
+{
+    vFloat x0 = dst_reg[0];
+    vFloat x1 = dst_reg[1];
+    vFloat x2 = dst_reg[2];
+    vFloat x3 = dst_reg[3];
+    vFloat x4 = dst_reg[4];
+    vFloat x5 = dst_reg[5];
+    vFloat x6 = dst_reg[6];
+    vFloat x7 = dst_reg[7];
+
+    dst_reg[0] = x0;
+    dst_reg[1] = x1;
+    dst_reg[2] = x2;
+    dst_reg[3] = x3;
+    dst_reg[4] = x4;
+    dst_reg[5] = x5;
+    dst_reg[6] = x6;
+    dst_reg[7] = x7;
 }
 
 void stupid_example(unsigned int value)

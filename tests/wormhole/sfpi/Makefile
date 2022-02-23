@@ -73,8 +73,8 @@ rv32lto/%.elf: lto/%.o $(INCLUDES) | rv32lto
 	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
 
 resultsx86/%: x86/kernels | results
-	x86/kernels 14 b > results/kernels_int
-	x86/kernels 14 > results/kernels_float
+	x86/kernels 17 b > results/kernels_int
+	x86/kernels 17 > results/kernels_float
 
 test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS) $(OTHR)
 	diff results/kernels_float gold/kernels_float

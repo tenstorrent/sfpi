@@ -9,11 +9,9 @@
 // __builtin_*s.
 //
 // __rvtt_vec_t:
-//   This type implements the variables stored in LREGs.  The type stores 32
-//   bits in an unsigned int where the least signficant 19 bits contain the
-//   LREG data.  Operations are performed in native form on the host hardware
-//   (eg, fp32); conversions from the internal format to/from the native
-//   formats are done on access.
+//   This type implements the variables stored in LREGs.  On wormhole, the
+//   type stores 32 bits in an unsigned int/float which is determined by
+//   context at use time.
 //
 // External dependencies:
 //   This code will plug into the emulation environment which needs to model
@@ -30,9 +28,12 @@
 
 namespace sfpu {
 
-constexpr int SFPU_WIDTH_WORMHOLE  = 32;
-constexpr int SFPU_SIZE_WORMHOLE = 128;
-constexpr int SFPU_CC_DEPTH_WORMHOLE = 16;
+constexpr int SFPU_COLS = 8;
+constexpr int SFPU_ROWS = 4;
+constexpr int SFPU_WIDTH = SFPU_ROWS * SFPU_COLS;
+constexpr int SFPU_DREG_SIZE = 128;
+constexpr int SFPU_CC_DEPTH = 16;
+constexpr int SFPU_LREGS = 8;
 
 constexpr unsigned int BIT_15_MASK = 0x08000;
 constexpr unsigned int BIT_31_MASK = 0x80000000;
@@ -70,12 +71,6 @@ constexpr unsigned int FP32_EXP_SHIFT = 23;
 constexpr unsigned int FP32_MAN_SHIFT = 0;
 constexpr unsigned int FP32_MAN_WIDTH = 23;
 constexpr unsigned int FP32_EXP_BIAS = 127;
-
-
-constexpr int SFPU_WIDTH = SFPU_WIDTH_WORMHOLE;
-constexpr int SFPU_SIZE = SFPU_SIZE_WORMHOLE;
-constexpr int SFPU_CC_DEPTH = SFPU_CC_DEPTH_WORMHOLE;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 inline float fp16b_to_float(unsigned int i)
@@ -129,7 +124,7 @@ inline int float_to_int(float f)
 ///////////////////////////////////////////////////////////////////////////////
 class SFPUDReg {
  private:
-    unsigned int regs[SFPU_SIZE][SFPU_WIDTH];
+    unsigned int regs[SFPU_DREG_SIZE][SFPU_WIDTH];
 
  public:
     SFPUDReg();
@@ -261,7 +256,7 @@ inline float __rvtt_vec_t::tf32_to_float(const unsigned int i)
 }
 
 namespace sfpu {
-extern __rvtt_vec_t sfpu_lreg[4];
+extern __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -292,6 +287,7 @@ extern __rvtt_vec_t sfpu_rvtt_sfpsetman_v(const __rvtt_vec_t& dst, const __rvtt_
 extern __rvtt_vec_t sfpu_rvtt_sfpabs(const __rvtt_vec_t& v, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpand(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpor(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
+extern __rvtt_vec_t sfpu_rvtt_sfpxor(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpnot(const __rvtt_vec_t& v);
 extern __rvtt_vec_t sfpu_rvtt_sfpmuli(const __rvtt_vec_t& v, unsigned short imm, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpaddi(const __rvtt_vec_t& v, unsigned short imm, unsigned int mod1);
@@ -305,5 +301,36 @@ extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
-extern float lut_to_fp32(unsigned short v);
 extern __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0, const __rvtt_vec_t& l1, const __rvtt_vec_t& l2, const __rvtt_vec_t& dst, unsigned short mod0);
+extern __rvtt_vec_t sfpu_rvtt_sfplutfp32_3r(const __rvtt_vec_t& l0,
+                                            const __rvtt_vec_t& l1,
+                                            const __rvtt_vec_t& l2,
+                                            const __rvtt_vec_t& dst,
+                                            unsigned short mod0);
+extern __rvtt_vec_t sfpu_rvtt_sfplutfp32_6r(const __rvtt_vec_t& l0,
+                                            const __rvtt_vec_t& l1,
+                                            const __rvtt_vec_t& l2,
+                                            const __rvtt_vec_t& l4,
+                                            const __rvtt_vec_t& l5,
+                                            const __rvtt_vec_t& l6,
+                                            const __rvtt_vec_t& dst,
+                                            unsigned short mod0);
+extern __rvtt_vec_t sfpu_rvtt_sfpcast(const __rvtt_vec_t& src, unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpstochrnd_i(const unsigned int mode,
+                                            const unsigned int imm8, const __rvtt_vec_t& srcc,
+                                            unsigned int mod1);
+extern __rvtt_vec_t sfpu_rvtt_sfpstochrnd_v(const unsigned int mode,
+                                            const __rvtt_vec_t& srcb, const __rvtt_vec_t& srcc,
+                                            unsigned int mod1);
+extern void sfpu_rvtt_sfptransp(__rvtt_vec_t& l0, __rvtt_vec_t& l1, __rvtt_vec_t& l2, __rvtt_vec_t& l3);
+extern __rvtt_vec_t sfpu_rvtt_sfpshft2_i(const __rvtt_vec_t& dst, int shift);
+extern __rvtt_vec_t sfpu_rvtt_sfpshft2_v(const __rvtt_vec_t& dst, const __rvtt_vec_t&src);
+extern void sfpu_rvtt_sfpshft2_g(__rvtt_vec_t& l0, __rvtt_vec_t& l1,
+                                 __rvtt_vec_t& l2, __rvtt_vec_t& l3,
+                                 int mod);
+
+extern void sfpu_rvtt_sfpshft2_ge(const __rvtt_vec_t& src,
+                                  __rvtt_vec_t& l0, __rvtt_vec_t& l1,
+                                  __rvtt_vec_t& l2, __rvtt_vec_t& l3);
+extern __rvtt_vec_t sfpu_rvtt_sfpshft2_e(const __rvtt_vec_t& src, int mod);
+extern void sfpu_rvtt_sfpswap(__rvtt_vec_t& dst, __rvtt_vec_t& src, int mod);

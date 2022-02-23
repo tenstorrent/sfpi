@@ -204,8 +204,8 @@ void replace_shft()
 
 void replace_creg()
 {
-    vInt x = vConst1;
-    vInt y = vConst0;
+    vInt x = vConstIntPrgm1;
+    vInt y = vConstIntPrgm2;
     dst_reg[0] = x << 1;
     dst_reg[0] = x & y;
     dst_reg[0] = y | x;

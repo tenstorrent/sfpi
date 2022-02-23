@@ -225,24 +225,13 @@ sfpi_inline void vIntBase::operator|=(const vType b)
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator^(const vType b) const
 {
-    __rvtt_vec_t tmp1, tmp2, ntmp2;
-
-    tmp1 = __builtin_rvtt_sfpor(v, b.get());
-    tmp2 = __builtin_rvtt_sfpand(v, b.get());
-    ntmp2 = __builtin_rvtt_sfpnot(tmp2);
-
-    return __builtin_rvtt_sfpand(tmp1, ntmp2);
+    return __builtin_rvtt_sfpxor(v, b.get());
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator^=(const vType b)
 {
-    __rvtt_vec_t tmp1;
-
-    tmp1 = __builtin_rvtt_sfpor(v, b.get());
-    v = __builtin_rvtt_sfpand(v, b.get());
-    v = __builtin_rvtt_sfpnot(v);
-    v = __builtin_rvtt_sfpand(v, tmp1);
+    v = __builtin_rvtt_sfpxor(v, b.get());
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>

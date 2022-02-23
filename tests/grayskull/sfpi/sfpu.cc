@@ -7,7 +7,7 @@ namespace sfpu {
 
 SFPUDReg sfpu_dreg;
 SFPUCC sfpu_cc;
-__rvtt_vec_t sfpu_lreg[4];
+__rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 
 };
 
@@ -22,7 +22,7 @@ static unsigned int cmp_ex_to_setcc_mod1_map[] = {
 ///////////////////////////////////////////////////////////////////////////////
 SFPUDReg::SFPUDReg()
 { 
-    for (int j = 0; j < SFPU_SIZE; j++) {
+    for (int j = 0; j < SFPU_DREG_SIZE; j++) {
         for (int i = 0; i < SFPU_WIDTH; i++) {
             regs[j][i] = 0xDEAD;
         }

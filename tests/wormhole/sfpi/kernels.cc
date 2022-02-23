@@ -62,6 +62,30 @@ sfpi_inline vCond test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat v
     }
 }
 
+template <class vType>
+sfpi_inline vType reduce_bool4(vType a, vType b, vType c, vType d, int reference)
+{
+    vType result1 = 0;
+    v_if (a == reference && b == reference) {
+        result1 = 1;
+    }
+    v_endif;
+
+    vType result2 = 0;
+    v_if (c == reference && d == reference) {
+        result2 = 1;
+    }
+    v_endif;
+
+    vUInt result = 0;
+    v_if (result1 == 1 && result2 == 1) {
+        result = 1;
+    }
+    v_endif;
+
+    return result;
+}
+
 sfpi_test_noinline void test1()
 {
     // Test SFPLOAD, SFPSTORE
@@ -917,6 +941,7 @@ sfpi_test_noinline void test7()
 
 sfpi_test_noinline void test8()
 {
+#if 0
     // SFPAND, SFPOR, SFPNOT, SFPABS
     // Atypical usage of conditionals
     // More conditionals (short v compares)
@@ -1118,6 +1143,30 @@ sfpi_test_noinline void test8()
     }
     v_endif;
 
+    v_if(dst_reg[0] == 29.0F) {
+        vInt a = 0xA5A5;
+        vInt b = 0xFF00;
+        vInt c = a ^ b;
+        set_expected_result(8, 32.0F, 0x5AA5, c);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 30.0F) {
+        vUInt a = 0xA5A5;
+        vUInt b = 0xFF00;
+        vUInt c = a ^ b;
+        set_expected_result(8, 64.0F, 0x5AA5, c);
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 31.0F) {
+        vInt a = 0xA5A5;
+        vInt b = 0xFF00;
+        b ^= a;
+        set_expected_result(8, 32.0F, 0x5AA5, b);
+    }
+    v_endif;
+
     // [0] = 0
     // [1] = 16.0
     // [2] = 16.0
@@ -1147,7 +1196,10 @@ sfpi_test_noinline void test8()
     // [26] = 1712.0
     // [27] = 176.0
     // [28] = 1872.0
-
+    // [29] = 32.0
+    // [30] = 64.0
+    // [31] = 32.0
+#endif
     copy_result_to_dreg0(8);
 }
 
@@ -1367,58 +1419,200 @@ sfpi_test_noinline void test11()
     }
     v_endif;
 
-    // Clear out the LUT, re-load it w/ ASM instructions, the pull it into
-    // variables for the SFPLUT
-    l0a = 0;
-    l1a = 0;
+    {
+        // Clear out the LUT, re-load it w/ ASM instructions, the pull it into
+        // variables for the SFPLUT
+        l0a = 0;
+        l1a = 0;
 
-    // These are fakedout w/ emule
-    TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
-    TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
-    vUInt l0b, l1b;
-    LRegAssigner lra;
-    l0b = lra.assign(LRegs::LReg0);
-    l1b = lra.assign(LRegs::LReg0);
+        // These are fakedout w/ emule
+        TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
+        TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
+        vUInt l0b, l1b;
+        LRegAssigner lra;
+        l0b = lra.assign(LRegs::LReg0);
+        l1b = lra.assign(LRegs::LReg0);
 
-    v_if(dst_reg[0] == 7.0F) {
-        // Use L0
-        vFloat h = -0.3F;
-        vUInt l2b = 0x9000;
-        h = lut_sign(h, l0b, l1b, l2b);
-        dst_reg[11] = h;
-    } v_elseif(dst_reg[0] == 8.0F) {
-        // Use L0
-        vFloat h = -0.3F;
-        vUInt l2b = 0x9000;
-        h = lut(h, l0b, l1b, l2b);
-        dst_reg[11] = h;
-    } v_elseif(dst_reg[0] == 9.0F) {
-        // Use L0
-        vFloat h = -0.3F;
-        vUInt l2b = 0x9000;
-        h = lut_sign(h, l0b, l1b, l2b, -1);
-        dst_reg[11] = h;
-    } v_elseif(dst_reg[0] == 10.0F) {
-        // Use L0
-        vFloat h = -0.3F;
-        vUInt l2b = 0x9000;
-        h = lut(h, l0b, l1b, l2b, 1);
-        dst_reg[11] = h;
-    } v_elseif(dst_reg[0] == 11.0F) {
-        // Use L1
-        vFloat h = 1.0F;
-        vUInt l2b = 0x9000;
-        h = lut(h, l0b, l1b, l2b, 1);
-        dst_reg[11] = h;
-    } v_elseif(dst_reg[0] == 12.0F) {
-        // Use L2
-        vFloat h = 4.0F;
-        vUInt l2b = 0x9000;
-        h = lut_sign(h, l0b, l1b, l2b);
-        dst_reg[11] = h;
+        v_if(dst_reg[0] == 7.0F) {
+            // Use L0
+            vFloat h = -0.3F;
+            vUInt l2b = 0x9000;
+            h = lut_sign(h, l0b, l1b, l2b);
+            dst_reg[11] = h;
+        } v_elseif(dst_reg[0] == 8.0F) {
+            // Use L0
+            vFloat h = -0.3F;
+            vUInt l2b = 0x9000;
+            h = lut(h, l0b, l1b, l2b);
+            dst_reg[11] = h;
+        } v_elseif(dst_reg[0] == 9.0F) {
+            // Use L0
+            vFloat h = -0.3F;
+            vUInt l2b = 0x9000;
+            h = lut_sign(h, l0b, l1b, l2b, -1);
+            dst_reg[11] = h;
+        } v_elseif(dst_reg[0] == 10.0F) {
+            // Use L0
+            vFloat h = -0.3F;
+            vUInt l2b = 0x9000;
+            h = lut(h, l0b, l1b, l2b, 1);
+            dst_reg[11] = h;
+        } v_elseif(dst_reg[0] == 11.0F) {
+            // Use L1
+            vFloat h = 1.0F;
+            vUInt l2b = 0x9000;
+            h = lut(h, l0b, l1b, l2b, 1);
+            dst_reg[11] = h;
+        } v_elseif(dst_reg[0] == 12.0F) {
+            // Use L2
+            vFloat h = 4.0F;
+            vUInt l2b = 0x9000;
+            h = lut_sign(h, l0b, l1b, l2b);
+            dst_reg[11] = h;
+        }
+        v_endif;
     }
-    v_endif;
 
+#if 0
+    // lut2 3 entry 16 bit
+    {
+        vUInt l0 = (s2vFloat16(2.0f).get() << 16) | s2vFloat16(3.0f).get();
+        vUInt l1 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(5.0f).get();
+        vUInt l2 = (s2vFloat16(6.0f).get() << 16) | s2vFloat16(7.0f).get();
+        v_if(dst_reg[0] == 13.0f) {
+            vFloat h = -0.25f;
+            h = lut2(h, l0, l1, l2);
+            dst_reg[11] = h; // .25 * 2 + 3 = -3.5 (sign retain)
+        } v_elseif(dst_reg[0] == 14.0f) {
+            vFloat h = 0.75f;
+            h = lut2(h, l0, l1, l2);
+            dst_reg[11] = h; // .75 * 4 + 5 = 8
+        } v_elseif(dst_reg[0] == 15.0f) {
+            vFloat h = -1.25f;
+            h = lut2(h, l0, l1, l2);
+            dst_reg[11] = h; // 1.25 * 6 + 7 = 7.5 + 7 = -14.5 (sign retain)
+        } v_elseif(dst_reg[0] == 16.0f) {
+            vFloat h = -0.25f;
+            h = lut2_sign(h, l0, l1, l2);
+            dst_reg[11] = h; // .25 * 2 + 3 = 3.5 (sign update)
+        }
+        v_endif;
+    }
+
+    // lut2 3 entry 32 bit
+    {
+        vFloat a0 = 2.0f;
+        vFloat a1 = 4.0f;
+        vFloat a2 = 6.0f;
+        vFloat b0 = 3.0f;
+        vFloat b1 = 5.0f;
+        vFloat b2 = 7.0f;
+        v_if(dst_reg[0] == 17.0f) {
+            vFloat h = -0.25f;
+            h = lut2(h, a0, a1, a2, b0, b1, b2);
+            dst_reg[11] = h; // .25 * 2 + 3 = -3.5 (sign retain)
+        } v_elseif(dst_reg[0] == 18.0f) {
+            vFloat h = 1.25f;
+            h = lut2(h, a0, a1, a2, b0, b1, b2);
+            dst_reg[11] = h; // 1.25 * 4 + 5 = 10
+        } v_elseif(dst_reg[0] == 19.0f) {
+            vFloat h = -3.0f;
+            h = lut2(h, a0, a1, a2, b0, b1, b2);
+            dst_reg[11] = h; // 3 * 6 + 7 = 18 + 7 = -25.0 (sign retain)
+        } v_elseif(dst_reg[0] == 20.0f) {
+            vFloat h = -0.25f;
+            h = lut2_sign(h, a0, a1, a2, b0, b1, b2);
+            dst_reg[11] = h; // .25 * 2 + 3 = 3.5 (sign update)
+        }
+        v_endif;
+    }
+
+    // lut2 6 entry 16 bit mode 1
+    {
+        vUInt a01 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(2.0f).get();
+        vUInt a23 = (s2vFloat16(8.0f).get() << 16) | s2vFloat16(6.0f).get();;
+        vUInt a34 = (s2vFloat16(12.0f).get() << 16) | s2vFloat16(10.0f).get();
+        vUInt b01 = (s2vFloat16(5.0f).get() << 16) | s2vFloat16(3.0f).get();
+        vUInt b23 = (s2vFloat16(9.0f).get() << 16) | s2vFloat16(7.0f).get();
+        vUInt b34 = (s2vFloat16(13.0f).get() << 16) | s2vFloat16(11.0f).get();
+        v_if(dst_reg[0] == 21.0f) {
+            vFloat h = -0.25f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // .25 * 2 + 3 = -3.5 (sign retain)
+        } v_elseif(dst_reg[0] == 22.0f) {
+            vFloat h = 0.75f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // .75 * 4 + 5 = 8
+        } v_elseif(dst_reg[0] == 23.0f) {
+            vFloat h = -1.25f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // 1.25 * 6 + 7 = 7.5 + 7 = -14.5 (sign retain)
+        } v_elseif(dst_reg[0] == 24.0f) {
+            vFloat h = -1.75f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // 1.75 * 8 + 9 = 14 + 9 = -23 (sign retain)
+        } v_elseif(dst_reg[0] == 25.0f) {
+            vFloat h = 2.5f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // 2.5 * 10 + 11 = 25 + 11 = 36.0
+        } v_elseif(dst_reg[0] == 26.0f) {
+            vFloat h = 3.5f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // 3.5 * 12 + 13 = 42 + 13 = 55.0
+        } v_elseif(dst_reg[0] == 27.0f) {
+            vFloat h = -0.25f;
+            h = lut2_sign(h, a01, a23, a34, b01, b23, b34);
+            dst_reg[11] = h; // .25 * 2 + 3 = 3.5 (sign update)
+        }
+        v_endif;
+    }
+
+    // lut2 6 entry 16 bit mode 2
+    {
+        vUInt a01 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(2.0f).get();
+        vUInt a23 = (s2vFloat16(8.0f).get() << 16) | s2vFloat16(6.0f).get();;
+        vUInt a34 = (s2vFloat16(12.0f).get() << 16) | s2vFloat16(10.0f).get();
+        vUInt b01 = (s2vFloat16(5.0f).get() << 16) | s2vFloat16(3.0f).get();
+        vUInt b23 = (s2vFloat16(9.0f).get() << 16) | s2vFloat16(7.0f).get();
+        vUInt b34 = (s2vFloat16(13.0f).get() << 16) | s2vFloat16(11.0f).get();
+
+        // Can't fit all the tests into 32 elements, skipping a few that are
+        // the most redundant to prior tests here
+#if 0
+        v_if(dst_reg[0] == 28.0f) {
+            vFloat h = -0.25f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // .25 * 2 + 3 = -3.5 (sign retain)
+        } v_elseif(dst_reg[0] == 29.0f) {
+            vFloat h = 0.75f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // .75 * 4 + 5 = 8
+        } v_elseif(dst_reg[0] == 30.0f) {
+            vFloat h = -1.25f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // 1.25 * 6 + 7 = 7.5 + 7 = -14.5 (sign retain)
+        }
+#endif
+        v_if(dst_reg[0] == 28.0f) {
+            vFloat h = -1.75f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // 1.75 * 8 + 9 = 14 + 9 = -23 (sign retain)
+        } v_elseif(dst_reg[0] == 29.0f) {
+            vFloat h = 3.5f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // 3.5 * 10 + 11 = 35 + 11 = 46.0
+        } v_elseif(dst_reg[0] == 30.0f) {
+            vFloat h = 4.5f;
+            h = lut2(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // 4.5 * 12 + 13 = 54 + 13 = 67.0
+        } v_elseif(dst_reg[0] == 31.0f) {
+            vFloat h = -0.25f;
+            h = lut2_sign(h, a01, a23, a34, b01, b23, b34, 2);
+            dst_reg[11] = h; // .25 * 2 + 3 = 3.5 (sign update)
+        }
+        v_endif;
+    }
+#endif
     // [1] = 0.125
     // [2] = -0.125
     // [3] = -0.375
@@ -1431,6 +1625,26 @@ sfpi_test_noinline void test11()
     // [10] = -0.75
     // [11] = 0.75
     // [12] = -1.0
+    // [13] = -3.5
+    // [14] = 8.0
+    // [15] = -14.5
+    // [16] = 3.5
+    // [17] = -3.5
+    // [18] = 10.0
+    // [19] = -25.0
+    // [20] = 3.5
+    // [21] = -3.5
+    // [22] = 8.0
+    // [23] = -14.5
+    // [24] = -23.0
+    // [25] = 36.0
+    // [26] = 55.0
+    // [27] = 3.5
+    // [28] = -23.0
+    // [29] = 46.0
+    // [30] = 67.0
+    // [31] = 3.5
+
     copy_result_to_dreg0(11);
 }
 
@@ -2274,6 +2488,276 @@ sfpi_test_noinline void test14(int imm)
     copy_result_to_dreg0(14);
 }
 
+sfpi_test_noinline void test15()
+{
+#if 0
+    // SFPTRANSP, SFPSHFT2
+
+    dst_reg[15] = -dst_reg[0];
+
+    {
+        vUInt a = vConstTileId + 0x100;
+        vUInt b = vConstTileId + 0x200;
+        vUInt c = vConstTileId + 0x300;
+        vUInt d = vConstTileId + 0x400;
+
+        subvec_transp(a, b, c, d);
+
+        vUInt base = vConstTileId >> 4;
+        base <<= 8;
+        base += 0x100;
+
+        // Load expected value, subtract actual value. result is 0 if correct
+        vUInt eff = 0xF;
+        vUInt cmpa = base | vConstTileId & eff;
+        cmpa -= a;
+        vUInt cmpb = base | ((vConstTileId & eff) + 0x10);
+        cmpb -= b;
+        vUInt cmpc = base | ((vConstTileId & eff) + 0x20);
+        cmpc -= c;
+        vUInt cmpd = base | ((vConstTileId & eff) + 0x30);
+        cmpd -= d;
+
+        // The above completes this test, now to make the results reportable
+        // in less than 4 full width vectors
+
+        // Reduce across a, b, c, d
+        vUInt result = reduce_bool4(cmpa, cmpb, cmpc, cmpd, 0);
+
+        // We care about xyz
+        // Use the thing we're testing to test the result by putting xyz result
+        // 4 8-wide subvectors in 4 variables
+        subvec_transp(result, cmpb, cmpc, cmpd);
+
+        // Reduce result (only care about first subbvec, rest along for the ride)
+        vUInt final = reduce_bool4(result, cmpb, cmpc, cmpd, 1);
+
+        v_if (dst_reg[0] < 8.0F) {
+            dst_reg[15] = final;
+        }
+        v_endif;
+    }
+
+    {
+        // subvec_shflror1
+        vUInt src = vConstTileId;
+        vUInt dst = subvec_shflror1(src);
+
+        vUInt cmpdst = vConstTileId - 2;
+        // first element in the subvec
+        v_if ((vConstTileId & 0xF) == 0) {
+            cmpdst += 0x10;
+        }
+        v_endif;
+        dst -= cmpdst;
+
+        vUInt tmp1 = 1;
+        vUInt tmp2 = 1;
+        vUInt tmp3 = 1;
+        subvec_transp(tmp1, dst, tmp2, tmp3);
+
+        vUInt final = reduce_bool4(dst, tmp1, tmp2, tmp3, 0);
+        v_if (dst_reg[0] >= 8.0F && dst_reg[0] < 16.0F) {
+            dst_reg[15] = final;
+        }
+        v_endif;
+    }
+
+    {
+        // subvec_shflshr1
+        vUInt src = vConstTileId;
+        vUInt dst = subvec_shflshr1(src);
+
+        vUInt cmpdst = vConstTileId - 2;
+        // first element in the subvec
+        v_if ((vConstTileId & 0xF) == 0) {
+            cmpdst = 0;
+        }
+        v_endif;
+        dst -= cmpdst;
+
+        vUInt tmp1 = 1;
+        vUInt tmp2 = 1;
+        vUInt tmp3 = 1;
+        subvec_transp(tmp1, tmp2, dst, tmp3);
+
+        vUInt final = reduce_bool4(tmp1, dst, tmp2, tmp3, 0);
+        v_if (dst_reg[0] >= 16.0F && dst_reg[0] < 24.0F) {
+            dst_reg[15] = final;
+        }
+        v_endif;
+    }
+
+#if 0
+    // Decided not to implement these at this time.  These insns are only
+    // interesting if/when we implement LOADMACRO
+    v_if (dst_reg[0] == 16.0F) {
+        // Wrapper doesn't emit shft2 bit shift, test directly
+        vUInt a = 0x005A;
+
+        a.get() = __builtin_rvtt_sfpshft2_i(a.get(), 4);
+        set_expected_result(16, 10.0F, 0x05A0, a);
+    }
+    v_endif;
+
+    v_if (dst_reg[0] == 17.0F) {
+        // Wrapper doesn't emit shft2 bit shift, test directly
+        vUInt a = 0x005A;
+        vUInt b = 4;
+
+        a.get() = __builtin_rvtt_sfpshft2_v(a.get(), b.get());
+        set_expected_result(16, 20.0F, 0x05A0, a);
+    }
+    v_endif;
+#endif
+
+    // [0..31] = 1
+    copy_result_to_dreg0(15);
+}
+
+void test16()
+{
+    // SFPSWAP, SFPCAST, SFPSTOCHRND
+    dst_reg[16] = -dst_reg[0];
+
+    // Tests are all 2 results per row, allowing 4 independent tests only 2 of
+    // which are used
+    vInt x = 2;
+    vInt y = 3;
+
+    v_if (dst_reg[0] < 8.0F) {
+        vec_swap(x, y);
+        v_if (dst_reg[0] >= 4.0f) {
+            vec_min_max(x, y);
+        }
+        v_endif;
+
+        v_if (((vConstTileId >> 1) & vInt(1)) == 0) {
+            dst_reg[16] = x;
+        } v_else {
+            dst_reg[16] = y;
+        }
+        v_endif;
+    }
+    v_endif;
+    // [0] = 3
+    // [1] = 2
+    // [2] = 3
+    // [3] = 2
+    // [4] = 2
+    // [5] = 3
+    // [6] = 2
+    // [7] = 3
+
+    // The tests above leave open 4..7, 12..15, etc
+    v_if (dst_reg[0] == 8.0F) {
+        dst_reg[16] = int2float(0xABBAAB);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 9.0F) {
+        dst_reg[16] = int2float(0xABBAAB, 0);
+    }
+    v_endif;
+
+    v_if (dst_reg[0] == 10.0F) {
+        dst_reg[16] = float2fp16a(1.32332);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 11.0F) {
+        dst_reg[16] = float2fp16b(1.32332);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 12.0F) {
+        dst_reg[16] = float2uint8(23.3);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 13.0F) {
+        dst_reg[16] = float2int8(23.3);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 14.0F) {
+        vUInt descale = 8;
+        dst_reg[16] = int322uint8(65533, descale);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 15.0F) {
+        dst_reg[16] = int322uint8(65533, 8);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 16.0F) {
+        vUInt descale = 8;
+        dst_reg[16] = int322int8(65533, descale);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 17.0F) {
+        dst_reg[16] = int322int8(65533, 8);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 18.0F) {
+        dst_reg[16] = float2int16(32832.0f);
+    }
+    v_endif;
+    v_if (dst_reg[0] == 19.0F) {
+        dst_reg[16] = float2uint16(32832.0f);
+    }
+    v_endif;
+
+    copy_result_to_dreg0(16);
+}
+
+
+void test17()
+{
+#if 0
+    // more SFPSWAP
+    dst_reg[17] = -dst_reg[0];
+
+    // Test sign-magnitude for ints
+    v_if (dst_reg[0] == 2.0F) {
+        vUInt x = -1;
+        vUInt y = -2;
+        vec_min_max(x, y);
+        dst_reg[17] = x;
+    }
+    v_endif;
+    // [2] = -1
+
+    v_if (dst_reg[0] == 3.0F) {
+        vFloat x = -1.0F;
+        vFloat y = -2.0F;
+        vec_min_max(x, y);
+        dst_reg[17] = x;
+    }
+    v_endif;
+    // [3] = -2.0
+
+    v_if (dst_reg[0] == 4.0F) {
+        vFloat x = 1.0F;
+        vFloat y = 2.0F;
+        vec_min_max(x, y);
+        dst_reg[17] = x;
+    }
+    v_endif;
+    // [4] = 1.0
+
+    v_if (dst_reg[0] == 5.0F || dst_reg[0] == 6.0F) {
+        vFloat x = -1.0F;
+        vFloat y = 1.0F;
+
+        v_if (dst_reg[0] == 5.0F) {
+            set_expected_result(17, 20.0F, 2, lz_nosgn(x));
+        } v_else {
+            set_expected_result(17, 20.0F, 2, lz_nosgn(y));
+        }
+        v_endif;
+    }
+    v_endif;
+    // [5] = 20.0F
+    // [6] = 20.0F
+
+    copy_result_to_dreg0(17);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // These tests are designed to be incremental so that if a test fails the
 // earlier tests should be examined/fixed prior to the latter tests.
@@ -2360,6 +2844,21 @@ void test_kernel(unsigned int row, bool exact)
         printf("Testing 14\n");
         test14(param_global);
     }
+
+    if ((!exact && row >= 15) || row == 15) {
+        printf("Testing 15\n");
+        test15();
+    }
+
+    if ((!exact && row >= 16) || row == 16) {
+        printf("Testing 16\n");
+        test16();
+    }
+
+    if ((!exact && row >= 17) || row == 17) {
+        printf("Testing 17\n");
+        test17();
+    }
 }
 
 int main(int argc, char* argv[])
@@ -2374,7 +2873,7 @@ int main(int argc, char* argv[])
         exact = true;
     }
 
-    if (row > 15) {
+    if (row > 17) {
         fprintf(stderr, "Row too large\n");
         exit(-1);
     }

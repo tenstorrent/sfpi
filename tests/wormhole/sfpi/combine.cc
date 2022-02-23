@@ -1162,6 +1162,7 @@ void muli_yes_caveat()
 
 void add_plus_half_yes1()
 {
+#if 0
     vFloat a = dst_reg[0];
     vFloat b = dst_reg[1];
     vFloat c = dst_reg[2];
@@ -1182,6 +1183,7 @@ void add_plus_half_yes1()
     dst_reg[8] = a * 1.0f + 0.5f; // becomes 2 loadis and a mad
     a = dst_reg[0];
     dst_reg[9] = a * 1.0f - 0.5f; // becomes 2 loadis and a mad
+#endif
 }
 
 void add_plus_half_yes2()

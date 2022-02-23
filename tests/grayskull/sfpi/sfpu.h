@@ -31,12 +31,9 @@
 namespace sfpu {
 
 constexpr int SFPU_WIDTH_GRAYSKULL = 64;
-constexpr int SFPU_SIZE_GRAYSKULL = 128;
+constexpr int SFPU_DREG_SIZE_GRAYSKULL = 128;
 constexpr int SFPU_CC_DEPTH_GRAYSKULL = 7;    // Grayskull is 8 deep w/ a bug limiting it to 7
-
-constexpr int SFPU_WIDTH_WORMHOLE  = 32;
-constexpr int SFPU_SIZE_WORMHOLE = 128;
-constexpr int SFPU_CC_DEPTH_WORMHOLE = 16;
+constexpr int SFPU_LREGS_GRAYSKULL = 4;
 
 constexpr unsigned int BIT_15_MASK = 0x08000;
 constexpr unsigned int BIT_18_MASK = 0x40000;
@@ -71,21 +68,16 @@ constexpr unsigned int FP32_SGN_MASK = 0x80000000;
 constexpr unsigned int FP32_MAN_WIDTH = 23;
 
 
-#ifdef ARCH_GRAYSKULL
 constexpr int SFPU_WIDTH = SFPU_WIDTH_GRAYSKULL;
-constexpr int SFPU_SIZE = SFPU_SIZE_GRAYSKULL;
+constexpr int SFPU_DREG_SIZE = SFPU_DREG_SIZE_GRAYSKULL;
 constexpr int SFPU_CC_DEPTH = SFPU_CC_DEPTH_GRAYSKULL;
-#elif ARCH_WORMHOLE
-constexpr int SFPU_WIDTH = SFPU_WIDTH_WORMHOLE;
-constexpr int SFPU_SIZE = SFPU_SIZE_WORMHOLE;
-constexpr int SFPU_CC_DEPTH = SFPU_CC_DEPTH_WORMHOLE;
-#endif
+constexpr int SFPU_LREGS = SFPU_LREGS_GRAYSKULL;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 class SFPUDReg {
  private:
-    unsigned short regs[SFPU_SIZE][SFPU_WIDTH];
+    unsigned short regs[SFPU_DREG_SIZE][SFPU_WIDTH];
 
  public:
     SFPUDReg();
@@ -245,7 +237,7 @@ inline float __rvtt_vec_t::tf32_to_float(const unsigned int i)
 }
 
 namespace sfpu {
-extern __rvtt_vec_t sfpu_lreg[4];
+extern __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -289,5 +281,4 @@ extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt
 extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
-extern float lut_to_fp32(unsigned short v);
 extern __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0, const __rvtt_vec_t& l1, const __rvtt_vec_t& l2, const __rvtt_vec_t& dst, unsigned short mod0);

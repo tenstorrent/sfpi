@@ -48,6 +48,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpabs(src, mod1) sfpu_rvtt_sfpabs(src, mod1)
 #define __builtin_rvtt_sfpand(dst, src) sfpu_rvtt_sfpand(dst, src)
 #define __builtin_rvtt_sfpor(dst, src) sfpu_rvtt_sfpor(dst, src)
+#define __builtin_rvtt_sfpxor(dst, src) sfpu_rvtt_sfpxor(dst, src)
 #define __builtin_rvtt_sfpnot(src) sfpu_rvtt_sfpnot(src)
 
 #define __builtin_rvtt_sfpmuli(dst, imm12, mod1) sfpu_rvtt_sfpmuli(dst, imm12, mod1)
@@ -69,6 +70,22 @@ namespace sfpi {
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) sfpu_rvtt_sfpsetsgn_v(dst, src)
 
 #define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod0) sfpu_rvtt_sfplut(l0, l1, l2, dst, mod0)
+#define __builtin_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0) sfpu_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0)
+#define __builtin_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0) sfpu_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0)
+
+#define __builtin_rvtt_sfpcast(src, mod1) sfpu_rvtt_sfpcast(src, mod1)
+#define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) sfpu_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1)
+#define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) sfpu_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1)
+
+#define __builtin_rvtt_sfptransp(l0, l1, l2, l3) sfpu_rvtt_sfptransp(l0, l1, l2, l3)
+
+#define __builtin_rvtt_sfpshft2_i(dst, imm) sfpu_rvtt_sfpshft2_i(dst, imm)
+#define __builtin_rvtt_sfpshft2_v(dst, src) sfpu_rvtt_sfpshft2_v(dst, src)
+#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod) sfpu_rvtt_sfpshft2_g(l0, l1, l2, l3, mod)
+#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3) sfpu_rvtt_sfpshft2_ge(src, l0, l1, l2, l3)
+#define __builtin_rvtt_sfpshft2_e(src, mod) sfpu_rvtt_sfpshft2_e(src, mod)
+
+#define __builtin_rvtt_sfpswap(dst, src, mod) sfpu_rvtt_sfpswap(dst, src, mod)
 
 #else // COMPILE_FOR_EMULE
 
@@ -126,6 +143,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpabs(src, mod1) __builtin_rvtt_wh_sfpabs(src, mod1)
 #define __builtin_rvtt_sfpand(dst, src) __builtin_rvtt_wh_sfpand(dst, src)
 #define __builtin_rvtt_sfpor(dst, src) __builtin_rvtt_wh_sfpor(dst, src)
+#define __builtin_rvtt_sfpxor(dst, src) __builtin_rvtt_wh_sfpxor(dst, src)
 #define __builtin_rvtt_sfpnot(src) __builtin_rvtt_wh_sfpnot(src)
 
 #define __builtin_rvtt_sfpmuli(dst, imm12, mod1) __builtin_rvtt_wh_sfpmuli((void *)ckernel::instrn_buffer, dst, imm12, mod1)
@@ -146,7 +164,35 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_rvtt_wh_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) __builtin_rvtt_wh_sfpsetsgn_v(dst, src)
 
-#define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod1) __builtin_rvtt_wh_sfplut(l0, l1, l2, dst, mod1)
+#define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod0) __builtin_rvtt_wh_sfplut(l0, l1, l2, dst, mod0)
+#define __builtin_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0) __builtin_rvtt_wh_sfplutfp32_3r(l0, l1, l2, l3, mod0)
+#define __builtin_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0) __builtin_rvtt_wh_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0)
+
+#define __builtin_rvtt_sfpcast(src, mod1) __builtin_rvtt_wh_sfpcast(src, mod1)
+#define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_i((void *)ckernel::instrn_buffer, mode, imm8, srcc, mod1)
+#define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_v(mode, srcb, srcc, mod1)
+
+#define __builtin_rvtt_sfptransp(l0, l1, l2, l3)                \
+    asm("SFPTRANSP %0, %1, %2, %3"                              \
+        : "+Q0" (l0), "+Q1" (l1), "+Q2" (l2), "+Q3" (l3)        \
+        :)
+
+#define __builtin_rvtt_sfpshft2_i(dst, imm) __builtin_rvtt_wh_sfpshft2_i(dst, imm)
+#define __builtin_rvtt_sfpshft2_v(dst, src) __builtin_rvtt_wh_sfpshft2_v(dst, src)
+#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod)                  \
+    asm("SFPSHFT2 0, L0, L0, %[q0], %[q1], %[q2], %[q3], %[modp]"       \
+        : [q0] "+Q0" (l0), [q1] "+Q1" (l1), [q2] "+Q2" (l2), [q3] "+Q3" (l3) \
+        : [modp] "i" (mod))
+#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3)                 \
+    asm("SFPSHFT2 0, %[lsrc], L0, %[q0], %[q1], %[q2], %[q3], %[mod]"    \
+        : [q0] "+Q0" (l0), [q1] "+Q1" (l1), [q2] "+Q2" (l2), [q3] "+Q3" (l3) \
+        : [lsrc] "x" (src), [mod] "i" (SFPSHFT2_MOD1_SUBVEC_SHFLROR1_AND_COPY4))
+#define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_wh_sfpshft2_e(src, mod)
+
+#define __builtin_rvtt_sfpswap(dst, src, mod)       \
+    asm("SFPSWAP %[d] %[s] %[m]"                    \
+        : [d] "+x" (dst), [s] "+x" (src)            \
+        : [m] "i" (mod))
 
 #endif // __GNUC__
 
@@ -232,6 +278,11 @@ constexpr unsigned int SFPLZ_MOD1_CC_NONE = 0;
 constexpr unsigned int SFPLZ_MOD1_CC_NE0 = 2;
 constexpr unsigned int SFPLZ_MOD1_CC_COMP = 8;
 constexpr unsigned int SFPLZ_MOD1_CC_EQ0 = 10;
+constexpr unsigned int SFPLZ_MOD1_NOSGN_MASK = 4;
+constexpr unsigned int SFPLZ_MOD1_NOSGN_CC_NONE = 4;
+constexpr unsigned int SFPLZ_MOD1_NOSGN_CC_NE0 = 6;
+constexpr unsigned int SFPLZ_MOD1_NOSGN_CC_COMP = 12;
+constexpr unsigned int SFPLZ_MOD1_NOSGN_CC_EQ0 = 14;
 
 constexpr unsigned int SFPSDIVP2_MOD1_ADD = 1;
 
@@ -241,6 +292,47 @@ constexpr unsigned int SFPLUT_MOD0_BIAS_POS = 0x1;
 constexpr unsigned int SFPLUT_MOD0_BIAS_NEG = 0x3;
 constexpr unsigned int SFPLUT_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUT_MOD0_SGN_RETAIN = 4;
+
+constexpr unsigned int SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE = 0;
+constexpr unsigned int SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1 = 2;
+constexpr unsigned int SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2 = 3;
+constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
+constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
+constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
+
+constexpr unsigned int SFPCAST_MOD1_RND_EVEN = 0;
+constexpr unsigned int SFPCAST_MOD1_RND_STOCH = 1;
+
+constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
+constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16A = 0;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16B = 1;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT8 = 2;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT8 = 3;
+constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_UINT8 = 4;
+constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_INT8 = 5;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT16 = 6;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT16 = 7;
+constexpr unsigned int SFPSTOCHRND_MOD1_CONV_MASK = 7;
+constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
+
+constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1_AND_COPY4 = 2;
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1 = 3;
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLSHR1 = 4;
+constexpr unsigned int SFPSHFT2_MOD1_SHFT_IMM = 5;
+constexpr unsigned int SFPSHFT2_MOD1_SHFT_LREG = 6;
+
+constexpr unsigned int SFPSWAP_MOD1_SWAP = 0;
+constexpr unsigned int SFPSWAP_MOD1_VEC_MIN_MAX = 1;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN01_MAX23 = 2;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN02_MAX13 = 3;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN03_MAX12 = 4;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 = 5;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
+constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
 
 constexpr unsigned int CREG_IDX_0P837300003 = 8;
 constexpr unsigned int CREG_IDX_0 = 9;

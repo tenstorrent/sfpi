@@ -9,7 +9,7 @@ namespace sfpi {
 //////////////////////////////////////////////////////////////////////////////
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
- sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2, const int offset = 0)
+sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2, const int offset = 0)
 {
     unsigned int bias_mask = (offset == 1) ? SFPLUT_MOD0_BIAS_POS :
         ((offset == -1) ? SFPLUT_MOD0_BIAS_NEG : SFPLUT_MOD0_BIAS_NONE);

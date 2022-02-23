@@ -1,4 +1,6 @@
+#include <algorithm>
 #include "sfpu.h"
+#include "sfpi_fp16.h"
 
 using namespace sfpu;
 using namespace sfpi;
@@ -7,9 +9,12 @@ namespace sfpu {
 
 SFPUDReg sfpu_dreg;
 SFPUCC sfpu_cc;
-__rvtt_vec_t sfpu_lreg[4];
+__rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 
 };
+
+#define sfpu_assert(x) if (!(x)) throw
+
 
 static unsigned int cmp_ex_to_setcc_mod1_map[] = {
   0,
@@ -22,7 +27,7 @@ static unsigned int cmp_ex_to_setcc_mod1_map[] = {
 ///////////////////////////////////////////////////////////////////////////////
 SFPUDReg::SFPUDReg()
 { 
-    for (int j = 0; j < SFPU_SIZE; j++) {
+    for (int j = 0; j < SFPU_DREG_SIZE; j++) {
         for (int i = 0; i < SFPU_WIDTH; i++) {
             regs[j][i] = 0xDEAD;
         }
@@ -695,6 +700,20 @@ __rvtt_vec_t sfpu_rvtt_sfpor(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
     return tmp;
 }
 
+__rvtt_vec_t sfpu_rvtt_sfpxor(const __rvtt_vec_t& dst, const __rvtt_vec_t& src)
+{
+    __rvtt_vec_t tmp;
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            tmp.set_uint(i, src.get_uint(i) ^ dst.get_uint(i));
+        }
+    }
+
+    return tmp;
+}
+
 __rvtt_vec_t sfpu_rvtt_sfpnot(const __rvtt_vec_t& v)
 {
     __rvtt_vec_t tmp;
@@ -775,6 +794,10 @@ __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1)
         if (sfpu_cc.enabled(i)) {
             unsigned int val = v.get_uint(i);
 
+            if (mod1 & SFPLZ_MOD1_NOSGN_MASK) {
+                val &= 0x7FFFFFFF;
+            }
+
             int b;
             for (b = FP32_MAX_BIT; b >= 0; b--) {
                 if ((val & (1 << b)) != 0) {
@@ -784,7 +807,7 @@ __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1)
 
             tmp.set_uint(i, FP32_MAX_BIT - b);
 
-            switch (mod1) {
+            switch (mod1 & ~SFPLZ_MOD1_NOSGN_MASK) {
             case SFPLZ_MOD1_CC_NONE:
                 break;
             case SFPLZ_MOD1_CC_NE0:
@@ -1063,4 +1086,429 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
     }
 
     return tmp;
+}
+
+float lut2_to_fp32(unsigned short in)
+{
+    // Handle modified exp, if exp is all 1s, make it all 0s
+    if ((in & FP16B_EXP_MASK) == FP16B_EXP_MASK) {
+        in &= ~FP16B_EXP_MASK;
+    }
+    return fp16b_to_float(in);
+}
+
+__rvtt_vec_t sfpu_rvtt_sfplutfp32_3r(const __rvtt_vec_t& l0,
+                                     const __rvtt_vec_t& l1,
+                                     const __rvtt_vec_t& l2,
+                                     const __rvtt_vec_t& dst,
+                                     unsigned short mod0)
+{
+    sfpu_assert((mod0 == SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE) ||
+                mod0 == (SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE | SFPLUT_MOD0_SGN_RETAIN));
+
+    bool retain_sgn = ((mod0 & SFPLUTFP32_MOD0_SGN_RETAIN) != 0);
+
+    __rvtt_vec_t tmp;
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            float val = abs(dst.get_float(i));
+
+            const __rvtt_vec_t& which = (val < 0.5f) ? l0 : (val < 1.0) ? l1 : l2;
+
+            unsigned int in = which.get_uint(i);
+            unsigned short a_in = in >> 16;
+            unsigned short b_in = in & 0xFFFF;
+
+            float a = lut2_to_fp32(a_in);
+            float b = lut2_to_fp32(b_in);
+            float lr3 = dst.get_float(i);
+
+            float result = a * fabs(lr3) + b;
+
+            if (retain_sgn) {
+                union {
+                    float fval;
+                    uint32_t ival;
+                };
+                fval = lr3;
+                uint32_t sgn = ival & FP32_SGN_MASK;
+                fval = result;
+                uint32_t rest = ival & ~FP32_SGN_MASK;
+                ival = rest | sgn;
+                result = fval;
+            }
+
+            tmp.set_float(i, result);
+        }
+    }
+
+    return tmp;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfplutfp32_6r(const __rvtt_vec_t& l0,
+                                     const __rvtt_vec_t& l1,
+                                     const __rvtt_vec_t& l2,
+                                     const __rvtt_vec_t& l4,
+                                     const __rvtt_vec_t& l5,
+                                     const __rvtt_vec_t& l6,
+                                     const __rvtt_vec_t& dst,
+                                     unsigned short mod0)
+{
+    bool retain_sgn = ((mod0 & SFPLUTFP32_MOD0_SGN_RETAIN) != 0);
+    mod0 = mod0 & ~SFPLUTFP32_MOD0_SGN_RETAIN;
+
+    __rvtt_vec_t tmp;
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            float val = abs(dst.get_float(i));
+            float a, b;
+
+            if (mod0 == SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1) {
+                if (val < 0.5f) {
+                    a = lut2_to_fp32(l0.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l4.get_uint(i) & 0xFFFF);
+                } else if (val < 1.0f) {
+                    a = lut2_to_fp32(l0.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l4.get_uint(i) >> 16);
+                } else if (val < 1.5f) {
+                    a = lut2_to_fp32(l1.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l5.get_uint(i) & 0xFFFF);
+                } else if (val < 2.0f) {
+                    a = lut2_to_fp32(l1.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l5.get_uint(i) >> 16);
+                } else if (val < 3.0f) {
+                    a = lut2_to_fp32(l2.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l6.get_uint(i) & 0xFFFF);
+                } else {
+                    a = lut2_to_fp32(l2.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l6.get_uint(i) >> 16);
+                }
+            } else if (mod0 == SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2) {
+                if (val < 0.5f) {
+                    a = lut2_to_fp32(l0.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l4.get_uint(i) & 0xFFFF);
+                } else if (val < 1.0f) {
+                    a = lut2_to_fp32(l0.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l4.get_uint(i) >> 16);
+                } else if (val < 1.5f) {
+                    a = lut2_to_fp32(l1.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l5.get_uint(i) & 0xFFFF);
+                } else if (val < 2.0f) {
+                    a = lut2_to_fp32(l1.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l5.get_uint(i) >> 16);
+                } else if (val < 4.0f) {
+                    a = lut2_to_fp32(l2.get_uint(i) & 0xFFFF);
+                    b = lut2_to_fp32(l6.get_uint(i) & 0xFFFF);
+                } else {
+                    a = lut2_to_fp32(l2.get_uint(i) >> 16);
+                    b = lut2_to_fp32(l6.get_uint(i) >> 16);
+                }
+            } else { // FP32 table
+                sfpu_assert(mod0 == SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE);
+
+                if (val < 1.0f) {
+                    a = l0.get_float(i);
+                    b = l4.get_float(i);
+                } else if (val < 2.0f) {
+                    a = l1.get_float(i);
+                    b = l5.get_float(i);
+                } else {
+                    a = l2.get_float(i);
+                    b = l6.get_float(i);
+                }
+            }
+
+            float lr3 = dst.get_float(i);
+            float result = a * fabs(lr3) + b;
+
+            if (retain_sgn) {
+                union {
+                    float fval;
+                    uint32_t ival;
+                };
+                fval = lr3;
+                uint32_t sgn = ival & FP32_SGN_MASK;
+                fval = result;
+                uint32_t rest = ival & ~FP32_SGN_MASK;
+                ival = rest | sgn;
+                result = fval;
+            }
+
+            tmp.set_float(i, result);
+        }
+    }
+
+    return tmp;
+}
+
+// This won't match the hw since it is using rand(), but matches the spirit
+static float stoch_rnd(float x)
+{
+    float frac = abs(x - trunc(x));
+
+    float random = (float)rand() / RAND_MAX;
+
+    float adjust = (random < frac) ? 1 : 0;
+
+    if (x < 0) adjust *= -1.0f;
+
+    return trunc(x) + adjust;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpcast(const __rvtt_vec_t& src, unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            unsigned int val = tmp.get_uint(i);
+            float fval = static_cast<float>(val);
+            float result;
+
+            if (mod1 == SFPCAST_MOD1_RND_STOCH) {
+                result = stoch_rnd(fval);
+            } else {
+                // XXXX not implemented!!!
+                // not sure if anyone will ever use the emulator for actual
+                // kernels, getting all this to work for the compiler test does
+                // not have a worthile ROI
+                result = NAN;
+            }
+
+            tmp.set_float(i, result);
+        }
+    }
+
+    return tmp;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpstochrnd_i(const unsigned int mode,
+                                     const unsigned int imm8, const __rvtt_vec_t& srcc,
+                                     unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+            // XXXX not implemented!!!
+            // not sure if anyone will ever use the emulator for actual
+            // kernels, getting all this to work for the compiler test does
+            // not have a worthile ROI
+            float result = NAN;
+
+            tmp.set_uint(i, result);
+        }
+    }
+
+    return tmp;
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpstochrnd_v(const unsigned int mode,
+                                     const __rvtt_vec_t& srcb, const __rvtt_vec_t& srcc,
+                                     unsigned int mod1)
+{
+    __rvtt_vec_t tmp;
+
+    sfpu_cc.deferred_commit();
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        if (sfpu_cc.enabled(i)) {
+
+            // XXXX not implemented!!!
+            // not sure if anyone will ever use the emulator for actual
+            // kernels, getting all this to work for the compiler test does
+            // not have a worthile ROI
+            float result = NAN;
+
+            tmp.set_uint(i, result);
+        }
+    }
+
+    return tmp;
+}
+
+void sfpu_rvtt_sfptransp(__rvtt_vec_t& l0, __rvtt_vec_t& l1,
+                         __rvtt_vec_t& l2, __rvtt_vec_t& l3)
+{
+    __rvtt_vec_t* table[] = { &l0, &l1, &l2, &l3};
+
+    sfpu_cc.deferred_commit();
+    for (int k = 0; k < SFPU_ROWS; k++) {
+        for (int r = k; r < SFPU_ROWS; r++) {
+            for (int c = 0; c < SFPU_COLS; c++) {
+                unsigned int tmp;
+                tmp = table[k]->get_uint(r * SFPU_COLS + c);
+
+                table[k]->set_uint(r * SFPU_COLS + c,
+                                   table[r]->get_uint(k * SFPU_COLS + c));
+                table[r]->set_uint(k * SFPU_COLS + c, tmp);
+            }
+        }
+    }
+}
+
+// The emulator could just call shft directly, there may be a future reason to
+// split this out...
+__rvtt_vec_t sfpu_rvtt_sfpshft2_i(const __rvtt_vec_t& dst, int shift)
+{
+    return sfpu_rvtt_sfpshft_i(dst, shift);
+}
+
+// Like above
+__rvtt_vec_t sfpu_rvtt_sfpshft2_v(const __rvtt_vec_t& dst, const __rvtt_vec_t&src)
+{
+    return sfpu_rvtt_sfpshft_v(dst, src);
+}
+
+// _g is the "global" version, no explicit destination, l0..l3 all written
+void sfpu_rvtt_sfpshft2_g(__rvtt_vec_t& l0, __rvtt_vec_t& l1,
+                          __rvtt_vec_t& l2, __rvtt_vec_t& l3,
+                          int mod)
+{
+    sfpu_assert(mod == SFPSHFT2_MOD1_COPY4 ||
+                mod == SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4);
+
+    sfpu_cc.deferred_commit();
+    if (mod == SFPSHFT2_MOD1_COPY4) {
+        for (int i = 0; i < SFPU_WIDTH; i++) {
+            if (sfpu_cc.enabled(i)) {
+                l0.set_uint(i, l1.get_uint(i));
+                l1.set_uint(i, l2.get_uint(i));
+                l2.set_uint(i, l3.get_uint(i));
+                l3.set_uint(i, 0);
+            }
+        }
+    } else if (mod == SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4) {
+        for (int r = 0; r < SFPU_ROWS; r++) {
+            for (int c = 0; c < SFPU_COLS; c++) {
+                int i = r * SFPU_COLS + c;
+
+                if (sfpu_cc.enabled(i)) {
+                    l0.set_uint(i, l1.get_uint(i));
+                    l1.set_uint(i, l2.get_uint(i));
+                    l2.set_uint(i, l3.get_uint(i));
+                    if (r == 3) {
+                        l3.set_uint(i, 0);
+                    } else {
+                        int i_next_row = (r + 1) * SFPU_COLS + c;
+                        l3.set_uint(i, l0.get_uint(i_next_row));
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+// _ge is both explicit and global, takes a src and writes l0..l3
+void sfpu_rvtt_sfpshft2_ge(const __rvtt_vec_t& src,
+                           __rvtt_vec_t& l0, __rvtt_vec_t& l1,
+                           __rvtt_vec_t& l2, __rvtt_vec_t& l3)
+{
+    // subvec_shflror1_and_vec_copy4
+    sfpu_cc.deferred_commit();
+    for (int r = 0; r < SFPU_ROWS; r++) {
+        for (int c = 0; c < SFPU_COLS; c++) {
+            int i = r * SFPU_COLS + c;
+
+            if (sfpu_cc.enabled(i)) {
+                l0.set_uint(i, l1.get_uint(i));
+                l1.set_uint(i, l2.get_uint(i));
+                l2.set_uint(i, l3.get_uint(i));
+                if (c == 0) {
+                    int i0 = r * SFPU_COLS + 7;
+                    l3.set_uint(i, src.get_uint(i0));
+                } else {
+                    l3.set_uint(i, src.get_uint(i - 1));
+                }
+            }
+        }
+    }
+}
+
+// _e is the explicit (operands) version
+__rvtt_vec_t sfpu_rvtt_sfpshft2_e(const __rvtt_vec_t& src,
+                                  int mod)
+{
+    __rvtt_vec_t tmp;
+
+    sfpu_assert(mod == SFPSHFT2_MOD1_SUBVEC_SHFLROR1 ||
+                mod == SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
+
+    sfpu_cc.deferred_commit();
+    for (int r = 0; r < SFPU_ROWS; r++) {
+        for (int c = 0; c < SFPU_COLS; c++) {
+            int i = r * SFPU_COLS + c;
+
+            if (sfpu_cc.enabled(i)) {
+                if (c == 0) {
+                    if (mod == SFPSHFT2_MOD1_SUBVEC_SHFLSHR1) {
+                        tmp.set_uint(i, 0);
+                    } else {
+                        int i0 = r * SFPU_COLS + 7;
+                        tmp.set_uint(i, src.get_uint(i0));
+                    }
+                } else {
+                    tmp.set_uint(i, src.get_uint(i - 1));
+                }
+            }
+        }
+    }
+
+    return tmp;
+}
+
+void sfpu_rvtt_sfpswap(__rvtt_vec_t& dst, __rvtt_vec_t& src, int mod)
+{
+    static const int direction[][4] = {
+        {0, 0, 0, 0}, // unused
+        {0, 0, 0, 0}, // VEC_MIN_MAX
+        {0, 0, 1, 1}, // SUBVEC_MIN01_MAX23
+        {0, 1, 0, 1}, // SUBVEC_MIN02_MAX13
+        {0, 1, 1, 0}, // SUBVEC_MIN03_MAX14
+        {0, 1, 1, 1}, // SUBVEC_MIN0_MAX123
+        {1, 0, 1, 1}, // SUBVEC_MIN1_MAX023
+        {1, 1, 0, 1}, // SUBVEC_MIN2_MAX013
+        {1, 1, 1, 0}, // SUBVEC_MIN3_MAX012
+    };
+
+    sfpu_cc.deferred_commit();
+    for (int r = 0; r < SFPU_ROWS; r++) {
+        for (int c = 0; c < SFPU_COLS; c++) {
+            int i = r * SFPU_COLS + c;
+            
+            if (sfpu_cc.enabled(i)) {
+                unsigned int srcv = src.get_uint(i);
+                unsigned int dstv = dst.get_uint(i);
+
+                // Do a signed magnitude compare
+                unsigned int max, min;
+
+                // I'm sure there's a better clever way to do this...
+                if ((srcv & 0x80000000) && (dstv & 0x80000000)) {
+                    max = std::min(srcv, dstv);
+                    min = std::max(srcv, dstv);
+                } else {
+                    max = std::max(srcv, dstv);
+                    min = std::min(srcv, dstv);
+                }
+
+                if (mod == SFPSWAP_MOD1_SWAP) {
+                    src.set_uint(i, dstv);
+                    dst.set_uint(i, srcv);
+                } else {
+                    if (direction[mod][r] == 0) {
+                        src.set_uint(i, max);
+                        dst.set_uint(i, min);
+                    } else {
+                        src.set_uint(i, min);
+                        dst.set_uint(i, max);
+                    }
+                }
+            }
+        }
+    }
 }
