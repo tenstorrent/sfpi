@@ -1207,6 +1207,42 @@ _Z13addi_yes_imm2j:
 	ret
 	.size	_Z13addi_yes_imm2j, .-_Z13addi_yes_imm2j
 	.align	1
+	.globl	_Z13addi_yes_imm3j
+	.type	_Z13addi_yes_imm3j, @function
+_Z13addi_yes_imm3j:
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	SFPLOAD	L0, 1, 0
+	slli	a0,a0,16
+	srli	a0,a0,8
+	li	a4,1962934272
+	add	a4, a4, a0
+# Op(75) lv(0)  d(0)
+	sw	a4,0(a5)
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z13addi_yes_imm3j, .-_Z13addi_yes_imm3j
+	.align	1
+	.globl	_Z13addi_yes_imm4j
+	.type	_Z13addi_yes_imm4j, @function
+_Z13addi_yes_imm4j:
+	SFPLOAD	L0, 1, 0
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a0,a0,16
+	srli	a0,a0,8
+	li	a4,1962934272
+	add	a4, a4, a0
+# Op(75) lv(0)  d(0)
+	sw	a4,0(a5)
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 0
+	ret
+	.size	_Z13addi_yes_imm4j, .-_Z13addi_yes_imm4j
+	.align	1
 	.globl	_Z14addi_live_yes1v
 	.type	_Z14addi_live_yes1v, @function
 _Z14addi_live_yes1v:
@@ -1367,19 +1403,19 @@ _Z8addi_no2v:
 _Z11addi_no_bb1i:
 	SFPLOADI	L1, 0, 16256
 	SFPLOADI	L2, 0, 16384
-	ble	a0,zero,.L102
+	ble	a0,zero,.L104
 	SFPADD	L10, L1, L2, L0, 0
 	SFPNOP
 	SFPNOP
 	li	a5,1
-	beq	a0,a5,.L102
-.L103:
+	beq	a0,a5,.L104
+.L105:
 	SFPADD	L10, L1, L2, L0, 0
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L103
-.L102:
+	bne	a0,a5,.L105
+.L104:
 	SFPSTORE	L0, 0, 0
 	ret
 	.size	_Z11addi_no_bb1i, .-_Z11addi_no_bb1i
@@ -1642,15 +1678,15 @@ _Z20add_plus_half_no_bb1i:
 	SFPADD	L10, L0, L2, L0, 0
 	SFPNOP
 	SFPNOP
-	ble	a0,zero,.L122
+	ble	a0,zero,.L124
 	li	a5,0
-.L123:
+.L125:
 	SFPADD	L10, L0, L1, L0, 0
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L123
-.L122:
+	bne	a0,a5,.L125
+.L124:
 	SFPSTORE	L0, 0, 0
 	ret
 	.size	_Z20add_plus_half_no_bb1i, .-_Z20add_plus_half_no_bb1i

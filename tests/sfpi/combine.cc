@@ -990,6 +990,24 @@ void addi_yes_imm2(unsigned int imm)
     dst_reg[0] = c;
 }
 
+void addi_yes_imm3(unsigned int imm)
+{
+    vFloat a = s2vFloat16b(imm);
+    vFloat b = dst_reg[0];
+
+    vFloat c = a + b;
+    dst_reg[0] = c;
+}
+
+void addi_yes_imm4(unsigned int imm)
+{
+    vFloat a = dst_reg[0];
+    vFloat b = s2vFloat16b(imm);
+
+    vFloat c = a + b;
+    dst_reg[0] = c;
+}
+
 void addi_live_yes1()
 {
     vFloat b = 2.0f;
