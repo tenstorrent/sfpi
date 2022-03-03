@@ -375,13 +375,13 @@ sfpi_test_noinline void test5()
     } v_elseif(dst_reg[0] == 1.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst0;
     } v_elseif(dst_reg[0] == 2.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstPrgm0;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm0;
     } v_elseif(dst_reg[0] == 3.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstPrgm1;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm1;
     } v_elseif(dst_reg[0] == 4.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstPrgm2;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm2;
     } v_elseif(dst_reg[0] == 5.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstPrgm3;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm3;
     } v_elseif(dst_reg[0] == 6.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst1;
     }

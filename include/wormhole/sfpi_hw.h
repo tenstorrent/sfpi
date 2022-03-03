@@ -152,6 +152,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #endif // COMPILE_FOR_EMULE
 
+constexpr unsigned int SFP_LREG_COUNT = 8;
+
 constexpr unsigned int SFP_DESTREG_STRIDE = 4;
 
 constexpr unsigned int SFPLOAD_MOD0_REBIAS_EXP = 1;

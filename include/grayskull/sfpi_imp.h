@@ -7,18 +7,18 @@
 namespace sfpi {
 
 //////////////////////////////////////////////////////////////////////////////
-constexpr vConst vConst0(CREG_IDX_0);
-constexpr vConst vConst0p6929(CREG_IDX_0P692871094);
-constexpr vConst vConstNeg1p0068(CREG_IDX_NEG_1P00683594);
-constexpr vConst vConst1p4424(CREG_IDX_1P442382813);
-constexpr vConst vConst0p8369(CREG_IDX_0P836914063);
-constexpr vConst vConstNeg0p5(CREG_IDX_NEG_0P5);
-constexpr vConst vConst1(CREG_IDX_1);
-constexpr vConst vConstNeg1(CREG_IDX_NEG_1);
-constexpr vConst vConst0p0020(CREG_IDX_0P001953125);
-constexpr vConst vConstNeg0p6748(CREG_IDX_NEG_0P67480469);
-constexpr vConst vConstNeg0p3447(CREG_IDX_NEG_0P34472656);
-constexpr vConst vConstTileId(CREG_IDX_TILEID);
+constexpr vConstFloat vConst0(CREG_IDX_0);
+constexpr vConstFloat vConst0p6929(CREG_IDX_0P692871094);
+constexpr vConstFloat vConstNeg1p0068(CREG_IDX_NEG_1P00683594);
+constexpr vConstFloat vConst1p4424(CREG_IDX_1P442382813);
+constexpr vConstFloat vConst0p8369(CREG_IDX_0P836914063);
+constexpr vConstFloat vConstNeg0p5(CREG_IDX_NEG_0P5);
+constexpr vConstFloat vConst1(CREG_IDX_1);
+constexpr vConstFloat vConstNeg1(CREG_IDX_NEG_1);
+constexpr vConstFloat vConst0p0020(CREG_IDX_0P001953125);
+constexpr vConstFloat vConstNeg0p6748(CREG_IDX_NEG_0P67480469);
+constexpr vConstFloat vConstNeg0p3447(CREG_IDX_NEG_0P34472656);
+constexpr vConstIntBase vConstTileId(CREG_IDX_TILEID);
 
 constexpr RegFile<vDReg, 64> dst_reg;
 
@@ -103,7 +103,7 @@ sfpi_inline void vDReg::operator=(const vDReg dreg) const
     __builtin_rvtt_sfpstore(tmp.get(), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
 }
 
-sfpi_inline void vDReg::operator=(const vConst creg) const
+sfpi_inline void vDReg::operator=(const vConstFloat creg) const
 {
     __rvtt_vec_t lr = __builtin_rvtt_sfpassignlr(creg.get());
     __builtin_rvtt_sfpstore(lr, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
@@ -113,29 +113,6 @@ sfpi_inline vFloat vDReg::operator-() const
 {
     vFloat tmp = *this;
     return __builtin_rvtt_sfpmov(tmp.get(), SFPMOV_MOD1_COMPSIGN);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-sfpi_inline vFloat vConst::operator+(const vFloat b) const { return sfpi_int::fp_add(vFloat(*this), b); }
-sfpi_inline vFloat vConst::operator-(const vFloat b) const { return sfpi_int::fp_sub(vFloat(*this), b); }
-sfpi_inline vFloat vConst::operator*(const vFloat b) const { return sfpi_int::fp_mul(vFloat(*this), b); }
-sfpi_inline vCondComp vConst::operator==(const vFloat x) const { return vCondComp(vCondComp::CompEQ, *this, x); }
-sfpi_inline vCondComp vConst::operator!=(const vFloat x) const { return vCondComp(vCondComp::CompNE, *this, x); }
-sfpi_inline vCondComp vConst::operator<(const vFloat x) const { return vCondComp(vCondComp::CompLT, *this, x); }
-sfpi_inline vCondComp vConst::operator<=(const vFloat x) const { return vCondComp(vCondComp::CompLTE, vFloat(*this), x, true, false); }
-sfpi_inline vCondComp vConst::operator>(const vFloat x) const { return vCondComp(vCondComp::CompGT, vFloat(*this), x, false, true); }
-sfpi_inline vCondComp vConst::operator>=(const vFloat x) const { return vCondComp(vCondComp::CompGTE, *this, x); }
-
-sfpi_inline vIntBase vConst::operator<<(uint32_t amt) const
-{
-    __rvtt_vec_t v = __builtin_rvtt_sfpassignlr(reg);
-    return __builtin_rvtt_sfpshft_i(v, amt);
-}
-
-sfpi_inline vUInt vConst::operator>>(uint32_t amt) const
-{
-    __rvtt_vec_t v = __builtin_rvtt_sfpassignlr(reg);
-    return __builtin_rvtt_sfpshft_i(v, -amt);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -182,12 +159,6 @@ sfpi_inline void vFloat::operator-=(const vFloat a)
 sfpi_inline vFloat::vFloat(const vDReg dreg)
 {
     v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_REBIAS_EXP, dreg.get());
-    initialized = true;
-}
-
-sfpi_inline vFloat::vFloat(const vConst creg)
-{
-    v = __builtin_rvtt_sfpassignlr(creg.get());
     initialized = true;
 }
 
@@ -305,7 +276,7 @@ sfpi_inline vType vIntBase::operator+(const vIntBase val) const
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
-sfpi_inline vType vIntBase::operator+(const vConst val) const
+sfpi_inline vType vIntBase::operator+(const vConstIntBase val) const
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
     return __builtin_rvtt_sfpiadd_v_ex(c, v, 0);
@@ -324,7 +295,7 @@ sfpi_inline vType vIntBase::operator-(const vIntBase val) const
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
-sfpi_inline vType vIntBase::operator-(const vConst val) const
+sfpi_inline vType vIntBase::operator-(const vConstIntBase val) const
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
     return __builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB);
@@ -343,7 +314,7 @@ sfpi_inline void vIntBase::operator+=(const vIntBase val)
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
-sfpi_inline void vIntBase::operator+=(const vConst val)
+sfpi_inline void vIntBase::operator+=(const vConstIntBase val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
     assign(__builtin_rvtt_sfpiadd_v_ex(c, v, 0));
@@ -362,7 +333,7 @@ sfpi_inline void vIntBase::operator-=(const vIntBase val)
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
-sfpi_inline void vIntBase::operator-=(const vConst val)
+sfpi_inline void vIntBase::operator-=(const vConstIntBase val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
     assign(__builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB));
@@ -524,6 +495,17 @@ sfpi_inline void vCond::emit(bool negate) const
         break;
     }
 }
+
+//////////////////////////////////////////////////////////////////////////////
+enum class LRegs {
+    LReg0 = 0,
+    LReg1 = 1,
+    LReg2 = 2,
+    LReg3 = 3,
+    LRegCount = SFP_LREG_COUNT,
+};
+
+LRegAssigner::LRegAssigner() : lregs{LRegs::LReg0, LRegs::LReg1, LRegs::LReg2, LRegs::LReg3} {}
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline vCCCtrl::vCCCtrl() : push_count(0)
