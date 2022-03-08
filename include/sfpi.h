@@ -282,25 +282,20 @@ public:
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator+(const vType b) const;
     sfpi_inline vInt operator+(int32_t b) const;
-    sfpi_inline vUInt operator+(uint32_t b) const;
 
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator-(const vType b) const;
     sfpi_inline vInt operator-(int32_t b) const;
-    sfpi_inline vUInt operator-(uint32_t b) const;
 
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator&(const vType b) const;
     sfpi_inline vInt operator&(int32_t b) const;
-    sfpi_inline vUInt operator&(uint32_t b) const;
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator|(const vType b) const;
     sfpi_inline vInt operator|(int32_t b) const;
-    sfpi_inline vUInt operator|(uint32_t b) const;
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator^(const vType b) const;
     sfpi_inline vInt operator^(int32_t b) const;
-    sfpi_inline vUInt operator^(uint32_t b) const;
 
     sfpi_inline vCondComp operator==(const vInt x) const;
     sfpi_inline vCondComp operator!=(const vInt x) const;
@@ -922,27 +917,22 @@ sfpi_inline vCondComp vConstFloat::operator>=(const vFloat x) const { return vCo
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vConstIntBase::operator+(const vType b) const { return vType(*this) + b; }
 sfpi_inline vInt vConstIntBase::operator+(int32_t b) const { return vInt(*this) + b; }
-sfpi_inline vUInt vConstIntBase::operator+(uint32_t b) const { return vUInt(*this) + b; }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vConstIntBase::operator-(const vType b) const { return vType(*this) - b; }
 sfpi_inline vInt vConstIntBase::operator-(int32_t b) const { return vInt(*this) - b; }
-sfpi_inline vUInt vConstIntBase::operator-(uint32_t b) const { return vUInt(*this) - b; }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vConstIntBase::operator&(const vType b) const { return vType(*this) & b; }
 sfpi_inline vInt vConstIntBase::operator&(int32_t b) const { return vInt(*this) & vInt(b); }
-sfpi_inline vUInt vConstIntBase::operator&(uint32_t b) const { return vUInt(*this) & vUInt(b); }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vConstIntBase::operator|(const vType b) const { return vType(*this) | b; }
 sfpi_inline vInt vConstIntBase::operator|(int32_t b) const { return vInt(*this) | vInt(b); }
-sfpi_inline vUInt vConstIntBase::operator|(uint32_t b) const { return vUInt(*this) | vUInt(b); }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vConstIntBase::operator^(const vType b) const { return vType(*this) ^ b; }
 sfpi_inline vInt vConstIntBase::operator^(int32_t b) const { return vInt(*this) ^ vInt(b); }
-sfpi_inline vUInt vConstIntBase::operator^(uint32_t b) const { return vUInt(*this) ^ vUInt(b); }
 
 sfpi_inline vCondComp vConstIntBase::operator==(const vInt x) const { return vCondComp(vCondComp::CompEQ, vIntBase(*this), x, 0); }
 sfpi_inline vCondComp vConstIntBase::operator!=(const vInt x) const { return vCondComp(vCondComp::CompNE, vIntBase(*this), x, 0); }
