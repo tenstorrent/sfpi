@@ -8,6 +8,12 @@
 
 #include "sfpi.h"
 
+#if defined(__GNUC__) && !defined(__clang__)
+#define sfpi_test_noinline __attribute__ ((noinline)) 
+#else
+#define sfpi_test_noinline
+#endif
+
 #define FWLOG1(x, y)
 #define NOC_NODE_ID 0
 #define NOC_CMD_BUF_READ_REG(x, y, z) 0
@@ -288,7 +294,7 @@ void calculate_cube(uint16_t exp_base_scale_factor = 0)
 */
 
 template <bool APPROXIMATION_MODE, bool ZERO_NEGATIVE, bool SCALE_EN>
-inline void calculate_exponential(int16_t exp_base_scale_factor = 0)
+sfpi_test_noinline void calculate_exponential(int16_t exp_base_scale_factor = 0)
 {
     vFloat c23_73;
     vInt adj_exp;
@@ -383,7 +389,7 @@ sfpi_inline vFloat calculate_gelu_core(vFloat in)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_gelu()
+sfpi_test_noinline void calculate_gelu()
 {
     constexpr uint imm1 = (APPROXIMATION_MODE)? 0x212C : 0x2010;
     constexpr uint imm2 = 0xFF00;
@@ -431,7 +437,7 @@ inline void calculate_gelu()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_sigmoid()
+sfpi_test_noinline void calculate_sigmoid()
 {
     // SFPU microcode
     vUInt l0, l1, l2;
@@ -453,7 +459,7 @@ inline void calculate_sigmoid()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_tanh()
+sfpi_test_noinline void calculate_tanh()
 {
     // SFPU microcode
     vUInt l0, l1, l2;
@@ -473,7 +479,7 @@ inline void calculate_tanh()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_hardtanh(uint param0, uint param1, uint param2)
+sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2)
 {
     // All params are in FP16_B format
     // param0 = -(neg_threshold)
@@ -511,7 +517,7 @@ inline void calculate_hardtanh(uint param0, uint param1, uint param2)
 }
 
 template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
-inline void calculate_tanh_derivative()
+sfpi_test_noinline void calculate_tanh_derivative()
 {
     vUInt l0, l1, l2;
     LRegAssigner lra;
@@ -537,7 +543,7 @@ inline void calculate_tanh_derivative()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_gelu_derivative()
+sfpi_test_noinline void calculate_gelu_derivative()
 {
     // SFPU microcode: 
     #pragma GCC unroll 0
@@ -565,7 +571,7 @@ inline void calculate_gelu_derivative()
 }
 
 template <bool APPROXIMATION_MODE, int ITERATIONS>
-inline void calculate_reciprocal()
+sfpi_test_noinline void calculate_reciprocal()
 {
     #pragma GCC unroll 0
     for (int d = 0; d < ITERATIONS; d++)
@@ -587,7 +593,7 @@ inline void calculate_reciprocal()
 }
 
 template <bool APPROXIMATION_MODE, int ITERATIONS, int RECIPROCAL_ITERATIONS=2>
-inline void calculate_sqrt()
+sfpi_test_noinline void calculate_sqrt()
 {
     for (int d = 0; d < 4; d++)
     {
@@ -633,7 +639,7 @@ inline void calculate_sqrt()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_dropout(uint prob, uint scale)
+sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
 {
     // SFPU microcode
 
@@ -681,7 +687,7 @@ inline void calculate_dropout(uint prob, uint scale)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_lrelu(uint slope)
+sfpi_test_noinline void calculate_lrelu(uint slope)
 {
     // SFPU microcode
     vFloat s = s2vFloat16b(slope); // XXXX Nonimm perf workaround, hoist conversion manually
@@ -702,7 +708,7 @@ inline void calculate_lrelu(uint slope)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_power(uint exponent)
+sfpi_test_noinline void calculate_power(uint exponent)
 {
     for (int d = 0; d < 4; d++)
     {
@@ -719,7 +725,7 @@ inline void calculate_power(uint exponent)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_multiply()
+sfpi_test_noinline void calculate_multiply()
 {
     for (int d = 0; d < 4; d++)
     {
@@ -815,7 +821,7 @@ sfpi_inline void calculate_log_body(const int log_base_scale_factor)
 }
 
 template <bool APPROXIMATION_MODE, bool HAS_BASE_SCALING>
-inline void calculate_log(uint log_base_scale_factor)
+sfpi_test_noinline void calculate_log(uint log_base_scale_factor)
 {
     #pragma GCC unroll 0
     for (int d = 0; d < 4; d++) {
@@ -832,7 +838,7 @@ sfpi_inline void calculate_comp_init_flag(bool check, vFloat& flag1, vFloat& fla
 }
 
 template <bool APPROXIMATION_MODE, SfpuType COMP_MODE>
-inline void calculate_comp(uint exponent_size_8)
+sfpi_test_noinline void calculate_comp(uint exponent_size_8)
 {
     //invert output and use same comparison check
     constexpr bool invert_output = ((COMP_MODE == SfpuType::greater_than_equal_zero) ||
@@ -906,7 +912,7 @@ inline void calculate_comp(uint exponent_size_8)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_clamp(uint param0, uint param1, uint param2)
+sfpi_test_noinline void calculate_clamp(uint param0, uint param1, uint param2)
 {
     // All params are in FP16 format
     // param0 = min
@@ -937,7 +943,7 @@ inline void calculate_clamp(uint param0, uint param1, uint param2)
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_abs()
+sfpi_test_noinline void calculate_abs()
 {
     // SFPU microcode
     for (int d = 0; d < 4; d++)
@@ -949,7 +955,7 @@ inline void calculate_abs()
 }
 
 template <bool APPROXIMATION_MODE>
-inline void calculate_sign(uint exponent_size_8)
+sfpi_test_noinline void calculate_sign(uint exponent_size_8)
 {
     // All params are in FP16 format
     // uint format = 1;
