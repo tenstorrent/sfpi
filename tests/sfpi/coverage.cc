@@ -815,6 +815,64 @@ void test_operator_equals()
 }
 #endif
 
+// Spew: hit a problem w/ gcc crashing w/ lots of live instruction in the gcc
+// smoke test.  The problem was in dead code (wrapper doesn't emit live
+// instructions anymore).  This more or less mimics what that test was doing.
+// It has always passed, not sure if it is worth keeping so if it gets
+// annoying remove it
+void spew()
+{
+    vFloat x = 1.0f;
+    vFloat y = 2.0f;
+
+    v_if (dst_reg[0] == 2.0f) {
+        x = dst_reg[0];
+        x = x * y + .5f;
+        x = x + y + .5f;
+        vFloat t = 3.0f;
+        v_if(dst_reg[0] == 1.0f) {
+            y *= t + 5.0f;
+            x = x * y + vConst1 + .5f;
+            y = setexp(x, 3);
+            y = setman(x, 3);
+            x = setman(y, -1);
+            y = abs(x);
+        }
+        v_endif;
+
+        vUInt z = lz(x);
+        z = shft(z, 5);
+        z = ~z;
+        y = setman(x, z);
+        x = y * y + y + .5;
+    }
+    v_endif;
+
+    x = dst_reg[0];
+    x = x * y + .5f;
+    x = x + y + .5f;
+    vFloat t = 3.0f;
+    y *= t + 5.0f;
+    x = x * y + vConst1 + .5f;
+    y = setexp(x, 3);
+    y = setman(x, 3);
+    x = setman(y, -1);
+    y = abs(x);
+
+    vUInt z = lz(x);
+    z = shft(z, 5);
+    z = ~z;
+    y = setman(x, z);
+    x = y * y + y + .5;
+
+    v_if (dst_reg[0] == 1.0f) {
+        x += 1.0f;
+    }
+    v_endif;
+
+    dst_reg[0] = x;
+}
+
 int main(int argc, char* argv[])
 {
     test_load_store();
@@ -842,5 +900,6 @@ int main(int argc, char* argv[])
     test_icmp_v();
     test_lut();
     stupid_example(argc);
+    spew();
     //    test_operator_equals();
 }

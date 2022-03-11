@@ -2,7 +2,7 @@ BUDA_ROOT ?= ../../../ll-sw
 SFPI_ROOT ?= ../..
 CC_PATH ?= $(SFPI_ROOT)/compiler
 
-INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/sfpi_internal.h ../inc/ckernel_ops.h
+INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/sfpi_internal.h $(SFPI_ROOT)/include/ckernel_ops.h
 CFLAGS = -I../inc -I$(SFPI_ROOT)/include -DARCH_GRAYSKULL -O3 -std=c++17 -Wall
 # Note: Production uses -g which adds GIMPLE_DEBUG gimple statements that can affect optimization
 # Enabling -g here results in unreadable asm, but testing should occur both ways...

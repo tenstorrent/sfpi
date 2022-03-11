@@ -439,14 +439,14 @@ _Z10test_loadilm:
 	srli	a4,a4,16
 	li	a3,1896087552
 	add	a3, a3, a4
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 0
 	slli	a4,a1,16
 	srli	a4,a4,16
 	li	a3,1895956480
 	add	a3, a3, a4
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 0
 	SFPLOADI	L0, 2, 255
@@ -457,14 +457,14 @@ _Z10test_loadilm:
 	srli	a4,a4,16
 	li	a3,1896087552
 	add	a3, a3, a4
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 4
 	slli	a4,a1,16
 	srli	a4,a4,16
 	li	a3,1895956480
 	add	a3, a3, a4
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a3,0(a5)
 	SFPSTORE	L0, 2, 4
 	SFPLOADI	L0, 1, 15360
@@ -483,14 +483,14 @@ _Z10test_loadilm:
 	srli	a0,a0,16
 	li	a4,1895825408
 	add	a4, a4, a0
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a4,0(a5)
 	SFPSTORE	L0, 0, 8
 	slli	a1,a1,16
 	srli	a1,a1,16
 	li	a4,1895825408
 	add	a4, a4, a1
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a4,0(a5)
 	SFPSTORE	L0, 0, 8
 	SFPLOADI	L0, 0, 16448
@@ -2214,7 +2214,7 @@ _Z14stupid_examplej:
 	srli	a0,a0,16
 	li	a4,1896939520
 	add	a4, a4, a0
-# Op(71) - d(1)
+# Op(0x71) - d(1)
 	sw	a4,0(a5)
 	SFPLOADI	L2, 0, 16281
 	SFPMAD	L0, L1, L2, L1, 0
@@ -2310,6 +2310,150 @@ _Z14stupid_examplej:
 	SFPNOP
 	ret
 	.size	_Z14stupid_examplej, .-_Z14stupid_examplej
+	.align	1
+	.globl	_Z4spewv
+	.type	_Z4spewv, @function
+_Z4spewv:
+	SFPLOADI	L1, 0, 16256
+	SFPLOADI	L2, 0, 16384
+	SFPLOAD	L3, 1, 0
+	SFPLOADI	L0, 0, 16384
+	SFPMAD	L0, L11, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L0, 6
+	SFPNOP
+	SFPLOAD	L1, 1, 0
+	SFPMUL	L1, L2, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L3, 0, 16128
+	SFPADD	L10, L0, L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L1, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L3, 0, 16128
+	SFPADD	L10, L0, L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 0, 16448
+	SFPPUSHC
+	SFPLOAD	L3, 1, 0
+	SFPMAD	L10, L11, L3, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L3, 6
+	SFPNOP
+	SFPADDI	16544, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMUL	L2, L0, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMAD	L1, L0, L10, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 0, 16128
+	SFPADD	L10, L0, L2, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSETEXP	3, L1, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	3, L1, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	4095, L0, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPABS	L1, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPLZ	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 4, 5
+	SFPSHFT	0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPNOT	L0, L0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMAD	L0, L0, L0, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L3, 0, 16128
+	SFPADD	L10, L2, L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPLOAD	L1, 1, 0
+	SFPMUL	L1, L0, L4, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPADD	L10, L1, L0, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 0, 16544
+	SFPADDI	16448, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPMUL	L0, L2, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMAD	L1, L0, L10, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSETEXP	3, L0, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	3, L0, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	4095, L0, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPABS	L0, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPLZ	L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 4, 5
+	SFPSHFT	0, L2, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPNOT	L1, L1
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPMAD	L1, L1, L1, L1, 1
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L0, 1, 0
+	SFPMAD	L10, L11, L0, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L0, 6
+	SFPNOP
+	SFPADDI	16256, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSTORE	L1, 0, 0
+	ret
+	.size	_Z4spewv, .-_Z4spewv
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main
@@ -2374,6 +2518,7 @@ main:
 	SFPSTORE	L3, 0, 4
 	mv	a0,s0
 	call	_Z14stupid_examplej
+	call	_Z4spewv
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	li	a0,0

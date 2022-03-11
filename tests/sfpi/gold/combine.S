@@ -386,7 +386,7 @@ _Z11iadd_i_no12j:
 	srli	a0,a0,16
 	li	a4,1897136128
 	add	a4, a4, a0
-# Op(71) - d(1)
+# Op(0x71) - d(1)
 	sw	a4,0(a5)
 	SFPIADD	0, L0, L1, 2
 	SFPNOP
@@ -1180,7 +1180,7 @@ _Z13addi_yes_imm1j:
 	srli	a0,a0,16
 	li	a4,1895825408
 	add	a4, a4, a0
-# Op(71) - d(0)
+# Op(0x71) - d(0)
 	sw	a4,0(a5)
 	SFPADDI	16256, L0, 0
 	SFPNOP
@@ -1199,7 +1199,7 @@ _Z13addi_yes_imm2j:
 	srli	a0,a0,8
 	li	a4,1962934272
 	add	a4, a4, a0
-# Op(75) lv(0)  d(0)
+# Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
 	SFPNOP
 	SFPNOP
@@ -1217,7 +1217,7 @@ _Z13addi_yes_imm3j:
 	srli	a0,a0,8
 	li	a4,1962934272
 	add	a4, a4, a0
-# Op(75) lv(0)  d(0)
+# Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
 	SFPNOP
 	SFPNOP
@@ -1235,7 +1235,7 @@ _Z13addi_yes_imm4j:
 	srli	a0,a0,8
 	li	a4,1962934272
 	add	a4, a4, a0
-# Op(75) lv(0)  d(0)
+# Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
 	SFPNOP
 	SFPNOP
@@ -1645,7 +1645,7 @@ _Z17add_plus_half_no1j:
 	srli	a0,a0,8
 	li	a4,1962934272
 	add	a4, a4, a0
-# Op(75) lv(0)  d(0)
+# Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
 	SFPNOP
 	SFPNOP
