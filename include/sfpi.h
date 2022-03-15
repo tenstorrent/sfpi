@@ -819,8 +819,8 @@ sfpi_inline vFloat fp_add(const vFloat a, const vFloat b)
 
 sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
 {
-    __rvtt_vec_t tmp = __builtin_rvtt_sfpmov(b.get(), SFPMOV_MOD1_COMPSIGN);
-    return __builtin_rvtt_sfpadd(a.get(), tmp, 0);
+    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlr(vConstNeg1.get());
+    return __builtin_rvtt_sfpmad(neg1, b.get(), a.get(), 0);
 }
 
 sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
@@ -998,7 +998,8 @@ sfpi_inline void vFloat::operator+=(const vFloat a)
 
 sfpi_inline void vFloat::operator-=(const vFloat a)
 {
-    v = __builtin_rvtt_sfpadd(v, (-a).get(), SFPMAD_MOD1_OFFSET_NONE);
+    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlr(vConstNeg1.get());
+    v = __builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE);
 }
 
 sfpi_inline vFloat::vFloat(const vDReg dreg)

@@ -5,7 +5,7 @@ In file included from ../../include/sfpi.h:113,
 ../../include/sfpi_internal.h:100:70: fatal error: cannot store sfpu register (register spill)
   100 | #define __builtin_rvtt_sfploadi(mod0, imm16) __builtin_riscv_sfploadi((void *)ckernel::instrn_buffer, mod0, imm16)
       |                                              ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../../include/sfpi.h:1023:9: note: in expansion of macro '__builtin_rvtt_sfploadi'
- 1023 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
+../../include/sfpi.h:1024:9: note: in expansion of macro '__builtin_rvtt_sfploadi'
+ 1024 |     v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
       |         ^~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.

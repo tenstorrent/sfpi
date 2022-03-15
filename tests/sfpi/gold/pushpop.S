@@ -552,7 +552,6 @@ _Z21control_flow_pif_gotoi:
 	call	rand
 	li	a5,1
 	beq	a0,a5,.L42
-.L40:
 	SFPCOMPC
 	SFPNOP
 	SFPLOADI	L0, 4, 5
@@ -564,6 +563,7 @@ _Z21control_flow_pif_gotoi:
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
+.L40:
 .L42:
 	SFPPOPC
 	SFPNOP
