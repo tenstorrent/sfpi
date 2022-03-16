@@ -10,15 +10,15 @@ namespace sfpi {
 constexpr vConstFloat vConst0(CREG_IDX_0);
 constexpr vConstFloat vConst1(CREG_IDX_1);
 constexpr vConstFloat vConst0p8373(CREG_IDX_0P837300003);
-constexpr vConstFloat vConstFloatPrgm0(CREG_IDX_PRGM0);
-constexpr vConstFloat vConstFloatPrgm1(CREG_IDX_PRGM1);
-constexpr vConstFloat vConstFloatPrgm2(CREG_IDX_PRGM2);
-constexpr vConstFloat vConstFloatPrgm3(CREG_IDX_PRGM3);
+constexpr vConstFloat vConstNeg1(CREG_IDX_PRGM0);
+constexpr vConstFloat vConstFloatPrgm0(CREG_IDX_PRGM1);
+constexpr vConstFloat vConstFloatPrgm1(CREG_IDX_PRGM2);
+constexpr vConstFloat vConstFloatPrgm2(CREG_IDX_PRGM3);
+
 constexpr vConstIntBase vConstTileId(CREG_IDX_TILEID);
-constexpr vConstIntBase vConstIntPrgm0(CREG_IDX_PRGM0);
-constexpr vConstIntBase vConstIntPrgm1(CREG_IDX_PRGM1);
-constexpr vConstIntBase vConstIntPrgm2(CREG_IDX_PRGM2);
-constexpr vConstIntBase vConstIntPrgm3(CREG_IDX_PRGM3);
+constexpr vConstIntBase vConstIntPrgm0(CREG_IDX_PRGM1);
+constexpr vConstIntBase vConstIntPrgm1(CREG_IDX_PRGM2);
+constexpr vConstIntBase vConstIntPrgm2(CREG_IDX_PRGM3);
 
 constexpr RegFile<vDReg, 64> dst_reg;
 
@@ -32,8 +32,8 @@ sfpi_inline vFloat fp_add(const vFloat a, const vFloat b)
 
 sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
 {
-    __rvtt_vec_t tmp = __builtin_rvtt_sfpmov(b.get(), SFPMOV_MOD1_COMPSIGN);
-    return __builtin_rvtt_sfpadd(a.get(), tmp, 0);
+    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlr(vConstNeg1.get());
+    return __builtin_rvtt_sfpmad(neg1, b.get(), a.get(), 0);
 }
 
 sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
@@ -336,6 +336,16 @@ sfpi_inline vUInt vUInt::operator>>(uint32_t amt) const
 sfpi_inline void vUInt::operator>>=(uint32_t amt)
 {
     assign((*this >> amt).get());
+}
+
+sfpi_inline void vConstFloat::operator=(const vFloat in) const
+{
+    __builtin_rvtt_sfpconfig_v(in.get(), get());
+}
+
+sfpi_inline void vConstIntBase::operator=(const vInt in) const
+{
+    __builtin_rvtt_sfpconfig_v(in.get(), get());
 }
 
 // Recursively process the conditional tree

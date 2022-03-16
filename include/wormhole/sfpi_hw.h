@@ -87,6 +87,8 @@ namespace sfpi {
 
 #define __builtin_rvtt_sfpswap(dst, src, mod) sfpu_rvtt_sfpswap(dst, src, mod)
 
+#define __builtin_rvtt_sfpconfig_v(l0, config_dest) sfpu_rvtt_sfpconfig_v(l0, config_dest)
+
 #else // COMPILE_FOR_EMULE
 
 #ifdef __clang__
@@ -193,6 +195,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
     asm("SFPSWAP %[d] %[s] %[m]"                    \
         : [d] "+x" (dst), [s] "+x" (src)            \
         : [m] "i" (mod))
+
+#define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_riscv_sfpconfig_v(l0, config_dest)
 
 #endif // __GNUC__
 
@@ -333,6 +337,23 @@ constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 = 5;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
+
+constexpr unsigned int SFPCONFIG_DEST_MACRO_INST0 = 0;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_INST1 = 1;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_INST2 = 2;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_INST3 = 3;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ0 = 4;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ1 = 5;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ2 = 6;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ3 = 7;
+constexpr unsigned int SFPCONFIG_DEST_MACRO_CTRL = 8;
+constexpr unsigned int SFPCONFIG_DEST_LREG11 = 11;
+constexpr unsigned int SFPCONFIG_DEST_LREG12 = 12;
+constexpr unsigned int SFPCONFIG_DEST_LREG13 = 13;
+constexpr unsigned int SFPCONFIG_DEST_LREG14 = 14;
+constexpr unsigned int SFPCONFIG_DEST_SFPU_CTRL = 15;
+
+constexpr unsigned int SFPCONFIG_MOD1_SRC_R0_LREG0 = 0;
 
 constexpr unsigned int CREG_IDX_0P837300003 = 8;
 constexpr unsigned int CREG_IDX_0 = 9;

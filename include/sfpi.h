@@ -261,6 +261,10 @@ class vConstFloat : public vRegBase {
 public:
     constexpr explicit vConstFloat(int r) : vRegBase(r) {}
 
+#ifdef ARCH_WORMHOLE
+    sfpi_inline void operator=(const vFloat in) const;
+#endif
+
     // Construct operator classes from operations
     sfpi_inline vFloat operator+(const vFloat b) const;
     sfpi_inline vFloat operator-(const vFloat b) const;
@@ -277,6 +281,10 @@ public:
 class vConstIntBase : public vRegBase {
 public:
     constexpr explicit vConstIntBase(int r) : vRegBase(r) {}
+
+#ifdef ARCH_WORMHOLE
+    sfpi_inline void operator=(const vInt in) const;
+#endif
 
     // Construct operator classes from operations
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>

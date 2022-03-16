@@ -243,19 +243,23 @@ void __rvtt_vec_t::dump(int i) const
 ///////////////////////////////////////////////////////////////////////////////
 class CRegInternal {
  private:
-    static constexpr __rvtt_vec_t cregs[16] {
-        0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
-        0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
-        0x3F56594B, 0x00000000, 0x3F800000, 0x00000000,
-        0x00000000, 0x00000000, 0x00000000, __rvtt_vec_t::ConstructType::TileId
-    };
+    static __rvtt_vec_t cregs[16];
 
  public:
-    constexpr const __rvtt_vec_t& operator[](const int i) const { return cregs[i]; }
+    void set(const __rvtt_vec_t& in, int n) { cregs[n] = in; }
+    const __rvtt_vec_t& operator[](const int i) const { return cregs[i]; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-constexpr CRegInternal kCRegInternal;
+static CRegInternal kCRegInternal;
+
+__rvtt_vec_t CRegInternal::cregs[16] =
+{
+    0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
+    0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF,
+    0x3F56594B, 0x00000000, 0x3F800000, 0xBF800000,
+    0x00000000, 0x00000000, 0x00000000, __rvtt_vec_t::ConstructType::TileId
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr)
@@ -1510,5 +1514,16 @@ void sfpu_rvtt_sfpswap(__rvtt_vec_t& dst, __rvtt_vec_t& src, int mod)
                 }
             }
         }
+    }
+}
+
+void sfpu_rvtt_sfpconfig_v(const __rvtt_vec_t& l0, unsigned int config_dest)
+{
+    if (config_dest >= SFPCONFIG_DEST_LREG11 &&
+        config_dest <= SFPCONFIG_DEST_LREG14) {
+        kCRegInternal.set(l0, config_dest);
+    } else {
+        // Most config bits aren't implemented
+        throw;
     }
 }

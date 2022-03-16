@@ -334,3 +334,4 @@ extern void sfpu_rvtt_sfpshft2_ge(const __rvtt_vec_t& src,
                                   __rvtt_vec_t& l2, __rvtt_vec_t& l3);
 extern __rvtt_vec_t sfpu_rvtt_sfpshft2_e(const __rvtt_vec_t& src, int mod);
 extern void sfpu_rvtt_sfpswap(__rvtt_vec_t& dst, __rvtt_vec_t& src, int mod);
+extern void sfpu_rvtt_sfpconfig_v(const __rvtt_vec_t& l0, unsigned int config_dest);

@@ -394,29 +394,33 @@ sfpi_test_noinline void test5()
     // Test SFPMAD, SFPMOV, vConsts
     dst_reg[5] = -dst_reg[0];
 
+    vConstFloatPrgm0 = .5F;
+    vConstFloatPrgm1 = 1.5F;
+    vConstIntPrgm2 = 0xBFC00000; // -1.5F
+
     v_if(dst_reg[0] == 0.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst0p8373;
     } v_elseif(dst_reg[0] == 1.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst0;
     } v_elseif(dst_reg[0] == 2.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm0;
+        dst_reg[5] = vConst0 * vConst0 + vConstNeg1;
     } v_elseif(dst_reg[0] == 3.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm1;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm0;
     } v_elseif(dst_reg[0] == 4.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm2;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm1;
     } v_elseif(dst_reg[0] == 5.0F) {
-        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm3;
+        dst_reg[5] = vConst0 * vConst0 + vConstFloatPrgm2;
     } v_elseif(dst_reg[0] == 6.0F) {
         dst_reg[5] = vConst0 * vConst0 + vConst1;
     }
     v_endif;
     // [0] = 0.8373
     // [1] = 0.0
-    // [2] = XXXX
-    // [3] = XXXX
-    // [4] = XXXX
-    // [5] = XXXX
-    // [6] = 1.0
+    // [2] = -1.0
+    // [3] = .5
+    // [4] = 1.5
+    // [5] = 2.5
+    // [6] = -1.5
 
     // [7] = -7.0
     // [8] = -8.0
@@ -2509,7 +2513,7 @@ sfpi_test_noinline void test15()
 
         // Load expected value, subtract actual value. result is 0 if correct
         vUInt eff = 0xF;
-        vUInt cmpa = base | vConstTileId & eff;
+        vUInt cmpa = base | (vConstTileId & eff);
         cmpa -= a;
         vUInt cmpb = base | ((vConstTileId & eff) + 0x10);
         cmpb -= b;
