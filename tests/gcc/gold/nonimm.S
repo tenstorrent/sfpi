@@ -169,21 +169,21 @@ _Z8load_regs:
 	addi	a4,a0,10
 	slli	a4,a4,16
 	srli	a4,a4,16
-	li	a3,1881145344
+	li	a3,1881210880
 	add	a3, a3, a4
 # Op(0x70) - d(2)
 	sw	a3,0(a5)
 	addi	a4,a0,20
 	slli	a4,a4,16
 	srli	a4,a4,16
-	li	a3,1880096768
+	li	a3,1880162304
 	add	a3, a3, a4
 # Op(0x70) - d(1)
 	sw	a3,0(a5)
 	addi	a0,a0,30
 	slli	a0,a0,16
 	srli	a0,a0,16
-	li	a4,1879048192
+	li	a4,1879113728
 	add	a4, a4, a0
 # Op(0x70) - d(0)
 	sw	a4,0(a5)
@@ -210,7 +210,7 @@ _Z9load_boths:
 	addi	a0,a0,10
 	slli	a0,a0,16
 	srli	a0,a0,16
-	li	a4,1879048192
+	li	a4,1879113728
 	add	a4, a4, a0
 # Op(0x70) - d(0)
 	sw	a4,0(a5)
@@ -1486,19 +1486,19 @@ _Z13loop_compileri:
 	sw	a6,0(a5)
 	slli	a1,a2,16
 	srli	a1,a1,16
-	li	a6,1881145344
+	li	a6,1881210880
 	add	a6, a6, a1
 # Op(0x70) - d(2)
 	sw	a6,0(a5)
 	slli	a1,a3,16
 	srli	a1,a1,16
-	li	a6,1880096768
+	li	a6,1880162304
 	add	a6, a6, a1
 # Op(0x70) - d(1)
 	sw	a6,0(a5)
 	slli	a1,a4,16
 	srli	a1,a1,16
-	li	a6,1879048192
+	li	a6,1879113728
 	add	a6, a6, a1
 # Op(0x70) - d(0)
 	sw	a6,0(a5)
@@ -1514,19 +1514,19 @@ _Z13loop_compileri:
 	sw	a6,0(a5)
 	slli	a1,a2,16
 	srli	a1,a1,16
-	li	a6,1881145344
+	li	a6,1881210880
 	add	a6, a6, a1
 # Op(0x70) - d(2)
 	sw	a6,0(a5)
 	slli	a1,a3,16
 	srli	a1,a1,16
-	li	a6,1880096768
+	li	a6,1880162304
 	add	a6, a6, a1
 # Op(0x70) - d(1)
 	sw	a6,0(a5)
 	slli	a1,a4,16
 	srli	a1,a1,16
-	li	a6,1879048192
+	li	a6,1879113728
 	add	a6, a6, a1
 # Op(0x70) - d(0)
 	sw	a6,0(a5)
@@ -1542,19 +1542,19 @@ _Z13loop_compileri:
 	sw	a6,0(a5)
 	slli	a1,a2,16
 	srli	a1,a1,16
-	li	a6,1881145344
+	li	a6,1881210880
 	add	a6, a6, a1
 # Op(0x70) - d(2)
 	sw	a6,0(a5)
 	slli	a1,a3,16
 	srli	a1,a1,16
-	li	a6,1880096768
+	li	a6,1880162304
 	add	a6, a6, a1
 # Op(0x70) - d(1)
 	sw	a6,0(a5)
 	slli	a1,a4,16
 	srli	a1,a1,16
-	li	a6,1879048192
+	li	a6,1879113728
 	add	a6, a6, a1
 # Op(0x70) - d(0)
 	sw	a6,0(a5)
@@ -1570,19 +1570,19 @@ _Z13loop_compileri:
 	sw	a1,0(a5)
 	slli	a2,a2,16
 	srli	a2,a2,16
-	li	a1,1881145344
+	li	a1,1881210880
 	add	a1, a1, a2
 # Op(0x70) - d(2)
 	sw	a1,0(a5)
 	slli	a3,a3,16
 	srli	a3,a3,16
-	li	a2,1880096768
+	li	a2,1880162304
 	add	a2, a2, a3
 # Op(0x70) - d(1)
 	sw	a2,0(a5)
 	slli	a4,a4,16
 	srli	a4,a4,16
-	li	a3,1879048192
+	li	a3,1879113728
 	add	a3, a3, a4
 # Op(0x70) - d(0)
 	sw	a3,0(a5)
@@ -1894,19 +1894,19 @@ main:
 	lw	a1,%lo(_ZN7ckernel13instrn_bufferE)(s2)
 	slli	a5,a0,16
 	srli	a5,a5,16
-	li	a4,1881145344
+	li	a4,1881210880
 	add	a4, a4, a5
 # Op(0x70) - d(2)
 	sw	a4,0(a1)
 	slli	a5,a2,16
 	srli	a5,a5,16
-	li	a4,1880096768
+	li	a4,1880162304
 	add	a4, a4, a5
 # Op(0x70) - d(1)
 	sw	a4,0(a1)
 	slli	a5,a3,16
 	srli	a5,a5,16
-	li	a4,1879048192
+	li	a4,1879113728
 	add	a4, a4, a5
 # Op(0x70) - d(0)
 	sw	a4,0(a1)
@@ -1922,19 +1922,19 @@ main:
 	sw	a4,0(a1)
 	slli	a5,a0,16
 	srli	a5,a5,16
-	li	a4,1881145344
+	li	a4,1881210880
 	add	a4, a4, a5
 # Op(0x70) - d(2)
 	sw	a4,0(a1)
 	slli	a5,a2,16
 	srli	a5,a5,16
-	li	a4,1880096768
+	li	a4,1880162304
 	add	a4, a4, a5
 # Op(0x70) - d(1)
 	sw	a4,0(a1)
 	slli	a5,a3,16
 	srli	a5,a5,16
-	li	a4,1879048192
+	li	a4,1879113728
 	add	a4, a4, a5
 # Op(0x70) - d(0)
 	sw	a4,0(a1)
@@ -1950,19 +1950,19 @@ main:
 	sw	a4,0(a1)
 	slli	a5,a0,16
 	srli	a5,a5,16
-	li	a4,1881145344
+	li	a4,1881210880
 	add	a4, a4, a5
 # Op(0x70) - d(2)
 	sw	a4,0(a1)
 	slli	a5,a2,16
 	srli	a5,a5,16
-	li	a4,1880096768
+	li	a4,1880162304
 	add	a4, a4, a5
 # Op(0x70) - d(1)
 	sw	a4,0(a1)
 	slli	a5,a3,16
 	srli	a5,a5,16
-	li	a4,1879048192
+	li	a4,1879113728
 	add	a4, a4, a5
 # Op(0x70) - d(0)
 	sw	a4,0(a1)
@@ -1978,19 +1978,19 @@ main:
 	sw	a5,0(a1)
 	slli	a0,a0,16
 	srli	a0,a0,16
-	li	a5,1881145344
+	li	a5,1881210880
 	add	a5, a5, a0
 # Op(0x70) - d(2)
 	sw	a5,0(a1)
 	slli	a2,a2,16
 	srli	a2,a2,16
-	li	a5,1880096768
+	li	a5,1880162304
 	add	a5, a5, a2
 # Op(0x70) - d(1)
 	sw	a5,0(a1)
 	slli	a3,a3,16
 	srli	a3,a3,16
-	li	a5,1879048192
+	li	a5,1879113728
 	add	a5, a5, a3
 # Op(0x70) - d(0)
 	sw	a5,0(a1)
