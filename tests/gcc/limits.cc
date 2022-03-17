@@ -30,10 +30,10 @@ int main(int argc, char* argv[])
     __builtin_riscv_sfpstore(nullptr, a, 0, 0xFFFF + offset16);
 
     // Signed 16 bit
-    a = __builtin_riscv_sfploadi(nullptr, 2, 0x0000 + offset16);
-    a = __builtin_riscv_sfploadi(nullptr, 2, 0xFFFF + offset16);
-    a = __builtin_riscv_sfploadi(nullptr, 4, -32768 + offset16);
-    a = __builtin_riscv_sfploadi(nullptr, 4,  32767 + offset16);
+    a = __builtin_riscv_sfploadi_ex(nullptr, 2, 0x0000 + offset16);
+    a = __builtin_riscv_sfploadi_ex(nullptr, 2, 0xFFFF + offset16);
+    a = __builtin_riscv_sfploadi_ex(nullptr, 4, -32768 + offset16);
+    a = __builtin_riscv_sfploadi_ex(nullptr, 4,  32767 + offset16);
 
     // Unsigned 16 bit
     a = __builtin_riscv_sfpaddi(nullptr, a, 0x0000 + offset16, 0);

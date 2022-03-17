@@ -527,7 +527,7 @@ void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mo
     if (b != 0) {
         __rvtt_vec_t tmp;
         int loadi_mod = ((mod1 & SFPSCMP_EX_MOD1_FMT_A) == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
-        __rvtt_vec_t op_b = __builtin_rvtt_sfploadi(loadi_mod, b);
+        __rvtt_vec_t op_b = __builtin_rvtt_sfploadi_ex(loadi_mod, b);
         tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
 
         __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);

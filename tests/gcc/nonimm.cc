@@ -91,10 +91,10 @@ void load_both(short int addr)
 
 void loadi_imm(short int value)
 {
-    v64sf x = __builtin_riscv_sfploadi((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_riscv_sfploadi((void *)instrn_buffer, 4, 10);
-    v64sf z = __builtin_riscv_sfploadi((void *)instrn_buffer, 8, 20);
-    v64sf a = __builtin_riscv_sfploadi((void *)instrn_buffer, 12, 30);
+    v64sf x = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 4, 10);
+    v64sf z = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 8, 20);
+    v64sf a = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 12, 30);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_riscv_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -103,10 +103,10 @@ void loadi_imm(short int value)
 
 void loadi_reg(short int value)
 {
-    v64sf x = __builtin_riscv_sfploadi((void *)instrn_buffer, 0, value);
-    v64sf y = __builtin_riscv_sfploadi((void *)instrn_buffer, 4, value+1);
-    v64sf z = __builtin_riscv_sfploadi((void *)instrn_buffer, 8, value+2);
-    v64sf a = __builtin_riscv_sfploadi((void *)instrn_buffer, 12, value+3);
+    v64sf x = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 0, value);
+    v64sf y = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 4, value+1);
+    v64sf z = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 8, value+2);
+    v64sf a = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 12, value+3);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_riscv_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -115,10 +115,10 @@ void loadi_reg(short int value)
 
 void loadi_both(short int value)
 {
-    v64sf x = __builtin_riscv_sfploadi((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_riscv_sfploadi((void *)instrn_buffer, 4, 20);
-    v64sf z = __builtin_riscv_sfploadi((void *)instrn_buffer, 8, value);
-    v64sf a = __builtin_riscv_sfploadi((void *)instrn_buffer, 12, value+1);
+    v64sf x = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 4, 20);
+    v64sf z = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 8, value);
+    v64sf a = __builtin_riscv_sfploadi_ex((void *)instrn_buffer, 12, value+1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_riscv_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_riscv_sfpstore((void *)instrn_buffer, z, 2, 20);

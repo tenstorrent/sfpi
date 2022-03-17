@@ -289,15 +289,16 @@ public:
 //////////////////////////////////////////////////////////////////////////////
 class vFloat : public vBase {
 private:
-    sfpi_inline void loadi(const s2vFloat16 val);
+    sfpi_inline void loadf(const float val);
+    sfpi_inline void loadf16(const s2vFloat16 val);
 
 public:
     vFloat() = default;
 
     sfpi_inline vFloat(const vDReg dreg);
     sfpi_inline vFloat(const vConst creg);
-    sfpi_inline vFloat(const s2vFloat16 f) { loadi(f); }
-    sfpi_inline vFloat(const float f) { loadi(f); }
+    sfpi_inline vFloat(const s2vFloat16 f) { loadf16(f); }
+    sfpi_inline vFloat(const float f) { loadf(f); }
     sfpi_inline vFloat(const __rvtt_vec_t& t) { assign(t); }
 
     // Assignment
@@ -1019,22 +1020,29 @@ sfpi_inline vFloat vFloat::operator-() const
     return __builtin_rvtt_sfpmov(v, SFPMOV_MOD1_COMPSIGN);
 }
 
-sfpi_inline void vFloat::loadi(const s2vFloat16 val)
+sfpi_inline void vFloat::loadf(const float val)
 {
-    v = __builtin_rvtt_sfploadi(val.get_format(), val.get());
+    s2vFloat16 c = s2vFloat16(val);
+    v = __builtin_rvtt_sfploadi_ex(c.get_format(), c.get());
+    initialized = true;
+}
+
+sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
+{
+    v = __builtin_rvtt_sfploadi_ex(val.get_format(), val.get());
     initialized = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void vIntBase::loadsi(int32_t val)
 {
-    v = __builtin_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, val);
+    v = __builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_SHORT, val);
     initialized = true;
 }
 
 sfpi_inline void vIntBase::loadui(uint32_t val)
 {
-    v = __builtin_rvtt_sfploadi(SFPLOADI_MOD0_USHORT, val);
+    v = __builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_USHORT, val);
     initialized = true;
 }
 

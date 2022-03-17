@@ -19,7 +19,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpload(mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
 #define __builtin_rvtt_sfpassignlr(lr) sfpu_rvtt_sfpassignlr(lr)
 #define __builtin_rvtt_sfpkeepalive(x, n)
-#define __builtin_rvtt_sfploadi(mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
+#define __builtin_rvtt_sfploadi_ex(mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
 #define __builtin_rvtt_sfpstore(src, mod0, addr) sfpu_rvtt_sfpstore(src, mod0, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) sfpu_rvtt_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() sfpu_rvtt_sfpnop()
@@ -97,7 +97,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpassignlr(lr) __builtin_riscv_sfpassignlr(lr)
 #define __builtin_rvtt_sfpkeepalive(x, n) __builtin_riscv_sfpkeepalive(x, n)
 
-#define __builtin_rvtt_sfploadi(mod0, imm16) __builtin_riscv_sfploadi((void *)ckernel::instrn_buffer, mod0, imm16)
+#define __builtin_rvtt_sfploadi_ex(mod0, imm16) __builtin_riscv_sfploadi_ex((void *)ckernel::instrn_buffer, mod0, imm16)
 #define __builtin_rvtt_sfpstore(src, mod0, addr) __builtin_riscv_sfpstore((void *)ckernel::instrn_buffer, src, mod0, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) __builtin_riscv_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() __builtin_riscv_sfpnop()
@@ -172,6 +172,7 @@ constexpr unsigned int SFPLOADI_MOD0_FLOATB = 0;
 constexpr unsigned int SFPLOADI_MOD0_FLOATA = 1;
 constexpr unsigned int SFPLOADI_MOD0_USHORT = 2;
 constexpr unsigned int SFPLOADI_MOD0_SHORT = 4;
+constexpr unsigned int SFPLOADIEX_MOD0_FLOAT = 16;
 
 constexpr unsigned int SFPEXMAN_MOD1_PAD8 = 0;
 constexpr unsigned int SFPEXMAN_MOD1_PAD9 = 1;
