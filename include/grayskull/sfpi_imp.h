@@ -454,10 +454,15 @@ sfpi_inline void vCond::emit(bool negate) const
     uint32_t use_mod1 = negate ? neg_mod1 : mod1;
 
     switch (type) {
+
     case vCond::vCondOpType::CompareFloat:
+        // Not used on Grayskull
+        break;
+
+    case vCond::vCondOpType::CompareFloat16:
         __builtin_rvtt_sfpscmp_ex(op_a.get_vec().get(), op_b.get_scalarfp().get(),
                                   use_mod1 | (op_b.get_scalarfp().get_format() ==
-                                              SFPLOADI_MOD0_FLOATA ? SFPSCMP_EX_MOD1_FMT_A : 0));
+                                              SFPLOADI_MOD0_FLOATA ? SFPSCMP_EX_MOD1_FMT_A : SFPSCMP_EX_MOD1_FMT_B));
         break;
 
     case vCond::vCondOpType::ComparevFloat:

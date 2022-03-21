@@ -116,7 +116,6 @@ sfpi_test_noinline void test3()
         dst_reg[3] = 20.0F;
     }
     v_endif;
-
     
     v_if(dst_reg[0] == 2.0F) {
         // 1 load
@@ -945,7 +944,6 @@ sfpi_test_noinline void test7()
 
 sfpi_test_noinline void test8()
 {
-#if 0
     // SFPAND, SFPOR, SFPNOT, SFPABS
     // Atypical usage of conditionals
     // More conditionals (short v compares)
@@ -1203,7 +1201,7 @@ sfpi_test_noinline void test8()
     // [29] = 32.0
     // [30] = 64.0
     // [31] = 32.0
-#endif
+
     copy_result_to_dreg0(8);
 }
 
@@ -1477,7 +1475,6 @@ sfpi_test_noinline void test11()
         v_endif;
     }
 
-#if 0
     // lut2 3 entry 16 bit
     {
         vUInt l0 = (s2vFloat16(2.0f).get() << 16) | s2vFloat16(3.0f).get();
@@ -1616,7 +1613,7 @@ sfpi_test_noinline void test11()
         }
         v_endif;
     }
-#endif
+
     // [1] = 0.125
     // [2] = -0.125
     // [3] = -0.375
@@ -2494,7 +2491,6 @@ sfpi_test_noinline void test14(int imm)
 
 sfpi_test_noinline void test15()
 {
-#if 0
     // SFPTRANSP, SFPSHFT2
 
     dst_reg[15] = -dst_reg[0];
@@ -2712,7 +2708,6 @@ void test16()
 
 void test17()
 {
-#if 0
     // more SFPSWAP
     dst_reg[17] = -dst_reg[0];
 

@@ -162,6 +162,19 @@ class vCCCtrlBase;
 enum class LRegs;
 
 //////////////////////////////////////////////////////////////////////////////
+sfpi_inline unsigned int f32asui(const float val)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const float inf) : f(inf) {}
+    } tmp(val);
+
+    return tmp.i;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 template<class Type, int N>
 class RegFile {
 
@@ -611,6 +624,7 @@ public:
         Null,
         Vec,
         VecPtr,
+        Float,
         Float16,
     };
 
@@ -633,6 +647,7 @@ public:
     sfpi_inline vOperand() : kind(Type::Null), null_ptr(nullptr), negate(false) {}
     sfpi_inline vOperand(const vBase v, bool neg = false) : kind(Type::Vec), vec(v), negate(neg) {}
     sfpi_inline vOperand(vBase* const v, bool neg = false) : kind(Type::VecPtr), vec_ptr(v), negate(neg) {}
+    sfpi_inline vOperand(const float v) : kind(Type::Float), uint_val(f32asui(v)), negate(false) {}
     sfpi_inline vOperand(const s2vFloat16 v) : kind(Type::Float16), s2vfloat16_val(v), negate(false) {}
 
     sfpi_inline Type get_type() const { return kind; }
@@ -641,6 +656,7 @@ public:
     sfpi_inline const vBase get_vec() const { return vec; }
     sfpi_inline vBase* const get_vec_ptr() const { return vec_ptr; }
     sfpi_inline const s2vFloat16 get_scalarfp() const { return s2vfloat16_val; }
+    sfpi_inline const uint32_t get_uint() const { return uint_val; }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -712,6 +728,7 @@ class vCond {
 protected:
     enum class vCondOpType {
         CompareFloat,
+        CompareFloat16,
         ComparevFloat,
         CompareInt,
         ComparevInt,
@@ -745,6 +762,9 @@ public:
 
     template <class typeA>
     sfpi_inline vCond(vCondOpType t, const typeA a, vIntBase b, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(0), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
+
+    template <class typeA>
+    sfpi_inline vCond(vCondOpType t, const typeA a, const float b, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
 
     template <class typeA>
     sfpi_inline vCond(vCondOpType t, const typeA a, const s2vFloat16 b, int32_t i, uint32_t m, uint32_t nm, bool c = false, bool nc = false) : type(t), op_a(a), op_b(b), imm(i), mod1(m), neg_mod1(nm), comp(c), neg_comp(nc) {}
@@ -783,7 +803,10 @@ private:
 
 public:
     template <class type>
-    sfpi_inline vCondComp(const vCondCompOpType t, const type a, const s2vFloat16 b, bool c = false, bool nc = false) : vCond(vCondOpType::CompareFloat, a, b, 0, t, not_cond(t), c, nc) {}
+    sfpi_inline vCondComp(const vCondCompOpType t, const type a, const float b, bool c = false, bool nc = false) : vCond(vCondOpType::CompareFloat, a, b, 0, t, not_cond(t), c, nc) {}
+
+    template <class type>
+    sfpi_inline vCondComp(const vCondCompOpType t, const type a, const s2vFloat16 b, bool c = false, bool nc = false) : vCond(vCondOpType::CompareFloat16, a, b, 0, t, not_cond(t), c, nc) {}
 
     sfpi_inline vCondComp(const vCondCompOpType t, const vFloat a, const vFloat b, bool c = false, bool nc = false) : vCond(vCondOpType::ComparevFloat, a, b, 0, t, not_cond(t), c, nc) {}
 
@@ -1068,19 +1091,6 @@ sfpi_inline IAddCC vCondOpIAddI::not_cond(const IAddCC t) const
 sfpi_inline IAddCC vCondOpIAddV::not_cond(const IAddCC t) const
 {
     return (t == IAddCCLT0) ? IAddCCGTE0 : IAddCCLT0;
-}
-
-// Helper
-sfpi_inline unsigned int f32asui(const float val)
-{
-    union Converter {
-        const float f;
-        const uint32_t i;
-
-        constexpr Converter(const float inf) : f(inf) {}
-    } tmp(val);
-
-    return tmp.i;
 }
 
 } // namespace sfpi

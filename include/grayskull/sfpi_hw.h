@@ -202,6 +202,7 @@ constexpr unsigned int SFPCMP_EX_MOD1_CC_GT = 6;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_MASK = 7;
 
 constexpr unsigned int SFPSCMP_EX_MOD1_FMT_A = 8;
+constexpr unsigned int SFPSCMP_EX_MOD1_FMT_B = 16;
 
 constexpr unsigned int SFPIADD_EX_MOD1_IS_SUB = 16;
 

@@ -91,10 +91,10 @@ void load_both(short int addr)
 
 void loadi_imm(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 4, 10);
-    v64sf z = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 8, 20);
-    v64sf a = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 12, 30);
+    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, 10);
+    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, 20);
+    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 12, 30);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -103,10 +103,10 @@ void loadi_imm(short int value)
 
 void loadi_reg(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 0, value);
-    v64sf y = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 4, value+1);
-    v64sf z = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 8, value+2);
-    v64sf a = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 12, value+3);
+    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, value);
+    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, value+1);
+    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, value+2);
+    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 12, value+3);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -115,10 +115,10 @@ void loadi_reg(short int value)
 
 void loadi_both(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 4, 20);
-    v64sf z = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 8, value);
-    v64sf a = __builtin_rvtt_wh_sfploadi((void *)instrn_buffer, 12, value+1);
+    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, 20);
+    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, value);
+    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 12, value+1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -467,10 +467,10 @@ void setman_i_imm(short int value)
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, x);
-    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, y);
-    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, z);
-    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, a);
+    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, x, 2);
+    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, y, 2);
+    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, z, 2);
+    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xAA, a, 2);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -483,10 +483,10 @@ void setman_i_reg(short int value)
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+0, x);
-    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+1, y);
-    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+2, z);
-    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+3, a);
+    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+0, x, 2);
+    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+1, y, 2);
+    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+2, z, 2);
+    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+3, a, 2);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);
@@ -499,10 +499,10 @@ void setman_i_both(short int value)
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 30);
     v64sf a = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 40);
-    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xBB, x);
-    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0XBB, y);
-    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+0, z);
-    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+1, a);
+    x = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0xBB, x, 2);
+    y = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, 0XBB, y, 2);
+    z = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+0, z, 2);
+    a = __builtin_rvtt_wh_sfpsetman_i((void *)instrn_buffer, value+1, a, 2);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 2, 20);

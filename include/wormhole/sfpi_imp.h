@@ -121,12 +121,12 @@ sfpi_inline vFloat vFloat::operator-(const vFloat b) const { return sfpi_int::fp
 sfpi_inline vFloat vFloat::operator-(const float b) const { return sfpi_int::fp_add(*this, vFloat(-b)); }
 sfpi_inline vFloat vFloat::operator-(const s2vFloat16 b) const { return sfpi_int::fp_add(*this, b.negate()); }
 sfpi_inline vFloat vFloat::operator*(const vFloat b) const { return sfpi_int::fp_mul(*this, b); }
-sfpi_inline vCondComp vFloat::operator==(const float x) const { return vCondComp(vCondComp::CompEQ, *this, s2vFloat16(x)); }
-sfpi_inline vCondComp vFloat::operator!=(const float x) const { return vCondComp(vCondComp::CompNE, *this, s2vFloat16(x)); }
-sfpi_inline vCondComp vFloat::operator<(const float x) const { return vCondComp(vCondComp::CompLT, *this, s2vFloat16(x)); }
-sfpi_inline vCondComp vFloat::operator<=(const float x) const { return vCondComp(vCondComp::CompLTE, *this, s2vFloat16(x), true, false); }
-sfpi_inline vCondComp vFloat::operator>(const float x) const { return vCondComp(vCondComp::CompGT, *this, s2vFloat16(x), false, true); }
-sfpi_inline vCondComp vFloat::operator>=(const float x) const { return vCondComp(vCondComp::CompGTE, *this, s2vFloat16(x)); }
+sfpi_inline vCondComp vFloat::operator==(const float x) const { return vCondComp(vCondComp::CompEQ, *this, x); }
+sfpi_inline vCondComp vFloat::operator!=(const float x) const { return vCondComp(vCondComp::CompNE, *this, x); }
+sfpi_inline vCondComp vFloat::operator<(const float x) const { return vCondComp(vCondComp::CompLT, *this, x); }
+sfpi_inline vCondComp vFloat::operator<=(const float x) const { return vCondComp(vCondComp::CompLTE, *this, x, true, false); }
+sfpi_inline vCondComp vFloat::operator>(const float x) const { return vCondComp(vCondComp::CompGT, *this, x, false, true); }
+sfpi_inline vCondComp vFloat::operator>=(const float x) const { return vCondComp(vCondComp::CompGTE, *this, x); }
 sfpi_inline vCondComp vFloat::operator==(const s2vFloat16 x) const { return vCondComp(vCondComp::CompEQ, *this, x); }
 sfpi_inline vCondComp vFloat::operator!=(const s2vFloat16 x) const { return vCondComp(vCondComp::CompNE, *this, x); }
 sfpi_inline vCondComp vFloat::operator<(const s2vFloat16 x) const { return vCondComp(vCondComp::CompLT, *this, x); }
@@ -169,7 +169,7 @@ sfpi_inline vFloat vFloat::operator-() const
 
 sfpi_inline void vFloat::loadf(const float val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_UINT32, f32asui(val)));
+    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_FLOAT, f32asui(val)));
 }
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
@@ -190,7 +190,7 @@ sfpi_inline void vIntBase::loadus(uint16_t val)
 
 sfpi_inline void vIntBase::loadsi(int32_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_UINT32, val));
+    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_INT32, val));
 }
 
 sfpi_inline void vIntBase::loadui(uint32_t val)
@@ -454,9 +454,14 @@ sfpi_inline void vCond::emit(bool negate) const
 
     switch (type) {
     case vCond::vCondOpType::CompareFloat:
+        __builtin_rvtt_sfpscmp_ex(op_a.get_vec().get(), op_b.get_uint(),
+                                  use_mod1 | SFPSCMP_EX_MOD1_FMT_FLOAT);
+        break;
+
+    case vCond::vCondOpType::CompareFloat16:
         __builtin_rvtt_sfpscmp_ex(op_a.get_vec().get(), op_b.get_scalarfp().get(),
                                   use_mod1 | (op_b.get_scalarfp().get_format() ==
-                                              SFPLOADI_MOD0_FLOATA ? SFPSCMP_EX_MOD1_FMT_A : 0));
+                                              SFPLOADI_MOD0_FLOATA ? SFPSCMP_EX_MOD1_FMT_A : SFPSCMP_EX_MOD1_FMT_B));
         break;
 
     case vCond::vCondOpType::ComparevFloat:

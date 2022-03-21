@@ -42,7 +42,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpsetexp_i(imm12, src) sfpu_rvtt_sfpsetexp_i(imm12, src)
 #define __builtin_rvtt_sfpsetexp_v(dst, src) sfpu_rvtt_sfpsetexp_v(dst, src)
 
-#define __builtin_rvtt_sfpsetman_i(imm12, src) sfpu_rvtt_sfpsetman_i(imm12, src)
+#define __builtin_rvtt_sfpsetman_i(imm12, src, mod) sfpu_rvtt_sfpsetman_i(imm12, src, mod)
 #define __builtin_rvtt_sfpsetman_v(dst, src) sfpu_rvtt_sfpsetman_v(dst, src)
 
 #define __builtin_rvtt_sfpabs(src, mod1) sfpu_rvtt_sfpabs(src, mod1)
@@ -139,7 +139,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_rvtt_wh_sfpsetexp_i((void *)ckernel::instrn_buffer, imm12, src)
 #define __builtin_rvtt_sfpsetexp_v(dst, src) __builtin_rvtt_wh_sfpsetexp_v(dst, src)
 
-#define __builtin_rvtt_sfpsetman_i(imm12, src) __builtin_rvtt_wh_sfpsetman_i((void *)ckernel::instrn_buffer, imm12, src)
+#define __builtin_rvtt_sfpsetman_i(imm12, src, mod) __builtin_rvtt_wh_sfpsetman_i((void *)ckernel::instrn_buffer, imm12, src, mod)
 #define __builtin_rvtt_sfpsetman_v(dst, src) __builtin_rvtt_wh_sfpsetman_v(dst, src)
 
 #define __builtin_rvtt_sfpabs(src, mod1) __builtin_rvtt_wh_sfpabs(src, mod1)
@@ -196,7 +196,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
         : [d] "+x" (dst), [s] "+x" (src)            \
         : [m] "i" (mod))
 
-#define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_riscv_sfpconfig_v(l0, config_dest)
+#define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 
 #endif // __GNUC__
 
@@ -222,7 +222,10 @@ constexpr unsigned int SFPLOADI_MOD0_USHORT = 2;
 constexpr unsigned int SFPLOADI_MOD0_SHORT = 4;
 constexpr unsigned int SFPLOADI_MOD0_UPPER = 8;
 constexpr unsigned int SFPLOADI_MOD0_LOWER = 10;
-constexpr unsigned int SFPLOADI_EX_MOD0_UINT32 = 16;
+constexpr unsigned int SFPLOADI_EX_MOD0_32BIT_MASK = 16;
+constexpr unsigned int SFPLOADI_EX_MOD0_INT32 = 16;
+constexpr unsigned int SFPLOADI_EX_MOD0_UINT32 = 17;
+constexpr unsigned int SFPLOADI_EX_MOD0_FLOAT = 18;
 
 constexpr unsigned int SFPEXMAN_MOD1_PAD8 = 0;
 constexpr unsigned int SFPEXMAN_MOD1_PAD9 = 1;
@@ -253,6 +256,9 @@ constexpr unsigned int SFPCMP_EX_MOD1_CC_GT = 6;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_MASK = 7;
 
 constexpr unsigned int SFPSCMP_EX_MOD1_FMT_A = 8;
+constexpr unsigned int SFPSCMP_EX_MOD1_FMT_B = 16;
+constexpr unsigned int SFPSCMP_EX_MOD1_FMT_FLOAT = 32;
+constexpr unsigned int SFPSCMP_EX_MOD1_FMT_MASK = 0x38;
 
 constexpr unsigned int SFPIADD_EX_MOD1_IS_SUB = 16;
 
@@ -265,6 +271,8 @@ constexpr unsigned int SFPSETCC_MOD1_LREG_NE0 = 2;
 constexpr unsigned int SFPSETCC_MOD1_LREG_GTE0 = 4;
 constexpr unsigned int SFPSETCC_MOD1_LREG_EQ0 = 6;
 constexpr unsigned int SFPSETCC_MOD1_COMP = 8;
+
+constexpr unsigned int SFPSETMAN_EX_MOD1_16BITIMM = 2;
 
 // EU: enable unmodified, EC: complement, EI: immediate
 // R1: result set, RI: immediate

@@ -322,13 +322,19 @@ __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned int value)
         }
         break;
 
+    case SFPLOADI_EX_MOD0_INT32:
     case SFPLOADI_EX_MOD0_UINT32:
+        converted = value;
+        break;
+
+    case SFPLOADI_EX_MOD0_FLOAT:
         converted = value;
         break;
 
     case SFPLOADI_MOD0_UPPER:
     case SFPLOADI_MOD0_LOWER:
     default:
+        fprintf(stderr, "Illegal mod0 in sfploadi: %d\n", mod0);
         throw;
     }
 
@@ -441,6 +447,7 @@ void sfpu_rvtt_sfpencc(unsigned int imm12, unsigned int mod1)
         sfpu_cc.set_result(false, (imm12 & 2) == 2);
         break;
     default:
+        fprintf(stderr, "Illegal mod1 in sfpencc: %d\n", mod1);
         throw;
     };
 }
@@ -496,6 +503,7 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
             sfpu_cc.and_result(i, !sfpu_cc.enabled(i));
             break;
         default:
+            fprintf(stderr, "Illegal mod1 in sfpsetcc: %d\n", mod1);
             throw;
         }
     }
@@ -518,14 +526,15 @@ void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mo
 
     if (b != 0) {
         __rvtt_vec_t tmp;
-        int loadi_mod = ((mod1 & SFPSCMP_EX_MOD1_FMT_A) == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
+        int fmt = mod1 & SFPSCMP_EX_MOD1_FMT_MASK;
+        int loadi_mod = (fmt == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA :
+            ((fmt == SFPSCMP_EX_MOD1_FMT_B) ? SFPLOADI_MOD0_FLOATB : SFPLOADI_EX_MOD0_FLOAT);
         __rvtt_vec_t op_b = __builtin_rvtt_sfploadi_ex(loadi_mod, b);
         __rvtt_vec_t neg_op_b = __builtin_rvtt_sfpmov(op_b, SFPMOV_MOD1_COMPSIGN);
         tmp = __builtin_rvtt_sfpmad(neg_op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_1), a, 0);
-
-        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
     } else {
-        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[cmp]);
     }
 }
 
@@ -545,7 +554,7 @@ void sfpu_rvtt_sfpvcmp_ex(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned
             sfpu_rvtt_sfpcompc();
         }
     } else {
-        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1 & SFPCMP_EX_MOD1_CC_MASK]);
     }
 }
 
@@ -624,7 +633,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetexp_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpsetman_i(unsigned int imm, const __rvtt_vec_t& v)
+__rvtt_vec_t sfpu_rvtt_sfpsetman_i(unsigned int imm, const __rvtt_vec_t& v, unsigned int)
 {
     __rvtt_vec_t tmp;
 
@@ -824,6 +833,7 @@ __rvtt_vec_t sfpu_rvtt_sfplz(const __rvtt_vec_t& v, unsigned int mod1)
                 sfpu_cc.deferred_and_result(i, val == 0);
                 break;
             default:
+                fprintf(stderr, "Illegal mod1 in sfplz: %d\n", mod1);
                 throw;
             }
         }
@@ -988,7 +998,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t&
         mod |= SFPIADD_MOD1_CC_NONE;
         tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
         if (cmp != 0) {
-            sfpu_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
+            sfpu_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp & SFPCMP_EX_MOD1_CC_MASK]);
         }
     }
 
@@ -1524,6 +1534,7 @@ void sfpu_rvtt_sfpconfig_v(const __rvtt_vec_t& l0, unsigned int config_dest)
         kCRegInternal.set(l0, config_dest);
     } else {
         // Most config bits aren't implemented
+        fprintf(stderr, "Unimplemented sfpconfig call\n");
         throw;
     }
 }

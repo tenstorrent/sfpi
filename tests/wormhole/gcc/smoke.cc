@@ -46,8 +46,8 @@ void smoke()
     __builtin_rvtt_wh_sfpcompc();
     __builtin_rvtt_wh_sfppopc();
 
-    a = __builtin_rvtt_wh_sfploadi(nullptr, 0, 12);
-    a = __builtin_rvtt_wh_sfploadi(nullptr, 0, -12);
+    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, 12);
+    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, -12);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 4);
     v64sf lr13 = __builtin_rvtt_wh_sfpassignlr(13);
@@ -102,6 +102,13 @@ void smoke()
 
     v2 = __builtin_rvtt_wh_sfpiadd_v(v2, lr13, 4);
 
+    v2 = __builtin_rvtt_wh_sfpxor(v2, v1);
+    v2 = __builtin_rvtt_wh_sfpcast(v1, 1);
+    v2 = __builtin_rvtt_wh_sfpshft2_e(v1, 3);
+    v2 = __builtin_rvtt_wh_sfpstochrnd_i(nullptr, 2, 3, v1, 1);
+    v2 = __builtin_rvtt_wh_sfpstochrnd_v(2, v2, v1, 1);
+    __builtin_rvtt_wh_sfpconfig_v(v2, 0);
+
     v2 = __builtin_rvtt_wh_sfplut(v2, d, c, v1, 1);
 }
 
@@ -117,14 +124,14 @@ void smoke_live()
     d = __builtin_rvtt_wh_sfpmul_lv(d,   a,   a, 1);
     d = __builtin_rvtt_wh_sfpadd_lv(d,   a,   a, 1);
 
-    a = __builtin_rvtt_wh_sfploadi_lv(nullptr, a, 0, 12);
+    a = __builtin_rvtt_wh_sfploadi_ex_lv(nullptr, a, 0, 12);
 
     a = __builtin_rvtt_wh_sfpmov_lv(a, d, SFPMOV_MOD1_COMPSIGN);
 
     a = __builtin_rvtt_wh_sfpexman_lv(a, d, SFPEXMAN_MOD1_PAD8);
 
     a = __builtin_rvtt_wh_sfpsetexp_i_lv(nullptr, a, 23, d);
-    a = __builtin_rvtt_wh_sfpsetman_i_lv(nullptr, a, 23, d);
+    a = __builtin_rvtt_wh_sfpsetman_i_lv(nullptr, a, 23, d, 0);
 
     a = __builtin_rvtt_wh_sfpabs_lv(a, d, SFPABS_MOD1_FLOAT);
     a = __builtin_rvtt_wh_sfpnot_lv(a, d);
@@ -142,6 +149,12 @@ void smoke_live()
     __builtin_rvtt_wh_sfppopc();
 
     a = __builtin_rvtt_wh_sfpsetsgn_i_lv(nullptr, a, 10, d);
+
+    a = __builtin_rvtt_wh_sfpcast_lv(a, d, 1);
+    a = __builtin_rvtt_wh_sfpshft2_e_lv(a, d, 3);
+    // XXXXXX bumping into bad gimple stuff again
+    //a = __builtin_rvtt_wh_sfpstochrnd_i_lv(nullptr, a, 2, 3, d, 1);
+    a = __builtin_rvtt_wh_sfpstochrnd_v_lv(a, 2, a, d, 1);
 }
 
 void smokier()

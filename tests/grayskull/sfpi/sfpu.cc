@@ -512,7 +512,7 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
 void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1)
 {
     unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
-    
+
     if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
         unsigned int new_mod = mod1 & ~SFPCMP_EX_MOD1_CC_MASK;
         // Inefficient
@@ -530,9 +530,9 @@ void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mo
         __rvtt_vec_t op_b = __builtin_rvtt_sfploadi_ex(loadi_mod, b);
         tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
 
-        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
     } else {
-        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[cmp]);
     }
 }
 
