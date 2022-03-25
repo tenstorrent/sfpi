@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cmath>
 #include <string>
 #include <sfpi_fp16.h>
 
@@ -41,6 +42,41 @@ inline float int_to_float(unsigned int i)
     return tmp.f;
 }
 
+inline int float_to_fp8(float f)
+{
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const float inf) : f(inf) {}
+    } tmp(f);
+    
+    if (f == 0.0) return 0xff;
+
+    unsigned int exp = (tmp.i & 0x7f800000) >> 23;
+    if (exp > 127 || exp < 127 - 7) return 0x0BAD;
+    
+    return ((tmp.i >> 24) & 0x80) | ((127 - exp) << 4) | ((tmp.i >> 19) & 0xf);
+}
+
+inline float fp8_to_float(unsigned int x)
+{
+    if (x > 0xff) return NAN;
+    if (x == 0xff) return 0.0;
+
+    unsigned int exp = 127 - ((x & 0x70) >> 4);
+    unsigned int y = ((x & 0x80) << 24) | (exp << 23) | ((x & 0xf) << 19);
+
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const unsigned int ini) : i(ini) {}
+    } tmp(y);
+    
+    return tmp.f;
+}
+
 inline int float_to_int(float f)
 {
     union Converter {
@@ -76,10 +112,16 @@ int main(int argc, char* argv[])
         float val = stof(s);
         printf("fp16a: 0x%x (%d)\n", (unsigned int)s2vFloat16a(val).get(), (int)s2vFloat16a(val).get());
         printf("fp16b: 0x%x (%d)\n", (unsigned int)s2vFloat16b(val).get(), (int)s2vFloat16b(val).get());
-        printf("fp32 : 0x%x (%d)\n", (unsigned int)float_to_int(val), (int)float_to_int(val));
+        printf("fp8  : 0x%x\n", (unsigned int)float_to_fp8(val));
+        printf("fp32 : 0x%x (%d, %dhi %dlo)\n", (unsigned int)float_to_int(val), (int)float_to_int(val), (unsigned int)float_to_int(val) >> 16, (unsigned int)float_to_int(val) & 0xFFFF);
+    } else if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X') && s.length() > 6) {
+        int val = stoi(s, nullptr, 0);
+        // Must be fp32
+        printf("fp32: %f\n", int_to_float(val));
     } else {
         int val = stoi(s, nullptr, 0);
         printf("fp32 (from fp16a): %f\n", fp16a_to_fp32(val));
         printf("fp32 (from fp16b): %f\n", fp16b_to_fp32(val));
+        printf("fp32 (from 8)    : %f\n", fp8_to_float(val));
     }
 }
