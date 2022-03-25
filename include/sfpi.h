@@ -90,7 +90,9 @@
 //    detail.  The main piece for the wrapper is that assignments generate an
 //    sfpassign_lv instruction which propogates the value from the previous
 //    assignment, thought this can only be done if the variable was previously
-//    written (initialized).
+//    written (initialized) and is only necessary if the instruction doesn't
+//    take the destination as an input (otherwise an unnecessary move may be
+//    generated).
 //
 //  Ugliness:
 //    The wrapper should get smaller over time as functionality is moved into
@@ -274,10 +276,10 @@ protected:
     bool initialized;
     __rvtt_vec_t v;
 
+    sfpi_inline void assign(const __rvtt_vec_t t);
+
 public:
     sfpi_inline vBase() : initialized(false) {}
-
-    sfpi_inline void assign(const __rvtt_vec_t t);
 
     sfpi_inline __rvtt_vec_t get() const { return v; }
     sfpi_inline __rvtt_vec_t& get() { return v; }
@@ -989,18 +991,18 @@ sfpi_inline vCondComp vFloat::operator>=(const vFloat x) const { return vCondCom
 
 sfpi_inline void vFloat::operator*=(const vFloat m)
 {
-    v = __builtin_rvtt_sfpmul(v, m.get(), SFPMAD_MOD1_OFFSET_NONE);
+    assign(__builtin_rvtt_sfpmul(v, m.get(), SFPMAD_MOD1_OFFSET_NONE));
 }
 
 sfpi_inline void vFloat::operator+=(const vFloat a)
 {
-    v = __builtin_rvtt_sfpadd(v, a.get(), SFPMAD_MOD1_OFFSET_NONE);
+    assign(__builtin_rvtt_sfpadd(v, a.get(), SFPMAD_MOD1_OFFSET_NONE));
 }
 
 sfpi_inline void vFloat::operator-=(const vFloat a)
 {
     __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlr(vConstNeg1.get());
-    v = __builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE);
+    assign(__builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE));
 }
 
 sfpi_inline vFloat::vFloat(const vDReg dreg)
@@ -1023,27 +1025,23 @@ sfpi_inline vFloat vFloat::operator-() const
 sfpi_inline void vFloat::loadf(const float val)
 {
     s2vFloat16 c = s2vFloat16(val);
-    v = __builtin_rvtt_sfploadi_ex(c.get_format(), c.get());
-    initialized = true;
+    assign(__builtin_rvtt_sfploadi_ex(c.get_format(), c.get()));
 }
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
 {
-    v = __builtin_rvtt_sfploadi_ex(val.get_format(), val.get());
-    initialized = true;
+    assign(__builtin_rvtt_sfploadi_ex(val.get_format(), val.get()));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void vIntBase::loadsi(int32_t val)
 {
-    v = __builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_SHORT, val);
-    initialized = true;
+    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_SHORT, val));
 }
 
 sfpi_inline void vIntBase::loadui(uint32_t val)
 {
-    v = __builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_USHORT, val);
-    initialized = true;
+    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_USHORT, val));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
@@ -1109,7 +1107,7 @@ sfpi_inline vType vIntBase::operator<<(uint32_t amt) const
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator<<=(uint32_t amt)
 {
-    v = (static_cast<vType>(*this) << amt).get();
+    assign((static_cast<vType>(*this) << amt).get());
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
@@ -1153,39 +1151,39 @@ sfpi_inline vType vIntBase::operator-(const vConst val) const
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::add_eq(int32_t val, unsigned int mod_base)
 {
-    v = __builtin_rvtt_sfpiadd_i_ex(v, val, mod_base);
+    assign(__builtin_rvtt_sfpiadd_i_ex(v, val, mod_base));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator+=(const vIntBase val)
 {
-    v = __builtin_rvtt_sfpiadd_v_ex(v, val.get(), 0);
+    assign(__builtin_rvtt_sfpiadd_v_ex(v, val.get(), 0));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator+=(const vConst val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    v = __builtin_rvtt_sfpiadd_v_ex(c, v, 0);
+    assign(__builtin_rvtt_sfpiadd_v_ex(c, v, 0));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::sub_eq(int32_t val, unsigned int mod_base)
 {
-    v = __builtin_rvtt_sfpiadd_i_ex(v, val, mod_base | SFPIADD_EX_MOD1_IS_SUB);
+    assign(__builtin_rvtt_sfpiadd_i_ex(v, val, mod_base | SFPIADD_EX_MOD1_IS_SUB));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator-=(const vIntBase val)
 {
-    v = __builtin_rvtt_sfpiadd_v_ex(val.get(), v, SFPIADD_EX_MOD1_IS_SUB);
+    assign(__builtin_rvtt_sfpiadd_v_ex(val.get(), v, SFPIADD_EX_MOD1_IS_SUB));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::operator-=(const vConst val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    v = __builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB);
+    assign(__builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB));
 }
 
 sfpi_inline const vCondOpLz vIntBase::lz_cc(const vBase src, LzCC cc)
@@ -1239,7 +1237,7 @@ sfpi_inline vUInt vUInt::operator>>(uint32_t amt) const
 
 sfpi_inline void vUInt::operator>>=(uint32_t amt)
 {
-    v = (*this >> amt).get();
+    assign((*this >> amt).get());
 }
 
 //////////////////////////////////////////////////////////////////////////////

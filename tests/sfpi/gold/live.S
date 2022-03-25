@@ -637,6 +637,74 @@ _Z18do_not_fold_assignv:
 	SFPSTORE	L0, 2, 0
 	ret
 	.size	_Z18do_not_fold_assignv, .-_Z18do_not_fold_assignv
+	.align	1
+	.globl	_Z20operator_plus_equalsv
+	.type	_Z20operator_plus_equalsv, @function
+_Z20operator_plus_equalsv:
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L2, 0, 16672
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 4
+	SFPNOP
+	SFPPUSHC
+	SFPLOADI	L2, 0, 16688
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 2
+	SFPNOP
+	SFPLOADI	L2, 0, 16704
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 2
+	SFPNOP
+	SFPLOADI	L2, 0, 16720
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 2
+	SFPNOP
+	SFPCOMPC
+	SFPNOP
+	SFPLOADI	L0, 4, 0
+	SFPPOPC
+	SFPNOP
+	SFPSETCC	0, L0, 6
+	SFPNOP
+	SFPLOAD	L2, 1, 8
+	SFPLOAD	L0, 1, 4
+	SFPPUSHC
+	SFPMAD	L10, L11, L1, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L3, 6
+	SFPNOP
+	SFPADD	L10, L0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPPUSHC
+	SFPLOADI	L2, 0, 16384
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 6
+	SFPNOP
+	SFPMUL	L0, L1, L4, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPSTORE	L0, 0, 0
+	SFPENCC	3, 10
+	SFPNOP
+	ret
+	.size	_Z20operator_plus_equalsv, .-_Z20operator_plus_equalsv
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main

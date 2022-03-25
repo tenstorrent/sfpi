@@ -5,99 +5,10 @@
 	.attribute stack_align, 16
 	.text
 	.align	1
-	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, @function
-_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
-	li	a5,4
-.L2:
-	SFPLOAD	L3, 1, 0
-	SFPSETEXP	127, L3, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPLOADI	L1, 1, 11973
-	SFPLOADI	L2, 1, 47539
-	SFPMAD	L0, L1, L2, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPLOADI	L2, 1, 16428
-	SFPMAD	L0, L1, L2, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPLOADI	L2, 1, 48615
-	SFPMAD	L0, L1, L2, L2, 0
-	SFPNOP
-	SFPNOP
-	SFPLOADI	L0, 4, 0
-	SFPSETCC	0, L3, 2
-	SFPNOP
-	SFPEXEXP	L3, L0, 2
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPABS	L0, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	1, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPLOADI	L1, 4, 0
-	SFPSETCC	0, L0, 2
-	SFPNOP
-	SFPLZ	L0, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPNOT	L1, L1
-	SFPNOP
-	SFPNOP
-	SFPIADD	19, L1, L1, 9
-	SFPNOP
-	SFPNOP
-	SFPNOP
-	SFPIADD	127, L1, L1, 5
-	SFPNOP
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPSETEXP	0, L3, L1, 0
-	SFPNOP
-	SFPNOP
-	SFPLZ	L0, L3, 0
-	SFPNOP
-	SFPNOP
-	SFPIADD	1, L3, L3, 5
-	SFPNOP
-	SFPNOP
-	SFPSHFT	0, L3, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	0, L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPMAD	L0, L5, L2, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPLOAD	L1, 1, 0
-	SFPSETCC	0, L1, 6
-	SFPNOP
-	SFPLOADI	L0, 0, 65408
-	SFPENCC	3, 10
-	SFPNOP
-	SFPSTORE	L0, 0, 0
- #APP
-# 820 "ckernel.cc" 1
-	.word (-536608768)
-# 0 "" 2
- #NO_APP
-	addi	a5,a5,-1
-	bne	a5,zero,.L2
-	ret
-	.size	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, .-_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0
-	.align	1
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0:
 	li	a5,4
-.L6:
+.L2:
 	SFPLOAD	L1, 1, 0
 	SFPMAD	L1, L7, L0, L1, 0
 	SFPNOP
@@ -120,14 +31,14 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0:
 # 0 "" 2
  #NO_APP
 	addi	a5,a5,-1
-	bne	a5,zero,.L6
+	bne	a5,zero,.L2
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0
 	.align	1
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0:
 	li	a5,4
-.L9:
+.L6:
 	SFPLOAD	L1, 1, 0
 	SFPMAD	L1, L7, L0, L1, 0
 	SFPNOP
@@ -145,7 +56,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0:
 # 0 "" 2
  #NO_APP
 	addi	a5,a5,-1
-	bne	a5,zero,.L9
+	bne	a5,zero,.L6
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0
 	.align	1
@@ -387,7 +298,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	li	a4,4
-.L16:
+.L13:
 	SFPLOAD	L0, 1, 0
 	SFPSETSGN	0, L0, L0, 1
 	SFPNOP
@@ -414,7 +325,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	SFPNOP
 	SFPNOP
 	li	a5,7
-.L15:
+.L12:
 	SFPIADD	-1, L1, L1, 9
 	SFPNOP
 	SFPNOP
@@ -423,7 +334,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,-1
-	bne	a5,zero,.L15
+	bne	a5,zero,.L12
 	SFPENCC	3, 10
 	SFPNOP
 	SFPLOAD	L1, 1, 0
@@ -486,14 +397,14 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 # 0 "" 2
  #NO_APP
 	addi	a4,a4,-1
-	bne	a4,zero,.L16
+	bne	a4,zero,.L13
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0
 	.align	1
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	li	a4,4
-.L21:
+.L18:
 	SFPLOAD	L0, 1, 0
 	SFPSETSGN	0, L0, L0, 1
 	SFPNOP
@@ -520,7 +431,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	SFPNOP
 	SFPNOP
 	li	a5,7
-.L20:
+.L17:
 	SFPIADD	-1, L1, L1, 9
 	SFPNOP
 	SFPNOP
@@ -529,7 +440,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,-1
-	bne	a5,zero,.L20
+	bne	a5,zero,.L17
 	SFPENCC	3, 10
 	SFPNOP
 	SFPLOAD	L1, 1, 0
@@ -592,9 +503,98 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 # 0 "" 2
  #NO_APP
 	addi	a4,a4,-1
-	bne	a4,zero,.L21
+	bne	a4,zero,.L18
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0
+	.align	1
+	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, @function
+_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
+	li	a5,4
+.L22:
+	SFPLOAD	L3, 1, 0
+	SFPSETEXP	127, L3, L0, 1
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L1, 1, 11973
+	SFPLOADI	L2, 1, 47539
+	SFPMAD	L0, L1, L2, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 1, 16428
+	SFPMAD	L0, L1, L2, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L2, 1, 48615
+	SFPMAD	L0, L1, L2, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPLOADI	L0, 4, 0
+	SFPSETCC	0, L3, 2
+	SFPNOP
+	SFPEXEXP	L3, L0, 2
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPABS	L0, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETSGN	1, L3, L3, 1
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPLOADI	L1, 4, 0
+	SFPSETCC	0, L0, 2
+	SFPNOP
+	SFPLZ	L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPNOT	L1, L1
+	SFPNOP
+	SFPNOP
+	SFPIADD	19, L1, L1, 9
+	SFPNOP
+	SFPNOP
+	SFPNOP
+	SFPIADD	127, L1, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSETEXP	0, L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPLZ	L0, L3, 0
+	SFPNOP
+	SFPNOP
+	SFPIADD	1, L3, L3, 5
+	SFPNOP
+	SFPNOP
+	SFPSHFT	0, L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPMAD	L0, L5, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPLOAD	L1, 1, 0
+	SFPSETCC	0, L1, 6
+	SFPNOP
+	SFPLOADI	L0, 0, 65408
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSTORE	L0, 0, 0
+ #APP
+# 820 "ckernel.cc" 1
+	.word (-536608768)
+# 0 "" 2
+ #NO_APP
+	addi	a5,a5,-1
+	bne	a5,zero,.L22
+	ret
+	.size	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, .-_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0
 	.section	.text._ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm,"axG",@progbits,_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm,comdat
 	.align	1
 	.weak	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm

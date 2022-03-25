@@ -352,6 +352,32 @@ void do_not_fold_assign()
     dst_reg[0] = a;
 }
 
+// Found bugs in the wrapper where the wrapper was not doing live assignments
+// which let the compiler pick arbitrary registers.
+void operator_plus_equals()
+{
+    vFloat y = dst_reg[0];
+
+    // This (or something like it) seems to be needed to apply some register
+    // pressure before x is first assigned.
+    v_if (y >= 10.0f && (y == 11.0f || y == 12.0f || y == 13.0f)) {
+        vFloat z = dst_reg[2];
+        vFloat x = dst_reg[1];
+
+        v_if (y == 1.0f) {
+            x += z;
+        }
+        v_endif;
+        v_if (y == 2.0f) {
+            x *= y;
+        }
+        v_endif;
+
+        dst_reg[0] = x;
+    }
+    v_endif;
+}
+
 int main(int argc, char* argv[])
 {
     abs_setcc();
