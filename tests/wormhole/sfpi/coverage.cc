@@ -751,8 +751,8 @@ void test_lut()
     vInt c = 2;
     vFloat d = 1.0f;
 
-    d = lut(d, a, b, c, 1);
-    dst_reg[1] = lut_sign(d, a, b, c, -1);
+    d = lut(d, a, b, c);
+    dst_reg[1] = lut_sign(d, a, b, c);
 }
 
 void test_cast()

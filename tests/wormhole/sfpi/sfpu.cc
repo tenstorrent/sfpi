@@ -262,7 +262,7 @@ __rvtt_vec_t CRegInternal::cregs[16] =
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-__rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr)
+__rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int mode, unsigned int addr)
 {
     __rvtt_vec_t tmp;
 
@@ -283,7 +283,7 @@ __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr)
 void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr)
 {
     sfpu_cc.deferred_commit();
-    if (mod0 & SFPSTORE_MOD0_INT) {
+    if (mod0 & SFPSTORE_MOD0_FMT_INT32_TO_SM) {
         sfpu_dreg.store_int(v.get_data_read(), addr);
     } else {
         sfpu_dreg.store_float(v.get_data_read(), addr);
@@ -1061,8 +1061,6 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
                               const __rvtt_vec_t& dst,
                                unsigned short mod0)
 {
-    unsigned short bias_flag = (mod0 & SFPLUT_MOD0_BIAS_MASK);
-    float bias = (bias_flag == SFPLUT_MOD0_BIAS_NEG) ? -0.5F : (bias_flag == SFPLUT_MOD0_BIAS_POS) ? 0.5F : 0.0F;
     bool retain_sgn = ((mod0 & SFPLUT_MOD0_SGN_RETAIN) != 0);
 
     __rvtt_vec_t tmp;
@@ -1080,7 +1078,7 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
             float b = lut_to_fp32(b_in);
             float lr3 = dst.get_float(i);
 
-            float result = a * fabs(lr3) + b + bias;
+            float result = a * fabs(lr3) + b;
 
             if (retain_sgn) {
                 union {

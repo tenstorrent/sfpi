@@ -260,7 +260,7 @@ extern __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr);
+extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int mode, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
 extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned int value);

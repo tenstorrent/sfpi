@@ -74,8 +74,7 @@ sfpi_inline vCondComp vDReg::operator>=(const vFloat x) const { return vCondComp
 template <>
 sfpi_inline void vDReg::operator=(const vFloat vec) const
 {
-    // For  half, rebias
-    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
+    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
 }
 
 sfpi_inline void vDReg::operator=(s2vFloat16 f) const
@@ -93,20 +92,19 @@ sfpi_inline void vDReg::operator=(const float f) const
 template <typename vecType, typename std::enable_if_t<std::is_base_of<vBase, vecType>::value>*>
 sfpi_inline void vDReg::operator=(const vecType vec) const
 {
-    // For short/ushort, do not rebias
-    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_INT, reg);
+    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
 }
 
 sfpi_inline void vDReg::operator=(const vDReg dreg) const
 {
     vFloat tmp = dreg;
-    __builtin_rvtt_sfpstore(tmp.get(), SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
+    __builtin_rvtt_sfpstore(tmp.get(), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
 }
 
 sfpi_inline void vDReg::operator=(const vConstFloat creg) const
 {
     __rvtt_vec_t lr = __builtin_rvtt_sfpassignlr(creg.get());
-    __builtin_rvtt_sfpstore(lr, SFPSTORE_MOD0_FLOAT_REBIAS_EXP, reg);
+    __builtin_rvtt_sfpstore(lr, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
 }
 
 sfpi_inline vFloat vDReg::operator-() const
@@ -158,7 +156,7 @@ sfpi_inline void vFloat::operator-=(const vFloat a)
 
 sfpi_inline vFloat::vFloat(const vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_REBIAS_EXP, dreg.get());
+    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
     initialized = true;
 }
 

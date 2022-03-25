@@ -2893,9 +2893,9 @@ int main(int argc, char* argv[])
             printf("Row: %d\n", j);
             for (int i = 0; i < SFPU_WIDTH; i++) {
                 if (printint) {
-                    printf("%04X ", sfpu_dreg.get(j * 4, i));
+                    printf("%04X ", sfpu_dreg.get(j * SFP_DESTREG_STRIDE, i));
                 } else {
-                    printf("%4.6f ", sfpu_dreg.get_float(j * 4, i));
+                    printf("%4.6f ", sfpu_dreg.get_float(j * SFP_DESTREG_STRIDE, i));
                 }
             }
             printf("\n\n");

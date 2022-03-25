@@ -48,23 +48,23 @@ void smoke()
 
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, 12);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, -12);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 0);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 4);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 4);
     v64sf lr13 = __builtin_rvtt_wh_sfpassignlr(13);
-    __builtin_rvtt_wh_sfpstore(nullptr, lr13, 2, 4);
+    __builtin_rvtt_wh_sfpstore(nullptr, lr13, 0, 2, 4);
     v64sf e = __builtin_rvtt_wh_sfpmad(a, b, c, 1);
-    __builtin_rvtt_wh_sfpstore(nullptr, e, 2, 4);
+    __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 2, 4);
 
     __builtin_rvtt_wh_sfpnop();
 
     v64sf v1, v2;
-    __builtin_rvtt_wh_sfpstore(nullptr, b, 2, 1);
+    __builtin_rvtt_wh_sfpstore(nullptr, b, 0, 2, 1);
     v1 = __builtin_rvtt_wh_sfpload(nullptr, 2, 0);
     v2 = __builtin_rvtt_wh_sfpmov(v1, SFPMOV_MOD1_COMPSIGN);
 
-    __builtin_rvtt_wh_sfpstore(nullptr, c, 2, 2);
-    __builtin_rvtt_wh_sfpstore(nullptr, d, 2, 3);
-    __builtin_rvtt_wh_sfpstore(nullptr, v2, 2, 10);
+    __builtin_rvtt_wh_sfpstore(nullptr, c, 0, 2, 2);
+    __builtin_rvtt_wh_sfpstore(nullptr, d, 0, 2, 3);
+    __builtin_rvtt_wh_sfpstore(nullptr, v2, 0, 2, 10);
 
     v2 = __builtin_rvtt_wh_sfpexexp(v1, SFPEXEXP_MOD1_DEBIAS);
     v2 = __builtin_rvtt_wh_sfpexman(v1, SFPEXMAN_MOD1_PAD8);
@@ -97,8 +97,8 @@ void smoke()
     v2 = __builtin_rvtt_wh_sfpsetsgn_i(nullptr, 10, v1);
     v2 = __builtin_rvtt_wh_sfpsetsgn_v(v2, v1);
 
-    __builtin_rvtt_wh_sfpstore(nullptr, v1, 2, 6);
-    __builtin_rvtt_wh_sfpstore(nullptr, v2, 2, 8);
+    __builtin_rvtt_wh_sfpstore(nullptr, v1, 0, 2, 6);
+    __builtin_rvtt_wh_sfpstore(nullptr, v2, 0, 2, 8);
 
     v2 = __builtin_rvtt_wh_sfpiadd_v(v2, lr13, 4);
 
@@ -167,18 +167,18 @@ void smokier()
     d = __builtin_rvtt_wh_sfpmad(a, b, c, 3);
     d = __builtin_rvtt_wh_sfplut(b, c, a, d, 7);
 
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 20);
-    __builtin_rvtt_wh_sfpstore(nullptr, b, 2, 20);
-    __builtin_rvtt_wh_sfpstore(nullptr, c, 2, 20);
-    __builtin_rvtt_wh_sfpstore(nullptr, d, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, b, 0, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, c, 0, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, d, 0, 2, 20);
 
     v64sf e = __builtin_rvtt_wh_sfpload(nullptr, 1, 20);
     v64sf f = __builtin_rvtt_wh_sfpload(nullptr, 1, 20);
     v64sf g = __builtin_rvtt_wh_sfpload(nullptr, 1, 20);
 
-    __builtin_rvtt_wh_sfpstore(nullptr, e, 2, 20);
-    __builtin_rvtt_wh_sfpstore(nullptr, f, 2, 20);
-    __builtin_rvtt_wh_sfpstore(nullptr, g, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, f, 0, 2, 20);
+    __builtin_rvtt_wh_sfpstore(nullptr, g, 0, 2, 20);
     __builtin_rvtt_wh_sfpkeepalive(c, 2);
 }
 
@@ -193,7 +193,7 @@ void smokiest()
     a = b;
     a = __builtin_rvtt_wh_sfpsetexp_v(a, orig_a);
    
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 2, 6);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 6);
 }
 
 
@@ -202,37 +202,37 @@ void assignlr()
     v64sf x;
 
     x = __builtin_rvtt_wh_sfpassignlr(0);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(1);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(2);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(3);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(4);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(5);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(6);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(7);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(8);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(9);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(10);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(11);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(12);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(13);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(14);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
     x =__builtin_rvtt_wh_sfpassignlr(15);
-    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
 }
 
 int main(int argc, char* argv[])

@@ -9,18 +9,14 @@ namespace sfpi {
 //////////////////////////////////////////////////////////////////////////////
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2, const int offset = 0)
+sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
 {
-    unsigned int bias_mask = (offset == 1) ? SFPLUT_MOD0_BIAS_POS :
-        ((offset == -1) ? SFPLUT_MOD0_BIAS_NEG : SFPLUT_MOD0_BIAS_NONE);
-    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_RETAIN | bias_mask);
+    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_RETAIN);
 }
 
-sfpi_inline vFloat lut_sign(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2, const int offset = 0)
+sfpi_inline vFloat lut_sign(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
 {
-    unsigned int bias_mask = (offset == 1) ? SFPLUT_MOD0_BIAS_POS :
-        ((offset == -1) ? SFPLUT_MOD0_BIAS_NEG : SFPLUT_MOD0_BIAS_NONE);
-    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_UPDATE | bias_mask);
+    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_UPDATE);
 }
 
 sfpi_inline vFloat lut2(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
@@ -224,7 +220,7 @@ sfpi_inline vUInt int322uint8(vInt in, unsigned int descale, int round_mode = 1)
     return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
                                         descale,
                                         in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_UINT8);
+                                        SFPSTOCHRND_MOD1_INT32_TO_UINT8 | SFPSTOCHRND_MOD1_IMM8);
 }
 
 sfpi_inline vUInt int322int8(vInt in, vUInt descale, int round_mode = 1)
@@ -240,7 +236,7 @@ sfpi_inline vUInt int322int8(vInt in, unsigned int descale, int round_mode = 1)
     return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
                                         descale,
                                         in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_INT8);
+                                        SFPSTOCHRND_MOD1_INT32_TO_INT8 | SFPSTOCHRND_MOD1_IMM8);
 }
 
 sfpi_inline vUInt float2uint16(vFloat in, int round_mode = 1)

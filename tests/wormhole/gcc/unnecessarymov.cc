@@ -70,7 +70,7 @@ void whymov()
     __builtin_rvtt_wh_sfpiadd_i(nullptr, a, -29, 1);
     b = __builtin_rvtt_wh_sfploadi_ex_lv(nullptr, b, 0, 17408);
     __builtin_rvtt_wh_sfppopc();
-    __builtin_rvtt_wh_sfpstore(nullptr, b, 0, 24);
+    __builtin_rvtt_wh_sfpstore(nullptr, b, 0, 0, 24);
 }
 
 #endif

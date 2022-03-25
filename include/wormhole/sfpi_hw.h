@@ -14,11 +14,11 @@ namespace sfpi {
 #define sfpi_inline inline
 
 #define __builtin_rvtt_sfpassign_lv(v, in) (in)
-#define __builtin_rvtt_sfpload(mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
+#define __builtin_rvtt_sfpload(mod0, mode, addr) sfpu_rvtt_sfpload(mod0, mode, addr)
 #define __builtin_rvtt_sfpassignlr(lr) sfpu_rvtt_sfpassignlr(lr)
 #define __builtin_rvtt_sfpkeepalive(x, n)
 #define __builtin_rvtt_sfploadi_ex(mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
-#define __builtin_rvtt_sfpstore(src, mod0, addr) sfpu_rvtt_sfpstore(src, mod0, addr)
+#define __builtin_rvtt_sfpstore(src, mod0, mode, addr) sfpu_rvtt_sfpstore(src, mod0, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) sfpu_rvtt_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() sfpu_rvtt_sfpnop()
 #define __builtin_rvtt_sfpillegal() sfpu_rvtt_sfpillegal()
@@ -110,12 +110,12 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define sfpi_inline __attribute__((always_inline)) inline
 
 #define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_wh_sfpassign_lv(v, in)
-#define __builtin_rvtt_sfpload(mod0, addr) __builtin_rvtt_wh_sfpload((void *)ckernel::instrn_buffer, mod0, addr)
+#define __builtin_rvtt_sfpload(mod0, mode, addr) __builtin_rvtt_wh_sfpload((void *)ckernel::instrn_buffer, mod0, mode, addr)
 #define __builtin_rvtt_sfpassignlr(lr) __builtin_rvtt_wh_sfpassignlr(lr)
 #define __builtin_rvtt_sfpkeepalive(x, n) __builtin_rvtt_wh_sfpkeepalive(x, n)
 
 #define __builtin_rvtt_sfploadi_ex(mod0, imm16) __builtin_rvtt_wh_sfploadi_ex((void *)ckernel::instrn_buffer, mod0, imm16)
-#define __builtin_rvtt_sfpstore(src, mod0, addr) __builtin_rvtt_wh_sfpstore((void *)ckernel::instrn_buffer, src, mod0, addr)
+#define __builtin_rvtt_sfpstore(src, mod0, mode, addr) __builtin_rvtt_wh_sfpstore((void *)ckernel::instrn_buffer, src, mod0, mode, addr)
 #define __builtin_rvtt_sfpmov(src, mod1) __builtin_rvtt_wh_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() __builtin_rvtt_wh_sfpnop()
 #define __builtin_rvtt_sfpillegal() __builtin_rvtt_wh_sfpillegal()
@@ -192,9 +192,10 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_wh_sfpshft2_e(src, mod)
 
 #define __builtin_rvtt_sfpswap(dst, src, mod)       \
-    asm("SFPSWAP %[d] %[s] %[m]"                    \
-        : [d] "+x" (dst), [s] "+x" (src)            \
-        : [m] "i" (mod))
+    asm("SFPSWAP %[d], %[s], %[m]"                  \
+        : [d] "+x" (src), [s] "+x" (dst)            \
+        : [m] "i" (mod));                           \
+        __builtin_rvtt_sfpnop()
 
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 
@@ -204,13 +205,21 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 constexpr unsigned int SFP_LREG_COUNT = 8;
 
-constexpr unsigned int SFP_DESTREG_STRIDE = 4;
+constexpr unsigned int SFP_DESTREG_STRIDE = 2;
 
-constexpr unsigned int SFPLOAD_MOD0_REBIAS_EXP = 1;
-constexpr unsigned int SFPLOAD_MOD0_NOREBIAS_EXP = 2;
+constexpr unsigned int SFPLOAD_MOD0_FMT_SRCB = 0;
+constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
+constexpr unsigned int SFPLOAD_MOD0_FMT_FP16B = 2;
+constexpr unsigned int SFPLOAD_MOD0_FMT_FP32 = 3;
+constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = 12;
+constexpr unsigned int SFPLOAD_ADDR_MODE_NOINC = 3;
 
-constexpr unsigned int SFPSTORE_MOD0_FLOAT_REBIAS_EXP = 0;
-constexpr unsigned int SFPSTORE_MOD0_INT = 2;
+constexpr unsigned int SFPSTORE_MOD0_FMT_SRCB = 0;
+constexpr unsigned int SFPSTORE_MOD0_FMT_FP16A = 1;
+constexpr unsigned int SFPSTORE_MOD0_FMT_FP16B = 2;
+constexpr unsigned int SFPSTORE_MOD0_FMT_FP32 = 3;
+constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = 12;
+constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 3;
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
 
@@ -298,10 +307,6 @@ constexpr unsigned int SFPLZ_MOD1_NOSGN_CC_EQ0 = 14;
 
 constexpr unsigned int SFPSDIVP2_MOD1_ADD = 1;
 
-constexpr unsigned int SFPLUT_MOD0_BIAS_MASK = 0x3;
-constexpr unsigned int SFPLUT_MOD0_BIAS_NONE = 0x0;
-constexpr unsigned int SFPLUT_MOD0_BIAS_POS = 0x1;
-constexpr unsigned int SFPLUT_MOD0_BIAS_NEG = 0x3;
 constexpr unsigned int SFPLUT_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUT_MOD0_SGN_RETAIN = 4;
 

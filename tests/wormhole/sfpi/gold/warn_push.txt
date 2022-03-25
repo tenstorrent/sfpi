@@ -1,0 +1,3 @@
+In function 'void pushwithoutpop()':
+cc1plus: error: malformed program, pushc without matching popc
+warn.cc:84: confused by earlier errors, bailing out

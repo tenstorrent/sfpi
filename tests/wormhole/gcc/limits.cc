@@ -26,71 +26,71 @@ int main(int argc, char* argv[])
     a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0x0000 + fail_offset);
     a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0xFFFF + fail_offset);
 
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0x0000 + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0xFFFF + fail_offset);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x0000 + fail_offset);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0xFFFF + fail_offset);
 
     // Unsigned 16 bit
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 2, 0x0000 + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 2, 0xFFFF + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Signed 16 bit
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 4, -32768 + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 4,  32767 + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Signed 16-32 bit crossover
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16, -32768 + pass_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16,  32767 + pass_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16,  65535 + pass_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Unsigned 16-32 bit crossover
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 17,  0 + pass_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 17,  0xFFFF + pass_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Float values
     // Easy fp16b
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3f800000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // fp16b
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3faf0000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3faf0001);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // fp16a
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3fa6e000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3fa6e001);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Exp on the edge of fp16a
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x47a6e000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x4826e000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Exp on the edge of fp16a
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3826e000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x37a6e000);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Unsigned 16 bit
     a = __builtin_rvtt_wh_sfpaddi(nullptr, a, 0x0000 + fail_offset, 0);
