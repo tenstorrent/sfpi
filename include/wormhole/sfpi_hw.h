@@ -24,7 +24,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpillegal() sfpu_rvtt_sfpillegal()
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) sfpu_rvtt_sfpencc(imm12, mod1)
-#define __builtin_rvtt_sfppushc() sfpu_rvtt_sfppushc()
+#define __builtin_rvtt_sfppushc(mod1) sfpu_rvtt_sfppushc(mod1)
 #define __builtin_rvtt_sfppopc() sfpu_rvtt_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) sfpu_rvtt_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) sfpu_rvtt_sfpsetcc_i(imm12, mod1)
@@ -121,7 +121,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpillegal() __builtin_rvtt_wh_sfpillegal()
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_rvtt_wh_sfpencc(imm12, mod1)
-#define __builtin_rvtt_sfppushc() __builtin_rvtt_wh_sfppushc()
+#define __builtin_rvtt_sfppushc(mod1) __builtin_rvtt_wh_sfppushc(mod1)
 #define __builtin_rvtt_sfppopc() __builtin_rvtt_wh_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_rvtt_wh_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_wh_sfpsetcc_i(imm12, mod1)
@@ -294,6 +294,9 @@ constexpr unsigned int SFPENCC_MOD1_EI_R1 = 2;
 constexpr unsigned int SFPENCC_MOD1_EU_RI = 8;
 constexpr unsigned int SFPENCC_MOD1_EC_RI = 9;
 constexpr unsigned int SFPENCC_MOD1_EI_RI = 10;
+
+constexpr unsigned int SFPPUSHC_MOD1_PUSH = 0;
+constexpr unsigned int SFPPUSHC_MOD1_REPLACE = 1;
 
 constexpr unsigned int SFPLZ_MOD1_CC_NONE = 0;
 constexpr unsigned int SFPLZ_MOD1_CC_NE0 = 2;

@@ -172,6 +172,7 @@ class SFPUCC {
     void comp();
 
     void push();
+    void replace();
     void pop();
 
     void dump();
@@ -272,7 +273,7 @@ extern void sfpu_rvtt_sfpnop();
 extern void sfpu_rvtt_sfpillegal();
 extern void sfpu_rvtt_sfpencc(unsigned int imm12, unsigned int mod1);
 extern void sfpu_rvtt_sfpcompc();
-extern void sfpu_rvtt_sfppushc();
+extern void sfpu_rvtt_sfppushc(unsigned int mod1);
 extern void sfpu_rvtt_sfppopc();
 extern void sfpu_rvtt_sfpsetcc_i(unsigned int imm, unsigned int mod1);
 extern void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1);

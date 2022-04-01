@@ -550,7 +550,7 @@ sfpi_inline vCCCtrl::~vCCCtrl()
     }
 }
 
-sfpi_inline void vCCCtrl::push()
+sfpi_inline void vCCCtrl::push(bool)
 {
     push_count++;
     __builtin_rvtt_sfppushc();

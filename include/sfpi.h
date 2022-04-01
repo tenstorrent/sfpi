@@ -863,7 +863,7 @@ public:
     sfpi_inline void cc_elseif(const vBool& cond);
     sfpi_inline void cc_elseif(const vCond& cond);
 
-    sfpi_inline void push();
+    sfpi_inline void push(bool replace_if_possible = false);
     sfpi_inline void pop();
 
     static sfpi_inline void enable_cc();
@@ -1096,13 +1096,13 @@ sfpi_inline IAddCC vCondOpIAddV::not_cond(const IAddCC t) const
 } // namespace sfpi
 
 #define v_if(x)             \
-{                           \
-    vCCCtrl __cc;            \
+    {                       \
+    vCCCtrl __cc;           \
     __cc.cc_if(x);
 
 #define v_elseif(x)         \
     __cc.cc_else();         \
-    __cc.push();            \
+    __cc.push(true);        \
     __cc.cc_elseif(x);
 
 #define v_else              \

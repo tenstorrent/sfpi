@@ -136,13 +136,27 @@ void SFPUCC::push()
     if (stack_ptr == SFPU_CC_DEPTH) {
         fprintf(stderr, "CC stack overflow on push, aborting");
         exit(-1);
-   }
+    }
     for (int i = 0; i < SFPU_WIDTH; i++) {
         enable_stack[stack_ptr][i] = enable[i];
         result_stack[stack_ptr][i] = result[i];
     }
 
     stack_ptr++;
+}
+
+void SFPUCC::replace()
+{
+    int prior = stack_ptr - 1;
+
+    if (prior < 0) {
+        fprintf(stderr, "CC stack replace on empty stack\n");
+        throw;
+    }
+    for (int i = 0; i < SFPU_WIDTH; i++) {
+        enable_stack[prior][i] = enable[i];
+        result_stack[prior][i] = result[i];
+    }
 }
 
 void SFPUCC::pop()
@@ -458,10 +472,17 @@ void sfpu_rvtt_sfpcompc()
     sfpu_cc.comp();
 }
 
-void sfpu_rvtt_sfppushc()
+void sfpu_rvtt_sfppushc(unsigned int mod1)
 {
     sfpu_cc.deferred_commit();
-    sfpu_cc.push();
+    if (mod1 == SFPPUSHC_MOD1_PUSH) {
+        sfpu_cc.push();
+    } else if (mod1 == SFPPUSHC_MOD1_REPLACE) {
+        sfpu_cc.replace();
+    } else {
+        fprintf(stderr, "Illegal mod1 in sfppushc: %d\n", mod1);
+        throw;
+    }
 }
 
 void sfpu_rvtt_sfppopc()
