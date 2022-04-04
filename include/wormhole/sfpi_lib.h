@@ -119,19 +119,24 @@ sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
     return __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
 }
 
-sfpi_inline vFloat setsgn(const vFloat v, const int32_t sgn)
+template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
     return __builtin_rvtt_sfpsetsgn_i(sgn, v.get());
 }
 
-sfpi_inline vFloat setsgn(const vFloat v, const vFloat sgn)
+template <typename vTypeA, typename vTypeB,
+    typename std::enable_if_t<std::is_base_of<vBase, vTypeA>::value>* = nullptr,
+    typename std::enable_if_t<std::is_base_of<vBase, vTypeB>::value>* = nullptr>
+sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
     // If sgn is not used later, compiler renames tmp and doesn't issue a mov
     return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
 }
 
-sfpi_inline vFloat setsgn(const vFloat v, const vInt sgn)
+template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+sfpi_inline vType setsgn(const vType v, const vInt sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
     // If sgn is not used later, compiler renames tmp and doesn't issue a mov
