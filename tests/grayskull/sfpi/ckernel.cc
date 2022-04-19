@@ -676,9 +676,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
         // Mask = 0xd295 -> a94b
         // PRNG SHL by one
         v_if (tmp < 0) {
-            vInt tmp2 = ~(mask & rand);
-            rand |= mask;
-            rand &= tmp2;
+            rand ^= mask;
         }
         v_endif;
 

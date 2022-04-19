@@ -78,7 +78,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -98,7 +98,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -118,7 +118,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -138,7 +138,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -163,7 +163,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -183,7 +183,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -203,7 +203,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -223,7 +223,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -243,7 +243,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -258,7 +258,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -273,7 +273,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -288,15 +288,15 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0
 	.align	1
-	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, @function
-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
+	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, @function
+_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	li	a4,4
 .L13:
 	SFPLOAD	L0, 1, 0
@@ -399,10 +399,10 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	addi	a4,a4,-1
 	bne	a4,zero,.L13
 	ret
-	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0
+	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0
 	.align	1
-	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, @function
-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
+	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, @function
+_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	li	a4,4
 .L18:
 	SFPLOAD	L0, 1, 0
@@ -505,7 +505,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	addi	a4,a4,-1
 	bne	a4,zero,.L18
 	ret
-	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0
+	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0
 	.align	1
 	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, @function
 _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
@@ -587,7 +587,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 820 "ckernel.cc" 1
+# 818 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -612,7 +612,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -627,7 +627,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -642,7 +642,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -657,7 +657,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -678,7 +678,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -697,7 +697,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -716,7 +716,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -735,7 +735,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -758,7 +758,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -773,7 +773,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -788,7 +788,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -803,7 +803,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -824,7 +824,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -843,7 +843,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -862,7 +862,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -881,7 +881,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 910 "ckernel.cc" 1
+# 908 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -942,7 +942,7 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 941 "ckernel.cc" 1
+# 939 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -961,7 +961,7 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 953 "ckernel.cc" 1
+# 951 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -971,7 +971,7 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 953 "ckernel.cc" 1
+# 951 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -981,7 +981,7 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 953 "ckernel.cc" 1
+# 951 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -991,7 +991,7 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 953 "ckernel.cc" 1
+# 951 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1016,7 +1016,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1033,7 +1033,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1050,7 +1050,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1067,7 +1067,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1090,7 +1090,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1111,7 +1111,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1132,7 +1132,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1153,7 +1153,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 978 "ckernel.cc" 1
+# 976 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1347,7 +1347,7 @@ _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 706 "ckernel.cc" 1
+# 704 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -1508,7 +1508,7 @@ _ZN7ckernel4sfpu15calculate_powerILb1EEEvm:
 .L54:
 	SFPSTORE	L0, 0, 0
  #APP
-# 723 "ckernel.cc" 1
+# 721 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -2375,7 +2375,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
  #APP
-# 820 "ckernel.cc" 1
+# 818 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
@@ -2568,16 +2568,16 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPNOP
 	SFPSETCC	0, L0, 0
 	SFPNOP
-	SFPMOV	L1, L0, 0
+	SFPMOV	L3, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPAND	L3, L0
+	SFPOR	L1, L0
 	SFPNOP
 	SFPNOP
-	SFPNOT	L0, L0
+	SFPAND	L1, L3
 	SFPNOP
 	SFPNOP
-	SFPOR	L1, L3
+	SFPNOT	L3, L3
 	SFPNOP
 	SFPNOP
 	SFPAND	L0, L3
@@ -2586,7 +2586,7 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPENCC	3, 10
 	SFPNOP
  #APP
-# 685 "ckernel.cc" 1
+# 683 "ckernel.cc" 1
 	.word (-536608768)
 # 0 "" 2
  #NO_APP
