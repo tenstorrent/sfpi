@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <math.h>
+#include <sfpi_fp16.h>
 #include "wormhole/sfpi_hw.h"
 
 namespace sfpu {
@@ -57,7 +58,9 @@ constexpr unsigned int FP16B_EXP_SHIFT = 7;
 constexpr unsigned int FP16A_SGN_MASK = 0x8000;
 constexpr unsigned int FP16A_EXP_MASK = 0x7C00;
 constexpr unsigned int FP16A_MAN_MASK = 0x03FF;
+constexpr unsigned int FP16A_SGN_SHIFT = 15;
 constexpr unsigned int FP16A_EXP_SHIFT = 10;
+constexpr unsigned int FP16A_MAN_WIDTH = 10;
 constexpr unsigned int FP16A_EXP_BIAS = 15;
 
 constexpr unsigned int FP32_MAX_BIT = 31;
@@ -81,6 +84,28 @@ inline float fp16b_to_float(unsigned int i)
 
         constexpr Converter(const unsigned int ini) : i(ini << 16) {}
     } tmp(i);
+
+    return tmp.f;
+}
+
+// XXXXX Quick and dirty, doesn't handle denorms, etc.
+inline float fp16a_to_float(unsigned int i)
+{
+    const unsigned int s = (i & FP16A_SGN_MASK) >> FP16A_SGN_SHIFT;
+    const unsigned int e = ((i & FP16A_EXP_MASK) >> FP16A_EXP_SHIFT) - FP16A_EXP_BIAS;
+    const unsigned int m = (i & FP16A_MAN_MASK);
+
+    const unsigned int fpval =
+        (s << FP32_SGN_SHIFT) |
+        ((e + FP32_EXP_BIAS) << FP32_EXP_SHIFT) |
+        (m << (FP32_MAN_WIDTH - FP16A_MAN_WIDTH));
+
+    union Converter {
+        const float f;
+        const uint32_t i;
+
+        constexpr Converter(const unsigned int ini) : i(ini) {}
+    } tmp(fpval);
 
     return tmp.f;
 }

@@ -1,3 +1,4 @@
-In function 'void pushwithoutpop()':
-cc1plus: error: malformed program, pushc without matching popc
-warn.cc:84: confused by earlier errors, bailing out
+warn.cc: In function 'void pushwithoutpop()':
+warn.cc:86:30: error: too few arguments to function 'void __builtin_riscv_sfppushc(unsigned int)'
+   86 |     __builtin_riscv_sfppushc();
+      |                              ^

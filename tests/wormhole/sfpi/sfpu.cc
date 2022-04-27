@@ -307,7 +307,6 @@ void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int a
 __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned int value)
 {
     unsigned int converted;
-
     switch (mod0) {
 
     case SFPLOADI_MOD0_FLOATB:
@@ -1124,10 +1123,10 @@ __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0,
 float lut2_to_fp32(unsigned short in)
 {
     // Handle modified exp, if exp is all 1s, make it all 0s
-    if ((in & FP16B_EXP_MASK) == FP16B_EXP_MASK) {
-        in &= ~FP16B_EXP_MASK;
+    if ((in & FP16A_EXP_MASK) == FP16A_EXP_MASK) {
+        in &= ~FP16A_EXP_MASK;
     }
-    return fp16b_to_float(in);
+    return fp16a_to_float(in);
 }
 
 __rvtt_vec_t sfpu_rvtt_sfplutfp32_3r(const __rvtt_vec_t& l0,
@@ -1147,7 +1146,7 @@ __rvtt_vec_t sfpu_rvtt_sfplutfp32_3r(const __rvtt_vec_t& l0,
         if (sfpu_cc.enabled(i)) {
             float val = abs(dst.get_float(i));
 
-            const __rvtt_vec_t& which = (val < 0.5f) ? l0 : (val < 1.0) ? l1 : l2;
+            const __rvtt_vec_t& which = (val < 1.0f) ? l0 : (val < 2.0) ? l1 : l2;
 
             unsigned int in = which.get_uint(i);
             unsigned short a_in = in >> 16;

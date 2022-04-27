@@ -25,13 +25,13 @@ void test_func(int count, bool calculate_bias)
     __builtin_rvtt_wh_sfpencc(3, 10);
     
     while (count-- > 0) {
-        __rvtt_vec_t a = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 0);
-        __rvtt_vec_t b = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 1);
+        __rvtt_vec_t a = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 0, 0);
+        __rvtt_vec_t b = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 0, 1);
 
         __rvtt_vec_t zero = __builtin_rvtt_wh_sfpassignlr(4);
-        __rvtt_vec_t d = __builtin_rvtt_wh_sfpmad(a, b, zero, 1);
-        __rvtt_vec_t e = __builtin_rvtt_wh_sfpmad(b, a, zero, 1);
-        __rvtt_vec_t f = __builtin_rvtt_wh_sfpmad(b, d, zero, 1);
+        __rvtt_vec_t d = __builtin_rvtt_wh_sfpmad(a, b, zero, 0);
+        __rvtt_vec_t e = __builtin_rvtt_wh_sfpmad(b, a, zero, 0);
+        __rvtt_vec_t f = __builtin_rvtt_wh_sfpmad(b, d, zero, 0);
 
         __builtin_rvtt_wh_sfpstore(nullptr, d, 0, 3, 3);
         __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 3, 4);
@@ -39,7 +39,7 @@ void test_func(int count, bool calculate_bias)
 
         if (calculate_bias) {
             __rvtt_vec_t bias = __builtin_rvtt_wh_sfploadi_ex(nullptr, SFPLOADI_MOD0_FLOATB, f32_to_f16b(BIAS));
-            d = __builtin_rvtt_wh_sfpmad(d, bias, zero, 1);
+            d = __builtin_rvtt_wh_sfpmad(d, bias, zero, 0);
             __builtin_rvtt_wh_sfpstore(nullptr, d, 0, 3, 4);
         }
 

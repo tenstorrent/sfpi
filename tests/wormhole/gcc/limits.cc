@@ -21,13 +21,13 @@ constexpr int fail_offset = FAIL_OFFSET;
 
 int main(int argc, char* argv[])
 {
-    v64sf a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0x0000);
+    v64sf a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, 0x0000);
 
-    a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0x0000 + fail_offset);
-    a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0xFFFF + fail_offset);
+    a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, 0x0000 + fail_offset);
+    a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, 0x3FFF + fail_offset);
 
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x0000 + fail_offset);
-    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0xFFFF + fail_offset);
+    __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x3FFF + fail_offset);
 
     // Unsigned 16 bit
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 2, 0x0000 + fail_offset);

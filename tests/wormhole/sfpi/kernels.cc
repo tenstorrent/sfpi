@@ -20,8 +20,10 @@ using namespace sfpi;
 #define TTI_SEMWAIT(x, y, z)
 #define semaphore_post(x)
 
+// Inlining the tests may make the tests that use a parameter fail to test the
+// non-imm path as compiling w/ -flto will fill in the value as an immediate
 #if defined(__GNUC__) && !defined(__clang__)
-#define sfpi_test_noinline __attribute__ ((noinline)) 
+#define sfpi_test_noinline __attribute__ ((noinline))
 #else
 #define sfpi_test_noinline
 #endif
@@ -88,16 +90,15 @@ sfpi_inline vType reduce_bool4(vType a, vType b, vType c, vType d, int reference
 
 sfpi_test_noinline void test1()
 {
-    // Test SFPLOAD, SFPSTORE
-    dst_reg[1] = dst_reg[0];
-
+    // Test SFPLOADI, SFPSTORE
+    dst_reg[1] = 1.3f;
     // Out: ramp from 0..63
     copy_result_to_dreg0(1);
 }
 
 sfpi_test_noinline void test2()
 {
-    // Test SFPMOV
+    // Test SFPLOAD, SFPMOV
     dst_reg[2] = -dst_reg[0];
 
     // Out: ramp down from 0 to -63
@@ -116,7 +117,7 @@ sfpi_test_noinline void test3()
         dst_reg[3] = 20.0F;
     }
     v_endif;
-    
+
     v_if(dst_reg[0] == 2.0F) {
         // 1 load
         vFloat a = 30.0F;
@@ -152,7 +153,7 @@ sfpi_test_noinline void test3()
     v_endif;
 
     v_if(dst_reg[0] == 7.0F) {
-        // This will be an int w/ 1 load (not sign extended
+        // This will be an int w/ 1 load (not sign extended)
         dst_reg[3] = 0x8F80;
     }
     v_endif;
@@ -187,12 +188,12 @@ sfpi_test_noinline void test3()
     v_endif;
 
     v_if(dst_reg[0] == 13.0F) {
-        dst_reg[3] = s2vFloat16b(0x3f80);
+        dst_reg[3] = s2vFloat16b(0.005f);
     }
     v_endif;
 
     v_if(dst_reg[0] == 14.0F) {
-        dst_reg[3] = s2vFloat16a(0x3f80);
+        dst_reg[3] = s2vFloat16a(0x3c05);
     }
     v_endif;
 
@@ -418,14 +419,27 @@ sfpi_test_noinline void test5()
     // [2] = -1.0
     // [3] = .5
     // [4] = 1.5
-    // [5] = 2.5
-    // [6] = -1.5
+    // [5] = -1.5
+    // [6] = 1.0
 
-    // [7] = -7.0
-    // [8] = -8.0
-    // [9] = -9.0
-    // [10] = -10.0
-    // [11] = -11.0
+    // Fill holes in the tests; grayskull tested other const regs
+    v_if(dst_reg[0] == 7.0F) {
+        dst_reg[5] = vConst0;
+    } v_elseif(dst_reg[0] == 8.0F) {
+        dst_reg[5] = vConst0;
+    } v_elseif(dst_reg[0] == 9.0F) {
+        dst_reg[5] = vConst0;
+    } v_elseif(dst_reg[0] == 10.0F) {
+        dst_reg[5] = vConst0;
+    } v_elseif(dst_reg[0] == 11.0F) {
+        dst_reg[5] = vConst0p8373 * vConstNeg1 + vConst1;
+    }
+    v_endif;
+    // [7] = 0.0
+    // [8] = 0.0
+    // [9] = 0.0
+    // [10] = 0.0
+    // [11] = .1627
 
     vFloat a = dst_reg[0];
     vFloat b = 20.0F;
@@ -1398,19 +1412,22 @@ sfpi_test_noinline void test11()
         // Use L0
         vFloat h = -0.3F;
         vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h = lut_sign(h, l0a, l1a, l2a, -1);
+        // Test used a bias on Grayskull, not supported on Wormhole
+        h = lut_sign(h, l0a, l1a, l2a);
         dst_reg[11] = h;
     } v_elseif(dst_reg[0] == 4.0F) {
         // Use L0
         vFloat h = -0.3F;
         vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h = lut(h, l0a, l1a, l2a, 1);
+        // Test used a bias on Grayskull, not supported on Wormhole
+        h = lut(h, l0a, l1a, l2a);
         dst_reg[11] = h;
     } v_elseif(dst_reg[0] == 5.0F) {
         // Use L1
         vFloat h = 1.0F;
         vUInt l2a = 0xA010; // Mulitply by -0.25, add 0.5
-        h = lut(h, l0a, l1a, l2a, 1);
+        // Test used a bias on Grayskull, not supported on Wormhole
+        h = lut(h, l0a, l1a, l2a);
         dst_reg[11] = h;
     } v_elseif(dst_reg[0] == 6.0F) {
         // Use L2
@@ -1451,19 +1468,22 @@ sfpi_test_noinline void test11()
             // Use L0
             vFloat h = -0.3F;
             vUInt l2b = 0x9000;
-            h = lut_sign(h, l0b, l1b, l2b, -1);
+            // Test used a bias on Grayskull, not supported on Wormhole
+            h = lut_sign(h, l0b, l1b, l2b);
             dst_reg[11] = h;
         } v_elseif(dst_reg[0] == 10.0F) {
             // Use L0
             vFloat h = -0.3F;
             vUInt l2b = 0x9000;
-            h = lut(h, l0b, l1b, l2b, 1);
+            // Test used a bias on Grayskull, not supported on Wormhole
+            h = lut(h, l0b, l1b, l2b);
             dst_reg[11] = h;
         } v_elseif(dst_reg[0] == 11.0F) {
             // Use L1
             vFloat h = 1.0F;
             vUInt l2b = 0x9000;
-            h = lut(h, l0b, l1b, l2b, 1);
+            // Test used a bias on Grayskull, not supported on Wormhole
+            h = lut(h, l0b, l1b, l2b);
             dst_reg[11] = h;
         } v_elseif(dst_reg[0] == 12.0F) {
             // Use L2
@@ -1477,21 +1497,21 @@ sfpi_test_noinline void test11()
 
     // lut2 3 entry 16 bit
     {
-        vUInt l0 = (s2vFloat16(2.0f).get() << 16) | s2vFloat16(3.0f).get();
-        vUInt l1 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(5.0f).get();
-        vUInt l2 = (s2vFloat16(6.0f).get() << 16) | s2vFloat16(7.0f).get();
+        vUInt l0 = (s2vFloat16a(2.0f).get() << 16) | s2vFloat16a(3.0f).get();
+        vUInt l1 = (s2vFloat16a(4.0f).get() << 16) | s2vFloat16a(5.0f).get();
+        vUInt l2 = (s2vFloat16a(6.0f).get() << 16) | s2vFloat16a(7.0f).get();
         v_if(dst_reg[0] == 13.0f) {
             vFloat h = -0.25f;
             h = lut2(h, l0, l1, l2);
             dst_reg[11] = h; // .25 * 2 + 3 = -3.5 (sign retain)
         } v_elseif(dst_reg[0] == 14.0f) {
-            vFloat h = 0.75f;
+            vFloat h = 1.25f;
             h = lut2(h, l0, l1, l2);
-            dst_reg[11] = h; // .75 * 4 + 5 = 8
+            dst_reg[11] = h; // 1.25 * 4 + 5 = 10 (sign retain)
         } v_elseif(dst_reg[0] == 15.0f) {
-            vFloat h = -1.25f;
+            vFloat h = -2.25f;
             h = lut2(h, l0, l1, l2);
-            dst_reg[11] = h; // 1.25 * 6 + 7 = 7.5 + 7 = -14.5 (sign retain)
+            dst_reg[11] = h; // 2.25 * 6 + 7 = 13.5 + 7 = -20.5 (sign retain)
         } v_elseif(dst_reg[0] == 16.0f) {
             vFloat h = -0.25f;
             h = lut2_sign(h, l0, l1, l2);
@@ -1515,7 +1535,7 @@ sfpi_test_noinline void test11()
         } v_elseif(dst_reg[0] == 18.0f) {
             vFloat h = 1.25f;
             h = lut2(h, a0, a1, a2, b0, b1, b2);
-            dst_reg[11] = h; // 1.25 * 4 + 5 = 10
+            dst_reg[11] = h; // 1.25 * 4 + 5 = 10 (sign retain)
         } v_elseif(dst_reg[0] == 19.0f) {
             vFloat h = -3.0f;
             h = lut2(h, a0, a1, a2, b0, b1, b2);
@@ -1530,12 +1550,12 @@ sfpi_test_noinline void test11()
 
     // lut2 6 entry 16 bit mode 1
     {
-        vUInt a01 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(2.0f).get();
-        vUInt a23 = (s2vFloat16(8.0f).get() << 16) | s2vFloat16(6.0f).get();;
-        vUInt a34 = (s2vFloat16(12.0f).get() << 16) | s2vFloat16(10.0f).get();
-        vUInt b01 = (s2vFloat16(5.0f).get() << 16) | s2vFloat16(3.0f).get();
-        vUInt b23 = (s2vFloat16(9.0f).get() << 16) | s2vFloat16(7.0f).get();
-        vUInt b34 = (s2vFloat16(13.0f).get() << 16) | s2vFloat16(11.0f).get();
+        vUInt a01 = (s2vFloat16a(4.0f).get() << 16) | s2vFloat16a(2.0f).get();
+        vUInt a23 = (s2vFloat16a(8.0f).get() << 16) | s2vFloat16a(6.0f).get();;
+        vUInt a34 = (s2vFloat16a(12.0f).get() << 16) | s2vFloat16a(10.0f).get();
+        vUInt b01 = (s2vFloat16a(5.0f).get() << 16) | s2vFloat16a(3.0f).get();
+        vUInt b23 = (s2vFloat16a(9.0f).get() << 16) | s2vFloat16a(7.0f).get();
+        vUInt b34 = (s2vFloat16a(13.0f).get() << 16) | s2vFloat16a(11.0f).get();
         v_if(dst_reg[0] == 21.0f) {
             vFloat h = -0.25f;
             h = lut2(h, a01, a23, a34, b01, b23, b34);
@@ -1570,12 +1590,12 @@ sfpi_test_noinline void test11()
 
     // lut2 6 entry 16 bit mode 2
     {
-        vUInt a01 = (s2vFloat16(4.0f).get() << 16) | s2vFloat16(2.0f).get();
-        vUInt a23 = (s2vFloat16(8.0f).get() << 16) | s2vFloat16(6.0f).get();;
-        vUInt a34 = (s2vFloat16(12.0f).get() << 16) | s2vFloat16(10.0f).get();
-        vUInt b01 = (s2vFloat16(5.0f).get() << 16) | s2vFloat16(3.0f).get();
-        vUInt b23 = (s2vFloat16(9.0f).get() << 16) | s2vFloat16(7.0f).get();
-        vUInt b34 = (s2vFloat16(13.0f).get() << 16) | s2vFloat16(11.0f).get();
+        vUInt a01 = (s2vFloat16a(4.0f).get() << 16) | s2vFloat16a(2.0f).get();
+        vUInt a23 = (s2vFloat16a(8.0f).get() << 16) | s2vFloat16a(6.0f).get();;
+        vUInt a34 = (s2vFloat16a(12.0f).get() << 16) | s2vFloat16a(10.0f).get();
+        vUInt b01 = (s2vFloat16a(5.0f).get() << 16) | s2vFloat16a(3.0f).get();
+        vUInt b23 = (s2vFloat16a(9.0f).get() << 16) | s2vFloat16a(7.0f).get();
+        vUInt b34 = (s2vFloat16a(13.0f).get() << 16) | s2vFloat16a(11.0f).get();
 
         // Can't fit all the tests into 32 elements, skipping a few that are
         // the most redundant to prior tests here
@@ -1616,19 +1636,19 @@ sfpi_test_noinline void test11()
 
     // [1] = 0.125
     // [2] = -0.125
-    // [3] = -0.375
-    // [4] = -0.625
-    // [5] = 0.875
+    // [3] = 0.125
+    // [4] = -0.125
+    // [5] = 0.375
     // [6] = -0.5
     // [7] = 0.25
     // [8] = -0.25
-    // [9] = -0.25
-    // [10] = -0.75
-    // [11] = 0.75
+    // [9] = 0.25
+    // [10] = -0.25
+    // [11] = 0.25
     // [12] = -1.0
     // [13] = -3.5
-    // [14] = 8.0
-    // [15] = -14.5
+    // [14] = 10.0
+    // [15] = -20.5
     // [16] = 3.5
     // [17] = -3.5
     // [18] = 10.0
@@ -1715,7 +1735,7 @@ sfpi_test_noinline void test12(int imm)
     v_endif;
 
     dst_reg[30 + 35 - imm] = 30.0F; // SFPSTORE
-    dst_reg[30 + 35 - imm + 1] = vConst1;
+    dst_reg[30 + 35 - imm + 1] = vConstNeg1;
 
     v_if(dst_reg[0] == 14.0F) {
         dst_reg[12] = dst_reg[30 + 35 - imm]; // SFPLOAD
@@ -2492,7 +2512,7 @@ sfpi_test_noinline void test14(int imm)
 sfpi_test_noinline void test15()
 {
     // SFPTRANSP, SFPSHFT2
-
+#if COMPILE_FOR_EMULE
     dst_reg[15] = -dst_reg[0];
 
     {
@@ -2587,7 +2607,6 @@ sfpi_test_noinline void test15()
         }
         v_endif;
     }
-
 #if 0
     // Decided not to implement these at this time.  These insns are only
     // interesting if/when we implement LOADMACRO
@@ -2610,6 +2629,7 @@ sfpi_test_noinline void test15()
     }
     v_endif;
 #endif
+#endif
 
     // [0..31] = 1
     copy_result_to_dreg0(15);
@@ -2622,8 +2642,8 @@ void test16()
 
     // Tests are all 2 results per row, allowing 4 independent tests only 2 of
     // which are used
-    vInt x = 2;
-    vInt y = 3;
+    vFloat x = 2.0f;
+    vFloat y = 3.0f;
 
     v_if (dst_reg[0] < 8.0F) {
         vec_swap(x, y);
@@ -2640,16 +2660,16 @@ void test16()
         v_endif;
     }
     v_endif;
-    // [0] = 3
-    // [1] = 2
-    // [2] = 3
-    // [3] = 2
-    // [4] = 2
-    // [5] = 3
-    // [6] = 2
-    // [7] = 3
+    // [0] = 3.0
+    // [1] = 2.0
+    // [2] = 3.0
+    // [3] = 2.0
+    // [4] = 2.0
+    // [5] = 3.0
+    // [6] = 2.0
+    // [7] = 3.0
 
-    // The tests above leave open 4..7, 12..15, etc
+    // These are really crappy "touch" tests
     v_if (dst_reg[0] == 8.0F) {
         dst_reg[16] = int2float(0xABBAAB);
     }
@@ -2668,43 +2688,42 @@ void test16()
     }
     v_endif;
     v_if (dst_reg[0] == 12.0F) {
-        dst_reg[16] = float2uint8(23.3);
+        set_expected_result(16, 48.0f, 24, float2uint8(23.3));
     }
     v_endif;
     v_if (dst_reg[0] == 13.0F) {
-        dst_reg[16] = float2int8(23.3);
+        set_expected_result(16, 64.0f, 24, float2int8(23.3));
     }
     v_endif;
     v_if (dst_reg[0] == 14.0F) {
         vUInt descale = 8;
-        dst_reg[16] = int322uint8(65533, descale);
+        set_expected_result(16, 80.0f, 0xeb, int322uint8(0xea00, descale));
     }
     v_endif;
     v_if (dst_reg[0] == 15.0F) {
-        dst_reg[16] = int322uint8(65533, 8);
+        set_expected_result(16, 96.0f, 0xf, int322uint8(0xea0, 8));
     }
     v_endif;
     v_if (dst_reg[0] == 16.0F) {
         vUInt descale = 8;
-        dst_reg[16] = int322int8(65533, descale);
+        set_expected_result(16, 112.0f, 0xf, int322int8(0xea0, descale));
     }
     v_endif;
     v_if (dst_reg[0] == 17.0F) {
-        dst_reg[16] = int322int8(65533, 8);
+        set_expected_result(16, 128.0f, 0xf, int322int8(0xea0, 8));
     }
     v_endif;
     v_if (dst_reg[0] == 18.0F) {
-        dst_reg[16] = float2int16(32832.0f);
+        set_expected_result(16, 130.0f, 0x7eb1, float2int16(32432.0f));
     }
     v_endif;
     v_if (dst_reg[0] == 19.0F) {
-        dst_reg[16] = float2uint16(32832.0f);
+        set_expected_result(16, 132.0f, 0x7eb1, float2uint16(32432.0f));
     }
     v_endif;
 
     copy_result_to_dreg0(16);
 }
-
 
 void test17()
 {
@@ -2716,10 +2735,10 @@ void test17()
         vUInt x = -1;
         vUInt y = -2;
         vec_min_max(x, y);
-        dst_reg[17] = x;
+        set_expected_result(17, 23.0f, -1, x);
     }
     v_endif;
-    // [2] = -1
+    // [2] = 23.0f
 
     v_if (dst_reg[0] == 3.0F) {
         vFloat x = -1.0F;
@@ -2730,6 +2749,7 @@ void test17()
     v_endif;
     // [3] = -2.0
 
+#if COMPILE_FOR_EMULE
     v_if (dst_reg[0] == 4.0F) {
         vFloat x = 1.0F;
         vFloat y = 2.0F;
@@ -2753,7 +2773,7 @@ void test17()
     v_endif;
     // [5] = 20.0F
     // [6] = 20.0F
-
+#endif
     copy_result_to_dreg0(17);
 }
 

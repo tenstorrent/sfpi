@@ -61,18 +61,6 @@ using namespace sfpi;
 
 using namespace ckernel;
 
-inline void sfpu_load_imm32(const uint dest, const uint upper16, const uint lower16)
-{
-        TTI_SFPLOADI(dest, 0xA, lower16);  // insmod == A will write the lower bits, and not affect the upper bits; 
-        TTI_SFPLOADI(dest, 0x8, upper16);  // insmod == 8 will write the upper bits, and not affect the lower bits; 
-}
-
-inline void sfpu_load_imm32(const uint dest, const uint val)
-{
-        TT_SFPLOADI(dest, 0xA, (val & 0xFFFF));  // insmod == A will write the lower bits, and not affect the upper bits; 
-        TT_SFPLOADI(dest, 0x8, (val>>16) & 0xFFFF);  // insmod == 8 will write the upper bits, and not affect the lower bits; 
-}
-
 sfpi_inline vCond sfpu_is_fp16_zero(const vFloat& v, uint exponent_size_8)
 {
     if (exponent_size_8) {
@@ -229,10 +217,10 @@ void calculate_cube(uint16_t exp_base_scale_factor = 0)
 }
 */
 
-template <bool APPROXIMATION_MODE, bool ZERO_NEGATIVE, bool SCALE_EN, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, bool ZERO_NEGATIVE, bool SCALE_EN>
 sfpi_test_noinline void calculate_exponential(uint16_t exp_base_scale_factor = 0)
 {
-    #pragma GCC unroll 4
+    // Unroll 8 best for approx, unroll 0 for precise, compiler figures this out
     for (int d = 0; d < 8; d++)
     {
         vFloat val = dst_reg[0];
@@ -300,7 +288,7 @@ inline vFloat calculate_gelu_core(vFloat in)
     return result;
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_gelu()
 {
     vUInt l0, l1, l2;
@@ -326,7 +314,7 @@ sfpi_test_noinline void calculate_gelu()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_sigmoid()
 {
     vUInt l0, l1, l2;
@@ -346,7 +334,7 @@ sfpi_test_noinline void calculate_sigmoid()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_tanh()
 {
     // SFPU microcode
@@ -367,7 +355,7 @@ sfpi_test_noinline void calculate_tanh()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2)
 {
     // All params are in FP16_B format
@@ -405,7 +393,7 @@ sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2
     }
 }
 
-template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
 sfpi_test_noinline void calculate_tanh_derivative()
 {
     vUInt l0, l1, l2;
@@ -430,7 +418,7 @@ sfpi_test_noinline void calculate_tanh_derivative()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_gelu_derivative()
 {
     constexpr uint imm2 = 0xFF10;
@@ -447,7 +435,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
         vFloat in = dst_reg[0];
         vFloat neg_half_sq_in = in * in * -0.5f;
 
-        // exp = e^(in)
+        // exp = e^(val)
         vFloat exp = calculate_exponential_body<false>(neg_half_sq_in);
 
         // exp = exp * 1/sqrt(2*pi)
@@ -463,7 +451,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
     }
 }
 
-template <bool APPROXIMATION_MODE, int ITERATIONS, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, int ITERATIONS>
 sfpi_test_noinline void calculate_reciprocal()
 {
     #pragma GCC unroll 2
@@ -484,7 +472,7 @@ sfpi_test_noinline void calculate_reciprocal()
     }
 }
 
-template <bool APPROXIMATION_MODE, int ITERATIONS, int RECIPROCAL_ITERATIONS=2, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, int ITERATIONS, int RECIPROCAL_ITERATIONS=2>
 sfpi_test_noinline void calculate_sqrt()
 {
     #pragma GCC unroll 8
@@ -530,7 +518,7 @@ sfpi_test_noinline void calculate_sqrt()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
 {
     // SFPU microcode
@@ -566,9 +554,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
         rand = rand >> 1;
         v_if (tmp != 0) {
             vUInt mask = vConstIntPrgm0;
-            vUInt tmp2 = ~(mask & rand);
-            rand |= mask;
-            rand &= tmp2;
+            rand ^= mask;
         }
         v_endif;
 
@@ -576,7 +562,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_lrelu(uint slope)
 {
     // SFPU microcode
@@ -597,7 +583,7 @@ sfpi_test_noinline void calculate_lrelu(uint slope)
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_power(uint exponent)
 {
     for (int d = 0; d < 8; d++)
@@ -614,7 +600,7 @@ sfpi_test_noinline void calculate_power(uint exponent)
     }
 }
 
-template <bool HAS_BASE_SCALING, uint ADDR_MOD>
+template <bool HAS_BASE_SCALING>
 sfpi_inline void calculate_log_body(const uint log_base_scale_factor)
 {
     ////////////////////////////
@@ -650,7 +636,7 @@ sfpi_inline void calculate_log_body(const uint log_base_scale_factor)
     }
     v_endif;
 
-    vFloat expf = 1.0f;//int2float(exp, 0);
+    vFloat expf = int2float(exp, 0);
     vFloat vConstLn2 = vConstFloatPrgm0;
     vFloat result = expf * vConstLn2 + series_result; // exp correction: ln(1+x) + exp*ln(2)
 
@@ -669,11 +655,11 @@ sfpi_inline void calculate_log_body(const uint log_base_scale_factor)
     dst_reg[0] = result;
 }
 
-template <bool APPROXIMATION_MODE, bool HAS_BASE_SCALING, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, bool HAS_BASE_SCALING>
 sfpi_test_noinline void calculate_log(uint log_base_scale_factor)
 {
     for(int d = 0; d < 8; d++){
-        calculate_log_body<HAS_BASE_SCALING, ADDR_MOD>(log_base_scale_factor);
+        calculate_log_body<HAS_BASE_SCALING>(log_base_scale_factor);
         TTI_INCRWC(0, 2, 0, 0);
     }
 }
@@ -686,7 +672,7 @@ sfpi_inline void calculate_comp_init_flag(bool check, vFloat& flag1, vFloat& fla
     }
 }
 
-template <bool APPROXIMATION_MODE, SfpuType COMP_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE, SfpuType COMP_MODE>
 inline void calculate_comp(uint exponent_size_8)
 {
     //invert output and use same comparison check
@@ -761,7 +747,7 @@ inline void calculate_comp(uint exponent_size_8)
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_clamp(uint param0, uint param1, uint param2)
 {
     // All params are in FP16 format
@@ -792,7 +778,7 @@ sfpi_test_noinline void calculate_clamp(uint param0, uint param1, uint param2)
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_abs()
 {
     // SFPU microcode
@@ -804,7 +790,7 @@ sfpi_test_noinline void calculate_abs()
     }
 }
 
-template <bool APPROXIMATION_MODE, uint ADDR_MOD>
+template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_sign(uint exponent_size_8)
 {
     // All params are in FP16 format
@@ -831,45 +817,45 @@ sfpi_test_noinline void calculate_sign(uint exponent_size_8)
 
 int main(int argc, char* argv[])
 {
-    calculate_comp<false, SfpuType::greater_than_equal_zero, 0>(argc);
-    calculate_comp<false, SfpuType::not_equal_zero, 0>(argc);
-    calculate_comp<false, SfpuType::greater_than_zero, 0>(argc);
-    calculate_comp<false, SfpuType::less_than_equal_zero, 0>(argc);
-    calculate_comp<false, SfpuType::equal_zero, 0>(argc);
+    calculate_comp<false, SfpuType::greater_than_equal_zero>(argc);
+    calculate_comp<false, SfpuType::not_equal_zero>(argc);
+    calculate_comp<false, SfpuType::greater_than_zero>(argc);
+    calculate_comp<false, SfpuType::less_than_equal_zero>(argc);
+    calculate_comp<false, SfpuType::equal_zero>(argc);
 
-    calculate_clamp<false, 0>(argc, argc, argc);
-    calculate_abs<false, 0>();
-    calculate_sign<false, 0>(true);
+    calculate_clamp<false>(argc, argc, argc);
+    calculate_abs<false>();
+    calculate_sign<false>(true);
 
-    calculate_sigmoid<false, 0>();
-    calculate_tanh<true, 0>();
-    calculate_hardtanh<false, 0>(argc, argc, argc);
-    calculate_lrelu<false, 0>(argc);
-    calculate_tanh_derivative<false, false, 0>();
-    calculate_tanh_derivative<false, true, 0>();
-    calculate_power<true, 0>(argc);
+    calculate_sigmoid<false>();
+    calculate_tanh<true>();
+    calculate_hardtanh<false>(argc, argc, argc);
+    calculate_lrelu<false>(argc);
+    calculate_tanh_derivative<false, false>();
+    calculate_tanh_derivative<false, true>();
+    calculate_power<true>(argc);
 
-    calculate_gelu<false, 0>();
-    calculate_gelu<true, 0>();
-    calculate_gelu_derivative<false, 0>();
+    calculate_gelu<false>();
+    calculate_gelu<true>();
+    calculate_gelu_derivative<false>();
 
-    calculate_sqrt<false, 4, 2, 0>();
-    calculate_sqrt<true, 4, 2, 0>();
-    calculate_exponential<false, false, false, 0>(0);
-    calculate_exponential<false, false, true, 0>(0);
-    calculate_exponential<false, true, false, 0>(0);
-    calculate_exponential<false, true, true, 0>(0);
-    calculate_exponential<true, false, false, 0>(0);
-    calculate_exponential<true, false, true, 0>(0);
-    calculate_exponential<true, true, false, 0>(0);
-    calculate_exponential<true, true, true, 0>(0);
-    calculate_log<true, true, 0>(argc);
-    calculate_log<true, false, 0>(argc);
+    calculate_sqrt<false, 4, 2>();
+    calculate_sqrt<true, 4, 2>();
+    calculate_exponential<false, false, false>(0);
+    calculate_exponential<false, false, true>(0);
+    calculate_exponential<false, true, false>(0);
+    calculate_exponential<false, true, true>(0);
+    calculate_exponential<true, false, false>(0);
+    calculate_exponential<true, false, true>(0);
+    calculate_exponential<true, true, false>(0);
+    calculate_exponential<true, true, true>(0);
+    calculate_log<true, true>(argc);
+    calculate_log<true, false>(argc);
 
-    calculate_reciprocal<false, 4, 0>();
-    calculate_reciprocal<true, 4, 0>();
+    calculate_reciprocal<false, 4>();
+    calculate_reciprocal<true, 4>();
 
-    calculate_dropout<false, 0>(argc, argc);
+    calculate_dropout<false>(argc, argc);
 
     return 0;
 }
