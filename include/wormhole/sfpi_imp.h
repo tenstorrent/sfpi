@@ -552,14 +552,10 @@ sfpi_inline vCCCtrl::~vCCCtrl()
     }
 }
 
-sfpi_inline void vCCCtrl::push(bool replace_if_possible)
+sfpi_inline void vCCCtrl::push()
 {
-    if (replace_if_possible && push_count > 1) {
-        __builtin_rvtt_sfppushc(SFPPUSHC_MOD1_REPLACE);
-    } else {
-        push_count++;
-        __builtin_rvtt_sfppushc(SFPPUSHC_MOD1_PUSH);
-    }
+    push_count++;
+    __builtin_rvtt_sfppushc();
 }
 
 sfpi_inline void vCCCtrl::pop()
