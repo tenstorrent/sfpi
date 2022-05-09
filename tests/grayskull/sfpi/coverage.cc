@@ -756,6 +756,32 @@ void test_lut()
     dst_reg[1] = lut_sign(d, a, b, c, -1);
 }
 
+void lra()
+{
+    LRegAssigner lra;
+
+    vFloat x = lra.assign(LRegs::LReg1);
+    dst_reg[0] = x;
+
+    vFloat y;
+    y = lra.assign(LRegs::LReg2);
+    dst_reg[0] = y;
+
+    vInt z = lra.assign(LRegs::LReg3);
+    dst_reg [0] = z;
+
+    vInt a;
+    a = lra.assign(LRegs::LReg0);
+    dst_reg[0] = a;
+
+    vUInt b = lra.assign(LRegs::LReg1);
+    dst_reg [0] = b;
+
+    vUInt c;
+    c = lra.assign(LRegs::LReg2);
+    dst_reg[0] = c;
+}
+
 void stupid_example(unsigned int value)
 {
     // dst_reg[n] loads into a temporary LREG

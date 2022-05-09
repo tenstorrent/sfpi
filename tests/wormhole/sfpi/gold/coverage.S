@@ -1418,6 +1418,18 @@ _Z9many_regsv:
 	ret
 	.size	_Z9many_regsv, .-_Z9many_regsv
 	.align	1
+	.globl	_Z3lrav
+	.type	_Z3lrav, @function
+_Z3lrav:
+	SFPSTORE	L1, 0, 3, 0
+	SFPSTORE	L2, 0, 3, 0
+	SFPSTORE	L3, 0, 3, 0
+	SFPSTORE	L4, 0, 3, 0
+	SFPSTORE	L5, 0, 3, 0
+	SFPSTORE	L6, 0, 3, 0
+	ret
+	.size	_Z3lrav, .-_Z3lrav
+	.align	1
 	.globl	_Z14stupid_examplej
 	.type	_Z14stupid_examplej, @function
 _Z14stupid_examplej:

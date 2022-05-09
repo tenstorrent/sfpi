@@ -2124,6 +2124,18 @@ _Z8test_lutv:
 	ret
 	.size	_Z8test_lutv, .-_Z8test_lutv
 	.align	1
+	.globl	_Z3lrav
+	.type	_Z3lrav, @function
+_Z3lrav:
+	SFPSTORE	L1, 0, 0
+	SFPSTORE	L2, 0, 0
+	SFPSTORE	L3, 2, 0
+	SFPSTORE	L0, 2, 0
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L2, 2, 0
+	ret
+	.size	_Z3lrav, .-_Z3lrav
+	.align	1
 	.globl	_Z14stupid_examplej
 	.type	_Z14stupid_examplej, @function
 _Z14stupid_examplej:

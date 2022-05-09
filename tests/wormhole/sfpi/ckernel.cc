@@ -152,9 +152,8 @@ inline void init_dropout_seed(uint16_t p2){
 
     FWLOG1("calculate_dropout() -- calculated seed:%x", per_tensix_input_seed);
     
-    vInt result;
     LRegAssigner lra;
-    result = lra.assign(LRegs::LReg3);
+    vInt result = lra.assign(LRegs::LReg3);
 
     vInt tmp = vConstTileId << 10;
     vInt ptis = per_tensix_input_seed; // XXXX should use mod=2, unsigned int.  confirm
@@ -291,11 +290,10 @@ inline vFloat calculate_gelu_core(vFloat in)
 template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_gelu()
 {
-    vUInt l0, l1, l2;
     LRegAssigner lra;
-    l0 = lra.assign(LRegs::LReg0);
-    l1 = lra.assign(LRegs::LReg1);
-    l2 = lra.assign(LRegs::LReg2);
+    vUInt l0 = lra.assign(LRegs::LReg0);
+    vUInt l1 = lra.assign(LRegs::LReg1);
+    vUInt l2 = lra.assign(LRegs::LReg2);
     vFloat half = 0.5f;
 
     #pragma GCC unroll 8
@@ -317,11 +315,10 @@ sfpi_test_noinline void calculate_gelu()
 template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_sigmoid()
 {
-    vUInt l0, l1, l2;
     LRegAssigner lra;
-    l0 = lra.assign(LRegs::LReg0);
-    l1 = lra.assign(LRegs::LReg1);
-    l2 = lra.assign(LRegs::LReg2);
+    vUInt l0 = lra.assign(LRegs::LReg0);
+    vUInt l1 = lra.assign(LRegs::LReg1);
+    vUInt l2 = lra.assign(LRegs::LReg2);
 
     #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
@@ -338,11 +335,10 @@ template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_tanh()
 {
     // SFPU microcode
-    vUInt l0, l1, l2;
     LRegAssigner lra;
-    l0 = lra.assign(LRegs::LReg0);
-    l1 = lra.assign(LRegs::LReg1);
-    l2 = lra.assign(LRegs::LReg2);
+    vUInt l0 = lra.assign(LRegs::LReg0);
+    vUInt l1 = lra.assign(LRegs::LReg1);
+    vUInt l2 = lra.assign(LRegs::LReg2);
 
     #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
@@ -396,11 +392,10 @@ sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2
 template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
 sfpi_test_noinline void calculate_tanh_derivative()
 {
-    vUInt l0, l1, l2;
     LRegAssigner lra;
-    l0 = lra.assign(LRegs::LReg0);
-    l1 = lra.assign(LRegs::LReg1);
-    l2 = lra.assign(LRegs::LReg2);
+    vUInt l0 = lra.assign(LRegs::LReg0);
+    vUInt l1 = lra.assign(LRegs::LReg1);
+    vUInt l2 = lra.assign(LRegs::LReg2);
 
     // tanh'(x) = 1 - (tanh(x))^2
     for (int d = 0; d < 8; d++)
@@ -423,10 +418,9 @@ sfpi_test_noinline void calculate_gelu_derivative()
 {
     constexpr uint imm2 = 0xFF10;
 
-    vUInt l0, l1, l2;
     LRegAssigner lra;
-    l0 = lra.assign(LRegs::LReg0);
-    l1 = lra.assign(LRegs::LReg1);
+    vUInt l0 = lra.assign(LRegs::LReg0);
+    vUInt l1 = lra.assign(LRegs::LReg1);
 
     // SFPU microcode: 
     #pragma GCC unroll 0
@@ -527,9 +521,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
     FWLOG1("calculate_dropout() -- scale:%x", scale);
 
     LRegAssigner lra;
-    // XXXX allow initializing from lra?
-    vUInt rand;
-    rand = lra.assign(LRegs::LReg3);
+    vUInt rand = lra.assign(LRegs::LReg3);
 
     #pragma GCC unroll 0
     for (int d = 0; d < 8; d++) {

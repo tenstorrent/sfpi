@@ -362,6 +362,7 @@ public:
     sfpi_inline vFloat(const s2vFloat16 f) { loadf16(f); }
     sfpi_inline vFloat(const float f) { loadf(f); }
     sfpi_inline vFloat(const __rvtt_vec_t& t) { assign(t); }
+    sfpi_inline vFloat(LRegAssignerInternal& lr) { vBase::operator=(lr); }
 
     // Assignment
     sfpi_inline void operator=(const vFloat in) { assign(in.v); }
@@ -487,6 +488,7 @@ public:
 #ifndef __clang__
     sfpi_inline vInt(uint32_t val) { loadui(val); }
 #endif
+    sfpi_inline vInt(LRegAssignerInternal& lr) { vBase::operator=(lr); }
 
     // Assignment
     sfpi_inline void operator=(const vInt in) { assign(in.v); }
@@ -563,6 +565,7 @@ public:
 #ifndef __clang__
     sfpi_inline vUInt(uint32_t val) { loadui(val); }
 #endif
+    sfpi_inline vUInt(LRegAssignerInternal& lr) { vBase::operator=(lr); }
 
     // Assignment
     sfpi_inline void operator=(const vUInt in ) { assign(in.v); }
