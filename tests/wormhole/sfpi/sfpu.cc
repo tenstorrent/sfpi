@@ -1335,7 +1335,7 @@ __rvtt_vec_t sfpu_rvtt_sfpstochrnd_i(const unsigned int mode,
             // not sure if anyone will ever use the emulator for actual
             // kernels, getting all this to work for the compiler test does
             // not have a worthile ROI
-            float result = NAN;
+            float result = -0.0;
 
             tmp.set_uint(i, result);
         }
@@ -1349,7 +1349,6 @@ __rvtt_vec_t sfpu_rvtt_sfpstochrnd_v(const unsigned int mode,
                                      unsigned int mod1)
 {
     __rvtt_vec_t tmp;
-
     sfpu_cc.deferred_commit();
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
@@ -1358,7 +1357,7 @@ __rvtt_vec_t sfpu_rvtt_sfpstochrnd_v(const unsigned int mode,
             // not sure if anyone will ever use the emulator for actual
             // kernels, getting all this to work for the compiler test does
             // not have a worthile ROI
-            float result = NAN;
+            float result = -0.0;
 
             tmp.set_uint(i, result);
         }
