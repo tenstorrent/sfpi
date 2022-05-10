@@ -383,6 +383,7 @@ constexpr unsigned int CREG_IDX_PRGM0 = 11;
 constexpr unsigned int CREG_IDX_PRGM1 = 12;
 constexpr unsigned int CREG_IDX_PRGM2 = 13;
 constexpr unsigned int CREG_IDX_PRGM3 = 14;
+constexpr unsigned int CREG_IDX_NEG_1 = CREG_IDX_PRGM0;
 constexpr unsigned int CREG_IDX_TILEID = 15;
 
 } // namespace sfpi
