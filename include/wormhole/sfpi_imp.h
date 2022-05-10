@@ -20,8 +20,6 @@ constexpr vConstIntBase vConstIntPrgm0(CREG_IDX_PRGM1);
 constexpr vConstIntBase vConstIntPrgm1(CREG_IDX_PRGM2);
 constexpr vConstIntBase vConstIntPrgm2(CREG_IDX_PRGM3);
 
-constexpr RegFile<vDReg, 64> dst_reg;
-
 //////////////////////////////////////////////////////////////////////////////
 namespace sfpi_int {
 
@@ -44,11 +42,6 @@ sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-template<class TYPE, int N>
-constexpr TYPE RegFile<TYPE, N>::operator[](const int x) const {
-    return TYPE(vRegBaseInitializer(x));
-}
-
 sfpi_inline vFloat vDReg::operator+(const vFloat b) const {return sfpi_int::fp_add(vFloat(*this), b); }
 sfpi_inline vFloat vDReg::operator-(const vFloat b) const { return sfpi_int::fp_sub(vFloat(*this), b); }
 sfpi_inline vFloat vDReg::operator*(const vFloat b) const  { return sfpi_int::fp_mul(vFloat(*this), b); }

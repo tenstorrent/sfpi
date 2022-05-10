@@ -13,6 +13,7 @@ namespace sfpi {
 
 #define sfpi_inline inline
 
+#define __builtin_rvtt_sfpincrwc(cr, d, b, a) sfpu_rvtt_sfpincrwc(cr, d, b, a)
 #define __builtin_rvtt_sfpassign_lv(v, in) (in)
 #define __builtin_rvtt_sfpload(mod0, addr) sfpu_rvtt_sfpload(mod0, addr)
 #define __builtin_rvtt_sfpassignlr(lr) sfpu_rvtt_sfpassignlr(lr)
@@ -90,6 +91,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
+#define __builtin_rvtt_sfpincrwc(cr, d, b, a) __builtin_rvtt_gs_sfpincrwc(cr, d, b, a)
 #define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_gs_sfpassign_lv(v, in)
 #define __builtin_rvtt_sfpload(mod0, addr) __builtin_rvtt_gs_sfpload((void *)ckernel::instrn_buffer, mod0, addr)
 #define __builtin_rvtt_sfpassignlr(lr) __builtin_rvtt_gs_sfpassignlr(lr)
@@ -154,7 +156,10 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 constexpr unsigned int SFP_LREG_COUNT = 4;
 
+// GS size is 1024 rows x 16 cols by 16 bits
 constexpr unsigned int SFP_DESTREG_STRIDE = 4;
+constexpr unsigned int SFP_DESTREG_MAX_SIZE = 1024;
+constexpr unsigned int SFP_DESTREG_MAX_ADDR = (SFP_DESTREG_MAX_SIZE / SFP_DESTREG_STRIDE);
 
 constexpr unsigned int SFPLOAD_MOD0_REBIAS_EXP = 1;
 constexpr unsigned int SFPLOAD_MOD0_NOREBIAS_EXP = 2;

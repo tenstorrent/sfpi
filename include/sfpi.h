@@ -179,7 +179,7 @@ template<class Type, int N>
 class RegFile {
 
 public:
-    constexpr Type operator[](const int x) const;
+    sfpi_inline Type operator[](const int x) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -246,6 +246,16 @@ public:
     sfpi_inline vCondComp operator<=(const vFloat x) const;
     sfpi_inline vCondComp operator>(const vFloat x) const;
     sfpi_inline vCondComp operator>=(const vFloat x) const;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+class DestReg {
+ private:
+    RegFile<vDReg, SFP_DESTREG_MAX_ADDR> dreg;
+
+ public:
+    sfpi_inline const vDReg operator[](const int i) const { return dreg[i]; }
+    sfpi_inline void operator++(const int i) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -873,6 +883,11 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
+template<class TYPE, int N>
+sfpi_inline TYPE RegFile<TYPE, N>::operator[](const int x) const {
+    return TYPE(vRegBaseInitializer(x));
+}
+
 sfpi_inline void vDReg::operator=(const int i) const
 {
     vInt v(i);
@@ -1096,8 +1111,12 @@ sfpi_inline IAddCC vCondOpIAddV::not_cond(const IAddCC t) const
     return (t == IAddCCLT0) ? IAddCCGTE0 : IAddCCLT0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+constexpr DestReg dst_reg;
+
 } // namespace sfpi
 
+//////////////////////////////////////////////////////////////////////////////
 #define v_if(x)             \
 {                           \
     vCCCtrl __cc;            \
@@ -1124,6 +1143,7 @@ sfpi_inline IAddCC vCondOpIAddV::not_cond(const IAddCC t) const
 #define p_endblock          \
 }
 
+//////////////////////////////////////////////////////////////////////////////
 #if defined(ARCH_GRAYSKULL)
 #include <grayskull/sfpi_imp.h>
 #include <grayskull/sfpi_lib.h>

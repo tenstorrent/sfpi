@@ -29,11 +29,7 @@ _Z13calculate_logILb1ELb0EEvm.isra.0:
 	SFPLOADI	L0, 0, 65408
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 655 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L2
 	ret
@@ -50,11 +46,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -64,11 +56,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -78,11 +66,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -92,11 +76,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -106,11 +86,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -120,11 +96,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -134,11 +106,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
@@ -148,11 +116,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0
 	.align	1
@@ -164,88 +128,56 @@ _Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPMAD	L0, L12, L13, L0, 0
 	SFPNOP
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0
 	.align	1
@@ -305,11 +237,7 @@ _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	SFPMOV	L2, L0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L8
 	ret
@@ -371,11 +299,7 @@ _Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
 	SFPMOV	L2, L0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L11
 	ret
@@ -395,11 +319,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -409,11 +329,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -423,11 +339,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -437,11 +349,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -451,11 +359,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -465,11 +369,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -479,11 +379,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -493,11 +389,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 .L14:
 	SFPLOAD	L0, 0, 3, 0
@@ -507,11 +399,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -519,11 +407,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -531,11 +415,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -543,11 +423,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -555,11 +431,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -567,11 +439,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -579,11 +447,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 0
@@ -591,11 +455,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_compILb0EL8SfpuType8EEvm, .-_Z14calculate_compILb0EL8SfpuType8EEvm
 	.section	.text._Z14calculate_compILb0EL8SfpuType10EEvm,"axG",@progbits,_Z14calculate_compILb0EL8SfpuType10EEvm,comdat
@@ -613,11 +473,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -627,11 +483,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -641,11 +493,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -655,11 +503,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -669,11 +513,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -683,11 +523,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -697,11 +533,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPLOADI	L0, 4, 14336
 	SFPIADD	0, L1, L0, 4
@@ -711,11 +543,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 .L18:
 	SFPLOAD	L0, 0, 3, 0
@@ -725,11 +553,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -737,11 +561,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -749,11 +569,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -761,11 +577,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -773,11 +585,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -785,11 +593,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -797,11 +601,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 6
 	SFPLOADI	L0, 0, 16256
@@ -809,11 +609,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_compILb0EL8SfpuType10EEvm, .-_Z14calculate_compILb0EL8SfpuType10EEvm
 	.section	.text._Z15calculate_clampILb0EEvmmm,"axG",@progbits,_Z15calculate_clampILb0EEvmmm,comdat
@@ -866,11 +662,7 @@ _Z15calculate_clampILb0EEvmmm:
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 769 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a4,a4,-1
 	bne	a4,zero,.L22
 	ret
@@ -883,67 +675,35 @@ _Z13calculate_absILb0EEvv:
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 781 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z13calculate_absILb0EEvv, .-_Z13calculate_absILb0EEvv
 	.section	.text._Z14calculate_signILb0EEvm,"axG",@progbits,_Z14calculate_signILb0EEvm,comdat
@@ -962,11 +722,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -977,11 +733,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -992,11 +744,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -1007,11 +755,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -1022,11 +766,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -1037,11 +777,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -1052,11 +788,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L1, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L1, 0
@@ -1067,11 +799,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 .L26:
 	SFPLOAD	L0, 0, 3, 0
@@ -1082,11 +810,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1095,11 +819,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1108,11 +828,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1121,11 +837,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1134,11 +846,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1147,11 +855,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1160,11 +864,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSTORE	L10, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -1173,11 +873,7 @@ _Z14calculate_signILb0EEvm:
 	SFPSETCC	0, L0, 6
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 806 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_signILb0EEvm, .-_Z14calculate_signILb0EEvm
 	.section	.text._Z17calculate_sigmoidILb0EEvv,"axG",@progbits,_Z17calculate_sigmoidILb0EEvv,comdat
@@ -1191,88 +887,56 @@ _Z17calculate_sigmoidILb0EEvv:
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPADDI	16128, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 330 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z17calculate_sigmoidILb0EEvv, .-_Z17calculate_sigmoidILb0EEvv
 	.section	.text._Z14calculate_tanhILb1EEvv,"axG",@progbits,_Z14calculate_tanhILb1EEvv,comdat
@@ -1284,74 +948,42 @@ _Z14calculate_tanhILb1EEvv:
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 350 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_tanhILb1EEvv, .-_Z14calculate_tanhILb1EEvv
 	.section	.text._Z18calculate_hardtanhILb0EEvmmm,"axG",@progbits,_Z18calculate_hardtanhILb0EEvmmm,comdat
@@ -1395,11 +1027,7 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	SFPADD	L10, L0, L1, L0, 0
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 388 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L32
 	ret
@@ -1424,11 +1052,7 @@ _Z15calculate_lreluILb0EEvm:
 	SFPMUL	L0, L1, L9, L0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 574 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L35
 	ret
@@ -1445,11 +1069,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1457,11 +1077,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1469,11 +1085,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1481,11 +1093,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1493,11 +1101,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1505,11 +1109,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1517,11 +1117,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPLUT	L3, 4
 	SFPNOP
@@ -1529,11 +1125,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z25calculate_tanh_derivativeILb0ELi0EEvv, .-_Z25calculate_tanh_derivativeILb0ELi0EEvv
 	.section	.text._Z25calculate_tanh_derivativeILb0ELi1EEvv,"axG",@progbits,_Z25calculate_tanh_derivativeILb0ELi1EEvv,comdat
@@ -1546,81 +1138,49 @@ _Z25calculate_tanh_derivativeILb0ELi1EEvv:
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMOV	L3, L4, 1
 	SFPMAD	L3, L4, L10, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 0
- #APP
-# 412 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z25calculate_tanh_derivativeILb0ELi1EEvv, .-_Z25calculate_tanh_derivativeILb0ELi1EEvv
 	.section	.text._Z15calculate_powerILb1EEvm,"axG",@progbits,_Z15calculate_powerILb1EEvm,comdat
@@ -1643,11 +1203,7 @@ _Z15calculate_powerILb1EEvm:
 	bne	a0,a5,.L41
 .L40:
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 591 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a4,a4,-1
 	bne	a4,zero,.L42
 	ret
@@ -1671,11 +1227,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1690,11 +1242,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1709,11 +1257,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1728,11 +1272,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1747,11 +1287,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1766,11 +1302,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1785,11 +1317,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L4, 0, 3, 0
 	SFPMUL	L4, L4, L9, L3, 0
 	SFPLOADI	L5, 0, 15671
@@ -1804,11 +1332,7 @@ _Z14calculate_geluILb0EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_geluILb0EEvv, .-_Z14calculate_geluILb0EEvv
 	.section	.text._Z14calculate_geluILb1EEvv,"axG",@progbits,_Z14calculate_geluILb1EEvv,comdat
@@ -1824,11 +1348,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1836,11 +1356,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1848,11 +1364,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1860,11 +1372,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1872,11 +1380,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1884,11 +1388,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L5, 0
 	SFPLUT	L3, 4
@@ -1896,11 +1396,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L5, L3, L5, L5, 0
 	SFPNOP
 	SFPSTORE	L5, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPMUL	L3, L4, L9, L4, 0
 	SFPLUT	L3, 4
@@ -1908,11 +1404,7 @@ _Z14calculate_geluILb1EEvv:
 	SFPMAD	L4, L3, L4, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 311 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_geluILb1EEvv, .-_Z14calculate_geluILb1EEvv
 	.section	.text._Z25calculate_gelu_derivativeILb0EEvv,"axG",@progbits,_Z25calculate_gelu_derivativeILb0EEvv,comdat
@@ -1988,11 +1480,7 @@ _Z25calculate_gelu_derivativeILb0EEvv:
 	SFPADDI	16128, L4, 0
 	SFPNOP
 	SFPSTORE	L4, 0, 3, 0
- #APP
-# 444 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L48
 	ret
@@ -2027,11 +1515,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2057,11 +1541,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2087,11 +1567,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2117,11 +1593,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2147,11 +1619,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2177,11 +1645,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2207,11 +1671,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L3, 0, 3, 0
 	SFPSETCC	0, L3, 2
 	SFPMOV	L3, L1, 0
@@ -2238,11 +1698,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_sqrtILb0ELi4ELi2EEvv, .-_Z14calculate_sqrtILb0ELi4ELi2EEvv
 	.section	.text._Z14calculate_sqrtILb1ELi4ELi2EEvv,"axG",@progbits,_Z14calculate_sqrtILb1ELi4ELi2EEvv,comdat
@@ -2254,74 +1710,42 @@ _Z14calculate_sqrtILb1ELi4ELi2EEvv:
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPIADD	0, L12, L0, 4
 	SFPSHFT	-1, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 511 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z14calculate_sqrtILb1ELi4ELi2EEvv, .-_Z14calculate_sqrtILb1ELi4ELi2EEvv
 	.section	.text._Z21calculate_exponentialILb0ELb0ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb0ELb0ELb1EEvt,comdat
@@ -2391,11 +1815,7 @@ _Z21calculate_exponentialILb0ELb0ELb1EEvt:
 	SFPMOV	L2, L0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L53
 	ret
@@ -2467,11 +1887,7 @@ _Z21calculate_exponentialILb0ELb1ELb1EEvt:
 	SFPMOV	L2, L0, 0
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L56
 	ret
@@ -2495,11 +1911,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2512,11 +1924,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2529,11 +1937,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2546,11 +1950,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2563,11 +1963,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2580,11 +1976,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2597,11 +1989,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2614,11 +2002,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	SFPIADD	0, L14, L0, 4
 	SFPSHFT	8, L0, L0, 1
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb1EEvt, .-_Z21calculate_exponentialILb1ELb0ELb1EEvt
 	.section	.text._Z21calculate_exponentialILb1ELb1ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb1ELb1ELb1EEvt,comdat
@@ -2643,11 +2027,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2663,11 +2043,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2683,11 +2059,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2703,11 +2075,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2723,11 +2091,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2743,11 +2107,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2763,11 +2123,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	li	a4,1896939520
 	add	a4, a4, a0
@@ -2783,11 +2139,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	SFPSETCC	0, L0, 0
 	SFPSTORE	L9, 0, 3, 0
 	SFPENCC	3, 10
- #APP
-# 267 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb1ELb1EEvt, .-_Z21calculate_exponentialILb1ELb1ELb1EEvt
 	.section	.text._Z13calculate_logILb1ELb1EEvm,"axG",@progbits,_Z13calculate_logILb1ELb1EEvm,comdat
@@ -2826,11 +2178,7 @@ _Z13calculate_logILb1ELb1EEvm:
 	SFPLOADI	L0, 0, 65408
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 655 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L61
 	ret
@@ -2868,11 +2216,7 @@ _Z20calculate_reciprocalILb0ELi4EEvv:
 	SFPMOV	L0, L0, 1
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 465 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L2, 0, 3, 0
 	SFPSETSGN	1, L2, L0, 1
 	SFPSETEXP	126, L0, L0, 1
@@ -2899,11 +2243,7 @@ _Z20calculate_reciprocalILb0ELi4EEvv:
 	SFPMOV	L0, L0, 1
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 465 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-2
 	bne	a5,zero,.L64
 	ret
@@ -2937,11 +2277,7 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	SFPMOV	L0, L0, 1
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 465 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L2, 0, 3, 0
 	SFPSETSGN	1, L2, L0, 1
 	SFPSETEXP	126, L0, L0, 1
@@ -2964,11 +2300,7 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	SFPMOV	L0, L0, 1
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 465 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-2
 	bne	a5,zero,.L68
 	ret
@@ -3013,11 +2345,7 @@ _Z17calculate_dropoutILb0EEvmm:
 	SFPSETCC	0, L0, 2
 	SFPXOR	L12, L3
 	SFPENCC	3, 10
- #APP
-# 553 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L72
 	ret
@@ -3038,11 +2366,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3050,11 +2374,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3062,11 +2382,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3074,11 +2390,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3086,11 +2398,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3098,11 +2406,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3110,11 +2414,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3122,11 +2422,7 @@ main:
 	SFPLOADI	L0, 0, 16256
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	call	_Z14calculate_compILb0EL8SfpuType8EEvm
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
@@ -3138,11 +2434,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3153,11 +2445,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3168,11 +2456,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3183,11 +2467,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3198,11 +2478,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3213,11 +2489,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3228,11 +2500,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 0
@@ -3243,11 +2511,7 @@ main:
 	SFPENCC	3, 10
 	SFPAND	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3258,11 +2522,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3273,11 +2533,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3288,11 +2544,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3303,11 +2555,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3318,11 +2566,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3333,11 +2577,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3348,11 +2588,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	SFPLOAD	L0, 0, 3, 0
 	SFPSETCC	0, L0, 0
 	SFPLOADI	L0, 0, 16256
@@ -3363,11 +2599,7 @@ main:
 	SFPENCC	3, 10
 	SFPOR	L1, L0
 	SFPSTORE	L0, 0, 3, 0
- #APP
-# 738 "ckernel.cc" 1
-	.word (-536739840)
-# 0 "" 2
- #NO_APP
+	SFPINCRWC	0, 0, 2, 0
 	mv	a0,s0
 	call	_Z14calculate_compILb0EL8SfpuType10EEvm
 	mv	a2,s0

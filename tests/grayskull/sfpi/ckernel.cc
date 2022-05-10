@@ -354,7 +354,7 @@ sfpi_test_noinline void calculate_exponential(int16_t exp_base_scale_factor = 0)
             v_endif;
         }
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -432,7 +432,7 @@ sfpi_test_noinline void calculate_gelu()
 
         dst_reg[0] = result;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -454,7 +454,7 @@ sfpi_test_noinline void calculate_sigmoid()
 
         dst_reg[0] = val + 0.5f;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -474,7 +474,7 @@ sfpi_test_noinline void calculate_tanh()
         val = lut(val, l0, l1, l2);
         dst_reg[0] = val;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -512,7 +512,7 @@ sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2
 
         dst_reg[0] = val;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -538,7 +538,7 @@ sfpi_test_noinline void calculate_tanh_derivative()
         val = vConst1 - val;
         dst_reg[0] = val;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -566,7 +566,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
 
         dst_reg[0] = dst_reg[0] + result;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -588,7 +588,7 @@ sfpi_test_noinline void calculate_reciprocal()
 
         dst_reg[0] = out;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -634,7 +634,7 @@ sfpi_test_noinline void calculate_sqrt()
             dst_reg[0] = approx * val;
         }
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -680,7 +680,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
         }
         v_endif;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -701,7 +701,7 @@ sfpi_test_noinline void calculate_lrelu(uint slope)
 
         dst_reg[0] = v;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -718,7 +718,7 @@ sfpi_test_noinline void calculate_power(uint exponent)
 
         dst_reg[0] = result;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -815,7 +815,7 @@ sfpi_inline void calculate_log_body(const int log_base_scale_factor)
 
     dst_reg[0] = result;
 
-    TTI_INCRWC(0, 4, 0, 0);
+    dst_reg++;
 }
 
 template <bool APPROXIMATION_MODE, bool HAS_BASE_SCALING>
@@ -905,7 +905,7 @@ sfpi_test_noinline void calculate_comp(uint exponent_size_8)
         }
 
         dst_reg[0] = result;
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -936,7 +936,7 @@ sfpi_test_noinline void calculate_clamp(uint param0, uint param1, uint param2)
 
         dst_reg[0] = val + s2vFloat16b(param2); // 12 bits
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -948,7 +948,7 @@ sfpi_test_noinline void calculate_abs()
     {
         vFloat v = dst_reg[0];
         dst_reg[0] = sfpi::abs(v);
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 
@@ -973,7 +973,7 @@ sfpi_test_noinline void calculate_sign(uint exponent_size_8)
         }
         v_endif;
 
-        TTI_INCRWC(0, 4, 0, 0);
+        dst_reg++;
     }
 }
 

@@ -20,7 +20,7 @@ static unsigned int cmp_ex_to_setcc_mod1_map[] = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-SFPUDReg::SFPUDReg()
+SFPUDReg::SFPUDReg() : addr_offset(0)
 { 
     for (int j = 0; j < SFPU_DREG_SIZE; j++) {
         for (int i = 0; i < SFPU_WIDTH; i++) {
@@ -43,7 +43,7 @@ void SFPUDReg::store_int(const unsigned int data[SFPU_WIDTH], const int addr)
 {
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            regs[addr][i] = data[i];
+            regs[addr + addr_offset][i] = data[i];
         }
     }
 }
@@ -53,7 +53,7 @@ void SFPUDReg::store_float(const unsigned int data[SFPU_WIDTH], const int addr)
     // XXXXXFIXME handle rebias on format A
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            regs[addr][i] = data[i] >> 3;
+            regs[addr + addr_offset][i] = data[i] >> 3;
         }
     }
 }
@@ -62,7 +62,7 @@ void SFPUDReg::store_float(const float data[SFPU_WIDTH], const int addr)
 {
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
-            regs[addr][i] = float_to_fp16b(data[i]) >> 3;
+            regs[addr + addr_offset][i] = float_to_fp16b(data[i]) >> 3;
         }
     }
 }
@@ -269,6 +269,11 @@ __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr)
 __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr)
 {
     return (lr < 4) ? sfpu_lreg[lr] : kCRegInternal[lr];
+}
+
+void sfpu_rvtt_sfpincrwc(int, int, int b, int)
+{
+    sfpu_dreg.add_offset(b);
 }
 
 void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr)

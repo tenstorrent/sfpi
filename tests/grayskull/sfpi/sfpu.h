@@ -77,6 +77,7 @@ constexpr int SFPU_LREGS = SFPU_LREGS_GRAYSKULL;
 ///////////////////////////////////////////////////////////////////////////////
 class SFPUDReg {
  private:
+    unsigned int addr_offset;
     unsigned short regs[SFPU_DREG_SIZE][SFPU_WIDTH];
 
  public:
@@ -93,6 +94,8 @@ class SFPUDReg {
 
     unsigned short get(const int row, const int col) const { return regs[row][col]; }
     float get_float(const int row, const int col) const { return fp16b_to_float(regs[row][col]); }
+
+    void add_offset(int o) { addr_offset += o; }
 };
 
 
@@ -241,6 +244,7 @@ extern __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+extern void sfpu_rvtt_sfpincrwc(int cr, int d, int b, int a);
 extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
 extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
