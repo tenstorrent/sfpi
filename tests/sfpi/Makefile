@@ -11,8 +11,8 @@ X86_INCLUDES = $(INCLUDES) sfpu.h
 X86_CC = g++
 X86_CFLAGS = -DCOMPILE_FOR_EMULE $(CFLAGS)
 
-RV32_CC ?= $(CC_PATH)/bin/riscv64-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
+RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
+RV32_CFLAGS = $(CFLAGS) -mgrayskull -march=rv32iy -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc fp16c.cc
 

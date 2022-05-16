@@ -4,8 +4,8 @@ CC_PATH ?= $(SFPI_ROOT)/compiler
 INCLUDES = $(SFPI_ROOT)/include/ckernel_ops.h
 CFLAGS = -I$(SFPI_ROOT)/include -DARCH_GRAYSKULL -O3 -std=c++17 -Wall
 
-RV32_CC ?= $(CC_PATH)/bin/riscv64-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -msfpu -march=rv32iy -mabi=ilp32 -fno-exceptions
+RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
+RV32_CFLAGS = $(CFLAGS) -mgrayskull -march=rv32iy -mabi=ilp32 -fno-exceptions
 
 SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.cc
 

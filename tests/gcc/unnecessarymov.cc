@@ -59,18 +59,18 @@ typedef float v64sf __attribute__((vector_size(64*4)));
 
 void whymov()
 {
-    v64sf a = __builtin_riscv_sfploadi_ex(nullptr, 4, 3);
-    v64sf tmp = __builtin_riscv_sfpload(nullptr, 1, 0);
-    __builtin_riscv_sfppushc();
-    __builtin_riscv_sfpsetcc_v(tmp, 6);
-    a = __builtin_riscv_sfploadi_ex_lv(nullptr, a, 4, 28);
-    __builtin_riscv_sfppopc();
-    v64sf b = __builtin_riscv_sfploadi_ex(nullptr, 0, 17152);
-    __builtin_riscv_sfppushc();
-    __builtin_riscv_sfpiadd_i(nullptr, a, -29, 1);
-    b = __builtin_riscv_sfploadi_ex_lv(nullptr, b, 0, 17408);
-    __builtin_riscv_sfppopc();
-    __builtin_riscv_sfpstore(nullptr, b, 0, 24);
+    v64sf a = __builtin_rvtt_gs_sfploadi_ex(nullptr, 4, 3);
+    v64sf tmp = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);
+    __builtin_rvtt_gs_sfppushc();
+    __builtin_rvtt_gs_sfpsetcc_v(tmp, 6);
+    a = __builtin_rvtt_gs_sfploadi_ex_lv(nullptr, a, 4, 28);
+    __builtin_rvtt_gs_sfppopc();
+    v64sf b = __builtin_rvtt_gs_sfploadi_ex(nullptr, 0, 17152);
+    __builtin_rvtt_gs_sfppushc();
+    __builtin_rvtt_gs_sfpiadd_i(nullptr, a, -29, 1);
+    b = __builtin_rvtt_gs_sfploadi_ex_lv(nullptr, b, 0, 17408);
+    __builtin_rvtt_gs_sfppopc();
+    __builtin_rvtt_gs_sfpstore(nullptr, b, 0, 24);
 }
 
 #endif

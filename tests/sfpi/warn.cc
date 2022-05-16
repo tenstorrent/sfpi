@@ -67,7 +67,7 @@ void setccnotinsidepushpop()
 {
     v64sf a = {1};
 
-    __builtin_riscv_sfpsetcc_v(a, 12);
+    __builtin_rvtt_gs_sfpsetcc_v(a, 12);
 }
 #endif
 
@@ -75,7 +75,7 @@ void setccnotinsidepushpop()
 #ifdef POP_PUSH
 void popwithoutpush()
 {
-    __builtin_riscv_sfppopc();
+    __builtin_rvtt_gs_sfppopc();
 }
 #endif
 
@@ -83,7 +83,7 @@ void popwithoutpush()
 #ifdef PUSH_POP
 void pushwithoutpop()
 {
-    __builtin_riscv_sfppushc();
+    __builtin_rvtt_gs_sfppushc();
 }
 #endif
 

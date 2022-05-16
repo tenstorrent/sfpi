@@ -21,9 +21,9 @@ cc1plus: error: invalid declaration for function 'argcall', sfpu types cannot be
   956 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 warn.cc: In function 'void setccnotinsidepushpop()':
-warn.cc:70:31: error: malformed program, sfpsetcc_v outside of pushc/popc
-   70 |     __builtin_riscv_sfpsetcc_v(a, 12);
-      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+warn.cc:70:33: error: malformed program, sfpsetcc_v outside of pushc/popc
+   70 |     __builtin_rvtt_gs_sfpsetcc_v(a, 12);
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
 In file included from test.h:11,
                  from warn.cc:5:
 ../../include/sfpi.h: In function '(static initializers for warn.cc)':
