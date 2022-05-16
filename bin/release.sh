@@ -23,7 +23,7 @@ cp -r $SRC/compiler/bin $DST/compiler
 cp -r $SRC/compiler/include $DST/compiler
 cp -r $SRC/compiler/lib $DST/compiler
 cp -r $SRC/compiler/libexec $DST/compiler
-cp -r $SRC/compiler/riscv64-unknown-elf $DST/compiler
+cp -r $SRC/compiler/riscv32-unknown-elf $DST/compiler
 # skip $SRC/share, doesn't seem to be needed and is biggish
 
 # Heavy hammer, will print tons of errors, eg,  "File format not recognized"

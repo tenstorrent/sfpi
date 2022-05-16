@@ -23,7 +23,7 @@ instructions.
 3) Configure the compiler:
     export SFPI_ROOT=<path to sfpi top level>
     cd tt-gcc
-    ./configure --prefix=$SFPI_ROOT/compiler -enable-multilib
+    ./configure --prefix=$SFPI_ROOT/compiler -disable-multilib -with-abi=ilp32 -with-arch=rv32i
     SFPI_ROOT must be an absolute path.  Note: the install script and the
     steps below assume the path used above
 
