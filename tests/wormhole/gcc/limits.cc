@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfpsetcc_i(0 + pass_offset, 1);
     __builtin_rvtt_wh_sfpsetcc_i(0x0FFF + pass_offset, 1);
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
 
     // Unsigned 12 bit
     __builtin_rvtt_wh_sfpencc(0 + pass_offset, 2);
@@ -191,5 +191,5 @@ int main(int argc, char* argv[])
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0xbfa00000, 33);
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x3fa6e001, 33);
 
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
 }

@@ -124,7 +124,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_rvtt_wh_sfpencc(imm12, mod1)
 #define __builtin_rvtt_sfppushc() __builtin_rvtt_wh_sfppushc(0)
-#define __builtin_rvtt_sfppopc() __builtin_rvtt_wh_sfppopc()
+#define __builtin_rvtt_sfppopc() __builtin_rvtt_wh_sfppopc(0)
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_rvtt_wh_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_wh_sfpsetcc_i(imm12, mod1)
 #define __builtin_rvtt_sfpscmp_ex(v, f, mod1) __builtin_rvtt_wh_sfpscmp_ex((void*)ckernel::instrn_buffer, v, f, mod1)

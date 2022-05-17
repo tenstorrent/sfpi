@@ -64,12 +64,12 @@ void whymov()
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfpsetcc_v(tmp, 6);
     a = __builtin_rvtt_wh_sfploadi_ex_lv(nullptr, a, 4, 28);
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
     v64sf b = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, 17152);
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfpiadd_i(nullptr, a, -29, 1);
     b = __builtin_rvtt_wh_sfploadi_ex_lv(nullptr, b, 0, 17408);
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
     __builtin_rvtt_wh_sfpstore(nullptr, b, 0, 0, 24);
 }
 

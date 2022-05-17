@@ -1,4 +1,5 @@
 warn.cc: In function 'void pushwithoutpop()':
-warn.cc:86:30: error: too few arguments to function 'void __builtin_riscv_sfppushc(unsigned int)'
+warn.cc:86:5: error: '__builtin_riscv_sfppushc' was not declared in this scope; did you mean '__builtin_rvtt_wh_sfppushc'?
    86 |     __builtin_riscv_sfppushc();
-      |                              ^
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+      |     __builtin_rvtt_wh_sfppushc

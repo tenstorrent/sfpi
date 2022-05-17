@@ -44,9 +44,9 @@ void smoke()
     __builtin_rvtt_wh_sfpsetcc_i(3, 12);
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0, 4);
     __builtin_rvtt_wh_sfpvcmp_ex(a, d, 4);
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
     __builtin_rvtt_wh_sfpcompc();
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
 
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, 12);
     a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, -12);
@@ -74,7 +74,7 @@ void smoke()
     v2 = __builtin_rvtt_wh_sfpsetexp_i(nullptr, 23, v1);
     v2 = __builtin_rvtt_wh_sfpsetexp_v(v2, v1);
 
-    v2 = __builtin_rvtt_wh_sfpsetman_i(nullptr, 23, v1);
+    v2 = __builtin_rvtt_wh_sfpsetman_i(nullptr, 23, v1, 0);
     v2 = __builtin_rvtt_wh_sfpsetman_v(v2, v1);
 
     v2 = __builtin_rvtt_wh_sfpabs(v1, SFPABS_MOD1_FLOAT);
@@ -148,15 +148,15 @@ void smoke_live()
 
     a = __builtin_rvtt_wh_sfpiadd_i_ex_lv(nullptr, a, d, 10, 4);
 
-    __builtin_rvtt_wh_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
 
     a = __builtin_rvtt_wh_sfpsetsgn_i_lv(nullptr, a, 10, d);
 
     a = __builtin_rvtt_wh_sfpcast_lv(a, d, 1);
-    a = __builtin_rvtt_wh_sfpshft2_e_lv(a, d, 3);
+    //    a = __builtin_rvtt_wh_sfpshft2_e_lv(a, d, 3);
     // XXXXXX bumping into bad gimple stuff again
     //a = __builtin_rvtt_wh_sfpstochrnd_i_lv(nullptr, a, 1, 3, d, 1);
-    a = __builtin_rvtt_wh_sfpstochrnd_v_lv(a, 1, a, d, 1);
+    //    a = __builtin_rvtt_wh_sfpstochrnd_v_lv(a, 1, a, d, 1);
 }
 
 void smokier()
