@@ -1139,6 +1139,48 @@ sfpi_inline void vUInt::operator>>=(uint32_t amt)
     assign((*this >> amt).get());
 }
 
+//////////////////////////////////////////////////////////////////////////////
+sfpi_inline vFloat operator+(const float a, const vFloat b) { return b + a; }
+sfpi_inline vFloat operator*(const float a, const vFloat b) { return b * a; }
+sfpi_inline vFloat operator-(const float a, const vFloat b) { return vFloat(a) - b; }
+sfpi_inline vCondComp operator==(const float a, const vFloat b) { return b == a; }
+sfpi_inline vCondComp operator!=(const float a, const vFloat b) { return b != a; }
+sfpi_inline vCondComp operator<(const float a, const vFloat b) { return b > a; }
+sfpi_inline vCondComp operator<=(const float a, const vFloat b) { return b >= a; }
+sfpi_inline vCondComp operator>(const float a, const vFloat b) { return b < a; }
+sfpi_inline vCondComp operator>=(const float a, const vFloat b) { return b <= a; }
+sfpi_inline vCondComp operator==(const s2vFloat16 a, const vFloat b) { return b == a; }
+sfpi_inline vCondComp operator!=(const s2vFloat16 a, const vFloat b) { return b != a; }
+sfpi_inline vCondComp operator<(const s2vFloat16 a, const vFloat b) { return b > a; }
+sfpi_inline vCondComp operator<=(const s2vFloat16 a, const vFloat b) { return b >= a; }
+sfpi_inline vCondComp operator>(const s2vFloat16 a, const vFloat b) { return b < a; }
+sfpi_inline vCondComp operator>=(const s2vFloat16 a, const vFloat b) { return b <= a; }
+
+sfpi_inline vInt operator+(const int32_t a, const vInt b) { return b + a; }
+sfpi_inline vInt operator-(const int32_t a, const vInt b) { return vInt(a) - b; }
+sfpi_inline vInt operator&(const int32_t a, const vInt b) { return b & a; }
+sfpi_inline vInt operator|(const int32_t a, const vInt b) { return b | a; }
+sfpi_inline vInt operator^(const int32_t a, const vInt b) { return b ^ a; }
+sfpi_inline vCondComp operator==(const int32_t a, const vInt b) { return b == a; }
+sfpi_inline vCondComp operator!=(const int32_t a, const vInt b) { return b != a; }
+sfpi_inline vCondComp operator<(const int32_t a, const vInt b) { return b > a; }
+sfpi_inline vCondComp operator<=(const int32_t a, const vInt b) { return b >= a; }
+sfpi_inline vCondComp operator>(const int32_t a, const vInt b) { return b < a; }
+sfpi_inline vCondComp operator>=(const int32_t a, const vInt b) { return b <= a; }
+
+sfpi_inline vUInt operator+(const int32_t a, const vUInt b) { return b + a; }
+sfpi_inline vUInt operator-(const int32_t a, const vUInt b) { return vUInt(a) - b; }
+sfpi_inline vUInt operator&(const int32_t a, const vUInt b) { return b & a; }
+sfpi_inline vUInt operator|(const int32_t a, const vUInt b) { return b | a; }
+sfpi_inline vUInt operator^(const int32_t a, const vUInt b) { return b ^ a; }
+sfpi_inline vCondComp operator==(const int32_t a, const vUInt b) { return b == a; }
+sfpi_inline vCondComp operator!=(const int32_t a, const vUInt b) { return b != a; }
+sfpi_inline vCondComp operator<(const int32_t a, const vUInt b) { return b > a; }
+sfpi_inline vCondComp operator<=(const int32_t a, const vUInt b) { return b >= a; }
+sfpi_inline vCondComp operator>(const int32_t a, const vUInt b) { return b < a; }
+sfpi_inline vCondComp operator>=(const int32_t a, const vUInt b) { return b <= a; }
+
+//////////////////////////////////////////////////////////////////////////////
 // Recursively process the conditional tree
 // gcc inline bails out due to complexity and always_inline doesn't allow
 // recursive inlining.  Instead, manually expand the code with "recursive"

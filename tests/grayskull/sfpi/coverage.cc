@@ -49,6 +49,9 @@ void test_add()
 
     dst_reg[17] = a + b + c;
     dst_reg[18] = a + b + c + dst_reg[0] + vConstNeg1 + 5.0f + 0.5F;
+
+    dst_reg[19] = 1.0f + a;
+    dst_reg[20] = 1.0f + dst_reg[19];
 }
 
 void test_sub()
@@ -78,6 +81,9 @@ void test_sub()
     dst_reg[14] = vConstNeg1 - dst_reg[12];
     dst_reg[15] = dst_reg[12] - vConst0p0020 + 0.5F;
     dst_reg[16] = c - vConstNeg0p6748 - 0.5F;
+
+    dst_reg[17] = 1.0f - a;
+    dst_reg[18] = 1.0f - dst_reg[19];
 }
 
 void test_mul()
@@ -106,6 +112,9 @@ void test_mul()
 
     dst_reg[17] = a * b * c;
     dst_reg[18] = a * b * c * dst_reg[0] * vConstNeg1 * 5.0f + 0.5F;
+
+    dst_reg[19] = 1.0f * a;
+    dst_reg[20] = 1.0f * dst_reg[19];
 }
 
 void test_mad()
@@ -367,6 +376,47 @@ void test_vhalf_conditional()
     dst_reg[8] = v;
 }
 
+void test_vhalf_conditional_reverse()
+{
+    vFloat x = 1.0f;
+
+    v_if(2.0f < x) {
+        v_if(2.0f >= x) {
+            dst_reg[2] = 2.0f;
+        } v_elseif(2.0f != x) {
+            dst_reg[3] = 2.0f;
+        }
+        v_endif;
+
+        v_if(2.0f == x) {
+            dst_reg[4] = 2.0f;
+        }
+        v_endif;
+
+        dst_reg[4] = 2.0f;
+    } v_elseif(2.0f > x) {
+        dst_reg[5] = 2.0f;
+    } v_elseif(!(2.0f >= x)) {
+        dst_reg[6] = 2.0f;
+    } v_else {
+        dst_reg[7] = 2.0f;
+    }
+    v_endif;
+
+    v_if(2.0f <= x) {
+        dst_reg[8] = 2.0f;
+    } v_elseif (!(2.0f <= x)) {
+        dst_reg[9] = 2.0f;
+    } v_elseif (2.0f > x) {
+        dst_reg[10] = 2.0f;
+    } v_elseif (!(2.0f > x)) {
+        dst_reg[11] = 2.0f;
+    }
+    v_endif;
+
+    dst_reg[8] = 2.0f;
+}
+
 void test_creg_conditional()
 {
     vFloat v = dst_reg[0];
@@ -479,6 +529,17 @@ void test_bitwise()
     dst_reg[11] = v3 | v4;
     dst_reg[12] = v3 & v4;
     dst_reg[13] = ((v3 & v4) | vInt(0xAA)) & ~v4;
+
+    v1 = 8;
+    v1 = 5 | v1;
+    v1 = 5 & v1;
+    v1 = 5 ^ v1;
+    dst_reg[14] = v1;
+
+    v3 = 5 | v3;
+    v3 = 5 & v3;
+    v3 = 5 ^ v3;
+    dst_reg[15] = v3;
 }
 
 void test_abs()
@@ -670,6 +731,47 @@ void test_icmp_i()
     } v_elseif (b > 5) {
         b += 500;
     } v_elseif (b >= 6) {
+        b += 600;
+    }
+    v_endif;
+
+    dst_reg[1] = b;
+}
+
+void test_icmp_i_rev()
+{
+    vInt a = 5;
+
+    v_if (1 == a) {
+        a += 100;
+    } v_elseif (2 != a) {
+        a += 200;
+    } v_elseif (3 < a) {
+        a += 300;
+    } v_elseif (4 <= a) {
+        a += 400;
+    } v_elseif (5 > a) {
+        a += 500;
+    } v_elseif (6 >= a) {
+        a += 600;
+    }
+    v_endif;
+
+    dst_reg[0] = a;
+
+    vUInt b = 16;
+
+    v_if (1 == b) {
+        b += 100;
+    } v_elseif (2 != b) {
+        b += 200;
+    } v_elseif (3 < b) {
+        b += 300;
+    } v_elseif (4 <= b) {
+        b += 400;
+    } v_elseif (5 > b) {
+        b += 500;
+    } v_elseif (6 >= b) {
         b += 600;
     }
     v_endif;
