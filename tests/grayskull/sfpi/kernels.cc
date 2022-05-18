@@ -64,11 +64,8 @@ sfpi_inline vCond test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat v
 
 sfpi_test_noinline void test1()
 {
-    // Test SFPLOAD, SFPSTORE
-    dst_reg[1] = dst_reg[0];
-
-    // Out: ramp from 0..63
-    copy_result_to_dreg0(1);
+    // Test SFPLOADI, SFPSTORE
+    dst_reg[1] = 1.3f;
 }
 
 sfpi_test_noinline void test2()
@@ -877,7 +874,7 @@ sfpi_test_noinline void test7()
 
 sfpi_test_noinline void test8()
 {
-    // SFPAND, SFPOR, SFPNOT, xor, SFPABS
+    // SFPAND, SFPOR, SFPNOT, XOR, SFPABS
     // Atypical usage of conditionals
     // More conditionals (short v compares)
 
