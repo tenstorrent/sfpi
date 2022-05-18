@@ -67,7 +67,7 @@ void setccnotinsidepushpop()
 {
     v64sf a = {1};
 
-    __builtin_riscv_sfpsetcc_v(a, 12);
+    __builtin_rvtt_wh_sfpsetcc_v(a, 12);
 }
 #endif
 
@@ -75,7 +75,7 @@ void setccnotinsidepushpop()
 #ifdef POP_PUSH
 void popwithoutpush()
 {
-    __builtin_riscv_sfppopc();
+    __builtin_rvtt_wh_sfppopc(0);
 }
 #endif
 
@@ -83,7 +83,7 @@ void popwithoutpush()
 #ifdef PUSH_POP
 void pushwithoutpop()
 {
-    __builtin_riscv_sfppushc();
+    __builtin_rvtt_sfppushc();
 }
 #endif
 
@@ -95,10 +95,18 @@ void spill()
     vFloat c = 1.0f;
     vFloat d = 1.0f;
     vFloat e = 1.0f;
+    vFloat f = 1.0f;
+    vFloat g = 1.0f;
+    vFloat h = 1.0f;
+    vFloat i = 1.0f;
     dst_reg[0] = a;
     dst_reg[0] = b;
     dst_reg[0] = c;
     dst_reg[0] = d;
     dst_reg[0] = e;
+    dst_reg[0] = f;
+    dst_reg[0] = g;
+    dst_reg[0] = h;
+    dst_reg[0] = i;
 }
 #endif

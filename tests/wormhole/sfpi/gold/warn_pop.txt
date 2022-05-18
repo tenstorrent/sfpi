@@ -1,5 +1,5 @@
 warn.cc: In function 'void popwithoutpush()':
-warn.cc:78:5: error: '__builtin_riscv_sfppopc' was not declared in this scope; did you mean '__builtin_rvtt_wh_sfppopc'?
-   78 |     __builtin_riscv_sfppopc();
-      |     ^~~~~~~~~~~~~~~~~~~~~~~
-      |     __builtin_rvtt_wh_sfppopc
+warn.cc:78:30: error: malformed program, popc without matching pushc
+   78 |     __builtin_rvtt_wh_sfppopc(0);
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+warn.cc:76: confused by earlier errors, bailing out
