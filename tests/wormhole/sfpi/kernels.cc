@@ -141,6 +141,7 @@ sfpi_test_noinline void test3()
     v_if(dst_reg[0] == 5.0F) {
         // This will be a short w/ 1 load
         vInt a = 0x3F80;
+        a |= 0x3f800000;
         dst_reg[3] = a;
     }
     v_endif;
@@ -154,13 +155,15 @@ sfpi_test_noinline void test3()
 
     v_if(dst_reg[0] == 7.0F) {
         // This will be an int w/ 1 load (not sign extended)
-        dst_reg[3] = 0x8F80;
+        vInt a = 0x8F80;
+        dst_reg[3] = a | 0x3f800000;
     }
     v_endif;
 
     v_if(dst_reg[0] == 8.0F) {
         // This will be a ushort w/ 1 load (not sign extended)
-        dst_reg[3] = 0x8F80U;
+        vUInt a = 0x8F80U;
+        dst_reg[3] = a | 0x3f800000;
     }
     v_endif;
 
@@ -171,7 +174,8 @@ sfpi_test_noinline void test3()
     v_endif;
 
     v_if(dst_reg[0] == 10.0F) {
-        dst_reg[3] = static_cast<unsigned short>(0x3f80);
+        vUInt a = static_cast<unsigned short>(0x3f80);
+        dst_reg[3] = a | 0x3f800000;
     }
     v_endif;
 
@@ -2652,7 +2656,7 @@ void test16()
         }
         v_endif;
 
-        v_if (((vConstTileId >> 1) & vInt(1)) == 0) {
+        v_if (((vConstTileId >> 1) & 1) == 0) {
             dst_reg[16] = x;
         } v_else {
             dst_reg[16] = y;

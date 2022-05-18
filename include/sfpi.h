@@ -505,8 +505,15 @@ public:
     sfpi_inline void operator=(LRegAssignerInternal& lr) { vBase::operator=(lr); }
 
     // Operations
-    sfpi_inline void operator&=(const vInt b) { return this->vIntBase::operator&=(b); }
-    sfpi_inline void operator|=(const vInt b) { return this->vIntBase::operator|=(b); }
+    sfpi_inline vInt operator&(int32_t b) const { return this->vIntBase::operator&(vInt(b)); }
+    sfpi_inline vInt operator&(const vInt b) const { return this->vIntBase::operator&(b); }
+    sfpi_inline void operator&=(const vInt b) { this->vIntBase::operator&=(b); }
+    sfpi_inline vInt operator|(int32_t b) const { return this->vIntBase::operator|(vInt(b)); }
+    sfpi_inline vInt operator|(const vInt b) const { return this->vIntBase::operator|(b); }
+    sfpi_inline void operator|=(const vInt b) { this->vIntBase::operator|=(b); }
+    sfpi_inline vInt operator^(int32_t b) const { return this->vIntBase::operator^(vInt(b)); }
+    sfpi_inline vInt operator^(const vInt b) const { return this->vIntBase::operator^(b); }
+    sfpi_inline void operator^=(const vInt b) { this->vIntBase::operator^=(b); }
     sfpi_inline vInt operator~() const { return this->vIntBase::operator~<vInt>(); }
 
     sfpi_inline vInt operator+(int32_t val) const { return this->vIntBase::add<vInt>(val, SFPIADD_I_EX_MOD1_SIGNED); }
@@ -582,8 +589,15 @@ public:
     sfpi_inline void operator=(LRegAssignerInternal& lr) { vBase::operator=(lr); }
 
     // Operations
-    sfpi_inline void operator&=(const vUInt b) { return this->vIntBase::operator&=(b); }
-    sfpi_inline void operator|=(const vUInt b) { return this->vIntBase::operator|=(b); }
+    sfpi_inline vUInt operator&(uint32_t b) const { return this->vIntBase::operator&(vUInt(b)); }
+    sfpi_inline vUInt operator&(const vUInt b) const { return this->vIntBase::operator&(b); }
+    sfpi_inline void operator&=(const vUInt b) { this->vIntBase::operator&=(b); }
+    sfpi_inline vUInt operator|(const vUInt b) const { return this->vIntBase::operator|(b); }
+    sfpi_inline vUInt operator|(const vUInt b) { return this->vIntBase::operator|(b); }
+    sfpi_inline void operator|=(const vUInt b) { this->vIntBase::operator|=(b); }
+    sfpi_inline vUInt operator^(const vUInt b) const { return this->vIntBase::operator^(b); }
+    sfpi_inline vUInt operator^(const vUInt b) { return this->vIntBase::operator^(b); }
+    sfpi_inline void operator^=(const vUInt b) { this->vIntBase::operator^=(b); }
     sfpi_inline vUInt operator~() const { return this->vIntBase::operator~<vUInt>(); }
 
     sfpi_inline vUInt operator+(int32_t val) const { return this->vIntBase::add<vUInt>(val, 0); }
