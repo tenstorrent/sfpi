@@ -150,6 +150,34 @@ _Z11replace_or3v:
 	ret
 	.size	_Z11replace_or3v, .-_Z11replace_or3v
 	.align	1
+	.globl	_Z16replace_live_or4v
+	.type	_Z16replace_live_or4v, @function
+_Z16replace_live_or4v:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L3, 4, 2
+	SFPLOADI	L0, 4, 3
+	SFPIADD	-4, L1, L2, 5
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L2, 6
+	SFPNOP
+	SFPMOV	L1, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPOR	L3, L2
+	SFPNOP
+	SFPNOP
+	SFPMOV	L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPENCC	3, 10
+	SFPNOP
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L3, 2, 4
+	SFPSTORE	L0, 2, 8
+	ret
+	.size	_Z16replace_live_or4v, .-_Z16replace_live_or4v
+	.align	1
 	.globl	_Z11remove_cmp1v
 	.type	_Z11remove_cmp1v, @function
 _Z11remove_cmp1v:

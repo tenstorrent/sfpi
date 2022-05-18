@@ -132,6 +132,24 @@ void replace_or3()
     dst_reg[2] = z;
 }
 
+// Test that the move happens in the right place and uses the right resulting
+// register w/ a liveness issue
+void replace_live_or4()
+{
+    vInt x = 1;
+    vInt y = 2;
+
+    vInt z = 3;
+    v_if (x == 4) {
+        z = x | y;
+    }
+    v_endif;
+
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+}
+
 void remove_cmp1()
 {
     vInt x = 1;
