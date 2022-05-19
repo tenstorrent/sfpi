@@ -23,6 +23,11 @@ void test_load_store()
     dst_reg[8] = a;
 
     dst_reg[9] = vConst1;
+
+    a = dst_reg[-1];
+    a = dst_reg[0xFFFFFF];
+    dst_reg[-1] = a;
+    dst_reg[0xFFFFFF] = a;
 }
 
 void test_add()
@@ -230,7 +235,7 @@ void test_exman_exexp()
     v_endif;
 }
 
-void test_setman_setexp_addexp_setsgn()
+void test_setman_setexp_addexp_setsgn(int val)
 {
     vFloat v1 = 1.0f;
     vInt v2 = 1;
@@ -239,18 +244,26 @@ void test_setman_setexp_addexp_setsgn()
     v1 = setexp(v1, 0x3ff);
     v1 = setexp(v1, v2);
     v1 = setexp(v1, v3);
+    v1 = setexp(v1, 0xFFFFF);
+    v1 = setexp(v1, -1);
 
     v1 = setman(v1, 0x3ff);
     v1 = setman(v1, v2);
     v1 = setman(v1, v3);
+    v1 = setman(v1, 0xFFFFF);
+    v1 = setman(v1, -1);
 
     vFloat v5 = dst_reg[1];
     v1 = addexp(v5, 20);
     v1 = addexp(v5, -20);
+    v1 = addexp(v5, val);
+    v1 = addexp(v5, 0xFFFFF);
 
     v1 = setsgn(v5, 1);
     v1 = setsgn(v5, -1);
     v1 = setsgn(v5, v2);
+    v1 = setsgn(v5, 0xFFFFF);
+
     vFloat v6 = dst_reg[2];
     v1 = setsgn(v5, v6);
 
@@ -570,6 +583,12 @@ void test_lz()
     v2 = lz(v3) + 1;
     v1 = lz(v1) + 1;
     v2 = lz(v2) + 1;
+
+    v1 = lz_nosgn(v3) + 1;
+    v2 = lz_nosgn(v3) + 1;
+    v1 = lz_nosgn(v1) + 1;
+    v2 = lz_nosgn(v2) + 1;
+
     dst_reg[0] = v1;
     dst_reg[1] = v2;
     dst_reg[2] = v3;
@@ -857,6 +876,65 @@ void test_lut()
     dst_reg[1] = lut_sign(d, a, b, c);
 }
 
+void test_lut2a()
+{
+    vFloat r, in;
+    vUInt l0, l1, l2;
+    in = 1.0f;
+    l0 = 1;
+    l1 = 2;
+    l2 = 3;
+
+    r = lut2(in, l0, l1, l2);
+    dst_reg[0] = r;
+    r = lut2_sign(in, l0, l1, l2);
+    dst_reg[1] = r;
+}
+
+void test_lut2b()
+{
+    vFloat r, in;
+    vFloat l0, l1, l2, l3, l4, l5;
+    in = 1.0f;
+    l0 = 1;
+    l1 = 2;
+    l2 = 3;
+    l3 = 4;
+    l4 = 5;
+    l5 = 6;
+
+    r = lut2(in, l0, l1, l2, l3, l4, l5);
+    dst_reg[0] = r;
+    r = lut2_sign(in, l0, l1, l2, l3, l4, l5);
+    dst_reg[1] = r;
+}
+
+void test_lut2c()
+{
+    vFloat r, in;
+    vUInt l0, l1, l2, l3, l4, l5;
+    in = 1.0f;
+    l0 = 1;
+    l1 = 2;
+    l2 = 3;
+    l3 = 4;
+    l4 = 5;
+    l5 = 6;
+
+    r = lut2(in, l0, l1, l2, l3, l4, l5);
+    dst_reg[0] = r;
+    r = lut2(in, l0, l1, l2, l3, l4, l5, 0);
+    dst_reg[1] = r;
+    r = lut2(in, l0, l1, l2, l3, l4, l5, 8);
+    dst_reg[2] = r;
+    r = lut2_sign(in, l0, l1, l2, l3, l4, l5);
+    dst_reg[3] = r;
+    r = lut2_sign(in, l0, l1, l2, l3, l4, l5, 0);
+    dst_reg[4] = r;
+    r = lut2_sign(in, l0, l1, l2, l3, l4, l5, 8);
+    dst_reg[5] = r;
+}
+
 void test_cast()
 {
     vInt a = 1;
@@ -865,16 +943,73 @@ void test_cast()
     dst_reg[0] = b;
     b = int2float(a, 1);
     dst_reg[1] = b;
+
+    b = int2float(a, 0xFFFFFF); // invalid value
+    dst_reg[1] = b;
 }
 
-void test_stochrnd()
+void test_stochrnd(int val)
 {
     vInt a = 1;
     vFloat b;
     b = int2float(a, 0);
-    dst_reg[0] = b;
     b = int2float(a, 1);
-    dst_reg[1] = b;
+
+    vFloat f = 1.0f;
+    vInt di;
+    vUInt du;
+
+    du = float2fp16a(f);
+    du = float2fp16a(f, 0);
+    du = float2fp16a(f, 2); // invalid
+
+    du = float2fp16b(f);
+    du = float2fp16b(f, 0);
+    du = float2fp16b(f, 2); // invalid
+
+    du = float2uint8(f);
+    du = float2uint8(f, 0);
+    du = float2uint8(f, 2); // invalid
+
+    du = float2int8(f);
+    du = float2int8(f, 0);
+    du = float2int8(f, 2); // invalid
+
+    du = float2uint16(f);
+    du = float2uint16(f, 0);
+    du = float2uint16(f, 2); // invalid
+
+    du = float2int16(f);
+    du = float2int16(f, 0);
+    du = float2int16(f, 2); // invalid
+
+    vInt descale = 3;
+    du = int322uint8(a, descale, 0);
+    du = int322uint8(a, descale, 1);
+    du = int322uint8(a, descale, 2); // invalid
+
+    du = int322uint8(a, 3, 0);
+    du = int322uint8(a, val, 0);
+    du = int322uint8(a, 0xffffff, 1);
+    du = int322uint8(a, 0xffffff, 2); // invalid
+
+    du = int322int8(a, descale, 0);
+    du = int322int8(a, descale, 1);
+    du = int322int8(a, descale, 2); // invalid
+
+    du = int322int8(a, 3, 0);
+    du = int322int8(a, val, 0);
+    du = int322int8(a, 0xffffff, 1);
+    du = int322int8(a, 0xffffff, 2); // invalid
+}
+
+void subvec_shfl()
+{
+    vFloat x, y;
+    x = 1.0f;
+
+    y = subvec_shflror1(x);
+    y = subvec_shflshr1(x);
 }
 
 void many_regs()
@@ -993,7 +1128,7 @@ int main(int argc, char* argv[])
     test_loadi(10, 20);
     test_control_flow(5);
     test_mad_imm();
-    test_setman_setexp_addexp_setsgn();
+    test_setman_setexp_addexp_setsgn(argc);
     test_dreg_conditional_const();
     test_vhalf_conditional_const();
     test_vhalf_conditional();
@@ -1009,6 +1144,12 @@ int main(int argc, char* argv[])
     test_icmp_i();
     test_icmp_v();
     test_lut();
+    test_lut2a();
+    test_lut2b();
+    test_lut2c();
+    many_regs();
+    subvec_shfl();
+    test_stochrnd(argc);
     stupid_example(argc);
     //    test_operator_equals();
 }

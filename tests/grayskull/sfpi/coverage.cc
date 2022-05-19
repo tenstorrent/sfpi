@@ -23,6 +23,11 @@ void test_load_store()
     dst_reg[8] = a;
 
     dst_reg[9] = vConstNeg1;
+
+    a = dst_reg[-1];
+    a = dst_reg[0xFFFFFF];
+    dst_reg[-1] = a;
+    dst_reg[0xFFFFFF] = a;
 }
 
 void test_add()
@@ -231,7 +236,7 @@ void test_exman_exexp()
     v_endif;
 }
 
-void test_setman_setexp_addexp_setsgn()
+void test_setman_setexp_addexp_setsgn(int val)
 {
     vFloat v1 = 1.0f;
     vInt v2 = 1;
@@ -240,18 +245,26 @@ void test_setman_setexp_addexp_setsgn()
     v1 = setexp(v1, 0x3ff);
     v1 = setexp(v1, v2);
     v1 = setexp(v1, v3);
+    v1 = setexp(v1, 0xFFFFF);
+    v1 = setexp(v1, -1);
 
     v1 = setman(v1, 0x3ff);
     v1 = setman(v1, v2);
     v1 = setman(v1, v3);
+    v1 = setman(v1, 0xFFFFF);
+    v1 = setman(v1, -1);
 
     vFloat v5 = dst_reg[1];
     v1 = addexp(v5, 20);
     v1 = addexp(v5, -20);
+    v1 = addexp(v5, val);
+    v1 = addexp(v5, 0xFFFFF);
 
     v1 = setsgn(v5, 1);
     v1 = setsgn(v5, -1);
     v1 = setsgn(v5, v2);
+    v1 = setsgn(v5, 0xFFFFF);
+
     vFloat v6 = dst_reg[2];
     v1 = setsgn(v5, v6);
 
@@ -1011,7 +1024,7 @@ int main(int argc, char* argv[])
     test_loadi(10, 20);
     test_control_flow(5);
     test_mad_imm();
-    test_setman_setexp_addexp_setsgn();
+    test_setman_setexp_addexp_setsgn(argc);
     test_dreg_conditional_const();
     test_vhalf_conditional_const();
     test_vhalf_conditional();

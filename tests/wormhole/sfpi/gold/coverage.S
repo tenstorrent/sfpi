@@ -18,6 +18,10 @@ _Z15test_load_storev:
 	SFPSTORE	L1, 0, 3, 12
 	SFPSTORE	L0, 0, 3, 16
 	SFPSTORE	L10, 0, 3, 18
+	SFPLOAD	L0, 0, 3, 16382
+	SFPLOAD	L0, 0, 3, 16382
+	SFPSTORE	L0, 0, 3, 16382
+	SFPSTORE	L0, 0, 3, 16382
 	ret
 	.size	_Z15test_load_storev, .-_Z15test_load_storev
 	.align	1
@@ -486,9 +490,9 @@ _Z16test_exman_exexpv:
 	ret
 	.size	_Z16test_exman_exexpv, .-_Z16test_exman_exexpv
 	.align	1
-	.globl	_Z32test_setman_setexp_addexp_setsgnv
-	.type	_Z32test_setman_setexp_addexp_setsgnv, @function
-_Z32test_setman_setexp_addexp_setsgnv:
+	.globl	_Z32test_setman_setexp_addexp_setsgni
+	.type	_Z32test_setman_setexp_addexp_setsgni, @function
+_Z32test_setman_setexp_addexp_setsgni:
 	SFPLOADI	L0, 0, 16256
 	SFPLOADI	L1, 4, 1
 	SFPLOADI	L2, 4, 1
@@ -497,21 +501,41 @@ _Z32test_setman_setexp_addexp_setsgnv:
 	SFPSETEXP	0, L0, L3, 0
 	SFPMOV	L2, L0, 0
 	SFPSETEXP	0, L3, L0, 0
+	SFPSETEXP	4095, L0, L0, 1
+	SFPSETEXP	4095, L0, L0, 1
 	SFPSETMAN	1023, L0, L0, 1
 	SFPMOV	L1, L3, 0
 	SFPSETMAN	0, L0, L3, 0
 	SFPSETMAN	0, L3, L2, 0
+	SFPLOADI	L0, 8, 15
+	SFPLOADI	L0, 10, 65535
+	SFPSETMAN	0, L2, L0, 0
+	SFPLOADI	L2, 8, 65535
+	SFPLOADI	L2, 10, 65535
+	SFPSETMAN	0, L0, L2, 0
 	SFPLOAD	L0, 0, 3, 2
 	SFPDIVP2	20, L0, L2, 1
 	SFPDIVP2	-20, L0, L2, 1
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a0,a0,20
+	srli	a0,a0,8
+	li	a4,1979711521
+	add	a4, a4, a0
+# Op(0x76) - d(2) s(0)
+	sw	a4,0(a5)
+	SFPNOP
+	SFPNOP
+	SFPDIVP2	-1, L0, L2, 1
 	SFPSETSGN	1, L0, L2, 1
 	SFPSETSGN	4095, L0, L2, 1
 	SFPSETSGN	0, L0, L1, 0
+	SFPSETSGN	4095, L0, L1, 1
 	SFPLOAD	L1, 0, 3, 4
 	SFPSETSGN	0, L0, L1, 0
 	SFPSTORE	L1, 0, 3, 4
 	ret
-	.size	_Z32test_setman_setexp_addexp_setsgnv, .-_Z32test_setman_setexp_addexp_setsgnv
+	.size	_Z32test_setman_setexp_addexp_setsgni, .-_Z32test_setman_setexp_addexp_setsgni
 	.align	1
 	.globl	_Z27test_dreg_conditional_constv
 	.type	_Z27test_dreg_conditional_constv, @function
@@ -1107,6 +1131,14 @@ _Z7test_lzv:
 	SFPIADD	1, L1, L1, 5
 	SFPLZ	L0, L0, 0
 	SFPIADD	1, L0, L0, 5
+	SFPLZ	L2, L1, 4
+	SFPIADD	1, L1, L1, 5
+	SFPLZ	L2, L0, 4
+	SFPIADD	1, L0, L0, 5
+	SFPLZ	L1, L1, 4
+	SFPIADD	1, L1, L1, 5
+	SFPLZ	L0, L0, 4
+	SFPIADD	1, L0, L0, 5
 	SFPSTORE	L1, 0, 3, 0
 	SFPSTORE	L0, 0, 3, 2
 	SFPSTORE	L2, 0, 3, 4
@@ -1582,27 +1614,154 @@ _Z8test_lutv:
 	ret
 	.size	_Z8test_lutv, .-_Z8test_lutv
 	.align	1
+	.globl	_Z10test_lut2av
+	.type	_Z10test_lut2av, @function
+_Z10test_lut2av:
+	SFPLOADI	L4, 0, 16256
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPLOADI	L2, 4, 3
+	SFPMOV	L4, L3, 0
+	SFPLOADI	L7, 2, 3
+	SFPLUTFP32	L3, 14
+	SFPNOP
+	SFPSTORE	L3, 0, 3, 0
+	SFPNOP
+	SFPMOV	L4, L3, 2
+	SFPLOADI	L7, 2, 0
+	SFPLUTFP32	L0, 10
+	SFPNOP
+	SFPSTORE	L0, 0, 3, 2
+	ret
+	.size	_Z10test_lut2av, .-_Z10test_lut2av
+	.align	1
+	.globl	_Z10test_lut2bv
+	.type	_Z10test_lut2bv, @function
+_Z10test_lut2bv:
+	SFPLOADI	L3, 0, 16256
+	SFPLOADI	L0, 0, 16256
+	SFPLOADI	L1, 0, 16384
+	SFPLOADI	L2, 0, 16448
+	SFPLOADI	L4, 0, 16512
+	SFPLOADI	L5, 0, 16544
+	SFPLOADI	L6, 0, 16576
+	SFPLUTFP32	L7, 4
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 0
+	SFPLUTFP32	L0, 0
+	SFPNOP
+	SFPSTORE	L0, 0, 3, 2
+	ret
+	.size	_Z10test_lut2bv, .-_Z10test_lut2bv
+	.align	1
+	.globl	_Z10test_lut2cv
+	.type	_Z10test_lut2cv, @function
+_Z10test_lut2cv:
+	SFPLOADI	L3, 0, 16256
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPLOADI	L2, 4, 3
+	SFPLOADI	L4, 4, 4
+	SFPLOADI	L5, 4, 5
+	SFPLOADI	L6, 4, 6
+	SFPLUTFP32	L7, 6
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 0
+	SFPLUTFP32	L7, 7
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 2
+	SFPLUTFP32	L7, 7
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 4
+	SFPLUTFP32	L7, 2
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 6
+	SFPLUTFP32	L7, 3
+	SFPNOP
+	SFPSTORE	L7, 0, 3, 8
+	SFPLUTFP32	L0, 3
+	SFPNOP
+	SFPSTORE	L0, 0, 3, 10
+	ret
+	.size	_Z10test_lut2cv, .-_Z10test_lut2cv
+	.align	1
 	.globl	_Z9test_castv
 	.type	_Z9test_castv, @function
 _Z9test_castv:
 	SFPLOADI	L0, 4, 1
 	SFPCAST L0, L1, 0
 	SFPSTORE	L1, 0, 3, 0
+	SFPCAST L0, L1, 1
+	SFPSTORE	L1, 0, 3, 2
 	SFPCAST L0, L0, 1
 	SFPSTORE	L0, 0, 3, 2
 	ret
 	.size	_Z9test_castv, .-_Z9test_castv
 	.align	1
-	.globl	_Z13test_stochrndv
-	.type	_Z13test_stochrndv, @function
-_Z13test_stochrndv:
-	SFPLOADI	L0, 4, 1
-	SFPCAST L0, L1, 0
-	SFPSTORE	L1, 0, 3, 0
-	SFPCAST L0, L0, 1
-	SFPSTORE	L0, 0, 3, 2
+	.globl	_Z13test_stochrndi
+	.type	_Z13test_stochrndi, @function
+_Z13test_stochrndi:
+	SFPLOADI	L1, 4, 1
+	SFPCAST L1, L0, 0
+	SFPCAST L1, L0, 1
+	SFPLOADI	L0, 0, 16256
+	SFPSTOCHRND	1, 0, L0, L0, L2, 0
+	SFPSTOCHRND	0, 0, L0, L0, L2, 0
+	SFPSTOCHRND	1, 0, L0, L0, L2, 0
+	SFPSTOCHRND	1, 0, L0, L0, L2, 1
+	SFPSTOCHRND	0, 0, L0, L0, L2, 1
+	SFPSTOCHRND	1, 0, L0, L0, L2, 1
+	SFPSTOCHRND	1, 0, L0, L0, L2, 2
+	SFPSTOCHRND	0, 0, L0, L0, L2, 2
+	SFPSTOCHRND	1, 0, L0, L0, L2, 2
+	SFPSTOCHRND	1, 0, L0, L0, L2, 3
+	SFPSTOCHRND	0, 0, L0, L0, L2, 3
+	SFPSTOCHRND	1, 0, L0, L0, L2, 3
+	SFPSTOCHRND	1, 0, L0, L0, L2, 6
+	SFPSTOCHRND	0, 0, L0, L0, L2, 6
+	SFPSTOCHRND	1, 0, L0, L0, L2, 6
+	SFPSTOCHRND	1, 0, L0, L0, L2, 7
+	SFPSTOCHRND	0, 0, L0, L0, L2, 7
+	SFPSTOCHRND	1, 0, L0, L0, L0, 7
+	SFPLOADI	L0, 4, 3
+	SFPSTOCHRND	0, 0, L0, L1, L2, 4
+	SFPSTOCHRND	1, 0, L0, L1, L2, 4
+	SFPSTOCHRND	1, 0, L0, L1, L2, 4
+	SFPSTOCHRND	0, 3, L0, L1, L2, 12
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a5,a0,24
+	srli	a5,a5,8
+	li	a3,-1912602324
+	add	a3, a3, a5
+# Op(0xffffff8e) - d(2) s(1)
+	sw	a3,0(a4)
+	SFPSTOCHRND	1, 31, L0, L1, L2, 12
+	SFPSTOCHRND	1, 31, L0, L1, L2, 12
+	SFPSTOCHRND	0, 0, L0, L1, L2, 5
+	SFPSTOCHRND	1, 0, L0, L1, L2, 5
+	SFPSTOCHRND	1, 0, L0, L1, L0, 5
+	SFPSTOCHRND	0, 3, L0, L1, L0, 13
+	mv	a0,a5
+	li	a5,-1912602355
+	add	a5, a5, a0
+# Op(0xffffff8e) - d(0) s(1)
+	sw	a5,0(a4)
+	SFPSTOCHRND	1, 31, L0, L1, L0, 13
+	SFPSTOCHRND	1, 31, L0, L1, L1, 13
 	ret
-	.size	_Z13test_stochrndv, .-_Z13test_stochrndv
+	.size	_Z13test_stochrndi, .-_Z13test_stochrndi
+	.align	1
+	.globl	_Z11subvec_shflv
+	.type	_Z11subvec_shflv, @function
+_Z11subvec_shflv:
+	SFPLOADI	L0, 0, 16256
+	SFPSHFT2	0, L0, L1, 3
+	SFPNOP
+	SFPSHFT2	0, L0, L0, 4
+	SFPNOP
+	ret
+	.size	_Z11subvec_shflv, .-_Z11subvec_shflv
 	.align	1
 	.globl	_Z9many_regsv
 	.type	_Z9many_regsv, @function
@@ -1758,7 +1917,8 @@ main:
 	SFPMAD	L0, L3, L1, L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 4
-	call	_Z32test_setman_setexp_addexp_setsgnv
+	mv	a0,s0
+	call	_Z32test_setman_setexp_addexp_setsgni
 	call	_Z27test_dreg_conditional_constv
 	call	_Z28test_vhalf_conditional_constv
 	call	_Z22test_vhalf_conditionalv
@@ -1782,6 +1942,31 @@ main:
 	SFPLUT	L3, 0
 	SFPNOP
 	SFPSTORE	L3, 0, 3, 2
+	SFPLOADI	L4, 0, 16256
+	SFPLOADI	L0, 4, 1
+	SFPLOADI	L1, 4, 2
+	SFPLOADI	L2, 4, 3
+	SFPMOV	L4, L3, 0
+	SFPLOADI	L7, 2, 3
+	SFPLUTFP32	L3, 14
+	SFPNOP
+	SFPSTORE	L3, 0, 3, 0
+	SFPNOP
+	SFPMOV	L4, L3, 2
+	SFPLOADI	L7, 2, 0
+	SFPLUTFP32	L0, 10
+	SFPNOP
+	SFPSTORE	L0, 0, 3, 2
+	call	_Z10test_lut2bv
+	call	_Z10test_lut2cv
+	call	_Z9many_regsv
+	SFPLOADI	L0, 0, 16256
+	SFPSHFT2	0, L0, L1, 3
+	SFPNOP
+	SFPSHFT2	0, L0, L0, 4
+	SFPNOP
+	mv	a0,s0
+	call	_Z13test_stochrndi
 	mv	a0,s0
 	call	_Z14stupid_examplej
 	lw	ra,12(sp)

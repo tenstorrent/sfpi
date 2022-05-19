@@ -8,8 +8,8 @@
 	.globl	_Z9abs_setccv
 	.type	_Z9abs_setccv, @function
 _Z9abs_setccv:
-	SFPLOADI	L1, 0, 49568
-	SFPLOADI	L0, 0, 49648
+	SFPLOADI	L1, 0, -15968
+	SFPLOADI	L0, 0, -15888
 	SFPLOAD	L2, 1, 0
 	SFPSETCC	0, L2, 6
 	SFPNOP

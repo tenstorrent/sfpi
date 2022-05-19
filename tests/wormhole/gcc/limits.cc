@@ -25,6 +25,7 @@ int main(int argc, char* argv[])
 
     a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, 0x0000 + fail_offset);
     a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, 0x3FFF + fail_offset);
+    a = __builtin_rvtt_wh_sfpload(nullptr, 0, 0, fail_offset);
 
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x0000 + fail_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x3FFF + fail_offset);
@@ -164,15 +165,15 @@ int main(int argc, char* argv[])
     a = __builtin_rvtt_wh_sfpsetsgn_i(nullptr, 0 + pass_offset, a);
     a = __builtin_rvtt_wh_sfpsetsgn_i(nullptr, 0x0FFF + pass_offset, a);
 
-    // Unsigned 12 bit
+    // Unsigned 1 bit.  Not masked in compiler but not user visible
     __builtin_rvtt_wh_sfppushc(0);
-    __builtin_rvtt_wh_sfpsetcc_i(0 + pass_offset, 1);
-    __builtin_rvtt_wh_sfpsetcc_i(0x0FFF + pass_offset, 1);
+    __builtin_rvtt_wh_sfpsetcc_i(0, 1);
+    __builtin_rvtt_wh_sfpsetcc_i(1, 1);
     __builtin_rvtt_wh_sfppopc(0);
 
-    // Unsigned 12 bit
-    __builtin_rvtt_wh_sfpencc(0 + pass_offset, 2);
-    __builtin_rvtt_wh_sfpencc(0x0FFF + pass_offset, 2);
+    // Unsigned 1 bit.  Not masked in compiler but not user visible
+    __builtin_rvtt_wh_sfpencc(0, 2);
+    __builtin_rvtt_wh_sfpencc(1, 2);
 
     __builtin_rvtt_wh_sfppushc(0);
     // 1.0 in different fmts
@@ -190,6 +191,16 @@ int main(int argc, char* argv[])
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0xbfa0, 17);
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0xbfa00000, 33);
     __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x3fa6e001, 33);
+
+    // Test limits of fp16a/fp16b/float32 determination
+    // This is fp16b, with pass_offset != 0 the mantissa will overflow, use fp16a
+    __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x3fff0000 | ((pass_offset & 1) << 15), 33);
+    // This is fp16b w/ large exp, with pass_offset != 0 the mantissa will overflow, use fp32
+    __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x47ff0000 | ((pass_offset & 1) << 15), 33);
+    // This is fp16a w/ largest exp, with pass_offset != 0 the exponent will overflow, use fp32
+    __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x477f8000 | ((pass_offset & 1) << 23), 33);
+    // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
+    __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0x38ff8000 & ~((pass_offset & 1) << 23), 33);
 
     __builtin_rvtt_wh_sfppopc(0);
 }

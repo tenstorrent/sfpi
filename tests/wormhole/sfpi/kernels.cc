@@ -217,6 +217,55 @@ sfpi_test_noinline void test3()
     }
     v_endif;
 
+    // Below are from the limits test.  Test the compiler's ability to use
+    // fp16a, fp16b or fp32 as needed
+
+    v_if(dst_reg[0] == 18.0F) {
+        dst_reg[3] = 1.9921875f; // 0x3fff0000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 19.0F) {
+        dst_reg[3] = 1.99609375f; // 0x3fff8000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 20.0F) {
+        // This is fp16b w/ large exp, with pass_offset != 0 the mantissa will overflow, use fp32
+        dst_reg[3] = 130560.0f; // 0x47ff0000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 21.0F) {
+        // This is fp16b w/ large exp, with pass_offset != 0 the mantissa will overflow, use fp32
+        dst_reg[3] = 130592.0f; // 0x47ff1000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 22.0F) {
+        // This is fp16a w/ largest exp, with pass_offset != 0 the exponent will overflow, use fp32
+        dst_reg[3] = 65408.0f; // 0x477f8000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 23.0F) {
+        // This is fp16a w/ largest exp, with pass_offset != 0 the exponent will overflow, use fp32
+        dst_reg[3] = 130816.0f; // 0x47ff8000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 23.0F) {
+        // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
+        dst_reg[3] = 0.000121831894f; // 0x38ff8000
+    }
+    v_endif;
+
+    v_if(dst_reg[0] == 24.0F) {
+        // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
+        dst_reg[3] = 0.000060915947f; // 0x387f8000
+    }
+    v_endif;
+
     // [0] = 10.0
     // [1] = 20.0
     // [2] = 30.0

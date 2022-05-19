@@ -248,7 +248,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L1, 1, 11973
-	SFPLOADI	L2, 1, 47539
+	SFPLOADI	L2, 1, -17997
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP
 	SFPNOP
@@ -256,7 +256,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPLOADI	L2, 1, 48615
+	SFPLOADI	L2, 1, -16921
 	SFPMAD	L0, L1, L2, L2, 0
 	SFPNOP
 	SFPNOP
@@ -314,7 +314,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	SFPLOAD	L1, 1, 0
 	SFPSETCC	0, L1, 6
 	SFPNOP
-	SFPLOADI	L0, 0, 65408
+	SFPLOADI	L0, 0, -128
 	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
@@ -1278,7 +1278,7 @@ _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L1, 2, 8208
-	SFPLOADI	L2, 2, 65280
+	SFPLOADI	L2, 2, -256
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPNOP
@@ -1304,7 +1304,7 @@ _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
 .L63:
 	SFPLOAD	L3, 1, 0
 	SFPLOADI	L1, 2, 8492
-	SFPLOADI	L2, 2, 65280
+	SFPLOADI	L2, 2, -256
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPNOP
@@ -1437,7 +1437,7 @@ _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	SFPSTORE	L0, 0, 0
 	SFPLOADI	L0, 2, 6399
 	SFPLOADI	L1, 2, 8492
-	SFPLOADI	L2, 2, 65280
+	SFPLOADI	L2, 2, -256
 	SFPLUT	L3, 4
 	SFPNOP
 	SFPNOP
@@ -1976,7 +1976,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPNOP
 	SFPNOP
 	SFPLOADI	L1, 1, 11973
-	SFPLOADI	L2, 1, 47539
+	SFPLOADI	L2, 1, -17997
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP
 	SFPNOP
@@ -1984,7 +1984,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP
 	SFPNOP
-	SFPLOADI	L2, 1, 48615
+	SFPLOADI	L2, 1, -16921
 	SFPMAD	L0, L1, L2, L2, 0
 	SFPNOP
 	SFPNOP
@@ -2050,7 +2050,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPLOAD	L1, 1, 0
 	SFPSETCC	0, L1, 6
 	SFPNOP
-	SFPLOADI	L0, 0, 65408
+	SFPLOADI	L0, 0, -128
 	SFPENCC	3, 10
 	SFPNOP
 	SFPSTORE	L0, 0, 0
@@ -2194,7 +2194,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
 	.weak	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm
 	.type	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, @function
 _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
-	SFPLOADI	L1, 0, 43339
+	SFPLOADI	L1, 0, -22197
 	slli	a1,a1,16
 	slli	a0,a0,16
 	li	a5,4

@@ -149,7 +149,8 @@ sfpi_inline vInt lz(const vType v)
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_CC_NONE));
 }
 
-sfpi_inline vInt lz_nosgn(const vFloat v)
+template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+sfpi_inline vInt lz_nosgn(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_NOSGN_CC_NONE));
 }
