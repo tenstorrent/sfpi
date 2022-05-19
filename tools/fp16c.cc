@@ -117,11 +117,11 @@ int main(int argc, char* argv[])
     } else if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X') && s.length() > 6) {
         int val = stoi(s, nullptr, 0);
         // Must be fp32
-        printf("fp32: %f\n", int_to_float(val));
+        printf("fp32: %12.12f\n", int_to_float(val));
     } else {
         int val = stoi(s, nullptr, 0);
-        printf("fp32 (from fp16a): %f\n", fp16a_to_fp32(val));
-        printf("fp32 (from fp16b): %f\n", fp16b_to_fp32(val));
-        printf("fp32 (from 8)    : %f\n", fp8_to_float(val));
+        printf("fp32 (from fp16a): %12.12f\n", fp16a_to_fp32(val));
+        printf("fp32 (from fp16b): %12.12f\n", fp16b_to_fp32(val));
+        printf("fp32 (from 8)    : %12.12f\n", fp8_to_float(val));
     }
 }
