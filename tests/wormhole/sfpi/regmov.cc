@@ -228,3 +228,43 @@ void replace_creg()
     dst_reg[0] = x & y;
     dst_reg[0] = y | x;
 }
+
+void bb(int argc)
+{
+    vInt a = 1;
+    vInt b = 2;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | b;
+    }
+
+    dst_reg[0] = c;
+}
+
+void bb2(int argc)
+{
+    vInt a = 1;
+    vInt b = 2;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | b;
+    }
+
+    dst_reg[0] = a;
+    dst_reg[0] = c;
+}
+
+void bb3(int argc)
+{
+    vInt a = 1;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | c;
+    }
+
+    dst_reg[0] = a;
+    dst_reg[0] = c;
+}

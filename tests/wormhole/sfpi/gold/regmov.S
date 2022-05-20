@@ -212,6 +212,54 @@ _Z12replace_cregv:
 	SFPSTORE	L0, 0, 3, 0
 	ret
 	.size	_Z12replace_cregv, .-_Z12replace_cregv
+	.align	1
+	.globl	_Z2bbi
+	.type	_Z2bbi, @function
+_Z2bbi:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L20
+	SFPNOP
+	SFPMOV	L1, L0, 2
+	SFPOR	L2, L0
+.L20:
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z2bbi, .-_Z2bbi
+	.align	1
+	.globl	_Z3bb2i
+	.type	_Z3bb2i, @function
+_Z3bb2i:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L22
+	SFPNOP
+	SFPMOV	L1, L0, 2
+	SFPOR	L2, L0
+.L22:
+	SFPSTORE	L1, 0, 3, 0
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z3bb2i, .-_Z3bb2i
+	.align	1
+	.globl	_Z3bb3i
+	.type	_Z3bb3i, @function
+_Z3bb3i:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L24
+	SFPNOP
+	SFPMOV	L1, L2, 2
+	SFPOR	L0, L2
+	SFPNOP
+	SFPMOV	L2, L0, 2
+.L24:
+	SFPSTORE	L1, 0, 3, 0
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z3bb3i, .-_Z3bb3i
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
 	.align	2
