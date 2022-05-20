@@ -847,6 +847,7 @@ int main(int argc, char* argv[])
     calculate_reciprocal<false, 4>();
     calculate_reciprocal<true, 4>();
 
+    init_dropout_seed(argc);
     calculate_dropout<false>(argc, argc);
 
     return 0;
