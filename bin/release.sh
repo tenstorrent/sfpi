@@ -28,7 +28,3 @@ cp -r $SRC/compiler/riscv32-unknown-elf $DST/compiler
 
 # Heavy hammer, will print tons of errors, eg,  "File format not recognized"
 find $DST/compiler -type f -executable -exec strip {} \;
-
-# Emulator
-cp $SRC/tests/sfpi/sfpu.cc $DST/emule
-cp $SRC/tests/sfpi/sfpu.h $DST/emule
