@@ -3,7 +3,7 @@ CC_PATH ?= $(SFPI_ROOT)/compiler
 
 INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/wormhole/sfpi_hw.h $(SFPI_ROOT)/include/wormhole/sfpi_imp.h $(SFPI_ROOT)/include/wormhole/sfpi_lib.h $(SFPI_ROOT)/include/wormhole/ckernel_ops.h
 
-CFLAGS = -I$(SFPI_ROOT)/include -I$(SFPI_ROOT)/include/wormhole -DARCH_WORMHOLE -O3 -std=c++17 -Wall
+CFLAGS = -I$(SFPI_ROOT)/include -I../../common/include -I$(SFPI_ROOT)/include/wormhole -DARCH_WORMHOLE -O3 -std=c++17 -Wall
 # Note: Production uses -g which adds GIMPLE_DEBUG gimple statements that can affect optimization
 # Enabling -g here results in unreadable asm, but testing should occur both ways...
 

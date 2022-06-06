@@ -181,8 +181,8 @@ _Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0:
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0
 	.align	1
-	.type	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, @function
-_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
+	.type	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, @function
+_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
 	li	a5,8
 .L8:
 	SFPLOAD	L1, 0, 3, 0
@@ -241,10 +241,10 @@ _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	addi	a5,a5,-1
 	bne	a5,zero,.L8
 	ret
-	.size	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0
+	.size	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0
 	.align	1
-	.type	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, @function
-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
+	.type	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, @function
+_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	li	a5,8
 .L11:
 	SFPLOAD	L1, 0, 3, 0
@@ -303,7 +303,7 @@ _Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
 	addi	a5,a5,-1
 	bne	a5,zero,.L11
 	ret
-	.size	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0
+	.size	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0
 	.section	.text._Z14calculate_compILb0EL8SfpuType8EEvm,"axG",@progbits,_Z14calculate_compILb0EL8SfpuType8EEvm,comdat
 	.align	1
 	.weak	_Z14calculate_compILb0EL8SfpuType8EEvm

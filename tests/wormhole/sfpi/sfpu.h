@@ -365,3 +365,10 @@ extern void sfpu_rvtt_sfpshft2_ge(const __rvtt_vec_t& src,
 extern __rvtt_vec_t sfpu_rvtt_sfpshft2_e(const __rvtt_vec_t& src, int mod);
 extern void sfpu_rvtt_sfpswap(__rvtt_vec_t& dst, __rvtt_vec_t& src, int mod);
 extern void sfpu_rvtt_sfpconfig_v(const __rvtt_vec_t& l0, unsigned int config_dest);
+
+extern int sfpu_rvtt_sfpfcmps_ex(const __rvtt_vec_t& v, unsigned int f, int mod);
+extern int sfpu_rvtt_sfpfcmpv_ex(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, int mod1);
+extern int sfpu_rvtt_sfpicmps_ex(const __rvtt_vec_t& v, unsigned int i, int mod1);
+extern int sfpu_rvtt_sfpicmpv_ex(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, int mod1);
+extern int sfpu_rvtt_sfpbool_ex(int t, int a, int b);
+extern void __builtin_rvtt_sfpcond_ex(int i);

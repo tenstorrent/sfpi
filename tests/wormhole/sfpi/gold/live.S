@@ -423,13 +423,7 @@ main:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
 	call	_Z9abs_setccv
-	SFPLOADI	L1, 0, 16256
-	SFPLOADI	L0, 0, 16384
-	SFPLOAD	L2, 0, 3, 0
-	SFPSETCC	0, L2, 6
-	SFPMOV	L1, L0, 0
-	SFPENCC	3, 10
-	SFPSTORE	L0, 0, 3, 0
+	call	_Z18rename_move_case2av
 	call	_Z16copy_move_case2bv
 	call	_Z15copy_move_case3v
 	call	_Z19internal_move_case4v

@@ -29,8 +29,12 @@ namespace sfpi {
 #define __builtin_rvtt_sfppopc() sfpu_rvtt_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) sfpu_rvtt_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) sfpu_rvtt_sfpsetcc_i(imm12, mod1)
-#define __builtin_rvtt_sfpscmp_ex(v, f, mod1) sfpu_rvtt_sfpscmp_ex(v, f, mod1)
-#define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) sfpu_rvtt_sfpvcmp_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpfcmps_ex(v, f, mod1) sfpu_rvtt_sfpfcmps_ex(v, f, mod1)
+#define __builtin_rvtt_sfpfcmpv_ex(v1, v2, mod1) sfpu_rvtt_sfpfcmpv_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpicmps_ex(v, i, mod1) sfpu_rvtt_sfpicmps_ex(v, i, mod1)
+#define __builtin_rvtt_sfpicmpv_ex(v1, v2, mod1) sfpu_rvtt_sfpicmpv_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpbool_ex(t, a, b) sfpu_rvtt_sfpbool_ex(t, a, b)
+#define __builtin_rvtt_sfpcond_ex(i) sfpu_rvtt_sfpcond_ex(i)
 #define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) sfpu_rvtt_sfpadd(va, vb, mod1)
@@ -127,8 +131,12 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfppopc() __builtin_rvtt_wh_sfppopc(0)
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_rvtt_wh_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_wh_sfpsetcc_i(imm12, mod1)
-#define __builtin_rvtt_sfpscmp_ex(v, f, mod1) __builtin_rvtt_wh_sfpscmp_ex((void*)ckernel::instrn_buffer, v, f, mod1)
-#define __builtin_rvtt_sfpvcmp_ex(v1, v2, mod1) __builtin_rvtt_wh_sfpvcmp_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpfcmps_ex(v, f, mod1) __builtin_rvtt_wh_sfpfcmps_ex((void *)ckernel::instrn_buffer, v, f, mod1)
+#define __builtin_rvtt_sfpfcmpv_ex(v1, v2, mod1) __builtin_rvtt_wh_sfpfcmpv_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpicmps_ex(v, i, mod1) __builtin_rvtt_wh_sfpicmps_ex((void *)ckernel::instrn_buffer, v, i, mod1)
+#define __builtin_rvtt_sfpicmpv_ex(v1, v2, mod1) __builtin_rvtt_wh_sfpicmpv_ex(v1, v2, mod1)
+#define __builtin_rvtt_sfpbool_ex(t, a, b) __builtin_rvtt_wh_sfpbool_ex(t, a, b)
+#define __builtin_rvtt_sfpcond_ex(i) __builtin_rvtt_wh_sfpcond_ex(i)
 #define __builtin_rvtt_sfpcompc() __builtin_rvtt_wh_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)
@@ -268,6 +276,10 @@ constexpr unsigned int SFPCMP_EX_MOD1_CC_NE = 4;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_LTE = 5;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_GT = 6;
 constexpr unsigned int SFPCMP_EX_MOD1_CC_MASK = 7;
+
+constexpr unsigned int SFPBOOL_EX_MOD1_OR = 1;
+constexpr unsigned int SFPBOOL_EX_MOD1_AND = 2;
+constexpr unsigned int SFPBOOL_EX_MOD1_NOT = 3;
 
 constexpr unsigned int SFPSCMP_EX_MOD1_FMT_A = 8;
 constexpr unsigned int SFPSCMP_EX_MOD1_FMT_B = 16;

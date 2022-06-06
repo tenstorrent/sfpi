@@ -1,7 +1,9 @@
 #include "sfpu.h"
+#include "sfpu_bool.h"
 
 using namespace sfpu;
 using namespace sfpi;
+using namespace std;
 
 namespace sfpu {
 
@@ -202,6 +204,46 @@ void SFPUCC::dump(int i)
         printf("[%d]d%c%c  ", i, enabled_string[!sfpu_cc.enable[i]], enabled_string[sfpu_cc.deferred_result[i]]);
     } else {
         printf("[%d]%c%c  ", i, enabled_string[!sfpu_cc.enable[i]], enabled_string[sfpu_cc.result[i]]);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void SFPUConditional::emit_boolean_tree(int w, bool negate)
+{
+    const SFPUConditional& node = sfpu_conditionals[w];
+    bool negate_node = node.negated;
+    bool restore = false;
+    __rvtt_vec_t saved_enables = sfpu_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 1);
+
+    if (node.get_boolean_type(negate) == SFPUConditional::opType::opOr) {
+        negate_node = !negate_node;
+        negate = !negate;
+    }
+
+    // Emit LHS
+    emit_conditional(node.op_a, negate);
+
+    // Emit RHS
+    if (sfpu_conditionals[node.op_b].is_boolean()) {
+        sfpu_rvtt_sfppushc();
+        emit_conditional(node.op_b, negate);
+        restore = true;
+    } else {
+        if (sfpu_conditionals[node.op_b].issues_compc(negate)) {
+            restore = true;
+            sfpu_rvtt_sfppushc();
+        }
+        emit_conditional(node.op_b, negate);
+    }
+
+    if (restore) {
+        saved_enables = sfpu_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 0);
+        sfpu_rvtt_sfppopc();
+        sfpu_rvtt_sfpsetcc_v(saved_enables, SFPSETCC_MOD1_LREG_EQ0);
+    }
+
+    if (negate_node) {
+        sfpu_rvtt_sfpcompc();
     }
 }
 
@@ -1023,6 +1065,12 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     }
 
     return tmp;
+}
+
+void sfpu_rvtt_sfpcond_ex(int w)
+{
+    SFPUConditional::emit_conditional(w, false);
+    sfpu_conditionals.resize(0);
 }
 
 inline float lut_to_fp32(unsigned short v)

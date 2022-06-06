@@ -286,3 +286,10 @@ extern __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_ve
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_i(unsigned short imm, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src);
 extern __rvtt_vec_t sfpu_rvtt_sfplut(const __rvtt_vec_t& l0, const __rvtt_vec_t& l1, const __rvtt_vec_t& l2, const __rvtt_vec_t& dst, unsigned short mod0);
+
+extern int sfpu_rvtt_sfpfcmps_ex(const __rvtt_vec_t& v, unsigned int f, int mod);
+extern int sfpu_rvtt_sfpfcmpv_ex(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, int mod1);
+extern int sfpu_rvtt_sfpicmps_ex(const __rvtt_vec_t& v, unsigned int i, int mod1);
+extern int sfpu_rvtt_sfpicmpv_ex(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, int mod1);
+extern int sfpu_rvtt_sfpbool_ex(int t, int a, int b);
+extern void __builtin_rvtt_sfpcond_ex(int i);

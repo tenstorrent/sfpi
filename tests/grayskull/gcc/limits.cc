@@ -111,18 +111,25 @@ int main(int argc, char* argv[])
     __builtin_rvtt_gs_sfpencc(0, 2);
     __builtin_rvtt_gs_sfpencc(1, 2);
 
+    int cond;
     __builtin_rvtt_gs_sfppushc();
     // 1.0 in different fmts
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0x3f80, 9);
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0x3f80, 17);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0x3f80, 9);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0x3f80, 17);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
 
     // -1.0 in different fmts
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0xbf80, 9);
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0xbf80, 17);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbf80, 9);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbf80, 17);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
 
     // Not a register in different formats
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0xbfa0, 9);
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0xbfa0, 17);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbfa0, 9);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbfa0, 17);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
 
     __builtin_rvtt_gs_sfppopc();
 }

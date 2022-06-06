@@ -226,11 +226,11 @@ void test_exman_exexp()
     dst_reg[3] = v3;
 
     vInt v4;
-    v_if (v4.exexp_cc(v1, ExExpCCLT0)); {
+    v_if ((v4 = exexp(v1)) < 0) {
     }
     v_endif;
 
-    v_if (v4.exexp_nodebias_cc(v1, ExExpCCLT0)); {
+    v_if ((v4 = exexp_nodebias(v1)) < 0) {
     }
     v_endif;
 }
@@ -686,7 +686,7 @@ void test_iadd()
     dst_reg[2] = v2;
     dst_reg[3] = v3;
 
-    v_if (v1.add_cc(vConstTileId, IAddCCGTE0)) {
+    v_if ((v1 = v1 + vConstTileId) >= 0) {
         dst_reg[4] = 0.0F;
     }
     v_endif;
@@ -709,7 +709,7 @@ void test_iadd()
     dst_reg[2] = v5;
     dst_reg[3] = v6;
 
-    v_if (v4.add_cc(vConstTileId, IAddCCGTE0)) {
+    v_if ((v4 = v4 + vConstTileId) >= 0) {
         dst_reg[4] = 0.0F;
     }
     v_endif;
@@ -1094,29 +1094,80 @@ void stupid_example(unsigned int value)
     v_endif;
 }
 
-#if 0
-// XXXXX bug
-// This behavior was removed because it doesn't play w/ predicated
-// execution, e.g.:
-//  v_if (x == 0 && (y = y + 1) < 0)
-// So just precluding it for now
 void test_operator_equals()
 {
     vFloat x, y, z;
 
     y = (x = 1.0F);
-    x = (y *= x);
-    z = (x -= y);
+    dst_reg[0] = x;
+    dst_reg[1] = y;
 
+    y = (z = y);
     dst_reg[0] = x;
     dst_reg[1] = y;
     dst_reg[2] = z;
 
-    vInt a, b;
-    a = (b = 1);
-    dst_reg[0] = a;
+    x = (y *= x);
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+
+    z = (x += y);
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+
+    z = (x -= y);
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+
+    {
+        vInt a, b;
+        a = (b = 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b += 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b |= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b &= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b ^= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b <<= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+    }
+    {
+        vUInt a, b;
+        a = (b = 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b += 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b |= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b &= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b ^= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b >>= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+        a = (b <<= 1);
+        dst_reg[0] = a;
+        dst_reg[0] = b;
+    }
 }
-#endif
 
 int main(int argc, char* argv[])
 {
@@ -1151,5 +1202,5 @@ int main(int argc, char* argv[])
     subvec_shfl();
     test_stochrnd(argc);
     stupid_example(argc);
-    //    test_operator_equals();
+    test_operator_equals();
 }

@@ -1,7 +1,7 @@
 In file included from test.h:11,
                  from warn.cc:5:
 ../../../include/sfpi.h: In function 'void spill()':
-../../../include/sfpi.h:1000:11: fatal error: cannot store sfpu register (register spill)
- 1000 |     assign(__builtin_rvtt_sfploadi_ex(val.get_format(), val.get()));
+../../../include/sfpi.h:792:11: fatal error: cannot store sfpu register (register spill)
+  792 |     assign(__builtin_rvtt_sfploadi_ex(val.get_format(), val.get()));
       |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.

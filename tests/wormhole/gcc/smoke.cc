@@ -38,12 +38,19 @@ void smoke()
 
     __builtin_rvtt_wh_sfpencc(2, 8);
 
+    int cond;
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfpsetcc_v(a, 12);
     __builtin_rvtt_wh_sfpsetcc_i(1, 12);
-    __builtin_rvtt_wh_sfpscmp_ex(nullptr, a, 0, 4);
-    __builtin_rvtt_wh_sfpvcmp_ex(a, d, 4);
+    cond = __builtin_rvtt_wh_sfpicmps_ex(nullptr, a, 0, 4);
+    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpicmpv_ex(a, d, 4);
+    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0, 4);
+    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpfcmpv_ex(a, d, 4);
+    __builtin_rvtt_wh_sfpcond_ex(cond);
     __builtin_rvtt_wh_sfppopc(0);
     __builtin_rvtt_wh_sfpcompc();
     __builtin_rvtt_wh_sfppopc(0);

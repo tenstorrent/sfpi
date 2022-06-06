@@ -678,6 +678,17 @@ sfpi_test_noinline void test6()
     }
     v_endif;
 
+    v_if (dst_reg[0] == 31.0F) {
+        vFloat x = 3.0f;
+        v_if (!!(x == 3.0f && x != 4.0f)) {
+            dst_reg[6] = 16.0;
+        } v_else {
+            dst_reg[6] = 32.0;
+        }
+        v_endif;
+    }
+    v_endif;
+
     // [0] = 256.0
     // [1] = 1024.0
     // [2] = 1024.0
@@ -1138,6 +1149,7 @@ sfpi_test_noinline void test8()
 sfpi_test_noinline void test9()
 {
     // SFPMULI, SFPADDI, SFPDIVP2, SFPLZ
+    // More conditional tests
 
     dst_reg[9] = -dst_reg[0];
     v_if(dst_reg[0] == 1.0F) {
@@ -1217,6 +1229,34 @@ sfpi_test_noinline void test9()
     }
     v_endif;
 
+    // Test more boolean expressions
+    v_if (dst_reg[0] >= 15.0F && dst_reg[0] < 19.0) {
+        vFloat v = dst_reg[0];
+        v_if ((v <= 16.0f && v != 15.0f) || (v == 18.0f)) {
+            dst_reg[9] = 32.0f;
+        }
+        v_endif;
+    }
+    v_endif;
+
+    // Same as above, but flip the order of the top level OR
+    v_if (dst_reg[0] >= 19.0F && dst_reg[0] < 23.0) {
+        vFloat v = dst_reg[0];
+        v_if ((v == 22.0f) || (v <= 20.0f && v != 19.0f)) {
+            dst_reg[9] = 32.0f;
+        }
+        v_endif;
+    }
+    v_endif;
+
+    v_if ((dst_reg[0] == 23.0 || dst_reg[0] == 24.0 ||
+           dst_reg[0] == 25.0 || dst_reg[0] == 26.0 ||
+           dst_reg[0] == 27.0 || dst_reg[0] == 28.0) &&
+          (dst_reg[0] != 23.0 && dst_reg[0] != 25.0 && dst_reg[0] != 27.0f)) {
+        dst_reg[9] = 64.0f;
+    }
+    v_endif;
+
     // [1] = 600.0
     // [2] = 800.0
     // [3] = 50.0
@@ -1231,6 +1271,21 @@ sfpi_test_noinline void test9()
     // [12] = 60.0
     // [13] = -6.0
     // [14] = -6.0
+    // [15] = -15.0
+    // [16] = 32.0
+    // [17] = -17.0
+    // [18] = 32.0
+    // [19] = -19.0
+    // [20] = 32.0
+    // [21] = -21.0
+    // [22] = 32.0
+    // [23] = -23.0
+    // [24] = 64.0
+    // [25] = -25.0
+    // [26] = 64.0
+    // [27] = -27.0
+    // [28] = 64.0
+
     copy_result_to_dreg0(9);
 }
 
@@ -1847,7 +1902,7 @@ sfpi_test_noinline void test14(int imm)
         vInt tmp;
 
         v_if (dst_reg[0] == 2.0F) {
-            v_if (tmp.lz_cc(a, LzCCNE0)) {
+            v_if ((tmp = lz(a)) != 0) {
                 vFloat c = vConst0 * vConst0 + vConst0;
                 b = -a;
                 a = c;
@@ -1870,7 +1925,7 @@ sfpi_test_noinline void test14(int imm)
         vInt tmp;
 
         v_if (dst_reg[0] == 4.0F) {
-            v_if (tmp.exexp_cc(a, ExExpCCGTE0)) {
+            v_if ((tmp = exexp(a)) >= 0) {
                 vFloat c = vConst0 * vConst0 + vConst0;
                 b = -a;
                 a = c;

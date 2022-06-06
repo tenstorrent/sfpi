@@ -642,13 +642,13 @@ _Z18do_not_fold_assignv:
 	.type	_Z20operator_plus_equalsv, @function
 _Z20operator_plus_equalsv:
 	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 0, 16672
+	SFPMAD	L0, L11, L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETCC	0, L0, 4
+	SFPNOP
 	SFPLOADI	L0, 4, 1
-	SFPLOADI	L2, 0, 16672
-	SFPMAD	L2, L11, L1, L2, 0
-	SFPNOP
-	SFPNOP
-	SFPSETCC	0, L2, 4
-	SFPNOP
 	SFPPUSHC
 	SFPLOADI	L2, 0, 16688
 	SFPMAD	L2, L11, L1, L2, 0
@@ -713,17 +713,7 @@ main:
 	addi	sp,sp,-16
 	sw	ra,12(sp)
 	call	_Z9abs_setccv
-	SFPLOADI	L1, 0, 16256
-	SFPLOADI	L0, 0, 16384
-	SFPLOAD	L2, 1, 0
-	SFPSETCC	0, L2, 6
-	SFPNOP
-	SFPMOV	L1, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPENCC	3, 10
-	SFPNOP
-	SFPSTORE	L0, 0, 0
+	call	_Z18rename_move_case2av
 	call	_Z16copy_move_case2bv
 	call	_Z15copy_move_case3v
 	call	_Z19internal_move_case4v

@@ -3,13 +3,6 @@
 #include <cstdio>
 #include "test.h"
 
-// XXXX BUG
-// operator= returns void for now to preclude using assignments in predicated
-// conditionals as the compiler doesn't understand order of operations and so
-// hoists the assignment outside of boolean expressions
-// Behvaior precluded by the wrapper for now
-#define ASSIGNMENTS_IN_COND 0
-
 using namespace sfpi;
 
 void iadd_i_yes1()
@@ -37,11 +30,9 @@ void iadd_i_yes1_live()
     v_endif;
 }
 
-#if ASSIGNMENTS_IN_COND
 void iadd_i_yes2()
 {
     vInt a = 3;
-    vInt b = 5;
     v_if ((a = a - 7) < 0) {
         dst_reg[0] = vConst1;
     }
@@ -57,6 +48,8 @@ void iadd_i_yes3a()
         dst_reg[0] = vConst1;
     }
     v_endif;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
 
 void iadd_i_yes3b()
@@ -69,15 +62,13 @@ void iadd_i_yes3b()
     }
     v_endif;
 }
-#endif
 
 void iadd_i_yes3c()
 {
     vInt a = 3;
     vInt b = 4;
 
-    // Wrapper handles this, compiler doesn't change anything
-    v_if (b == 6 && a.add_cc(a, -5, IAddCCLT0)) {
+    v_if (b == 6 && ((a = a - 5) < 0)) {
         dst_reg[0] = vConst1;
     }
     v_endif;
@@ -87,9 +78,8 @@ void iadd_i_yes3d()
 {
     vInt a = 3;
 
-    // Wrapper handles this, compiler doesn't change anything
     a = a - 5;
-    v_if (a.add_cc(a, 0, IAddCCLT0)) {
+    v_if ((a = a - 0) < 0) {
         dst_reg[0] = vConst1;
     }
     v_endif;
@@ -136,7 +126,6 @@ void iadd_i_yes6()
     v_endif;
 }
 
-#if ASSIGNMENTS_IN_COND
 void iadd_i_yes7()
 {
     vInt a = 3;
@@ -146,8 +135,9 @@ void iadd_i_yes7()
         dst_reg[0] = vConst1;
     }
     v_endif;
+    dst_reg[0] = a;
+    dst_reg[0] = b;
 }
-#endif
 
 void iadd_i_yes8()
 {
@@ -205,7 +195,6 @@ void iadd_i_no2()
     v_endif;
 }
 
-#if ASSIGNMENTS_IN_COND
 void iadd_i_no3()
 {
     vInt a = 3;
@@ -216,8 +205,8 @@ void iadd_i_no3()
         dst_reg[0] = vConst1;
     }
     v_endif;
+    dst_reg[0] = a;
 }
-#endif
 
 void iadd_i_no4()
 {
@@ -301,9 +290,9 @@ void iadd_i_no9()
 {
     vInt a = 3;
 
-    // No, subsequent use of a
+    // No - combines with the +0
     a = a - 3;
-    v_if (a.add_cc(a, 0, IAddCCLT0)) {
+    v_if ((a = a + 0) < 0) {
         dst_reg[0] = vConst1;
     }
     v_endif;

@@ -38,11 +38,19 @@ void smoke()
 
     __builtin_rvtt_gs_sfpencc(2, 8);
 
+    int cond;
+    a = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);  // reg pressure
+    d = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);  // reg pressure
     __builtin_rvtt_gs_sfppushc();
     __builtin_rvtt_gs_sfpsetcc_v(a, 12);
     __builtin_rvtt_gs_sfpsetcc_i(1, 12);
-    __builtin_rvtt_gs_sfpscmp_ex(nullptr, a, 0, 4);
-    __builtin_rvtt_gs_sfpvcmp_ex(a, d, 4);
+    cond = __builtin_rvtt_gs_sfpicmps_ex(nullptr, a, 0, 4);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpicmpv_ex(a, d, 4);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0, 4);
+    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpfcmpv_ex(a, d, 4);
     __builtin_rvtt_gs_sfpcompc();
     __builtin_rvtt_gs_sfppopc();
 
@@ -52,6 +60,7 @@ void smoke()
     __builtin_rvtt_gs_sfpstore(nullptr, a, 2, 4);
     v64sf lr13 = __builtin_rvtt_gs_sfpassignlr(13);
     __builtin_rvtt_gs_sfpstore(nullptr, lr13, 2, 4);
+    b = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);  // reg pressure
     v64sf e = __builtin_rvtt_gs_sfpmad(a, b, c, 1);
     __builtin_rvtt_gs_sfpstore(nullptr, e, 2, 4);
 
