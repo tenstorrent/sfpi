@@ -96,18 +96,18 @@ sfpi_inline vFloat::vFloat(const vDReg dreg)
 
 sfpi_inline void vFloat::loadf(const float val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_FLOAT, f32asui(val)));
+    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, f32asui(val)));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void vIntBase::loadsi(int32_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_INT32, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_INT32, val));
 }
 
 sfpi_inline void vIntBase::loadui(uint32_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_UINT32, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_UINT32, val));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>

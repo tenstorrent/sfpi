@@ -43,20 +43,20 @@ void smoke()
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfpsetcc_v(a, 12);
     __builtin_rvtt_wh_sfpsetcc_i(1, 12);
-    cond = __builtin_rvtt_wh_sfpicmps_ex(nullptr, a, 0, 4);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpicmpv_ex(a, d, 4);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0, 4);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmpv_ex(a, d, 4);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxicmps(nullptr, a, 0, 4);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxicmpv(a, d, 4);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0, 4);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmpv(a, d, 4);
+    __builtin_rvtt_wh_sfpxcond(cond);
     __builtin_rvtt_wh_sfppopc(0);
     __builtin_rvtt_wh_sfpcompc();
     __builtin_rvtt_wh_sfppopc(0);
 
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, 12);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 0, -12);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 0, 12);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 0, -12);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 4);
     v64sf lr13 = __builtin_rvtt_wh_sfpassignlr(13);
@@ -100,7 +100,7 @@ void smoke()
     v2 = __builtin_rvtt_wh_sfpshft_i(nullptr, v2, 10);
     v2 = __builtin_rvtt_wh_sfpshft_v(v2, v1);
 
-    v1 = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, v1, 10, 0);
+    v1 = __builtin_rvtt_wh_sfpxiadd_i(nullptr, v1, 10, 0);
     v2 = __builtin_rvtt_wh_sfpiadd_v(v2, v1, 5);
 
     v2 = __builtin_rvtt_wh_sfpsetsgn_i(nullptr, 10, v1);
@@ -133,7 +133,7 @@ void smoke_live()
     d = __builtin_rvtt_wh_sfpmul_lv(d,   a,   a, 0);
     d = __builtin_rvtt_wh_sfpadd_lv(d,   a,   a, 0);
 
-    a = __builtin_rvtt_wh_sfploadi_ex_lv(nullptr, a, 0, 12);
+    a = __builtin_rvtt_wh_sfpxloadi_lv(nullptr, a, 0, 12);
 
     a = __builtin_rvtt_wh_sfpmov_lv(a, d, SFPMOV_MOD1_COMPSIGN);
 
@@ -153,7 +153,7 @@ void smoke_live()
 
     a = __builtin_rvtt_wh_sfpexexp_lv(a, d, SFPEXEXP_MOD1_DEBIAS);
 
-    a = __builtin_rvtt_wh_sfpiadd_i_ex_lv(nullptr, a, d, 10, 4);
+    a = __builtin_rvtt_wh_sfpxiadd_i_lv(nullptr, a, d, 10, 4);
 
     __builtin_rvtt_wh_sfppopc(0);
 

@@ -3,6 +3,6 @@ In file included from ../../../include/sfpi.h:1198,
                  from warn.cc:5:
 ../../../include/wormhole/sfpi_imp.h: In function 'void spill()':
 ../../../include/wormhole/sfpi_imp.h:99:11: fatal error: cannot store sfpu register (register spill)
-   99 |     assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_EX_MOD0_FLOAT, f32asui(val)));
-      |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   99 |     assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, f32asui(val)));
+      |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.

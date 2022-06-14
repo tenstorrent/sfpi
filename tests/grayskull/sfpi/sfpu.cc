@@ -13,7 +13,7 @@ __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 
 };
 
-static unsigned int cmp_ex_to_setcc_mod1_map[] = {
+static unsigned int xcmp_to_setcc_mod1_map[] = {
   0,
   SFPSETCC_MOD1_LREG_LT0,
   SFPSETCC_MOD1_LREG_EQ0,
@@ -556,16 +556,16 @@ void sfpu_rvtt_sfpsetcc_v(const __rvtt_vec_t& v, unsigned int mod1)
     }
 }
 
-void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1)
+void sfpu_rvtt_sfpxscmp(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1)
 {
-    unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
+    unsigned int cmp = mod1 & SFPXCMP_MOD1_CC_MASK;
 
-    if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
-        unsigned int new_mod = mod1 & ~SFPCMP_EX_MOD1_CC_MASK;
+    if (cmp == SFPXCMP_MOD1_CC_LTE || cmp == SFPXCMP_MOD1_CC_GT) {
+        unsigned int new_mod = mod1 & ~SFPXCMP_MOD1_CC_MASK;
         // Inefficient
-        sfpu_rvtt_sfpscmp_ex(a, b, new_mod | SFPCMP_EX_MOD1_CC_GTE);
-        sfpu_rvtt_sfpscmp_ex(a, b, new_mod | SFPCMP_EX_MOD1_CC_NE);
-        if (cmp == SFPCMP_EX_MOD1_CC_LTE) {
+        sfpu_rvtt_sfpxscmp(a, b, new_mod | SFPXCMP_MOD1_CC_GTE);
+        sfpu_rvtt_sfpxscmp(a, b, new_mod | SFPXCMP_MOD1_CC_NE);
+        if (cmp == SFPXCMP_MOD1_CC_LTE) {
             sfpu_rvtt_sfpcompc();
         }
         return;
@@ -573,33 +573,33 @@ void sfpu_rvtt_sfpscmp_ex(const __rvtt_vec_t& a, unsigned int b, unsigned int mo
 
     if (b != 0) {
         __rvtt_vec_t tmp;
-        int loadi_mod = ((mod1 & SFPSCMP_EX_MOD1_FMT_A) == SFPSCMP_EX_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
-        __rvtt_vec_t op_b = __builtin_rvtt_sfploadi_ex(loadi_mod, b);
+        int loadi_mod = ((mod1 & SFPXSCMP_MOD1_FMT_A) == SFPXSCMP_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
+        __rvtt_vec_t op_b = __builtin_rvtt_sfpxloadi(loadi_mod, b);
         tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
 
-        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
+        __builtin_rvtt_sfpsetcc_v(tmp, xcmp_to_setcc_mod1_map[cmp]);
     } else {
-        __builtin_rvtt_sfpsetcc_v(a, cmp_ex_to_setcc_mod1_map[cmp]);
+        __builtin_rvtt_sfpsetcc_v(a, xcmp_to_setcc_mod1_map[cmp]);
     }
 }
 
-void sfpu_rvtt_sfpvcmp_ex(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
+void sfpu_rvtt_sfpxvcmp(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned int mod1)
 {
-    unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
+    unsigned int cmp = mod1 & SFPXCMP_MOD1_CC_MASK;
 
     __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(b,
                                              __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
                                              a,
                                              0);
 
-    if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
+    if (cmp == SFPXCMP_MOD1_CC_LTE || cmp == SFPXCMP_MOD1_CC_GT) {
         __builtin_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_GTE0);
         __builtin_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_NE0);
-        if (cmp == SFPCMP_EX_MOD1_CC_LTE) {
+        if (cmp == SFPXCMP_MOD1_CC_LTE) {
             sfpu_rvtt_sfpcompc();
         }
     } else {
-        __builtin_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[mod1]);
+        __builtin_rvtt_sfpsetcc_v(tmp, xcmp_to_setcc_mod1_map[mod1]);
     }
 }
 
@@ -936,7 +936,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i(short imm, const __rvtt_vec_t& src, unsigned in
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpxiadd_i(short imm, const __rvtt_vec_t& src, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
 
@@ -947,26 +947,26 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_i_ex(short imm, const __rvtt_vec_t& src, unsigned
     for (int i = 0; i < SFPU_WIDTH; i++) {
         if (sfpu_cc.enabled(i)) {
             int val = src.get_uint(i);
-            val += (mod1 & SFPIADD_EX_MOD1_IS_SUB) ? -imm : imm;
+            val += (mod1 & SFPXIADD_MOD1_IS_SUB) ? -imm : imm;
             tmp.set_uint(i, val);
 
-            switch (mod1 & SFPCMP_EX_MOD1_CC_MASK) {
-            case SFPCMP_EX_MOD1_CC_GTE:
+            switch (mod1 & SFPXCMP_MOD1_CC_MASK) {
+            case SFPXCMP_MOD1_CC_GTE:
                 sfpu_cc.deferred_and_result(i, val >= 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_LT:
+            case SFPXCMP_MOD1_CC_LT:
                 sfpu_cc.deferred_and_result(i, val < 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_EQ:
+            case SFPXCMP_MOD1_CC_EQ:
                 sfpu_cc.deferred_and_result(i, val == 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_NE:
+            case SFPXCMP_MOD1_CC_NE:
                 sfpu_cc.deferred_and_result(i, val != 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_LTE:
+            case SFPXCMP_MOD1_CC_LTE:
                 sfpu_cc.deferred_and_result(i, val <= 0);
                 break;
-            case SFPCMP_EX_MOD1_CC_GT:
+            case SFPXCMP_MOD1_CC_GT:
                 sfpu_cc.deferred_and_result(i, val > 0);
                 break;
             }
@@ -1006,23 +1006,23 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& sr
     return tmp;
 }
 
-__rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
+__rvtt_vec_t sfpu_rvtt_sfpxiadd_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& src, unsigned int mod1)
 {
     __rvtt_vec_t tmp;
 
-    unsigned int cmp = mod1 & SFPCMP_EX_MOD1_CC_MASK;
+    unsigned int cmp = mod1 & SFPXCMP_MOD1_CC_MASK;
 
-    bool is_sub = ((mod1 & SFPIADD_EX_MOD1_IS_SUB) != 0);
+    bool is_sub = ((mod1 & SFPXIADD_MOD1_IS_SUB) != 0);
     unsigned int mod = is_sub ? SFPIADD_MOD1_ARG_2SCOMP_LREG_DST : SFPIADD_MOD1_ARG_LREG_DST;
-    if (cmp == SFPCMP_EX_MOD1_CC_LT || cmp == SFPCMP_EX_MOD1_CC_GTE) {
+    if (cmp == SFPXCMP_MOD1_CC_LT || cmp == SFPXCMP_MOD1_CC_GTE) {
         // Perform op w/ compare
-        mod |= (cmp == SFPCMP_EX_MOD1_CC_LT) ? SFPIADD_MOD1_CC_LT0 : SFPIADD_MOD1_CC_GTE0;
+        mod |= (cmp == SFPXCMP_MOD1_CC_LT) ? SFPIADD_MOD1_CC_LT0 : SFPIADD_MOD1_CC_GTE0;
         tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
-    } else if (cmp == SFPCMP_EX_MOD1_CC_LTE || cmp == SFPCMP_EX_MOD1_CC_GT) {
+    } else if (cmp == SFPXCMP_MOD1_CC_LTE || cmp == SFPXCMP_MOD1_CC_GT) {
         // Perform op w/o compare, compare w/ IADDI
-        tmp = sfpu_rvtt_sfpiadd_v_ex(dst, src, (mod1 & ~SFPCMP_EX_MOD1_CC_MASK) | SFPCMP_EX_MOD1_CC_GTE);
+        tmp = sfpu_rvtt_sfpxiadd_v(dst, src, (mod1 & ~SFPXCMP_MOD1_CC_MASK) | SFPXCMP_MOD1_CC_GTE);
         sfpu_rvtt_sfpsetcc_v(tmp, SFPSETCC_MOD1_LREG_NE0);
-        if (cmp == SFPCMP_EX_MOD1_CC_LTE) {
+        if (cmp == SFPXCMP_MOD1_CC_LTE) {
             sfpu_rvtt_sfpcompc();
         }
     } else {
@@ -1030,7 +1030,7 @@ __rvtt_vec_t sfpu_rvtt_sfpiadd_v_ex(const __rvtt_vec_t& dst, const __rvtt_vec_t&
         mod |= SFPIADD_MOD1_CC_NONE;
         tmp = sfpu_rvtt_sfpiadd_v(dst, src, mod);
         if (cmp != 0) {
-            sfpu_rvtt_sfpsetcc_v(tmp, cmp_ex_to_setcc_mod1_map[cmp]);
+            sfpu_rvtt_sfpsetcc_v(tmp, xcmp_to_setcc_mod1_map[cmp]);
         }
     }
 
@@ -1067,7 +1067,7 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     return tmp;
 }
 
-void sfpu_rvtt_sfpcond_ex(int w)
+void sfpu_rvtt_sfpxcond(int w)
 {
     SFPUConditional::emit_conditional(w, false);
     sfpu_conditionals.resize(0);

@@ -31,13 +31,13 @@ int main(int argc, char* argv[])
     __builtin_rvtt_gs_sfpstore(nullptr, a, 0, 0xFFFF + fail_offset);
 
     // Signed 16 bit
-    a = __builtin_rvtt_gs_sfploadi_ex(nullptr, 2, 0x0000 + fail_offset);
+    a = __builtin_rvtt_gs_sfpxloadi(nullptr, 2, 0x0000 + fail_offset);
     __builtin_rvtt_gs_sfpstore(nullptr, a, 0, 0);
-    a = __builtin_rvtt_gs_sfploadi_ex(nullptr, 2, 0xFFFF + fail_offset);
+    a = __builtin_rvtt_gs_sfpxloadi(nullptr, 2, 0xFFFF + fail_offset);
     __builtin_rvtt_gs_sfpstore(nullptr, a, 0, 0);
-    a = __builtin_rvtt_gs_sfploadi_ex(nullptr, 4, -32768 + fail_offset);
+    a = __builtin_rvtt_gs_sfpxloadi(nullptr, 4, -32768 + fail_offset);
     __builtin_rvtt_gs_sfpstore(nullptr, a, 0, 0);
-    a = __builtin_rvtt_gs_sfploadi_ex(nullptr, 4,  32767 + fail_offset);
+    a = __builtin_rvtt_gs_sfpxloadi(nullptr, 4,  32767 + fail_offset);
     __builtin_rvtt_gs_sfpstore(nullptr, a, 0, 0);
 
     // Unsigned 16 bit
@@ -67,22 +67,22 @@ int main(int argc, char* argv[])
     a = __builtin_rvtt_gs_sfpiadd_i(nullptr, a, -32768 + pass_offset, 5);
 
     // Signed 12 bit
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 2047 + pass_offset, 8);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, -1 + pass_offset, 8);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, -2048 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 2047 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, -1 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, -2048 + pass_offset, 8);
 
     // Signed 16 bit
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 32767 + pass_offset, 8);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, -1 + pass_offset, 8);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, -32768 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 32767 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, -1 + pass_offset, 8);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, -32768 + pass_offset, 8);
 
     // Unsigned 12 bit
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 0 + pass_offset, 0);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 4095 + pass_offset, 0);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 0 + pass_offset, 0);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 4095 + pass_offset, 0);
 
     // Unsigned 16 bit
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 0 + pass_offset, 0);
-    a = __builtin_rvtt_gs_sfpiadd_i_ex(nullptr, a, 65535 + pass_offset, 0);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 0 + pass_offset, 0);
+    a = __builtin_rvtt_gs_sfpxiadd_i(nullptr, a, 65535 + pass_offset, 0);
 
     // Signed 12 bit
     a = __builtin_rvtt_gs_sfpshft_i(nullptr, a, 0x07FF + pass_offset);
@@ -114,22 +114,22 @@ int main(int argc, char* argv[])
     int cond;
     __builtin_rvtt_gs_sfppushc();
     // 1.0 in different fmts
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0x3f80, 9);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0x3f80, 17);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0x3f80, 9);
+    __builtin_rvtt_gs_sfpxcond(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0x3f80, 17);
+    __builtin_rvtt_gs_sfpxcond(cond);
 
     // -1.0 in different fmts
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbf80, 9);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbf80, 17);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbf80, 9);
+    __builtin_rvtt_gs_sfpxcond(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbf80, 17);
+    __builtin_rvtt_gs_sfpxcond(cond);
 
     // Not a register in different formats
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbfa0, 9);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
-    cond = __builtin_rvtt_gs_sfpfcmps_ex(nullptr, a, 0xbfa0, 17);
-    __builtin_rvtt_gs_sfpcond_ex(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbfa0, 9);
+    __builtin_rvtt_gs_sfpxcond(cond);
+    cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbfa0, 17);
+    __builtin_rvtt_gs_sfpxcond(cond);
 
     __builtin_rvtt_gs_sfppopc();
 }

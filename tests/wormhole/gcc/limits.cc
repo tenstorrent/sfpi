@@ -31,66 +31,66 @@ int main(int argc, char* argv[])
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0x3FFF + fail_offset);
 
     // Unsigned 16 bit
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 2, 0x0000 + fail_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 2, 0x0000 + fail_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 2, 0xFFFF + fail_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 2, 0xFFFF + fail_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Signed 16 bit
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 4, -32768 + fail_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 4, -32768 + fail_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 4,  32767 + fail_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 4,  32767 + fail_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Signed 16-32 bit crossover
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16, -32768 + pass_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 16, -32768 + pass_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16,  32767 + pass_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 16,  32767 + pass_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 16,  65535 + pass_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 16,  65535 + pass_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Unsigned 16-32 bit crossover
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 17,  0 + pass_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 17,  0 + pass_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 17,  0xFFFF + pass_offset);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 17,  0xFFFF + pass_offset);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Float values
     // Easy fp16b
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3f800000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3f800000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // fp16b
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3faf0000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3faf0000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3faf0001);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3faf0001);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // fp16a
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3fa6e000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3fa6e000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3fa6e001);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3fa6e001);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Exp on the edge of fp16a
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x47a6e000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x47a6e000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x4826e000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x4826e000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Exp on the edge of fp16a
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x3826e000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x3826e000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // 32 bit float
-    a = __builtin_rvtt_wh_sfploadi_ex(nullptr, 18,  0x37a6e000);
+    a = __builtin_rvtt_wh_sfpxloadi(nullptr, 18,  0x37a6e000);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 0, 0);
 
     // Unsigned 16 bit
@@ -120,30 +120,30 @@ int main(int argc, char* argv[])
     a = __builtin_rvtt_wh_sfpiadd_i(nullptr, a, -32768 + pass_offset, 5);
 
     // Signed 12 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 2047 + pass_offset, 8);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, -1 + pass_offset, 8);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, -2048 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 2047 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, -1 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, -2048 + pass_offset, 8);
 
     // Signed 16 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 32767 + pass_offset, 8);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, -1 + pass_offset, 8);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, -32768 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 32767 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, -1 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, -32768 + pass_offset, 8);
 
     // Signed 32 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 65535 + pass_offset, 8);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, -65536 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 65535 + pass_offset, 8);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, -65536 + pass_offset, 8);
 
     // Unsigned 12 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 0 + pass_offset, 0);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 4095 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 0 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 4095 + pass_offset, 0);
 
     // Unsigned 16 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 0 + pass_offset, 0);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 65535 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 0 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 65535 + pass_offset, 0);
 
     // Unsigned 32 bit
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 65535 + pass_offset, 0);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex(nullptr, a, 65536 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 65535 + pass_offset, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i(nullptr, a, 65536 + pass_offset, 0);
 
     // Signed 12 bit
     a = __builtin_rvtt_wh_sfpshft_i(nullptr, a, 0x07FF + pass_offset);
@@ -178,44 +178,44 @@ int main(int argc, char* argv[])
     int cond;
     __builtin_rvtt_wh_sfppushc(0);
     // 1.0 in different fmts
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x3f80, 9);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x3f80, 17);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x3f800000, 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f80, 9);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f80, 17);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f800000, 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
 
     // -1.0 in different fmts
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbf80, 9);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbf80, 17);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbf800000, 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf80, 9);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf80, 17);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf800000, 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
 
     // Not a register in different formats
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbfa0, 9);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbfa0, 17);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0xbfa00000, 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x3fa6e001, 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa0, 9);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa0, 17);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa00000, 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3fa6e001, 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
 
     // Test limits of fp16a/fp16b/float32 determination
     // This is fp16b, with pass_offset != 0 the mantissa will overflow, use fp16a
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x3fff0000 | ((pass_offset & 1) << 15), 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3fff0000 | ((pass_offset & 1) << 15), 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
     // This is fp16b w/ large exp, with pass_offset != 0 the mantissa will overflow, use fp32
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x47ff0000 | ((pass_offset & 1) << 15), 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x47ff0000 | ((pass_offset & 1) << 15), 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
     // This is fp16a w/ largest exp, with pass_offset != 0 the exponent will overflow, use fp32
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x477f8000 | ((pass_offset & 1) << 23), 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x477f8000 | ((pass_offset & 1) << 23), 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
     // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
-    cond = __builtin_rvtt_wh_sfpfcmps_ex(nullptr, a, 0x38ff8000 & ~((pass_offset & 1) << 23), 33);
-    __builtin_rvtt_wh_sfpcond_ex(cond);
+    cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x38ff8000 & ~((pass_offset & 1) << 23), 33);
+    __builtin_rvtt_wh_sfpxcond(cond);
 
     __builtin_rvtt_wh_sfppopc(0);
 }

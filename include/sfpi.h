@@ -494,22 +494,22 @@ public:
     sfpi_inline vInt operator^=(const vInt b) { this->vIntBase::operator^=(b); return v; }
     sfpi_inline vInt operator~() const { return this->vIntBase::operator~<vInt>(); }
 
-    sfpi_inline vInt operator+(int32_t val) const { return this->vIntBase::add<vInt>(val, SFPIADD_I_EX_MOD1_SIGNED); }
+    sfpi_inline vInt operator+(int32_t val) const { return this->vIntBase::add<vInt>(val, SFPXIADD_MOD1_SIGNED); }
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vInt operator+(const vType val) const { return this->vIntBase::operator+<vInt>(val); }
     sfpi_inline vInt operator+(const vConstIntBase val) const { return this->vIntBase::operator+<vInt>(val); }
 
-    sfpi_inline vInt operator-(int32_t val) const { return this->vIntBase::sub<vInt>(val, SFPIADD_I_EX_MOD1_SIGNED); }
+    sfpi_inline vInt operator-(int32_t val) const { return this->vIntBase::sub<vInt>(val, SFPXIADD_MOD1_SIGNED); }
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vInt operator-(const vType val) const { return this->vIntBase::operator-<vInt>(val); }
     sfpi_inline vInt operator-(const vConstIntBase val) const { return this->vIntBase::operator-<vInt>(val); }
 
-    sfpi_inline vInt operator+=(int32_t val) { this->vIntBase::add_eq<vInt>(val, SFPIADD_I_EX_MOD1_SIGNED); return v; }
+    sfpi_inline vInt operator+=(int32_t val) { this->vIntBase::add_eq<vInt>(val, SFPXIADD_MOD1_SIGNED); return v; }
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vInt operator+=(const vType val) { this->vIntBase::operator+=<vInt>(val); return v; }
     sfpi_inline vInt operator+=(const vConstIntBase val) { this->vIntBase::operator-=<vInt>(val); return v; }
 
-    sfpi_inline vInt operator-=(int32_t val) { this->vIntBase::sub_eq<vInt>(val, SFPIADD_I_EX_MOD1_SIGNED); return v; }
+    sfpi_inline vInt operator-=(int32_t val) { this->vIntBase::sub_eq<vInt>(val, SFPXIADD_MOD1_SIGNED); return v; }
     template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>* = nullptr>
     sfpi_inline vInt operator-=(const vType val) { this->vIntBase::operator-=<vInt>(val); return v; }
     sfpi_inline vInt operator-=(const vConstIntBase val) { this->vIntBase::operator-=<vInt>(val); return v; }
@@ -619,9 +619,9 @@ class vCond {
 
  private:
     enum class vBoolOpType {
-        vBoolOr = SFPBOOL_EX_MOD1_OR,
-        vBoolAnd = SFPBOOL_EX_MOD1_AND,
-        vBoolNot = SFPBOOL_EX_MOD1_NOT,
+        vBoolOr = SFPXBOOL_MOD1_OR,
+        vBoolAnd = SFPXBOOL_MOD1_AND,
+        vBoolNot = SFPXBOOL_MOD1_NOT,
     };
 
     int result;
@@ -630,33 +630,33 @@ class vCond {
 
  public:
     enum vCondOpType {
-        vCondLT = SFPCMP_EX_MOD1_CC_LT,
-        vCondNE = SFPCMP_EX_MOD1_CC_NE,
-        vCondGTE = SFPCMP_EX_MOD1_CC_GTE,
-        vCondEQ = SFPCMP_EX_MOD1_CC_EQ,
-        vCondLTE = SFPCMP_EX_MOD1_CC_LTE,
-        vCondGT = SFPCMP_EX_MOD1_CC_GT,
+        vCondLT = SFPXCMP_MOD1_CC_LT,
+        vCondNE = SFPXCMP_MOD1_CC_NE,
+        vCondGTE = SFPXCMP_MOD1_CC_GTE,
+        vCondEQ = SFPXCMP_MOD1_CC_EQ,
+        vCondLTE = SFPXCMP_MOD1_CC_LTE,
+        vCondGT = SFPXCMP_MOD1_CC_GT,
     };
 
     // Bool
-    sfpi_inline vCond(vBoolOpType t, const vCond& a, const vCond& b) { result = __builtin_rvtt_sfpbool_ex((int)t, a.get(), b.get()); }
+    sfpi_inline vCond(vBoolOpType t, const vCond& a, const vCond& b) { result = __builtin_rvtt_sfpxbool((int)t, a.get(), b.get()); }
 
     // Float
     sfpi_inline vCond(const vCondOpType t, const vFloat a, const float b)
-    { result = __builtin_rvtt_sfpfcmps_ex(a.get(), f32asui(b), t | SFPSCMP_EX_MOD1_FMT_FLOAT); }
+    { result = __builtin_rvtt_sfpxfcmps(a.get(), f32asui(b), t | SFPXSCMP_MOD1_FMT_FLOAT); }
 
     sfpi_inline vCond(const vCondOpType t, const vFloat a, const s2vFloat16 b)
-    { result = __builtin_rvtt_sfpfcmps_ex(a.get(), b.get(), t | ((b.get_format() == SFPLOADI_MOD0_FLOATA) ? SFPSCMP_EX_MOD1_FMT_A : SFPSCMP_EX_MOD1_FMT_B)); }
+    { result = __builtin_rvtt_sfpxfcmps(a.get(), b.get(), t | ((b.get_format() == SFPLOADI_MOD0_FLOATA) ? SFPXSCMP_MOD1_FMT_A : SFPXSCMP_MOD1_FMT_B)); }
 
     sfpi_inline vCond(const vCondOpType t, const vFloat a, const vFloat b)
-    { result = __builtin_rvtt_sfpfcmpv_ex(a.get(), b.get(), t); }
+    { result = __builtin_rvtt_sfpxfcmpv(a.get(), b.get(), t); }
 
     // Int
     sfpi_inline vCond(const vCondOpType t, const vIntBase a, int32_t b, uint32_t mod)
-    { result = __builtin_rvtt_sfpicmps_ex(a.get(), b, mod | t); }
+    { result = __builtin_rvtt_sfpxicmps(a.get(), b, mod | t); }
 
     sfpi_inline vCond(const vCondOpType t, const vIntBase a, const vIntBase b, uint32_t mod)
-    { result = __builtin_rvtt_sfpicmpv_ex(a.get(), b.get(), mod | t); }
+    { result = __builtin_rvtt_sfpxicmpv(a.get(), b.get(), mod | t); }
 
     // Create boolean operations from conditional operations
     sfpi_inline const vCond operator&&(const vCond& b) const { return vCond(vBoolOpType::vBoolAnd, *this, b); }
@@ -789,18 +789,18 @@ sfpi_inline vFloat vFloat::operator-() const
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(val.get_format(), val.get()));
+    assign(__builtin_rvtt_sfpxloadi(val.get_format(), val.get()));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void vIntBase::loadss(int16_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_SHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_SHORT, val));
 }
 
 sfpi_inline void vIntBase::loadus(uint16_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_USHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_USHORT, val));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
@@ -850,51 +850,51 @@ sfpi_inline vType vIntBase::operator<<=(uint32_t amt)
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::add(int32_t val, unsigned int mod_base) const
 {
-    return __builtin_rvtt_sfpiadd_i_ex(v, val, mod_base);
+    return __builtin_rvtt_sfpxiadd_i(v, val, mod_base);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator+(const vIntBase val) const
 {
-    return __builtin_rvtt_sfpiadd_v_ex(val.get(), v, 0);
+    return __builtin_rvtt_sfpxiadd_v(val.get(), v, 0);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator+(const vConstIntBase val) const
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    return __builtin_rvtt_sfpiadd_v_ex(c, v, 0);
+    return __builtin_rvtt_sfpxiadd_v(c, v, 0);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::sub(int32_t val, unsigned int mod_base) const
 {
-    return __builtin_rvtt_sfpiadd_i_ex(v, val, mod_base | SFPIADD_EX_MOD1_IS_SUB);
+    return __builtin_rvtt_sfpxiadd_i(v, val, mod_base | SFPXIADD_MOD1_IS_SUB);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator-(const vIntBase val) const
 {
-    return __builtin_rvtt_sfpiadd_v_ex(val.get(), v, SFPIADD_EX_MOD1_IS_SUB);
+    return __builtin_rvtt_sfpxiadd_v(val.get(), v, SFPXIADD_MOD1_IS_SUB);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator-(const vConstIntBase val) const
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    return __builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB);
+    return __builtin_rvtt_sfpxiadd_v(c, v, SFPXIADD_MOD1_IS_SUB);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::add_eq(int32_t val, unsigned int mod_base)
 {
-    assign(__builtin_rvtt_sfpiadd_i_ex(v, val, mod_base));
+    assign(__builtin_rvtt_sfpxiadd_i(v, val, mod_base));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator+=(const vIntBase val)
 {
-    assign(__builtin_rvtt_sfpiadd_v_ex(v, val.get(), 0));
+    assign(__builtin_rvtt_sfpxiadd_v(v, val.get(), 0));
     return v;
 }
 
@@ -902,20 +902,20 @@ template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vT
 sfpi_inline vType vIntBase::operator+=(const vConstIntBase val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    assign(__builtin_rvtt_sfpiadd_v_ex(c, v, 0));
+    assign(__builtin_rvtt_sfpxiadd_v(c, v, 0));
     return v;
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline void vIntBase::sub_eq(int32_t val, unsigned int mod_base)
 {
-    assign(__builtin_rvtt_sfpiadd_i_ex(v, val, mod_base | SFPIADD_EX_MOD1_IS_SUB));
+    assign(__builtin_rvtt_sfpxiadd_i(v, val, mod_base | SFPXIADD_MOD1_IS_SUB));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
 sfpi_inline vType vIntBase::operator-=(const vIntBase val)
 {
-    assign(__builtin_rvtt_sfpiadd_v_ex(val.get(), v, SFPIADD_EX_MOD1_IS_SUB));
+    assign(__builtin_rvtt_sfpxiadd_v(val.get(), v, SFPXIADD_MOD1_IS_SUB));
     return v;
 }
 
@@ -923,7 +923,7 @@ template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vT
 sfpi_inline vType vIntBase::operator-=(const vConstIntBase val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlr(val.get());
-    assign(__builtin_rvtt_sfpiadd_v_ex(c, v, SFPIADD_EX_MOD1_IS_SUB));
+    assign(__builtin_rvtt_sfpxiadd_v(c, v, SFPXIADD_MOD1_IS_SUB));
     return v;
 }
 
@@ -1084,12 +1084,12 @@ sfpi_inline vIntBase::vIntBase(const vConstIntBase creg)
     initialized = true;
 }
 
-sfpi_inline const vCond vInt::operator==(int32_t val) const { return vCond(vCond::vCondEQ, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
-sfpi_inline const vCond vInt::operator!=(int32_t val) const { return vCond(vCond::vCondNE, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
-sfpi_inline const vCond vInt::operator<(int32_t val) const { return vCond(vCond::vCondLT, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
-sfpi_inline const vCond vInt::operator<=(int32_t val) const { return  vCond(vCond::vCondLTE, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
-sfpi_inline const vCond vInt::operator>(int32_t val) const { return  vCond(vCond::vCondGT, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
-sfpi_inline const vCond vInt::operator>=(int32_t val) const { return vCond(vCond::vCondGTE, *this, val, SFPIADD_I_EX_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator==(int32_t val) const { return vCond(vCond::vCondEQ, *this, val, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator!=(int32_t val) const { return vCond(vCond::vCondNE, *this, val, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator<(int32_t val) const { return vCond(vCond::vCondLT, *this, val, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator<=(int32_t val) const { return  vCond(vCond::vCondLTE, *this, val, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator>(int32_t val) const { return  vCond(vCond::vCondGT, *this, val, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline const vCond vInt::operator>=(int32_t val) const { return vCond(vCond::vCondGTE, *this, val, SFPXIADD_MOD1_SIGNED); }
 
 sfpi_inline const vCond vInt::operator==(const vIntBase src) const { return vCond(vCond::vCondEQ, src, *this, 0); }
 sfpi_inline const vCond vInt::operator!=(const vIntBase src) const { return vCond(vCond::vCondNE, src, *this, 0); }
@@ -1121,7 +1121,7 @@ sfpi_inline vCCCtrl::vCCCtrl() : push_count(0)
 
 sfpi_inline void vCCCtrl::cc_if(const vCond& op)
 {
-    __builtin_rvtt_sfpcond_ex(op.get());
+    __builtin_rvtt_sfpxcond(op.get());
 }
 
 sfpi_inline void vCCCtrl::cc_elseif(const vCond& op)

@@ -38,7 +38,7 @@ void test_func(int count, bool calculate_bias)
         __builtin_rvtt_wh_sfpstore(nullptr, f, 0, 3, 5);
 
         if (calculate_bias) {
-            __rvtt_vec_t bias = __builtin_rvtt_wh_sfploadi_ex(nullptr, SFPLOADI_MOD0_FLOATB, f32_to_f16b(BIAS));
+            __rvtt_vec_t bias = __builtin_rvtt_wh_sfpxloadi(nullptr, SFPLOADI_MOD0_FLOATB, f32_to_f16b(BIAS));
             d = __builtin_rvtt_wh_sfpmad(d, bias, zero, 0);
             __builtin_rvtt_wh_sfpstore(nullptr, d, 0, 3, 4);
         }

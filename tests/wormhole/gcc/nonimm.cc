@@ -91,10 +91,10 @@ void load_both(short int addr)
 
 void loadi_imm(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, 10);
-    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, 20);
-    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 10, 30);
+    v64sf x = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 4, 10);
+    v64sf z = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 8, 20);
+    v64sf a = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 10, 30);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
@@ -103,10 +103,10 @@ void loadi_imm(short int value)
 
 void loadi_reg(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, value);
-    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, value+1);
-    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, value+2);
-    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 12, value+3);
+    v64sf x = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 0, value);
+    v64sf y = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 4, value+1);
+    v64sf z = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 8, value+2);
+    v64sf a = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 12, value+3);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
@@ -115,10 +115,10 @@ void loadi_reg(short int value)
 
 void loadi_both(short int value)
 {
-    v64sf x = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 0, 10);
-    v64sf y = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 4, 20);
-    v64sf z = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 8, value);
-    v64sf a = __builtin_rvtt_wh_sfploadi_ex((void *)instrn_buffer, 12, value+1);
+    v64sf x = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 0, 10);
+    v64sf y = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 4, 20);
+    v64sf z = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 8, value);
+    v64sf a = __builtin_rvtt_wh_sfpxloadi((void *)instrn_buffer, 12, value+1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
@@ -275,43 +275,43 @@ void iadd_i_both(short int value)
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, a, 0, 2, 30);
 }
 
-void iadd_i_imm_ex(short int value)
+void xiadd_i_imm(short int value)
 {
     v64sf x = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 10);
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 30);
     v64sf a = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 40);
-    x = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, x, 1, 0);
-    y = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, y, 2, 0);
-    z = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, z, 3, 0);
-    a = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, a, 4, 0);
+    x = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, x, 1, 0);
+    y = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, y, 2, 0);
+    z = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, z, 3, 0);
+    a = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, a, 4, 0);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, a, 0, 2, 30);
 }
 
-void iadd_i_reg_ex(short int value)
+void xiadd_i_reg(short int value)
 {
     v64sf x = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 10);
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 30);
-    x = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, x, value+0, 0);
-    y = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, y, value+1, 0);
-    z = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, z, value+2, 0);
+    x = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, x, value+0, 0);
+    y = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, y, value+1, 0);
+    z = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, z, value+2, 0);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
 }
 
-void iadd_i_both_ex(short int value)
+void xiadd_i_both(short int value)
 {
     v64sf x = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 10);
     v64sf y = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 20);
     v64sf z = __builtin_rvtt_wh_sfpload((void *)instrn_buffer, 1, 0, 30);
-    x = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, x, 1,       0);
-    y = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, y, 2,       0);
-    z = __builtin_rvtt_wh_sfpiadd_i_ex((void *)instrn_buffer, z, value+0, 0);
+    x = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, x, 1,       0);
+    y = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, y, 2,       0);
+    z = __builtin_rvtt_wh_sfpxiadd_i((void *)instrn_buffer, z, value+0, 0);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, x, 0, 2, 1);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, y, 0, 2, 10);
     __builtin_rvtt_wh_sfpstore((void *)instrn_buffer, z, 0, 2, 20);
@@ -611,9 +611,9 @@ int main(int argc, char* argv[])
     iadd_i_reg(argc);
     iadd_i_both(argc);
 
-    iadd_i_imm_ex(argc);
-    iadd_i_reg_ex(argc);
-    iadd_i_both_ex(argc);
+    xiadd_i_imm(argc);
+    xiadd_i_reg(argc);
+    xiadd_i_both(argc);
 
     shft_i_imm(argc);
     shft_i_reg(argc);

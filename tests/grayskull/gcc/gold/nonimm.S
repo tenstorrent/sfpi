@@ -673,9 +673,9 @@ _Z11iadd_i_boths:
 	ret
 	.size	_Z11iadd_i_boths, .-_Z11iadd_i_boths
 	.align	1
-	.globl	_Z13iadd_i_imm_exs
-	.type	_Z13iadd_i_imm_exs, @function
-_Z13iadd_i_imm_exs:
+	.globl	_Z11xiadd_i_imms
+	.type	_Z11xiadd_i_imms, @function
+_Z11xiadd_i_imms:
 	SFPLOAD	L3, 1, 10
 	SFPLOAD	L2, 1, 20
 	SFPLOAD	L1, 1, 30
@@ -697,11 +697,11 @@ _Z13iadd_i_imm_exs:
 	SFPSTORE	L1, 2, 20
 	SFPSTORE	L0, 2, 30
 	ret
-	.size	_Z13iadd_i_imm_exs, .-_Z13iadd_i_imm_exs
+	.size	_Z11xiadd_i_imms, .-_Z11xiadd_i_imms
 	.align	1
-	.globl	_Z13iadd_i_reg_exs
-	.type	_Z13iadd_i_reg_exs, @function
-_Z13iadd_i_reg_exs:
+	.globl	_Z11xiadd_i_regs
+	.type	_Z11xiadd_i_regs, @function
+_Z11xiadd_i_regs:
 	SFPLOAD	L1, 1, 10
 	SFPLOAD	L0, 1, 20
 	SFPLOAD	L3, 1, 30
@@ -740,11 +740,11 @@ _Z13iadd_i_reg_exs:
 	SFPSTORE	L1, 2, 10
 	SFPSTORE	L0, 2, 20
 	ret
-	.size	_Z13iadd_i_reg_exs, .-_Z13iadd_i_reg_exs
+	.size	_Z11xiadd_i_regs, .-_Z11xiadd_i_regs
 	.align	1
-	.globl	_Z14iadd_i_both_exs
-	.type	_Z14iadd_i_both_exs, @function
-_Z14iadd_i_both_exs:
+	.globl	_Z12xiadd_i_boths
+	.type	_Z12xiadd_i_boths, @function
+_Z12xiadd_i_boths:
 	SFPLOAD	L2, 1, 10
 	SFPLOAD	L1, 1, 20
 	SFPLOAD	L3, 1, 30
@@ -769,7 +769,7 @@ _Z14iadd_i_both_exs:
 	SFPSTORE	L1, 2, 10
 	SFPSTORE	L0, 2, 20
 	ret
-	.size	_Z14iadd_i_both_exs, .-_Z14iadd_i_both_exs
+	.size	_Z12xiadd_i_boths, .-_Z12xiadd_i_boths
 	.align	1
 	.globl	_Z10shft_i_imms
 	.type	_Z10shft_i_imms, @function
@@ -1742,11 +1742,11 @@ main:
 	mv	a0,s0
 	call	_Z11iadd_i_boths
 	mv	a0,s0
-	call	_Z13iadd_i_imm_exs
+	call	_Z11xiadd_i_imms
 	mv	a0,s0
-	call	_Z13iadd_i_reg_exs
+	call	_Z11xiadd_i_regs
 	mv	a0,s0
-	call	_Z14iadd_i_both_exs
+	call	_Z12xiadd_i_boths
 	mv	a0,s0
 	call	_Z10shft_i_imms
 	mv	a0,s0

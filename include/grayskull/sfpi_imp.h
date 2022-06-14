@@ -103,12 +103,12 @@ sfpi_inline void vFloat::loadf(const float val)
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void vIntBase::loadsi(int32_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_SHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_SHORT, val));
 }
 
 sfpi_inline void vIntBase::loadui(uint32_t val)
 {
-    assign(__builtin_rvtt_sfploadi_ex(SFPLOADI_MOD0_USHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_USHORT, val));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<vIntBase, vType>::value>*>
