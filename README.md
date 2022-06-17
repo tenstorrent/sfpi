@@ -9,7 +9,8 @@ instructions.
 1) Clone the sfpi repo and get a branch:
   git clone https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi
 
-  Work isn't done on master, check out whichever branch you need
+  Work isn't done on master, check out whichever branch you need (likely
+  tt-rel/riscv-gcc-10.2.0)
 
 2) Initialize the submodules:
   git submodule update --init --resursive
