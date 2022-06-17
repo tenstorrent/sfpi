@@ -228,3 +228,122 @@ void replace_creg()
     dst_reg[0] = x & y;
     dst_reg[0] = y | x;
 }
+
+void bb(int argc)
+{
+    vInt a = 1;
+    vInt b = 2;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | b;
+    }
+
+    dst_reg[0] = c;
+}
+
+void bb2(int argc)
+{
+    vInt a = 1;
+    vInt b = 2;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | b;
+    }
+
+    dst_reg[0] = a;
+    dst_reg[0] = c;
+}
+
+void bb3(int argc)
+{
+    vInt a = 1;
+    vInt c = 3;
+
+    if (argc == 0) {
+        c = a | c;
+    }
+
+    dst_reg[0] = a;
+    dst_reg[0] = c;
+}
+
+// Setexp, setman, setsgn use dst as src but can't swap the order of args
+// Setexp, setman, setsgn use dst as src but can't swap the order of args
+// Test that moves get generated properly
+void setexp_mov()
+{
+    vFloat x = 1.0f;
+    vInt y = 50;
+
+    vFloat z = setexp(x, y);
+
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+}
+
+void setman_mov()
+{
+    vFloat x = 1.0f;
+    vInt y = 50;
+
+    vFloat z = setman(x, y);
+
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+}
+
+void setsgn_mov()
+{
+    vFloat x = 1.0f;
+    vInt y = 50;
+
+    vFloat z = setsgn(x, y);
+
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+}
+
+// Can't swap due to subsequent use
+void replace_xor3()
+{
+    vInt x = 1;
+    vInt y = 2;
+
+    vInt z = x ^ y;
+
+    dst_reg[0] = x;
+    dst_reg[1] = y;
+    dst_reg[2] = z;
+}
+
+void swap_const_reg_or()
+{
+    vInt x = 2;
+
+    vInt y = x | vConstTileId;
+
+    dst_reg[0] = x;
+    dst_reg[0] = y;
+}
+
+void move_const_reg_or()
+{
+    vInt x = 2;
+
+    vInt y = vConstTileId | x;
+
+    dst_reg[0] = y;
+}
+
+// OK, stupid case, but could happen: both params are const regs
+void move_const_reg2_or()
+{
+    vInt y = vConstTileId | vInt(vConstTileId);
+
+    dst_reg[0] = y;
+}

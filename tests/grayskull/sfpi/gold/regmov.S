@@ -280,6 +280,187 @@ _Z12replace_cregv:
 	SFPSTORE	L0, 2, 0
 	ret
 	.size	_Z12replace_cregv, .-_Z12replace_cregv
+	.align	1
+	.globl	_Z2bbi
+	.type	_Z2bbi, @function
+_Z2bbi:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L20
+	SFPPUSHC
+	SFPENCC	3, 2
+	SFPNOP
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPOR	L2, L0
+	SFPNOP
+	SFPNOP
+.L20:
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z2bbi, .-_Z2bbi
+	.align	1
+	.globl	_Z3bb2i
+	.type	_Z3bb2i, @function
+_Z3bb2i:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L22
+	SFPPUSHC
+	SFPENCC	3, 2
+	SFPNOP
+	SFPMOV	L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPPOPC
+	SFPNOP
+	SFPOR	L1, L0
+	SFPNOP
+	SFPNOP
+.L22:
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z3bb2i, .-_Z3bb2i
+	.align	1
+	.globl	_Z3bb3i
+	.type	_Z3bb3i, @function
+_Z3bb3i:
+	SFPLOADI	L1, 4, 1
+	SFPLOADI	L0, 4, 3
+	bne	a0,zero,.L24
+	SFPOR	L1, L0
+	SFPNOP
+	SFPNOP
+.L24:
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z3bb3i, .-_Z3bb3i
+	.align	1
+	.globl	_Z10setexp_movv
+	.type	_Z10setexp_movv, @function
+_Z10setexp_movv:
+	SFPLOADI	L2, 0, 16256
+	SFPLOADI	L1, 4, 50
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETEXP	0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 0, 0
+	SFPSTORE	L1, 2, 4
+	SFPSTORE	L0, 0, 8
+	ret
+	.size	_Z10setexp_movv, .-_Z10setexp_movv
+	.align	1
+	.globl	_Z10setman_movv
+	.type	_Z10setman_movv, @function
+_Z10setman_movv:
+	SFPLOADI	L2, 0, 16256
+	SFPLOADI	L1, 4, 50
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETMAN	0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 0, 0
+	SFPSTORE	L1, 2, 4
+	SFPSTORE	L0, 0, 8
+	ret
+	.size	_Z10setman_movv, .-_Z10setman_movv
+	.align	1
+	.globl	_Z10setsgn_movv
+	.type	_Z10setsgn_movv, @function
+_Z10setsgn_movv:
+	SFPLOADI	L2, 0, 16256
+	SFPLOADI	L1, 4, 50
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSETSGN	0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L2, 0, 0
+	SFPSTORE	L1, 2, 4
+	SFPSTORE	L0, 0, 8
+	ret
+	.size	_Z10setsgn_movv, .-_Z10setsgn_movv
+	.align	1
+	.globl	_Z12replace_xor3v
+	.type	_Z12replace_xor3v, @function
+_Z12replace_xor3v:
+	SFPLOADI	L3, 4, 1
+	SFPLOADI	L2, 4, 2
+	SFPMOV	L3, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPOR	L2, L0
+	SFPNOP
+	SFPNOP
+	SFPMOV	L3, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPAND	L2, L1
+	SFPNOP
+	SFPNOP
+	SFPNOT	L1, L1
+	SFPNOP
+	SFPNOP
+	SFPAND	L1, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L3, 2, 0
+	SFPSTORE	L2, 2, 4
+	SFPSTORE	L0, 2, 8
+	ret
+	.size	_Z12replace_xor3v, .-_Z12replace_xor3v
+	.align	1
+	.globl	_Z17swap_const_reg_orv
+	.type	_Z17swap_const_reg_orv, @function
+_Z17swap_const_reg_orv:
+	SFPLOADI	L1, 4, 2
+	SFPMOV	L1, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPOR	L15, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 0
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z17swap_const_reg_orv, .-_Z17swap_const_reg_orv
+	.align	1
+	.globl	_Z17move_const_reg_orv
+	.type	_Z17move_const_reg_orv, @function
+_Z17move_const_reg_orv:
+	SFPLOADI	L0, 4, 2
+	SFPOR	L15, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z17move_const_reg_orv, .-_Z17move_const_reg_orv
+	.align	1
+	.globl	_Z18move_const_reg2_orv
+	.type	_Z18move_const_reg2_orv, @function
+_Z18move_const_reg2_orv:
+	SFPMOV	L15, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPOR	L15, L0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	ret
+	.size	_Z18move_const_reg2_orv, .-_Z18move_const_reg2_orv
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
 	.align	2
