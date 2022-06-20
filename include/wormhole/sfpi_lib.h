@@ -94,7 +94,7 @@ sfpi_inline vFloat setexp(const vFloat v, const uint32_t exp)
     return __builtin_rvtt_sfpsetexp_i(exp, v.get());
 }
 
-sfpi_inline vFloat setexp(const vFloat v, const vIntBase exp)
+sfpi_inline vFloat setexp(const vFloat v, const __vIntBase exp)
 {
     // Odd: dst is both exponent and result so undergoes a type change
     // If exp is not used later, compiler renames tmp and doesn't issue a mov
@@ -106,7 +106,7 @@ sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
     return __builtin_rvtt_sfpsetman_i(man, v.get(), 0);
 }
 
-sfpi_inline vFloat setman(const vFloat v, const vIntBase man)
+sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
 {
     // Grayskull HW bug, is this useful?  Should there be a "Half" form?
     // Odd: dst is both man and result so undergoes a type change
@@ -119,15 +119,15 @@ sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
     return __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
     return __builtin_rvtt_sfpsetsgn_i(sgn, v.get());
 }
 
 template <typename vTypeA, typename vTypeB,
-    typename std::enable_if_t<std::is_base_of<vBase, vTypeA>::value>* = nullptr,
-    typename std::enable_if_t<std::is_base_of<vBase, vTypeB>::value>* = nullptr>
+    typename std::enable_if_t<std::is_base_of<__vBase, vTypeA>::value>* = nullptr,
+    typename std::enable_if_t<std::is_base_of<__vBase, vTypeB>::value>* = nullptr>
 sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
@@ -135,7 +135,7 @@ sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
     return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const vInt sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
@@ -143,13 +143,13 @@ sfpi_inline vType setsgn(const vType v, const vInt sgn)
     return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vInt lz(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_CC_NONE));
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vInt lz_nosgn(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_NOSGN_CC_NONE));
@@ -170,8 +170,8 @@ sfpi_inline vUInt shft(const vUInt v, const vInt amt)
     return __builtin_rvtt_sfpshft_v(v.get(), amt.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
-sfpi_inline vType reinterpret(const vBase v)
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
+sfpi_inline vType reinterpret(const __vBase v)
 {
     return vType(v.get());
 }
@@ -261,29 +261,29 @@ sfpi_inline vUInt float2int16(vFloat in, int round_mode = 1)
                                         SFPSTOCHRND_MOD1_FP32_TO_INT16);
 }
 
-sfpi_inline void subvec_transp(vBase& l0, vBase& l1, vBase& l2, vBase& l3)
+sfpi_inline void subvec_transp(__vBase& l0, __vBase& l1, __vBase& l2, __vBase& l3)
 {
     __builtin_rvtt_sfptransp(l0.get(), l1.get(), l2.get(), l3.get());
 }
 
-sfpi_inline __rvtt_vec_t subvec_shflror1(const vBase& src)
+sfpi_inline __rvtt_vec_t subvec_shflror1(const __vBase& src)
 
 {
     return __builtin_rvtt_sfpshft2_e(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLROR1);
 }
 
-sfpi_inline __rvtt_vec_t subvec_shflshr1(const vBase& src)
+sfpi_inline __rvtt_vec_t subvec_shflshr1(const __vBase& src)
 
 {
     return __builtin_rvtt_sfpshft2_e(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
 
-sfpi_inline void vec_swap(vBase& dst, vBase& src)
+sfpi_inline void vec_swap(__vBase& dst, __vBase& src)
 {
     __builtin_rvtt_sfpswap(dst.get(), src.get(), SFPSWAP_MOD1_SWAP);
 }
 
-sfpi_inline void vec_min_max(vBase& dst, vBase& src)
+sfpi_inline void vec_min_max(__vBase& dst, __vBase& src)
 {
     __builtin_rvtt_sfpswap(dst.get(), src.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
 }

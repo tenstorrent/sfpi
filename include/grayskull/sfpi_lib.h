@@ -48,7 +48,7 @@ sfpi_inline vFloat setexp(const vFloat v, const uint32_t exp)
     return __builtin_rvtt_sfpsetexp_i(exp, v.get());
 }
 
-sfpi_inline vFloat setexp(const vFloat v, const vIntBase exp)
+sfpi_inline vFloat setexp(const vFloat v, const __vIntBase exp)
 {
     // Odd: dst is both exponent and result so undergoes a type change
     // If exp is not used later, compiler renames tmp and doesn't issue a mov
@@ -60,7 +60,7 @@ sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
     return __builtin_rvtt_sfpsetman_i(man, v.get());
 }
 
-sfpi_inline vFloat setman(const vFloat v, const vIntBase man)
+sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
 {
     // Grayskull HW bug, is this useful?  Should there be a "Half" form?
     // Odd: dst is both man and result so undergoes a type change
@@ -73,15 +73,15 @@ sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
     return __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
     return __builtin_rvtt_sfpsetsgn_i(sgn, v.get());
 }
 
 template <typename vTypeA, typename vTypeB,
-    typename std::enable_if_t<std::is_base_of<vBase, vTypeA>::value>* = nullptr,
-    typename std::enable_if_t<std::is_base_of<vBase, vTypeB>::value>* = nullptr>
+    typename std::enable_if_t<std::is_base_of<__vBase, vTypeA>::value>* = nullptr,
+    typename std::enable_if_t<std::is_base_of<__vBase, vTypeB>::value>* = nullptr>
 sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
@@ -89,7 +89,7 @@ sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
     return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const vInt sgn)
 {
     // Odd: dst is both sgn and result so undergoes a type change
@@ -97,7 +97,7 @@ sfpi_inline vType setsgn(const vType v, const vInt sgn)
     return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vInt lz(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_CC_NONE));
@@ -118,8 +118,8 @@ sfpi_inline vUInt shft(const vUInt v, const vInt amt)
     return __builtin_rvtt_sfpshft_v(v.get(), amt.get());
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<vBase, vType>::value>* = nullptr>
-sfpi_inline vType reinterpret(const vBase v)
+template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
+sfpi_inline vType reinterpret(const __vBase v)
 {
     return vType(v.get());
 }
