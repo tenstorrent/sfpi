@@ -1102,10 +1102,23 @@ __rvtt_vec_t sfpu_rvtt_sfpsetsgn_v(const __rvtt_vec_t& dst, const __rvtt_vec_t& 
     return tmp;
 }
 
-void sfpu_rvtt_sfpxcond(int w)
+void sfpu_rvtt_sfpxcondb(int tree, int)
 {
-    SFPUConditional::emit_conditional(w, false);
+    SFPUConditional::emit_conditional(tree, false);
     sfpu_conditionals.resize(0);
+}
+
+__rvtt_vec_t sfpu_rvtt_sfpxcondi(int w)
+{
+    __rvtt_vec_t tmp;
+
+    tmp = sfpu_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 0);
+    __builtin_rvtt_sfppushc();
+    sfpu_rvtt_sfpxcondb(w, 0);
+    tmp = sfpu_rvtt_sfploadi(SFPLOADI_MOD0_SHORT, 1);
+    __builtin_rvtt_sfppopc();
+
+    return tmp;
 }
 
 inline float lut_to_fp32(unsigned short v)

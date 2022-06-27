@@ -65,7 +65,7 @@ namespace ckernel
 namespace sfpu
 {
     
-sfpi_inline vCond sfpu_is_fp16_zero(const vFloat& v, uint exponent_size_8)
+sfpi_inline vInt sfpu_is_fp16_zero(const vFloat& v, uint exponent_size_8)
 {
     if (exponent_size_8) {
         // fp16b

@@ -42,15 +42,20 @@ void smoke()
     a = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);  // reg pressure
     d = __builtin_rvtt_gs_sfpload(nullptr, 1, 0);  // reg pressure
     __builtin_rvtt_gs_sfppushc();
+    int top = __builtin_rvtt_gs_sfpxvif();
     __builtin_rvtt_gs_sfpsetcc_v(a, 12);
     __builtin_rvtt_gs_sfpsetcc_i(1, 12);
     cond = __builtin_rvtt_gs_sfpxicmps(nullptr, a, 0, 4);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxicmpv(a, d, 4);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0, 4);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmpv(a, d, 4);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
     __builtin_rvtt_gs_sfpcompc();
     __builtin_rvtt_gs_sfppopc();
 

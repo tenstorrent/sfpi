@@ -532,8 +532,12 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	.weak	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
-	beq	a0,zero,.L28
-	SFPLOAD	L0, 1, 0
+	bne	a0,zero,.L25
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -544,7 +548,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -555,7 +563,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -566,7 +578,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -578,12 +594,8 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	ret
-.L28:
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+.L25:
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -594,11 +606,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -609,11 +617,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -624,11 +628,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 0
@@ -646,8 +646,12 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	.weak	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
-	beq	a0,zero,.L33
-	SFPLOAD	L0, 1, 0
+	bne	a0,zero,.L29
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -658,7 +662,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -669,7 +677,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -680,7 +692,11 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
+	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -692,12 +708,8 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	ret
-.L33:
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+.L29:
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -708,11 +720,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -723,11 +731,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -738,11 +742,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	SFPNOP
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 6
 	SFPNOP
 	SFPLOADI	L0, 0, 16256
@@ -777,7 +777,7 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	slli	a2,a2,16
 	li	a4,4
 	srli	a2,a2,8
-.L35:
+.L33:
 	SFPLOAD	L0, 1, 0
 	SFPMAD	L2, L11, L0, L3, 0
 	SFPNOP
@@ -811,7 +811,7 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a4,a4,-1
-	bne	a4,zero,.L35
+	bne	a4,zero,.L33
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm, .-_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm
 	.section	.text._ZN7ckernel4sfpu13calculate_absILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu13calculate_absILb0EEEvv,comdat
@@ -850,13 +850,17 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	.weak	_ZN7ckernel4sfpu14calculate_signILb0EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_signILb0EEEvm, @function
 _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
-	beq	a0,zero,.L42
-	SFPLOAD	L0, 1, 0
+	bne	a0,zero,.L37
+	SFPLOAD	L1, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L0, 0
+	SFPSETCC	0, L1, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
+	SFPNOP
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -864,12 +868,16 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L0, 0
+	SFPSETCC	0, L1, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
+	SFPNOP
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -877,12 +885,16 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L0, 0
+	SFPSETCC	0, L1, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
+	SFPNOP
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -890,12 +902,16 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L0, 1, 0
+	SFPLOAD	L1, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L0, 0
+	SFPSETCC	0, L1, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
+	SFPNOP
+	SFPLOADI	L0, 4, 14336
+	SFPIADD	0, L1, L0, 4
+	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -904,17 +920,13 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
 	ret
-.L42:
-	SFPLOAD	L1, 1, 0
+.L37:
+	SFPLOAD	L0, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L1, 0
+	SFPSETCC	0, L0, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
-	SFPNOP
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -922,16 +934,12 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
+	SFPLOAD	L0, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L1, 0
+	SFPSETCC	0, L0, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
-	SFPNOP
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -939,16 +947,12 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
+	SFPLOAD	L0, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L1, 0
+	SFPSETCC	0, L0, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
-	SFPNOP
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -956,16 +960,12 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	SFPLOAD	L1, 1, 0
+	SFPLOAD	L0, 1, 0
 	SFPSTORE	L10, 0, 0
-	SFPSETCC	0, L1, 0
+	SFPSETCC	0, L0, 0
 	SFPNOP
 	SFPSTORE	L11, 0, 0
 	SFPENCC	3, 10
-	SFPNOP
-	SFPLOADI	L0, 4, 14336
-	SFPIADD	0, L1, L0, 4
-	SFPNOP
 	SFPNOP
 	SFPSETCC	0, L0, 6
 	SFPNOP
@@ -1075,7 +1075,7 @@ _ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm:
 # Op(0x71) - d(1)
 	sw	a4,0(a5)
 	li	a5,4
-.L46:
+.L43:
 	SFPLOAD	L0, 1, 0
 	SFPADD	L10, L0, L3, L0, 0
 	SFPNOP
@@ -1099,7 +1099,7 @@ _ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L46
+	bne	a5,zero,.L43
 	ret
 	.size	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm, .-_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm
 	.section	.text._ZN7ckernel4sfpu15calculate_lreluILb0EEEvm,"axG",@progbits,_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm,comdat
@@ -1116,7 +1116,7 @@ _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
 # Op(0x71) - d(1)
 	sw	a4,0(a5)
 	li	a5,4
-.L49:
+.L46:
 	SFPLOAD	L0, 1, 0
 	SFPSETCC	0, L0, 0
 	SFPNOP
@@ -1128,7 +1128,7 @@ _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L49
+	bne	a5,zero,.L46
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm, .-_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm
 	.section	.text._ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv,comdat
@@ -1236,24 +1236,24 @@ _ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv:
 _ZN7ckernel4sfpu15calculate_powerILb1EEEvm:
 	li	a4,4
 	li	a3,2
-.L56:
+.L53:
 	SFPLOAD	L1, 1, 0
 	SFPMUL	L1, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
-	bleu	a0,a3,.L54
+	bleu	a0,a3,.L51
 	li	a5,2
-.L55:
+.L52:
 	SFPMUL	L0, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L55
-.L54:
+	bne	a0,a5,.L52
+.L51:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a4,a4,-1
-	bne	a4,zero,.L56
+	bne	a4,zero,.L53
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_powerILb1EEEvm, .-_ZN7ckernel4sfpu15calculate_powerILb1EEEvm
 	.section	.text._ZN7ckernel4sfpu14calculate_geluILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_geluILb0EEEvv,comdat
@@ -1262,7 +1262,7 @@ _ZN7ckernel4sfpu15calculate_powerILb1EEEvm:
 	.type	_ZN7ckernel4sfpu14calculate_geluILb0EEEvv, @function
 _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
 	li	a5,4
-.L60:
+.L57:
 	SFPLOAD	L1, 1, 0
 	SFPMUL	L1, L1, L4, L3, 0
 	SFPNOP
@@ -1292,7 +1292,7 @@ _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
 	SFPSTORE	L3, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L60
+	bne	a5,zero,.L57
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_geluILb0EEEvv, .-_ZN7ckernel4sfpu14calculate_geluILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_geluILb1EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_geluILb1EEEvv,comdat
@@ -1301,7 +1301,7 @@ _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
 	.type	_ZN7ckernel4sfpu14calculate_geluILb1EEEvv, @function
 _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
 	li	a5,4
-.L63:
+.L60:
 	SFPLOAD	L3, 1, 0
 	SFPLOADI	L1, 2, 8492
 	SFPLOADI	L2, 2, -256
@@ -1318,7 +1318,7 @@ _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
 	SFPSTORE	L1, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L63
+	bne	a5,zero,.L60
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_geluILb1EEEvv, .-_ZN7ckernel4sfpu14calculate_geluILb1EEEvv
 	.section	.text._ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv,comdat
@@ -1327,7 +1327,7 @@ _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
 	.type	_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv, @function
 _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	li	a4,4
-.L67:
+.L64:
 	SFPLOAD	L3, 1, 0
 	SFPMUL	L3, L3, L4, L0, 0
 	SFPNOP
@@ -1361,7 +1361,7 @@ _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	SFPNOP
 	SFPNOP
 	li	a5,7
-.L66:
+.L63:
 	SFPIADD	-1, L1, L1, 9
 	SFPNOP
 	SFPNOP
@@ -1370,7 +1370,7 @@ _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,-1
-	bne	a5,zero,.L66
+	bne	a5,zero,.L63
 	SFPENCC	3, 10
 	SFPNOP
 	SFPLOAD	L1, 1, 0
@@ -1449,7 +1449,7 @@ _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	SFPSTORE	L3, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a4,a4,-1
-	bne	a4,zero,.L67
+	bne	a4,zero,.L64
 	ret
 	.size	_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv, .-_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv,comdat
@@ -1663,7 +1663,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	li	a4,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
-.L74:
+.L71:
 	SFPLOAD	L0, 1, 0
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a3)
 	li	a2,1896939520
@@ -1699,7 +1699,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	SFPNOP
 	SFPNOP
 	li	a5,7
-.L73:
+.L70:
 	SFPIADD	-1, L1, L1, 9
 	SFPNOP
 	SFPNOP
@@ -1708,7 +1708,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,-1
-	bne	a5,zero,.L73
+	bne	a5,zero,.L70
 	SFPENCC	3, 10
 	SFPNOP
 	SFPLOAD	L1, 1, 0
@@ -1767,7 +1767,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
 	addi	a4,a4,-1
-	bne	a4,zero,.L74
+	bne	a4,zero,.L71
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs,comdat
@@ -1779,7 +1779,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	li	a4,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
-.L79:
+.L76:
 	SFPLOAD	L0, 1, 0
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a3)
 	li	a2,1896939520
@@ -1815,7 +1815,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	SFPNOP
 	SFPNOP
 	li	a5,7
-.L78:
+.L75:
 	SFPIADD	-1, L1, L1, 9
 	SFPNOP
 	SFPNOP
@@ -1824,7 +1824,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	SFPNOP
 	SFPNOP
 	addi	a5,a5,-1
-	bne	a5,zero,.L78
+	bne	a5,zero,.L75
 	SFPENCC	3, 10
 	SFPNOP
 	SFPLOAD	L1, 1, 0
@@ -1883,7 +1883,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
 	addi	a4,a4,-1
-	bne	a4,zero,.L79
+	bne	a4,zero,.L76
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs,comdat
@@ -1895,7 +1895,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
 	li	a5,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
-.L83:
+.L80:
 	SFPLOAD	L1, 1, 0
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a3)
 	li	a2,1899036672
@@ -1918,7 +1918,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
 	SFPSTORE	L1, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L83
+	bne	a5,zero,.L80
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs,comdat
@@ -1930,7 +1930,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
 	li	a5,4
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
-.L86:
+.L83:
 	SFPLOAD	L1, 1, 0
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	li	a2,1899036672
@@ -1958,7 +1958,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L86
+	bne	a5,zero,.L83
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,"axG",@progbits,_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,comdat
@@ -1970,7 +1970,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	li	a5,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
-.L89:
+.L86:
 	SFPLOAD	L3, 1, 0
 	SFPSETEXP	127, L3, L0, 1
 	SFPNOP
@@ -2056,7 +2056,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L89
+	bne	a5,zero,.L86
 	ret
 	.size	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm, .-_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm
 	.section	.text._ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv,"axG",@progbits,_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv,comdat
@@ -2065,7 +2065,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	.type	_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv, @function
 _ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv:
 	li	a5,4
-.L92:
+.L89:
 	SFPLOAD	L0, 1, 0
 	SFPSETSGN	1, L0, L0, 1
 	SFPNOP
@@ -2124,7 +2124,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L92
+	bne	a5,zero,.L89
 	ret
 	.size	_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv, .-_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv
 	.section	.text._ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv,"axG",@progbits,_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv,comdat
@@ -2133,7 +2133,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv:
 	.type	_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv, @function
 _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
 	li	a5,4
-.L95:
+.L92:
 	SFPLOAD	L0, 1, 0
 	SFPSETSGN	1, L0, L0, 1
 	SFPNOP
@@ -2186,7 +2186,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
 	SFPSTORE	L0, 0, 0
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L95
+	bne	a5,zero,.L92
 	ret
 	.size	_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv, .-_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv
 	.section	.text._ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm,"axG",@progbits,_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm,comdat
@@ -2201,7 +2201,7 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a1,a1,8
 	srli	a0,a0,16
-.L98:
+.L95:
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a3)
 	SFPLOAD	L0, 1, 0
 	li	a2,1946157056
@@ -2255,7 +2255,7 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L98
+	bne	a5,zero,.L95
 	ret
 	.size	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, .-_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm
 	.globl	__floatunsisf

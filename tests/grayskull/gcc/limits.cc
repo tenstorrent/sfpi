@@ -114,22 +114,28 @@ int main(int argc, char* argv[])
     int cond;
     __builtin_rvtt_gs_sfppushc();
     // 1.0 in different fmts
+    int top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0x3f80, 9);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0x3f80, 17);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
 
     // -1.0 in different fmts
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbf80, 9);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbf80, 17);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
 
     // Not a register in different formats
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbfa0, 9);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
+    top = __builtin_rvtt_gs_sfpxvif();
     cond = __builtin_rvtt_gs_sfpxfcmps(nullptr, a, 0xbfa0, 17);
-    __builtin_rvtt_gs_sfpxcond(cond);
+    __builtin_rvtt_gs_sfpxcondb(cond, top);
 
     __builtin_rvtt_gs_sfppopc();
 }

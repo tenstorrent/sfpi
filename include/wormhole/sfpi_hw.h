@@ -33,8 +33,10 @@ namespace sfpi {
 #define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) sfpu_rvtt_sfpxfcmpv(v1, v2, mod1)
 #define __builtin_rvtt_sfpxicmps(v, i, mod1) sfpu_rvtt_sfpxicmps(v, i, mod1)
 #define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) sfpu_rvtt_sfpxicmpv(v1, v2, mod1)
+#define __builtin_rvtt_sfpxvif() 0
 #define __builtin_rvtt_sfpxbool(t, a, b) sfpu_rvtt_sfpxbool(t, a, b)
-#define __builtin_rvtt_sfpxcond(i) sfpu_rvtt_sfpxcond(i)
+#define __builtin_rvtt_sfpxcondb(s, i) sfpu_rvtt_sfpxcondb(s, i)
+#define __builtin_rvtt_sfpxcondi(i) sfpu_rvtt_sfpxcondi(i)
 #define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) sfpu_rvtt_sfpadd(va, vb, mod1)
@@ -135,8 +137,10 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) __builtin_rvtt_wh_sfpxfcmpv(v1, v2, mod1)
 #define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_wh_sfpxicmps((void *)ckernel::instrn_buffer, v, i, mod1)
 #define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) __builtin_rvtt_wh_sfpxicmpv(v1, v2, mod1)
+#define __builtin_rvtt_sfpxvif() __builtin_rvtt_wh_sfpxvif()
 #define __builtin_rvtt_sfpxbool(t, a, b) __builtin_rvtt_wh_sfpxbool(t, a, b)
-#define __builtin_rvtt_sfpxcond(i) __builtin_rvtt_wh_sfpxcond(i)
+#define __builtin_rvtt_sfpxcondb(s, i) __builtin_rvtt_wh_sfpxcondb(s, i)
+#define __builtin_rvtt_sfpxcondi(i) __builtin_rvtt_wh_sfpxcondi(i)
 #define __builtin_rvtt_sfpcompc() __builtin_rvtt_wh_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)

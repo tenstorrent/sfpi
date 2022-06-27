@@ -53,7 +53,7 @@ sfpi_inline void set_expected_result(int addr, float sentinel, int expected, vIn
     v_endif;
 }
 
-sfpi_inline vCond test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat vec, float a, float b)
+sfpi_inline vInt test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat vec, float a, float b)
 {
     if (scalar_bool) {
         return vec == a;

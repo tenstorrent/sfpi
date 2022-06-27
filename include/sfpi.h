@@ -132,7 +132,6 @@ namespace sfpi {
 class vFloat;
 class vInt;
 class vUInt;
-class vCond;
 class LRegAssigner;
 enum class LRegs;
 
@@ -481,6 +480,7 @@ public:
     sfpi_inline vInt(uint32_t val) { loadui(val); }
 #endif
     sfpi_inline vInt(__LRegAssignerInternal& lr) { __vBase::operator=(lr); }
+    sfpi_inline vInt(const __vCond vc);
 
     // Assignment
     sfpi_inline vInt operator=(const vInt in) { assign(in.v); return v; }
@@ -559,6 +559,7 @@ public:
     sfpi_inline vUInt(uint32_t val) { loadui(val); }
 #endif
     sfpi_inline vUInt(__LRegAssignerInternal& lr) { __vBase::operator=(lr); }
+    sfpi_inline vUInt(const __vCond vc);
 
     // Assignment
     sfpi_inline vUInt operator=(const vUInt in ) { assign(in.v); return v; }
@@ -620,7 +621,8 @@ public:
 //////////////////////////////////////////////////////////////////////////////
 class __vCond {
     friend class __vCCCtrl;
-    friend class vCond;
+    friend class vInt;
+    friend class vUInt;
 
  private:
     enum class vBoolOpType {
@@ -663,35 +665,32 @@ class __vCond {
     sfpi_inline __vCond(const __vCondOpType t, const __vIntBase a, const __vIntBase b, uint32_t mod)
     { result = __builtin_rvtt_sfpxicmpv(a.get(), b.get(), mod | t); }
 
+    // Create from an integer context
+    sfpi_inline __vCond(const vInt a) { result = __builtin_rvtt_sfpxicmps(a.get(), 0, __vCondNE); }
+
     // Create boolean operations from conditional operations
     sfpi_inline const __vCond operator&&(const __vCond& b) const { return __vCond(vBoolOpType::vBoolAnd, *this, b); }
     sfpi_inline const __vCond operator||(const __vCond& b) const { return __vCond(vBoolOpType::vBoolOr, *this, b); }
     sfpi_inline const __vCond operator!() const { return __vCond(vBoolOpType::vBoolNot, *this, *this); }
 };
 
-class vCond {
- private:
-    __vCond vc;
-
- public:
-    sfpi_inline vCond(const __vCond in) : vc(in) {}
-
-    sfpi_inline int get() const { return vc.get(); }
-};
-
 //////////////////////////////////////////////////////////////////////////////
 class __vCCCtrl {
 protected:
+    int top;
     int push_count;
 
 public:
     sfpi_inline __vCCCtrl();
     sfpi_inline ~__vCCCtrl();
 
-    sfpi_inline void cc_if(const vCond& op);
+    sfpi_inline void cc_if(const __vCond& op) const;
+    sfpi_inline void cc_if(const __vIntBase& b) const;
     sfpi_inline void cc_else() const;
-    sfpi_inline void cc_elseif(const vCond& cond);
+    sfpi_inline void cc_elseif(const __vCond& cond) const;
+    sfpi_inline void cc_elseif(const __vIntBase& b) const;
 
+    sfpi_inline void mark_top();
     sfpi_inline void push();
     sfpi_inline void pop();
 
@@ -1099,6 +1098,12 @@ sfpi_inline __vIntBase::__vIntBase(const __vConstIntBase creg)
     initialized = true;
 }
 
+sfpi_inline vInt::vInt(const __vCond vc)
+{
+    v = __builtin_rvtt_sfpxcondi(vc.get());
+    initialized = true;
+}
+
 sfpi_inline const __vCond vInt::operator==(int32_t val) const { return __vCond(__vCond::__vCondEQ, *this, val, SFPXIADD_MOD1_SIGNED); }
 sfpi_inline const __vCond vInt::operator!=(int32_t val) const { return __vCond(__vCond::__vCondNE, *this, val, SFPXIADD_MOD1_SIGNED); }
 sfpi_inline const __vCond vInt::operator<(int32_t val) const { return __vCond(__vCond::__vCondLT, *this, val, SFPXIADD_MOD1_SIGNED); }
@@ -1114,6 +1119,12 @@ sfpi_inline const __vCond vInt::operator>(const __vIntBase src) const { return _
 sfpi_inline const __vCond vInt::operator>=(const __vIntBase src) const { return __vCond(__vCond::__vCondGTE, src, *this, 0); }
 
 //////////////////////////////////////////////////////////////////////////////
+sfpi_inline vUInt::vUInt(const __vCond vc)
+{
+    v = __builtin_rvtt_sfpxcondi(vc.get());
+    initialized = true;
+}
+
 sfpi_inline const __vCond vUInt::operator==(int32_t val) const { return __vCond(__vCond::__vCondEQ, *this, val, 0); }
 sfpi_inline const __vCond vUInt::operator!=(int32_t val) const { return __vCond(__vCond::__vCondNE, *this, val, 0); }
 sfpi_inline const __vCond vUInt::operator<(int32_t val) const { return __vCond(__vCond::__vCondLT, *this, val, 0); }
@@ -1134,14 +1145,24 @@ sfpi_inline __vCCCtrl::__vCCCtrl() : push_count(0)
     push();
 }
 
-sfpi_inline void __vCCCtrl::cc_if(const vCond& op)
+sfpi_inline void __vCCCtrl::cc_if(const __vCond& op) const
 {
-    __builtin_rvtt_sfpxcond(op.get());
+    __builtin_rvtt_sfpxcondb(op.get(), top);
 }
 
-sfpi_inline void __vCCCtrl::cc_elseif(const vCond& op)
+sfpi_inline void __vCCCtrl::cc_if(const __vIntBase& v) const
+{
+    __builtin_rvtt_sfpxcondb(__vCond(__vCond::__vCondNE, v, 0, 0).get(), top);
+}
+
+sfpi_inline void __vCCCtrl::cc_elseif(const __vCond& op) const
 {
     cc_if(op);
+}
+
+sfpi_inline void __vCCCtrl::cc_elseif(const __vIntBase& v) const
+{
+    cc_if(v);
 }
 
 sfpi_inline void __vCCCtrl::cc_else() const
@@ -1154,6 +1175,11 @@ sfpi_inline __vCCCtrl::~__vCCCtrl()
     while (push_count != 0) {
         pop();
     }
+}
+
+sfpi_inline void __vCCCtrl::mark_top()
+{
+    top = __builtin_rvtt_sfpxvif();
 }
 
 sfpi_inline void __vCCCtrl::push()
@@ -1181,12 +1207,14 @@ constexpr __DestReg dst_reg;
 //////////////////////////////////////////////////////////////////////////////
 #define v_if(x)             \
 {                           \
-    __vCCCtrl __cc;            \
-    __cc.cc_if(x);
+   __vCCCtrl __cc;          \
+   __cc.mark_top();         \
+   __cc.cc_if(x);
 
 #define v_elseif(x)         \
     __cc.cc_else();         \
     __cc.push();            \
+    __cc.mark_top();        \
     __cc.cc_elseif(x);
 
 #define v_else              \
@@ -1200,6 +1228,7 @@ constexpr __DestReg dst_reg;
     __vCCCtrl __cc;
 
 #define v_and(x)            \
+    __cc.mark_top();        \
     __cc.cc_if(x)
 
 #define p_endblock          \

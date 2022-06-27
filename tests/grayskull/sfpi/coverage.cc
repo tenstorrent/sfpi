@@ -508,6 +508,31 @@ void test_creg_conditional_rev()
     dst_reg[8] = v;
 }
 
+void test_conditional_outside_vif()
+{
+    vFloat x = 1.0f;
+    vInt y = (x == 0.0f);
+    vUInt z = (x == 0.0f);
+
+    v_if (y == 0) {
+    }
+    v_endif;
+
+    v_if (z != 0) {
+    }
+    v_endif;
+
+    v_if (y) {
+    } v_elseif(y) {
+    }
+    v_endif;
+
+    v_if (z) {
+    } v_elseif(z) {
+    }
+    v_endif;
+}
+
 void test_bitwise()
 {
     vInt v1, v2;

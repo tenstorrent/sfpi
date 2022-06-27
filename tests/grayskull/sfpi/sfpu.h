@@ -292,4 +292,5 @@ extern int sfpu_rvtt_sfpxfcmpv(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, i
 extern int sfpu_rvtt_sfpxicmps(const __rvtt_vec_t& v, unsigned int i, int mod1);
 extern int sfpu_rvtt_sfpxicmpv(const __rvtt_vec_t& v1, const __rvtt_vec_t& v2, int mod1);
 extern int sfpu_rvtt_sfpxbool(int t, int a, int b);
-extern void __builtin_rvtt_sfpxcond(int i);
+extern void __builtin_rvtt_sfpxcondb(int tree, int start);
+extern __rvtt_vec_t __builtin_rvtt_sfpxcondi(int i);

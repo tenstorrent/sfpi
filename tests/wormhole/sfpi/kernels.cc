@@ -55,7 +55,7 @@ sfpi_inline void set_expected_result(int addr, float sentinel, int expected, vIn
     v_endif;
 }
 
-sfpi_inline vCond test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat vec, float a, float b)
+sfpi_inline vInt test_interleaved_scalar_vector_cond(bool scalar_bool, vFloat vec, float a, float b)
 {
     if (scalar_bool) {
         return vec == a;
@@ -2838,7 +2838,7 @@ void test17()
 {
     // more SFPSWAP
     dst_reg[17] = -dst_reg[0];
-
+#if COMPILE_FOR_EMULE
     // Test sign-magnitude for ints
     v_if (dst_reg[0] == 2.0F) {
         vUInt x = -1;
@@ -2858,7 +2858,6 @@ void test17()
     v_endif;
     // [3] = -2.0
 
-#if COMPILE_FOR_EMULE
     v_if (dst_reg[0] == 4.0F) {
         vFloat x = 1.0F;
         vFloat y = 2.0F;

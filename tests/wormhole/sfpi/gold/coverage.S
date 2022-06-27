@@ -1032,6 +1032,33 @@ _Z25test_creg_conditional_revv:
 	ret
 	.size	_Z25test_creg_conditional_revv, .-_Z25test_creg_conditional_revv
 	.align	1
+	.globl	_Z28test_conditional_outside_vifv
+	.type	_Z28test_conditional_outside_vifv, @function
+_Z28test_conditional_outside_vifv:
+	SFPLOADI	L2, 0, 16256
+	SFPLOADI	L1, 4, 0
+	SFPSETCC	0, L2, 6
+	SFPLOADI	L1, 4, 1
+	SFPENCC	3, 10
+	SFPLOADI	L0, 4, 0
+	SFPSETCC	0, L2, 6
+	SFPLOADI	L0, 4, 1
+	SFPENCC	3, 10
+	SFPSETCC	0, L1, 6
+	SFPENCC	3, 10
+	SFPSETCC	0, L0, 2
+	SFPENCC	3, 10
+	SFPSETCC	0, L1, 2
+	SFPCOMPC
+	SFPSETCC	0, L1, 2
+	SFPENCC	3, 10
+	SFPSETCC	0, L0, 2
+	SFPCOMPC
+	SFPSETCC	0, L0, 2
+	SFPENCC	3, 10
+	ret
+	.size	_Z28test_conditional_outside_vifv, .-_Z28test_conditional_outside_vifv
+	.align	1
 	.globl	_Z12test_bitwisev
 	.type	_Z12test_bitwisev, @function
 _Z12test_bitwisev:
