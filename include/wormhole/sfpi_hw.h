@@ -187,29 +187,14 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpcast(src, mod1) __builtin_rvtt_wh_sfpcast(src, mod1)
 #define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_i((void *)ckernel::instrn_buffer, mode, imm8, srcc, mod1)
 #define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_v(mode, srcb, srcc, mod1)
-
-#define __builtin_rvtt_sfptransp(l0, l1, l2, l3)                \
-    asm("SFPTRANSP %0, %1, %2, %3"                              \
-        : "+Q0" (l0), "+Q1" (l1), "+Q2" (l2), "+Q3" (l3)        \
-        :)
+#define __builtin_rvtt_sfpswap(dst, src, mod) __builtin_rvtt_wh_sfpswap(dst, src, mod)
+#define __builtin_rvtt_sfptransp(l0, l1, l2, l3) __builtin_rvtt_wh_sfptransp(l0, l1, l2, l3)
 
 #define __builtin_rvtt_sfpshft2_i(dst, imm) __builtin_rvtt_wh_sfpshft2_i(dst, imm)
 #define __builtin_rvtt_sfpshft2_v(dst, src) __builtin_rvtt_wh_sfpshft2_v(dst, src)
-#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod)                  \
-    asm("SFPSHFT2 0, L0, L0, %[q0], %[q1], %[q2], %[q3], %[modp]"       \
-        : [q0] "+Q0" (l0), [q1] "+Q1" (l1), [q2] "+Q2" (l2), [q3] "+Q3" (l3) \
-        : [modp] "i" (mod))
-#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3)                 \
-    asm("SFPSHFT2 0, %[lsrc], L0, %[q0], %[q1], %[q2], %[q3], %[mod]"    \
-        : [q0] "+Q0" (l0), [q1] "+Q1" (l1), [q2] "+Q2" (l2), [q3] "+Q3" (l3) \
-        : [lsrc] "x" (src), [mod] "i" (SFPSHFT2_MOD1_SUBVEC_SHFLROR1_AND_COPY4))
+#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod) __builtin_rvtt_wh_sfpshft2_g(l0, l1, l2, l3, mod)
+#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3) __builtin_rvtt_wh_sfpshft2_ge(src, l0, l1, l2, l3)
 #define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_wh_sfpshft2_e(src, mod)
-
-#define __builtin_rvtt_sfpswap(dst, src, mod)       \
-    asm("SFPSWAP %[d], %[s], %[m]"                  \
-        : [d] "+x" (src), [s] "+x" (dst)            \
-        : [m] "i" (mod));                           \
-        __builtin_rvtt_sfpnop()
 
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 

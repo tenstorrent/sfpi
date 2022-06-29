@@ -32,7 +32,7 @@ using namespace sfpi;
 int param_global;
 
 
-inline void copy_result_to_dreg0(int addr)
+sfpi_inline void copy_result_to_dreg0(int addr)
 {
     // NOP for test
 }
@@ -108,6 +108,9 @@ sfpi_test_noinline void test2()
 sfpi_test_noinline void test3()
 {
     // Test SFPENCC, SFPSETCC, SFPCOMPC, LOADI, MAD (in conditionals)
+    // Note: WH complains about the integer tests storing into float formated
+    // dst_reg w/ exponent of 0, so some tests use SFPOR to pass the result
+    // through violating the spirit of testing one thing at a time
 
     v_if(dst_reg[0] == 0.0F) {
         // 1 load
@@ -254,13 +257,13 @@ sfpi_test_noinline void test3()
     }
     v_endif;
 
-    v_if(dst_reg[0] == 23.0F) {
+    v_if(dst_reg[0] == 24.0F) {
         // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
         dst_reg[3] = 0.000121831894f; // 0x38ff8000
     }
     v_endif;
 
-    v_if(dst_reg[0] == 24.0F) {
+    v_if(dst_reg[0] == 25.0F) {
         // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
         dst_reg[3] = 0.000060915947f; // 0x387f8000
     }
@@ -857,6 +860,7 @@ sfpi_test_noinline void test6()
     // [28] = 256.0
     // [29] = 256.0
     // [30] = 256.0
+    // [31] = 16.0
 
     copy_result_to_dreg0(6);
 }
@@ -1027,7 +1031,6 @@ sfpi_test_noinline void test8()
     // More conditionals (short v compares)
 
     dst_reg[8] = -dst_reg[0];
-
     v_if(dst_reg[0] == 1.0F) {
         vUInt a = 0x05FF;
         vUInt b = 0x0AAA;
@@ -2621,9 +2624,8 @@ sfpi_test_noinline void test14(int imm)
 sfpi_test_noinline void test15()
 {
     // SFPTRANSP, SFPSHFT2
-#if COMPILE_FOR_EMULE
-    dst_reg[15] = -dst_reg[0];
 
+    dst_reg[15] = -dst_reg[0];
     {
         vUInt a = vConstTileId + 0x100;
         vUInt b = vConstTileId + 0x200;
@@ -2662,7 +2664,7 @@ sfpi_test_noinline void test15()
         vUInt final = reduce_bool4(result, cmpb, cmpc, cmpd, 1);
 
         v_if (dst_reg[0] < 8.0F) {
-            dst_reg[15] = final;
+            set_expected_result(15, 8.0F, 1, final);
         }
         v_endif;
     }
@@ -2687,7 +2689,7 @@ sfpi_test_noinline void test15()
 
         vUInt final = reduce_bool4(dst, tmp1, tmp2, tmp3, 0);
         v_if (dst_reg[0] >= 8.0F && dst_reg[0] < 16.0F) {
-            dst_reg[15] = final;
+            set_expected_result(15, 16.0F, 1, final);
         }
         v_endif;
     }
@@ -2712,7 +2714,7 @@ sfpi_test_noinline void test15()
 
         vUInt final = reduce_bool4(tmp1, dst, tmp2, tmp3, 0);
         v_if (dst_reg[0] >= 16.0F && dst_reg[0] < 24.0F) {
-            dst_reg[15] = final;
+            set_expected_result(15, 24.0F, 1, final);
         }
         v_endif;
     }
@@ -2737,7 +2739,6 @@ sfpi_test_noinline void test15()
         set_expected_result(16, 20.0F, 0x05A0, a);
     }
     v_endif;
-#endif
 #endif
 
     // [0..31] = 1
@@ -2838,7 +2839,7 @@ void test17()
 {
     // more SFPSWAP
     dst_reg[17] = -dst_reg[0];
-#if COMPILE_FOR_EMULE
+
     // Test sign-magnitude for ints
     v_if (dst_reg[0] == 2.0F) {
         vUInt x = -1;
@@ -2881,7 +2882,7 @@ void test17()
     v_endif;
     // [5] = 20.0F
     // [6] = 20.0F
-#endif
+
     copy_result_to_dreg0(17);
 }
 
