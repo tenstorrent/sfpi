@@ -474,8 +474,6 @@ _Z8addi_regs:
 	add	a3, a3, a5
 # Op(0x75) lv(3)  d(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,16
 	srli	a5,a5,8
@@ -483,8 +481,6 @@ _Z8addi_regs:
 	add	a3, a3, a5
 # Op(0x75) lv(2)  d(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,16
 	srli	a5,a5,8
@@ -492,8 +488,6 @@ _Z8addi_regs:
 	add	a3, a3, a5
 # Op(0x75) lv(1)  d(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,16
 	srli	a0,a0,8
@@ -501,8 +495,6 @@ _Z8addi_regs:
 	add	a5, a5, a0
 # Op(0x75) lv(0)  d(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -527,8 +519,6 @@ _Z9addi_boths:
 	add	a3, a3, a5
 # Op(0x75) lv(1)  d(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,16
 	srli	a0,a0,8
@@ -536,8 +526,6 @@ _Z9addi_boths:
 	add	a5, a5, a0
 # Op(0x75) lv(0)  d(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -780,8 +768,6 @@ _Z10shft_i_regs:
 	add	a3, a3, a5
 # Op(0x7a) lv(3)  d(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -789,8 +775,6 @@ _Z10shft_i_regs:
 	add	a3, a3, a5
 # Op(0x7a) lv(2)  d(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -798,8 +782,6 @@ _Z10shft_i_regs:
 	add	a3, a3, a5
 # Op(0x7a) lv(1)  d(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -807,8 +789,6 @@ _Z10shft_i_regs:
 	add	a5, a5, a0
 # Op(0x7a) lv(0)  d(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -833,8 +813,6 @@ _Z11shft_i_boths:
 	add	a3, a3, a5
 # Op(0x7a) lv(1)  d(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -842,8 +820,6 @@ _Z11shft_i_boths:
 	add	a5, a5, a0
 # Op(0x7a) lv(0)  d(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -988,8 +964,6 @@ _Z12setexp_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff82) - d(3) s(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -997,8 +971,6 @@ _Z12setexp_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff82) - d(2) s(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -1006,8 +978,6 @@ _Z12setexp_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff82) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1015,8 +985,6 @@ _Z12setexp_i_regs:
 	add	a5, a5, a0
 # Op(0xffffff82) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1041,8 +1009,6 @@ _Z13setexp_i_boths:
 	add	a3, a3, a5
 # Op(0xffffff82) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1050,8 +1016,6 @@ _Z13setexp_i_boths:
 	add	a5, a5, a0
 # Op(0xffffff82) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1196,8 +1160,6 @@ _Z12setsgn_i_regj:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(3) s(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -1205,8 +1167,6 @@ _Z12setsgn_i_regj:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(2) s(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -1214,8 +1174,6 @@ _Z12setsgn_i_regj:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1223,8 +1181,6 @@ _Z12setsgn_i_regj:
 	add	a5, a5, a0
 # Op(0xffffff89) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1249,8 +1205,6 @@ _Z13setsgn_i_boths:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1258,8 +1212,6 @@ _Z13setsgn_i_boths:
 	add	a5, a5, a0
 # Op(0xffffff89) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1278,31 +1230,23 @@ _Z11multi_reusei:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	slli	a5,a0,20
 	srli	a5,a5,8
 	li	a3,-1996488703
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	slli	a5,a0,20
 	srli	a5,a5,8
 	li	a3,-1996488703
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	mv	a0,a5
 	li	a5,-1996488703
 	add	a5, a5, a0
 # Op(0xffffff89) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L0, 0, 2, 0
 	ret
 	.size	_Z11multi_reusei, .-_Z11multi_reusei
@@ -1700,32 +1644,24 @@ main:
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	slli	a5,s1,20
 	srli	a5,a5,8
 	li	a3,-1996488703
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	slli	a5,s1,20
 	srli	a5,a5,8
 	li	a3,-1996488703
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	slli	a5,s1,20
 	srli	a5,a5,8
 	li	a3,-1996488703
 	add	a3, a3, a5
 # Op(0xffffff89) - d(0) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L0, 0, 2, 0
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(s2)
 	li	t3,1881538560

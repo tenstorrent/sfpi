@@ -973,8 +973,6 @@ _Z13addi_yes_imm2j:
 # Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
 	SFPNOP
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret
 	.size	_Z13addi_yes_imm2j, .-_Z13addi_yes_imm2j
@@ -1269,8 +1267,6 @@ _Z17add_plus_half_no1j:
 	add	a4, a4, a0
 # Op(0x75) lv(0)  d(0)
 	sw	a4,0(a5)
-	SFPNOP
-	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret

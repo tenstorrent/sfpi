@@ -659,8 +659,6 @@ _Z15calculate_clampILb0EEvmmm:
 # Op(0x75) lv(0)  d(0)
 	sw	a0,0(a5)
 	SFPNOP
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	SFPINCRWC	0, 2, 0, 0
 	addi	a4,a4,-1
@@ -2325,8 +2323,6 @@ _Z17calculate_dropoutILb0EEvmm:
 	add	a6, a6, a1
 # Op(0x74) lv(0)  d(0)
 	sw	a6,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 3, 0
 	li	a6,1896480768
