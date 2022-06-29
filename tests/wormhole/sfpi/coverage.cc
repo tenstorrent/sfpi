@@ -139,6 +139,44 @@ void test_mad()
     dst_reg[19] = vConst0 * -b + -a + 0.5F;
 }
 
+void test_incdec()
+{
+    {
+        vFloat x = 1.0f;
+
+        dst_reg[0] = x++;
+        dst_reg[1] = ++x;
+        dst_reg[2] = x;
+
+        dst_reg[0] = x--;
+        dst_reg[1] = --x;
+        dst_reg[2] = x;
+    }
+    {
+        vInt x = 1;
+
+        dst_reg[0] = x++;
+        dst_reg[1] = ++x;
+        dst_reg[2] = x;
+
+        dst_reg[0] = x--;
+        dst_reg[1] = --x;
+        dst_reg[2] = x;
+    }
+
+    {
+        vUInt x = 1;
+
+        dst_reg[0] = x++;
+        dst_reg[1] = ++x;
+        dst_reg[2] = x;
+
+        dst_reg[0] = x--;
+        dst_reg[1] = --x;
+        dst_reg[2] = x;
+    }
+}
+
 void test_loadi(int32_t i, uint32_t ui)
 {
     vInt a = 10;
@@ -1201,6 +1239,7 @@ int main(int argc, char* argv[])
     test_sub();
     test_mul();
     test_mad();
+    test_incdec();
     test_loadi(10, 20);
     test_control_flow(5);
     test_mad_imm();
@@ -1210,6 +1249,7 @@ int main(int argc, char* argv[])
     test_vhalf_conditional();
     test_creg_conditional();
     test_creg_conditional_rev();
+    test_conditional_outside_vif();
     test_bitwise();
     test_abs();
     test_lz();

@@ -238,7 +238,10 @@ class __DestReg {
 
  public:
     sfpi_inline const __vDReg operator[](const int i) const { return dreg[i]; }
-    sfpi_inline void operator++(const int i) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
+    // Make these void - ugly as these aren't really inc/dec
+    sfpi_inline void operator++() const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
+    sfpi_inline void operator++(const int) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
+    sfpi_inline void operator+=(const int i) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -371,6 +374,10 @@ public:
     sfpi_inline vFloat operator-() const;
     sfpi_inline vFloat operator*(const vFloat b) const;
     sfpi_inline vFloat operator*=(const vFloat);
+    sfpi_inline vFloat operator++(const int) { *this += 1; return *this; }
+    sfpi_inline vFloat operator++() { vFloat tmp = *this; *this += 1; return tmp; }
+    sfpi_inline vFloat operator--(const int) { *this -= 1; return *this; }
+    sfpi_inline vFloat operator--() { vFloat tmp = *this; *this -= 1; return tmp; }
 
     // Conditionals
     sfpi_inline __vCond operator==(const float x) const;
@@ -518,6 +525,11 @@ public:
     sfpi_inline vInt operator-=(const vType val) { this->__vIntBase::operator-=<vInt>(val); return v; }
     sfpi_inline vInt operator-=(const __vConstIntBase val) { this->__vIntBase::operator-=<vInt>(val); return v; }
 
+    sfpi_inline vInt operator++(const int) { *this += 1; return *this; }
+    sfpi_inline vInt operator++() { vInt tmp = *this; *this += 1; return tmp; }
+    sfpi_inline vInt operator--(const int) { *this -= 1; return *this; }
+    sfpi_inline vInt operator--() { vInt tmp = *this; *this -= 1; return tmp; }
+
     sfpi_inline vInt operator<<(uint32_t amt) const { return this->__vIntBase::operator<<<vInt>(amt); }
     sfpi_inline vInt operator<<=(uint32_t amt) { this->__vIntBase::operator<<=<vInt>(amt); return v; }
 
@@ -596,6 +608,11 @@ public:
     template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
     sfpi_inline vUInt operator-=(const vType val) { this->__vIntBase::operator-=<vUInt>(val); return v; }
     sfpi_inline vUInt operator-=(const __vConstIntBase val) { this->__vIntBase::operator-=<vUInt>(val); return v; }
+
+    sfpi_inline vUInt operator++(const int) { *this += 1; return *this; }
+    sfpi_inline vUInt operator++() { vUInt tmp = *this; *this += 1; return tmp; }
+    sfpi_inline vUInt operator--(const int) { *this -= 1; return *this; }
+    sfpi_inline vUInt operator--() { vUInt tmp = *this; *this -= 1; return tmp; }
 
     sfpi_inline vUInt operator<<(uint32_t amt) const { return this->__vIntBase::operator<<<vUInt>(amt); }
     sfpi_inline vUInt operator>>(uint32_t amt) const;

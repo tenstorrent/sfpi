@@ -409,6 +409,72 @@ _Z8test_madv:
 	ret
 	.size	_Z8test_madv, .-_Z8test_madv
 	.align	1
+	.globl	_Z11test_incdecv
+	.type	_Z11test_incdecv, @function
+_Z11test_incdecv:
+	SFPLOADI	L1, 0, 16256
+	SFPADDI	16256, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 0
+	SFPLOADI	L0, 0, 16256
+	SFPADD	L10, L1, L0, L2, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 0, 4
+	SFPSTORE	L2, 0, 8
+	SFPLOADI	L0, 0, 16256
+	SFPMAD	L11, L0, L2, L0, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 0
+	SFPLOADI	L1, 0, 16256
+	SFPMAD	L11, L1, L0, L1, 0
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 0, 4
+	SFPSTORE	L1, 0, 8
+	SFPLOADI	L1, 4, 1
+	SFPIADD	1, L1, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 0
+	SFPIADD	1, L1, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 4
+	SFPSTORE	L0, 2, 8
+	SFPIADD	-1, L0, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	SFPIADD	-1, L0, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 4
+	SFPSTORE	L1, 2, 8
+	SFPLOADI	L1, 4, 1
+	SFPIADD	1, L1, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 0
+	SFPIADD	1, L1, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L1, 2, 4
+	SFPSTORE	L0, 2, 8
+	SFPIADD	-1, L0, L0, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 0
+	SFPIADD	-1, L0, L1, 5
+	SFPNOP
+	SFPNOP
+	SFPSTORE	L0, 2, 4
+	SFPSTORE	L1, 2, 8
+	ret
+	.size	_Z11test_incdecv, .-_Z11test_incdecv
+	.align	1
 	.globl	_Z10test_loadilm
 	.type	_Z10test_loadilm, @function
 _Z10test_loadilm:
@@ -492,19 +558,19 @@ _Z10test_loadilm:
 _Z17test_control_flowi:
 	SFPLOADI	L0, 0, 16320
 	li	a5,0
-	bgt	a0,zero,.L9
-	j	.L8
-.L15:
+	bgt	a0,zero,.L10
+	j	.L9
+.L16:
 	SFPLOAD	L0, 1, 4
 	addi	a5,a5,1
-	beq	a0,a5,.L8
-.L9:
+	beq	a0,a5,.L9
+.L10:
 	andi	a4,a5,1
-	bne	a4,zero,.L15
+	bne	a4,zero,.L16
 	SFPSTORE	L0, 0, 8
 	addi	a5,a5,1
-	bne	a0,a5,.L9
-.L8:
+	bne	a0,a5,.L10
+.L9:
 	ret
 	.size	_Z17test_control_flowi, .-_Z17test_control_flowi
 	.align	1
@@ -3001,6 +3067,7 @@ main:
 	call	_Z8test_subv
 	call	_Z8test_mulv
 	call	_Z8test_madv
+	call	_Z11test_incdecv
 	li	a1,20
 	li	a0,10
 	call	_Z10test_loadilm
@@ -3030,6 +3097,7 @@ main:
 	call	_Z22test_vhalf_conditionalv
 	call	_Z21test_creg_conditionalv
 	call	_Z25test_creg_conditional_revv
+	call	_Z28test_conditional_outside_vifv
 	call	_Z12test_bitwisev
 	call	_Z8test_absv
 	call	_Z7test_lzv
