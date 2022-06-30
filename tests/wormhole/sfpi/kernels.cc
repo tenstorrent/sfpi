@@ -1113,7 +1113,7 @@ sfpi_test_noinline void test8()
             tmp += 16.0F;
         }
     }
-    p_endblock;
+    v_endblock;
     dst_reg[8] = tmp;
 
     // <= and > are compound statements in the compiler, <= uses a compc

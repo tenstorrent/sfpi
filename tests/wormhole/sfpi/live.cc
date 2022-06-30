@@ -143,7 +143,7 @@ void bb_2()
             a = b - 5;
         }
 
-        p_endblock;
+        v_endblock;
     }
 
     dst_reg[0] = a;

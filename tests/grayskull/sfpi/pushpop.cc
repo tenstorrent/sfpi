@@ -115,7 +115,7 @@ void block_yes()
             v_and(a >= 3);
             a = 4;
         }
-        p_endblock;
+        v_endblock;
     }
     v_endif;
 }

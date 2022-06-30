@@ -1248,7 +1248,7 @@ constexpr __DestReg dst_reg;
     __cc.mark_top();        \
     __cc.cc_if(x)
 
-#define p_endblock          \
+#define v_endblock          \
 }
 
 //////////////////////////////////////////////////////////////////////////////
