@@ -1,6 +1,6 @@
 	.file	"nonimm.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -566,8 +566,6 @@ _Z10iadd_i_regs:
 	add	a3, a3, a5
 # Op(0x79) - d(3) s(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -575,8 +573,6 @@ _Z10iadd_i_regs:
 	add	a3, a3, a5
 # Op(0x79) - d(2) s(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -584,8 +580,6 @@ _Z10iadd_i_regs:
 	add	a3, a3, a5
 # Op(0x79) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -593,8 +587,6 @@ _Z10iadd_i_regs:
 	add	a5, a5, a0
 # Op(0x79) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -619,8 +611,6 @@ _Z11iadd_i_boths:
 	add	a3, a3, a5
 # Op(0x79) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -628,8 +618,6 @@ _Z11iadd_i_boths:
 	add	a5, a5, a0
 # Op(0x79) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -860,8 +848,6 @@ _Z9divp2_regs:
 	add	a3, a3, a5
 # Op(0x76) - d(3) s(0)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -869,8 +855,6 @@ _Z9divp2_regs:
 	add	a3, a3, a5
 # Op(0x76) - d(2) s(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -878,8 +862,6 @@ _Z9divp2_regs:
 	add	a3, a3, a5
 # Op(0x76) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -887,8 +869,6 @@ _Z9divp2_regs:
 	add	a5, a5, a0
 # Op(0x76) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -913,8 +893,6 @@ _Z10divp2_boths:
 	add	a3, a3, a5
 # Op(0x76) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -922,8 +900,6 @@ _Z10divp2_boths:
 	add	a5, a5, a0
 # Op(0x76) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1056,8 +1032,6 @@ _Z12setman_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff83) - d(3) s(3)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,1
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -1065,8 +1039,6 @@ _Z12setman_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff83) - d(2) s(2)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a5,a0,2
 	slli	a5,a5,20
 	srli	a5,a5,8
@@ -1074,8 +1046,6 @@ _Z12setman_i_regs:
 	add	a3, a3, a5
 # Op(0xffffff83) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,3
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1083,8 +1053,6 @@ _Z12setman_i_regs:
 	add	a5, a5, a0
 # Op(0xffffff83) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
@@ -1109,8 +1077,6 @@ _Z13setman_i_boths:
 	add	a3, a3, a5
 # Op(0xffffff83) - d(1) s(1)
 	sw	a3,0(a4)
-	SFPNOP
-	SFPNOP
 	addi	a0,a0,1
 	slli	a0,a0,20
 	srli	a0,a0,8
@@ -1118,8 +1084,6 @@ _Z13setman_i_boths:
 	add	a5, a5, a0
 # Op(0xffffff83) - d(0) s(0)
 	sw	a5,0(a4)
-	SFPNOP
-	SFPNOP
 	SFPSTORE	L3, 0, 2, 1
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20

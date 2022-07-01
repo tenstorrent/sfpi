@@ -1,6 +1,6 @@
 	.file	"smoke.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -31,7 +31,7 @@ _Z5smokev:
 	SFPSETCC	0, L4, 2
 	SFPSETCC	0, L3, 2
 	SFPMAD	L1, L11, L3, L3, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L3, 2
 	SFPPOPC	0
 	SFPCOMPC
@@ -41,9 +41,9 @@ _Z5smokev:
 	SFPSTORE	L3, 0, 2, 4
 	SFPSTORE	L13, 0, 2, 4
 	SFPMAD	L3, L0, L2, L3, 0
-	SFPNOP
+	SFPWNOP
 	SFPSTORE	L3, 0, 2, 4
-	SFPNOP
+	SFPWNOP
 	SFPSTORE	L0, 0, 2, 1
 	SFPLOAD	L3, 0, 2, 0
 	SFPMOV	L3, L0, 1
@@ -61,7 +61,7 @@ _Z5smokev:
 	SFPOR	L3, L0
 	SFPNOT	L3, L0
 	SFPMULI	32, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPADDI	32, L0, 0
 	SFPDIVP2	32, L3, L0, 1
 	SFPLZ	L3, L0, 2
@@ -77,12 +77,12 @@ _Z5smokev:
 	SFPXOR	L3, L0
 	SFPCAST L3, L0, 1
 	SFPSHFT2	0, L3, L0, 3
-	SFPNOP
+	SFPWNOP
 	SFPSTOCHRND	1, 3, L0, L3, L0, 1
 	SFPSTOCHRND	1, 0, L0, L3, L0, 1
 	SFPCONFIG	0, 0, 0
 	SFPLUT	L3, 0
-	SFPNOP
+	SFPWNOP
 	.size	_Z5smokev, .-_Z5smokev
 	.align	1
 	.globl	_Z10smoke_livev
@@ -94,7 +94,7 @@ _Z10smoke_livev:
 	SFPMAD	L0, L0, L0, L1, 0
 	SFPMUL	L0, L0, L9, L1, 0
 	SFPADD	L10, L0, L0, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L0, L1, 1
 	SFPEXMAN	L0, L1, 1
 	SFPSETEXP	23, L0, L1, 1
@@ -117,7 +117,7 @@ _Z10smoke_livev:
 _Z7smokierv:
 	SFPLOAD	L3, 0, 1, 20
 	SFPMAD	L2, L0, L1, L3, 0
-	SFPNOP
+	SFPWNOP
 	SFPLUT	L3, 4
 	SFPSTORE	L2, 0, 2, 20
 	SFPSTORE	L0, 0, 2, 20
@@ -129,7 +129,7 @@ _Z7smokierv:
 	SFPSTORE	L2, 0, 2, 20
 	SFPSTORE	L0, 0, 2, 20
 	SFPSTORE	L3, 0, 2, 20
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L2, 2
 	.size	_Z7smokierv, .-_Z7smokierv
 	.align	1

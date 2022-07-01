@@ -1,6 +1,6 @@
 	.file	"live.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -55,10 +55,10 @@ _Z15copy_move_case3v:
 	SFPMOV	L1, L0, 0
 	SFPENCC	3, 10
 	SFPADDI	16448, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSTORE	L1, 0, 3, 0
 	SFPADDI	16512, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret
 	.size	_Z15copy_move_case3v, .-_Z15copy_move_case3v

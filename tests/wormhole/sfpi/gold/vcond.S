@@ -1,6 +1,6 @@
 	.file	"vcond.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -450,17 +450,17 @@ _Z20vcond_inside_inline4v:
 	SFPPUSHC	0
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L0, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPLOADI	L1, 0, 16256
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L0, L2, 2
 	SFPMAD	L11, L1, L0, L2, 0
 	SFPPOPC	0
 	SFPPUSHC	0
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L2, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPPOPC	0
 	SFPSETCC	0, L2, 6
@@ -479,10 +479,10 @@ _Z23vcond_inside_noninline4i:
 	SFPPUSHC	0
 	SFPLOADI	L0, 0, 16448
 	SFPMAD	L0, L11, L2, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L0, 0
 	li	a4,3
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L2, L0, 2
 	beq	a5,a4,.L45
 .L46:
@@ -493,7 +493,7 @@ _Z23vcond_inside_noninline4i:
 	SFPPUSHC	0
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L0, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	addi	a5,a5,-1
 	bne	a5,a4,.L46
@@ -503,7 +503,7 @@ _Z23vcond_inside_noninline4i:
 	SFPPUSHC	0
 	SFPLOADI	L1, 4, 0
 	SFPSETCC	0, L0, 6
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 1
 	SFPPOPC	0
@@ -513,7 +513,7 @@ _Z23vcond_inside_noninline4i:
 	SFPSTORE	L2, 0, 3, 0
 	ret
 .L48:
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L2, L0, 2
 	j	.L44
 	.size	_Z23vcond_inside_noninline4i, .-_Z23vcond_inside_noninline4i
@@ -524,16 +524,16 @@ _Z21vcond_outside_inline4v:
 	SFPLOADI	L0, 0, 16256
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L0, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPLOADI	L1, 0, 16256
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L0, L2, 2
 	SFPMAD	L11, L1, L0, L2, 0
 	SFPENCC	3, 10
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L2, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPENCC	3, 10
 	SFPLOADI	L1, 4, 0
@@ -555,10 +555,10 @@ _Z24vcond_outside_noninline4i:
 	beq	a0,zero,.L56
 	SFPLOADI	L0, 0, 16448
 	SFPMAD	L0, L11, L2, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L0, 0
 	li	a4,3
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L2, L0, 2
 	beq	a5,a4,.L53
 .L54:
@@ -568,7 +568,7 @@ _Z24vcond_outside_noninline4i:
 	beq	a5,zero,.L52
 	SFPLOADI	L1, 0, 16448
 	SFPMAD	L1, L11, L0, L1, 0
-	SFPNOP
+	SFPWNOP
 	SFPSETCC	0, L1, 0
 	addi	a5,a5,-1
 	bne	a5,a4,.L54
@@ -577,7 +577,7 @@ _Z24vcond_outside_noninline4i:
 .L52:
 	SFPLOADI	L1, 4, 0
 	SFPSETCC	0, L0, 6
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 1
 	SFPENCC	3, 10
@@ -587,7 +587,7 @@ _Z24vcond_outside_noninline4i:
 	SFPSTORE	L2, 0, 3, 0
 	ret
 .L56:
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L2, L0, 2
 	j	.L52
 	.size	_Z24vcond_outside_noninline4i, .-_Z24vcond_outside_noninline4i

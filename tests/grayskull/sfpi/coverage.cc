@@ -284,12 +284,14 @@ void test_setman_setexp_addexp_setsgn(int val)
     v1 = setexp(v1, v2);
     v1 = setexp(v1, v3);
     v1 = setexp(v1, 0xFFFFF);
+    v1 = setexp(v1, val);
     v1 = setexp(v1, -1);
 
     v1 = setman(v1, 0x3ff);
     v1 = setman(v1, v2);
     v1 = setman(v1, v3);
     v1 = setman(v1, 0xFFFFF);
+    v1 = setman(v1, val);
     v1 = setman(v1, -1);
 
     vFloat v5 = dst_reg[1];
@@ -301,6 +303,7 @@ void test_setman_setexp_addexp_setsgn(int val)
     v1 = setsgn(v5, 1);
     v1 = setsgn(v5, -1);
     v1 = setsgn(v5, v2);
+    v1 = setsgn(v5, val);
     v1 = setsgn(v5, 0xFFFFF);
 
     vFloat v6 = dst_reg[2];

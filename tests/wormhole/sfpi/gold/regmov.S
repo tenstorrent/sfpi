@@ -1,6 +1,6 @@
 	.file	"regmov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -220,7 +220,7 @@ _Z2bbi:
 	SFPLOADI	L2, 4, 2
 	SFPLOADI	L0, 4, 3
 	bne	a0,zero,.L20
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPOR	L2, L0
 .L20:
@@ -251,7 +251,7 @@ _Z3bb2i:
 	SFPLOADI	L2, 4, 2
 	SFPLOADI	L0, 4, 3
 	bne	a0,zero,.L24
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L2, L0, 2
 	SFPOR	L1, L0
 .L24:

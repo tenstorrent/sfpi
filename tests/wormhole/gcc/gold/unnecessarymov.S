@@ -1,6 +1,6 @@
 	.file	"unnecessarymov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -15,7 +15,7 @@ _Z6whymovv:
 	SFPENCC	3, 10
 	SFPLOADI	L1, 0, 17152
 	SFPIADD	-29, L0, L0, 1
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 0, 17408
 	SFPENCC	3, 10
@@ -34,7 +34,7 @@ main:
 	SFPENCC	3, 10
 	SFPLOADI	L1, 0, 17152
 	SFPIADD	-29, L0, L0, 1
-	SFPNOP
+	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 0, 17408
 	SFPENCC	3, 10
