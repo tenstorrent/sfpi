@@ -9,9 +9,6 @@ instructions.
 1) Clone the sfpi repo and get a branch:
   git clone https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi
 
-  Work isn't done on master, check out whichever branch you need (likely
-  tt-rel/riscv-gcc-10.2.0)
-
 2) Initialize the submodules:
   git submodule update --init --resursive
 
@@ -20,6 +17,12 @@ instructions.
     git submodule update --init
     cd tt-gcc
     git submodule update --init
+
+  If you are working on gcc (probably in a submodule such as riscv-gcc), be
+  sure to check out an appropriate branch.  The gcc work isn't done on master,
+  typically it is done on tt-rel/riscv-gcc-10.2.0.  If you are just compiling,
+  then don't bother with this, the --init above should put you at the right
+  commit.
 
 3) Configure the compiler:
     export SFPI_ROOT=<path to sfpi top level>
@@ -35,8 +38,8 @@ instructions.
   To build:
     make -j <n>
 
-  Note: re-building gcc is squirrelly, if you aren't sure how to do it it is best
-  to build from scratch w/ a "make clean".
+  Note: incremental gcc buidls are squirrelly, if you aren't sure how to do it
+  it is best to build from scratch w/ a "make clean" at the tt-gcc level.
 
 5) Build the tests:
     cd $SFPI_ROOT/sfpi/tests
