@@ -116,10 +116,17 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
-#define __builtin_rvtt_sfpincrwc(cr, d, b, a) __builtin_rvtt_wh_sfpincrwc(cr, d, b, a)
+#define __builtin_rvtt_sfpassignlr(lr) __builtin_rvtt_sfpassignlr(lr)
+#define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps((void *)ckernel::instrn_buffer, v, i, mod1)
+#define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) __builtin_rvtt_sfpxicmpv(v1, v2, mod1)
+#define __builtin_rvtt_sfpxvif() __builtin_rvtt_sfpxvif()
+#define __builtin_rvtt_sfpxbool(t, a, b) __builtin_rvtt_sfpxbool(t, a, b)
+#define __builtin_rvtt_sfpxcondb(s, i) __builtin_rvtt_sfpxcondb(s, i)
+#define __builtin_rvtt_sfpxcondi(i) __builtin_rvtt_sfpxcondi(i)
+#define __builtin_rvtt_sfpincrwc(cr, d, b, a) __builtin_rvtt_sfpincrwc(cr, d, b, a)
+
 #define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_wh_sfpassign_lv(v, in)
 #define __builtin_rvtt_sfpload(mod0, mode, addr) __builtin_rvtt_wh_sfpload((void *)ckernel::instrn_buffer, mod0, mode, addr)
-#define __builtin_rvtt_sfpassignlr(lr) __builtin_rvtt_wh_sfpassignlr(lr)
 #define __builtin_rvtt_sfpkeepalive(x, n) __builtin_rvtt_wh_sfpkeepalive(x, n)
 
 #define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_wh_sfpxloadi((void *)ckernel::instrn_buffer, mod0, imm16)
@@ -135,12 +142,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_wh_sfpsetcc_i(imm12, mod1)
 #define __builtin_rvtt_sfpxfcmps(v, f, mod1) __builtin_rvtt_wh_sfpxfcmps((void *)ckernel::instrn_buffer, v, f, mod1)
 #define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) __builtin_rvtt_wh_sfpxfcmpv(v1, v2, mod1)
-#define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_wh_sfpxicmps((void *)ckernel::instrn_buffer, v, i, mod1)
-#define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) __builtin_rvtt_wh_sfpxicmpv(v1, v2, mod1)
-#define __builtin_rvtt_sfpxvif() __builtin_rvtt_wh_sfpxvif()
-#define __builtin_rvtt_sfpxbool(t, a, b) __builtin_rvtt_wh_sfpxbool(t, a, b)
-#define __builtin_rvtt_sfpxcondb(s, i) __builtin_rvtt_wh_sfpxcondb(s, i)
-#define __builtin_rvtt_sfpxcondi(i) __builtin_rvtt_wh_sfpxcondi(i)
 #define __builtin_rvtt_sfpcompc() __builtin_rvtt_wh_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)

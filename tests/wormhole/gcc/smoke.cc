@@ -20,9 +20,9 @@ void smoke()
     c = __builtin_rvtt_wh_sfpload(nullptr, 0, 1, 32);
 
     v64sf lr6, lr7, lr8;
-    lr6 = __builtin_rvtt_wh_sfpassignlr(6);
-    lr7 = __builtin_rvtt_wh_sfpassignlr(7);
-    lr8 = __builtin_rvtt_wh_sfpassignlr(8);
+    lr6 = __builtin_rvtt_sfpassignlr(6);
+    lr7 = __builtin_rvtt_sfpassignlr(7);
+    lr8 = __builtin_rvtt_sfpassignlr(8);
 
     d = __builtin_rvtt_wh_sfpmad(  a,   b,   c, 0);
     d = __builtin_rvtt_wh_sfpmad(  a,   b, lr6, 0);
@@ -41,20 +41,20 @@ void smoke()
     int cond;
     __builtin_rvtt_wh_sfppushc(0);
     __builtin_rvtt_wh_sfppushc(0);
-    int top = __builtin_rvtt_wh_sfpxvif();
+    int top = __builtin_rvtt_sfpxvif();
     __builtin_rvtt_wh_sfpsetcc_v(a, 12);
     __builtin_rvtt_wh_sfpsetcc_i(1, 12);
-    cond = __builtin_rvtt_wh_sfpxicmps(nullptr, a, 0, 4);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
-    cond = __builtin_rvtt_wh_sfpxicmpv(a, d, 4);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    cond = __builtin_rvtt_sfpxicmps(nullptr, a, 0, 4);
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
+    cond = __builtin_rvtt_sfpxicmpv(a, d, 4);
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0, 4);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmpv(a, d, 4);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
     __builtin_rvtt_wh_sfppopc(0);
     __builtin_rvtt_wh_sfpcompc();
     __builtin_rvtt_wh_sfppopc(0);
@@ -63,7 +63,7 @@ void smoke()
     a = __builtin_rvtt_wh_sfpxloadi(nullptr, 0, -12);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 4);
-    v64sf lr13 = __builtin_rvtt_wh_sfpassignlr(13);
+    v64sf lr13 = __builtin_rvtt_sfpassignlr(13);
     __builtin_rvtt_wh_sfpstore(nullptr, lr13, 0, 2, 4);
     v64sf e = __builtin_rvtt_wh_sfpmad(a, b, c, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 2, 4);
@@ -172,9 +172,9 @@ void smoke_live()
 
 void smokier()
 {
-    v64sf a = __builtin_rvtt_wh_sfpassignlr(2);
-    v64sf b = __builtin_rvtt_wh_sfpassignlr(0);
-    v64sf c = __builtin_rvtt_wh_sfpassignlr(1);
+    v64sf a = __builtin_rvtt_sfpassignlr(2);
+    v64sf b = __builtin_rvtt_sfpassignlr(0);
+    v64sf c = __builtin_rvtt_sfpassignlr(1);
     v64sf d = __builtin_rvtt_wh_sfpload(nullptr, 0, 1, 20);
 
     d = __builtin_rvtt_wh_sfpmad(a, b, c, 0);
@@ -214,37 +214,37 @@ void assignlr()
 {
     v64sf x;
 
-    x = __builtin_rvtt_wh_sfpassignlr(0);
+    x = __builtin_rvtt_sfpassignlr(0);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(1);
+    x =__builtin_rvtt_sfpassignlr(1);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(2);
+    x =__builtin_rvtt_sfpassignlr(2);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(3);
+    x =__builtin_rvtt_sfpassignlr(3);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(4);
+    x =__builtin_rvtt_sfpassignlr(4);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(5);
+    x =__builtin_rvtt_sfpassignlr(5);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(6);
+    x =__builtin_rvtt_sfpassignlr(6);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(7);
+    x =__builtin_rvtt_sfpassignlr(7);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(8);
+    x =__builtin_rvtt_sfpassignlr(8);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(9);
+    x =__builtin_rvtt_sfpassignlr(9);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(10);
+    x =__builtin_rvtt_sfpassignlr(10);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(11);
+    x =__builtin_rvtt_sfpassignlr(11);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(12);
+    x =__builtin_rvtt_sfpassignlr(12);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(13);
+    x =__builtin_rvtt_sfpassignlr(13);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(14);
+    x =__builtin_rvtt_sfpassignlr(14);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
-    x =__builtin_rvtt_wh_sfpassignlr(15);
+    x =__builtin_rvtt_sfpassignlr(15);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0);
 }
 

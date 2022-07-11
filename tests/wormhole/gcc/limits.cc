@@ -178,58 +178,58 @@ int main(int argc, char* argv[])
     int cond;
     __builtin_rvtt_wh_sfppushc(0);
     // 1.0 in different fmts
-    int top = __builtin_rvtt_wh_sfpxvif();
+    int top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f80, 9);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f80, 17);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3f800000, 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
 
     // -1.0 in different fmts
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf80, 9);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf80, 17);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbf800000, 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
 
     // Not a register in different formats
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa0, 9);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa0, 17);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0xbfa00000, 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
-    top = __builtin_rvtt_wh_sfpxvif();
+    __builtin_rvtt_sfpxcondb(cond, top);
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3fa6e001, 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
 
     // Test limits of fp16a/fp16b/float32 determination
     // This is fp16b, with pass_offset != 0 the mantissa will overflow, use fp16a
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x3fff0000 | ((pass_offset & 1) << 15), 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
     // This is fp16b w/ large exp, with pass_offset != 0 the mantissa will overflow, use fp32
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x47ff0000 | ((pass_offset & 1) << 15), 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
     // This is fp16a w/ largest exp, with pass_offset != 0 the exponent will overflow, use fp32
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x477f8000 | ((pass_offset & 1) << 23), 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
     // This is fp16a w/ smallest exp, with pass offset != 0 the exponent will underflow, use fp32
-    top = __builtin_rvtt_wh_sfpxvif();
+    top = __builtin_rvtt_sfpxvif();
     cond = __builtin_rvtt_wh_sfpxfcmps(nullptr, a, 0x38ff8000 & ~((pass_offset & 1) << 23), 33);
-    __builtin_rvtt_wh_sfpxcondb(cond, top);
+    __builtin_rvtt_sfpxcondb(cond, top);
 
     __builtin_rvtt_wh_sfppopc(0);
 }
