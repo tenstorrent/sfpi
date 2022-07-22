@@ -482,39 +482,31 @@ _Z10test_loadilm:
 	SFPSTORE	L0, 2, 0
 	SFPLOADI	L0, 4, -255
 	SFPSTORE	L0, 2, 0
+	li	a4,65536
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	addi	a4,a4,-1
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a4,a0,16
-	srli	a4,a4,16
-	li	a3,1896087552
-	add	a3, a3, a4
-# Op(0x71) - d(0)
-	sw	a3,0(a5)
+	and	a0,a0,a4
+	li	a3, 1896087552	# 71040000
+	add	a3,a0,a3
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 2, 0
-	slli	a4,a1,16
-	srli	a4,a4,16
-	li	a3,1895956480
-	add	a3, a3, a4
-# Op(0x71) - d(0)
-	sw	a3,0(a5)
+	and	a1,a1,a4
+	li	a4, 1895956480	# 71020000
+	add	a4,a4,a1
+	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 2, 0
 	SFPLOADI	L0, 2, 255
 	SFPSTORE	L0, 2, 4
 	SFPLOADI	L0, 2, -255
 	SFPSTORE	L0, 2, 4
-	slli	a4,a0,16
-	srli	a4,a4,16
-	li	a3,1896087552
-	add	a3, a3, a4
-# Op(0x71) - d(0)
-	sw	a3,0(a5)
+	li	a4, 1896087552	# 71040000
+	add	a4,a4,a0
+	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 2, 4
-	slli	a4,a1,16
-	srli	a4,a4,16
-	li	a3,1895956480
-	add	a3, a3, a4
-# Op(0x71) - d(0)
-	sw	a3,0(a5)
+	li	a4, 1895956480	# 71020000
+	add	a4,a4,a1
+	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 2, 4
 	SFPLOADI	L0, 1, 15360
 	SFPSTORE	L0, 0, 8
@@ -528,19 +520,13 @@ _Z10test_loadilm:
 	SFPSTORE	L0, 0, 8
 	SFPLOADI	L0, 0, 16256
 	SFPSTORE	L0, 0, 8
-	slli	a0,a0,16
-	srli	a0,a0,16
-	li	a4,1895825408
-	add	a4, a4, a0
-# Op(0x71) - d(0)
-	sw	a4,0(a5)
+	li	a4, 1895825408	# 71000000
+	add	a0,a4,a0
+	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 0, 8
-	slli	a1,a1,16
-	srli	a1,a1,16
-	li	a4,1895825408
-	add	a4, a4, a1
-# Op(0x71) - d(0)
-	sw	a4,0(a5)
+	li	a4, 1895825408	# 71000000
+	add	a1,a1,a4
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	L0, 0, 8
 	SFPLOADI	L0, 0, 16448
 	SFPSTORE	L0, 0, 20
@@ -647,14 +633,14 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETEXP	4095, L0, L0, 1
 	SFPNOP
 	SFPNOP
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a4,a0,20
-	srli	a4,a4,8
-	li	a3,-2113929215
-	add	a3, a3, a4
-# Op(0xffffff82) - d(0) s(0)
-	sw	a3,0(a5)
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	slli	a5,a0,12
+	li	a3,16773120
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	and	a5,a5,a3
+	li	a3, 2181038081	# 82000001
+	add	a3,a5,a3
+	sw	a3, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSETEXP	4095, L0, L0, 1
@@ -675,15 +661,15 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETMAN	4095, L1, L1, 1
 	SFPNOP
 	SFPNOP
-	slli	a4,a0,20
-	srli	a4,a4,8
-	li	a3,-2097151727
-	add	a3, a3, a4
-# Op(0xffffff83) - d(1) s(1)
-	sw	a3,0(a5)
+	slli	a0,a0,16
+	li	a3, 1895956480	# 71020000
+	srli	a0,a0,16
+	add	a0,a0,a3
+	sw	a0, 0(a4)	# Op(0x71) - d(lr0)
+	SFPSETMAN	0, L1, L0, 0
 	SFPNOP
 	SFPNOP
-	SFPSETMAN	4095, L1, L1, 1
+	SFPSETMAN	4095, L0, L0, 1
 	SFPNOP
 	SFPNOP
 	SFPLOAD	L0, 1, 4
@@ -693,12 +679,9 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPDIVP2	-20, L0, L1, 1
 	SFPNOP
 	SFPNOP
-	slli	a4,a0,20
-	srli	a4,a4,8
-	li	a3,1979711505
-	add	a3, a3, a4
-# Op(0x76) - d(1) s(0)
-	sw	a3,0(a5)
+	li	a3, 1979711505	# 76000011
+	add	a3,a5,a3
+	sw	a3, 0(a4)	# Op(0x76) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPDIVP2	-1, L0, L1, 1
@@ -713,11 +696,9 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETSGN	0, L0, L2, 0
 	SFPNOP
 	SFPNOP
-	mv	a0,a4
-	li	a4,-1996488687
-	add	a4, a4, a0
-# Op(0xffffff89) - d(1) s(0)
-	sw	a4,0(a5)
+	li	a3, 2298478609	# 89000011
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x89) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSETSGN	4095, L0, L1, 1
@@ -2707,13 +2688,12 @@ _Z14stupid_examplej:
 	SFPNOP
 	SFPSTORE	L1, 0, 16
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a0,a0,16
-	srli	a0,a0,16
-	li	a4,1896939520
-	add	a4, a4, a0
-# Op(0x71) - d(1)
-	sw	a4,0(a5)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a5,a0,16
+	li	a3, 1896939520	# 71110000
+	srli	a5,a5,16
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPLOADI	L2, 0, 16281
 	SFPMAD	L0, L1, L2, L1, 0
 	SFPNOP

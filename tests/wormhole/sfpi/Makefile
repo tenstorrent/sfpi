@@ -12,11 +12,11 @@ X86_CC = g++
 X86_CFLAGS = -DCOMPILE_FOR_EMULE $(CFLAGS)
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mwormhole -march=rv32iw -mabi=ilp32 -fno-exceptions
+RV32_CFLAGS = $(CFLAGS) -mwormhole -march=rv32imw -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc
 
-ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regmov.S rv32/vcond.S
+ASMS = $(addprefix rv32/,$(SRCS:.cc=.S)) rv32/combine.S rv32/pushpop.S rv32/regmov.S rv32/vcond.S rv32/nonimm.S
 OTHR = rv32/warn.txt rv32/warn_push.txt rv32/warn_pop.txt rv32/warn_spill.txt
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
 LTOS = $(addprefix rv32lto/,$(SRCS:.cc=))
@@ -85,6 +85,7 @@ test: resultsx86/kernels_int resultsx86/kernels/float $(ASMS) $(OTHR)
 	cmp rv32/live.S gold/live.S
 	cmp rv32/regmov.S gold/regmov.S
 	cmp rv32/vcond.S gold/vcond.S
+	cmp rv32/nonimm.S gold/nonimm.S
 	cmp rv32/warn.txt gold/warn.txt
 	cmp rv32/warn_push.txt gold/warn_push.txt
 	cmp rv32/warn_pop.txt gold/warn_pop.txt
@@ -102,6 +103,7 @@ promote:
 	cp rv32/live.S gold/live.S
 	cp rv32/regmov.S gold/regmov.S
 	cp rv32/vcond.S gold/vcond.S
+	cp rv32/nonimm.S gold/nonimm.S
 	cp rv32/warn.txt gold/warn.txt
 	cp rv32/warn_push.txt gold/warn_push.txt
 	cp rv32/warn_pop.txt gold/warn_pop.txt

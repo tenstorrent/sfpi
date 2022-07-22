@@ -329,18 +329,16 @@ _Z11iadd_i_no12j:
 	SFPLOADI	L0, 4, 3
 	SFPIADD	-5, L0, L0, 5
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a4,a0,16
-	srli	a4,a4,16
-	li	a3,1897529344
-	add	a3, a3, a4
-# Op(0x71) - d(1)
-	sw	a3,0(a5)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a5,a0,16
+	li	a3, 1897529344	# 711a0000
+	srli	a5,a5,16
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
+	li	a5, 1897398272	# 71180000
 	srli	a0,a0,16
-	li	a4,1897398272
-	add	a4, a4, a0
-# Op(0x71) lv(1)  d(1)
-	sw	a4,0(a5)
+	add	a0,a0,a5
+	sw	a0, 0(a4)	# Op(0x71) lv(lr1)  d(lr1)
 	SFPIADD	0, L0, L1, 2
 	SFPIADD	2, L0, L0, 5
 	SFPENCC	3, 10
@@ -949,11 +947,10 @@ _Z13addi_yes_imm1j:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a0,a0,16
+	li	a4, 1895825408	# 71000000
 	srli	a0,a0,16
-	li	a4,1895825408
-	add	a4, a4, a0
-# Op(0x71) - d(0)
-	sw	a4,0(a5)
+	add	a0,a0,a4
+	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPADDI	16256, L0, 0
 	SFPWNOP
 	SFPSTORE	L0, 0, 3, 0
@@ -964,14 +961,14 @@ _Z13addi_yes_imm1j:
 	.type	_Z13addi_yes_imm2j, @function
 _Z13addi_yes_imm2j:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	SFPLOADI	L0, 0, 16256
-	slli	a0,a0,16
-	srli	a0,a0,8
-	li	a4,1962934272
-	add	a4, a4, a0
-# Op(0x75) lv(0)  d(0)
-	sw	a4,0(a5)
+	slli	a5,a0,16
+	srli	a5,a5,16
+	li	a3, 1962934272	# 75000000
+	slli	a5,a5,8
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
 	SFPWNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret
@@ -1259,14 +1256,14 @@ _Z17add_plus_half_no1j:
 	SFPLOAD	L2, 0, 3, 4
 	SFPMAD	L0, L1, L2, L0, 0
 	SFPWNOP
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a0,a0,16
-	srli	a0,a0,8
-	li	a4,1962934272
-	add	a4, a4, a0
-# Op(0x75) lv(0)  d(0)
-	sw	a4,0(a5)
+	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
+	li	a3, 1962934272	# 75000000
+	slli	a5,a5,8
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
 	SFPWNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret

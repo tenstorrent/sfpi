@@ -761,22 +761,26 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	.type	_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm, @function
 _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	lui	a6,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a6)
-	slli	a0,a0,16
-	srli	a0,a0,16
-	li	a4,1897988096
-	add	a4, a4, a0
-# Op(0x71) - d(2)
-	sw	a4,0(a5)
-	slli	a3,a1,16
-	srli	a3,a3,16
-	li	a4,1896939520
-	add	a4, a4, a3
-# Op(0x71) - d(1)
-	sw	a4,0(a5)
-	slli	a2,a2,16
+	li	a3,65536
+	addi	a3,a3,-1
+	lw	a7,%lo(_ZN7ckernel13instrn_bufferE)(a6)
+	and	a0,a0,a3
+	li	a5, 1897988096	# 71210000
+	add	a5,a0,a5
+	sw	a5, 0(a7)	# Op(0x71) - d(lr2)
+	and	a5,a1,a3
+	li	a4, 1896939520	# 71110000
+	add	a4,a5,a4
+	sw	a4, 0(a7)	# Op(0x71) - d(lr1)
+	and	a3,a2,a3
+	li	a2, 1895890944	# 71010000
+	slli	a3,a3,8
+	li	a1, 1895890944	# 71010000
+	add	a2,a5,a2
+	li	a5, 1962934272	# 75000000
 	li	a4,4
-	srli	a2,a2,8
+	add	a1,a0,a1
+	add	a3,a3,a5
 .L33:
 	SFPLOAD	L0, 1, 0
 	SFPMAD	L2, L11, L0, L3, 0
@@ -785,10 +789,7 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	SFPSETCC	0, L3, 0
 	SFPNOP
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a6)
-	li	a1,1895890944
-	add	a1, a1, a0
-# Op(0x71) lv(0)  d(0)
-	sw	a1,0(a5)
+	sw	a1, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPCOMPC
 	SFPNOP
 	SFPMAD	L1, L11, L0, L3, 0
@@ -796,16 +797,10 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	SFPNOP
 	SFPSETCC	0, L3, 4
 	SFPNOP
-	li	a1,1895890944
-	add	a1, a1, a3
-# Op(0x71) lv(0)  d(0)
-	sw	a1,0(a5)
+	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPENCC	3, 10
 	SFPNOP
-	li	a1,1962934272
-	add	a1, a1, a2
-# Op(0x75) lv(0)  d(0)
-	sw	a1,0(a5)
+	sw	a3, 0(a5)	# Op(0x75) lv(lr0)  d(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 0
@@ -1054,26 +1049,22 @@ _ZN7ckernel4sfpu14calculate_tanhILb1EEEvv:
 	.weak	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm
 	.type	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm, @function
 _ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm:
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a0,a0,16
-	srli	a0,a0,16
-	li	a4,1898971136
-	add	a4, a4, a0
-# Op(0x71) - d(3)
-	sw	a4,0(a5)
-	slli	a1,a1,16
-	srli	a1,a1,16
-	li	a4,1897922560
-	add	a4, a4, a1
-# Op(0x71) - d(2)
-	sw	a4,0(a5)
-	slli	a2,a2,16
-	srli	a2,a2,16
-	li	a4,1896873984
-	add	a4, a4, a2
-# Op(0x71) - d(1)
-	sw	a4,0(a5)
+	li	a5,65536
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	addi	a5,a5,-1
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	and	a0,a0,a5
+	li	a3, 1898971136	# 71300000
+	add	a0,a0,a3
+	sw	a0, 0(a4)	# Op(0x71) - d(lr3)
+	and	a1,a1,a5
+	li	a3, 1897922560	# 71200000
+	add	a1,a1,a3
+	sw	a1, 0(a4)	# Op(0x71) - d(lr2)
+	and	a2,a2,a5
+	li	a5, 1896873984	# 71100000
+	add	a2,a2,a5
+	sw	a2, 0(a4)	# Op(0x71) - d(lr1)
 	li	a5,4
 .L43:
 	SFPLOAD	L0, 1, 0
@@ -1110,11 +1101,10 @@ _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a0,a0,16
+	li	a4, 1896873984	# 71100000
 	srli	a0,a0,16
-	li	a4,1896873984
-	add	a4, a4, a0
-# Op(0x71) - d(1)
-	sw	a4,0(a5)
+	add	a0,a0,a4
+	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	li	a5,4
 .L46:
 	SFPLOAD	L0, 1, 0
@@ -1660,16 +1650,15 @@ _ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv:
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	slli	a0,a0,16
+	srli	a0,a0,16
+	li	a5, 1896939520	# 71110000
 	li	a4,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a0,a0,16
+	add	a0,a0,a5
 .L71:
 	SFPLOAD	L0, 1, 0
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a3)
-	li	a2,1896939520
-	add	a2, a2, a0
-# Op(0x71) - d(1)
-	sw	a2,0(a5)
+	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
@@ -1776,16 +1765,15 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	slli	a0,a0,16
+	srli	a0,a0,16
+	li	a5, 1896939520	# 71110000
 	li	a4,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a0,a0,16
+	add	a0,a0,a5
 .L76:
 	SFPLOAD	L0, 1, 0
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a3)
-	li	a2,1896939520
-	add	a2, a2, a0
-# Op(0x71) - d(1)
-	sw	a2,0(a5)
+	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
@@ -1891,17 +1879,16 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
-	slli	a0,a0,16
+	slli	a4,a0,16
+	srli	a4,a4,16
+	li	a3, 1899036672	# 71310000
 	li	a5,4
-	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a0,a0,16
+	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
+	add	a4,a4,a3
 .L80:
 	SFPLOAD	L1, 1, 0
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a3)
-	li	a2,1899036672
-	add	a2, a2, a0
-# Op(0x71) - d(3)
-	sw	a2,0(a4)
+	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)
+	sw	a4, 0(a3)	# Op(0x71) - d(lr3)
 	SFPMUL	L1, L3, L4, L1, 0
 	SFPNOP
 	SFPNOP
@@ -1926,17 +1913,16 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
-	slli	a0,a0,16
-	li	a5,4
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a0,a0,16
+	slli	a5,a0,16
+	srli	a5,a5,16
+	li	a3, 1899036672	# 71310000
+	li	a4,4
+	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
+	add	a5,a5,a3
 .L83:
 	SFPLOAD	L1, 1, 0
-	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	li	a2,1899036672
-	add	a2, a2, a0
-# Op(0x71) - d(3)
-	sw	a2,0(a3)
+	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)
+	sw	a5, 0(a3)	# Op(0x71) - d(lr3)
 	SFPMUL	L1, L3, L4, L1, 0
 	SFPNOP
 	SFPNOP
@@ -1957,8 +1943,8 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	addi	a5,a5,-1
-	bne	a5,zero,.L83
+	addi	a4,a4,-1
+	bne	a4,zero,.L83
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,"axG",@progbits,_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,comdat
@@ -1966,10 +1952,12 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
 	.weak	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm
 	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm, @function
 _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
-	slli	a0,a0,16
+	slli	a4,a0,16
+	srli	a4,a4,16
+	li	a0, 1896939520	# 71110000
 	li	a5,4
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a0,a0,16
+	add	a0,a0,a4
 .L86:
 	SFPLOAD	L3, 1, 0
 	SFPSETEXP	127, L3, L0, 1
@@ -2040,10 +2028,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	SFPNOP
 	SFPNOP
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a3)
-	li	a2,1896939520
-	add	a2, a2, a0
-# Op(0x71) - d(1)
-	sw	a2,0(a4)
+	sw	a0, 0(a4)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L1, L4, L0, 0
 	SFPNOP
 	SFPNOP
@@ -2195,19 +2180,21 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
 	.type	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, @function
 _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPLOADI	L1, 0, -22197
-	slli	a1,a1,16
-	slli	a0,a0,16
-	li	a5,4
-	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
-	srli	a1,a1,8
-	srli	a0,a0,16
+	li	a4,65536
+	addi	a4,a4,-1
+	and	a5,a1,a4
+	li	a3, 1946157056	# 74000000
+	slli	a5,a5,8
+	and	a0,a0,a4
+	add	a5,a5,a3
+	li	a3, 1898053632	# 71220000
+	li	a4,4
+	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
+	add	a0,a0,a3
 .L95:
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a3)
+	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)
 	SFPLOAD	L0, 1, 0
-	li	a2,1946157056
-	add	a2, a2, a1
-# Op(0x74) lv(0)  d(0)
-	sw	a2,0(a4)
+	sw	a5, 0(a3)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L0, 0, 0
@@ -2217,10 +2204,7 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPSHFT	-3, L0, L0, 1
 	SFPNOP
 	SFPNOP
-	li	a2,1898053632
-	add	a2, a2, a0
-# Op(0x71) - d(2)
-	sw	a2,0(a4)
+	sw	a0, 0(a3)	# Op(0x71) - d(lr2)
 	SFPIADD	0, L0, L2, 2
 	SFPNOP
 	SFPNOP
@@ -2254,8 +2238,8 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	SFPENCC	3, 10
 	SFPNOP
 	SFPINCRWC	0, 4, 0, 0
-	addi	a5,a5,-1
-	bne	a5,zero,.L95
+	addi	a4,a4,-1
+	bne	a4,zero,.L95
 	ret
 	.size	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, .-_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm
 	.globl	__floatunsisf
@@ -2279,11 +2263,10 @@ main:
 	call	__floatunsisf
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a4, 1896873984	# 71100000
 	srli	a0,a0,16
-	li	a4,1896873984
-	add	a4, a4, a0
-# Op(0x71) - d(1)
-	sw	a4,0(a5)
+	add	a0,a0,a4
+	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMOV	L0, L3, 0
 	SFPNOP
 	SFPNOP

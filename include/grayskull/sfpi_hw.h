@@ -57,9 +57,6 @@ namespace sfpi {
 #define __builtin_rvtt_sfpor(dst, src) sfpu_rvtt_sfpor(dst, src)
 #define __builtin_rvtt_sfpnot(src) sfpu_rvtt_sfpnot(src)
 
-#define __builtin_rvtt_sfpmuli(dst, imm12, mod1) sfpu_rvtt_sfpmuli(dst, imm12, mod1)
-#define __builtin_rvtt_sfpaddi(dst, imm12, mod1) sfpu_rvtt_sfpaddi(dst, imm12, mod1)
-
 #define __builtin_rvtt_sfpdivp2(imm12, src, mod1) sfpu_rvtt_sfpdivp2(imm12, src, mod1)
 
 #define __builtin_rvtt_sfplz(src, mod1) sfpu_rvtt_sfplz(src, mod1)
@@ -67,7 +64,6 @@ namespace sfpi {
 #define __builtin_rvtt_sfpshft_i(dst, imm12) sfpu_rvtt_sfpshft_i(dst, imm12)
 #define __builtin_rvtt_sfpshft_v(dst, src) sfpu_rvtt_sfpshft_v(dst, src)
 
-#define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) sfpu_rvtt_sfpiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) sfpu_rvtt_sfpxiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) sfpu_rvtt_sfpiadd_v(dst, src, mod1)
 #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) sfpu_rvtt_sfpxiadd_v(dst, src, mod1)
@@ -98,7 +94,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define sfpi_inline __attribute__((always_inline)) inline
 
 #define __builtin_rvtt_sfpassignlr(lr) __builtin_rvtt_sfpassignlr(lr)
-#define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps((void *)ckernel::instrn_buffer, v, i, mod1)
+#define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps((void *)ckernel::instrn_buffer, v, i, 0, 0, mod1)
 #define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) __builtin_rvtt_sfpxicmpv(v1, v2, mod1)
 #define __builtin_rvtt_sfpxvif() __builtin_rvtt_sfpxvif()
 #define __builtin_rvtt_sfpxbool(t, a, b) __builtin_rvtt_sfpxbool(t, a, b)
@@ -107,11 +103,11 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpincrwc(cr, d, b, a) __builtin_rvtt_sfpincrwc(cr, d, b, a)
 
 #define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_gs_sfpassign_lv(v, in)
-#define __builtin_rvtt_sfpload(mod0, addr) __builtin_rvtt_gs_sfpload((void *)ckernel::instrn_buffer, mod0, addr)
+#define __builtin_rvtt_sfpload(mod0, addr) __builtin_rvtt_gs_sfpload((void *)ckernel::instrn_buffer, mod0, addr, 0, 0)
 #define __builtin_rvtt_sfpkeepalive(x, n) __builtin_rvtt_gs_sfpkeepalive(x, n)
 
-#define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_gs_sfpxloadi((void *)ckernel::instrn_buffer, mod0, imm16)
-#define __builtin_rvtt_sfpstore(src, mod0, addr) __builtin_rvtt_gs_sfpstore((void *)ckernel::instrn_buffer, src, mod0, addr)
+#define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_gs_sfpxloadi((void *)ckernel::instrn_buffer, mod0, imm16, 0, 0)
+#define __builtin_rvtt_sfpstore(src, mod0, addr) __builtin_rvtt_gs_sfpstore((void *)ckernel::instrn_buffer, src, mod0, addr, 0, 0)
 #define __builtin_rvtt_sfpmov(src, mod1) __builtin_rvtt_gs_sfpmov(src, mod1)
 #define __builtin_rvtt_sfpnop() __builtin_rvtt_gs_sfpnop()
 #define __builtin_rvtt_sfpillegal() __builtin_rvtt_gs_sfpillegal()
@@ -121,7 +117,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfppopc() __builtin_rvtt_gs_sfppopc()
 #define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_rvtt_gs_sfpsetcc_v(src, mod1)
 #define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_gs_sfpsetcc_i(imm12, mod1)
-#define __builtin_rvtt_sfpxfcmps(v, f, mod1) __builtin_rvtt_gs_sfpxfcmps((void *)ckernel::instrn_buffer, v, f, mod1)
+#define __builtin_rvtt_sfpxfcmps(v, f, mod1) __builtin_rvtt_gs_sfpxfcmps((void *)ckernel::instrn_buffer, v, f, 0, 0, mod1)
 #define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) __builtin_rvtt_gs_sfpxfcmpv(v1, v2, mod1)
 #define __builtin_rvtt_sfpcompc() __builtin_rvtt_gs_sfpcompc()
 
@@ -132,10 +128,10 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpexexp(src, mod1) __builtin_rvtt_gs_sfpexexp(src, mod1)
 #define __builtin_rvtt_sfpexman(src, mod1) __builtin_rvtt_gs_sfpexman(src, mod1)
 
-#define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_rvtt_gs_sfpsetexp_i((void *)ckernel::instrn_buffer, imm12, src)
+#define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_rvtt_gs_sfpsetexp_i((void *)ckernel::instrn_buffer, imm12, 0, 0, src)
 #define __builtin_rvtt_sfpsetexp_v(dst, src) __builtin_rvtt_gs_sfpsetexp_v(dst, src)
 
-#define __builtin_rvtt_sfpsetman_i(imm12, src) __builtin_rvtt_gs_sfpsetman_i((void *)ckernel::instrn_buffer, imm12, src)
+#define __builtin_rvtt_sfpsetman_i(imm12, src) __builtin_rvtt_gs_sfpsetman_i((void *)ckernel::instrn_buffer, imm12, 0, 0, src)
 #define __builtin_rvtt_sfpsetman_v(dst, src) __builtin_rvtt_gs_sfpsetman_v(dst, src)
 
 #define __builtin_rvtt_sfpabs(src, mod1) __builtin_rvtt_gs_sfpabs(src, mod1)
@@ -143,22 +139,18 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpor(dst, src) __builtin_rvtt_gs_sfpor(dst, src)
 #define __builtin_rvtt_sfpnot(src) __builtin_rvtt_gs_sfpnot(src)
 
-#define __builtin_rvtt_sfpmuli(dst, imm12, mod1) __builtin_rvtt_gs_sfpmuli((void *)ckernel::instrn_buffer, dst, imm12, mod1)
-#define __builtin_rvtt_sfpaddi(dst, imm12, mod1) __builtin_rvtt_gs_sfpaddi((void *)ckernel::instrn_buffer, dst, imm12, mod1)
-
-#define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_rvtt_gs_sfpdivp2((void *)ckernel::instrn_buffer, imm12, src, mod1)
+#define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_rvtt_gs_sfpdivp2((void *)ckernel::instrn_buffer, imm12, 0, 0, src, mod1)
 
 #define __builtin_rvtt_sfplz(src, mod1) __builtin_rvtt_gs_sfplz(src, mod1)
 
-#define __builtin_rvtt_sfpshft_i(dst, imm12) __builtin_rvtt_gs_sfpshft_i((void *)ckernel::instrn_buffer, dst, imm12)
+#define __builtin_rvtt_sfpshft_i(dst, imm12) __builtin_rvtt_gs_sfpshft_i((void *)ckernel::instrn_buffer, dst, imm12, 0, 0)
 #define __builtin_rvtt_sfpshft_v(dst, src) __builtin_rvtt_gs_sfpshft_v(dst, src)
 
-#define __builtin_rvtt_sfpiadd_i(imm12, src, mod1) __builtin_rvtt_gs_sfpiadd_i((void *)ckernel::instrn_buffer, src, imm12, mod1)
-#define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) __builtin_rvtt_gs_sfpxiadd_i((void *)ckernel::instrn_buffer, src, imm12, mod1)
+#define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) __builtin_rvtt_gs_sfpxiadd_i((void *)ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
 #define __builtin_rvtt_sfpiadd_v(dst, src, mod1) __builtin_rvtt_gs_sfpiadd_v(dst, src, mod1)
 #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) __builtin_rvtt_gs_sfpxiadd_v(dst, src, mod1)
 
-#define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_rvtt_gs_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, src)
+#define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_rvtt_gs_sfpsetsgn_i((void *)ckernel::instrn_buffer, imm12, 0, 0, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) __builtin_rvtt_gs_sfpsetsgn_v(dst, src)
 
 #define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod1) __builtin_rvtt_gs_sfplut(l0, l1, l2, dst, mod1)
