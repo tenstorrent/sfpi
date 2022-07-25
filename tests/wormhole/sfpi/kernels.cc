@@ -1869,7 +1869,6 @@ sfpi_test_noinline void test12(int imm)
         TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
 
         dst_reg[12] = a;
-        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
         a = dst_reg[imm - 23];
 
         semaphore_post(3);
@@ -1882,7 +1881,6 @@ sfpi_test_noinline void test12(int imm)
         // non-imm store, imm load
         vFloat a = 130.0F;
         dst_reg[imm - 23] = a;
-        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
         a = dst_reg[12];
         dst_reg[12] = a + 1.0F;
     }
@@ -1896,7 +1894,6 @@ sfpi_test_noinline void test12(int imm)
         TTI_SEMWAIT(p_stall::STALL_MATH, p_stall::SEMAPHORE_3, p_stall::STALL_ON_ZERO);
 
         dst_reg[imm - 23] = a;
-        __builtin_rvtt_sfpnop(); // XXXXXX remove me when compiler is fixed
         a = dst_reg[imm - 23];
 
         semaphore_post(3);
