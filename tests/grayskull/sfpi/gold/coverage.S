@@ -633,14 +633,14 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETEXP	4095, L0, L0, 1
 	SFPNOP
 	SFPNOP
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	slli	a5,a0,12
-	li	a3,16773120
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	and	a5,a5,a3
-	li	a3, 2181038081	# 82000001
-	add	a3,a5,a3
-	sw	a3, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a4,16773120
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	slli	a0,a0,12
+	and	a0,a0,a4
+	li	a4, 2181038081	# 82000001
+	add	a4,a0,a4
+	sw	a4, 0(a5)	# Op(0x82) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSETEXP	4095, L0, L0, 1
@@ -661,15 +661,12 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETMAN	4095, L1, L1, 1
 	SFPNOP
 	SFPNOP
-	slli	a0,a0,16
-	li	a3, 1895956480	# 71020000
-	srli	a0,a0,16
-	add	a0,a0,a3
-	sw	a0, 0(a4)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L1, L0, 0
+	li	a4, 2197815569	# 83000111
+	add	a4,a4,a0
+	sw	a4, 0(a5)	# Op(0x83) - d(lr1) s(lr1)
 	SFPNOP
 	SFPNOP
-	SFPSETMAN	4095, L0, L0, 1
+	SFPSETMAN	4095, L1, L1, 1
 	SFPNOP
 	SFPNOP
 	SFPLOAD	L0, 1, 4
@@ -679,9 +676,9 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPDIVP2	-20, L0, L1, 1
 	SFPNOP
 	SFPNOP
-	li	a3, 1979711505	# 76000011
-	add	a3,a5,a3
-	sw	a3, 0(a4)	# Op(0x76) - d(lr1) s(lr0)
+	li	a4, 1979711505	# 76000011
+	add	a4,a0,a4
+	sw	a4, 0(a5)	# Op(0x76) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPDIVP2	-1, L0, L1, 1
@@ -696,9 +693,9 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSETSGN	0, L0, L2, 0
 	SFPNOP
 	SFPNOP
-	li	a3, 2298478609	# 89000011
-	add	a5,a5,a3
-	sw	a5, 0(a4)	# Op(0x89) - d(lr1) s(lr0)
+	li	a4, 2298478609	# 89000011
+	add	a0,a0,a4
+	sw	a0, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSETSGN	4095, L0, L1, 1

@@ -981,34 +981,33 @@ _Z12setman_i_imms:
 	.globl	_Z12setman_i_regs
 	.type	_Z12setman_i_regs, @function
 _Z12setman_i_regs:
-	SFPLOAD	L1, 1, 10
-	SFPLOAD	L0, 1, 20
-	SFPLOAD	L3, 1, 30
+	SFPLOAD	L2, 1, 10
+	SFPLOAD	L1, 1, 20
+	SFPLOAD	L0, 1, 30
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a5,65536
-	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	addi	a5,a5,-1
-	and	a4,a0,a5
-	li	a2, 1898053632	# 71220000
-	add	a4,a4,a2
-	sw	a4, 0(a3)	# Op(0x71) - d(lr2)
-	SFPSETMAN	0, L1, L2, 0
+	slli	a5,a0,20
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 2197815841	# 83000221
+	srli	a5,a5,8
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x83) - d(lr2) s(lr2)
 	SFPNOP
 	SFPNOP
-	addi	a4,a0,1
-	and	a4,a4,a5
-	li	a2, 1897005056	# 71120000
-	add	a4,a4,a2
-	sw	a4, 0(a3)	# Op(0x71) - d(lr1)
-	SFPSETMAN	0, L0, L1, 0
+	addi	a5,a0,1
+	li	a3,16773120
+	slli	a5,a5,12
+	and	a5,a5,a3
+	li	a2, 2197815569	# 83000111
+	add	a5,a5,a2
+	sw	a5, 0(a4)	# Op(0x83) - d(lr1) s(lr1)
 	SFPNOP
 	SFPNOP
 	addi	a0,a0,2
-	and	a0,a0,a5
-	li	a5, 1895956480	# 71020000
+	slli	a0,a0,12
+	and	a0,a0,a3
+	li	a5, 2197815297	# 83000001
 	add	a0,a0,a5
-	sw	a0, 0(a3)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L3, L0, 0
+	sw	a0, 0(a4)	# Op(0x83) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L2, 2, 1
@@ -1022,21 +1021,20 @@ _Z12setman_i_regs:
 _Z13setman_i_boths:
 	SFPLOAD	L2, 1, 10
 	SFPLOAD	L1, 1, 20
-	SFPLOAD	L3, 1, 30
+	SFPLOAD	L0, 1, 30
 	SFPSETMAN	187, L2, L2, 1
 	SFPNOP
 	SFPNOP
 	SFPSETMAN	187, L1, L1, 1
 	SFPNOP
 	SFPNOP
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	slli	a0,a0,16
-	li	a4, 1895956480	# 71020000
-	srli	a0,a0,16
-	add	a0,a0,a4
-	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L3, L0, 0
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	slli	a5,a0,20
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 2197815297	# 83000001
+	srli	a5,a5,8
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x83) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
 	SFPSTORE	L2, 2, 1

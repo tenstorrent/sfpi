@@ -1323,106 +1323,100 @@ _Z10muladdi_lvi:
 	.globl	_Z5otherif
 	.type	_Z5otherif, @function
 _Z5otherif:
-	li	a3,65536
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	slli	a4,a0,2
-	addi	a3,a3,-1
+	li	a4,65536
+	slli	a3,a0,2
+	addi	a4,a4,-1
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	and	a4,a4,a3
+	and	a3,a3,a4
 	li	t3, 1879113728	# 70010000
-	add	t3,a4,t3
+	add	t3,a3,t3
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
-	li	t1, 1880162304	# 70110000
-	add	t1,a4,t1
-	sw	t1, 0(a5)	# Op(0x70) - d(lr1)
-	slli	a2,a0,12
-	li	a1,16773120
-	and	a2,a2,a1
-	li	a7, 2298478849	# 89000101
-	add	a7,a2,a7
-	sw	a7, 0(a5)	# Op(0x89) - d(lr0) s(lr1)
+	mv	t1,t3
+	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
+	slli	a4,a0,12
+	li	a2,16773120
+	and	a4,a4,a2
+	li	a7, 2298478609	# 89000011
+	add	a7,a4,a7
+	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
-	and	a0,a0,a3
-	li	a3, 1895956480	# 71020000
-	add	a3,a0,a3
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L1, L0, 0
+	li	a6, 2197815297	# 83000001
+	add	a6,a4,a6
+	sw	a6, 0(a5)	# Op(0x83) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
-	li	a6, 2181038097	# 82000011
-	add	a6,a2,a6
-	sw	a6, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
-	SFPNOP
-	SFPNOP
-	li	a1, 1979711777	# 76000121
-	add	a2,a2,a1
-	sw	a2, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
-	SFPNOP
-	SFPNOP
-	li	a0, 1914699776	# 72200000
+	li	a0, 2181038097	# 82000011
 	add	a0,a4,a0
-	sw	a0, 0(a5)	# Op(0x72) s(lr2)
-	li	a1, 1913651200	# 72100000
-	add	a1,a4,a1
-	sw	a1, 0(a5)	# Op(0x72) s(lr1)
+	sw	a0, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
+	SFPNOP
+	SFPNOP
+	li	a2, 1979711777	# 76000121
+	add	a4,a4,a2
+	sw	a4, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
+	SFPNOP
+	SFPNOP
+	li	a1, 1914699776	# 72200000
+	add	a1,a3,a1
+	sw	a1, 0(a5)	# Op(0x72) s(lr2)
+	li	a2, 1913651200	# 72100000
+	add	a2,a3,a2
+	sw	a2, 0(a5)	# Op(0x72) s(lr1)
 	li	t4, 1912602624	# 72000000
-	add	a4,a4,t4
-	sw	a4, 0(a5)	# Op(0x72) s(lr0)
+	add	a3,a3,t4
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
-	sw	t1, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a7, 0(a5)	# Op(0x89) - d(lr0) s(lr1)
-	SFPNOP
-	SFPNOP
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L1, L0, 0
-	SFPNOP
-	SFPNOP
-	sw	a6, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
-	SFPNOP
-	SFPNOP
-	sw	a2, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
-	SFPNOP
-	SFPNOP
-	sw	a0, 0(a5)	# Op(0x72) s(lr2)
-	sw	a1, 0(a5)	# Op(0x72) s(lr1)
-	sw	a4, 0(a5)	# Op(0x72) s(lr0)
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
-	sw	t1, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a7, 0(a5)	# Op(0x89) - d(lr0) s(lr1)
+	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L1, L0, 0
+	sw	a6, 0(a5)	# Op(0x83) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a6, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
+	sw	a0, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a2, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
+	sw	a4, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
 	SFPNOP
 	SFPNOP
-	sw	a0, 0(a5)	# Op(0x72) s(lr2)
-	sw	a1, 0(a5)	# Op(0x72) s(lr1)
-	sw	a4, 0(a5)	# Op(0x72) s(lr0)
+	sw	a1, 0(a5)	# Op(0x72) s(lr2)
+	sw	a2, 0(a5)	# Op(0x72) s(lr1)
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
-	sw	t1, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a7, 0(a5)	# Op(0x89) - d(lr0) s(lr1)
+	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
+	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	SFPSETMAN	0, L1, L0, 0
+	sw	a6, 0(a5)	# Op(0x83) - d(lr0) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a6, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
+	sw	a0, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
 	SFPNOP
 	SFPNOP
-	sw	a2, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
+	sw	a4, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
 	SFPNOP
 	SFPNOP
-	sw	a0, 0(a5)	# Op(0x72) s(lr2)
-	sw	a1, 0(a5)	# Op(0x72) s(lr1)
-	sw	a4, 0(a5)	# Op(0x72) s(lr0)
+	sw	a1, 0(a5)	# Op(0x72) s(lr2)
+	sw	a2, 0(a5)	# Op(0x72) s(lr1)
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
+	sw	t1, 0(a5)	# Op(0x70) - d(lr0)
+	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
+	SFPNOP
+	SFPNOP
+	sw	a6, 0(a5)	# Op(0x83) - d(lr0) s(lr0)
+	SFPNOP
+	SFPNOP
+	sw	a0, 0(a5)	# Op(0x82) - d(lr1) s(lr0)
+	SFPNOP
+	SFPNOP
+	sw	a4, 0(a5)	# Op(0x76) - d(lr2) s(lr1)
+	SFPNOP
+	SFPNOP
+	sw	a1, 0(a5)	# Op(0x72) s(lr2)
+	sw	a2, 0(a5)	# Op(0x72) s(lr1)
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z5otherif, .-_Z5otherif
 	.align	1
