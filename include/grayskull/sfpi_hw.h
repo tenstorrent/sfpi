@@ -205,6 +205,7 @@ constexpr unsigned int SFPIADD_MOD1_CC_GTE0 = 8;
 constexpr unsigned int SFPXIADD_MOD1_SIGNED = 8;
 constexpr unsigned int SFPXIADD_MOD1_IS_SUB = 16;
 constexpr unsigned int SFPXIADD_MOD1_IS_12BITS = 32;
+constexpr unsigned int SFPXIADD_MOD1_IS_16BITS = 64;
 
 constexpr unsigned int SFPXCMP_MOD1_CC_NONE = 0;
 constexpr unsigned int SFPXCMP_MOD1_CC_LT = 1;
