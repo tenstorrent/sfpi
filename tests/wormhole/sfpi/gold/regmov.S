@@ -220,7 +220,6 @@ _Z2bbi:
 	SFPLOADI	L2, 4, 2
 	SFPLOADI	L0, 4, 3
 	bne	a0,zero,.L20
-	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPOR	L2, L0
 .L20:
@@ -251,7 +250,6 @@ _Z3bb2i:
 	SFPLOADI	L2, 4, 2
 	SFPLOADI	L0, 4, 3
 	bne	a0,zero,.L24
-	SFPWNOP
 	SFPMOV	L2, L0, 2
 	SFPOR	L1, L0
 .L24:

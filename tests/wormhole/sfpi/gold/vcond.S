@@ -453,7 +453,6 @@ _Z20vcond_inside_inline4v:
 	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPLOADI	L1, 0, 16256
-	SFPWNOP
 	SFPMOV	L0, L2, 2
 	SFPMAD	L11, L1, L0, L2, 0
 	SFPPOPC	0
@@ -482,7 +481,6 @@ _Z23vcond_inside_noninline4i:
 	SFPWNOP
 	SFPSETCC	0, L0, 0
 	li	a4,3
-	SFPWNOP
 	SFPMOV	L2, L0, 2
 	beq	a5,a4,.L45
 .L46:
@@ -503,7 +501,6 @@ _Z23vcond_inside_noninline4i:
 	SFPPUSHC	0
 	SFPLOADI	L1, 4, 0
 	SFPSETCC	0, L0, 6
-	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 1
 	SFPPOPC	0
@@ -513,7 +510,6 @@ _Z23vcond_inside_noninline4i:
 	SFPSTORE	L2, 0, 3, 0
 	ret
 .L48:
-	SFPWNOP
 	SFPMOV	L2, L0, 2
 	j	.L44
 	.size	_Z23vcond_inside_noninline4i, .-_Z23vcond_inside_noninline4i
@@ -527,7 +523,6 @@ _Z21vcond_outside_inline4v:
 	SFPWNOP
 	SFPSETCC	0, L1, 0
 	SFPLOADI	L1, 0, 16256
-	SFPWNOP
 	SFPMOV	L0, L2, 2
 	SFPMAD	L11, L1, L0, L2, 0
 	SFPENCC	3, 10
@@ -558,7 +553,6 @@ _Z24vcond_outside_noninline4i:
 	SFPWNOP
 	SFPSETCC	0, L0, 0
 	li	a4,3
-	SFPWNOP
 	SFPMOV	L2, L0, 2
 	beq	a5,a4,.L53
 .L54:
@@ -577,7 +571,6 @@ _Z24vcond_outside_noninline4i:
 .L52:
 	SFPLOADI	L1, 4, 0
 	SFPSETCC	0, L0, 6
-	SFPWNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 1
 	SFPENCC	3, 10
@@ -587,7 +580,6 @@ _Z24vcond_outside_noninline4i:
 	SFPSTORE	L2, 0, 3, 0
 	ret
 .L56:
-	SFPWNOP
 	SFPMOV	L2, L0, 2
 	j	.L52
 	.size	_Z24vcond_outside_noninline4i, .-_Z24vcond_outside_noninline4i

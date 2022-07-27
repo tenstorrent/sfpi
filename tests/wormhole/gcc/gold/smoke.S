@@ -129,7 +129,6 @@ _Z7smokierv:
 	SFPSTORE	L2, 0, 2, 20
 	SFPSTORE	L0, 0, 2, 20
 	SFPSTORE	L3, 0, 2, 20
-	SFPWNOP
 	SFPMOV	L1, L2, 2
 	.size	_Z7smokierv, .-_Z7smokierv
 	.align	1
