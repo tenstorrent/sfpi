@@ -1,6 +1,6 @@
 	.file	"unnecessarymov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -16,7 +16,6 @@ _Z6whymovv:
 	SFPLOADI	L1, 4, 3
 	SFPIADD	-29, L0, L0, 5
 	SFPSETCC	0, L0, 6
-	SFPNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 4
 	SFPENCC	3, 10
@@ -31,14 +30,13 @@ _Z11whymov_sqrtv:
 	SFPLOADI	L3, 4, 1
 	SFPMOV	L2, L0, 0
 	SFPIADD	0, L3, L0, 6
-	SFPNOP
 	SFPMOV	L0, L1, 2
 	SFPMUL	L0, L0, L9, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPMUL	L0, L1, L9, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPMUL	L0, L2, L9, L0, 0
-	SFPNOP
+	SFPWNOP
 	SFPSTORE	L0, 0, 3, 0
 	ret
 	.size	_Z11whymov_sqrtv, .-_Z11whymov_sqrtv
@@ -52,7 +50,6 @@ _Z11test_icmp_vv:
 	SFPIADD	0, L2, L1, 6
 	SFPSETCC	0, L1, 6
 	SFPIADD	100, L0, L0, 5
-	SFPNOP
 	SFPMOV	L0, L2, 2
 	SFPENCC	3, 10
 	SFPSTORE	L0, 0, 3, 0
@@ -83,7 +80,6 @@ _Z20lots_of_conditionalsv:
 	SFPSETCC	0, L0, 0
 	SFPSETCC	0, L0, 4
 	SFPCOMPC
-	SFPNOP
 	SFPMOV	L1, L0, 2
 	SFPLOADI	L0, 4, 0
 	SFPPOPC	0

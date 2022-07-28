@@ -102,6 +102,7 @@ promote:
 	cp rv32/coverage.S gold/coverage.S
 	cp rv32/live.S gold/live.S
 	cp rv32/regmov.S gold/regmov.S
+	cp rv32/vcond.S gold/vcond.S
 	cp rv32/nonimm.S gold/nonimm.S
 	cp rv32/warn.txt gold/warn.txt
 	cp rv32/warn_push.txt gold/warn_push.txt
