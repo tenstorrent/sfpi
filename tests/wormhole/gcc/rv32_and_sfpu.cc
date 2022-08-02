@@ -28,7 +28,7 @@ void test_func(int count, bool calculate_bias)
         __rvtt_vec_t a = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 0, 0, 0, 0);
         __rvtt_vec_t b = __builtin_rvtt_wh_sfpload(nullptr, SFPLOAD_MOD0_REBIAS_EXP, 0, 1, 0, 0);
 
-        __rvtt_vec_t zero = __builtin_rvtt_sfpassignlr(4);
+        __rvtt_vec_t zero = __builtin_rvtt_sfpassignlreg(4);
         __rvtt_vec_t d = __builtin_rvtt_wh_sfpmad(a, b, zero, 0);
         __rvtt_vec_t e = __builtin_rvtt_wh_sfpmad(b, a, zero, 0);
         __rvtt_vec_t f = __builtin_rvtt_wh_sfpmad(b, d, zero, 0);

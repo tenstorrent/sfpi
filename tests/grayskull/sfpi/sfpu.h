@@ -246,7 +246,7 @@ extern __rvtt_vec_t sfpu_lreg[SFPU_LREGS];
 ///////////////////////////////////////////////////////////////////////////////
 extern void sfpu_rvtt_sfpincrwc(int cr, int d, int b, int a);
 extern __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr);
-extern __rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr);
+extern __rvtt_vec_t sfpu_rvtt_sfpassignlreg(unsigned int lr);
 extern void sfpu_rvtt_sfpstore(const __rvtt_vec_t& v, unsigned int mod0, unsigned int addr);
 extern __rvtt_vec_t sfpu_rvtt_sfploadi(unsigned int mod0, unsigned short value);
 extern __rvtt_vec_t sfpu_rvtt_sfpmov(const __rvtt_vec_t& v, unsigned int mod1);

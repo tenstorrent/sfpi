@@ -331,7 +331,7 @@ __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int mode, unsigned in
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-__rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr)
+__rvtt_vec_t sfpu_rvtt_sfpassignlreg(unsigned int lr)
 {
     return (lr < 4) ? sfpu_lreg[lr] : kCRegInternal[lr];
 }
@@ -598,7 +598,7 @@ void sfpu_rvtt_sfpxscmp(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1
             ((fmt == SFPXSCMP_MOD1_FMT_B) ? SFPLOADI_MOD0_FLOATB : SFPXLOADI_MOD0_FLOAT);
         __rvtt_vec_t op_b = __builtin_rvtt_sfpxloadi(loadi_mod, b);
         __rvtt_vec_t neg_op_b = __builtin_rvtt_sfpmov(op_b, SFPMOV_MOD1_COMPSIGN);
-        tmp = __builtin_rvtt_sfpmad(neg_op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_1), a, 0);
+        tmp = __builtin_rvtt_sfpmad(neg_op_b, __builtin_rvtt_sfpassignlreg(CREG_IDX_1), a, 0);
         __builtin_rvtt_sfpsetcc_v(tmp, cmpx_to_setcc_mod1_map[cmp]);
     } else {
         __builtin_rvtt_sfpsetcc_v(a, cmpx_to_setcc_mod1_map[cmp]);
@@ -611,7 +611,7 @@ void sfpu_rvtt_sfpxvcmp(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned i
 
     __rvtt_vec_t neg = __builtin_rvtt_sfpmov(b, SFPMOV_MOD1_COMPSIGN);
     __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(neg,
-                                             __builtin_rvtt_sfpassignlr(CREG_IDX_1),
+                                             __builtin_rvtt_sfpassignlreg(CREG_IDX_1),
                                              a,
                                              0);
     if (cmp == SFPXCMP_MOD1_CC_LTE || cmp == SFPXCMP_MOD1_CC_GT) {

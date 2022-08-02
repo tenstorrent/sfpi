@@ -308,7 +308,7 @@ __rvtt_vec_t sfpu_rvtt_sfpload(unsigned int mod0, unsigned int addr)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-__rvtt_vec_t sfpu_rvtt_sfpassignlr(unsigned int lr)
+__rvtt_vec_t sfpu_rvtt_sfpassignlreg(unsigned int lr)
 {
     return (lr < 4) ? sfpu_lreg[lr] : kCRegInternal[lr];
 }
@@ -575,7 +575,7 @@ void sfpu_rvtt_sfpxscmp(const __rvtt_vec_t& a, unsigned int b, unsigned int mod1
         __rvtt_vec_t tmp;
         int loadi_mod = ((mod1 & SFPXSCMP_MOD1_FMT_A) == SFPXSCMP_MOD1_FMT_A) ? SFPLOADI_MOD0_FLOATA : SFPLOADI_MOD0_FLOATB;
         __rvtt_vec_t op_b = __builtin_rvtt_sfpxloadi(loadi_mod, b);
-        tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1), a, 0);
+        tmp = __builtin_rvtt_sfpmad(op_b, __builtin_rvtt_sfpassignlreg(CREG_IDX_NEG_1), a, 0);
 
         __builtin_rvtt_sfpsetcc_v(tmp, xcmp_to_setcc_mod1_map[cmp]);
     } else {
@@ -588,7 +588,7 @@ void sfpu_rvtt_sfpxvcmp(const __rvtt_vec_t& a, const __rvtt_vec_t& b, unsigned i
     unsigned int cmp = mod1 & SFPXCMP_MOD1_CC_MASK;
 
     __rvtt_vec_t tmp = __builtin_rvtt_sfpmad(b,
-                                             __builtin_rvtt_sfpassignlr(CREG_IDX_NEG_1),
+                                             __builtin_rvtt_sfpassignlreg(CREG_IDX_NEG_1),
                                              a,
                                              0);
 

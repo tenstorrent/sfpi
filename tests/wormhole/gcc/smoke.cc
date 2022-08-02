@@ -20,9 +20,9 @@ void smoke()
     c = __builtin_rvtt_wh_sfpload(nullptr, 0, 1, 32, 0, 0);
 
     v64sf lr6, lr7, lr8;
-    lr6 = __builtin_rvtt_sfpassignlr(6);
-    lr7 = __builtin_rvtt_sfpassignlr(7);
-    lr8 = __builtin_rvtt_sfpassignlr(8);
+    lr6 = __builtin_rvtt_sfpassignlreg(6);
+    lr7 = __builtin_rvtt_sfpassignlreg(7);
+    lr8 = __builtin_rvtt_sfpassignlreg(8);
 
     d = __builtin_rvtt_wh_sfpmad(  a,   b,   c, 0);
     d = __builtin_rvtt_wh_sfpmad(  a,   b, lr6, 0);
@@ -63,7 +63,7 @@ void smoke()
     a = __builtin_rvtt_wh_sfpxloadi(nullptr, 0, -12, 0, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 0, 0, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, a, 0, 2, 4, 0, 0);
-    v64sf lr13 = __builtin_rvtt_sfpassignlr(13);
+    v64sf lr13 = __builtin_rvtt_sfpassignlreg(13);
     __builtin_rvtt_wh_sfpstore(nullptr, lr13, 0, 2, 4, 0, 0);
     v64sf e = __builtin_rvtt_wh_sfpmad(a, b, c, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 2, 4, 0, 0);
@@ -169,9 +169,9 @@ void smoke_live()
 
 void smokier()
 {
-    v64sf a = __builtin_rvtt_sfpassignlr(2);
-    v64sf b = __builtin_rvtt_sfpassignlr(0);
-    v64sf c = __builtin_rvtt_sfpassignlr(1);
+    v64sf a = __builtin_rvtt_sfpassignlreg(2);
+    v64sf b = __builtin_rvtt_sfpassignlreg(0);
+    v64sf c = __builtin_rvtt_sfpassignlreg(1);
     v64sf d = __builtin_rvtt_wh_sfpload(nullptr, 0, 1, 20, 0, 0);
 
     d = __builtin_rvtt_wh_sfpmad(a, b, c, 0);
@@ -189,7 +189,7 @@ void smokier()
     __builtin_rvtt_wh_sfpstore(nullptr, e, 0, 2, 20, 0, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, f, 0, 2, 20, 0, 0);
     __builtin_rvtt_wh_sfpstore(nullptr, g, 0, 2, 20, 0, 0);
-    __builtin_rvtt_wh_sfpkeepalive(c, 2);
+    __builtin_rvtt_wh_sfppreservelreg(c, 2);
 }
 
 void smokiest()
@@ -211,37 +211,37 @@ void assignlr()
 {
     v64sf x;
 
-    x = __builtin_rvtt_sfpassignlr(0);
+    x = __builtin_rvtt_sfpassignlreg(0);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(1);
+    x =__builtin_rvtt_sfpassignlreg(1);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(2);
+    x =__builtin_rvtt_sfpassignlreg(2);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(3);
+    x =__builtin_rvtt_sfpassignlreg(3);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(4);
+    x =__builtin_rvtt_sfpassignlreg(4);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(5);
+    x =__builtin_rvtt_sfpassignlreg(5);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(6);
+    x =__builtin_rvtt_sfpassignlreg(6);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(7);
+    x =__builtin_rvtt_sfpassignlreg(7);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(8);
+    x =__builtin_rvtt_sfpassignlreg(8);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(9);
+    x =__builtin_rvtt_sfpassignlreg(9);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(10);
+    x =__builtin_rvtt_sfpassignlreg(10);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(11);
+    x =__builtin_rvtt_sfpassignlreg(11);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(12);
+    x =__builtin_rvtt_sfpassignlreg(12);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(13);
+    x =__builtin_rvtt_sfpassignlreg(13);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(14);
+    x =__builtin_rvtt_sfpassignlreg(14);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
-    x =__builtin_rvtt_sfpassignlr(15);
+    x =__builtin_rvtt_sfpassignlreg(15);
     __builtin_rvtt_wh_sfpstore(nullptr, x, 0, 0, 0, 0, 0);
 }
 

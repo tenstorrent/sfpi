@@ -154,7 +154,7 @@ void store_both(short int addr)
 
 void store_r_imm(short int addr)
 {
-    v64sf lr13 = __builtin_rvtt_sfpassignlr(13);
+    v64sf lr13 = __builtin_rvtt_sfpassignlreg(13);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, 10, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, 20, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, 10, 0, 0);
@@ -163,7 +163,7 @@ void store_r_imm(short int addr)
 
 void store_r_reg(short int addr)
 {
-    v64sf lr13 = __builtin_rvtt_sfpassignlr(13);
+    v64sf lr13 = __builtin_rvtt_sfpassignlreg(13);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, addr, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, addr+1, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, addr+2, 0, 0);
@@ -172,7 +172,7 @@ void store_r_reg(short int addr)
 
 void store_r_both(short int addr)
 {
-    v64sf lr13 = __builtin_rvtt_sfpassignlr(13);
+    v64sf lr13 = __builtin_rvtt_sfpassignlreg(13);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, 10, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, 20, 0, 0);
     __builtin_rvtt_gs_sfpstore((void *)instrn_buffer, lr13, 2, addr, 0, 0);
