@@ -99,7 +99,7 @@ void smoke()
 
     v2 = __builtin_rvtt_wh_sfpdivp2(nullptr, 32, 0, 0, v1, 1);
 
-    v2 = __builtin_rvtt_wh_sfplz(v1, 2);
+    v2 = __builtin_rvtt_wh_sfplz(v1, 4);
 
     v2 = __builtin_rvtt_wh_sfpshft_i(nullptr, v2, 10, 0, 0);
     v2 = __builtin_rvtt_wh_sfpshft_v(v2, v1);
