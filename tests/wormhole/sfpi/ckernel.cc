@@ -219,7 +219,7 @@ void calculate_cube(uint16_t exp_base_scale_factor = 0)
 template <bool APPROXIMATION_MODE, bool ZERO_NEGATIVE, bool SCALE_EN>
 sfpi_test_noinline void calculate_exponential(uint16_t exp_base_scale_factor = 0)
 {
-    // Unroll 8 best for approx, unroll 0 for precise, compiler figures this out
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
     {
         vFloat val = dst_reg[0];
@@ -364,7 +364,7 @@ sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2
     vFloat p1 = s2vFloat16(param1);
     vFloat p2 = s2vFloat16(param2);
     // SFPU microcode
-    #pragma GCC unroll 0
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
     {
         vFloat val = dst_reg[0];
@@ -423,7 +423,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
     vUInt l1 = lra.assign(LRegs::LReg1);
 
     // SFPU microcode: 
-    #pragma GCC unroll 0
+    #pragma GCC unroll 4
     for (int d = 0; d < 8; d++)
     {
         vFloat in = dst_reg[0];
@@ -448,7 +448,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
 template <bool APPROXIMATION_MODE, int ITERATIONS>
 sfpi_test_noinline void calculate_reciprocal()
 {
-    #pragma GCC unroll 2
+    #pragma GCC unroll 8
     for (int d = 0; d < ITERATIONS; d++)
     {
         vFloat in = dst_reg[0];
@@ -523,7 +523,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
     LRegAssigner lra;
     vUInt rand = lra.assign(LRegs::LReg3);
 
-    #pragma GCC unroll 0
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++) {
         ////////////////////////
         // Scale samples
@@ -560,7 +560,7 @@ sfpi_test_noinline void calculate_lrelu(uint slope)
     // SFPU microcode
     vFloat s = s2vFloat16b(slope); // XXXX Nonimm perf workaround, hoist conversion manually
 
-    #pragma GCC unroll 0
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++) {
         vFloat v = dst_reg[0];
 
@@ -650,6 +650,7 @@ sfpi_inline void calculate_log_body(const uint log_base_scale_factor)
 template <bool APPROXIMATION_MODE, bool HAS_BASE_SCALING>
 sfpi_test_noinline void calculate_log(uint log_base_scale_factor)
 {
+    #pragma GCC unroll 8
     for(int d = 0; d < 8; d++){
         calculate_log_body<HAS_BASE_SCALING>(log_base_scale_factor);
         dst_reg++;
@@ -752,7 +753,7 @@ sfpi_test_noinline void calculate_clamp(uint param0, uint param1, uint param2)
     // SFPU microcode
     vFloat min = s2vFloat16(param0, format);
     vFloat max = s2vFloat16(param1, format);
-    #pragma GCC unroll 0
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
     {
         vFloat val = dst_reg[0];

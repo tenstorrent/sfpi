@@ -1173,6 +1173,7 @@ _Z13loop_compileri:
 	and	a3,a3,a6
 	and	a4,a4,a6
 	add	a1,a1,a7
+	SFPREPLAY	0, 8, 1, 1
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	li	a2, 1881210880	# 70210000
 	add	a2,a2,a0
@@ -1187,30 +1188,9 @@ _Z13loop_compileri:
 	SFPSTORE	L2, 0, 2, 10
 	SFPSTORE	L1, 0, 2, 20
 	SFPSTORE	L0, 0, 2, 30
-	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
-	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
-	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 0, 2, 1
-	SFPSTORE	L2, 0, 2, 10
-	SFPSTORE	L1, 0, 2, 20
-	SFPSTORE	L0, 0, 2, 30
-	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
-	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
-	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 0, 2, 1
-	SFPSTORE	L2, 0, 2, 10
-	SFPSTORE	L1, 0, 2, 20
-	SFPSTORE	L0, 0, 2, 30
-	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
-	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
-	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 0, 2, 1
-	SFPSTORE	L2, 0, 2, 10
-	SFPSTORE	L1, 0, 2, 20
-	SFPSTORE	L0, 0, 2, 30
+	SFPREPLAY	0, 8, 0, 0
+	SFPREPLAY	0, 8, 0, 0
+	SFPREPLAY	0, 8, 0, 0
 	ret
 	.size	_Z13loop_compileri, .-_Z13loop_compileri
 	.section	.rodata.str1.4,"aMS",@progbits,1
@@ -1259,6 +1239,7 @@ main:
 	call	_Z9loadi_regs
 	mv	a0,s0
 	call	_Z10loadi_boths
+	SFPREPLAY	0, 3, 1, 1
 	SFPLOAD	L0, 1, 0, 10
 	SFPSTORE	L0, 0, 2, 10
 	SFPSTORE	L0, 0, 2, 20
@@ -1288,9 +1269,7 @@ main:
 	li	a1, 1912733696	# 72020000
 	add	a1,a2,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	SFPLOAD	L0, 1, 0, 10
-	SFPSTORE	L0, 0, 2, 10
-	SFPSTORE	L0, 0, 2, 20
+	SFPREPLAY	0, 3, 0, 0
 	li	a1, 1912733696	# 72020000
 	add	a1,a4,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
