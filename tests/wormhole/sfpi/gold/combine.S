@@ -1306,6 +1306,42 @@ _Z20add_plus_half_no_bb1i:
 	ret
 	.size	_Z20add_plus_half_no_bb1i, .-_Z20add_plus_half_no_bb1i
 	.align	1
+	.globl	_Z15bail_on_fp16b_1v
+	.type	_Z15bail_on_fp16b_1v, @function
+_Z15bail_on_fp16b_1v:
+	SFPLOADI	L0, 8, 16460
+	SFPLOADI	L0, 10, 52429
+	SFPLOADI	L1, 0, 16256
+	SFPADD	L10, L0, L1, L0, 0
+	SFPWNOP
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z15bail_on_fp16b_1v, .-_Z15bail_on_fp16b_1v
+	.align	1
+	.globl	_Z15bail_on_fp16b_2v
+	.type	_Z15bail_on_fp16b_2v, @function
+_Z15bail_on_fp16b_2v:
+	SFPLOADI	L0, 8, 16460
+	SFPLOADI	L0, 10, 52429
+	SFPADDI	16256, L0, 0
+	SFPWNOP
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z15bail_on_fp16b_2v, .-_Z15bail_on_fp16b_2v
+	.align	1
+	.globl	_Z15bail_on_fp16b_3v
+	.type	_Z15bail_on_fp16b_3v, @function
+_Z15bail_on_fp16b_3v:
+	SFPLOADI	L0, 8, 16460
+	SFPLOADI	L0, 10, 52429
+	SFPLOADI	L1, 8, 16521
+	SFPLOADI	L1, 10, 39322
+	SFPADD	L10, L0, L1, L0, 0
+	SFPWNOP
+	SFPSTORE	L0, 0, 3, 0
+	ret
+	.size	_Z15bail_on_fp16b_3v, .-_Z15bail_on_fp16b_3v
+	.align	1
 	.globl	_Z10complexishv
 	.type	_Z10complexishv, @function
 _Z10complexishv:

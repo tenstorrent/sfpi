@@ -1305,6 +1305,29 @@ void add_plus_half_no_bb1(int count)
     dst_reg[0] = c;
 }
 
+// The compiler can select the other non-fp16b value
+void bail_on_fp16b_1()
+{
+    vFloat a = 3.2f;
+    a = a + 1.0f;
+    dst_reg[0] = a;
+}
+
+void bail_on_fp16b_2()
+{
+    vFloat a = 1.0f;
+    a = a + 3.2f;
+    dst_reg[0] = a;
+}
+
+// Neither will work...
+void bail_on_fp16b_3()
+{
+    vFloat a = 3.2f;
+    a = a + 4.3;
+    dst_reg[0] = a;
+}
+
 void complexish()
 {
     vFloat a = dst_reg[0];
