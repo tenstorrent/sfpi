@@ -144,14 +144,14 @@ _Z19macro_reuse_checkedi:
 	.globl	_Z8load_imms
 	.type	_Z8load_imms, @function
 _Z8load_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8load_imms, .-_Z8load_imms
 	.align	1
@@ -181,18 +181,18 @@ _Z8load_regs:
 	li	a5, 1879113728	# 70010000
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8load_regs, .-_Z8load_regs
 	.align	1
 	.globl	_Z9load_boths
 	.type	_Z9load_boths, @function
 _Z9load_boths:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a5,65536
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -206,24 +206,24 @@ _Z9load_boths:
 	li	a5, 1879113728	# 70010000
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9load_boths, .-_Z9load_boths
 	.align	1
 	.globl	_Z9loadi_imms
 	.type	_Z9loadi_imms, @function
 _Z9loadi_imms:
-	SFPLOADI	L3, 0, 10
-	SFPLOADI	L2, 4, 10
-	SFPLOADI	L1, 8, 20
-	SFPLOADI	L0, 12, 30
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOADI	L3, 10, 0
+	SFPLOADI	L2, 10, 4
+	SFPLOADI	L1, 20, 8
+	SFPLOADI	L0, 30, 12
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9loadi_imms, .-_Z9loadi_imms
 	.align	1
@@ -253,18 +253,18 @@ _Z9loadi_regs:
 	li	a5, 1896611840	# 710c0000
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x71) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9loadi_regs, .-_Z9loadi_regs
 	.align	1
 	.globl	_Z10loadi_boths
 	.type	_Z10loadi_boths, @function
 _Z10loadi_boths:
-	SFPLOADI	L3, 0, 10
-	SFPLOADI	L2, 4, 20
+	SFPLOADI	L3, 10, 0
+	SFPLOADI	L2, 20, 4
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a5,65536
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -278,28 +278,28 @@ _Z10loadi_boths:
 	li	a5, 1896611840	# 710c0000
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x71) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10loadi_boths, .-_Z10loadi_boths
 	.align	1
 	.globl	_Z9store_imms
 	.type	_Z9store_imms, @function
 _Z9store_imms:
-	SFPLOAD	L0, 1, 10
-	SFPSTORE	L0, 2, 10
-	SFPSTORE	L0, 2, 20
-	SFPSTORE	L0, 2, 30
-	SFPSTORE	L0, 2, 40
+	SFPLOAD	L0, 10, 1
+	SFPSTORE	10, L0, 2
+	SFPSTORE	20, L0, 2
+	SFPSTORE	30, L0, 2
+	SFPSTORE	40, L0, 2
 	ret
 	.size	_Z9store_imms, .-_Z9store_imms
 	.align	1
 	.globl	_Z9store_regs
 	.type	_Z9store_regs, @function
 _Z9store_regs:
-	SFPLOAD	L0, 1, 10
+	SFPLOAD	L0, 10, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a5,65536
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -329,9 +329,9 @@ _Z9store_regs:
 	.globl	_Z10store_boths
 	.type	_Z10store_boths, @function
 _Z10store_boths:
-	SFPLOAD	L0, 1, 10
-	SFPSTORE	L0, 2, 10
-	SFPSTORE	L0, 2, 20
+	SFPLOAD	L0, 10, 1
+	SFPSTORE	10, L0, 2
+	SFPSTORE	20, L0, 2
 	li	a4,65536
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a5,a0,1
@@ -352,10 +352,10 @@ _Z10store_boths:
 	.globl	_Z11store_r_imms
 	.type	_Z11store_r_imms, @function
 _Z11store_r_imms:
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
 	ret
 	.size	_Z11store_r_imms, .-_Z11store_r_imms
 	.align	1
@@ -391,8 +391,8 @@ _Z11store_r_regs:
 	.globl	_Z12store_r_boths
 	.type	_Z12store_r_boths, @function
 _Z12store_r_boths:
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a5,65536
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -412,36 +412,36 @@ _Z12store_r_boths:
 	.globl	_Z8addi_imms
 	.type	_Z8addi_imms, @function
 _Z8addi_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPADDI	1, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPADDI	2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPADDI	3, L1, 3
-	SFPNOP
-	SFPNOP
-	SFPADDI	4, L0, 3
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPADDI	L3, 1, 1
+	TTNOP
+	TTNOP
+	SFPADDI	L2, 2, 1
+	TTNOP
+	TTNOP
+	SFPADDI	L1, 3, 3
+	TTNOP
+	TTNOP
+	SFPADDI	L0, 4, 3
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8addi_imms, .-_Z8addi_imms
 	.align	1
 	.globl	_Z8addi_regs
 	.type	_Z8addi_regs, @function
 _Z8addi_regs:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
 	li	a4,16777216
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,8
@@ -451,52 +451,52 @@ _Z8addi_regs:
 	li	a2, 1962934321	# 75000031
 	add	a5,a5,a2
 	sw	a5, 0(a3)	# Op(0x75) lv(lr3)  d(lr3)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	slli	a5,a5,8
 	and	a5,a5,a4
 	li	a2, 1962934314	# 7500002a
 	add	a5,a5,a2
 	sw	a5, 0(a3)	# Op(0x75) lv(lr2)  d(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,2
 	slli	a5,a5,8
 	and	a5,a5,a4
 	li	a2, 1962934293	# 75000015
 	add	a5,a5,a2
 	sw	a5, 0(a3)	# Op(0x75) lv(lr1)  d(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,3
 	slli	a0,a0,8
 	and	a0,a0,a4
 	li	a5, 1962934279	# 75000007
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x75) lv(lr0)  d(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8addi_regs, .-_Z8addi_regs
 	.align	1
 	.globl	_Z9addi_boths
 	.type	_Z9addi_boths, @function
 _Z9addi_boths:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPADDI	1, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPADDI	2, L2, 3
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPADDI	L3, 1, 1
+	TTNOP
+	TTNOP
+	SFPADDI	L2, 2, 3
+	TTNOP
+	TTNOP
 	li	a4,16777216
 	lui	a3,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,8
@@ -506,55 +506,55 @@ _Z9addi_boths:
 	li	a2, 1962934293	# 75000015
 	add	a5,a5,a2
 	sw	a5, 0(a3)	# Op(0x75) lv(lr1)  d(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,1
 	slli	a0,a0,8
 	and	a0,a0,a4
 	li	a5, 1962934279	# 75000007
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x75) lv(lr0)  d(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9addi_boths, .-_Z9addi_boths
 	.align	1
 	.globl	_Z11xiadd_i_imms
 	.type	_Z11xiadd_i_imms, @function
 _Z11xiadd_i_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPIADD	1, L3, L3, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	2, L2, L2, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	3, L1, L1, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	4, L0, L0, 5
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPIADD	L3, L3, 1, 5
+	TTNOP
+	TTNOP
+	SFPIADD	L2, L2, 2, 5
+	TTNOP
+	TTNOP
+	SFPIADD	L1, L1, 3, 5
+	TTNOP
+	TTNOP
+	SFPIADD	L0, L0, 4, 5
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z11xiadd_i_imms, .-_Z11xiadd_i_imms
 	.align	1
 	.globl	_Z11xiadd_i_regs
 	.type	_Z11xiadd_i_regs, @function
 _Z11xiadd_i_regs:
-	SFPLOAD	L1, 1, 10
-	SFPLOAD	L0, 1, 20
-	SFPLOAD	L3, 1, 30
+	SFPLOAD	L1, 10, 1
+	SFPLOAD	L0, 20, 1
+	SFPLOAD	L3, 30, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a5,65536
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -563,43 +563,43 @@ _Z11xiadd_i_regs:
 	li	a2, 1898053632	# 71220000
 	add	a4,a4,a2
 	sw	a4, 0(a3)	# Op(0x71) - d(lr2)
-	SFPIADD	0, L1, L2, 4
-	SFPNOP
-	SFPNOP
+	SFPIADD	L2, L1, 0, 4
+	TTNOP
+	TTNOP
 	addi	a4,a0,1
 	and	a4,a4,a5
 	li	a2, 1897005056	# 71120000
 	add	a4,a4,a2
 	sw	a4, 0(a3)	# Op(0x71) - d(lr1)
-	SFPIADD	0, L0, L1, 4
-	SFPNOP
-	SFPNOP
+	SFPIADD	L1, L0, 0, 4
+	TTNOP
+	TTNOP
 	addi	a0,a0,2
 	and	a0,a0,a5
 	li	a5, 1895956480	# 71020000
 	add	a0,a0,a5
 	sw	a0, 0(a3)	# Op(0x71) - d(lr0)
-	SFPIADD	0, L3, L0, 4
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L2, 2, 1
-	SFPSTORE	L1, 2, 10
-	SFPSTORE	L0, 2, 20
+	SFPIADD	L0, L3, 0, 4
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L2, 2
+	SFPSTORE	10, L1, 2
+	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z11xiadd_i_regs, .-_Z11xiadd_i_regs
 	.align	1
 	.globl	_Z12xiadd_i_boths
 	.type	_Z12xiadd_i_boths, @function
 _Z12xiadd_i_boths:
-	SFPLOAD	L2, 1, 10
-	SFPLOAD	L1, 1, 20
-	SFPLOAD	L3, 1, 30
-	SFPIADD	1, L2, L2, 5
-	SFPNOP
-	SFPNOP
-	SFPIADD	2, L1, L1, 5
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L2, 10, 1
+	SFPLOAD	L1, 20, 1
+	SFPLOAD	L3, 30, 1
+	SFPIADD	L2, L2, 1, 5
+	TTNOP
+	TTNOP
+	SFPIADD	L1, L1, 2, 5
+	TTNOP
+	TTNOP
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a0,a0,16
@@ -607,48 +607,48 @@ _Z12xiadd_i_boths:
 	srli	a0,a0,16
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
-	SFPIADD	0, L3, L0, 4
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L2, 2, 1
-	SFPSTORE	L1, 2, 10
-	SFPSTORE	L0, 2, 20
+	SFPIADD	L0, L3, 0, 4
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L2, 2
+	SFPSTORE	10, L1, 2
+	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z12xiadd_i_boths, .-_Z12xiadd_i_boths
 	.align	1
 	.globl	_Z10shft_i_imms
 	.type	_Z10shft_i_imms, @function
 _Z10shft_i_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSHFT	1, L0, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSHFT	2, L0, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPSHFT	3, L0, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSHFT	4, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSHFT	L3, L0, 1, 1
+	TTNOP
+	TTNOP
+	SFPSHFT	L2, L0, 2, 1
+	TTNOP
+	TTNOP
+	SFPSHFT	L1, L0, 3, 1
+	TTNOP
+	TTNOP
+	SFPSHFT	L0, L0, 4, 1
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10shft_i_imms, .-_Z10shft_i_imms
 	.align	1
 	.globl	_Z10shft_i_regs
 	.type	_Z10shft_i_regs, @function
 _Z10shft_i_regs:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -656,8 +656,8 @@ _Z10shft_i_regs:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr3)  d(lr3)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	li	a3,16773120
 	slli	a5,a5,12
@@ -665,44 +665,44 @@ _Z10shft_i_regs:
 	li	a2, 2046820385	# 7a000021
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,2
 	slli	a5,a5,12
 	and	a5,a5,a3
 	li	a2, 2046820369	# 7a000011
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr1)  d(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,3
 	slli	a0,a0,12
 	and	a0,a0,a3
 	li	a5, 2046820353	# 7a000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10shft_i_regs, .-_Z10shft_i_regs
 	.align	1
 	.globl	_Z11shft_i_boths
 	.type	_Z11shft_i_boths, @function
 _Z11shft_i_boths:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSHFT	1, L0, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSHFT	2, L0, L2, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSHFT	L3, L0, 1, 1
+	TTNOP
+	TTNOP
+	SFPSHFT	L2, L0, 2, 1
+	TTNOP
+	TTNOP
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -710,8 +710,8 @@ _Z11shft_i_boths:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr1)  d(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,1
 	li	a5,16773120
 	slli	a0,a0,12
@@ -719,48 +719,48 @@ _Z11shft_i_boths:
 	li	a5, 2046820353	# 7a000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z11shft_i_boths, .-_Z11shft_i_boths
 	.align	1
 	.globl	_Z9divp2_imms
 	.type	_Z9divp2_imms, @function
 _Z9divp2_imms:
-	SFPLOAD	L0, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L0, 1, 30
-	SFPLOAD	L1, 1, 40
-	SFPDIVP2	26, L0, L3, 0
-	SFPNOP
-	SFPNOP
-	SFPDIVP2	42, L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPDIVP2	58, L0, L0, 0
-	SFPNOP
-	SFPNOP
-	SFPDIVP2	74, L1, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L0, 2, 20
-	SFPSTORE	L1, 2, 30
+	SFPLOAD	L0, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L0, 30, 1
+	SFPLOAD	L1, 40, 1
+	SFPDIVP2	L3, L0, 26, 0
+	TTNOP
+	TTNOP
+	SFPDIVP2	L2, L2, 42, 1
+	TTNOP
+	TTNOP
+	SFPDIVP2	L0, L0, 58, 0
+	TTNOP
+	TTNOP
+	SFPDIVP2	L1, L1, 74, 1
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L0, 2
+	SFPSTORE	30, L1, 2
 	ret
 	.size	_Z9divp2_imms, .-_Z9divp2_imms
 	.align	1
 	.globl	_Z9divp2_regs
 	.type	_Z9divp2_regs, @function
 _Z9divp2_regs:
-	SFPLOAD	L0, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
+	SFPLOAD	L0, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -768,8 +768,8 @@ _Z9divp2_regs:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x76) - d(lr3) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	li	a3,16773120
 	slli	a5,a5,12
@@ -777,44 +777,44 @@ _Z9divp2_regs:
 	li	a2, 1979712033	# 76000221
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x76) - d(lr2) s(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,2
 	slli	a5,a5,12
 	and	a5,a5,a3
 	li	a2, 1979711760	# 76000110
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x76) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,3
 	slli	a0,a0,12
 	and	a0,a0,a3
 	li	a5, 1979711489	# 76000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x76) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9divp2_regs, .-_Z9divp2_regs
 	.align	1
 	.globl	_Z10divp2_boths
 	.type	_Z10divp2_boths, @function
 _Z10divp2_boths:
-	SFPLOAD	L0, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPDIVP2	27, L0, L3, 0
-	SFPNOP
-	SFPNOP
-	SFPDIVP2	27, L2, L2, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L0, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPDIVP2	L3, L0, 27, 0
+	TTNOP
+	TTNOP
+	SFPDIVP2	L2, L2, 27, 1
+	TTNOP
+	TTNOP
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -822,8 +822,8 @@ _Z10divp2_boths:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x76) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,1
 	li	a5,16773120
 	slli	a0,a0,12
@@ -831,48 +831,48 @@ _Z10divp2_boths:
 	li	a5, 1979711489	# 76000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x76) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10divp2_boths, .-_Z10divp2_boths
 	.align	1
 	.globl	_Z12setexp_i_imms
 	.type	_Z12setexp_i_imms, @function
 _Z12setexp_i_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSETEXP	170, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	170, L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	170, L1, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	170, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSETEXP	L3, L3, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETEXP	L2, L2, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETEXP	L1, L1, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETEXP	L0, L0, 170, 1
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setexp_i_imms, .-_Z12setexp_i_imms
 	.align	1
 	.globl	_Z12setexp_i_regs
 	.type	_Z12setexp_i_regs, @function
 _Z12setexp_i_regs:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -880,8 +880,8 @@ _Z12setexp_i_regs:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x82) - d(lr3) s(lr3)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	li	a3,16773120
 	slli	a5,a5,12
@@ -889,44 +889,44 @@ _Z12setexp_i_regs:
 	li	a2, 2181038625	# 82000221
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x82) - d(lr2) s(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,2
 	slli	a5,a5,12
 	and	a5,a5,a3
 	li	a2, 2181038353	# 82000111
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x82) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,3
 	slli	a0,a0,12
 	and	a0,a0,a3
 	li	a5, 2181038081	# 82000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setexp_i_regs, .-_Z12setexp_i_regs
 	.align	1
 	.globl	_Z13setexp_i_boths
 	.type	_Z13setexp_i_boths, @function
 _Z13setexp_i_boths:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSETEXP	187, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSETEXP	187, L2, L2, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSETEXP	L3, L3, 187, 1
+	TTNOP
+	TTNOP
+	SFPSETEXP	L2, L2, 187, 1
+	TTNOP
+	TTNOP
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -934,8 +934,8 @@ _Z13setexp_i_boths:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x82) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,1
 	li	a5,16773120
 	slli	a0,a0,12
@@ -943,47 +943,47 @@ _Z13setexp_i_boths:
 	li	a5, 2181038081	# 82000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z13setexp_i_boths, .-_Z13setexp_i_boths
 	.align	1
 	.globl	_Z12setman_i_imms
 	.type	_Z12setman_i_imms, @function
 _Z12setman_i_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSETMAN	170, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	170, L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	170, L1, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	170, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSETMAN	L3, L3, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETMAN	L2, L2, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETMAN	L1, L1, 170, 1
+	TTNOP
+	TTNOP
+	SFPSETMAN	L0, L0, 170, 1
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setman_i_imms, .-_Z12setman_i_imms
 	.align	1
 	.globl	_Z12setman_i_regs
 	.type	_Z12setman_i_regs, @function
 _Z12setman_i_regs:
-	SFPLOAD	L2, 1, 10
-	SFPLOAD	L1, 1, 20
-	SFPLOAD	L0, 1, 30
+	SFPLOAD	L2, 10, 1
+	SFPLOAD	L1, 20, 1
+	SFPLOAD	L0, 30, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -991,8 +991,8 @@ _Z12setman_i_regs:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x83) - d(lr2) s(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	li	a3,16773120
 	slli	a5,a5,12
@@ -1000,34 +1000,34 @@ _Z12setman_i_regs:
 	li	a2, 2197815569	# 83000111
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x83) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,2
 	slli	a0,a0,12
 	and	a0,a0,a3
 	li	a5, 2197815297	# 83000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x83) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L2, 2, 1
-	SFPSTORE	L1, 2, 10
-	SFPSTORE	L0, 2, 20
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L2, 2
+	SFPSTORE	10, L1, 2
+	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z12setman_i_regs, .-_Z12setman_i_regs
 	.align	1
 	.globl	_Z13setman_i_boths
 	.type	_Z13setman_i_boths, @function
 _Z13setman_i_boths:
-	SFPLOAD	L2, 1, 10
-	SFPLOAD	L1, 1, 20
-	SFPLOAD	L0, 1, 30
-	SFPSETMAN	187, L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPSETMAN	187, L1, L1, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L2, 10, 1
+	SFPLOAD	L1, 20, 1
+	SFPLOAD	L0, 30, 1
+	SFPSETMAN	L2, L2, 187, 1
+	TTNOP
+	TTNOP
+	SFPSETMAN	L1, L1, 187, 1
+	TTNOP
+	TTNOP
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -1035,47 +1035,47 @@ _Z13setman_i_boths:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x83) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L2, 2, 1
-	SFPSTORE	L1, 2, 10
-	SFPSTORE	L0, 2, 20
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L2, 2
+	SFPSTORE	10, L1, 2
+	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z13setman_i_boths, .-_Z13setman_i_boths
 	.align	1
 	.globl	_Z12setsgn_i_imms
 	.type	_Z12setsgn_i_imms, @function
 _Z12setsgn_i_imms:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSETSGN	1962, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	1962, L2, L2, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	1962, L1, L1, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	1962, L0, L0, 1
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSETSGN	L3, L3, 1962, 1
+	TTNOP
+	TTNOP
+	SFPSETSGN	L2, L2, 1962, 1
+	TTNOP
+	TTNOP
+	SFPSETSGN	L1, L1, 1962, 1
+	TTNOP
+	TTNOP
+	SFPSETSGN	L0, L0, 1962, 1
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setsgn_i_imms, .-_Z12setsgn_i_imms
 	.align	1
 	.globl	_Z12setsgn_i_regj
 	.type	_Z12setsgn_i_regj, @function
 _Z12setsgn_i_regj:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,12
 	li	a3,16773120
@@ -1084,52 +1084,52 @@ _Z12setsgn_i_regj:
 	li	a2, 2298479409	# 89000331
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x89) - d(lr3) s(lr3)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,1
 	slli	a5,a5,12
 	and	a5,a5,a3
 	li	a2, 2298479137	# 89000221
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x89) - d(lr2) s(lr2)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a5,a0,2
 	slli	a5,a5,12
 	and	a5,a5,a3
 	li	a2, 2298478865	# 89000111
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x89) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,3
 	slli	a0,a0,12
 	and	a0,a0,a3
 	li	a5, 2298478593	# 89000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setsgn_i_regj, .-_Z12setsgn_i_regj
 	.align	1
 	.globl	_Z13setsgn_i_boths
 	.type	_Z13setsgn_i_boths, @function
 _Z13setsgn_i_boths:
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSETSGN	1979, L3, L3, 1
-	SFPNOP
-	SFPNOP
-	SFPSETSGN	1979, L2, L2, 1
-	SFPNOP
-	SFPNOP
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSETSGN	L3, L3, 1979, 1
+	TTNOP
+	TTNOP
+	SFPSETSGN	L2, L2, 1979, 1
+	TTNOP
+	TTNOP
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,20
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
@@ -1137,8 +1137,8 @@ _Z13setsgn_i_boths:
 	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x89) - d(lr1) s(lr1)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	addi	a0,a0,1
 	li	a5,16773120
 	slli	a0,a0,12
@@ -1146,12 +1146,12 @@ _Z13setsgn_i_boths:
 	li	a5, 2298478593	# 89000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	TTNOP
+	TTNOP
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z13setsgn_i_boths, .-_Z13setsgn_i_boths
 	.align	1
@@ -1166,24 +1166,24 @@ _Z11multi_reusei:
 	add	a5,a0,a5
 	li	a4,0
 	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a5,a0,a5
 	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a5,a0,a5
 	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a0,a0,a5
 	sw	a0, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 2, 0
+	TTNOP
+	TTNOP
+	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z11multi_reusei, .-_Z11multi_reusei
 	.align	1
@@ -1292,34 +1292,34 @@ _Z13loop_compileri:
 	li	a0, 1879113728	# 70010000
 	add	a4,a4,a0
 	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
 	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
 	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
 	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z13loop_compileri, .-_Z13loop_compileri
 	.section	.rodata.str1.4,"aMS",@progbits,1
@@ -1344,37 +1344,37 @@ main:
 	slli	s0,s1,16
 	call	_Z13macro_checkedi
 	srai	s0,s0,16
-	SFPLOAD	L3, 1, 10
-	SFPLOAD	L2, 1, 20
-	SFPLOAD	L1, 1, 30
-	SFPLOAD	L0, 1, 40
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOAD	L3, 10, 1
+	SFPLOAD	L2, 20, 1
+	SFPLOAD	L1, 30, 1
+	SFPLOAD	L0, 40, 1
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	mv	a0,s0
 	call	_Z8load_regs
 	mv	a0,s0
 	call	_Z9load_boths
-	SFPLOADI	L3, 0, 10
-	SFPLOADI	L2, 4, 10
-	SFPLOADI	L1, 8, 20
-	SFPLOADI	L0, 12, 30
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPLOADI	L3, 10, 0
+	SFPLOADI	L2, 10, 4
+	SFPLOADI	L1, 20, 8
+	SFPLOADI	L0, 30, 12
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	mv	a0,s0
 	call	_Z9loadi_regs
 	mv	a0,s0
 	call	_Z10loadi_boths
-	SFPLOAD	L0, 1, 10
-	SFPSTORE	L0, 2, 10
-	SFPSTORE	L0, 2, 20
-	SFPSTORE	L0, 2, 30
-	SFPSTORE	L0, 2, 40
-	SFPNOP
-	SFPLOAD	L0, 1, 10
+	SFPLOAD	L0, 10, 1
+	SFPSTORE	10, L0, 2
+	SFPSTORE	20, L0, 2
+	SFPSTORE	30, L0, 2
+	SFPSTORE	40, L0, 2
+	TTNOP
+	SFPLOAD	L0, 10, 1
 	lui	s4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	s3,65536
 	addi	s3,s3,-1
@@ -1398,19 +1398,19 @@ main:
 	li	a1, 1912733696	# 72020000
 	add	a1,a2,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	SFPLOAD	L0, 1, 10
-	SFPSTORE	L0, 2, 10
-	SFPSTORE	L0, 2, 20
+	SFPLOAD	L0, 10, 1
+	SFPSTORE	10, L0, 2
+	SFPSTORE	20, L0, 2
 	li	a1, 1912733696	# 72020000
 	add	a1,a4,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
 	li	a1, 1912733696	# 72020000
 	add	a1,a3,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
 	li	a1, 1926365184	# 72d20000
 	add	a1,s2,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr13)
@@ -1423,8 +1423,8 @@ main:
 	li	a3, 1926365184	# 72d20000
 	add	a2,a2,a3
 	sw	a2, 0(a5)	# Op(0x72) s(lr13)
-	SFPSTORE	L13, 2, 10
-	SFPSTORE	L13, 2, 20
+	SFPSTORE	10, L13, 2
+	SFPSTORE	20, L13, 2
 	li	a3, 1926365184	# 72d20000
 	add	a3,s2,a3
 	sw	a3, 0(a5)	# Op(0x72) s(lr13)
@@ -1481,24 +1481,24 @@ main:
 	add	a3,a5,a3
 	li	a2,0
 	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a3,a5,a3
 	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a3,a5,a3
 	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
+	TTNOP
+	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a5,a5,a3
 	sw	a5, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
-	SFPNOP
-	SFPNOP
-	SFPSTORE	L0, 2, 0
+	TTNOP
+	TTNOP
+	SFPSTORE	0, L0, 2
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(s4)
 	li	t3,1881538560
 	add	t3,s1,t3
@@ -1587,34 +1587,34 @@ main:
 	li	a3, 1879113728	# 70010000
 	add	s0,s0,a3
 	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
 	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
 	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
 	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
-	SFPSTORE	L3, 2, 1
-	SFPSTORE	L2, 2, 10
-	SFPSTORE	L1, 2, 20
-	SFPSTORE	L0, 2, 30
+	SFPSTORE	1, L3, 2
+	SFPSTORE	10, L2, 2
+	SFPSTORE	20, L1, 2
+	SFPSTORE	30, L0, 2
 	lui	a0,%hi(.LC0)
 	addi	a0,a0,%lo(.LC0)
 	call	printf

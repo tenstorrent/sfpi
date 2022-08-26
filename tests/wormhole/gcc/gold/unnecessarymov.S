@@ -8,17 +8,17 @@
 	.globl	_Z6whymovv
 	.type	_Z6whymovv, @function
 _Z6whymovv:
-	SFPLOADI	L0, 4, 3
-	SFPLOAD	L1, 1, 0, 0
-	SFPSETCC	0, L1, 6
-	SFPLOADI	L0, 4, 28
+	SFPLOADI	L0, 3, 4
+	SFPLOAD	L1, 0, 1, 0
+	SFPSETCC	L1, 0, 6
+	SFPLOADI	L0, 28, 4
 	SFPENCC	3, 10
-	SFPLOADI	L1, 0, 17152
-	SFPIADD	-29, L0, L0, 1
-	SFPMOV	L1, L0, 2
-	SFPLOADI	L0, 0, 17408
+	SFPLOADI	L1, 17152, 0
+	SFPIADD	L0, L0, -29, 1
+	SFPMOV	L0, L1, 2
+	SFPLOADI	L0, 17408, 0
 	SFPENCC	3, 10
-	SFPSTORE	L0, 0, 0, 24
+	SFPSTORE	24, L0, 0, 0
 	ret
 	.size	_Z6whymovv, .-_Z6whymovv
 	.section	.text.startup,"ax",@progbits
@@ -26,17 +26,17 @@ _Z6whymovv:
 	.globl	main
 	.type	main, @function
 main:
-	SFPLOADI	L0, 4, 3
-	SFPLOAD	L1, 1, 0, 0
-	SFPSETCC	0, L1, 6
-	SFPLOADI	L0, 4, 28
+	SFPLOADI	L0, 3, 4
+	SFPLOAD	L1, 0, 1, 0
+	SFPSETCC	L1, 0, 6
+	SFPLOADI	L0, 28, 4
 	SFPENCC	3, 10
-	SFPLOADI	L1, 0, 17152
-	SFPIADD	-29, L0, L0, 1
-	SFPMOV	L1, L0, 2
-	SFPLOADI	L0, 0, 17408
+	SFPLOADI	L1, 17152, 0
+	SFPIADD	L0, L0, -29, 1
+	SFPMOV	L0, L1, 2
+	SFPLOADI	L0, 17408, 0
 	SFPENCC	3, 10
-	SFPSTORE	L0, 0, 0, 24
+	SFPSTORE	24, L0, 0, 0
 	li	a0,0
 	ret
 	.size	main, .-main
