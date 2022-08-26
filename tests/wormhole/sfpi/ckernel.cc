@@ -435,7 +435,7 @@ sfpi_test_noinline void calculate_gelu_derivative()
     vUInt l1 = l_reg[1];
 
     // SFPU microcode: 
-    #pragma GCC unroll 4
+    #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
     {
         vFloat in = dst_reg[0];
