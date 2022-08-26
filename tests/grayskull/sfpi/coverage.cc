@@ -939,28 +939,20 @@ void test_lut()
 
 void lra()
 {
-    LRegAssigner lra;
+    vFloat x = l_reg[1];
+    vFloat y = l_reg[2];
+    vInt z = l_reg[3];
+    vInt a = l_reg[0];
 
-    vFloat x = lra.assign(LRegs::LReg1);
     dst_reg[0] = x;
-
-    vFloat y;
-    y = lra.assign(LRegs::LReg2);
     dst_reg[0] = y;
-
-    vInt z = lra.assign(LRegs::LReg3);
     dst_reg [0] = z;
-
-    vInt a;
-    a = lra.assign(LRegs::LReg0);
     dst_reg[0] = a;
 
-    vUInt b = lra.assign(LRegs::LReg1);
-    dst_reg [0] = b;
-
-    vUInt c;
-    c = lra.assign(LRegs::LReg2);
-    dst_reg[0] = c;
+    l_reg[0] = a;
+    l_reg[1] = x;
+    l_reg[2] = y;
+    l_reg[3] = z;
 }
 
 void stupid_example(unsigned int value)

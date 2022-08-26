@@ -1828,12 +1828,14 @@ _Z9many_regsv:
 	.globl	_Z3lrav
 	.type	_Z3lrav, @function
 _Z3lrav:
+	SFPSTORE	L5, 0, 3, 0
+	SFPSTORE	L7, 0, 3, 0
+	SFPSTORE	L6, 0, 3, 0
+	SFPSTORE	L0, 0, 3, 0
 	SFPSTORE	L1, 0, 3, 0
 	SFPSTORE	L2, 0, 3, 0
 	SFPSTORE	L3, 0, 3, 0
 	SFPSTORE	L4, 0, 3, 0
-	SFPSTORE	L5, 0, 3, 0
-	SFPSTORE	L6, 0, 3, 0
 	ret
 	.size	_Z3lrav, .-_Z3lrav
 	.align	1

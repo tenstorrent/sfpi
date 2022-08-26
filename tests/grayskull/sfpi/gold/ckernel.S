@@ -1879,16 +1879,16 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
-	slli	a4,a0,16
-	srli	a4,a4,16
+	slli	a0,a0,16
+	srli	a0,a0,16
 	li	a3, 1899036672	# 71310000
 	li	a5,4
 	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
-	add	a4,a4,a3
+	add	a3,a3,a0
 .L80:
 	SFPLOAD	L1, 1, 0
-	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)
-	sw	a4, 0(a3)	# Op(0x71) - d(lr3)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a2)
+	sw	a3, 0(a4)	# Op(0x71) - d(lr3)
 	SFPMUL	L1, L3, L4, L1, 0
 	SFPNOP
 	SFPNOP

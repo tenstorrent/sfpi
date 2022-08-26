@@ -1101,28 +1101,32 @@ void many_regs()
 
 void lra()
 {
-    LRegAssigner lra;
+    vFloat x = l_reg[1];
+    vFloat v = l_reg[0];
+    vInt a = l_reg[4];
+    vFloat y = l_reg[2];
+    vUInt b = l_reg[5];
+    vInt z = l_reg[3];
+    vUInt d = l_reg[7];
+    vUInt c = l_reg[6];
 
-    vFloat x = lra.assign(LRegs::LReg1);
+    dst_reg [0] = b;
+    dst_reg[0] = d;
+    dst_reg[0] = c;
+    dst_reg[0] = v;
     dst_reg[0] = x;
-
-    vFloat y;
-    y = lra.assign(LRegs::LReg2);
     dst_reg[0] = y;
-
-    vInt z = lra.assign(LRegs::LReg3);
     dst_reg [0] = z;
-
-    vInt a;
-    a = lra.assign(LRegs::LReg4);
     dst_reg[0] = a;
 
-    vUInt b = lra.assign(LRegs::LReg5);
-    dst_reg [0] = b;
-
-    vUInt c;
-    c = lra.assign(LRegs::LReg6);
-    dst_reg[0] = c;
+    l_reg[0] = v;
+    l_reg[1] = x;
+    l_reg[2] = y;
+    l_reg[3] = z;
+    l_reg[4] = a;
+    l_reg[5] = b;
+    l_reg[6] = c;
+    l_reg[7] = d;
 }
 
 void stupid_example(unsigned int value)

@@ -1560,9 +1560,8 @@ sfpi_test_noinline void test11()
         TTI_SFPLOADI(0, SFPLOADI_MOD0_USHORT, 0xFF20); // Mulitply by 0.0, add 0.25
         TTI_SFPLOADI(1, SFPLOADI_MOD0_USHORT, 0x2010); // Mulitply by 0.25, add 0.5
         vUInt l0b, l1b;
-        LRegAssigner lra;
-        l0b = lra.assign(LRegs::LReg0);
-        l1b = lra.assign(LRegs::LReg0);
+        l0b = l_reg[0];
+        l1b = l_reg[1];
 
         v_if(dst_reg[0] == 7.0F) {
             // Use L0
@@ -1605,6 +1604,9 @@ sfpi_test_noinline void test11()
             dst_reg[11] = h;
         }
         v_endif;
+
+        l_reg[0] = l0b;
+        l_reg[1] = l1b;
     }
 
     // lut2 3 entry 16 bit

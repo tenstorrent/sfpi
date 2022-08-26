@@ -2651,8 +2651,6 @@ _Z3lrav:
 	SFPSTORE	L2, 0, 0
 	SFPSTORE	L3, 2, 0
 	SFPSTORE	L0, 2, 0
-	SFPSTORE	L1, 2, 0
-	SFPSTORE	L2, 2, 0
 	ret
 	.size	_Z3lrav, .-_Z3lrav
 	.align	1

@@ -135,15 +135,4 @@ sfpi_inline vType __vIntBase::operator^=(const vType b)
     return v;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-enum class LRegs {
-    LReg0 = 0,
-    LReg1 = 1,
-    LReg2 = 2,
-    LReg3 = 3,
-    LRegCount = SFP_LREG_COUNT,
-};
-
-LRegAssigner::LRegAssigner() : lregs{LRegs::LReg0, LRegs::LReg1, LRegs::LReg2, LRegs::LReg3} {}
-
 } // namespace sfpi

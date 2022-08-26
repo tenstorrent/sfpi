@@ -266,18 +266,20 @@ _Z9loadstorei:
 	li	a2, 1912651776	# 7200c000
 	add	a2,a4,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
-	SFPREPLAY	0, 6, 1, 1
 	SFPLOADI	L0, 4, 1
 	mv	a3,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
+	SFPREPLAY	0, 6, 1, 1
 	SFPLOADI	L0, 4, 2
 	mv	a4,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
+	SFPLOADI	L0, 4, 1
+	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPREPLAY	0, 6, 0, 0
 	SFPREPLAY	0, 6, 0, 0
-	SFPREPLAY	0, 4, 0, 0
+	SFPREPLAY	0, 2, 0, 0
 	ret
 	.size	_Z9loadstorei, .-_Z9loadstorei
 	.align	1

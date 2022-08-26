@@ -133,19 +133,4 @@ sfpi_inline void __vConstIntBase::operator=(const vInt in) const
     __builtin_rvtt_sfpconfig_v(in.get(), get());
 }
 
-//////////////////////////////////////////////////////////////////////////////
-enum class LRegs {
-    LReg0 = 0,
-    LReg1 = 1,
-    LReg2 = 2,
-    LReg3 = 3,
-    LReg4 = 4,
-    LReg5 = 5,
-    LReg6 = 6,
-    LReg7 = 7,
-    LRegCount = SFP_LREG_COUNT,
-};
-
-LRegAssigner::LRegAssigner() : lregs{LRegs::LReg0, LRegs::LReg1, LRegs::LReg2, LRegs::LReg3, LRegs::LReg4, LRegs::LReg5, LRegs::LReg6, LRegs::LReg7} {}
-
 } // namespace sfpi
