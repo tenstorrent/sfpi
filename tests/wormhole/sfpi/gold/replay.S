@@ -48,27 +48,23 @@ _Z7replay6v:
 	.type	_Z25replay_load_in_the_middlev, @function
 _Z25replay_load_in_the_middlev:
 	SFPLOADI	L0, 1, 4
+	TTREPLAY	0, 9, 1, 1
 	SFPIADD	L0, L0, 1, 5
 	SFPIADD	L1, L0, -4, 5
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 0, 4
 	SFPENCC	3, 10
-	TTREPLAY	0, 9, 1, 1
 	SFPLOAD	L2, 0, 0, 3
 	SFPMOV	L1, L0, 0
 	SFPSETEXP	L1, L2, 0, 0
 	SFPSTORE	0, L1, 0, 3
-	SFPIADD	L0, L0, 1, 5
-	SFPIADD	L1, L0, -4, 5
-	SFPSETCC	L1, 0, 6
-	SFPLOADI	L0, 0, 4
-	SFPENCC	3, 10
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
+	TTREPLAY	0, 5, 0, 0
 	SFPLOAD	L1, 0, 0, 3
 	SFPSETEXP	L0, L1, 0, 0
 	SFPSTORE	0, L0, 0, 3
@@ -96,14 +92,16 @@ _Z27replay_assignlreg_const_regv:
 	.globl	_Z18replay_partial_topv
 	.type	_Z18replay_partial_topv, @function
 _Z18replay_partial_topv:
-	TTREPLAY	0, 4, 1, 1
+	TTREPLAY	0, 7, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	SFPMULI	L0, 16544, 0
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 4, 0, 0
-	TTREPLAY	0, 4, 0, 0
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 3
+	TTREPLAY	0, 7, 0, 0
 	SFPABS	L0, L0, 1
 	SFPSTORE	0, L0, 0, 3
 	ret
@@ -170,6 +168,7 @@ _Z14replay_nonimm2i:
 	add	a4,a6,a4
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
+	TTREPLAY	0, 4, 1, 1
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPSETMAN	L0, L1, 0, 0
 	SFPSTORE	0, L0, 0, 3
@@ -178,57 +177,37 @@ _Z14replay_nonimm2i:
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a1,a0,2
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a1,a0,3
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a1,a0,4
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a1,a0,5
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a1,a0,6
 	and	a1,a1,a2
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPLOAD	L1, 0, 0, 3
+	TTREPLAY	0, 4, 0, 0
 	addi	a0,a0,7
 	and	a0,a0,a2
 	add	a0,a0,a3
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSETMAN	L0, L1, 0, 0
-	SFPSTORE	0, L0, 0, 3
+	TTREPLAY	0, 3, 0, 0
 	ret
 	.size	_Z14replay_nonimm2i, .-_Z14replay_nonimm2i
 	.align	1
@@ -326,7 +305,6 @@ _Z21replay_jump_in_middleii:
 	.globl	_Z14replay_tti_asmv
 	.type	_Z14replay_tti_asmv, @function
 _Z14replay_tti_asmv:
-	TTREPLAY	0, 3, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	SFPMULI	L0, 16544, 0
 	SFPNOP
@@ -336,49 +314,63 @@ _Z14replay_tti_asmv:
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)
 # 0 "" 2
  #NO_APP
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 3, 0, 0
+	SFPLOAD	L0, 0, 0, 3
+	SFPMULI	L0, 16544, 0
+	SFPNOP
  #APP
 # 168 "replay.cc" 1
 	.word (402653186)

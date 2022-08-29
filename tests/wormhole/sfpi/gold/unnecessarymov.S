@@ -72,14 +72,13 @@ _Z11test_icmp_vv:
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
 	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 3, 1, 1
 	SFPSETCC	L0, 0, 0
 	SFPSETCC	L0, 0, 4
 	SFPCOMPC
 	SFPLOADI	L1, 1, 4
 	SFPPUSHC	0
-	SFPSETCC	L0, 0, 0
-	SFPSETCC	L0, 0, 4
-	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
 	SFPMOV	L0, L1, 2
 	SFPLOADI	L0, 0, 4
 	SFPPOPC	0

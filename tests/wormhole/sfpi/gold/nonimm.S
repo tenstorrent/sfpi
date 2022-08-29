@@ -63,7 +63,6 @@ _Z6loadiffi:
 	.globl	_Z9loadif_lvfi
 	.type	_Z9loadif_lvfi, @function
 _Z9loadif_lvfi:
-	TTREPLAY	0, 13, 1, 1
 	SFPLOADI	L0, 16256, 0
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L2, 16384, 0
@@ -91,9 +90,45 @@ _Z9loadif_lvfi:
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
 	SFPSTORE	2, L1, 0, 3
-	TTREPLAY	0, 13, 0, 0
-	TTREPLAY	0, 13, 0, 0
-	TTREPLAY	0, 13, 0, 0
+	SFPLOADI	L0, 16256, 0
+	SFPLOADI	L1, 16256, 0
+	SFPLOADI	L2, 16384, 0
+	SFPMAD	L2, L2, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 6
+	sw	a6, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a3, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	2, L1, 0, 3
+	SFPLOADI	L0, 16256, 0
+	SFPLOADI	L1, 16256, 0
+	SFPLOADI	L2, 16384, 0
+	SFPMAD	L2, L2, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 6
+	sw	a6, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a3, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	2, L1, 0, 3
+	SFPLOADI	L0, 16256, 0
+	SFPLOADI	L1, 16256, 0
+	SFPLOADI	L2, 16384, 0
+	SFPMAD	L2, L2, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 6
+	sw	a6, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	sw	a3, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	2, L1, 0, 3
 	SFPLOADI	L0, 16256, 0
 	SFPLOADI	L1, 16384, 0
 	SFPMAD	L1, L1, L11, L0, 0
@@ -103,6 +138,7 @@ _Z9loadif_lvfi:
 	li	a4, 1895825408	# 71000000
 	add	a4,a1,a4
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	TTREPLAY	0, 7, 1, 1
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
 	SFPLOADI	L0, 16256, 0
@@ -111,63 +147,21 @@ _Z9loadif_lvfi:
 	SFPNOP
 	SFPSETCC	L1, 0, 6
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	li	a4, 1895890944	# 71010000
 	add	a4,a4,a1
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	SFPLOADI	L1, 16384, 0
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
+	TTREPLAY	0, 7, 0, 0
 	li	a4, 1895825408	# 71000000
 	add	a1,a4,a1
 	sw	a1, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
@@ -189,8 +183,7 @@ _Z9loadif_lvfi:
 	SFPNOP
 	SFPSETCC	L1, 0, 6
 	sw	a1, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	TTREPLAY	0, 2, 0, 0
 	ret
 	.size	_Z9loadif_lvfi, .-_Z9loadif_lvfi
 	.align	1
@@ -262,22 +255,20 @@ _Z9loadstorei:
 	and	a4,a4,a0
 	li	a1, 1879097344	# 7000c000
 	add	a1,a4,a1
+	TTREPLAY	0, 6, 1, 1
 	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
 	li	a2, 1912651776	# 7200c000
 	add	a2,a4,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
-	TTREPLAY	0, 6, 1, 1
 	SFPLOADI	L0, 1, 4
 	mv	a3,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 2, 4
 	mv	a4,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
-	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
-	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	TTREPLAY	0, 6, 0, 0
 	TTREPLAY	0, 6, 0, 0
-	TTREPLAY	0, 4, 0, 0
+	TTREPLAY	0, 6, 0, 0
 	ret
 	.size	_Z9loadstorei, .-_Z9loadstorei
 	.align	1
@@ -344,6 +335,7 @@ _Z17loadstorefallbacki:
 _Z20loadstorefallback_lvi:
 	SFPLOADI	L0, 16256, 0
 	SFPLOADI	L1, 16256, 0
+	TTREPLAY	0, 6, 1, 1
 	SFPMAD	L2, L10, L11, L0, 0
 	SFPNOP
 	SFPSETCC	L2, 0, 6
@@ -360,24 +352,9 @@ _Z20loadstorefallback_lvi:
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x70) lv(lr1)  d(lr1)
 	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x70) lv(lr0)  d(lr0)
-	sw	a5, 0(a4)	# Op(0x70) lv(lr1)  d(lr1)
-	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x70) lv(lr0)  d(lr0)
-	sw	a5, 0(a4)	# Op(0x70) lv(lr1)  d(lr1)
-	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x70) lv(lr0)  d(lr0)
-	sw	a5, 0(a4)	# Op(0x70) lv(lr1)  d(lr1)
-	SFPENCC	3, 10
+	TTREPLAY	0, 6, 0, 0
+	TTREPLAY	0, 6, 0, 0
+	TTREPLAY	0, 6, 0, 0
 	SFPSTORE	0, L0, 0, 3
 	SFPSTORE	0, L1, 0, 3
 	ret
@@ -397,6 +374,7 @@ _Z5fcmpsfi:
 	add	a6,a6,a3
 	li	a3, 1897398272	# 71180000
 	add	a3,a0,a3
+	TTREPLAY	0, 25, 1, 1
 	sw	a6, 0(a5)	# Op(0x71) - d(lr1)
 	sw	a3, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
 	SFPMAD	L1, L1, L11, L0, 0
@@ -421,35 +399,15 @@ _Z5fcmpsfi:
 	SFPSETCC	L1, 0, 6
 	SFPSTORE	0, L0, 0, 3
 	SFPENCC	3, 10
-	TTREPLAY	0, 25, 1, 1
 	SFPLOADI	L1, 16448, 0
 	SFPMAD	L1, L1, L11, L0, 0
 	SFPNOP
 	SFPSETCC	L1, 0, 6
 	SFPSTORE	0, L0, 0, 3
 	SFPENCC	3, 10
-	sw	a6, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a3, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
-	SFPSTORE	0, L0, 0, 3
-	SFPENCC	3, 10
-	sw	a2, 0(a5)	# Op(0x71) - d(lr1)
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
-	SFPSTORE	0, L0, 0, 3
-	SFPENCC	3, 10
-	sw	a4, 0(a5)	# Op(0x71) - d(lr1)
-	SFPMAD	L1, L1, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 6
-	SFPSTORE	0, L0, 0, 3
-	SFPENCC	3, 10
 	TTREPLAY	0, 25, 0, 0
 	TTREPLAY	0, 25, 0, 0
-	TTREPLAY	0, 6, 0, 0
+	TTREPLAY	0, 25, 0, 0
 	ret
 	.size	_Z5fcmpsfi, .-_Z5fcmpsfi
 	.align	1
@@ -475,6 +433,7 @@ _Z7muladdffi:
 	li	a0, 1897398272	# 71180000
 	add	a0,a4,a0
 	add	a6,a3,a6
+	TTREPLAY	0, 15, 1, 1
 	sw	a6, 0(a5)	# Op(0x71) - d(lr1)
 	sw	a0, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
 	SFPMUL	L1, L0, L1, L9, 0
@@ -503,41 +462,9 @@ _Z7muladdffi:
 	xor	t3, t3, a7
 	sw	t3, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
-	sw	a6, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a0, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPMUL	L1, L0, L1, L9, 0
-	SFPNOP
-	sw	a2, 0(a5)	# Op(0x75) lv(lr1)  d(lr1)
-	sw	a7, 0(a5)	# Op(0x71) - d(lr0)
-	SFPADD	L1, L10, L1, L0, 0
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPADD	L0, L10, L1, L0, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	sw	t1, 0(a5)	# Op(0x74) lv(lr0)  d(lr0)
-	li	t3, 1048576
-	xor	t3, t3, a7
-	sw	t3, 0(a5)	# Op(0x71) - d(lr1)
+	TTREPLAY	0, 15, 0, 0
 	SFPMUL	L0, L0, L1, L9, 0
-	sw	a6, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a0, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPMUL	L1, L0, L1, L9, 0
-	SFPNOP
-	sw	a2, 0(a5)	# Op(0x75) lv(lr1)  d(lr1)
-	sw	a7, 0(a5)	# Op(0x71) - d(lr0)
-	SFPADD	L1, L10, L1, L0, 0
-	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPADD	L0, L10, L1, L0, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	sw	t1, 0(a5)	# Op(0x74) lv(lr0)  d(lr0)
-	li	t1, 1048576
-	xor	t1, t1, a7
-	sw	t1, 0(a5)	# Op(0x71) - d(lr1)
+	TTREPLAY	0, 15, 0, 0
 	SFPMUL	L1, L0, L1, L9, 0
 	li	a7, 1048576
 	xor	a7, a7, a6
@@ -572,6 +499,7 @@ _Z7muladdffi:
 _Z10muladdf_lvfi:
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 21, 1, 1
 	SFPMAD	L2, L10, L11, L0, 0
 	SFPNOP
 	SFPSETCC	L2, 0, 6
@@ -608,69 +536,9 @@ _Z10muladdf_lvfi:
 	SFPSTORE	0, L0, 0, 3
 	SFPSTORE	2, L1, 0, 3
 	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L0, L1, L2, L9, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L1, L10, L0, L2, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L0, L1, L2, L9, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L1, L10, L0, L2, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	SFPENCC	3, 10
-	SFPMAD	L2, L10, L11, L0, 0
-	SFPNOP
-	SFPSETCC	L2, 0, 6
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPMUL	L0, L1, L2, L9, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPMUL	L1, L0, L2, L9, 0
-	sw	t3, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	sw	t1, 0(a5)	# Op(0x71) - d(lr2)
-	SFPADD	L1, L10, L0, L2, 0
-	sw	a7, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a6, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPADD	L0, L10, L1, L2, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	SFPENCC	3, 10
+	TTREPLAY	0, 21, 0, 0
+	TTREPLAY	0, 21, 0, 0
+	TTREPLAY	0, 21, 0, 0
 	ret
 	.size	_Z10muladdf_lvfi, .-_Z10muladdf_lvfi
 	.align	1
@@ -688,11 +556,11 @@ _Z5icmpsi:
 	add	a3,a3,a5
 	li	a5, 1897398272	# 71180000
 	add	a5,a0,a5
+	TTREPLAY	0, 12, 1, 1
 	sw	a3, 0(a4)	# Op(0x71) - d(lr1)
 	sw	a5, 0(a4)	# Op(0x71) lv(lr1)  d(lr1)
 	SFPIADD	L1, L2, 0, 6
 	SFPSETCC	L1, 0, 6
-	TTREPLAY	0, 12, 1, 1
 	SFPLOADI	L1, 0, 0
 	SFPSTORE	0, L1, 0, 3
 	SFPENCC	3, 10
@@ -701,13 +569,9 @@ _Z5icmpsi:
 	SFPLOADI	L1, 0, 0
 	SFPSTORE	0, L1, 0, 3
 	SFPENCC	3, 10
-	sw	a3, 0(a4)	# Op(0x71) - d(lr1)
-	sw	a5, 0(a4)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPIADD	L1, L2, 0, 6
-	SFPSETCC	L1, 0, 6
 	TTREPLAY	0, 12, 0, 0
 	TTREPLAY	0, 12, 0, 0
-	TTREPLAY	0, 3, 0, 0
+	TTREPLAY	0, 7, 0, 0
 	SFPIADD	L0, L0, -1, 5
 	SFPSETCC	L0, 0, 6
 	SFPLOADI	L0, 0, 0
@@ -729,6 +593,7 @@ _Z7muladdii:
 	li	a2, 1896349696	# 71080000
 	add	a1,a3,a1
 	add	a2,a4,a2
+	TTREPLAY	0, 8, 1, 1
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPIADD	L0, L1, 0, 4
@@ -741,30 +606,9 @@ _Z7muladdii:
 	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
 	SFPIADD	L1, L0, 0, 6
 	SFPIADD	L1, L1, -1, 5
-	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPIADD	L0, L1, 0, 4
-	SFPIADD	L0, L0, 1, 5
-	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPIADD	L1, L0, 0, 6
-	SFPIADD	L1, L1, -1, 5
-	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPIADD	L0, L1, 0, 4
-	SFPIADD	L0, L0, 1, 5
-	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPIADD	L1, L0, 0, 6
-	SFPIADD	L1, L1, -1, 5
-	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPIADD	L0, L1, 0, 4
-	SFPIADD	L0, L0, 1, 5
-	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr1)  d(lr1)
-	SFPIADD	L1, L0, 0, 6
-	SFPIADD	L1, L1, -1, 5
+	TTREPLAY	0, 8, 0, 0
+	TTREPLAY	0, 8, 0, 0
+	TTREPLAY	0, 8, 0, 0
 	ret
 	.size	_Z7muladdii, .-_Z7muladdii
 	.align	1
@@ -773,6 +617,7 @@ _Z7muladdii:
 _Z10muladdi_lvi:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 1, 4
+	TTREPLAY	0, 13, 1, 1
 	SFPIADD	L2, L0, -2, 5
 	SFPSETCC	L2, 0, 6
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
@@ -797,45 +642,9 @@ _Z10muladdi_lvi:
 	SFPMOV	L1, L2, 0
 	SFPIADD	L0, L1, -1, 5
 	SFPENCC	3, 10
-	SFPIADD	L2, L0, -2, 5
-	SFPSETCC	L2, 0, 6
-	sw	a1, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 4
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, 1, 5
-	sw	a1, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 6
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, -1, 5
-	SFPENCC	3, 10
-	SFPIADD	L2, L0, -2, 5
-	SFPSETCC	L2, 0, 6
-	sw	a1, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 4
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, 1, 5
-	sw	a1, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 6
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, -1, 5
-	SFPENCC	3, 10
-	SFPIADD	L2, L0, -2, 5
-	SFPSETCC	L2, 0, 6
-	sw	a1, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a2, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 4
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, 1, 5
-	sw	a3, 0(a5)	# Op(0x71) - d(lr2)
-	sw	a4, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
-	SFPIADD	L2, L0, 0, 6
-	SFPMOV	L1, L2, 0
-	SFPIADD	L0, L1, -1, 5
-	SFPENCC	3, 10
+	TTREPLAY	0, 13, 0, 0
+	TTREPLAY	0, 13, 0, 0
+	TTREPLAY	0, 13, 0, 0
 	ret
 	.size	_Z10muladdi_lvi, .-_Z10muladdi_lvi
 	.align	1
@@ -934,6 +743,7 @@ _Z8other_lvif:
 	sw	a2, 0(a5)	# Op(0x76) - d(lr1) s(lr0)
 	li	a0, 1913700352	# 7210c000
 	add	a0,a3,a0
+	TTREPLAY	0, 16, 1, 1
 	sw	a0, 0(a5)	# Op(0x72) s(lr1)
 	li	a1, 1912651776	# 7200c000
 	add	a1,a3,a1
@@ -960,32 +770,8 @@ _Z8other_lvif:
 	SFPMOV	L2, L4, 0
 	sw	a6, 0(a5)	# Op(0x82) lv(lr0)  d(lr0) s(lr2)
 	sw	a2, 0(a5)	# Op(0x76) lv(lr1)  d(lr1) s(lr0)
-	sw	a0, 0(a5)	# Op(0x72) s(lr1)
-	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	sw	a3, 0(a5)	# Op(0x72) s(lr2)
-	SFPENCC	3, 10
-	SFPMAD	L4, L10, L11, L3, 0
-	SFPNOP
-	SFPSETCC	L4, 0, 6
-	li	t5, 1048576
-	xor	t5, t5, t4
-	sw	t5, 0(a5)	# Op(0x70) lv(lr1)  d(lr1)
-	sw	t4, 0(a5)	# Op(0x70) lv(lr0)  d(lr0)
-	sw	t1, 0(a5)	# Op(0x89) lv(lr1)  d(lr1) s(lr0)
-	li	t5, 6291456
-	xor	t5, t5, a7
-	sw	t5, 0(a5)	# Op(0x71) - d(lr4)
-	li	t5, 6291456
-	xor	t5, t5, a4
-	sw	t5, 0(a5)	# Op(0x71) lv(lr4)  d(lr4)
-	SFPSETMAN	L4, L0, 0, 0
-	SFPMOV	L2, L4, 0
-	sw	a6, 0(a5)	# Op(0x82) lv(lr0)  d(lr0) s(lr2)
-	sw	a2, 0(a5)	# Op(0x76) lv(lr1)  d(lr1) s(lr0)
-	sw	a0, 0(a5)	# Op(0x72) s(lr1)
-	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	sw	a3, 0(a5)	# Op(0x72) s(lr2)
-	SFPENCC	3, 10
+	TTREPLAY	0, 16, 0, 0
+	TTREPLAY	0, 4, 0, 0
 	SFPMAD	L3, L10, L11, L3, 0
 	SFPNOP
 	SFPSETCC	L3, 0, 6
@@ -1004,10 +790,7 @@ _Z8other_lvif:
 	SFPMOV	L2, L3, 0
 	sw	a6, 0(a5)	# Op(0x82) lv(lr0)  d(lr0) s(lr2)
 	sw	a2, 0(a5)	# Op(0x76) lv(lr1)  d(lr1) s(lr0)
-	sw	a0, 0(a5)	# Op(0x72) s(lr1)
-	sw	a1, 0(a5)	# Op(0x72) s(lr0)
-	sw	a3, 0(a5)	# Op(0x72) s(lr2)
-	SFPENCC	3, 10
+	TTREPLAY	0, 4, 0, 0
 	ret
 	.size	_Z8other_lvif, .-_Z8other_lvif
 	.align	1
@@ -1023,15 +806,14 @@ _Z8stochrndi:
 	and	a5,a5,a3
 	li	a3, 2382364700	# 8e00001c
 	add	a3,a5,a3
+	TTREPLAY	0, 3, 1, 1
 	sw	a3, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
 	li	a2, 2382364701	# 8e00001d
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
 	sw	a3, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
 	sw	a5, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
-	sw	a3, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
-	sw	a5, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
-	sw	a3, 0(a4)	# Op(0x8e) - d(lr1) s(lr0)
+	TTREPLAY	0, 3, 0, 0
 	li	a3, 16
 	xor	a3, a3, a5
 	sw	a3, 0(a4)	# Op(0x8e) - d(lr0) s(lr0)
@@ -1044,6 +826,7 @@ _Z8stochrndi:
 _Z11stochrnd_lvi:
 	SFPLOADI	L1, 1, 4
 	SFPLOADI	L0, 1, 4
+	TTREPLAY	0, 5, 1, 1
 	SFPIADD	L2, L1, -1, 5
 	SFPSETCC	L2, 0, 6
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
@@ -1059,21 +842,9 @@ _Z11stochrnd_lvi:
 	add	a5,a5,a2
 	sw	a5, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
 	SFPENCC	3, 10
-	SFPIADD	L2, L1, -1, 5
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	sw	a5, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	SFPENCC	3, 10
-	SFPIADD	L2, L1, -1, 5
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	sw	a5, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	SFPENCC	3, 10
-	SFPIADD	L2, L1, -1, 5
-	SFPSETCC	L2, 0, 6
-	sw	a3, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	sw	a5, 0(a4)	# Op(0x8e) lv(lr0)  d(lr0) s(lr1)
-	SFPENCC	3, 10
+	TTREPLAY	0, 5, 0, 0
+	TTREPLAY	0, 5, 0, 0
+	TTREPLAY	0, 5, 0, 0
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z11stochrnd_lvi, .-_Z11stochrnd_lvi
@@ -1089,6 +860,7 @@ _Z4shfti:
 	and	a3,a3,a2
 	li	a5, 2046820353	# 7a000001
 	add	a3,a3,a5
+	TTREPLAY	0, 3, 1, 1
 	sw	a3, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
 	neg	a5,a0
 	slli	a5,a5,12
@@ -1098,9 +870,7 @@ _Z4shfti:
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
 	sw	a3, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
-	sw	a3, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
-	sw	a5, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
-	sw	a3, 0(a4)	# Op(0x7a) lv(lr0)  d(lr0)
+	TTREPLAY	0, 3, 0, 0
 	SFPMOV	L1, L0, 0
 	li	a3, 16
 	xor	a3, a3, a5
@@ -1115,6 +885,7 @@ _Z4shfti:
 _Z7shft_lvi:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 1, 4
+	TTREPLAY	0, 9, 1, 1
 	SFPIADD	L2, L0, -1, 5
 	SFPSETCC	L2, 0, 6
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
@@ -1136,33 +907,9 @@ _Z7shft_lvi:
 	sw	a5, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
 	SFPMOV	L1, L2, 0
 	SFPENCC	3, 10
-	SFPIADD	L2, L0, -1, 5
-	SFPSETCC	L2, 0, 6
-	SFPMOV	L2, L1, 0
-	sw	a3, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L0, L2, 0
-	SFPMOV	L2, L0, 0
-	sw	a5, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L1, L2, 0
-	SFPENCC	3, 10
-	SFPIADD	L2, L0, -1, 5
-	SFPSETCC	L2, 0, 6
-	SFPMOV	L2, L1, 0
-	sw	a3, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L0, L2, 0
-	SFPMOV	L2, L0, 0
-	sw	a5, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L1, L2, 0
-	SFPENCC	3, 10
-	SFPIADD	L2, L0, -1, 5
-	SFPSETCC	L2, 0, 6
-	SFPMOV	L2, L1, 0
-	sw	a3, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L0, L2, 0
-	SFPMOV	L2, L0, 0
-	sw	a5, 0(a4)	# Op(0x7a) lv(lr2)  d(lr2)
-	SFPMOV	L1, L2, 0
-	SFPENCC	3, 10
+	TTREPLAY	0, 9, 0, 0
+	TTREPLAY	0, 9, 0, 0
+	TTREPLAY	0, 9, 0, 0
 	SFPSTORE	0, L0, 0, 3
 	SFPSTORE	0, L1, 0, 3
 	ret
@@ -1182,14 +929,12 @@ _Z4mulii:
 	add	a0,a0,a3
 	sw	a0, 0(a4)	# Op(0x71) - d(lr1)
 	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 4, 1, 1
 	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
 	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
-	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
-	SFPNOP
-	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
-	SFPNOP
+	TTREPLAY	0, 4, 0, 0
 	SFPSTORE	0, L0, 0, 3
 	SFPSTORE	0, L1, 0, 3
 	ret
