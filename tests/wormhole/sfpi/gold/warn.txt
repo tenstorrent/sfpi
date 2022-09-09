@@ -24,9 +24,42 @@ warn.cc: In function 'void setccnotinsidepushpop()':
 warn.cc:70:33: error: malformed program, sfpsetcc_v outside of pushc/popc
    70 |     __builtin_rvtt_wh_sfpsetcc_v(a, 12);
       |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-In file included from test.h:11,
+In function 'void intinc()':
+cc1plus: warning: 'x.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
+In file included from ../../../include/sfpi.h:123,
+                 from test.h:11,
                  from warn.cc:5:
-../../../include/sfpi.h: In function '(static initializers for warn.cc)':
-../../../include/sfpi.h:782:7: error: cannot write sfpu vector to memory
-  782 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
-      |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_mad_uninit()':
+../../../include/wormhole/sfpi_hw.h:143:69: warning: '*((void*)& x +256)' is used uninitialized in this function [-Wuninitialized]
+  143 | #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)
+      |                                                                     ^
+warn.cc:83:12: note: '*((void*)& x +256)' was declared here
+   83 |     vFloat x, y;
+      |            ^
+cc1plus: warning: '*((void*)& b +256)' is used uninitialized in this function [-Wuninitialized]
+cc1plus: warning: '*((void*)& x +256)' is used uninitialized in this function [-Wuninitialized]
+In file included from ../../../include/sfpi.h:123,
+                 from test.h:11,
+                 from warn.cc:5:
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_int_add_fold_uninit()':
+../../../include/wormhole/sfpi_hw.h:170:79: warning: 'x.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
+  170 | #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) __builtin_rvtt_wh_sfpxiadd_v(dst, src, mod1)
+      |                                                                               ^
+warn.cc:90:10: note: 'x.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' was declared here
+   90 |     vInt x, y;
+      |          ^
+cc1plus: warning: '*((void*)& val +256)' is used uninitialized in this function [-Wuninitialized]
+cc1plus: warning: 'x.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
+In file included from ../../../include/sfpi.h:123,
+                 from test.h:11,
+                 from warn.cc:5:
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_cond_uninit()':
+../../../include/wormhole/sfpi_hw.h:115:70: warning: '*((void*)& x +256)' is used uninitialized in this function [-Wuninitialized]
+  115 | #define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps((void *)ckernel::instrn_buffer, v, i, 0, 0, mod1)
+      |                                                                      ^
+warn.cc:100:10: note: '*((void*)& x +256)' was declared here
+  100 |     vInt x;
+      |          ^
+cc1plus: warning: '*((void*)& x +256)' is used uninitialized in this function [-Wuninitialized]
+Illegal rvtt builtin found in conditional tree: sfpxloadi
+warn.cc:98: confused by earlier errors, bailing out

@@ -69,6 +69,41 @@ void setccnotinsidepushpop()
 
     __builtin_rvtt_wh_sfpsetcc_v(a, 12);
 }
+
+void intinc()
+{
+    vInt x;
+    x++;
+}
+
+// Hit a crashes on some of the below due to not checking SSA_NAME_DEF_STMT
+// for null result.  Testing a bunch of them...
+void crash_mad_uninit()
+{
+    vFloat x, y;
+
+    dst_reg[0] = x + y;
+}
+
+void crash_int_add_fold_uninit()
+{
+    vInt x, y;
+
+    vInt z = x + y;
+    v_if (z == 0) {
+    }
+    v_endif;
+}
+
+void crash_cond_uninit()
+{
+    vInt x;
+
+    v_if (x == 0) {
+    }
+    v_endif;
+}
+
 #endif
 
 // The errors below cause the compiler to bail out, try one at a time
