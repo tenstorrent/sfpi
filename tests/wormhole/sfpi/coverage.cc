@@ -1005,12 +1005,12 @@ void test_cast()
 {
     vInt a = 1;
     vFloat b;
-    b = int2float(a, 0);
+    b = int_to_float(a, 0);
     dst_reg[0] = b;
-    b = int2float(a, 1);
+    b = int_to_float(a, 1);
     dst_reg[1] = b;
 
-    b = int2float(a, 0xFFFFFF); // invalid value
+    b = int_to_float(a, 0xFFFFFF); // invalid value
     dst_reg[1] = b;
 }
 
@@ -1018,55 +1018,55 @@ void test_stochrnd(int val)
 {
     vInt a = 1;
     vFloat b;
-    b = int2float(a, 0);
-    b = int2float(a, 1);
+    b = int_to_float(a, 0);
+    b = int_to_float(a, 1);
 
     vFloat f = 1.0f;
     vInt di;
     vUInt du;
 
-    du = float2fp16a(f);
-    du = float2fp16a(f, 0);
-    du = float2fp16a(f, 2); // invalid
+    du = float_to_fp16a(f);
+    du = float_to_fp16a(f, 0);
+    du = float_to_fp16a(f, 2); // invalid
 
-    du = float2fp16b(f);
-    du = float2fp16b(f, 0);
-    du = float2fp16b(f, 2); // invalid
+    du = float_to_fp16b(f);
+    du = float_to_fp16b(f, 0);
+    du = float_to_fp16b(f, 2); // invalid
 
-    du = float2uint8(f);
-    du = float2uint8(f, 0);
-    du = float2uint8(f, 2); // invalid
+    du = float_to_uint8(f);
+    du = float_to_uint8(f, 0);
+    du = float_to_uint8(f, 2); // invalid
 
-    du = float2int8(f);
-    du = float2int8(f, 0);
-    du = float2int8(f, 2); // invalid
+    du = float_to_int8(f);
+    du = float_to_int8(f, 0);
+    du = float_to_int8(f, 2); // invalid
 
-    du = float2uint16(f);
-    du = float2uint16(f, 0);
-    du = float2uint16(f, 2); // invalid
+    du = float_to_uint16(f);
+    du = float_to_uint16(f, 0);
+    du = float_to_uint16(f, 2); // invalid
 
-    du = float2int16(f);
-    du = float2int16(f, 0);
-    du = float2int16(f, 2); // invalid
+    du = float_to_int16(f);
+    du = float_to_int16(f, 0);
+    du = float_to_int16(f, 2); // invalid
 
     vInt descale = 3;
-    du = int322uint8(a, descale, 0);
-    du = int322uint8(a, descale, 1);
-    du = int322uint8(a, descale, 2); // invalid
+    du = int32_to_uint8(a, descale, 0);
+    du = int32_to_uint8(a, descale, 1);
+    du = int32_to_uint8(a, descale, 2); // invalid
 
-    du = int322uint8(a, 3, 0);
-    du = int322uint8(a, val, 0);
-    du = int322uint8(a, 0xffffff, 1);
-    du = int322uint8(a, 0xffffff, 2); // invalid
+    du = int32_to_uint8(a, 3, 0);
+    du = int32_to_uint8(a, val, 0);
+    du = int32_to_uint8(a, 0xffffff, 1);
+    du = int32_to_uint8(a, 0xffffff, 2); // invalid
 
-    du = int322int8(a, descale, 0);
-    du = int322int8(a, descale, 1);
-    du = int322int8(a, descale, 2); // invalid
+    du = int32_to_int8(a, descale, 0);
+    du = int32_to_int8(a, descale, 1);
+    du = int32_to_int8(a, descale, 2); // invalid
 
-    du = int322int8(a, 3, 0);
-    du = int322int8(a, val, 0);
-    du = int322int8(a, 0xffffff, 1);
-    du = int322int8(a, 0xffffff, 2); // invalid
+    du = int32_to_int8(a, 3, 0);
+    du = int32_to_int8(a, val, 0);
+    du = int32_to_int8(a, 0xffffff, 1);
+    du = int32_to_int8(a, 0xffffff, 2); // invalid
 }
 
 void subvec_shfl()

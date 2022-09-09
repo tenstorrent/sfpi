@@ -335,8 +335,8 @@ void stochrnd(int arg)
     vUInt du;
 #pragma GCC unroll loops
     for(int x = 0; x < loops; x++) {
-        du = int322uint8(a, arg, 0);
-        du = int322int8(a, arg, 0);
+        du = int32_to_uint8(a, arg, 0);
+        du = int32_to_int8(a, arg, 0);
     }
     dst_reg[0] = du;
 }
@@ -349,8 +349,8 @@ void stochrnd_lv(int arg)
 #pragma GCC unroll loops
     for(int x = 0; x < loops; x++) {
         v_if (a == 1) {
-            du = int322uint8(a, arg, 0);
-            du = int322int8(a, arg, 0);
+            du = int32_to_uint8(a, arg, 0);
+            du = int32_to_int8(a, arg, 0);
         }
         v_endif;
     }
