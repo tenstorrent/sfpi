@@ -1005,12 +1005,12 @@ void test_cast()
 {
     vInt a = 1;
     vFloat b;
-    b = int_to_float(a, 0);
+    b = int32_to_float(a, 0);
     dst_reg[0] = b;
-    b = int_to_float(a, 1);
+    b = int32_to_float(a, 1);
     dst_reg[1] = b;
 
-    b = int_to_float(a, 0xFFFFFF); // invalid value
+    b = int32_to_float(a, 0xFFFFFF); // invalid value
     dst_reg[1] = b;
 }
 
@@ -1018,8 +1018,8 @@ void test_stochrnd(int val)
 {
     vInt a = 1;
     vFloat b;
-    b = int_to_float(a, 0);
-    b = int_to_float(a, 1);
+    b = int32_to_float(a, 0);
+    b = int32_to_float(a, 1);
 
     vFloat f = 1.0f;
     vInt di;

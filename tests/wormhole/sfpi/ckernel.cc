@@ -644,7 +644,7 @@ sfpi_inline void calculate_log_body(const uint log_base_scale_factor)
     }
     v_endif;
 
-    vFloat expf = int_to_float(exp, 0);
+    vFloat expf = int32_to_float(exp, 0);
     vFloat vConstLn2 = vConstFloatPrgm0;
     vFloat result = expf * vConstLn2 + series_result; // exp correction: ln(1+x) + exp*ln(2)
 

@@ -176,7 +176,7 @@ sfpi_inline vType reinterpret(const __vBase v)
     return vType(v.get());
 }
 
-sfpi_inline vFloat int_to_float(vInt in, int round_mode = 1)
+sfpi_inline vFloat int32_to_float(vInt in, int round_mode = 1)
 {
     return __builtin_rvtt_sfpcast(in.get(), round_mode ? SFPCAST_MOD1_RND_STOCH : SFPCAST_MOD1_RND_EVEN);
 }

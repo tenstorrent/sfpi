@@ -2780,11 +2780,11 @@ void test16()
 
     // These are really crappy "touch" tests
     v_if (dst_reg[0] == 8.0F) {
-        dst_reg[16] = int_to_float(0xABBAAB);
+        dst_reg[16] = int32_to_float(0xABBAAB);
     }
     v_endif;
     v_if (dst_reg[0] == 9.0F) {
-        dst_reg[16] = int_to_float(0xABBAAB, 0);
+        dst_reg[16] = int32_to_float(0xABBAAB, 0);
     }
     v_endif;
 
