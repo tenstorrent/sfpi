@@ -408,18 +408,21 @@ _Z9loadstorei:
 	SFPLOADI	L0, 2, 4
 	mv	a4,a3
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 1, 4
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 2, 4
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 1, 4
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 2, 4
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 1, 4
@@ -1366,6 +1369,7 @@ _Z5otherif:
 	li	t4, 1912602624	# 72000000
 	add	a3,a3,t4
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
@@ -1383,6 +1387,7 @@ _Z5otherif:
 	sw	a1, 0(a5)	# Op(0x72) s(lr2)
 	sw	a2, 0(a5)	# Op(0x72) s(lr1)
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)
@@ -1400,6 +1405,7 @@ _Z5otherif:
 	sw	a1, 0(a5)	# Op(0x72) s(lr2)
 	sw	a2, 0(a5)	# Op(0x72) s(lr1)
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	sw	t3, 0(a5)	# Op(0x70) - d(lr0)
 	sw	t1, 0(a5)	# Op(0x70) - d(lr0)
 	sw	a7, 0(a5)	# Op(0x89) - d(lr1) s(lr0)

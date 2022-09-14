@@ -1101,12 +1101,10 @@ _Z11addi_no_bb1i:
 	SFPLOADI	L2, 16384, 0
 	ble	a0,zero,.L107
 	SFPADD	L0, L10, L1, L2, 0
-	SFPNOP
 	li	a5,1
 	beq	a0,a5,.L107
 .L108:
 	SFPADD	L0, L10, L1, L2, 0
-	SFPNOP
 	addi	a5,a5,1
 	bne	a0,a5,.L108
 .L107:

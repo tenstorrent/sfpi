@@ -1296,6 +1296,7 @@ _Z13loop_compileri:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
@@ -1304,6 +1305,7 @@ _Z13loop_compileri:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
@@ -1312,6 +1314,7 @@ _Z13loop_compileri:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
@@ -1364,6 +1367,7 @@ main:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	mv	a0,s0
 	call	_Z9loadi_regs
 	mv	a0,s0
@@ -1398,6 +1402,7 @@ main:
 	li	a1, 1912733696	# 72020000
 	add	a1,a2,a1
 	sw	a1, 0(a5)	# Op(0x72) s(lr0)
+	TTNOP
 	SFPLOAD	L0, 10, 1
 	SFPSTORE	10, L0, 2
 	SFPSTORE	20, L0, 2
@@ -1431,6 +1436,7 @@ main:
 	li	a3, 1926365184	# 72d20000
 	add	a4,a4,a3
 	sw	a4, 0(a5)	# Op(0x72) s(lr13)
+	TTNOP
 	mv	a0,s0
 	call	_Z8addi_imms
 	mv	a0,s0
@@ -1499,6 +1505,7 @@ main:
 	TTNOP
 	TTNOP
 	SFPSTORE	0, L0, 2
+	TTNOP
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(s4)
 	li	t3,1881538560
 	add	t3,s1,t3
@@ -1591,6 +1598,7 @@ main:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
@@ -1599,6 +1607,7 @@ main:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
@@ -1607,6 +1616,7 @@ main:
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
+	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
 	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)

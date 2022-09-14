@@ -80,7 +80,6 @@ _Z5smokev:
 	SFPSTOCHRND	L0, L0, L3, 1, 1, 0
 	SFPCONFIG	0, 0, 0
 	SFPLUT	L3, 0
-	SFPNOP
 	.size	_Z5smokev, .-_Z5smokev
 	.align	1
 	.globl	_Z10smoke_livev
