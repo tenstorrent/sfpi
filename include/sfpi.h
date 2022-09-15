@@ -267,7 +267,7 @@ public:
     constexpr explicit __vConstFloat(int r) : __vRegBase(r) {}
 
 #ifdef ARCH_WORMHOLE
-    sfpi_inline void operator=(const vFloat in) const;
+    sfpi_inline void operator=(const float in) const;
 #endif
 
     // Construct operator classes from operations
@@ -288,7 +288,7 @@ public:
     constexpr explicit __vConstIntBase(int r) : __vRegBase(r) {}
 
 #ifdef ARCH_WORMHOLE
-    sfpi_inline void operator=(const vInt in) const;
+    sfpi_inline void operator=(const int in) const;
 #endif
 
     // Construct operator classes from operations

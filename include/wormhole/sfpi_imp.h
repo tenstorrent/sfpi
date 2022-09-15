@@ -123,14 +123,16 @@ sfpi_inline vType __vIntBase::operator^=(const vType b)
     return v;
 }
 
-sfpi_inline void __vConstFloat::operator=(const vFloat in) const
+sfpi_inline void __vConstFloat::operator=(const float in) const
 {
-    __builtin_rvtt_sfpconfig_v(in.get(), get());
+    vFloat tmp = in;
+    __builtin_rvtt_sfpconfig_v(tmp.get(), get());
 }
 
-sfpi_inline void __vConstIntBase::operator=(const vInt in) const
+sfpi_inline void __vConstIntBase::operator=(const int in) const
 {
-    __builtin_rvtt_sfpconfig_v(in.get(), get());
+    vInt tmp = in;
+    __builtin_rvtt_sfpconfig_v(tmp.get(), get());
 }
 
 enum class LRegs {
