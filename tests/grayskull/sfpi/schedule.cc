@@ -82,13 +82,16 @@ void loop_nop()
 
 void loop_nonop()
 {
+    vFloat trash;
+
     dst_reg[0] = 1.0f;
     #pragma GCC unroll 0
     for (int i = 0; i < 4; i++) {
         vFloat a = 1.0f;
-        vFloat trash = dst_reg[0];
+        trash = dst_reg[0];
         dst_reg[0] = a;
     }
+    dst_reg[0] = trash;
 }
 
 void loop_nop(int imm)

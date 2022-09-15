@@ -100,13 +100,17 @@ _Z8loop_nopv:
 _Z10loop_nonopv:
 	SFPLOADI	L0, 16256, 0
 	SFPSTORE	0, L0, 0
-	li	a5,4
+	SFPLOADI	L0, 16256, 0
+	SFPLOAD	L1, 0, 1
+	SFPSTORE	0, L0, 0
+	li	a5,3
 .L8:
 	SFPLOADI	L0, 16256, 0
 	SFPLOAD	L1, 0, 1
 	SFPSTORE	0, L0, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L8
+	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z10loop_nonopv, .-_Z10loop_nonopv
 	.align	1
