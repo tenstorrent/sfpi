@@ -939,20 +939,20 @@ void test_lut()
 
 void lra()
 {
-    vFloat x = l_reg[1];
-    vFloat y = l_reg[2];
-    vInt z = l_reg[3];
-    vInt a = l_reg[0];
+    vFloat x = l_reg[LRegs::LReg1];
+    vFloat y = l_reg[LRegs::LReg2];
+    vInt z = l_reg[LRegs::LReg3];
+    vInt a = l_reg[LRegs::LReg0];
 
     dst_reg[0] = x;
     dst_reg[0] = y;
     dst_reg [0] = z;
     dst_reg[0] = a;
 
-    l_reg[0] = a;
-    l_reg[1] = x;
-    l_reg[2] = y;
-    l_reg[3] = z;
+    l_reg[LRegs::LReg0] = a;
+    l_reg[LRegs::LReg1] = x;
+    l_reg[LRegs::LReg2] = y;
+    l_reg[LRegs::LReg3] = z;
 }
 
 void stupid_example(unsigned int value)

@@ -248,6 +248,7 @@ class __vLReg : public __vRegBase {
  private:
     template<class Type, int N> friend class __RegFile;
     constexpr explicit __vLReg(const __vRegBaseInitializer i) : __vRegBase(i.get()) {}
+
  public:
     sfpi_inline __rvtt_vec_t operator=(__vBase& v) const;
 };
@@ -255,9 +256,9 @@ class __vLReg : public __vRegBase {
 class __LReg {
  private:
     __RegFile<__vLReg, SFP_LREG_COUNT> lreg;
-    
+
  public:
-    sfpi_inline const __vLReg operator[](const int i) const { return lreg[i]; }
+    sfpi_inline const __vLReg operator[](const enum LRegs lr) const { return lreg[static_cast<std::underlying_type<LRegs>::type>(lr)]; }
 };
 
 //////////////////////////////////////////////////////////////////////////////

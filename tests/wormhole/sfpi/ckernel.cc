@@ -152,13 +152,13 @@ inline void init_dropout_seed(uint16_t p2){
 
     FWLOG1("calculate_dropout() -- calculated seed:%x", per_tensix_input_seed);
     
-    vInt result = l_reg[3];
+    vInt result = l_reg[LRegs::LReg3];
 
     vInt tmp = vConstTileId << 10;
     vInt ptis = per_tensix_input_seed; // XXXX should use mod=2, unsigned int.  confirm
     result = ~(tmp & ptis) & (tmp | ptis);
 
-    l_reg[3] = result;
+    l_reg[LRegs::LReg3] = result;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -291,9 +291,9 @@ inline vFloat calculate_gelu_core(vFloat in)
 template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_gelu()
 {
-    vUInt l0 = l_reg[0];
-    vUInt l1 = l_reg[1];
-    vUInt l2 = l_reg[2];
+    vUInt l0 = l_reg[LRegs::LReg0];
+    vUInt l1 = l_reg[LRegs::LReg1];
+    vUInt l2 = l_reg[LRegs::LReg2];
     vFloat half = 0.5f;
 
     #pragma GCC unroll 8
@@ -311,17 +311,17 @@ sfpi_test_noinline void calculate_gelu()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_sigmoid()
 {
-    vUInt l0 = l_reg[0];
-    vUInt l1 = l_reg[1];
-    vUInt l2 = l_reg[2];
+    vUInt l0 = l_reg[LRegs::LReg0];
+    vUInt l1 = l_reg[LRegs::LReg1];
+    vUInt l2 = l_reg[LRegs::LReg2];
 
     #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
@@ -333,18 +333,18 @@ sfpi_test_noinline void calculate_sigmoid()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
 sfpi_test_noinline void calculate_tanh()
 {
     // SFPU microcode
-    vUInt l0 = l_reg[0];
-    vUInt l1 = l_reg[1];
-    vUInt l2 = l_reg[2];
+    vUInt l0 = l_reg[LRegs::LReg0];
+    vUInt l1 = l_reg[LRegs::LReg1];
+    vUInt l2 = l_reg[LRegs::LReg2];
 
     #pragma GCC unroll 8
     for (int d = 0; d < 8; d++)
@@ -356,9 +356,9 @@ sfpi_test_noinline void calculate_tanh()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -402,9 +402,9 @@ sfpi_test_noinline void calculate_hardtanh(uint param0, uint param1, uint param2
 template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
 sfpi_test_noinline void calculate_tanh_derivative()
 {
-    vUInt l0 = l_reg[0];
-    vUInt l1 = l_reg[1];
-    vUInt l2 = l_reg[2];
+    vUInt l0 = l_reg[LRegs::LReg0];
+    vUInt l1 = l_reg[LRegs::LReg1];
+    vUInt l2 = l_reg[LRegs::LReg2];
 
     // tanh'(x) = 1 - (tanh(x))^2
     for (int d = 0; d < 8; d++)
@@ -421,9 +421,9 @@ sfpi_test_noinline void calculate_tanh_derivative()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -431,8 +431,8 @@ sfpi_test_noinline void calculate_gelu_derivative()
 {
     constexpr uint imm2 = 0xFF10;
 
-    vUInt l0 = l_reg[0];
-    vUInt l1 = l_reg[1];
+    vUInt l0 = l_reg[LRegs::LReg0];
+    vUInt l1 = l_reg[LRegs::LReg1];
 
     // SFPU microcode: 
     #pragma GCC unroll 8
@@ -456,8 +456,8 @@ sfpi_test_noinline void calculate_gelu_derivative()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
 }
 
 template <bool APPROXIMATION_MODE, int ITERATIONS>
@@ -535,7 +535,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
     FWLOG1("calculate_dropout() -- prob:%x", prob);
     FWLOG1("calculate_dropout() -- scale:%x", scale);
 
-    vUInt rand = l_reg[3];
+    vUInt rand = l_reg[LRegs::LReg3];
 
     #pragma GCC unroll 8
     for (int d = 0; d < 8; d++) {
@@ -567,7 +567,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
         dst_reg++;
     }
 
-    l_reg[3] = rand;
+    l_reg[LRegs::LReg3] = rand;
 }
 
 template <bool APPROXIMATION_MODE>

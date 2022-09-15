@@ -1101,14 +1101,14 @@ void many_regs()
 
 void lra()
 {
-    vFloat x = l_reg[1];
-    vFloat v = l_reg[0];
-    vInt a = l_reg[4];
-    vFloat y = l_reg[2];
-    vUInt b = l_reg[5];
-    vInt z = l_reg[3];
-    vUInt d = l_reg[7];
-    vUInt c = l_reg[6];
+    vFloat x = l_reg[LRegs::LReg1];
+    vFloat v = l_reg[LRegs::LReg0];
+    vInt a = l_reg[LRegs::LReg4];
+    vFloat y = l_reg[LRegs::LReg2];
+    vUInt b = l_reg[LRegs::LReg5];
+    vInt z = l_reg[LRegs::LReg3];
+    vUInt d = l_reg[LRegs::LReg7];
+    vUInt c = l_reg[LRegs::LReg6];
 
     dst_reg [0] = b;
     dst_reg[0] = d;
@@ -1119,14 +1119,14 @@ void lra()
     dst_reg [0] = z;
     dst_reg[0] = a;
 
-    l_reg[0] = v;
-    l_reg[1] = x;
-    l_reg[2] = y;
-    l_reg[3] = z;
-    l_reg[4] = a;
-    l_reg[5] = b;
-    l_reg[6] = c;
-    l_reg[7] = d;
+    l_reg[LRegs::LReg0] = v;
+    l_reg[LRegs::LReg1] = x;
+    l_reg[LRegs::LReg2] = y;
+    l_reg[LRegs::LReg3] = z;
+    l_reg[LRegs::LReg4] = a;
+    l_reg[LRegs::LReg5] = b;
+    l_reg[LRegs::LReg6] = c;
+    l_reg[LRegs::LReg7] = d;
 }
 
 void stupid_example(unsigned int value)

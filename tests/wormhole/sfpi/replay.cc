@@ -61,12 +61,12 @@ void replay_assignlreg_const_reg()
     for (int i = 0; i < 8; i++) {
         vFloat x = dst_reg[0];
 
-        vUInt lr3 = l_reg[3];
+        vUInt lr3 = l_reg[LRegs::LReg3];
 
         x = setman(x, lr3);
         dst_reg[0] = x;
 
-        l_reg[3] = lr3;
+        l_reg[LRegs::LReg3] = lr3;
     }
 }
 

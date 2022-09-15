@@ -171,13 +171,13 @@ inline void init_dropout_seed(uint16_t p2)
     FWLOG1("calculate_dropout() -- calculated seed:%x", per_tensix_input_seed);
     
     vInt result;
-    result = l_reg[3];
+    result = l_reg[LRegs::LReg3];
 
     vInt tmp = vConstTileId << 13;
     vInt ptis = reinterpret<vInt>(vFloat(per_tensix_input_seed));
     result = ~(tmp & ptis) & (tmp | ptis);
 
-    l_reg[3] = result;
+    l_reg[LRegs::LReg3] = result;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -302,8 +302,8 @@ sfpi_test_noinline void calculate_exponential(int16_t exp_base_scale_factor = 0)
 
     if constexpr (APPROXIMATION_MODE)
     {
-        c23_73 = l_reg[0];
-        adj_exp = l_reg[2];
+        c23_73 = l_reg[LRegs::LReg0];
+        adj_exp = l_reg[LRegs::LReg2];
     }
 
     #pragma GCC unroll 0
@@ -359,8 +359,8 @@ sfpi_test_noinline void calculate_exponential(int16_t exp_base_scale_factor = 0)
 
     if constexpr (APPROXIMATION_MODE)
     {
-        c23_73 = l_reg[0];
-        adj_exp = l_reg[2];
+        c23_73 = l_reg[LRegs::LReg0];
+        adj_exp = l_reg[LRegs::LReg2];
     }
 }
 
@@ -400,7 +400,7 @@ sfpi_test_noinline void calculate_gelu()
     constexpr uint imm1 = (APPROXIMATION_MODE)? 0x212C : 0x2010;
     constexpr uint imm2 = 0xFF00;
     vUInt l0;
-    l0 = l_reg[0];
+    l0 = l_reg[LRegs::LReg0];
 
     // SFPU microcode
     #pragma GCC unroll 0
@@ -440,7 +440,7 @@ sfpi_test_noinline void calculate_gelu()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
+    l_reg[LRegs::LReg0] = l0;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -448,9 +448,9 @@ sfpi_test_noinline void calculate_sigmoid()
 {
     // SFPU microcode
     vUInt l0, l1, l2;
-    l0 = l_reg[0];
-    l1 = l_reg[1];
-    l2 = l_reg[2];
+    l0 = l_reg[LRegs::LReg0];
+    l1 = l_reg[LRegs::LReg1];
+    l2 = l_reg[LRegs::LReg2];
 
     for (int d = 0; d < 4; d++)
     {
@@ -463,9 +463,9 @@ sfpi_test_noinline void calculate_sigmoid()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -473,9 +473,9 @@ sfpi_test_noinline void calculate_tanh()
 {
     // SFPU microcode
     vUInt l0, l1, l2;
-    l0 = l_reg[0];
-    l1 = l_reg[1];
-    l2 = l_reg[2];
+    l0 = l_reg[LRegs::LReg0];
+    l1 = l_reg[LRegs::LReg1];
+    l2 = l_reg[LRegs::LReg2];
 
     for (int d = 0; d < 4; d++)
     {
@@ -486,9 +486,9 @@ sfpi_test_noinline void calculate_tanh()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -533,9 +533,9 @@ template <bool APPROXIMATION_MODE, int WITH_PRECOMPUTED_TANH>
 sfpi_test_noinline void calculate_tanh_derivative()
 {
     vUInt l0, l1, l2;
-    l0 = l_reg[0];
-    l1 = l_reg[1];
-    l2 = l_reg[2];
+    l0 = l_reg[LRegs::LReg0];
+    l1 = l_reg[LRegs::LReg1];
+    l2 = l_reg[LRegs::LReg2];
 
     // tanh'(x) = 1 - (tanh(x))^2
     for (int d = 0; d < 4; d++)
@@ -553,9 +553,9 @@ sfpi_test_noinline void calculate_tanh_derivative()
         dst_reg++;
     }
 
-    l_reg[0] = l0;
-    l_reg[1] = l1;
-    l_reg[2] = l2;
+    l_reg[LRegs::LReg0] = l0;
+    l_reg[LRegs::LReg1] = l1;
+    l_reg[LRegs::LReg2] = l2;
 }
 
 template <bool APPROXIMATION_MODE>
@@ -618,7 +618,7 @@ sfpi_test_noinline void calculate_sqrt()
         if constexpr (APPROXIMATION_MODE)
         {
             vUInt magic;
-            magic = l_reg[2];
+            magic = l_reg[LRegs::LReg2];
 
             //sqrt initial approximation
             // adjust bias
@@ -628,7 +628,7 @@ sfpi_test_noinline void calculate_sqrt()
             val_s >>= 1;
             dst_reg[0] = reinterpret<vFloat>(val_s);
 
-            l_reg[2] = magic;
+            l_reg[LRegs::LReg2] = magic;
         }
         else
         {
@@ -664,7 +664,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
     FWLOG1("calculate_dropout() -- scale:%x", scale);
 
     vUInt rand;
-    rand = l_reg[3];
+    rand = l_reg[LRegs::LReg3];
     vUInt mask = reinterpret<vUInt>(vFloat(s2vFloat16b(0xa94b)));
 
     #pragma GCC unroll 0
@@ -699,7 +699,7 @@ sfpi_test_noinline void calculate_dropout(uint prob, uint scale)
         dst_reg++;
     }
 
-    l_reg[3] = rand;
+    l_reg[LRegs::LReg3] = rand;
 }
 
 template <bool APPROXIMATION_MODE>
