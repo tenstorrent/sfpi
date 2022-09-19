@@ -38,14 +38,17 @@ https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/SFPI
     cd tt-gcc
     ./configure --prefix=$SFPI_ROOT/compiler -disable-multilib -with-abi=ilp32 -with-arch=rv32i
 ```
+
     SFPI_ROOT must be an absolute path.  Note: the install script and the
     steps below assume the path used above
 
 4) Build the compiler:
+
   The compiler is based on: https://github.com/riscv-collab/riscv-gnu-toolchain
   see documentation there for installing packages needed to build gcc.
 
   To build:
+
 ```
     make -j <n>
 ```
