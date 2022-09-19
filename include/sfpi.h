@@ -268,6 +268,7 @@ public:
 
 #ifdef ARCH_WORMHOLE
     sfpi_inline void operator=(const float in) const;
+    sfpi_inline void operator=(const s2vFloat16 in) const;
 #endif
 
     // Construct operator classes from operations

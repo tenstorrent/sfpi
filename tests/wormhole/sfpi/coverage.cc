@@ -1239,6 +1239,20 @@ void test_operator_equals()
     }
 }
 
+void test_assign_prgm_const()
+{
+    vConstFloatPrgm0 = 0.863281f;
+    vConstFloatPrgm1 = 1.863281f;
+    vConstFloatPrgm2 = 2.863281f;
+
+    vConstIntPrgm0 = 1;
+    vConstIntPrgm1 = 2;
+    vConstIntPrgm2 = 3;
+
+    vConstFloatPrgm0 = s2vFloat16b(127 << 7);
+    vConstFloatPrgm1 = s2vFloat16a(1.0f);
+}
+
 int main(int argc, char* argv[])
 {
     test_load_store();

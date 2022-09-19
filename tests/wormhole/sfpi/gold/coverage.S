@@ -1837,6 +1837,31 @@ _Z20test_operator_equalsv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z20test_operator_equalsv, .-_Z20test_operator_equalsv
+	.align	1
+	.globl	_Z22test_assign_prgm_constv
+	.type	_Z22test_assign_prgm_constv, @function
+_Z22test_assign_prgm_constv:
+	SFPLOADI	L0, 16220, 8
+	SFPLOADI	L0, 65532, 10
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 16366, 8
+	SFPLOADI	L0, 32766, 10
+	SFPCONFIG	13, 0, 0
+	SFPLOADI	L0, 16439, 8
+	SFPLOADI	L0, 16383, 10
+	SFPCONFIG	14, 0, 0
+	SFPLOADI	L0, 1, 4
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 2, 4
+	SFPCONFIG	13, 0, 0
+	SFPLOADI	L0, 3, 4
+	SFPCONFIG	14, 0, 0
+	SFPLOADI	L0, 16256, 0
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 15360, 1
+	SFPCONFIG	13, 0, 0
+	ret
+	.size	_Z22test_assign_prgm_constv, .-_Z22test_assign_prgm_constv
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main
