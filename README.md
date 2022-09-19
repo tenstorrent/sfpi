@@ -39,8 +39,8 @@ https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/SFPI
     ./configure --prefix=$SFPI_ROOT/compiler -disable-multilib -with-abi=ilp32 -with-arch=rv32i
 ```
 
-    SFPI_ROOT must be an absolute path.  Note: the install script and the
-    steps below assume the path used above
+  SFPI_ROOT must be an absolute path.  Note: the install script and the
+  steps below assume the path used above
 
 4) Build the compiler:
 
@@ -57,6 +57,7 @@ https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/SFPI
   it is best to build from scratch w/ a "make clean" at the tt-gcc level.
 
 5) Build the tests:
+
 ```
     cd $SFPI_ROOT/sfpi/tests
     make all
