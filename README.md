@@ -5,6 +5,14 @@ This repo contains SFPI, its associated tests including and SFPU emulator and
 a TT enhanced RISC-V gcc which exposes intrinsics that generate SFPU
 instructions.
 
+### User Documentation
+
+http://yyz-webservice-02.local.tenstorrent.com/docs/pybuda-docs/index.html
+
+### Internals (implementation) Documentation
+
+https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/SFPI
+
 ### Building
 1) Clone the sfpi repo and get a branch:
   git clone https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi
@@ -25,9 +33,11 @@ instructions.
   commit.
 
 3) Configure the compiler:
+```
     export SFPI_ROOT=<path to sfpi top level>
     cd tt-gcc
     ./configure --prefix=$SFPI_ROOT/compiler -disable-multilib -with-abi=ilp32 -with-arch=rv32i
+```
     SFPI_ROOT must be an absolute path.  Note: the install script and the
     steps below assume the path used above
 
@@ -36,14 +46,18 @@ instructions.
   see documentation there for installing packages needed to build gcc.
 
   To build:
+```
     make -j <n>
+```
 
-  Note: incremental gcc buidls are squirrelly, if you aren't sure how to do it
+  Note: incremental gcc builds are squirrelly, if you aren't sure how to do it
   it is best to build from scratch w/ a "make clean" at the tt-gcc level.
 
 5) Build the tests:
+```
     cd $SFPI_ROOT/sfpi/tests
     make all
+```
 
   If this builds, the compiler at least exports the right intrinsics for use
   w/ the synced sfpi.  If it fails to build, there is likely a sync error
@@ -54,8 +68,10 @@ instructions.
   The tests in sfpi use the SFPI wrapper and are more complex.
 
 6) Run the tests
+```
     cd sfpi
     make test
+```
 
    This will run the built x86/kernels and diff the results against a file in
    gold.  That tests the simulator and sfpi.  It will also build a few files
@@ -64,8 +80,10 @@ instructions.
    least what they used to do.
 
 7) Create a release
+```
     cd $SFPI_ROOT
     bin/release.sh <path to release compiler>
+```
 
   Note: the release script assumes you are overwriting a release (it looks
   for a directory as a sanity check)
