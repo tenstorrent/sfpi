@@ -11,7 +11,7 @@ http://yyz-webservice-02.local.tenstorrent.com/docs/pybuda-docs/index.html
 
 ### Internals (implementation) Documentation
 
-https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/SFPI
+https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/home
 
 ### Building
 1) Clone the sfpi repo and get a branch:
