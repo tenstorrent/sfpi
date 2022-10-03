@@ -438,6 +438,21 @@ _Z18move_const_reg2_orv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z18move_const_reg2_orv, .-_Z18move_const_reg2_orv
+	.align	1
+	.globl	_Z8move_lutv
+	.type	_Z8move_lutv, @function
+_Z8move_lutv:
+	SFPLOADI	L0, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPLOADI	L2, 3, 4
+	SFPLOADI	L4, 16256, 0
+	SFPMOV	L3, L4, 0
+	SFPLUT	L3, 4
+	SFPNOP
+	SFPSTORE	0, L3, 0, 3
+	SFPSTORE	2, L4, 0, 3
+	ret
+	.size	_Z8move_lutv, .-_Z8move_lutv
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
 	.align	2

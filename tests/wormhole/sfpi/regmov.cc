@@ -451,3 +451,16 @@ void move_const_reg2_or()
 
     dst_reg[0] = y;
 }
+
+void move_lut()
+{
+    vUInt l0 = 1;
+    vUInt l1 = 2;
+    vUInt l2 = 3;
+    vFloat in = 1.0f;
+    vFloat r;
+
+    r = lut(in, l0, l1, l2);
+    dst_reg[0] = r;
+    dst_reg[1] = in;
+}
