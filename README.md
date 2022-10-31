@@ -95,3 +95,81 @@ https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/home
   The above will copy lots of files and strip the results which spews tons of
   errors.  This could be cleaned up, but seems to work (strip fails when it
   doesn't recognized the file type).
+
+8) Running the test suite
+  This is not required for typical build/release cycles, but should likely be
+  done if the RISCV code paths are altered or any other signficant
+  perturbation is made.
+
+  The following recipe comes from HelpRack w/ some modifications for issues I
+  ran into.
+
+  Prerequisites
+  The following programs should be installed on your system.
+    * dejagnu, libglib2.0-dev, libfdt-dev, libpixman-1-dev, zlib1g-dev, libgtk-3-dev, expect, ninja
+  (Note: I installed the above with conda)
+
+8a) Build as above
+
+8b) run
+   make check build-sim -j12
+
+This command also runs test suites which you can inspect in the "$SFPI_ROOT/tt-gcc/build-gcc-newlib-stage2/gcc/testsuite/gcc" directory. The files to inspect are "gcc.log" and "gcc.sum"
+
+Preparing the system to support qemu emulation
+8c) Create a file named "riscv32-unknown-elf-run" in the $SFPI_ROOT/compiler/bin
+directory with the following script:
+
+```
+#!/bin/bash
+RISC_V_SYSROOT=$SFPI_ROOT/compiler/riscv32-unknown-elf
+qemu-args=()
+while [[ "$1" != "" ]]
+do
+    case "$1" in
+    -Wq,*) qemu_args+=("$(echo "$1" | cut -d, -f2-)");;
+    *) break;;
+    esac
+    shift
+done
+xlen="$(readelf -h $1 | grep 'Class' | cut -d: -f 2 | xargs echo |
+sed 's/^ELF//')"
+qemu-riscv$xlen -r 5.10 "${qemu_args[@]}" -L ${RISC_V_SYSROOT} "$@"
+```
+
+8d) Mark this file as executable
+  chmod +x riscv32-unknown-elf-run
+The above will run some tests and put the results in gcc.log and gcc.sum under $SFPI_ROOT/build-gcc-newlib-stage2/gcc/testsuite/gcc
+
+8e) Set PATH and LD_LIBRARY_PATH
+  export PATH=$SFPI_ROOT/compiler/bin:$PATH
+  export LD_LIBRARY_PATH=$SFPI_ROOT/compiler/lib:$LD_LIBRARY_PATH
+
+8f) Create a test directory. You can place this directory wherever you want
+
+8g) Copy the dejagnu configuration file from $SFPI_ROOT/tt-gcc/build-gcc-newlib-stage2/gcc/testsuite/gcc/site.exp to your "test" directory
+
+8h) Edit "site.exp" and add the path to target_boards to this file. Append the following line to the
+end of the file (expand $SFPI_ROOT manually):
+  lappend boards_dir "$SFPI_ROOT/tt-gcc/riscv-dejagnu/baseboards"
+
+8i) To run all the tests in the GCC test suite
+  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc
+Or, eg, use "riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow/-mgrayskull"
+which runs the SFPU passes and found a couple bugs when first run.
+
+8j) To run a particular test suite, e.g., compile.exp, execute.exp etc.
+  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc execute.exp
+
+8k) To run a single test file eg. gcc.c-torture/execute/fprintf-1.c
+  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc execute.exp=fprintf-1*
+
+8l) After running a single test as in 8k, the log file will list the options
+to gcc that were used to run the test.  Add the path to the compiler to
+compile just that single case.  Some tests are compilation tests and this will
+be sufficient, other tests run filters on output or run the simulator to
+generate a result.  These are more complicated and take some digging.
+
+8m) check "gcc.log" and "gcc.sum" to view the log and summary of the executed tests, respectively.
+
+8n) check "testrun.log" and "testrun.sum" to view the log and summary of the runtest command.
