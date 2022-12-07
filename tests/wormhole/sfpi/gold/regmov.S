@@ -1,6 +1,6 @@
 	.file	"regmov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -460,4 +460,4 @@ _Z8move_lutv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (GNU) 12.2.0"

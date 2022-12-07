@@ -1,6 +1,6 @@
 	.file	"live.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -106,31 +106,31 @@ _Z4bb_1v:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 2, 4
 	li	s0,0
-	j	.L13
-.L17:
+	j	.L9
+.L14:
 	SFPIADD	L2, L0, -3, 9
 	call	rand
-	bne	a0,zero,.L15
+	bne	a0,zero,.L16
 	SFPIADD	L0, L1, 4, 5
 	SFPCOMPC
 	SFPPUSHC	0
 	SFPIADD	L2, L0, -5, 9
 	call	rand
-	bne	a0,zero,.L16
+	bne	a0,zero,.L17
 	SFPIADD	L0, L1, 6, 5
 	SFPPOPC	0
-.L15:
+.L16:
 	SFPENCC	3, 10
 	addi	s0,s0,1
-.L13:
+.L9:
 	call	rand
-	bgt	a0,s0,.L17
+	bgt	a0,s0,.L14
 	SFPSTORE	0, L0, 0, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
 	jr	ra
-.L16:
+.L17:
 	SFPPOPC	0
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
@@ -151,30 +151,27 @@ _Z4bb_2v:
 	SFPLOADI	L1, 2, 4
 	li	s0,0
 	li	s1,1
-.L23:
-	call	rand
-	bgt	a0,s0,.L25
-	SFPSTORE	0, L0, 0, 3
-	lw	ra,12(sp)
-	lw	s0,8(sp)
-	lw	s1,4(sp)
-	addi	sp,sp,16
-	jr	ra
-.L25:
-	beq	s0,zero,.L20
+	j	.L19
+.L27:
 	bne	s0,s1,.L22
 	SFPIADD	L0, L0, -4, 9
 .L22:
 	SFPIADD	L0, L1, -5, 5
 	SFPENCC	3, 10
 	addi	s0,s0,1
-	j	.L23
-.L20:
+.L19:
+	call	rand
+	ble	a0,s0,.L26
+	bne	s0,zero,.L27
 	SFPIADD	L0, L1, -3, 5
-	SFPIADD	L0, L1, -5, 5
-	SFPENCC	3, 10
-	addi	s0,s0,1
-	j	.L23
+	j	.L22
+.L26:
+	SFPSTORE	0, L0, 0, 3
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
+	addi	sp,sp,16
+	jr	ra
 	.size	_Z4bb_2v, .-_Z4bb_2v
 	.align	1
 	.globl	_Z4bb_3v
@@ -188,35 +185,30 @@ _Z4bb_3v:
 	SFPLOADI	L1, 2, 4
 	li	s0,0
 	li	s1,2
+	j	.L29
+.L33:
 	call	rand
-	ble	a0,s0,.L27
-.L35:
-	call	rand
-	beq	a0,zero,.L27
+	beq	a0,zero,.L34
 	SFPIADD	L2, L0, -3, 9
 	call	rand
-	bgt	a0,s1,.L28
+	bgt	a0,s1,.L37
 	SFPIADD	L0, L1, -4, 5
 	SFPCOMPC
 	SFPIADD	L2, L0, -5, 9
+.L37:
 	SFPIADD	L0, L1, -6, 5
 	SFPENCC	3, 10
 	addi	s0,s0,1
-.L36:
+.L29:
 	call	rand
-	bgt	a0,s0,.L35
-.L27:
+	bgt	a0,s0,.L33
+.L34:
 	SFPSTORE	0, L0, 0, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
 	addi	sp,sp,16
 	jr	ra
-.L28:
-	SFPIADD	L0, L1, -6, 5
-	SFPENCC	3, 10
-	addi	s0,s0,1
-	j	.L36
 	.size	_Z4bb_3v, .-_Z4bb_3v
 	.align	1
 	.globl	_Z4bb_4v
@@ -229,14 +221,14 @@ _Z4bb_4v:
 	SFPIADD	L1, L0, -1, 9
 	call	rand
 	li	a5,5
-	beq	a0,a5,.L41
+	beq	a0,a5,.L42
 	call	rand
 	li	s0,6
-	beq	a0,s0,.L40
+	beq	a0,s0,.L41
 	call	rand
-	beq	a0,s0,.L40
-.L41:
-.L39:
+	beq	a0,s0,.L41
+.L42:
+.L40:
 	SFPIADD	L0, L0, -2, 9
 	SFPLOADI	L0, 5, 4
 	SFPENCC	3, 10
@@ -245,7 +237,7 @@ _Z4bb_4v:
 	lw	s0,8(sp)
 	addi	sp,sp,16
 	jr	ra
-.L40:
+.L41:
 	SFPIADD	L1, L0, -3, 9
 	SFPIADD	L0, L0, -4, 9
 	SFPLOADI	L0, 5, 4
@@ -267,12 +259,12 @@ _Z11bb_not_livev:
 	SFPLOADI	L0, 2, 4
 	li	s0,0
 	j	.L45
-.L47:
+.L46:
 	SFPIADD	L1, L0, -3, 5
 	addi	s0,s0,1
 .L45:
 	call	rand
-	bgt	a0,s0,.L47
+	bgt	a0,s0,.L46
 	SFPIADD	L0, L0, -4, 5
 	SFPSTORE	0, L0, 0, 3
 	lw	ra,12(sp)
@@ -287,13 +279,12 @@ _Z14popc_unrollingv:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 1, 4
 	SFPIADD	L2, L0, -2, 9
-	TTREPLAY	0, 2, 1, 1
+	TTREPLAY	0, 3, 1, 1
 	SFPIADD	L0, L1, -1, 5
 	SFPCOMPC
 	SFPPUSHC	0
 	SFPIADD	L2, L0, -3, 9
-	TTREPLAY	0, 2, 0, 0
-	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
 	SFPIADD	L2, L0, -4, 9
 	TTREPLAY	0, 2, 0, 0
 	SFPIADD	L2, L0, -5, 9
@@ -302,8 +293,7 @@ _Z14popc_unrollingv:
 	SFPPOPC	0
 	SFPENCC	3, 10
 	SFPIADD	L2, L0, -6, 9
-	TTREPLAY	0, 2, 0, 0
-	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
 	SFPIADD	L2, L0, -7, 9
 	TTREPLAY	0, 2, 0, 0
 	SFPIADD	L2, L0, -8, 9
@@ -451,4 +441,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (GNU) 12.2.0"

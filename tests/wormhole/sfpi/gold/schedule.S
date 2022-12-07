@@ -1,6 +1,6 @@
 	.file	"schedule.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -53,15 +53,15 @@ _Z18basic_addi_nop_immi:
 	SFPLOADI	L0, 16256, 0
 	SFPADDI	L0, 16256, 0
 	SFPNOP
-	slli	a5,a0,1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a0,16384
-	addi	a0,a0,-1
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	and	a5,a5,a0
-	li	a3, 1912651776	# 7200c000
-	add	a5,a5,a3
-	sw	a5, 0(a4)	# Op(0x72) s(lr0)
+	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a4,16384
+	slli	a5,a0,1
+	addi	a4,a4,-1
+	and	a5,a5,a4
+	li	a4, 1912651776	# 7200c000
+	add	a5,a5,a4
+	sw	a5, 0(a3)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z18basic_addi_nop_immi, .-_Z18basic_addi_nop_immi
 	.align	1
@@ -102,4 +102,4 @@ _Z11loop_no_nopv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (GNU) 12.2.0"

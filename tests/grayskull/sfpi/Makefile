@@ -61,16 +61,16 @@ rv32/%: %.cc $(INCLUDES) | rv32
 	$(RV32_CC) $(RV32_CFLAGS) -o $@ $<
 
 rv32lto/%: %.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -flto -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -flto=auto -o $@ $<
 
 rv32lto/%.S: %.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -flto -S -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -flto=auto -S -o $@ $<
 
 rv32lto/%.o: %.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -flto -c -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -flto=auto -c -o $@ $<
 
 rv32lto/%.elf: lto/%.o $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -flto -Wl,--verbose -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -flto=auto -Wl,--verbose -o $@ $<
 
 resultsx86/%: x86/kernels | results
 	x86/kernels 14 b > results/kernels_int

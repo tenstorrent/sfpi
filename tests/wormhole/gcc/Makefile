@@ -33,13 +33,13 @@ rv32/%: %.cc $(INCLUDES) | rv32
 	$(RV32_CC) $(RV32_CFLAGS) -o $@ $<
 
 rv32lto/%: %.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -flto -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -flto=auto -o $@ $<
 
 rv32lto/limits_low: limits.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -DPASS_OFFSET=-1 -DFAIL_OFFSET=-1 -flto -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -DPASS_OFFSET=-1 -DFAIL_OFFSET=-1 -flto=auto -o $@ $<
 
 rv32lto/limits_high: limits.cc $(INCLUDES) | rv32lto
-	$(RV32_CC) $(RV32_CFLAGS) -DPASS_OFFSET=1 -DFAIL_OFFSET=1 -flto -o $@ $<
+	$(RV32_CC) $(RV32_CFLAGS) -DPASS_OFFSET=1 -DFAIL_OFFSET=1 -flto=auto -o $@ $<
 
 test: rv32/smoke.S rv32/limits.S rv32/limits_low.S rv32/limits_high.S rv32/nonimm.S rv32/unnecessarymov.S
 	cmp rv32/smoke.S gold/smoke.S
