@@ -1,6 +1,6 @@
 	.file	"replay.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -157,54 +157,54 @@ _Z13replay_nonimmi:
 	.type	_Z14replay_nonimm2i, @function
 _Z14replay_nonimm2i:
 	SFPLOAD	L1, 0, 0, 3
-	li	a1,65536
+	li	a2,65536
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	addi	a1,a1,-1
+	addi	a2,a2,-1
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a3, 1896480768	# 710a0000
-	srli	a4,a0,16
-	and	a2,a0,a1
-	li	a6, 1896349696	# 71080000
-	add	a4,a4,a6
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	srli	a6,a0,16
+	and	a1,a0,a2
+	li	a4, 1896349696	# 71080000
+	add	a4,a6,a4
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 1, 1
 	sw	a4, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPSETMAN	L0, L1, 0, 0
 	SFPSTORE	0, L0, 0, 3
 	SFPLOAD	L1, 0, 0, 3
-	addi	a2,a0,1
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,1
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
-	addi	a2,a0,2
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,2
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
-	addi	a2,a0,3
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,3
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
-	addi	a2,a0,4
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,4
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
-	addi	a2,a0,5
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,5
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
-	addi	a2,a0,6
-	and	a2,a2,a1
-	add	a2,a2,a3
-	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
+	addi	a1,a0,6
+	and	a1,a1,a2
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 4, 0, 0
 	addi	a0,a0,7
-	and	a0,a0,a1
+	and	a0,a0,a2
 	add	a0,a0,a3
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 3, 0, 0
@@ -214,46 +214,33 @@ _Z14replay_nonimm2i:
 	.globl	_Z14replay_nonimm3i
 	.type	_Z14replay_nonimm3i, @function
 _Z14replay_nonimm3i:
-	li	a3,16384
+	li	a2,16384
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a0,a0,1
-	addi	a3,a3,-1
+	addi	a2,a2,-1
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	and	a2,a0,a3
-	li	a4, 1879097344	# 7000c000
-	add	a4,a2,a4
-	TTREPLAY	0, 4, 1, 1
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
+	and	a1,a0,a2
+	li	a3, 1879097344	# 7000c000
+	add	a3,a1,a3
+	TTREPLAY	0, 8, 1, 1
+	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
+	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0, 3
-	TTREPLAY	0, 4, 0, 0
-	TTREPLAY	0, 4, 0, 0
-	TTREPLAY	0, 4, 0, 0
+	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
+	SFPSTORE	0, L0, 0, 3
+	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
+	SFPSTORE	0, L0, 0, 3
+	TTREPLAY	0, 8, 0, 0
 	addi	a0,a0,2
-	and	a0,a0,a3
+	and	a0,a0,a2
 	li	a4, 1879097344	# 7000c000
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0, 3
-	li	a4, 1879097344	# 7000c000
-	add	a4,a4,a2
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
-	sw	a4, 0(a5)	# Op(0x70) - d(lr0)
-	SFPSTORE	0, L0, 0, 3
+	mv	a4,a3
+	TTREPLAY	0, 8, 0, 0
+	TTREPLAY	0, 8, 0, 0
 	ret
 	.size	_Z14replay_nonimm3i, .-_Z14replay_nonimm3i
 	.align	1
@@ -399,4 +386,4 @@ _Z14replay_tti_asmv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"

@@ -1,9 +1,7 @@
 In file included from ../../../include/sfpi.h:1234,
                  from test.h:11,
                  from warn.cc:5:
-In member function 'void sfpi::vFloat::loadf(float)',
-    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:356:46,
-    inlined from 'void spill()' at warn.cc:135:16:
+../../../include/wormhole/sfpi_imp.h: In function 'void spill()':
 ../../../include/wormhole/sfpi_imp.h:99:11: fatal error: cannot store sfpu register (register spill)
    99 |     assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, __f32asui(val)));
       |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

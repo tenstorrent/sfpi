@@ -1,6 +1,6 @@
 	.file	"live.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_y2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -140,14 +140,14 @@ _Z4bb_1v:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 2, 4
 	li	s0,0
-	j	.L9
-.L14:
+	j	.L13
+.L17:
 	SFPIADD	L2, L0, -3, 9
 	TTNOP
 	TTNOP
 	TTNOP
 	call	rand
-	bne	a0,zero,.L16
+	bne	a0,zero,.L15
 	SFPIADD	L0, L1, 4, 5
 	TTNOP
 	TTNOP
@@ -159,25 +159,25 @@ _Z4bb_1v:
 	TTNOP
 	TTNOP
 	call	rand
-	bne	a0,zero,.L17
+	bne	a0,zero,.L16
 	SFPIADD	L0, L1, 6, 5
 	TTNOP
 	TTNOP
 	SFPPOPC
 	TTNOP
-.L16:
+.L15:
 	SFPENCC	3, 10
 	TTNOP
 	addi	s0,s0,1
-.L9:
+.L13:
 	call	rand
-	bgt	a0,s0,.L14
+	bgt	a0,s0,.L17
 	SFPSTORE	0, L0, 2
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
 	jr	ra
-.L17:
+.L16:
 	SFPPOPC
 	TTNOP
 	SFPENCC	3, 10
@@ -200,8 +200,17 @@ _Z4bb_2v:
 	SFPLOADI	L1, 2, 4
 	li	s0,0
 	li	s1,1
-	j	.L19
-.L27:
+.L23:
+	call	rand
+	bgt	a0,s0,.L25
+	SFPSTORE	0, L0, 2
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
+	addi	sp,sp,16
+	jr	ra
+.L25:
+	beq	s0,zero,.L20
 	bne	s0,s1,.L22
 	SFPIADD	L0, L0, -4, 9
 	TTNOP
@@ -214,21 +223,18 @@ _Z4bb_2v:
 	SFPENCC	3, 10
 	TTNOP
 	addi	s0,s0,1
-.L19:
-	call	rand
-	ble	a0,s0,.L26
-	bne	s0,zero,.L27
+	j	.L23
+.L20:
 	SFPIADD	L0, L1, -3, 5
 	TTNOP
 	TTNOP
-	j	.L22
-.L26:
-	SFPSTORE	0, L0, 2
-	lw	ra,12(sp)
-	lw	s0,8(sp)
-	lw	s1,4(sp)
-	addi	sp,sp,16
-	jr	ra
+	SFPIADD	L0, L1, -5, 5
+	TTNOP
+	TTNOP
+	SFPENCC	3, 10
+	TTNOP
+	addi	s0,s0,1
+	j	.L23
 	.size	_Z4bb_2v, .-_Z4bb_2v
 	.align	1
 	.globl	_Z4bb_3v
@@ -242,16 +248,17 @@ _Z4bb_3v:
 	SFPLOADI	L1, 2, 4
 	li	s0,0
 	li	s1,2
-	j	.L29
-.L33:
 	call	rand
-	beq	a0,zero,.L34
+	ble	a0,s0,.L27
+.L35:
+	call	rand
+	beq	a0,zero,.L27
 	SFPIADD	L2, L0, -3, 9
 	TTNOP
 	TTNOP
 	TTNOP
 	call	rand
-	bgt	a0,s1,.L37
+	bgt	a0,s1,.L28
 	SFPIADD	L0, L1, -4, 5
 	TTNOP
 	TTNOP
@@ -261,23 +268,30 @@ _Z4bb_3v:
 	TTNOP
 	TTNOP
 	TTNOP
-.L37:
 	SFPIADD	L0, L1, -6, 5
 	TTNOP
 	TTNOP
 	SFPENCC	3, 10
 	TTNOP
 	addi	s0,s0,1
-.L29:
+.L36:
 	call	rand
-	bgt	a0,s0,.L33
-.L34:
+	bgt	a0,s0,.L35
+.L27:
 	SFPSTORE	0, L0, 2
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
 	addi	sp,sp,16
 	jr	ra
+.L28:
+	SFPIADD	L0, L1, -6, 5
+	TTNOP
+	TTNOP
+	SFPENCC	3, 10
+	TTNOP
+	addi	s0,s0,1
+	j	.L36
 	.size	_Z4bb_3v, .-_Z4bb_3v
 	.align	1
 	.globl	_Z4bb_4v
@@ -293,14 +307,14 @@ _Z4bb_4v:
 	TTNOP
 	call	rand
 	li	a5,5
-	beq	a0,a5,.L42
-	call	rand
+	beq	a0,a5,.L41
 	li	s0,6
-	beq	a0,s0,.L41
 	call	rand
-	beq	a0,s0,.L41
-.L42:
-.L40:
+	beq	a0,s0,.L40
+	call	rand
+	beq	a0,s0,.L40
+.L41:
+.L39:
 	SFPIADD	L0, L0, -2, 9
 	TTNOP
 	TTNOP
@@ -313,7 +327,7 @@ _Z4bb_4v:
 	lw	s0,8(sp)
 	addi	sp,sp,16
 	jr	ra
-.L41:
+.L40:
 	SFPIADD	L1, L0, -3, 9
 	TTNOP
 	TTNOP
@@ -342,14 +356,14 @@ _Z11bb_not_livev:
 	SFPLOADI	L0, 2, 4
 	li	s0,0
 	j	.L45
-.L46:
+.L47:
 	SFPIADD	L1, L0, -3, 5
 	TTNOP
 	TTNOP
 	addi	s0,s0,1
 .L45:
 	call	rand
-	bgt	a0,s0,.L46
+	bgt	a0,s0,.L47
 	SFPIADD	L0, L0, -4, 5
 	TTNOP
 	TTNOP
@@ -735,4 +749,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"

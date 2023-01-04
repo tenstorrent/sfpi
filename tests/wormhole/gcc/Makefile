@@ -5,7 +5,7 @@ INCLUDES = $(SFPI_ROOT)/include/wormhole/ckernel_ops.h
 CFLAGS = -I$(SFPI_ROOT)/include -I$(SFPI_ROOT)/include/wormhole -DARCH_WORMHOLE -O3 -std=c++17 -Wall
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mwormhole -march=rv32imw -mabi=ilp32 -fno-exceptions -fno-rvtt-sfpu-replay
+RV32_CFLAGS = $(CFLAGS) -mwormhole -march=rv32iw -mabi=ilp32 -mtune=rvtt-b1 -fno-exceptions -fno-rvtt-sfpu-replay
 
 SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.cc
 

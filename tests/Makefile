@@ -1,5 +1,5 @@
-TARGETS := all clean test
-SUBDIRS := grayskull/. wormhole/.
+TARGETS := all clean test promote
+SUBDIRS := grayskull/. wormhole/. riscv/.
 
 $(TARGETS): $(SUBDIRS)
 $(SUBDIRS):

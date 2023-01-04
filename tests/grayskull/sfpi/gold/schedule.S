@@ -1,6 +1,6 @@
 	.file	"schedule.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_y2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -100,13 +100,16 @@ _Z8loop_nopv:
 _Z10loop_nonopv:
 	SFPLOADI	L0, 16256, 0
 	SFPSTORE	0, L0, 0
-	li	a5,4
-.L11:
+	SFPLOADI	L0, 16256, 0
+	SFPLOAD	L1, 0, 1
+	SFPSTORE	0, L0, 0
+	li	a5,3
+.L8:
 	SFPLOADI	L0, 16256, 0
 	SFPLOAD	L1, 0, 1
 	SFPSTORE	0, L0, 0
 	addi	a5,a5,-1
-	bne	a5,zero,.L11
+	bne	a5,zero,.L8
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z10loop_nonopv, .-_Z10loop_nonopv
@@ -125,13 +128,13 @@ _Z8loop_nopi:
 	li	a4,4
 	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
 	add	a5,a5,a3
-.L16:
+.L11:
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)
 	sw	a5, 0(a3)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0
 	TTNOP
 	addi	a4,a4,-1
-	bne	a4,zero,.L16
+	bne	a4,zero,.L11
 	ret
 	.size	_Z8loop_nopi, .-_Z8loop_nopi
 	.globl	_ZN7ckernel13instrn_bufferE
@@ -141,4 +144,4 @@ _Z8loop_nopi:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"

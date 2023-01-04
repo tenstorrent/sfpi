@@ -1,4 +1,4 @@
-TARGETS := all clean test
+TARGETS := all clean test promote
 SUBDIRS := gcc/. sfpi/.
 
 $(TARGETS): $(SUBDIRS)

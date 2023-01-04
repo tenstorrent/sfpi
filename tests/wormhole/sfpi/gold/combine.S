@@ -1,6 +1,6 @@
 	.file	"combine.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w"
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -288,19 +288,22 @@ _Z11iadd_i_no10v:
 	SFPLOADI	L0, 3, 4
 	call	rand
 	SFPIADD	L0, L0, -5, 5
-	bne	a0,zero,.L26
-	SFPSETCC	L0, 0, 0
-	SFPSTORE	0, L10, 0, 3
-	SFPENCC	3, 10
-.L25:
+	beq	a0,zero,.L29
+	li	a5,1
+	beq	a0,a5,.L30
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
-.L26:
-	li	a5,1
-	bne	a0,a5,.L25
+.L30:
 	SFPSETCC	L0, 0, 0
 	SFPSTORE	0, L9, 0, 3
+	SFPENCC	3, 10
+	lw	ra,12(sp)
+	addi	sp,sp,16
+	jr	ra
+.L29:
+	SFPSETCC	L0, 0, 0
+	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	lw	ra,12(sp)
 	addi	sp,sp,16
@@ -348,15 +351,17 @@ _Z11iadd_i_no12j:
 _Z13iadd_i_no_bb1i:
 	SFPLOADI	L0, 1, 4
 	SFPIADD	L0, L0, -5, 5
-	ble	a0,zero,.L32
+	bgt	a0,zero,.L37
+	SFPSTORE	0, L0, 0, 3
+	ret
+.L37:
 	li	a5,0
-.L33:
+.L35:
 	SFPSETCC	L0, 0, 0
 	SFPIADD	L0, L0, 1, 5
 	SFPENCC	3, 10
 	addi	a5,a5,1
-	bne	a0,a5,.L33
-.L32:
+	bne	a0,a5,.L35
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z13iadd_i_no_bb1i, .-_Z13iadd_i_no_bb1i
@@ -469,15 +474,17 @@ _Z13iadd_v_no_bb1i:
 	SFPLOADI	L0, 1, 4
 	SFPLOADI	L1, 2, 4
 	SFPIADD	L0, L1, 0, 6
-	ble	a0,zero,.L45
+	bgt	a0,zero,.L51
+	SFPSTORE	0, L0, 0, 3
+	ret
+.L51:
 	li	a5,0
-.L46:
+.L49:
 	SFPSETCC	L0, 0, 0
 	SFPIADD	L0, L0, 1, 5
 	SFPENCC	3, 10
 	addi	a5,a5,1
-	bne	a0,a5,.L46
-.L45:
+	bne	a0,a5,.L49
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z13iadd_v_no_bb1i, .-_Z13iadd_v_no_bb1i
@@ -550,15 +557,17 @@ _Z6lz_no3v:
 _Z9lz_no_bb1i:
 	SFPLOADI	L0, 16448, 0
 	SFPLZ	L1, L0, 0
-	ble	a0,zero,.L54
+	bgt	a0,zero,.L61
+	SFPSTORE	0, L0, 0, 3
+	ret
+.L61:
 	li	a5,0
-.L55:
+.L59:
 	SFPSETCC	L0, 0, 0
 	SFPADDI	L0, 16256, 0
 	SFPENCC	3, 10
 	addi	a5,a5,1
-	bne	a0,a5,.L55
-.L54:
+	bne	a0,a5,.L59
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z9lz_no_bb1i, .-_Z9lz_no_bb1i
@@ -641,19 +650,22 @@ _Z9exexp_no2v:
 	.globl	_Z12exexp_no_bb1i
 	.type	_Z12exexp_no_bb1i, @function
 _Z12exexp_no_bb1i:
-	SFPLOADI	L1, 16448, 0
-	SFPEXEXP	L0, L1, 0
-	ble	a0,zero,.L64
+	SFPLOADI	L0, 16448, 0
+	SFPEXEXP	L1, L0, 0
+	bgt	a0,zero,.L72
+	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L1, 0, 3
+	ret
+.L72:
 	li	a5,0
-.L65:
-	SFPSETCC	L0, 0, 4
+.L70:
+	SFPSETCC	L1, 0, 4
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	addi	a5,a5,1
-	bne	a0,a5,.L65
-.L64:
-	SFPSTORE	0, L1, 0, 3
+	bne	a0,a5,.L70
 	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L1, 0, 3
 	ret
 	.size	_Z12exexp_no_bb1i, .-_Z12exexp_no_bb1i
 	.align	1
@@ -694,9 +706,9 @@ _Z8mad_yes3v:
 	SFPNOP
 	SFPMAD	L0, L10, L0, L10, 0
 	SFPNOP
-	SFPMAD	L1, L1, L0, L2, 0
+	SFPMAD	L0, L1, L0, L2, 0
 	SFPNOP
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z8mad_yes3v, .-_Z8mad_yes3v
 	.align	1
@@ -847,14 +859,14 @@ _Z10mad_no_bb1i:
 	SFPLOAD	L1, 4, 0, 3
 	SFPMUL	L0, L0, L2, L9, 0
 	SFPNOP
-	ble	a0,zero,.L80
+	ble	a0,zero,.L86
 	li	a5,0
-.L81:
+.L87:
 	SFPADD	L0, L10, L0, L1, 0
 	SFPNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L81
-.L80:
+	bne	a0,a5,.L87
+.L86:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z10mad_no_bb1i, .-_Z10mad_no_bb1i
@@ -1087,16 +1099,15 @@ _Z8addi_no2v:
 _Z11addi_no_bb1i:
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L2, 16384, 0
-	ble	a0,zero,.L100
+	ble	a0,zero,.L107
 	SFPADD	L0, L10, L1, L2, 0
-	li	a5,0
-	j	.L101
-.L102:
+	li	a5,1
+	beq	a0,a5,.L107
+.L108:
 	SFPADD	L0, L10, L1, L2, 0
-.L101:
 	addi	a5,a5,1
-	bne	a0,a5,.L102
-.L100:
+	bne	a0,a5,.L108
+.L107:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z11addi_no_bb1i, .-_Z11addi_no_bb1i
@@ -1279,14 +1290,14 @@ _Z20add_plus_half_no_bb1i:
 	SFPLOADI	L1, 16128, 0
 	SFPADD	L0, L10, L0, L2, 0
 	SFPNOP
-	ble	a0,zero,.L116
+	ble	a0,zero,.L127
 	li	a5,0
-.L117:
+.L128:
 	SFPADD	L0, L10, L0, L1, 0
 	SFPNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L117
-.L116:
+	bne	a0,a5,.L128
+.L127:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z20add_plus_half_no_bb1i, .-_Z20add_plus_half_no_bb1i
@@ -1352,15 +1363,14 @@ _Z10complexishv:
 	SFPMULI	L0, 0, 0
 	SFPNOP
 	SFPSTORE	8, L0, 0, 3
-	SFPLOAD	L2, 10, 0, 3
-	SFPLOAD	L0, 12, 0, 3
+	SFPLOAD	L0, 10, 0, 3
+	SFPLOAD	L2, 12, 0, 3
 	SFPLOADI	L3, 49216, 0
-	SFPMAD	L2, L2, L0, L3, 0
-	SFPNOP
-	SFPADDI	L2, 16128, 0
-	SFPLOAD	L0, 14, 0, 3
-	SFPMOV	L0, L0, 1
-	SFPMUL	L2, L2, L0, L9, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 16128, 0
+	SFPLOAD	L2, 14, 0, 3
+	SFPMOV	L2, L2, 1
+	SFPMUL	L2, L0, L2, L9, 0
 	SFPLOAD	L0, 16, 0, 3
 	SFPMAD	L0, L11, L0, L2, 0
 	SFPLOADI	L2, 16640, 0
@@ -1371,11 +1381,11 @@ _Z10complexishv:
 	SFPLOADI	L3, 48896, 0
 	SFPMAD	L0, L0, L2, L3, 0
 	SFPMOV	L1, L1, 1
-	SFPMUL	L0, L0, L1, L9, 0
+	SFPMUL	L1, L0, L1, L9, 0
 	SFPNOP
-	SFPMULI	L0, 0, 0
+	SFPMULI	L1, 0, 0
 	SFPNOP
-	SFPSTORE	18, L0, 0, 3
+	SFPSTORE	18, L1, 0, 3
 	ret
 	.size	_Z10complexishv, .-_Z10complexishv
 	.globl	_ZN7ckernel13instrn_bufferE
@@ -1385,4 +1395,4 @@ _Z10complexishv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"

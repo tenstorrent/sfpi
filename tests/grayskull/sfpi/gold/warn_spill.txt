@@ -1,9 +1,6 @@
 In file included from test.h:11,
                  from warn.cc:5:
-In member function 'void sfpi::vFloat::loadf16(sfpi::s2vFloat16)',
-    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/grayskull/sfpi_imp.h:100:12,
-    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:356:46,
-    inlined from 'void spill()' at warn.cc:96:16:
+../../../include/sfpi.h: In function 'void spill()':
 ../../../include/sfpi.h:839:11: fatal error: cannot store sfpu register (register spill)
   839 |     assign(__builtin_rvtt_sfpxloadi(val.get_format(), val.get()));
       |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,6 +1,6 @@
 	.file	"pushpop.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_y2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -205,7 +205,11 @@ _Z6bb_yesi:
 	TTNOP
 	TTNOP
 	TTNOP
-	ble	a0,zero,.L10
+	bgt	a0,zero,.L15
+	SFPENCC	3, 10
+	TTNOP
+	ret
+.L15:
 	li	a5,0
 .L13:
 	SFPPUSHC
@@ -214,16 +218,15 @@ _Z6bb_yesi:
 	TTNOP
 	TTNOP
 	andi	a4,a5,1
-	beq	a4,zero,.L14
+	beq	a4,zero,.L16
 	SFPPOPC
 	TTNOP
 	addi	a5,a5,1
 	bne	a0,a5,.L13
-.L10:
 	SFPENCC	3, 10
 	TTNOP
 	ret
-.L14:
+.L16:
 	SFPIADD	L1, L0, -3, 9
 	TTNOP
 	TTNOP
@@ -232,7 +235,7 @@ _Z6bb_yesi:
 	SFPPOPC
 	TTNOP
 	addi	a5,a5,1
-	bne	a0,a5,.L13
+	bne	a5,a0,.L13
 	SFPENCC	3, 10
 	TTNOP
 	ret
@@ -415,16 +418,15 @@ _Z10fn_call_nov:
 _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 1, 4
 	li	a5,20
-	beq	a0,a5,.L24
+	beq	a0,a5,.L26
 	li	a5,30
-	beq	a0,a5,.L25
+	beq	a0,a5,.L27
 	li	a5,10
-	beq	a0,a5,.L28
-.L26:
+	beq	a0,a5,.L30
 	SFPLOADI	L0, 8, 4
 	SFPSTORE	0, L0, 2
 	ret
-.L24:
+.L26:
 	SFPIADD	L1, L0, -4, 1
 	TTNOP
 	TTNOP
@@ -435,7 +437,7 @@ _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 8, 4
 	SFPSTORE	0, L0, 2
 	ret
-.L28:
+.L30:
 	SFPIADD	L1, L0, -2, 1
 	TTNOP
 	TTNOP
@@ -446,20 +448,14 @@ _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 8, 4
 	SFPSTORE	0, L0, 2
 	ret
-.L25:
+.L27:
 	SFPIADD	L1, L0, -8, 1
 	TTNOP
 	TTNOP
 	TTNOP
 	SFPLOADI	L0, 9, 4
 	li	a5,40
-	ble	a1,a5,.L29
-	SFPENCC	3, 10
-	TTNOP
-	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 2
-	ret
-.L29:
+	bgt	a1,a5,.L29
 	SFPCOMPC
 	TTNOP
 	SFPIADD	L1, L0, -10, 1
@@ -469,7 +465,15 @@ _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 11, 4
 	SFPENCC	3, 10
 	TTNOP
-	j	.L26
+	SFPLOADI	L0, 8, 4
+	SFPSTORE	0, L0, 2
+	ret
+.L29:
+	SFPENCC	3, 10
+	TTNOP
+	SFPLOADI	L0, 8, 4
+	SFPSTORE	0, L0, 2
+	ret
 	.size	_Z24control_flow_v_if_switchii, .-_Z24control_flow_v_if_switchii
 	.align	1
 	.globl	_Z25control_flow_pif_continuei
@@ -480,10 +484,10 @@ _Z25control_flow_pif_continuei:
 	sw	s0,8(sp)
 	sw	s1,4(sp)
 	SFPLOADI	L0, 1, 4
-	ble	a0,zero,.L30
+	ble	a0,zero,.L31
 	mv	s1,a0
 	li	s0,0
-.L34:
+.L35:
 	SFPIADD	L1, L0, -2, 1
 	TTNOP
 	TTNOP
@@ -496,7 +500,7 @@ _Z25control_flow_pif_continuei:
 	TTNOP
 	SFPLOADI	L0, 4, 4
 	call	rand
-	beq	a0,s1,.L36
+	beq	a0,s1,.L37
 	SFPCOMPC
 	TTNOP
 	SFPLOADI	L0, 5, 4
@@ -507,20 +511,20 @@ _Z25control_flow_pif_continuei:
 	TTNOP
 	SFPLOADI	L0, 8, 4
 	addi	s0,s0,1
-	bne	s1,s0,.L34
-.L30:
+	bne	s1,s0,.L35
+.L31:
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
 	addi	sp,sp,16
 	jr	ra
-.L36:
+.L37:
 	SFPPOPC
 	TTNOP
 	SFPENCC	3, 10
 	TTNOP
 	addi	s0,s0,1
-	bne	s0,s1,.L34
+	bne	s0,s1,.L35
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
@@ -547,7 +551,7 @@ _Z21control_flow_pif_gotoi:
 	SFPLOADI	L0, 4, 4
 	call	rand
 	li	a5,1
-	beq	a0,a5,.L41
+	beq	a0,a5,.L42
 	SFPCOMPC
 	TTNOP
 	SFPLOADI	L0, 5, 4
@@ -559,8 +563,8 @@ _Z21control_flow_pif_gotoi:
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
-.L39:
-.L41:
+.L40:
+.L42:
 	SFPPOPC
 	TTNOP
 	SFPENCC	3, 10
@@ -576,4 +580,4 @@ _Z21control_flow_pif_gotoi:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"

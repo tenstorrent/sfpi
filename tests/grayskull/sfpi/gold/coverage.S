@@ -1,6 +1,6 @@
 	.file	"coverage.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_y2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -157,14 +157,14 @@ _Z8test_subv:
 	SFPMAD	L1, L11, L0, L2, 3
 	TTNOP
 	TTNOP
-	SFPMAD	L2, L11, L0, L2, 0
+	SFPMAD	L3, L11, L0, L2, 0
 	TTNOP
 	TTNOP
-	SFPLOAD	L3, 0, 1
-	SFPMAD	L3, L11, L3, L2, 0
+	SFPLOAD	L2, 0, 1
+	SFPMAD	L2, L11, L2, L3, 0
 	TTNOP
 	TTNOP
-	SFPMAD	L3, L11, L10, L3, 0
+	SFPMAD	L3, L11, L10, L2, 0
 	TTNOP
 	TTNOP
 	SFPADD	L2, L10, L0, L1, 0
@@ -415,19 +415,19 @@ _Z8test_madv:
 	.globl	_Z11test_incdecv
 	.type	_Z11test_incdecv, @function
 _Z11test_incdecv:
-	SFPLOADI	L0, 16256, 0
-	SFPADDI	L0, 16256, 0
-	TTNOP
-	TTNOP
-	SFPSTORE	0, L0, 0
 	SFPLOADI	L1, 16256, 0
-	SFPADD	L1, L10, L0, L1, 0
+	SFPADDI	L1, 16256, 0
 	TTNOP
 	TTNOP
-	SFPSTORE	4, L0, 0
-	SFPSTORE	8, L1, 0
+	SFPSTORE	0, L1, 0
 	SFPLOADI	L0, 16256, 0
-	SFPMAD	L0, L11, L0, L1, 0
+	SFPADD	L2, L10, L1, L0, 0
+	TTNOP
+	TTNOP
+	SFPSTORE	4, L1, 0
+	SFPSTORE	8, L2, 0
+	SFPLOADI	L0, 16256, 0
+	SFPMAD	L0, L11, L0, L2, 0
 	TTNOP
 	TTNOP
 	SFPSTORE	0, L0, 0
@@ -496,7 +496,7 @@ _Z10test_loadilm:
 	SFPSTORE	0, L0, 2
 	and	a1,a1,a4
 	li	a4, 1895956480	# 71020000
-	add	a4,a1,a4
+	add	a4,a4,a1
 	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	0, L0, 2
 	SFPLOADI	L0, 255, 2
@@ -524,8 +524,8 @@ _Z10test_loadilm:
 	SFPLOADI	L0, 16256, 0
 	SFPSTORE	8, L0, 0
 	li	a4, 1895825408	# 71000000
-	add	a4,a4,a0
-	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
+	add	a0,a4,a0
+	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	8, L0, 0
 	li	a4, 1895825408	# 71000000
 	add	a1,a1,a4
@@ -549,13 +549,13 @@ _Z17test_control_flowi:
 	li	a5,0
 	bgt	a0,zero,.L10
 	j	.L9
-.L17:
+.L16:
 	SFPLOAD	L0, 4, 1
 	addi	a5,a5,1
 	beq	a0,a5,.L9
 .L10:
 	andi	a4,a5,1
-	bne	a4,zero,.L17
+	bne	a4,zero,.L16
 	SFPSTORE	8, L0, 0
 	addi	a5,a5,1
 	bne	a0,a5,.L10
@@ -2999,17 +2999,17 @@ _Z4spewv:
 	SFPMUL	L0, L0, L1, L4, 1
 	TTNOP
 	TTNOP
-	SFPADD	L0, L10, L0, L1, 1
+	SFPADD	L2, L10, L0, L1, 1
 	TTNOP
 	TTNOP
-	SFPLOADI	L2, 16544, 0
-	SFPADDI	L2, 16448, 0
+	SFPLOADI	L0, 16544, 0
+	SFPADDI	L0, 16448, 0
 	TTNOP
 	TTNOP
-	SFPMUL	L1, L1, L2, L4, 0
+	SFPMUL	L0, L1, L0, L4, 0
 	TTNOP
 	TTNOP
-	SFPMAD	L0, L0, L1, L10, 1
+	SFPMAD	L0, L2, L0, L10, 1
 	TTNOP
 	TTNOP
 	SFPSETEXP	L1, L0, 3, 1
@@ -3135,4 +3135,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 12.2.0"
+	.ident	"GCC: (GNU) 10.2.0"
