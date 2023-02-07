@@ -2,35 +2,36 @@
 
 #include <cstdio>
 
-#define l1_load(type) __builtin_rvtt_l1_load_##type
+#define l1p __attribute__((rvtt_l1_ptr))
+#define regp __attribute__((rvtt_reg_ptr))
 
-static const int *gptr = (int *)0xffff0000;
+struct __ts {
+    int a;
+    int b;
+};
 
-typedef union {
-    long long int li;
-    struct {
-        unsigned int upper;
-        unsigned int lower;
-    };
-} lint;
+union __tu {
+    l1p int *l1;
+    int *ll;
+};
 
-typedef union {
-    unsigned long long int uli;
-    struct {
-        unsigned int upper;
-        unsigned int lower;
-    };
-} ulint;
+struct __ar {
+    int l1p v[5];
+};
 
-signed char array_qi[5] = {0, -1, -2, -3, -4};
-short array_hi[5] = {0, -1, -2, -3, -4};
-int array_si[5] = {0, -1, -2, -3, -4};
-lint array_di[5] = {0, -1, -2, -3, -4};
-unsigned char array_uqi[5] = {0, 1, 2, 3, 4};
-unsigned short array_uhi[5] = {0, 1, 2, 3, 4};
-unsigned int array_usi[5] = {0, 1, 2, 3, 4};
-ulint array_udi[5] = {0, 1, 2, 3, 4};
-#if 0
+struct __arp {
+    int *l1p v[5];
+};
+
+int global[4];
+int l1p global_l1[4];
+
+struct __ts l1p global_ts[4];
+
+int l1p *global_l1_ptr = &global[0];
+int l1p *global_l1_xo_ptr = &global_l1[0];
+int l1p *global_l1_const_ptr = (int *)0x800;
+
 // Compiler can't break this up for scheduling
 int latency_chain_dependent(int *p, int a, int b, int c, int d, int e)
 {
@@ -47,239 +48,300 @@ int latency_chain_split(int *p, int a, int b, int c, int d, int e)
     return x + y + z;
 }
 
-int latency_chain_dependent_intrinsic(int *p, int a, int b, int c, int d, int e)
+int latency_chain_dependent_decorated(l1p int *p, int a, int b, int c, int d, int e)
 {
-    return l1_load(si)(*p) + a + b + c + d + e;
+    return *p + a + b + c + d + e;
 }
 
-int latency_chain_split_intrinsic(int *p, int a, int b, int c, int d, int e)
+int latency_chain_split_decorated(l1p int *p, int a, int b, int c, int d, int e)
 {
-    int x = l1_load(si)(*p) + a;
+    int x = *p + a;
     int y = b + c;
     int z = d + e;
 
     return x + y + z;
 }
 
-int addr_calc1(int *ptr)
+int load_global()
+{
+    return global[0];
+}
+
+int load_global_l1()
+{
+    return global_l1[0];
+}
+
+int load_global_l1_xo_ptr()
+{
+    return *global_l1_xo_ptr;
+}
+
+int load_global_l1_ptr()
+{
+    return *global_l1_ptr;
+}
+
+int load_global_l1_ts_ptr()
+{
+    return global_ts[1].b;
+}
+
+int load_union_l1(union __tu thing)
+{
+    return *thing.l1;
+}
+
+int load_union_ll(union __tu thing)
+{
+    return *thing.ll;
+}
+
+int load_array(struct __ar l1p *p)
+{
+    return p->v[1];
+}
+
+int load_array2(struct __ar l1p *p, int n)
+{
+    return p->v[n];
+}
+
+int load_arrayp(struct __arp l1p *p)
+{
+    return *p->v[0];
+}
+
+int load_arrayp2(struct __arp l1p *p)
+{
+    return *p->v[0] + *p->v[1] + *p->v[2] + *p->v[3] + *p->v[4];
+}
+
+int different(int l1p x)
+{
+    return x;
+}
+
+int load_global_l1_const()
+{
+    return *global_l1_const_ptr;
+}
+
+int cast1()
+{
+    return *(l1p int *)(0x320);
+}
+
+int cast2(int scale, int offset)
+{
+    return *(l1p int *)(0x320 + 4 * scale + offset);
+}
+
+int cast3(int value)
+{
+    return *(l1p int *)(value);
+}
+
+// Forces the MEM_EXPR to contain a PARM_DECL
+int lots_o_args(int a0, int a1, int a2, int a3, int a4, int a5, 
+                int a6, int a7, int a8, int a9, int a10, int a11, 
+                int a12, int a13, int a14, int a15, int a16, int a17)
+{
+    return a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17;
+}
+
+// Forces the MEM_EXPR to contain a PARM_DECL
+int lots_o_args(int a0, int a1, int a2, int a3, int a4, int a5, 
+                int a6, int a7, int a8, int a9, int a10, int a11, 
+                int a12, int a13, int a14, int a15, int a16, int l1p *a17)
+{
+    return a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + *a17;
+}
+
+int addr_calc_decorated1(l1p int *ptr)
+{
+    return *ptr;
+}
+
+int addr_calc_decorated2(l1p int *ptr)
 {
     return *(ptr + 5);
 }
 
-int addr_calc2()
+int addr_calc_decorated3(l1p struct __ts *ptr)
 {
-    return array_si[3];
+    return ptr->a;
 }
 
-int addr_calc3()
+int addr_calc_decorated4a(l1p struct __ts *ptr)
 {
-    return *(gptr + 5);
+    return ptr->b;
 }
 
-int addr_calc_stack()
+int addr_calc_decorated4b(l1p struct __ts *ptr)
 {
-    volatile int v = 3;
-    volatile int *vp = &v;
-    return *vp;
+    return ptr[5].b;
 }
 
-int addr_calc_intrin1(int *ptr)
+int addr_calc_decorated5(volatile l1p int *ptr)
 {
-    return l1_load(si)(*(ptr + 5));
+    return *ptr;
 }
 
-int addr_calc_intrin2()
+int plus(l1p struct __ts *ptr)
 {
-    return l1_load(si)(array_si[3]);
+    return ptr->b + 5;
 }
 
-int addr_calc_intrin3()
+unsigned char uqi(l1p unsigned char *ptr)
 {
-    return l1_load(si)(*(gptr + 5));
+    return *ptr;
 }
 
-int addr_calc_intrin_stack()
+char qi(l1p char *ptr)
 {
-    int v = 0;
-    return l1_load(si)(v);
+    return *ptr;
 }
 
-void * intrin_ptr(void *ptr)
+unsigned short uhi(l1p unsigned short *ptr)
 {
-    return l1_load(ptr)(ptr);
+    return *ptr;
 }
 
-signed char intrin_qi()
+short hi(l1p short *ptr)
 {
-    return l1_load(qi)(array_qi[2]);
+    return *ptr;
 }
 
-int intrin_qi2()
+// coercion up
+int up_qi(l1p char *ptr)
 {
-    return l1_load(qi)(array_qi[2]);
+    return *ptr;
 }
 
-short intrin_hi()
+// coercion up
+unsigned int up_uqi(l1p unsigned char *ptr)
 {
-    return l1_load(hi)(array_hi[2]);
+    return *ptr;
 }
 
-int intrin_hi2()
+// coercion up
+int up_hi(l1p short *ptr)
 {
-    return l1_load(hi)(array_hi[2]);
+    return *ptr;
 }
 
-int intrin_si()
+// coercion up
+unsigned int up_uhi(l1p unsigned short *ptr)
 {
-    return l1_load(si)(array_si[2]);
+    return *ptr;
 }
 
-unsigned char intrin_uqi()
+// coercion down
+char down_qi(l1p int *ptr)
 {
-    return l1_load(uqi)(array_uqi[2]);
+    return *ptr;
 }
 
-unsigned int intrin_uqi2()
+// coercion down
+unsigned char down_uqi(l1p unsigned int *ptr)
 {
-    return l1_load(uqi)(array_uqi[2]);
+    return *ptr;
 }
 
-unsigned short intrin_uhi()
+// coercion down
+short down_hi(l1p int *ptr)
 {
-    return l1_load(uhi)(array_uhi[2]);
+    return *ptr;
 }
 
-unsigned int intrin_uhi2()
+// coercion down
+unsigned short down_uhi(l1p unsigned int *ptr)
 {
-    return l1_load(uhi)(array_uhi[2]);
+    return *ptr;
 }
 
-unsigned int intrin_usi()
+volatile l1p int *l1ptrtestreturn(volatile l1p int *l1ptr)
 {
-    return l1_load(usi)(array_usi[2]);
+    return l1ptr;
 }
 
-long long int intrin_di()
+// wish these caused an error
+int * error_drop_attribute_on_return(l1p int *ptr)
 {
-    lint out;
-    out.upper = l1_load(si)(array_di[2].upper);
-    out.lower = l1_load(si)(array_di[2].lower);
-    return out.li;
+    return ptr;
 }
 
-long long int di()
+int error_drop_attribute_on_assign(l1p int *ptr)
 {
-    return array_di[2].li;
+    int *ptr1 = ptr;
+    return *ptr1;
 }
 
-unsigned long long int intrin_udi()
+l1p int * cast(int *ptr)
 {
-    ulint out;
-    out.upper = l1_load(si)(array_udi[2].upper);
-    out.lower = l1_load(si)(array_udi[2].lower);
-    return out.uli;
+    return (l1p int *)ptr;
 }
 
-unsigned long long int udi()
+void store(l1p int *ptr)
 {
-    return array_udi[2].uli;
-}
-int intrin_multiple_cast()
-{
-    return (int)(short)(int)l1_load(qi)(array_qi[2]);
+    *ptr = 0;
 }
 
-unsigned short intrin_downcast1()
+void copy(l1p struct __ts *ptr)
 {
-    return l1_load(si)(array_si[2]);
+    ptr->b = ptr->a;
 }
 
-unsigned char intrin_downcast2()
+// wish the following caused errors
+l1p int * error_add_attribute_on_return(int *ptr)
 {
-    return l1_load(si)(array_si[2]);
+    return ptr;
 }
 
-int multiple_uses()
+l1p int * error_add_attribute_on_assign(int *ptr)
 {
-    unsigned short us = l1_load(hi)(array_hi[2]);
-    signed char sc = us;
-    signed int si = us;
-
-    return sc + si;
+    l1p int *ptr1 = ptr;
+    return ptr1;
 }
 
-int multiple_uses_base()
+int error_l1_ptr_type_param1(l1p int l1ptr)
 {
-    unsigned short us = array_hi[2];
-    signed char sc = us;
-    signed int si = us;
-
-    return sc + si;
+    return l1ptr;
 }
 
-int intervening_code(int a)
+int error_l1_ptr_type_param2(volatile l1p int l1ptr)
 {
-    unsigned short us = l1_load(hi)(array_hi[2]);
-
-    int b = a << 4;
-    
-    return b + (int)us;
+    return l1ptr;
 }
 
-// Baseline w/o an intrinsic.  Default of unmodified char is unsigned on RISCV
-signed char qi()
+int error_l1_ptr_type_var()
 {
-    return array_qi[2];
+    l1p int l1ptr = 1;
+    return l1ptr;
 }
 
-short hi()
+l1p int error_l1_ptr_return(volatile l1p int *l1ptr)
 {
-    return array_hi[2];
+    return *l1ptr;
 }
 
-int si()
+unsigned int reg_read_latency(int regp *p, int a, int b, int c, int d, int e)
 {
-    return array_si[2];
+    int x = *p + a;
+    int y = b + c;
+    int z = d + e;
+
+    return x + y + z;
 }
 
-unsigned char uqi()
+unsigned int real_test_case(unsigned int noc, unsigned int reg_id, int a, int b, int c, int d, int e)
 {
-    return array_uqi[2];
-}
-
-unsigned short uhi()
-{
-    return array_uhi[2];
-}
-
-unsigned int usi()
-{
-    return array_usi[2];
-}
-
-// Test register loads.  There's only a USI version, so whew
-unsigned int reg_read()
-{
-    return __builtin_rvtt_reg_read(array_usi[2]);
-}
-
-// People shouldn't be casting, so minimal testing here
-unsigned short reg_read_downcast()
-{
-    return __builtin_rvtt_reg_read(array_usi[2]);
-}
-#endif
-
-// Can't reproduce issue found in firmware where a loaded value was shifted
-// and masked twice to two different regs, fix blind
-void dual_use_bug(unsigned char *in, volatile unsigned int *out1, volatile unsigned char *out2)
-{
-    unsigned int x = l1_load(uqi)(in[0]);
-    out1[0] = x;
-    out2[0] = x;
+    unsigned int offset = (noc << 16) + reg_id;
+    volatile unsigned int regp * ptr = (volatile unsigned int regp *)offset;
+    return *ptr + a + b + c + d + e;
 }
 
 int main(int argc, char *argv[])
 {
-    
 }
