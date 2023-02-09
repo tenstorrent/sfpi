@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 // Test the compiler's implementation of the workaround for the GS
 // L1/local_memory arbiter bug
 
@@ -53,7 +55,83 @@ int at_exit(int l1p *l1, int *lm)
 {
     return *l1;
 }
-// XXXX failure - can't loosen constraint on a loop!
+
+int clear_by_ll(int l1p *l1, int *lm)
+{
+    int a = *l1;
+    int b = lm[0];
+    int c = lm[1];
+    int d = lm[2];
+    int e = lm[3];
+    int f = b + c;
+    int g = lm[4];
+
+    return a + b + c + d + e + f + g;
+}
+
+int restrict_ll(volatile int l1p *l1, volatile int *lm, int s)
+{
+    int tmp1 = l1[0];
+    int tmp2 = 0;
+    if (s > 0) {
+        tmp2 = l1[1];
+        tmp2 = lm[1];
+    }
+
+    int a = *lm;
+    int b = *lm;
+    int c = *lm;
+    int d = *lm;
+    int e = *lm;
+    *lm = a;
+    *lm = b;
+    *lm = c;
+    *lm = d;
+    *lm = e;
+
+    return (tmp1 > tmp2) ? a : b;
+}
+
+void resolve_all(volatile int l1p *l1, volatile int *lm, int s)
+{
+    int tmp1 = l1[0];
+    int tmp2 = 0;
+    if (s > 0) {
+        tmp2 = l1[1];
+        tmp2 = lm[1];
+    }
+
+    int a = *lm;
+    int b = *lm;
+    int c = *lm;
+    *lm = a;
+    *lm = b;
+    *lm = c;
+    *lm = tmp1;
+    *lm = tmp2;
+}
+
+void no_resolve_all(volatile int l1p *l1, volatile int *lm, int s)
+{
+    int tmp1 = l1[0];
+    int tmp2 = 0;
+    if (s > 0) {
+        tmp2 = l1[1];
+        tmp2 = lm[1];
+    }
+
+    int a = *lm;
+    int b = *lm;
+    int c = *lm;
+    int d = *lm;
+    *lm = a;
+    *lm = b;
+    *lm = c;
+    *lm = d;
+    *lm = tmp1;
+    *lm = tmp2;
+}
+
 int loop1(int l1p *l1, int *lm)
 {
     int tmp = *l1;
@@ -443,13 +521,12 @@ int split_bb2(int l1p *l1, int *ll, bool which)
     return ll[3] + ll[4] + ll[5] + ll[6] + ll[7] + a + b + c;
 }
 
-#if 0
 // XXXXX uncomment when the shifts are handled
 unsigned int volatile_type_mismatch(volatile unsigned short l1p *l1)
 {
     return *l1;
 }
-#endif
+
 #if 0
 int error()
 {
@@ -467,6 +544,41 @@ int warning(int l1p *l1, int *ll)
    __builtin_rvtt_gs_l1_load_war(a);
 
    return a + b + c;
+}
+
+struct longlong {
+    uint64_t v1;
+    uint64_t v2;
+};
+
+void fails_in_production(struct longlong l1p *p, bool flag)
+{
+    uint64_t x;
+    x = flag ? p->v1 : p->v2;
+
+    volatile uint32_t hi = x >> 32;
+    volatile uint32_t lo = x & 0xFFFFFFFF;
+}
+
+union tt_uint64_t {
+    uint64_t v;
+    struct {
+        uint32_t hi;
+        uint32_t lo;
+    };
+
+    void l1_load(tt_uint64_t l1p *p) {
+        hi = p->hi;
+        lo = p->lo;
+    }
+};
+
+uint64_t hiloload(tt_uint64_t * l1p p)
+{
+    tt_uint64_t v;
+    v.l1_load(p);
+    return v.v;
+
 }
 
 int main(int argc, char *argv[])

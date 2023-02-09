@@ -261,7 +261,6 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi:
 	lw	a0,20(sp)
 	add	a5,a5,a4
 	add	a5,a5,a0
-	mv	a3,a3	# GS L1 war
 	lw	a0,24(sp)
 	add	a5,a5,a0
 	lw	a0,28(sp)
