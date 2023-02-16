@@ -335,6 +335,107 @@ unsigned int reg_read_latency(int regp *p, int a, int b, int c, int d, int e)
     return x + y + z;
 }
 
+void many_uses(l1p int *l1, int *ll)
+{
+    int c = ll[0];
+    int a = l1[0];
+    int b = a + a;
+    b += a;
+    b += c;
+    ll[0] = a;
+    ll[1] = b;
+}
+
+int hoist(l1p int *l1, int *ll)
+{
+    int a = ll[0];
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int hoist_store(l1p int *l1, int *ll)
+{
+    int a = ll[0];
+    ll[0] = 3;
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int hoist_restrict_store(l1p int *l1, int * __restrict__ ll, int idx)
+{
+    int a = ll[idx];
+    ll[0] = 3;
+    int b = ll[idx+1];
+    int c = ll[idx+2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int hoist_volatile_loads(l1p int *l1, int volatile * ll)
+{
+    int a = ll[0];
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int hoist_volatile_restrict_load(l1p int *l1, int volatile * __restrict__ ll)
+{
+    int a = ll[0];
+    ll[0] = 3;
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int hoist_unspec_volatile(l1p int *l1, int* ll)
+{
+    int a = ll[0];
+    __builtin_rvtt_gs_sfppushc();
+    __builtin_rvtt_gs_sfppopc();
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+
+    return a + b + c + d;
+}
+
+int lower(l1p int *l1, int* ll, int offset)
+{
+    int a = ll[0];
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+    int e = c + d;
+    int f = ll[offset];
+
+    return a + b + e + f;
+}
+
+int lower2(l1p int *l1, int* ll, int offset)
+{
+    int a = ll[0];
+    int b = ll[1];
+    int c = ll[2];
+    int d = l1[0];
+    int e = c + d;
+    int f = ll[offset];
+    int g = e >> 1;
+
+    return a + b + e + f + g;
+}
+
 unsigned int real_test_case(unsigned int noc, unsigned int reg_id, int a, int b, int c, int d, int e)
 {
     unsigned int offset = (noc << 16) + reg_id;

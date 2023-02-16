@@ -379,22 +379,22 @@ _Z10test_loadilm:
 	li	a4,65536
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a4,a4,-1
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	and	a2,a0,a4
 	li	a3, 1896480768	# 710a0000
+	and	a2,a0,a4
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a3,a2,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	srli	a0,a0,16
 	li	a3, 1896349696	# 71080000
+	srli	a0,a0,16
 	add	a3,a0,a3
 	sw	a3, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPSTORE	0, L0, 0, 3
-	and	a4,a1,a4
 	li	a3, 1896480768	# 710a0000
+	and	a4,a1,a4
 	add	a3,a3,a4
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
-	srli	a1,a1,16
 	li	a3, 1896349696	# 71080000
+	srli	a1,a1,16
 	add	a3,a1,a3
 	sw	a3, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPSTORE	0, L0, 0, 3
@@ -422,12 +422,12 @@ _Z10test_loadilm:
 	SFPLOADI	L0, 16256, 1
 	SFPSTORE	4, L0, 0, 3
 	SFPLOADI	L0, 16256, 1
-	TTREPLAY	0, 3, 1, 1
+	TTREPLAY	0, 2, 1, 1
 	SFPSTORE	4, L0, 0, 3
 	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 2, 0, 0
+	TTREPLAY	0, 2, 0, 0
 	SFPSTORE	4, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	TTREPLAY	0, 3, 0, 0
 	li	a3, 1895825408	# 71000000
 	add	a3,a3,a2
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
@@ -514,13 +514,13 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPMOV	L0, L2, 0
 	SFPSETEXP	L0, L3, 0, 0
 	SFPSETEXP	L0, L0, 4095, 1
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a4,16773120
 	slli	a5,a0,12
-	li	a3,16773120
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	and	a5,a5,a3
 	li	a3, 2181038081	# 82000001
+	and	a5,a5,a4
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	add	a3,a5,a3
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	sw	a3, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
 	SFPSETEXP	L0, L0, 4095, 1
 	SFPSETMAN	L0, L0, 1023, 1
@@ -531,8 +531,8 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPLOADI	L2, 15, 8
 	SFPLOADI	L2, 65535, 10
 	SFPSETMAN	L2, L0, 0, 0
-	slli	a3,a0,16
 	li	a2, 1896480768	# 710a0000
+	slli	a3,a0,16
 	srli	a3,a3,16
 	add	a3,a3,a2
 	sw	a3, 0(a4)	# Op(0x71) - d(lr0)
@@ -1628,12 +1628,12 @@ _Z13test_stochrndi:
 	SFPSTOCHRND	L2, L0, L1, 4, 1, 0
 	SFPSTOCHRND	L2, L0, L1, 4, 1, 0
 	SFPSTOCHRND	L2, L0, L1, 12, 0, 3
+	li	a5,65536
+	slli	a0,a0,8
+	addi	a5,a5,-1
+	and	a0,a0,a5
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	li	a5,65536
-	addi	a5,a5,-1
-	slli	a0,a0,8
-	and	a0,a0,a5
 	li	a5, 2382364972	# 8e00012c
 	add	a5,a5,a0
 	sw	a5, 0(a4)	# Op(0x8e) - d(lr2) s(lr1)
@@ -1722,11 +1722,11 @@ _Z14stupid_examplej:
 	SFPLOADI	L1, 16320, 0
 	TTREPLAY	0, 4, 0, 0
 	SFPSTORE	8, L1, 0, 3
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
 	li	a3, 1896939520	# 71110000
 	srli	a5,a5,16
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	TTREPLAY	0, 4, 0, 0

@@ -53,13 +53,13 @@ _Z18basic_addi_nop_immi:
 	SFPLOADI	L0, 16256, 0
 	SFPADDI	L0, 16256, 0
 	SFPNOP
-	slli	a5,a0,1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	slli	a5,a0,1
 	li	a0,16384
+	li	a3, 1912651776	# 7200c000
 	addi	a0,a0,-1
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	and	a5,a5,a0
-	li	a3, 1912651776	# 7200c000
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x72) s(lr0)
 	ret

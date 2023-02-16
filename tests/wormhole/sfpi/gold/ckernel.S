@@ -603,9 +603,9 @@ _Z15calculate_clampILb0EEvmmm:
 	li	a4,65536
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a6,a4,-1
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	and	a4,a0,a6
 	li	a3, 1896939520	# 71110000
+	and	a4,a0,a6
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a3,a4,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
 	and	a3,a1,a6
@@ -629,8 +629,8 @@ _Z15calculate_clampILb0EEvmmm:
 	sw	a3, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
 	SFPENCC	3, 10
 	and	a4,a2,a6
-	slli	a4,a4,8
 	li	a2, 1962934304	# 75000020
+	slli	a4,a4,8
 	add	a4,a4,a2
 	sw	a4, 0(a5)	# Op(0x75) lv(lr2)  d(lr2)
 	SFPNOP
@@ -781,13 +781,13 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	li	a5,65536
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a5,a5,-1
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	and	a0,a0,a5
 	li	a3, 1900019712	# 71400000
+	and	a0,a0,a5
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	add	a3,a0,a3
 	sw	a3, 0(a4)	# Op(0x71) - d(lr4)
-	and	a1,a1,a5
 	li	a3, 1898971136	# 71300000
+	and	a1,a1,a5
 	add	a1,a1,a3
 	sw	a1, 0(a4)	# Op(0x71) - d(lr3)
 	and	a2,a2,a5
@@ -853,11 +853,11 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	.weak	_Z15calculate_lreluILb0EEvm
 	.type	_Z15calculate_lreluILb0EEvm, @function
 _Z15calculate_lreluILb0EEvm:
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a0,a0,16
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a4, 1895825408	# 71000000
 	srli	a0,a0,16
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 6, 1, 1
@@ -1424,8 +1424,8 @@ _Z21calculate_exponentialILb0ELb0ELb1EEvt:
 	TTREPLAY	0, 32, 1, 1
 	SFPLOAD	L1, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a4, 1895890944	# 71010000
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPMUL	L1, L1, L0, L9, 0
@@ -1667,8 +1667,8 @@ _Z21calculate_exponentialILb0ELb1ELb1EEvt:
 	TTREPLAY	0, 32, 1, 1
 	SFPLOAD	L1, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a4, 1895890944	# 71010000
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPMUL	L1, L1, L0, L9, 0
@@ -1910,8 +1910,8 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	TTREPLAY	0, 10, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a4, 1896939520	# 71110000
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
@@ -1939,8 +1939,8 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	TTREPLAY	0, 13, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a4, 1896939520	# 71110000
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
@@ -1985,11 +1985,11 @@ _Z13calculate_logILb1ELb1EEvm:
 	SFPENCC	3, 10
 	SFPCAST L0, L0, 0
 	SFPMAD	L0, L0, L12, L1, 0
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
 	li	a3, 1896939520	# 71110000
 	srli	a5,a5,16
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
@@ -2085,11 +2085,11 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	.type	_Z17calculate_dropoutILb0EEvmm, @function
 _Z17calculate_dropoutILb0EEvmm:
 	li	a2,65536
-	addi	a2,a2,-1
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	addi	a2,a2,-1
+	li	a3, 1946157056	# 74000000
 	and	a4,a1,a2
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	li	a3, 1946157056	# 74000000
 	slli	a4,a4,8
 	add	a4,a4,a3
 	TTREPLAY	0, 16, 1, 1
@@ -2097,8 +2097,8 @@ _Z17calculate_dropoutILb0EEvmm:
 	sw	a4, 0(a5)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
-	and	a2,a0,a2
 	li	a3, 1896480768	# 710a0000
+	and	a2,a0,a2
 	srli	a0,a0,16
 	add	a2,a2,a3
 	li	a3, 1896349696	# 71080000
@@ -2326,8 +2326,8 @@ main:
 	SFPMOV	L0, L15, 0
 	SFPSHFT	L0, L0, 10, 1
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a3,s0,16
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	srli	a3,a3,16
 	li	a5, 1897005056	# 71120000
 	add	a5,a5,a3

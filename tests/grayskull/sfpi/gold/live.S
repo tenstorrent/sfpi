@@ -737,8 +737,8 @@ main:
 	SFPENCC	3, 10
 	TTNOP
 	SFPSTORE	0, L0, 2
-	lw	ra,12(sp)
 	li	a0,0
+	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main
