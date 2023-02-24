@@ -164,6 +164,12 @@ which runs the SFPU passes and found a couple bugs when first run.
 8k) To run a single test file eg. gcc.c-torture/execute/fprintf-1.c
   runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc execute.exp=fprintf-1*
 
+Debug tips:
+ - use -verbose to see what the heck is going on
+ - change $SFPI_ROOT/compiler/share/dejagnu/dg.exp "set keep 0" to "set keep 1" to keep the executable around
+ - look in gcc/testsuite/lib/gcc-dg.exp for the OPTIONS lists to whittle down
+   and run fewer variations
+
 8l) After running a single test as in 8k, the log file will list the options
 to gcc that were used to run the test.  Add the path to the compiler to
 compile just that single case.  Some tests are compilation tests and this will

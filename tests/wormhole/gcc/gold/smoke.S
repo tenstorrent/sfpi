@@ -177,8 +177,8 @@ main:
 	SFPLOAD	L0, 1, 0, 2
 	SFPSETEXP	L0, L1, 0, 0
 	SFPSTORE	6, L0, 0, 2
-	li	a0,0
 	lw	ra,12(sp)
+	li	a0,0
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main

@@ -13,10 +13,10 @@ _Z11lotsoparamsiiiiiiiiiii:
 	add	a0,a0,a3
 	add	a0,a0,a4
 	add	a0,a0,a5
-	lw	a5,8(sp)
 	add	a0,a0,a6
 	add	a0,a0,a7
 	lw	a7,0(sp)
+	lw	a5,8(sp)
 	add	a0,a0,a7
 	lw	a7,4(sp)
 	add	a0,a0,a7
@@ -45,22 +45,22 @@ _Z6simpleU11rvtt_l1_ptrPiS_:
 	.globl	_Z4copyU11rvtt_l1_ptrPiS_
 	.type	_Z4copyU11rvtt_l1_ptrPiS_, @function
 _Z4copyU11rvtt_l1_ptrPiS_:
-	lw	t0,0(a0)
-	lw	t6,0(a1)
+	lw	a4,0(a0)
+	lw	a5,0(a1)
 	lw	t5,4(a1)
 	lw	t4,8(a1)
 	lw	t3,12(a1)
-	mv	t0,t0	# GS L1 war
+	mv	a4,a4	# GS L1 war
 	lw	t1,16(a1)
 	lw	a7,20(a1)
 	lw	a6,24(a1)
 	lw	a2,28(a1)
 	lw	a3,32(a1)
+	add	a5,a5,a4
+	sw	a5,0(a1)
+	lw	t6,4(a0)
 	lw	a4,36(a1)
 	lw	a5,40(a1)
-	add	t6,t6,t0
-	sw	t6,0(a1)
-	lw	t6,4(a0)
 	add	t5,t5,t6
 	sw	t5,4(a1)
 	lw	t5,8(a0)
@@ -112,13 +112,13 @@ _Z4copyU11rvtt_l1_ptrPiS_:
 	.globl	_Z11double_loadU11rvtt_l1_ptrPiS_
 	.type	_Z11double_loadU11rvtt_l1_ptrPiS_, @function
 _Z11double_loadU11rvtt_l1_ptrPiS_:
-	lw	a2,4(a0)
 	lw	a5,0(a0)
+	lw	a2,4(a0)
 	lw	a7,0(a1)
 	lw	a6,8(a1)
 	lw	a3,12(a1)
 	lw	a4,16(a1)
-	mv	a5,a5	# GS L1 war
+	mv	a2,a2	# GS L1 war
 	lw	a0,20(a1)
 	add	a5,a5,a7
 	add	a5,a5,a6
@@ -134,8 +134,8 @@ _Z11double_loadU11rvtt_l1_ptrPiS_:
 _Z5call1U11rvtt_l1_ptrPiS_:
 	addi	sp,sp,-16
 	sw	s0,8(sp)
-	mv	s0,a0
 	sw	ra,12(sp)
+	mv	s0,a0
 	call	_Z6simpleU11rvtt_l1_ptrPiS_
 	lw	a5,0(s0)
 	mv	a5,a5	# GS L1 war
@@ -151,19 +151,19 @@ _Z5call1U11rvtt_l1_ptrPiS_:
 _Z5call2U11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
 	addi	sp,sp,-32
-	li	t1,10
+	li	a5,10
+	sw	a5,8(sp)
+	li	a5,9
+	sw	a5,4(sp)
+	li	a5,8
+	sw	a5,0(sp)
 	li	a7,7
-	sw	t1,8(sp)
-	li	t1,9
 	li	a6,6
-	sw	t1,4(sp)
-	li	t1,8
 	li	a5,5
 	li	a4,4
 	li	a3,3
 	li	a2,2
 	li	a1,1
-	sw	t1,0(sp)
 	sw	ra,28(sp)
 	mv	a0,a0	# GS L1 war
 	call	_Z11lotsoparamsiiiiiiiiiii
@@ -177,24 +177,24 @@ _Z5call2U11rvtt_l1_ptrPiS_:
 _Z5call3U11rvtt_l1_ptrPiiiiiiiiiii:
 	lw	a0,0(a0)
 	addi	sp,sp,-16
-	mv	t4,a1
-	mv	t3,a2
-	mv	t1,a3
+	lw	t4,16(sp)
+	lw	t3,20(sp)
+	lw	t1,24(sp)
+	sw	a2,20(sp)
+	sw	a1,24(sp)
+	sw	a3,16(sp)
 	mv	t6,a4
 	mv	t5,a5
-	lw	a3,16(sp)
-	lw	a2,20(sp)
-	lw	a1,24(sp)
-	sw	t3,20(sp)
-	sw	t4,24(sp)
+	mv	a4,a7
+	mv	a5,a6
 	sw	a0,12(sp)
 	lw	a0,12(sp)
-	sw	t1,16(sp)
-	mv	a5,a6
-	mv	a4,a7
 	mv	a7,t6
 	mv	a6,t5
 	addi	sp,sp,16
+	mv	a3,t4
+	mv	a2,t3
+	mv	a1,t1
 	tail	_Z11lotsoparamsiiiiiiiiiii
 	.size	_Z5call3U11rvtt_l1_ptrPiiiiiiiiiii, .-_Z5call3U11rvtt_l1_ptrPiiiiiiiiiii
 	.align	1
@@ -214,8 +214,9 @@ _Z11clear_by_llU11rvtt_l1_ptrPiS_:
 	lw	a4,4(a1)
 	lw	a6,8(a1)
 	lw	a2,12(a1)
-	add	a3,a5,a4
+	mv	a7,a7	# GS L1 war
 	lw	a0,16(a1)
+	add	a3,a5,a4
 	add	a5,a5,a7
 	add	a5,a5,a4
 	add	a5,a5,a6
@@ -299,8 +300,8 @@ _Z14no_resolve_allU11rvtt_l1_ptrPViS0_i:
 	.type	_Z5loop1U11rvtt_l1_ptrPiS_, @function
 _Z5loop1U11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
-	li	a5,0
 	addi	a3,a1,16
+	li	a5,0
 .L25:
 	lw	a4,0(a1)
 	addi	a1,a1,4
@@ -314,9 +315,9 @@ _Z5loop1U11rvtt_l1_ptrPiS_:
 	.type	_Z13loop1_preemptU11rvtt_l1_ptrPiS_, @function
 _Z13loop1_preemptU11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
+	addi	a3,a1,16
 	li	a5,0
 	mv	a0,a0	# GS L1 war
-	addi	a3,a1,16
 .L28:
 	lw	a4,0(a1)
 	addi	a1,a1,4
@@ -337,8 +338,8 @@ _Z5loop2U11rvtt_l1_ptrPiS_:
 	lw	a2,0(a1)
 	addi	a0,a0,4
 	addi	a1,a1,4
-	add	a5,a5,a2
 	add	a4,a4,a3
+	add	a5,a5,a2
 	bne	a6,a0,.L31
 	add	a0,a4,a5
 	ret
@@ -348,8 +349,8 @@ _Z5loop2U11rvtt_l1_ptrPiS_:
 	.type	_Z5loop3U11rvtt_l1_ptrPiS_, @function
 _Z5loop3U11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
-	li	a5,0
 	addi	a2,a1,16
+	li	a5,0
 .L36:
 	lw	a4,0(a1)
 	lw	a3,40(a1)
@@ -367,9 +368,9 @@ _Z5loop3U11rvtt_l1_ptrPiS_:
 	.type	_Z13loop3_preemptU11rvtt_l1_ptrPiS_, @function
 _Z13loop3_preemptU11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
+	addi	a2,a1,16
 	li	a5,0
 	mv	a0,a0	# GS L1 war
-	addi	a2,a1,16
 .L42:
 	lw	a4,0(a1)
 	lw	a3,40(a1)
@@ -478,8 +479,8 @@ _Z5cond3U11rvtt_l1_ptrPiS_b:
 	lw	a2,12(a1)
 	lw	a3,16(a1)
 	add	a5,a5,a4
-	lw	a4,20(a1)
 	add	a5,a5,a2
+	lw	a4,20(a1)
 	add	a5,a5,a3
 	add	a5,a5,a4
 	add	a0,a5,a0
@@ -511,13 +512,13 @@ _Z7complexU11rvtt_l1_ptrPiS_b:
 	j	.L71
 .L72:
 	lw	a3,0(a1)
-	addi	a1,a1,4
+	addi	a5,a5,4
 	add	a0,a0,a3
+	addi	a1,a1,4
 	ble	a0,a2,.L67
 .L71:
 	lw	a3,0(a5)
 	addi	a4,a4,1
-	addi	a5,a5,4
 	add	a0,a0,a3
 	bgt	a0,a4,.L72
 .L67:
@@ -545,13 +546,6 @@ _Z8complex2U11rvtt_l1_ptrPiS_ii:
 	beq	a5,zero,.L76
 	addi	a1,a1,8
 	li	a6,0
-	j	.L80
-.L82:
-	lw	a5,0(a1)
-	addi	a1,a1,4
-	add	a0,a0,a5
-	and	a5,a2,a0
-	beq	a5,zero,.L76
 .L80:
 	and	a5,a3,a0
 	lw	a7,0(a4)
@@ -559,8 +553,13 @@ _Z8complex2U11rvtt_l1_ptrPiS_ii:
 	beq	a5,zero,.L81
 	add	a0,a0,a7
 .L81:
+	ble	a0,a6,.L76
+	lw	a5,0(a1)
 	addi	a4,a4,4
-	bgt	a0,a6,.L82
+	add	a0,a0,a5
+	and	a5,a2,a0
+	addi	a1,a1,4
+	bne	a5,zero,.L80
 .L76:
 	ret
 	.size	_Z8complex2U11rvtt_l1_ptrPiS_ii, .-_Z8complex2U11rvtt_l1_ptrPiS_ii
@@ -650,47 +649,47 @@ _Z7cancel2U11rvtt_l1_ptrPiS_S_:
 	.globl	_Z7cancel3U11rvtt_l1_ptrPiS_S_
 	.type	_Z7cancel3U11rvtt_l1_ptrPiS_S_, @function
 _Z7cancel3U11rvtt_l1_ptrPiS_S_:
-	lw	a6,20(a0)
-	lw	t3,16(a0)
-	lw	t5,12(a0)
-	lw	t6,8(a0)
+	lw	t4,4(a0)
 	lw	a2,0(a0)
-	lw	a5,4(a0)
-	lw	a7,24(a1)
-	lw	t1,52(a1)
+	lw	t1,8(a0)
+	lw	t2,12(a0)
+	lw	t3,16(a0)
+	lw	a6,20(a0)
+	lw	a5,24(a1)
+	lw	a0,52(a1)
 	lw	a3,48(a1)
-	lw	t4,76(a1)
-	mv	a5,a5	# GS L1 war
+	lw	a7,76(a1)
+	mv	a6,a6	# GS L1 war
 	lw	a4,72(a1)
-	add	a3,a3,t1
-	lw	t1,80(a1)
+	lw	t0,80(a1)
+	lw	t6,100(a1)
+	add	a2,a2,t4
 	add	a2,a2,a5
 	lw	a5,96(a1)
-	add	a2,a2,a7
-	lw	a7,100(a1)
-	add	a2,a2,t6
-	add	a4,a4,t4
-	add	a3,a3,a2
-	lw	t4,104(a1)
-	lw	a2,124(a1)
+	lw	t5,104(a1)
+	add	a3,a3,a0
 	lw	a0,120(a1)
-	add	a4,a4,t1
-	add	a5,a5,a7
+	lw	t4,124(a1)
+	add	a2,a2,t1
 	lw	t1,108(a1)
-	add	a3,a3,t5
+	add	a4,a4,a7
 	lw	a7,128(a1)
-	add	a4,a4,a3
-	add	a5,a5,t4
-	add	a0,a0,a2
+	add	a3,a3,a2
 	lw	a2,132(a1)
+	add	a3,a3,t2
+	add	a5,a5,t6
+	add	a5,a5,t5
+	add	a0,a0,t4
+	add	a4,a4,t0
+	add	a4,a4,a3
+	lw	a3,136(a1)
 	add	a5,a5,t1
 	add	a0,a0,a7
 	add	a4,a4,t3
-	lw	a3,136(a1)
 	add	a5,a5,a4
 	add	a0,a0,a2
-	add	a5,a5,a6
 	add	a0,a0,a3
+	add	a5,a5,a6
 	add	a0,a0,a5
 	ret
 	.size	_Z7cancel3U11rvtt_l1_ptrPiS_S_, .-_Z7cancel3U11rvtt_l1_ptrPiS_S_
@@ -719,8 +718,8 @@ _Z12split_bb1_siU11rvtt_l1_ptrPiS_b:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -744,8 +743,8 @@ _Z13split_bb1_usiU11rvtt_l1_ptrPjPib:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -769,8 +768,8 @@ _Z12split_bb1_hiU11rvtt_l1_ptrPsPib:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -794,8 +793,8 @@ _Z13split_bb1_uhiU11rvtt_l1_ptrPtPib:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -819,8 +818,8 @@ _Z12split_bb1_qiU11rvtt_l1_ptrPcPib:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -844,8 +843,8 @@ _Z13split_bb1_uqiU11rvtt_l1_ptrPhPib:
 	mv	a0,a0	# GS L1 war
 	lw	a2,24(a1)
 	add	a5,a5,a3
-	lw	a3,28(a1)
 	add	a5,a5,a6
+	lw	a3,28(a1)
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -863,21 +862,21 @@ _Z13split_bb1_ptrPU11rvtt_l1_ptrPjPPib:
 	mv	a3,a4
 	mv	a4,a5
 .L134:
-	lw	a2,16(a1)
+	lw	a0,16(a1)
 	lw	a5,12(a1)
-	lw	a0,20(a1)
-	lw	a6,0(a2)
+	lw	a2,20(a1)
+	lw	a7,0(a0)
 	lw	a5,0(a5)
-	lw	a2,24(a1)
+	lw	a0,24(a1)
+	lw	a6,0(a2)
+	lw	a2,28(a1)
 	lw	a0,0(a0)
-	lw	a1,28(a1)
-	add	a5,a5,a6
+	add	a5,a5,a7
 	lw	a2,0(a2)
-	add	a5,a5,a0
-	lw	a0,0(a1)
-	add	a5,a5,a2
+	add	a5,a5,a6
 	lw	a3,0(a3)
 	add	a5,a5,a0
+	add	a5,a5,a2
 	lw	a0,0(a4)
 	add	a5,a5,a3
 	add	a0,a5,a0
@@ -890,15 +889,14 @@ _Z18split_bb1_baselineU11rvtt_l1_ptrPViS0_b:
 	beq	a2,zero,.L139
 	lw	a4,0(a0)
 	lw	a0,0(a1)
-	mv	a4,a4	# GS L1 war
 .L140:
 	lw	a5,12(a1)
-	lw	a3,16(a1)
-	lw	a6,20(a1)
+	lw	a2,16(a1)
+	lw	a3,20(a1)
+	add	a5,a5,a2
 	lw	a2,24(a1)
 	add	a5,a5,a3
 	lw	a3,28(a1)
-	add	a5,a5,a6
 	add	a5,a5,a2
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -925,8 +923,8 @@ _Z9split_bb2U11rvtt_l1_ptrPiS_b:
 	mv	a3,a3	# GS L1 war
 	lw	a6,24(a1)
 	add	a5,a5,a2
-	lw	a2,28(a1)
 	add	a5,a5,a7
+	lw	a2,28(a1)
 	add	a5,a5,a6
 	add	a5,a5,a2
 	add	a5,a5,a3
@@ -950,10 +948,10 @@ _Z22volatile_type_mismatchU11rvtt_l1_ptrPVt:
 	.type	_Z7warningU11rvtt_l1_ptrPiS_, @function
 _Z7warningU11rvtt_l1_ptrPiS_:
 	lw	a5,0(a0)
-	lw	a0,4(a0)
-	lw	a4,0(a1)
+	lw	a4,4(a0)
+	lw	a0,0(a1)
+	add	a5,a5,a4
 	add	a0,a5,a0
-	add	a0,a0,a4
 	ret
 	.size	_Z7warningU11rvtt_l1_ptrPiS_, .-_Z7warningU11rvtt_l1_ptrPiS_
 	.align	1
@@ -962,17 +960,15 @@ _Z7warningU11rvtt_l1_ptrPiS_:
 _Z19fails_in_productionU11rvtt_l1_ptrP8longlongb:
 	addi	sp,sp,-16
 	beq	a1,zero,.L147
-	lw	a5,0(a0)
 	lw	a4,4(a0)
-	mv	a4,a4	# GS L1 war
+	lw	a5,0(a0)
 	sw	a4,8(sp)
 	sw	a5,12(sp)
 	addi	sp,sp,16
 	jr	ra
 .L147:
-	lw	a5,8(a0)
 	lw	a4,12(a0)
-	mv	a4,a4	# GS L1 war
+	lw	a5,8(a0)
 	sw	a4,8(sp)
 	sw	a5,12(sp)
 	addi	sp,sp,16

@@ -15,15 +15,15 @@ _Z9basic_nopi:
 	SFPLOADI	L0, 17136, 0
 	SFPSTORE	48, L0, 0
 	TTNOP
-	li	a4,65536
 	addi	a5,a0,-23
+	li	a4,65536
 	addi	a4,a4,-1
 	slli	a5,a5,2
-	li	a3, 1879113728	# 70010000
 	and	a5,a5,a4
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	add	a3,a5,a3
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 1879113728	# 70010000
+	add	a3,a5,a3
 	sw	a3, 0(a4)	# Op(0x70) - d(lr0)
 	SFPLOADI	L0, 17154, 0
 	li	a3, 1912602624	# 72000000
@@ -52,15 +52,15 @@ _Z18basic_incrwc_nonopi:
 	SFPLOADI	L0, 17136, 0
 	SFPSTORE	48, L0, 0
 	TTINCRWC	0, 4, 0, 0
-	li	a4,65536
 	addi	a5,a0,-23
+	li	a4,65536
 	addi	a4,a4,-1
 	slli	a5,a5,2
-	li	a3, 1879113728	# 70010000
 	and	a5,a5,a4
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	add	a3,a5,a3
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 1879113728	# 70010000
+	add	a3,a5,a3
 	sw	a3, 0(a4)	# Op(0x70) - d(lr0)
 	SFPLOADI	L0, 17154, 0
 	li	a3, 1912602624	# 72000000
@@ -121,12 +121,12 @@ _Z8loop_nopi:
 	SFPSTORE	0, L0, 0
 	TTNOP
 	li	a4,65536
-	slli	a5,a0,2
 	addi	a4,a4,-1
-	li	a3, 1879113728	# 70010000
+	slli	a5,a0,2
 	and	a5,a5,a4
-	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1879113728	# 70010000
 	li	a4,4
+	lui	a2,%hi(_ZN7ckernel13instrn_bufferE)
 	add	a5,a5,a3
 .L11:
 	lw	a3,%lo(_ZN7ckernel13instrn_bufferE)(a2)

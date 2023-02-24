@@ -1,7 +1,6 @@
 // This file contains tests for load latency and riscv L1 load intrinsic
 
 #include <cstdio>
-
 #define l1p __attribute__((rvtt_l1_ptr))
 #define regp __attribute__((rvtt_reg_ptr))
 

@@ -23,8 +23,8 @@ _Z19latency_chain_splitPiiiiii:
 	lw	a0,0(a0)
 	add	a2,a2,a3
 	add	a1,a1,a0
-	add	a0,a4,a5
 	add	a1,a1,a2
+	add	a0,a4,a5
 	add	a0,a1,a0
 	ret
 	.size	_Z19latency_chain_splitPiiiiii, .-_Z19latency_chain_splitPiiiiii
@@ -144,17 +144,17 @@ _Z11load_arraypU11rvtt_l1_ptrP5__arp:
 	.globl	_Z12load_arrayp2U11rvtt_l1_ptrP5__arp
 	.type	_Z12load_arrayp2U11rvtt_l1_ptrP5__arp, @function
 _Z12load_arrayp2U11rvtt_l1_ptrP5__arp:
-	lw	a1,16(a0)
-	lw	a4,12(a0)
-	lw	a4,0(a4)
-	lw	a3,8(a0)
-	lw	a3,0(a3)
-	lw	a2,4(a0)
-	lw	a2,0(a2)
 	lw	a5,0(a0)
-	lw	a0,0(a1)
+	lw	a2,4(a0)
+	lw	a3,8(a0)
+	lw	a4,12(a0)
+	lw	a1,16(a0)
 	lw	a5,0(a5)
+	lw	a2,0(a2)
+	lw	a3,0(a3)
+	lw	a4,0(a4)
 	add	a5,a5,a2
+	lw	a0,0(a1)
 	add	a5,a5,a3
 	add	a5,a5,a4
 	add	a0,a5,a0
@@ -211,19 +211,19 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiii:
 	add	a0,a0,a2
 	add	a0,a0,a3
 	add	a0,a0,a4
-	lw	a4,12(sp)
 	add	a0,a0,a5
-	lw	a5,0(sp)
 	add	a0,a0,a6
+	lw	a5,0(sp)
 	add	a0,a0,a7
 	add	a5,a0,a5
 	lw	a0,4(sp)
+	lw	a4,12(sp)
 	add	a5,a5,a0
 	lw	a0,8(sp)
 	add	a5,a5,a0
-	lw	a0,20(sp)
 	add	a5,a5,a4
 	lw	a4,16(sp)
+	lw	a0,20(sp)
 	add	a5,a5,a4
 	add	a5,a5,a0
 	lw	a0,24(sp)
@@ -244,30 +244,30 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi:
 	add	a0,a0,a2
 	add	a0,a0,a3
 	add	a0,a0,a4
-	lw	a4,36(sp)
 	add	a0,a0,a5
-	lw	a5,0(sp)
 	add	a0,a0,a6
-	add	a0,a0,a7
-	add	a5,a0,a5
+	add	a5,a0,a7
+	lw	a0,0(sp)
+	lw	a4,36(sp)
+	lw	a3,0(a4)
+	add	a5,a5,a0
 	lw	a0,4(sp)
 	add	a5,a5,a0
 	lw	a0,8(sp)
-	add	a5,a5,a0
-	lw	a0,0(a4)
 	lw	a4,12(sp)
+	add	a5,a5,a0
 	add	a5,a5,a4
 	lw	a4,16(sp)
+	lw	a0,20(sp)
 	add	a5,a5,a4
-	lw	a4,20(sp)
-	add	a5,a5,a4
-	lw	a4,24(sp)
-	add	a5,a5,a4
-	lw	a4,28(sp)
-	add	a5,a5,a4
-	lw	a4,32(sp)
-	add	a5,a5,a4
+	add	a5,a5,a0
+	lw	a0,24(sp)
+	add	a5,a5,a0
+	lw	a0,28(sp)
+	add	a5,a5,a0
+	lw	a0,32(sp)
 	add	a0,a5,a0
+	add	a0,a0,a3
 	ret
 	.size	_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi, .-_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi
 	.align	1
@@ -460,7 +460,6 @@ _Z5storeU11rvtt_l1_ptrPi:
 	.type	_Z4copyU11rvtt_l1_ptrP4__ts, @function
 _Z4copyU11rvtt_l1_ptrP4__ts:
 	lw	a5,0(a0)
-	mv	a5,a5	# GS L1 war
 	sw	a5,4(a0)
 	ret
 	.size	_Z4copyU11rvtt_l1_ptrP4__ts, .-_Z4copyU11rvtt_l1_ptrP4__ts
@@ -566,8 +565,8 @@ _Z11hoist_storeU11rvtt_l1_ptrPiS_:
 _Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i:
 	lw	a0,0(a0)
 	slli	a2,a2,2
-	li	a4,3
 	add	a2,a1,a2
+	li	a4,3
 	lw	a5,0(a2)
 	sw	a4,0(a1)
 	lw	a3,4(a2)
@@ -625,16 +624,16 @@ _Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_:
 	.type	_Z5lowerU11rvtt_l1_ptrPiS_i, @function
 _Z5lowerU11rvtt_l1_ptrPiS_i:
 	lw	a3,0(a0)
-	lw	a4,4(a1)
-	lw	a0,0(a1)
-	lw	a5,8(a1)
+	lw	a5,0(a1)
+	lw	a6,4(a1)
+	lw	a4,8(a1)
 	slli	a2,a2,2
-	add	a0,a0,a4
 	add	a1,a1,a2
-	lw	a4,0(a1)
-	add	a5,a5,a3
-	add	a0,a0,a5
-	add	a0,a0,a4
+	lw	a0,0(a1)
+	add	a5,a5,a6
+	add	a4,a4,a3
+	add	a5,a5,a4
+	add	a0,a5,a0
 	ret
 	.size	_Z5lowerU11rvtt_l1_ptrPiS_i, .-_Z5lowerU11rvtt_l1_ptrPiS_i
 	.align	1
@@ -642,29 +641,29 @@ _Z5lowerU11rvtt_l1_ptrPiS_i:
 	.type	_Z6lower2U11rvtt_l1_ptrPiS_i, @function
 _Z6lower2U11rvtt_l1_ptrPiS_i:
 	lw	a3,0(a0)
-	lw	a4,4(a1)
-	lw	a5,8(a1)
-	lw	a0,0(a1)
+	lw	a5,0(a1)
+	lw	a0,8(a1)
+	lw	a6,4(a1)
 	slli	a2,a2,2
 	add	a1,a1,a2
-	add	a0,a0,a4
 	lw	a4,0(a1)
-	add	a5,a5,a3
-	add	a0,a0,a5
-	srai	a5,a5,1
-	add	a0,a0,a4
-	add	a0,a0,a5
+	add	a0,a0,a3
+	add	a5,a5,a6
+	add	a5,a5,a0
+	srai	a0,a0,1
+	add	a5,a5,a4
+	add	a0,a5,a0
 	ret
 	.size	_Z6lower2U11rvtt_l1_ptrPiS_i, .-_Z6lower2U11rvtt_l1_ptrPiS_i
 	.align	1
 	.globl	_Z14real_test_casejjiiiii
 	.type	_Z14real_test_casejjiiiii, @function
 _Z14real_test_casejjiiiii:
-	add	a5,a5,a6
 	slli	a0,a0,16
-	add	a5,a5,a4
 	add	a0,a0,a1
 	lw	a0,0(a0)
+	add	a5,a5,a6
+	add	a5,a5,a4
 	add	a5,a5,a3
 	add	a5,a5,a2
 	add	a0,a5,a0

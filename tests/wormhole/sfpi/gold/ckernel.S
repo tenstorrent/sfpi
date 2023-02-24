@@ -601,11 +601,11 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	.type	_Z15calculate_clampILb0EEvmmm, @function
 _Z15calculate_clampILb0EEvmmm:
 	li	a4,65536
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a6,a4,-1
-	li	a3, 1896939520	# 71110000
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	and	a4,a0,a6
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a3, 1896939520	# 71110000
 	add	a3,a4,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
 	and	a3,a1,a6
@@ -629,8 +629,8 @@ _Z15calculate_clampILb0EEvmmm:
 	sw	a3, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
 	SFPENCC	3, 10
 	and	a4,a2,a6
-	li	a2, 1962934304	# 75000020
 	slli	a4,a4,8
+	li	a2, 1962934304	# 75000020
 	add	a4,a4,a2
 	sw	a4, 0(a5)	# Op(0x75) lv(lr2)  d(lr2)
 	SFPNOP
@@ -779,15 +779,15 @@ _Z14calculate_tanhILb1EEvv:
 	.type	_Z18calculate_hardtanhILb0EEvmmm, @function
 _Z18calculate_hardtanhILb0EEvmmm:
 	li	a5,65536
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a5,a5,-1
-	li	a3, 1900019712	# 71400000
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	and	a0,a0,a5
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 1900019712	# 71400000
 	add	a3,a0,a3
 	sw	a3, 0(a4)	# Op(0x71) - d(lr4)
-	li	a3, 1898971136	# 71300000
 	and	a1,a1,a5
+	li	a3, 1898971136	# 71300000
 	add	a1,a1,a3
 	sw	a1, 0(a4)	# Op(0x71) - d(lr3)
 	and	a2,a2,a5
@@ -856,8 +856,8 @@ _Z15calculate_lreluILb0EEvm:
 	slli	a0,a0,16
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a4, 1895825408	# 71000000
-	srli	a0,a0,16
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	srli	a0,a0,16
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 6, 1, 1
@@ -1985,11 +1985,11 @@ _Z13calculate_logILb1ELb1EEvm:
 	SFPENCC	3, 10
 	SFPCAST L0, L0, 0
 	SFPMAD	L0, L0, L12, L1, 0
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a3, 1896939520	# 71110000
-	srli	a5,a5,16
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
@@ -2085,10 +2085,10 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	.type	_Z17calculate_dropoutILb0EEvmm, @function
 _Z17calculate_dropoutILb0EEvmm:
 	li	a2,65536
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a2,a2,-1
-	li	a3, 1946157056	# 74000000
 	and	a4,a1,a2
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1946157056	# 74000000
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a4,a4,8
 	add	a4,a4,a3
@@ -2097,8 +2097,8 @@ _Z17calculate_dropoutILb0EEvmm:
 	sw	a4, 0(a5)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
-	li	a3, 1896480768	# 710a0000
 	and	a2,a0,a2
+	li	a3, 1896480768	# 710a0000
 	srli	a0,a0,16
 	add	a2,a2,a3
 	li	a3, 1896349696	# 71080000

@@ -86,9 +86,9 @@ _Z9store_uhiPVt:
 	.globl	_Z9store_uqiPVh
 	.type	_Z9store_uqiPVh, @function
 _Z9store_uqiPVh:
-	lui	a5,%hi(dstuqi)
-	lw	a4,%lo(dstuqi)(a5)
 	lbu	a5,0(a0)
+	lui	a4,%hi(dstuqi)
+	lw	a4,%lo(dstuqi)(a4)
 	addi	a5,a5,10
 	sb	a5,0(a4)
 	ret
@@ -97,9 +97,9 @@ _Z9store_uqiPVh:
 	.globl	_Z8keep_uqiPVh
 	.type	_Z8keep_uqiPVh, @function
 _Z8keep_uqiPVh:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lbu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
 	addi	a5,a5,10
 	andi	a5,a5,0xff
 	sh	a5,0(a4)
@@ -109,10 +109,10 @@ _Z8keep_uqiPVh:
 	.globl	_Z16double_store_uhiPVt
 	.type	_Z16double_store_uhiPVt, @function
 _Z16double_store_uhiPVt:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lhu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
 	addi	a5,a5,10
+	lw	a4,%lo(dstuhi)(a4)
 	slli	a5,a5,16
 	srli	a5,a5,16
 	sh	a5,0(a4)
@@ -123,9 +123,9 @@ _Z16double_store_uhiPVt:
 	.globl	_Z16double_store_uqiPVh
 	.type	_Z16double_store_uqiPVh, @function
 _Z16double_store_uqiPVh:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lbu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
 	addi	a5,a5,10
 	andi	a5,a5,0xff
 	sh	a5,0(a4)
@@ -136,10 +136,10 @@ _Z16double_store_uqiPVh:
 	.globl	_Z16triple_store_uhiPVt
 	.type	_Z16triple_store_uhiPVt, @function
 _Z16triple_store_uhiPVt:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lhu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
 	addi	a5,a5,10
+	lw	a4,%lo(dstuhi)(a4)
 	slli	a5,a5,16
 	srli	a5,a5,16
 	sh	a5,0(a4)
@@ -151,9 +151,9 @@ _Z16triple_store_uhiPVt:
 	.globl	_Z16triple_store_uqiPVh
 	.type	_Z16triple_store_uqiPVh, @function
 _Z16triple_store_uqiPVh:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lbu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
 	addi	a5,a5,10
 	andi	a5,a5,0xff
 	sh	a5,0(a4)
@@ -200,8 +200,8 @@ _Z14keep_later_usePVt:
 _Z15keep_later_use2Pt:
 	lhu	a5,0(a0)
 	lui	a4,%hi(dstuhi)
-	addi	a0,a5,10
 	lw	a4,%lo(dstuhi)(a4)
+	addi	a0,a5,10
 	slli	a0,a0,16
 	sh	a5,0(a4)
 	srli	a0,a0,16
@@ -235,8 +235,8 @@ _Z7keep_bbPVti:
 	ble	a1,zero,.L24
 	li	a5,0
 .L25:
-	addi	a5,a5,1
 	sh	zero,0(a4)
+	addi	a5,a5,1
 	bne	a1,a5,.L25
 .L24:
 	ret
@@ -245,10 +245,10 @@ _Z7keep_bbPVti:
 	.globl	_Z15keep_word_writePVt
 	.type	_Z15keep_word_writePVt, @function
 _Z15keep_word_writePVt:
-	lui	a5,%hi(dstusi)
-	lw	a4,%lo(dstusi)(a5)
 	lhu	a5,0(a0)
+	lui	a4,%hi(dstusi)
 	addi	a5,a5,10
+	lw	a4,%lo(dstusi)(a4)
 	slli	a5,a5,16
 	srli	a5,a5,16
 	sw	a5,0(a4)
@@ -258,9 +258,9 @@ _Z15keep_word_writePVt:
 	.globl	_Z15keep_word_writePVh
 	.type	_Z15keep_word_writePVh, @function
 _Z15keep_word_writePVh:
-	lui	a5,%hi(dstusi)
-	lw	a4,%lo(dstusi)(a5)
 	lbu	a5,0(a0)
+	lui	a4,%hi(dstusi)
+	lw	a4,%lo(dstusi)(a4)
 	addi	a5,a5,10
 	andi	a5,a5,0xff
 	sw	a5,0(a4)
@@ -279,9 +279,9 @@ _Z17replace_contortedPVt:
 	.globl	_Z14keep_word_loadPVj
 	.type	_Z14keep_word_loadPVj, @function
 _Z14keep_word_loadPVj:
-	lui	a5,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a5)
 	lw	a5,0(a0)
+	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
 	addi	a5,a5,2
 	sh	a5,0(a4)
 	ret
@@ -302,8 +302,8 @@ _Z23replace_word_load_storePVj:
 _Z18keep_word_load_retPVj:
 	lw	a0,0(a0)
 	lui	a5,%hi(dstuhi)
-	slli	a0,a0,16
 	lw	a5,%lo(dstuhi)(a5)
+	slli	a0,a0,16
 	srli	a0,a0,16
 	sh	a0,0(a5)
 	ret
@@ -359,34 +359,34 @@ _Z9wish_listPVt:
 	.type	main, @function
 main:
 	li	a5,-4096
+	lhu	a4,-274(a5)
+	lbu	a4,-274(a5)
+	lhu	a4,-274(a5)
+	lbu	a4,-274(a5)
+	lhu	a4,-274(a5)
 	lui	a2,%hi(dstuhi)
-	lhu	a4,-274(a5)
-	lbu	a4,-274(a5)
-	lhu	a4,-274(a5)
-	lbu	a4,-274(a5)
-	lhu	a4,-274(a5)
-	lw	a1,%lo(dstuhi)(a2)
-	lui	a3,%hi(dstuqi)
+	lw	a3,%lo(dstuhi)(a2)
 	addi	a4,a4,10
-	lw	a3,%lo(dstuqi)(a3)
-	sh	a4,0(a1)
+	sh	a4,0(a3)
 	lbu	a4,-274(a5)
+	lui	a3,%hi(dstuqi)
+	lw	a3,%lo(dstuqi)(a3)
 	addi	a4,a4,10
 	sb	a4,0(a3)
 	lbu	a3,-274(a5)
 	lw	a4,%lo(dstuhi)(a2)
-	lui	a2,%hi(dstusi)
 	addi	a3,a3,10
-	lw	a2,%lo(dstusi)(a2)
 	andi	a3,a3,0xff
 	sh	a3,0(a4)
 	lhu	a3,-274(a5)
+	lui	a2,%hi(dstusi)
 	addi	a3,a3,10
 	slli	a3,a3,16
 	srli	a3,a3,16
 	sh	a3,0(a4)
 	sh	a3,0(a4)
 	lbu	a3,-274(a5)
+	lw	a2,%lo(dstusi)(a2)
 	addi	a3,a3,10
 	andi	a3,a3,0xff
 	sh	a3,0(a4)
@@ -412,8 +412,8 @@ main:
 	ble	a0,zero,.L38
 	li	a5,0
 .L39:
-	addi	a5,a5,1
 	sh	zero,0(a4)
+	addi	a5,a5,1
 	bne	a0,a5,.L39
 .L38:
 	li	a0,0

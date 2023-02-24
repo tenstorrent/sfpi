@@ -472,11 +472,11 @@ _Z11iadd_i_no12j:
 	SFPIADD	L0, L0, -5, 5
 	TTNOP
 	TTNOP
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a3, 1897136128	# 71140000
-	srli	a5,a5,16
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPIADD	L1, L0, 0, 2
@@ -1268,8 +1268,8 @@ _Z13addi_yes_imm1j:
 	slli	a0,a0,16
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a4, 1895825408	# 71000000
-	srli	a0,a0,16
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	srli	a0,a0,16
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
 	SFPADDI	L0, 16256, 0
@@ -1285,9 +1285,9 @@ _Z13addi_yes_imm2j:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	SFPLOADI	L0, 16256, 0
-	li	a3, 1962934272	# 75000000
 	slli	a5,a0,16
 	srli	a5,a5,16
+	li	a3, 1962934272	# 75000000
 	slli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
@@ -1303,9 +1303,9 @@ _Z13addi_yes_imm3j:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	SFPLOAD	L0, 0, 1
-	li	a3, 1962934272	# 75000000
 	slli	a5,a0,16
 	srli	a5,a5,16
+	li	a3, 1962934272	# 75000000
 	slli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
@@ -1319,10 +1319,10 @@ _Z13addi_yes_imm3j:
 	.type	_Z13addi_yes_imm4j, @function
 _Z13addi_yes_imm4j:
 	SFPLOAD	L0, 0, 1
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
-	li	a3, 1962934272	# 75000000
 	srli	a5,a5,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1962934272	# 75000000
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	slli	a5,a5,8
 	add	a5,a5,a3
@@ -1729,10 +1729,10 @@ _Z17add_plus_half_no1j:
 	SFPMAD	L0, L0, L1, L2, 0
 	TTNOP
 	TTNOP
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
-	li	a3, 1962934272	# 75000000
 	srli	a5,a5,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1962934272	# 75000000
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	slli	a5,a5,8
 	add	a5,a5,a3

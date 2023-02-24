@@ -486,11 +486,11 @@ _Z10test_loadilm:
 	SFPLOADI	L0, -255, 4
 	SFPSTORE	0, L0, 2
 	li	a4,65536
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a4,a4,-1
-	li	a3, 1896087552	# 71040000
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	and	a0,a0,a4
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a3, 1896087552	# 71040000
 	add	a3,a0,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
 	SFPSTORE	0, L0, 2
@@ -638,11 +638,11 @@ _Z32test_setman_setexp_addexp_setsgni:
 	TTNOP
 	li	a5,16773120
 	slli	a0,a0,12
-	li	a4, 2181038081	# 82000001
 	and	a0,a0,a5
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	add	a4,a0,a4
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a4, 2181038081	# 82000001
+	add	a4,a0,a4
 	sw	a4, 0(a5)	# Op(0x82) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
@@ -2685,11 +2685,11 @@ _Z14stupid_examplej:
 	TTNOP
 	TTNOP
 	SFPSTORE	16, L1, 0
-	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a3, 1896939520	# 71110000
-	srli	a5,a5,16
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPLOADI	L2, 16281, 0

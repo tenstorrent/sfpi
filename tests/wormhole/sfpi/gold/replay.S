@@ -135,8 +135,8 @@ _Z13replay_nonimmi:
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	srli	a0,a0,16
 	li	a2, 1896480768	# 710a0000
-	li	a4, 1896349696	# 71080000
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a4, 1896349696	# 71080000
 	add	a4,a0,a4
 	add	a3,a3,a2
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
@@ -158,13 +158,13 @@ _Z13replay_nonimmi:
 _Z14replay_nonimm2i:
 	SFPLOAD	L1, 0, 0, 3
 	li	a2,65536
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	addi	a2,a2,-1
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a3, 1896480768	# 710a0000
 	srli	a6,a0,16
 	and	a1,a0,a2
-	li	a4, 1896349696	# 71080000
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a4, 1896349696	# 71080000
 	add	a4,a6,a4
 	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
@@ -219,8 +219,8 @@ _Z14replay_nonimm3i:
 	addi	a2,a2,-1
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
 	and	a1,a0,a2
-	li	a3, 1879097344	# 7000c000
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a3, 1879097344	# 7000c000
 	add	a3,a1,a3
 	TTREPLAY	0, 8, 1, 1
 	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
@@ -232,13 +232,12 @@ _Z14replay_nonimm3i:
 	sw	a3, 0(a5)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0, 3
 	TTREPLAY	0, 8, 0, 0
-	li	a4, 1879097344	# 7000c000
 	addi	a0,a0,2
 	and	a0,a0,a2
+	li	a4, 1879097344	# 7000c000
 	add	a0,a0,a4
 	sw	a0, 0(a5)	# Op(0x70) - d(lr0)
 	SFPSTORE	0, L0, 0, 3
-	mv	a4,a3
 	TTREPLAY	0, 8, 0, 0
 	TTREPLAY	0, 8, 0, 0
 	ret

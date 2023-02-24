@@ -437,8 +437,8 @@ main:
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	li	a0,0
 	lw	ra,12(sp)
+	li	a0,0
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main
