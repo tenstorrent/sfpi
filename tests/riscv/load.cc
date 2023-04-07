@@ -31,6 +31,9 @@ int l1p *global_l1_ptr = &global[0];
 int l1p *global_l1_xo_ptr = &global_l1[0];
 int l1p *global_l1_const_ptr = (int *)0x800;
 
+#define CONST_ADDR 0xFFFF0000
+
+
 // Compiler can't break this up for scheduling
 int latency_chain_dependent(int *p, int a, int b, int c, int d, int e)
 {
@@ -434,6 +437,87 @@ int lower2(l1p int *l1, int* ll, int offset)
 
     return a + b + e + f + g;
 }
+
+int const_addrf(int a)
+{
+    int regp *ptr = reinterpret_cast<regp int *>(CONST_ADDR);
+    return *ptr + a;
+}
+
+const int cfg_state_id = 1;
+
+regp int * const_addr = (regp int *)(CONST_ADDR + 16);
+
+typedef __attribute__((rvtt_reg_ptr)) int * regpt;
+typedef volatile int __attribute__((rvtt_reg_ptr)) * vregpt;
+
+inline regpt get_cfg_pointer()
+{
+    return reinterpret_cast<regpt>(CONST_ADDR);
+}
+
+inline volatile regpt get_cfg_pointer_v()
+{
+    return reinterpret_cast<volatile regpt>(CONST_ADDR);
+}
+
+inline vregpt get_cfg_pointer_vt()
+{
+    return reinterpret_cast<vregpt>(CONST_ADDR);
+}
+
+int const_addr2(int a)
+{
+    regpt ptr = get_cfg_pointer();
+    return *ptr + a;
+}
+
+int const_addr3(int a)
+{
+    volatile regpt ptr = get_cfg_pointer_v();
+    return *ptr + a;
+}
+
+int const_addr4(int a)
+{
+    vregpt ptr = get_cfg_pointer_v();
+    return *ptr + a;
+}
+
+// This is weird C crap
+// int l1p * var;  // pointer to L1 int
+// and
+// int * l1p var   // pointer to L1 int
+// are synonomous.  But:
+// int l1p * ptr_arr[4];  // array of pointers to L1 ints
+// int * l1p ptr_arr[4];  // array of L1 pointers to ints
+// int l1p * l1p ptr_arr[4];  // array of L1 pointers to L1 ints
+// differ.
+// And
+// int l1p * foo();  // applies the l1p to the function
+// int * l1p foo();  // applies the l1p to the int *
+int l1p * l1p ptr_arr[4];
+
+int order_of_attribute1(int l1p *p)
+{
+    return *p;
+}
+
+int order_of_attribute2(int l1p * l1p p)
+{
+    return *p;
+}
+
+int * l1p ptr_arr1()
+{
+    return ptr_arr[1];
+}
+
+int ptr_arr2()
+{
+    return *ptr_arr[1];
+}
+
 
 unsigned int real_test_case(unsigned int noc, unsigned int reg_id, int a, int b, int c, int d, int e)
 {

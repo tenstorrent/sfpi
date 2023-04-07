@@ -139,8 +139,8 @@ _Z5call1U11rvtt_l1_ptrPiS_:
 	call	_Z6simpleU11rvtt_l1_ptrPiS_
 	lw	a5,0(s0)
 	mv	a5,a5	# GS L1 war
-	lw	ra,12(sp)
 	lw	s0,8(sp)
+	lw	ra,12(sp)
 	addi	sp,sp,16
 	add	a0,a0,a5
 	jr	ra
@@ -187,10 +187,11 @@ _Z5call3U11rvtt_l1_ptrPiiiiiiiiiii:
 	mv	t5,a5
 	mv	a4,a7
 	mv	a5,a6
+	mv	a7,t6
+	mv	a0,a0	# GS L1 war
+	mv	a6,t5
 	sw	a0,12(sp)
 	lw	a0,12(sp)
-	mv	a7,t6
-	mv	a6,t5
 	addi	sp,sp,16
 	mv	a3,t4
 	mv	a2,t3
@@ -315,9 +316,9 @@ _Z5loop1U11rvtt_l1_ptrPiS_:
 	.type	_Z13loop1_preemptU11rvtt_l1_ptrPiS_, @function
 _Z13loop1_preemptU11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
+	mv	a0,a0	# GS L1 war
 	addi	a3,a1,16
 	li	a5,0
-	mv	a0,a0	# GS L1 war
 .L28:
 	lw	a4,0(a1)
 	addi	a1,a1,4
@@ -334,12 +335,12 @@ _Z5loop2U11rvtt_l1_ptrPiS_:
 	li	a4,0
 	li	a5,0
 .L31:
-	lw	a3,0(a0)
 	lw	a2,0(a1)
+	lw	a3,0(a0)
 	addi	a0,a0,4
+	add	a5,a5,a2
 	addi	a1,a1,4
 	add	a4,a4,a3
-	add	a5,a5,a2
 	bne	a6,a0,.L31
 	add	a0,a4,a5
 	ret
@@ -368,9 +369,9 @@ _Z5loop3U11rvtt_l1_ptrPiS_:
 	.type	_Z13loop3_preemptU11rvtt_l1_ptrPiS_, @function
 _Z13loop3_preemptU11rvtt_l1_ptrPiS_:
 	lw	a0,0(a0)
+	mv	a0,a0	# GS L1 war
 	addi	a2,a1,16
 	li	a5,0
-	mv	a0,a0	# GS L1 war
 .L42:
 	lw	a4,0(a1)
 	lw	a3,40(a1)
@@ -591,8 +592,8 @@ _Z11remove_war4U11rvtt_l1_ptrPiS_:
 	lw	a2,12(a1)
 	lw	a3,16(a1)
 	add	a0,a0,a4
-	lw	a4,20(a1)
 	add	a0,a0,a2
+	lw	a4,20(a1)
 	add	a0,a0,a3
 	add	a0,a0,a4
 	add	a0,a0,a5
@@ -664,32 +665,32 @@ _Z7cancel3U11rvtt_l1_ptrPiS_S_:
 	lw	t0,80(a1)
 	lw	t6,100(a1)
 	add	a2,a2,t4
-	add	a2,a2,a5
-	lw	a5,96(a1)
 	lw	t5,104(a1)
+	lw	t4,124(a1)
+	add	a2,a2,a5
+	add	a2,a2,t1
+	lw	a5,96(a1)
+	add	a4,a4,a7
 	add	a3,a3,a0
 	lw	a0,120(a1)
-	lw	t4,124(a1)
-	add	a2,a2,t1
-	lw	t1,108(a1)
-	add	a4,a4,a7
-	lw	a7,128(a1)
 	add	a3,a3,a2
-	lw	a2,132(a1)
 	add	a3,a3,t2
+	lw	t1,108(a1)
+	lw	a7,128(a1)
+	add	a4,a4,t0
 	add	a5,a5,t6
+	lw	a2,132(a1)
+	add	a4,a4,a3
 	add	a5,a5,t5
 	add	a0,a0,t4
-	add	a4,a4,t0
-	add	a4,a4,a3
 	lw	a3,136(a1)
+	add	a4,a4,t3
 	add	a5,a5,t1
 	add	a0,a0,a7
-	add	a4,a4,t3
 	add	a5,a5,a4
 	add	a0,a0,a2
-	add	a0,a0,a3
 	add	a5,a5,a6
+	add	a0,a0,a3
 	add	a0,a0,a5
 	ret
 	.size	_Z7cancel3U11rvtt_l1_ptrPiS_S_, .-_Z7cancel3U11rvtt_l1_ptrPiS_S_
