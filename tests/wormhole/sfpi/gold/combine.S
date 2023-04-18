@@ -962,9 +962,8 @@ _Z13addi_yes_imm2j:
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	SFPLOADI	L0, 16256, 0
 	slli	a5,a0,16
-	srli	a5,a5,16
 	li	a3, 1962934272	# 75000000
-	slli	a5,a5,8
+	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
 	SFPNOP
@@ -1253,11 +1252,10 @@ _Z17add_plus_half_no1j:
 	SFPMAD	L0, L0, L1, L2, 0
 	SFPNOP
 	slli	a5,a0,16
-	srli	a5,a5,16
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	li	a3, 1962934272	# 75000000
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	slli	a5,a5,8
+	srli	a5,a5,8
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
 	SFPNOP

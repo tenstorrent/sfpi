@@ -111,25 +111,67 @@ _Z8keep_uqiPVh:
 _Z16double_store_uhiPVt:
 	lhu	a5,0(a0)
 	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
+	addi	a5,a5,10
+	sh	a5,0(a4)
+	sh	a5,0(a4)
+	ret
+	.size	_Z16double_store_uhiPVt, .-_Z16double_store_uhiPVt
+	.align	1
+	.globl	_Z20double_store_uhi_retPVt
+	.type	_Z20double_store_uhi_retPVt, @function
+_Z20double_store_uhi_retPVt:
+	lhu	a0,0(a0)
+	lui	a5,%hi(dstuhi)
+	addi	a0,a0,10
+	lw	a5,%lo(dstuhi)(a5)
+	slli	a0,a0,16
+	srli	a0,a0,16
+	sh	a0,0(a5)
+	sh	a0,0(a5)
+	ret
+	.size	_Z20double_store_uhi_retPVt, .-_Z20double_store_uhi_retPVt
+	.align	1
+	.globl	_Z20double_store_uhi_usePVt
+	.type	_Z20double_store_uhi_usePVt, @function
+_Z20double_store_uhi_usePVt:
+	lhu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
+	lw	a4,%lo(dstuhi)(a4)
+	addi	a3,a5,10
+	sh	a3,0(a4)
+	sh	a3,0(a4)
+	addi	a5,a5,15
+	sh	a5,0(a4)
+	ret
+	.size	_Z20double_store_uhi_usePVt, .-_Z20double_store_uhi_usePVt
+	.align	1
+	.globl	_Z21double_store_uhi_use2PVtt
+	.type	_Z21double_store_uhi_use2PVtt, @function
+_Z21double_store_uhi_use2PVtt:
+	lhu	a5,0(a0)
+	lui	a4,%hi(dstuhi)
 	addi	a5,a5,10
 	lw	a4,%lo(dstuhi)(a4)
 	slli	a5,a5,16
 	srli	a5,a5,16
 	sh	a5,0(a4)
 	sh	a5,0(a4)
+	add	a5,a5,a1
+	sh	a5,0(a4)
 	ret
-	.size	_Z16double_store_uhiPVt, .-_Z16double_store_uhiPVt
+	.size	_Z21double_store_uhi_use2PVtt, .-_Z21double_store_uhi_use2PVtt
 	.align	1
 	.globl	_Z16double_store_uqiPVh
 	.type	_Z16double_store_uqiPVh, @function
 _Z16double_store_uqiPVh:
 	lbu	a5,0(a0)
-	lui	a4,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a4)
+	lui	a4,%hi(dstuqi)
+	lw	a3,%lo(dstuqi)(a4)
 	addi	a5,a5,10
-	andi	a5,a5,0xff
-	sh	a5,0(a4)
-	sh	a5,0(a4)
+	sb	a5,0(a3)
+	lw	a4,%lo(dstuqi)(a4)
+	sb	a5,0(a4)
 	ret
 	.size	_Z16double_store_uqiPVh, .-_Z16double_store_uqiPVh
 	.align	1
@@ -138,10 +180,8 @@ _Z16double_store_uqiPVh:
 _Z16triple_store_uhiPVt:
 	lhu	a5,0(a0)
 	lui	a4,%hi(dstuhi)
-	addi	a5,a5,10
 	lw	a4,%lo(dstuhi)(a4)
-	slli	a5,a5,16
-	srli	a5,a5,16
+	addi	a5,a5,10
 	sh	a5,0(a4)
 	sh	a5,0(a4)
 	sh	a5,0(a4)
@@ -152,13 +192,14 @@ _Z16triple_store_uhiPVt:
 	.type	_Z16triple_store_uqiPVh, @function
 _Z16triple_store_uqiPVh:
 	lbu	a5,0(a0)
-	lui	a4,%hi(dstuhi)
-	lw	a4,%lo(dstuhi)(a4)
+	lui	a4,%hi(dstuqi)
+	lw	a3,%lo(dstuqi)(a4)
 	addi	a5,a5,10
-	andi	a5,a5,0xff
-	sh	a5,0(a4)
-	sh	a5,0(a4)
-	sh	a5,0(a4)
+	sb	a5,0(a3)
+	lw	a3,%lo(dstuqi)(a4)
+	sb	a5,0(a3)
+	lw	a4,%lo(dstuqi)(a4)
+	sb	a5,0(a4)
 	ret
 	.size	_Z16triple_store_uqiPVh, .-_Z16triple_store_uqiPVh
 	.align	1
@@ -232,13 +273,13 @@ _Z7keep_bbPVti:
 	slli	a0,a0,16
 	srli	a0,a0,16
 	sh	a0,0(a4)
-	ble	a1,zero,.L24
+	ble	a1,zero,.L27
 	li	a5,0
-.L25:
+.L28:
 	sh	zero,0(a4)
 	addi	a5,a5,1
-	bne	a1,a5,.L25
-.L24:
+	bne	a1,a5,.L28
+.L27:
 	ret
 	.size	_Z7keep_bbPVti, .-_Z7keep_bbPVti
 	.align	1
@@ -340,19 +381,104 @@ _Z13replace_paramPVjPt:
 	ret
 	.size	_Z13replace_paramPVjPt, .-_Z13replace_paramPVjPt
 	.align	1
-	.globl	_Z9wish_listPVt
-	.type	_Z9wish_listPVt, @function
-_Z9wish_listPVt:
+	.globl	_Z10real_worldPVt
+	.type	_Z10real_worldPVt, @function
+_Z10real_worldPVt:
 	lhu	a5,0(a0)
 	addi	a5,a5,1
-	slli	a4,a5,16
-	srli	a4,a4,16
-	sh	a4,0(a0)
+	sh	a5,0(a0)
 	lhu	a0,2(a0)
 	sub	a0,a5,a0
 	seqz	a0,a0
 	ret
-	.size	_Z9wish_listPVt, .-_Z9wish_listPVt
+	.size	_Z10real_worldPVt, .-_Z10real_worldPVt
+	.align	1
+	.globl	_Z14mask_and_shiftt
+	.type	_Z14mask_and_shiftt, @function
+_Z14mask_and_shiftt:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srli	a0,a0,12
+	ret
+	.size	_Z14mask_and_shiftt, .-_Z14mask_and_shiftt
+	.align	1
+	.globl	_Z15mask_and_shift2t
+	.type	_Z15mask_and_shift2t, @function
+_Z15mask_and_shift2t:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srli	a0,a0,16
+	slli	a5,a0,4
+	add	a0,a5,a0
+	ret
+	.size	_Z15mask_and_shift2t, .-_Z15mask_and_shift2t
+	.align	1
+	.globl	_Z15mask_and_shift3s
+	.type	_Z15mask_and_shift3s, @function
+_Z15mask_and_shift3s:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srai	a0,a0,12
+	ret
+	.size	_Z15mask_and_shift3s, .-_Z15mask_and_shift3s
+	.align	1
+	.globl	_Z15mask_and_shift4s
+	.type	_Z15mask_and_shift4s, @function
+_Z15mask_and_shift4s:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srai	a0,a0,16
+	slli	a5,a0,4
+	add	a0,a5,a0
+	ret
+	.size	_Z15mask_and_shift4s, .-_Z15mask_and_shift4s
+	.align	1
+	.globl	_Z15mask_and_shift5t
+	.type	_Z15mask_and_shift5t, @function
+_Z15mask_and_shift5t:
+	addi	a0,a0,1
+	slli	a0,a0,4
+	slli	a0,a0,16
+	srli	a0,a0,16
+	ret
+	.size	_Z15mask_and_shift5t, .-_Z15mask_and_shift5t
+	.align	1
+	.globl	_Z15mask_and_shift6t
+	.type	_Z15mask_and_shift6t, @function
+_Z15mask_and_shift6t:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srli	a0,a0,16
+	slli	a5,a0,4
+	add	a0,a0,a5
+	slli	a0,a0,16
+	srli	a0,a0,16
+	ret
+	.size	_Z15mask_and_shift6t, .-_Z15mask_and_shift6t
+	.align	1
+	.globl	_Z15mask_and_shift7s
+	.type	_Z15mask_and_shift7s, @function
+_Z15mask_and_shift7s:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srai	a0,a0,12
+	slli	a0,a0,16
+	srai	a0,a0,16
+	ret
+	.size	_Z15mask_and_shift7s, .-_Z15mask_and_shift7s
+	.align	1
+	.globl	_Z15mask_and_shift8s
+	.type	_Z15mask_and_shift8s, @function
+_Z15mask_and_shift8s:
+	addi	a0,a0,1
+	slli	a0,a0,16
+	srli	a0,a0,16
+	slli	a5,a0,4
+	add	a0,a0,a5
+	slli	a0,a0,16
+	srai	a0,a0,16
+	ret
+	.size	_Z15mask_and_shift8s, .-_Z15mask_and_shift8s
 	.section	.text.startup,"ax",@progbits
 	.align	1
 	.globl	main
@@ -364,37 +490,37 @@ main:
 	lhu	a4,-274(a5)
 	lbu	a4,-274(a5)
 	lhu	a4,-274(a5)
-	lui	a2,%hi(dstuhi)
-	lw	a3,%lo(dstuhi)(a2)
+	lui	a3,%hi(dstuhi)
+	lw	a2,%lo(dstuhi)(a3)
 	addi	a4,a4,10
-	sh	a4,0(a3)
+	sh	a4,0(a2)
 	lbu	a4,-274(a5)
-	lui	a3,%hi(dstuqi)
-	lw	a3,%lo(dstuqi)(a3)
+	lui	a2,%hi(dstuqi)
+	lw	a1,%lo(dstuqi)(a2)
 	addi	a4,a4,10
-	sb	a4,0(a3)
+	sb	a4,0(a1)
+	lbu	a4,-274(a5)
+	lw	a1,%lo(dstuhi)(a3)
+	addi	a4,a4,10
+	andi	a4,a4,0xff
+	sh	a4,0(a1)
+	lhu	a4,-274(a5)
+	lw	a6,%lo(dstuqi)(a2)
+	addi	a4,a4,10
+	sh	a4,0(a1)
+	sh	a4,0(a1)
+	lbu	a4,-274(a5)
+	addi	a4,a4,10
+	sb	a4,0(a6)
+	lw	a2,%lo(dstuqi)(a2)
+	sb	a4,0(a2)
+	lui	a4,%hi(dstusi)
+	lhu	a1,-274(a5)
+	lw	a2,%lo(dstusi)(a4)
+	lw	a4,%lo(dstuhi)(a3)
+	sw	a1,0(a2)
 	lbu	a3,-274(a5)
-	lw	a4,%lo(dstuhi)(a2)
-	addi	a3,a3,10
-	andi	a3,a3,0xff
-	sh	a3,0(a4)
-	lhu	a3,-274(a5)
-	lui	a2,%hi(dstusi)
-	addi	a3,a3,10
-	slli	a3,a3,16
-	srli	a3,a3,16
-	sh	a3,0(a4)
-	sh	a3,0(a4)
-	lbu	a3,-274(a5)
-	lw	a2,%lo(dstusi)(a2)
-	addi	a3,a3,10
-	andi	a3,a3,0xff
-	sh	a3,0(a4)
-	sh	a3,0(a4)
-	lhu	a3,-274(a5)
 	sw	a3,0(a2)
-	lbu	a3,-274(a5)
-	sw	a3,0(a2)
 	lhu	a3,-274(a5)
 	addi	a3,a3,10
 	sh	a3,0(a4)
@@ -402,20 +528,18 @@ main:
 	sh	a3,0(a4)
 	lhu	a3,-274(a5)
 	addi	a3,a3,10
-	slli	a3,a3,16
-	srli	a3,a3,16
 	sh	a3,0(a4)
 	sh	a3,0(a4)
 	lhu	a5,-274(a5)
 	addi	a5,a5,10
 	sh	a5,0(a4)
-	ble	a0,zero,.L38
+	ble	a0,zero,.L49
 	li	a5,0
-.L39:
+.L50:
 	sh	zero,0(a4)
 	addi	a5,a5,1
-	bne	a0,a5,.L39
-.L38:
+	bne	a0,a5,.L50
+.L49:
 	li	a0,0
 	ret
 	.size	main, .-main

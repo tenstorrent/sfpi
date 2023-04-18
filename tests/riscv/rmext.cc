@@ -75,7 +75,6 @@ void keep_uqi(volatile unsigned char *ptr)
     *dstuhi = tmp;
 }
 
-// wish list
 void double_store_uhi(volatile unsigned short *ptr)
 {
     unsigned short tmp = *ptr;
@@ -84,13 +83,39 @@ void double_store_uhi(volatile unsigned short *ptr)
     *dstuhi = tmp;
 }
 
-// wish list
+unsigned short double_store_uhi_ret(volatile unsigned short *ptr)
+{
+    unsigned short tmp = *ptr;
+    tmp += 10;
+    *dstuhi = tmp;
+    *dstuhi = tmp;
+    return tmp;
+}
+
+void double_store_uhi_use(volatile unsigned short *ptr)
+{
+    unsigned short tmp = *ptr;
+    tmp += 10;
+    *dstuhi = tmp;
+    *dstuhi = tmp;
+    *dstuhi = tmp + 5;
+}
+
+void double_store_uhi_use2(volatile unsigned short *ptr, unsigned short a)
+{
+    unsigned short tmp = *ptr;
+    tmp += 10;
+    *dstuhi = tmp;
+    *dstuhi = tmp;
+    *dstuhi = tmp + a;
+}
+
 void double_store_uqi(volatile unsigned char *ptr)
 {
     unsigned char tmp = *ptr;
     tmp += 10;
-    *dstuhi = tmp;
-    *dstuhi = tmp;
+    *dstuqi = tmp;
+    *dstuqi = tmp;
 }
 
 void triple_store_uhi(volatile unsigned short *ptr)
@@ -106,9 +131,9 @@ void triple_store_uqi(volatile unsigned char *ptr)
 {
     unsigned char tmp = *ptr;
     tmp += 10;
-    *dstuhi = tmp;
-    *dstuhi = tmp;
-    *dstuhi = tmp;
+    *dstuqi = tmp;
+    *dstuqi = tmp;
+    *dstuqi = tmp;
 }
 
 void replace_write_uhi(volatile unsigned short *ptr)
@@ -227,12 +252,62 @@ void replace_param(volatile unsigned int *ptr, unsigned short *out)
 
 // This shows up in dram_stream_intf.cc:
 //   curr_dram_output_stream_state->r_dim_count = r_dim_count;
-int wish_list(volatile unsigned short *ptr)
+int real_world(volatile unsigned short *ptr)
 {
     unsigned int v = *ptr;
     v++;
     *ptr = v;
     return (v == *(ptr+1)) ? 1 : 0;
+}
+
+// zero/sign extend followed by shift
+// fold shift into extend operation
+unsigned int mask_and_shift(unsigned short x)
+{
+    x += 1;
+    return x << 4;
+}
+
+unsigned int mask_and_shift2(unsigned short x)
+{
+    x += 1;
+    return (x << 4) + x;
+}
+
+int mask_and_shift3(short x)
+{
+    x += 1;
+    return x << 4;
+}
+
+int mask_and_shift4(short x)
+{
+    x += 1;
+    return (x << 4) + x;
+}
+
+unsigned short mask_and_shift5(unsigned short x)
+{
+    x += 1;
+    return x << 4;
+}
+
+unsigned short mask_and_shift6(unsigned short x)
+{
+    x += 1;
+    return (x << 4) + x;
+}
+
+short mask_and_shift7(short x)
+{
+    x += 1;
+    return x << 4;
+}
+
+short mask_and_shift8(short x)
+{
+    x += 1;
+    return (x << 4) + x;
 }
 
 int main(int argc, char *argv[])
