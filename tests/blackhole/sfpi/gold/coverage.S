@@ -1,0 +1,1965 @@
+	.file	"coverage.cc"
+	.option nopic
+	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute unaligned_access, 0
+	.attribute stack_align, 16
+	.text
+	.align	1
+	.globl	_Z15test_load_storev
+	.type	_Z15test_load_storev, @function
+_Z15test_load_storev:
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	SFPLOAD	L1, 4, 0, 7
+	SFPSTORE	6, L2, 0, 7
+	SFPSTORE	8, L0, 0, 7
+	SFPSTORE	10, L1, 0, 7
+	SFPLOAD	L1, 14, 0, 7
+	SFPSTORE	12, L1, 0, 7
+	SFPSTORE	16, L0, 0, 7
+	SFPSTORE	18, L10, 0, 7
+	SFPLOAD	L0, 16382, 0, 7
+	SFPLOAD	L0, 16382, 0, 7
+	SFPSTORE	16382, L0, 0, 7
+	SFPSTORE	16382, L0, 0, 7
+	ret
+	.size	_Z15test_load_storev, .-_Z15test_load_storev
+	.align	1
+	.globl	_Z8test_addv
+	.type	_Z8test_addv, @function
+_Z8test_addv:
+	SFPLOAD	L1, 4, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	TTREPLAY	0, 2, 1, 1
+	SFPADD	L0, L10, L0, L1, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPLOAD	L1, 10, 0, 7
+	SFPLOAD	L0, 8, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 16128, 0
+	SFPNOP
+	SFPSTORE	6, L0, 0, 7
+	SFPLOAD	L1, 16, 0, 7
+	SFPLOAD	L0, 14, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 48896, 0
+	SFPNOP
+	SFPSTORE	12, L0, 0, 7
+	SFPLOAD	L1, 18, 0, 7
+	SFPLOAD	L0, 20, 0, 7
+	SFPADD	L2, L10, L1, L0, 0
+	SFPNOP
+	SFPADDI	L2, 48896, 0
+	SFPADD	L1, L10, L1, L0, 0
+	SFPLOAD	L3, 0, 0, 7
+	SFPADD	L1, L10, L1, L3, 0
+	SFPNOP
+	SFPADD	L1, L10, L1, L10, 0
+	SFPSTORE	22, L2, 0, 7
+	SFPADD	L3, L10, L1, L0, 0
+	SFPNOP
+	SFPADDI	L3, 16128, 0
+	SFPNOP
+	SFPSTORE	24, L3, 0, 7
+	SFPADD	L3, L10, L9, L10, 0
+	SFPNOP
+	SFPSTORE	26, L3, 0, 7
+	SFPLOAD	L3, 24, 0, 7
+	SFPADD	L3, L10, L10, L3, 0
+	SFPNOP
+	SFPSTORE	28, L3, 0, 7
+	SFPLOAD	L3, 24, 0, 7
+	SFPADD	L3, L10, L3, L8, 0
+	SFPNOP
+	SFPADDI	L3, 16128, 0
+	SFPNOP
+	SFPSTORE	30, L3, 0, 7
+	SFPADD	L3, L10, L2, L12, 0
+	SFPNOP
+	SFPADDI	L3, 48896, 0
+	SFPNOP
+	SFPSTORE	32, L3, 0, 7
+	SFPADD	L3, L10, L1, L0, 0
+	SFPNOP
+	SFPADD	L3, L10, L3, L2, 0
+	SFPNOP
+	SFPSTORE	34, L3, 0, 7
+	SFPADD	L0, L10, L1, L0, 0
+	SFPNOP
+	SFPADD	L0, L10, L0, L2, 0
+	SFPLOAD	L2, 0, 0, 7
+	SFPADD	L0, L10, L0, L2, 0
+	SFPNOP
+	SFPADD	L0, L10, L0, L10, 0
+	SFPNOP
+	SFPADDI	L0, 16544, 0
+	SFPNOP
+	SFPADDI	L0, 16128, 0
+	SFPNOP
+	SFPSTORE	36, L0, 0, 7
+	SFPADDI	L1, 16256, 0
+	SFPNOP
+	SFPSTORE	38, L1, 0, 7
+	SFPLOAD	L0, 38, 0, 7
+	SFPADDI	L0, 16256, 0
+	SFPNOP
+	SFPSTORE	40, L0, 0, 7
+	ret
+	.size	_Z8test_addv, .-_Z8test_addv
+	.align	1
+	.globl	_Z8test_subv
+	.type	_Z8test_subv, @function
+_Z8test_subv:
+	SFPLOAD	L0, 4, 0, 7
+	SFPLOAD	L1, 2, 0, 7
+	TTREPLAY	0, 2, 1, 1
+	SFPMAD	L0, L11, L0, L1, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPLOAD	L0, 10, 0, 7
+	SFPLOAD	L1, 8, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 16128, 0
+	SFPNOP
+	SFPSTORE	6, L0, 0, 7
+	SFPLOAD	L0, 16, 0, 7
+	SFPLOAD	L1, 14, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 48896, 0
+	SFPNOP
+	SFPSTORE	12, L0, 0, 7
+	SFPLOAD	L2, 18, 0, 7
+	SFPLOAD	L1, 20, 0, 7
+	SFPMAD	L0, L11, L1, L2, 0
+	SFPNOP
+	SFPADDI	L0, 48896, 0
+	SFPMAD	L3, L11, L1, L2, 0
+	SFPLOAD	L2, 0, 0, 7
+	SFPMAD	L2, L11, L2, L3, 0
+	SFPNOP
+	SFPMAD	L3, L11, L10, L2, 0
+	SFPADD	L2, L10, L1, L0, 0
+	SFPNOP
+	SFPMAD	L2, L11, L2, L3, 0
+	SFPSTORE	22, L0, 0, 7
+	SFPMAD	L3, L11, L1, L2, 0
+	SFPNOP
+	SFPADDI	L3, 16128, 0
+	SFPNOP
+	SFPSTORE	24, L3, 0, 7
+	SFPADD	L2, L10, L2, L1, 0
+	SFPNOP
+	SFPMAD	L2, L11, L0, L2, 0
+	SFPNOP
+	SFPSTORE	34, L2, 0, 7
+	SFPLOAD	L2, 18, 0, 7
+	SFPMAD	L1, L11, L1, L2, 0
+	SFPNOP
+	SFPMAD	L1, L11, L0, L1, 0
+	SFPLOAD	L3, 0, 0, 7
+	SFPMAD	L1, L11, L3, L1, 0
+	SFPNOP
+	SFPMAD	L1, L11, L10, L1, 0
+	SFPNOP
+	SFPADDI	L1, 49312, 0
+	SFPNOP
+	SFPADDI	L1, 16128, 0
+	SFPNOP
+	SFPSTORE	36, L1, 0, 7
+	SFPMAD	L1, L11, L10, L9, 0
+	SFPNOP
+	SFPSTORE	26, L1, 0, 7
+	SFPLOAD	L1, 24, 0, 7
+	SFPMAD	L1, L11, L1, L10, 0
+	SFPNOP
+	SFPSTORE	28, L1, 0, 7
+	SFPLOAD	L1, 24, 0, 7
+	SFPMAD	L1, L11, L13, L1, 0
+	SFPNOP
+	SFPADDI	L1, 16128, 0
+	SFPNOP
+	SFPSTORE	30, L1, 0, 7
+	SFPMAD	L0, L11, L14, L0, 0
+	SFPNOP
+	SFPADDI	L0, 48896, 0
+	SFPNOP
+	SFPSTORE	32, L0, 0, 7
+	SFPLOADI	L0, 16256, 0
+	SFPMAD	L2, L11, L2, L0, 0
+	SFPNOP
+	SFPSTORE	34, L2, 0, 7
+	SFPLOAD	L0, 38, 0, 7
+	SFPLOADI	L1, 16256, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPSTORE	36, L0, 0, 7
+	ret
+	.size	_Z8test_subv, .-_Z8test_subv
+	.align	1
+	.globl	_Z8test_mulv
+	.type	_Z8test_mulv, @function
+_Z8test_mulv:
+	SFPLOAD	L1, 4, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	SFPMUL	L0, L0, L1, L9, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPLOAD	L1, 10, 0, 7
+	SFPLOAD	L0, 8, 0, 7
+	SFPLOADI	L2, 16128, 0
+	SFPMAD	L0, L0, L1, L2, 0
+	SFPNOP
+	SFPSTORE	6, L0, 0, 7
+	SFPLOAD	L1, 16, 0, 7
+	SFPLOAD	L0, 14, 0, 7
+	SFPLOADI	L2, 48896, 0
+	SFPMAD	L0, L0, L1, L2, 0
+	SFPNOP
+	SFPSTORE	12, L0, 0, 7
+	SFPLOAD	L0, 18, 0, 7
+	SFPLOAD	L1, 20, 0, 7
+	SFPLOADI	L2, 48896, 0
+	SFPMAD	L2, L0, L1, L2, 0
+	SFPMUL	L0, L0, L1, L9, 0
+	SFPMOV	L3, L1, 1
+	SFPMUL	L0, L0, L3, L9, 0
+	SFPLOAD	L3, 0, 0, 7
+	SFPMUL	L0, L0, L3, L9, 0
+	SFPLOAD	L3, 0, 0, 7
+	SFPMOV	L3, L3, 1
+	SFPMUL	L0, L0, L3, L9, 0
+	SFPNOP
+	SFPMUL	L0, L0, L10, L9, 0
+	SFPSTORE	22, L2, 0, 7
+	SFPLOADI	L3, 16128, 0
+	SFPMAD	L3, L0, L1, L3, 0
+	SFPNOP
+	SFPSTORE	24, L3, 0, 7
+	SFPMUL	L3, L9, L10, L9, 0
+	SFPNOP
+	SFPSTORE	26, L3, 0, 7
+	SFPLOAD	L3, 24, 0, 7
+	SFPMUL	L3, L10, L3, L9, 0
+	SFPNOP
+	SFPSTORE	28, L3, 0, 7
+	SFPLOAD	L3, 24, 0, 7
+	SFPLOADI	L4, 16128, 0
+	SFPMAD	L3, L3, L14, L4, 0
+	SFPNOP
+	SFPSTORE	30, L3, 0, 7
+	SFPLOADI	L3, 48896, 0
+	SFPMAD	L3, L2, L13, L3, 0
+	SFPNOP
+	SFPSTORE	32, L3, 0, 7
+	SFPMUL	L3, L0, L1, L9, 0
+	SFPNOP
+	SFPMUL	L3, L3, L2, L9, 0
+	SFPNOP
+	SFPSTORE	34, L3, 0, 7
+	SFPMUL	L1, L0, L1, L9, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPLOAD	L2, 0, 0, 7
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPNOP
+	SFPMUL	L1, L1, L10, L9, 0
+	SFPLOADI	L2, 16544, 0
+	SFPLOADI	L3, 16128, 0
+	SFPMAD	L1, L1, L2, L3, 0
+	SFPNOP
+	SFPSTORE	36, L1, 0, 7
+	SFPMULI	L0, 16256, 0
+	SFPNOP
+	SFPSTORE	38, L0, 0, 7
+	SFPLOAD	L0, 38, 0, 7
+	SFPMULI	L0, 16256, 0
+	SFPNOP
+	SFPSTORE	40, L0, 0, 7
+	ret
+	.size	_Z8test_mulv, .-_Z8test_mulv
+	.align	1
+	.globl	_Z8test_madv
+	.type	_Z8test_madv, @function
+_Z8test_madv:
+	SFPLOAD	L1, 4, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	SFPLOAD	L2, 6, 0, 7
+	TTREPLAY	0, 2, 1, 1
+	SFPMAD	L0, L0, L1, L2, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPLOAD	L1, 12, 0, 7
+	SFPLOAD	L0, 10, 0, 7
+	SFPLOAD	L2, 14, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 16128, 0
+	SFPNOP
+	SFPSTORE	8, L0, 0, 7
+	SFPLOAD	L1, 20, 0, 7
+	SFPLOAD	L0, 18, 0, 7
+	SFPLOAD	L2, 22, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPADDI	L0, 48896, 0
+	SFPNOP
+	SFPSTORE	16, L0, 0, 7
+	SFPLOAD	L1, 24, 0, 7
+	SFPLOAD	L0, 26, 0, 7
+	SFPLOAD	L2, 28, 0, 7
+	SFPMAD	L3, L1, L0, L2, 0
+	SFPNOP
+	SFPADDI	L3, 48896, 0
+	SFPNOP
+	SFPSTORE	30, L3, 0, 7
+	SFPMAD	L2, L1, L0, L2, 0
+	SFPNOP
+	SFPADDI	L2, 16128, 0
+	SFPNOP
+	SFPSTORE	32, L2, 0, 7
+	SFPMAD	L2, L1, L0, L10, 0
+	SFPNOP
+	SFPADDI	L2, 48896, 0
+	SFPNOP
+	SFPSTORE	34, L2, 0, 7
+	SFPMAD	L2, L9, L0, L10, 0
+	SFPNOP
+	SFPADDI	L2, 16128, 0
+	SFPNOP
+	SFPSTORE	36, L2, 0, 7
+	SFPMOV	L0, L0, 1
+	SFPMOV	L1, L1, 1
+	SFPMAD	L0, L9, L0, L1, 0
+	SFPNOP
+	SFPADDI	L0, 16128, 0
+	SFPNOP
+	SFPSTORE	38, L0, 0, 7
+	ret
+	.size	_Z8test_madv, .-_Z8test_madv
+	.align	1
+	.globl	_Z11test_incdecv
+	.type	_Z11test_incdecv, @function
+_Z11test_incdecv:
+	SFPLOADI	L1, 16256, 0
+	SFPADDI	L1, 16256, 0
+	SFPNOP
+	SFPSTORE	0, L1, 0, 7
+	SFPLOADI	L0, 16256, 0
+	SFPADD	L2, L10, L1, L0, 0
+	SFPSTORE	2, L1, 0, 7
+	SFPSTORE	4, L2, 0, 7
+	SFPLOADI	L0, 16256, 0
+	SFPMAD	L0, L11, L0, L2, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L1, 16256, 0
+	SFPMAD	L1, L11, L1, L0, 0
+	TTREPLAY	0, 11, 1, 1
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L1, 0, 7
+	SFPLOADI	L1, 1, 4
+	SFPIADD	L1, L1, 1, 5
+	SFPSTORE	0, L1, 0, 7
+	SFPIADD	L0, L1, 1, 5
+	SFPSTORE	2, L1, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPIADD	L0, L0, -1, 5
+	SFPSTORE	0, L0, 0, 7
+	SFPIADD	L1, L0, -1, 5
+	TTREPLAY	0, 11, 0, 0
+	TTREPLAY	0, 2, 0, 0
+	ret
+	.size	_Z11test_incdecv, .-_Z11test_incdecv
+	.align	1
+	.globl	_Z10test_loadilm
+	.type	_Z10test_loadilm, @function
+_Z10test_loadilm:
+	SFPLOADI	L0, 255, 4
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L0, -255, 4
+	SFPSTORE	0, L0, 0, 7
+	li	a4,65536
+	addi	a4,a4,-1
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	and	a2,a0,a4
+	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a3, 1896480768	# 710a0000
+	add	a3,a2,a3
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
+	srli	a0,a0,16
+	li	a3, 1896349696	# 71080000
+	add	a3,a0,a3
+	sw	a3, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	SFPSTORE	0, L0, 0, 7
+	and	a4,a1,a4
+	li	a3, 1896480768	# 710a0000
+	add	a3,a3,a4
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
+	srli	a1,a1,16
+	li	a3, 1896349696	# 71080000
+	add	a3,a1,a3
+	sw	a3, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L0, 255, 2
+	SFPSTORE	2, L0, 0, 7
+	SFPLOADI	L0, 65535, 8
+	SFPLOADI	L0, 65281, 10
+	SFPSTORE	2, L0, 0, 7
+	li	a3, 1896480768	# 710a0000
+	add	a3,a3,a2
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
+	li	a3, 1896349696	# 71080000
+	add	a0,a0,a3
+	sw	a0, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	SFPSTORE	2, L0, 0, 7
+	li	a3, 1896480768	# 710a0000
+	add	a3,a3,a4
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
+	li	a3, 1896349696	# 71080000
+	add	a1,a1,a3
+	sw	a1, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
+	SFPSTORE	2, L0, 0, 7
+	SFPLOADI	L0, 15360, 1
+	SFPSTORE	4, L0, 0, 7
+	SFPLOADI	L0, 16256, 1
+	SFPSTORE	4, L0, 0, 7
+	SFPLOADI	L0, 16256, 1
+	TTREPLAY	0, 3, 1, 1
+	SFPSTORE	4, L0, 0, 7
+	SFPLOADI	L0, 16256, 0
+	SFPSTORE	4, L0, 0, 7
+	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 3, 0, 0
+	li	a3, 1895825408	# 71000000
+	add	a3,a3,a2
+	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
+	SFPSTORE	4, L0, 0, 7
+	li	a3, 1895825408	# 71000000
+	add	a4,a3,a4
+	sw	a4, 0(a5)	# Op(0x71) - d(lr0)
+	SFPSTORE	4, L0, 0, 7
+	SFPLOADI	L0, 16448, 0
+	SFPSTORE	10, L0, 0, 7
+	SFPLOADI	L0, 49216, 0
+	SFPSTORE	10, L0, 0, 7
+	SFPLOADI	L0, 16454, 8
+	SFPLOADI	L0, 26214, 10
+	SFPSTORE	12, L0, 0, 7
+	SFPLOADI	L0, 16448, 0
+	SFPSTORE	14, L0, 0, 7
+	ret
+	.size	_Z10test_loadilm, .-_Z10test_loadilm
+	.align	1
+	.globl	_Z17test_control_flowi
+	.type	_Z17test_control_flowi, @function
+_Z17test_control_flowi:
+	SFPLOADI	L0, 16320, 0
+	li	a5,0
+	bgt	a0,zero,.L10
+	j	.L9
+.L16:
+	SFPLOAD	L0, 2, 0, 7
+	addi	a5,a5,1
+	beq	a0,a5,.L9
+.L10:
+	andi	a4,a5,1
+	bne	a4,zero,.L16
+	SFPSTORE	4, L0, 0, 7
+	addi	a5,a5,1
+	bne	a0,a5,.L10
+.L9:
+	ret
+	.size	_Z17test_control_flowi, .-_Z17test_control_flowi
+	.align	1
+	.globl	_Z12test_mad_immv
+	.type	_Z12test_mad_immv, @function
+_Z12test_mad_immv:
+	SFPLOAD	L1, 0, 0, 7
+	SFPLOADI	L0, 16046, 8
+	SFPLOADI	L0, 5243, 10
+	SFPLOADI	L2, 48793, 8
+	SFPLOADI	L2, 39322, 10
+	SFPMAD	L0, L1, L0, L2, 0
+	SFPLOADI	L2, 16128, 0
+	SFPMAD	L0, L1, L0, L2, 0
+	SFPNOP
+	SFPSTORE	4, L0, 0, 7
+	ret
+	.size	_Z12test_mad_immv, .-_Z12test_mad_immv
+	.align	1
+	.globl	_Z16test_exman_exexpv
+	.type	_Z16test_exman_exexpv, @function
+_Z16test_exman_exexpv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPEXMAN	L1, L0, 0
+	SFPEXMAN	L1, L0, 1
+	SFPEXEXP	L1, L0, 0
+	SFPEXEXP	L1, L0, 1
+	SFPSTORE	6, L1, 0, 7
+	SFPEXEXP	L1, L0, 2
+	SFPENCC	3, 10
+	SFPEXEXP	L1, L0, 1
+	SFPSETCC	L1, 0, 0
+	SFPENCC	3, 10
+	ret
+	.size	_Z16test_exman_exexpv, .-_Z16test_exman_exexpv
+	.align	1
+	.globl	_Z32test_setman_setexp_addexp_setsgni
+	.type	_Z32test_setman_setexp_addexp_setsgni, @function
+_Z32test_setman_setexp_addexp_setsgni:
+	SFPLOADI	L0, 16256, 0
+	SFPLOADI	L1, 1, 4
+	SFPLOADI	L2, 1, 4
+	SFPSETEXP	L0, L0, 1023, 1
+	SFPMOV	L3, L1, 0
+	SFPSETEXP	L3, L0, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPSETEXP	L0, L3, 0, 0
+	SFPSETEXP	L0, L0, 4095, 1
+	slli	a5,a0,12
+	li	a4,16773120
+	and	a5,a5,a4
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a3, 2181038081	# 82000001
+	add	a3,a5,a3
+	sw	a3, 0(a4)	# Op(0x82) - d(lr0) s(lr0)
+	SFPSETEXP	L0, L0, 4095, 1
+	SFPSETMAN	L0, L0, 1023, 1
+	SFPMOV	L3, L1, 0
+	SFPSETMAN	L3, L0, 0, 0
+	SFPMOV	L0, L2, 2
+	SFPSETMAN	L0, L3, 0, 0
+	SFPLOADI	L2, 15, 8
+	SFPLOADI	L2, 65535, 10
+	SFPSETMAN	L2, L0, 0, 0
+	slli	a3,a0,16
+	li	a2, 1896480768	# 710a0000
+	srli	a3,a3,16
+	add	a3,a3,a2
+	sw	a3, 0(a4)	# Op(0x71) - d(lr0)
+	li	a3, 1896349696	# 71080000
+	srli	a0,a0,16
+	add	a0,a0,a3
+	sw	a0, 0(a4)	# Op(0x71) lv(lr0)  d(lr0)
+	SFPSETMAN	L0, L2, 0, 0
+	SFPLOADI	L2, 65535, 8
+	SFPLOADI	L2, 65535, 10
+	SFPSETMAN	L2, L0, 0, 0
+	SFPLOAD	L0, 2, 0, 7
+	SFPDIVP2	L2, L0, 20, 1
+	SFPDIVP2	L2, L0, -20, 1
+	li	a3, 1979711521	# 76000021
+	add	a3,a5,a3
+	sw	a3, 0(a4)	# Op(0x76) - d(lr2) s(lr0)
+	SFPDIVP2	L2, L0, -1, 1
+	SFPSETSGN	L2, L0, 1, 1
+	SFPSETSGN	L2, L0, 4095, 1
+	SFPSETSGN	L1, L0, 0, 0
+	li	a3, 2298478609	# 89000011
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x89) - d(lr1) s(lr0)
+	SFPSETSGN	L1, L0, 4095, 1
+	SFPLOAD	L1, 4, 0, 7
+	SFPSETSGN	L1, L0, 0, 0
+	SFPSTORE	4, L1, 0, 7
+	ret
+	.size	_Z32test_setman_setexp_addexp_setsgni, .-_Z32test_setman_setexp_addexp_setsgni
+	.align	1
+	.globl	_Z27test_dreg_conditional_constv
+	.type	_Z27test_dreg_conditional_constv, @function
+_Z27test_dreg_conditional_constv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16544, 0
+	SFPMAD	L1, L1, L11, L2, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 0
+	SFPPUSHC	0
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16384, 0
+	TTREPLAY	0, 3, 1, 1
+	SFPMAD	L1, L1, L11, L2, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSTORE	4, L0, 0, 7
+	SFPCOMPC
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16512, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	6, L0, 0, 7
+	SFPPOPC	0
+	SFPSTORE	8, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16576, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPPUSHC	0
+	SFPLOAD	L1, 0, 0, 7
+	SFPSETCC	L1, 0, 6
+	SFPSTORE	10, L0, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16576, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPSTORE	12, L0, 0, 7
+	SFPCOMPC
+	SFPSTORE	14, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16608, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	16, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16640, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	18, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16656, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	20, L0, 0, 7
+	SFPCOMPC
+	SFPLOAD	L2, 0, 0, 7
+	SFPLOADI	L1, 16672, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z27test_dreg_conditional_constv, .-_Z27test_dreg_conditional_constv
+	.align	1
+	.globl	_Z28test_vhalf_conditional_constv
+	.type	_Z28test_vhalf_conditional_constv, @function
+_Z28test_vhalf_conditional_constv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPLOADI	L1, 16544, 0
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 0
+	SFPPUSHC	0
+	SFPLOADI	L1, 16384, 0
+	TTREPLAY	0, 3, 1, 1
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSTORE	4, L0, 0, 7
+	SFPCOMPC
+	SFPLOADI	L1, 16512, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	6, L0, 0, 7
+	SFPPOPC	0
+	SFPSTORE	8, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOADI	L1, 16576, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSTORE	10, L0, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOADI	L1, 16576, 0
+	TTREPLAY	0, 2, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPSTORE	12, L0, 0, 7
+	SFPCOMPC
+	SFPSTORE	14, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPLOADI	L1, 16608, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	16, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOADI	L1, 16640, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	18, L0, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOADI	L1, 16656, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	20, L0, 0, 7
+	SFPCOMPC
+	SFPLOADI	L1, 16672, 0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z28test_vhalf_conditional_constv, .-_Z28test_vhalf_conditional_constv
+	.align	1
+	.globl	_Z22test_vhalf_conditionalv
+	.type	_Z22test_vhalf_conditionalv, @function
+_Z22test_vhalf_conditionalv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPLOADI	L1, 16256, 0
+	SFPMAD	L2, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 0
+	TTREPLAY	0, 4, 1, 1
+	SFPPUSHC	0
+	SFPMAD	L2, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 4
+	SFPSTORE	4, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L2, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 2
+	SFPSTORE	6, L0, 0, 7
+	SFPPOPC	0
+	SFPSTORE	8, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 4, 0, 0
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSTORE	10, L0, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L2, 0, 0
+	SFPSTORE	12, L0, 0, 7
+	SFPCOMPC
+	SFPSTORE	14, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPMAD	L2, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 4
+	SFPSETCC	L2, 0, 2
+	SFPCOMPC
+	SFPSTORE	16, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 4, 0, 0
+	SFPSETCC	L2, 0, 2
+	SFPSTORE	18, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 4, 0, 0
+	SFPSETCC	L2, 0, 2
+	SFPSTORE	20, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z22test_vhalf_conditionalv, .-_Z22test_vhalf_conditionalv
+	.align	1
+	.globl	_Z30test_vhalf_conditional_reversev
+	.type	_Z30test_vhalf_conditional_reversev, @function
+_Z30test_vhalf_conditional_reversev:
+	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 3, 1, 1
+	SFPLOADI	L1, 16384, 0
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	4, L1, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 2
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	6, L1, 0, 7
+	SFPPOPC	0
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 6
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	8, L1, 0, 7
+	SFPPOPC	0
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	8, L1, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	10, L1, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	12, L1, 0, 7
+	SFPCOMPC
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	14, L1, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	16, L1, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	18, L1, 0, 7
+	SFPCOMPC
+	SFPPUSHC	0
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPLOADI	L1, 16384, 0
+	SFPSTORE	20, L1, 0, 7
+	SFPCOMPC
+	SFPLOADI	L1, 16384, 0
+	SFPMAD	L0, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L0, 0, 4
+	SFPLOADI	L0, 16384, 0
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPLOADI	L0, 16384, 0
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z30test_vhalf_conditional_reversev, .-_Z30test_vhalf_conditional_reversev
+	.align	1
+	.globl	_Z21test_creg_conditionalv
+	.type	_Z21test_creg_conditionalv, @function
+_Z21test_creg_conditionalv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 0
+	TTREPLAY	0, 3, 1, 1
+	SFPPUSHC	0
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSTORE	4, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	6, L0, 0, 7
+	SFPPOPC	0
+	SFPSTORE	8, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 6
+	SFPSTORE	10, L0, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPSTORE	12, L0, 0, 7
+	SFPCOMPC
+	SFPSTORE	14, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	16, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	18, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	20, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z21test_creg_conditionalv, .-_Z21test_creg_conditionalv
+	.align	1
+	.globl	_Z25test_creg_conditional_revv
+	.type	_Z25test_creg_conditional_revv, @function
+_Z25test_creg_conditional_revv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPMAD	L1, L0, L11, L10, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 0
+	TTREPLAY	0, 3, 1, 1
+	SFPPUSHC	0
+	SFPMAD	L1, L0, L11, L10, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSTORE	4, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L1, L0, L11, L10, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	6, L0, 0, 7
+	SFPPOPC	0
+	SFPSTORE	8, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 6
+	SFPSTORE	10, L0, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 0
+	SFPSTORE	12, L0, 0, 7
+	SFPCOMPC
+	SFPSTORE	14, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPMAD	L1, L0, L11, L10, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	16, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	18, L0, 0, 7
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPSTORE	20, L0, 0, 7
+	SFPCOMPC
+	SFPMAD	L1, L0, L11, L10, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSTORE	22, L0, 0, 7
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	16, L0, 0, 7
+	ret
+	.size	_Z25test_creg_conditional_revv, .-_Z25test_creg_conditional_revv
+	.align	1
+	.globl	_Z28test_conditional_outside_vifv
+	.type	_Z28test_conditional_outside_vifv, @function
+_Z28test_conditional_outside_vifv:
+	SFPLOADI	L2, 16256, 0
+	SFPLOADI	L1, 0, 4
+	SFPSETCC	L2, 0, 6
+	SFPLOADI	L1, 1, 4
+	SFPENCC	3, 10
+	SFPLOADI	L0, 0, 4
+	SFPSETCC	L2, 0, 6
+	SFPLOADI	L0, 1, 4
+	SFPENCC	3, 10
+	SFPSETCC	L1, 0, 6
+	SFPENCC	3, 10
+	SFPSETCC	L0, 0, 2
+	SFPENCC	3, 10
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPSETCC	L1, 0, 2
+	SFPENCC	3, 10
+	SFPSETCC	L0, 0, 2
+	SFPCOMPC
+	SFPSETCC	L0, 0, 2
+	SFPENCC	3, 10
+	ret
+	.size	_Z28test_conditional_outside_vifv, .-_Z28test_conditional_outside_vifv
+	.align	1
+	.globl	_Z12test_bitwisev
+	.type	_Z12test_bitwisev, @function
+_Z12test_bitwisev:
+	SFPLOADI	L0, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPOR	L0, L1
+	SFPLOADI	L2, 170, 4
+	SFPOR	L0, L2
+	SFPSTORE	4, L0, 0, 7
+	SFPAND	L0, L1
+	SFPLOADI	L2, 170, 4
+	SFPAND	L0, L2
+	SFPSTORE	6, L1, 0, 7
+	SFPNOT	L2, L0
+	SFPSTORE	8, L2, 0, 7
+	SFPMOV	L2, L0, 0
+	SFPOR	L2, L1
+	SFPSTORE	10, L2, 0, 7
+	TTREPLAY	0, 2, 1, 1
+	SFPMOV	L2, L0, 0
+	SFPAND	L2, L1
+	SFPSTORE	12, L2, 0, 7
+	SFPAND	L0, L1
+	SFPLOADI	L2, 170, 4
+	SFPOR	L0, L2
+	SFPNOT	L1, L1
+	SFPAND	L0, L1
+	SFPSTORE	14, L0, 0, 7
+	SFPLOADI	L0, 3, 2
+	SFPLOADI	L1, 4, 2
+	SFPOR	L0, L1
+	SFPLOADI	L2, 170, 2
+	SFPOR	L0, L2
+	SFPSTORE	16, L0, 0, 7
+	SFPAND	L0, L1
+	SFPLOADI	L2, 170, 2
+	SFPAND	L0, L2
+	SFPSTORE	18, L1, 0, 7
+	SFPNOT	L2, L0
+	SFPSTORE	20, L2, 0, 7
+	SFPMOV	L2, L0, 0
+	SFPOR	L2, L1
+	SFPSTORE	22, L2, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPSTORE	24, L2, 0, 7
+	TTREPLAY	0, 2, 0, 0
+	SFPLOADI	L3, 170, 4
+	SFPOR	L2, L3
+	SFPNOT	L1, L1
+	SFPAND	L2, L1
+	SFPSTORE	26, L2, 0, 7
+	SFPLOADI	L1, 8, 4
+	SFPLOADI	L2, 5, 4
+	SFPOR	L1, L2
+	SFPLOADI	L2, 5, 4
+	SFPAND	L1, L2
+	SFPLOADI	L2, 5, 4
+	SFPXOR	L1, L2
+	SFPSTORE	28, L1, 0, 7
+	SFPLOADI	L1, 5, 4
+	SFPOR	L0, L1
+	SFPLOADI	L1, 5, 2
+	SFPAND	L0, L1
+	SFPLOADI	L1, 5, 4
+	SFPXOR	L0, L1
+	SFPSTORE	30, L0, 0, 7
+	ret
+	.size	_Z12test_bitwisev, .-_Z12test_bitwisev
+	.align	1
+	.globl	_Z8test_absv
+	.type	_Z8test_absv, @function
+_Z8test_absv:
+	SFPLOADI	L1, -5, 4
+	SFPABS	L0, L1, 0
+	SFPABS	L0, L0, 0
+	SFPIADD	L0, L0, 1, 5
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	2, L0, 0, 7
+	SFPLOADI	L1, 49344, 0
+	SFPABS	L0, L1, 1
+	SFPABS	L0, L0, 1
+	SFPADDI	L0, 16256, 0
+	SFPSTORE	4, L1, 0, 7
+	SFPSTORE	6, L0, 0, 7
+	ret
+	.size	_Z8test_absv, .-_Z8test_absv
+	.align	1
+	.globl	_Z7test_lzv
+	.type	_Z7test_lzv, @function
+_Z7test_lzv:
+	SFPLOADI	L2, 16672, 0
+	SFPLZ	L1, L2, 0
+	SFPIADD	L1, L1, 1, 5
+	SFPLZ	L0, L2, 0
+	SFPIADD	L0, L0, 1, 5
+	SFPLZ	L1, L1, 0
+	SFPIADD	L1, L1, 1, 5
+	SFPLZ	L0, L0, 0
+	SFPIADD	L0, L0, 1, 5
+	SFPLZ	L1, L2, 4
+	SFPIADD	L1, L1, 1, 5
+	SFPLZ	L0, L2, 4
+	SFPIADD	L0, L0, 1, 5
+	SFPLZ	L1, L1, 4
+	SFPIADD	L1, L1, 1, 5
+	SFPLZ	L0, L0, 4
+	SFPIADD	L0, L0, 1, 5
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L2, 0, 7
+	ret
+	.size	_Z7test_lzv, .-_Z7test_lzv
+	.align	1
+	.globl	_Z9test_shftv
+	.type	_Z9test_shftv, @function
+_Z9test_shftv:
+	SFPLOADI	L2, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPLOADI	L0, 3, 4
+	SFPSHFT	L2, L0, -4, 1
+	SFPSHFT	L1, L0, 5, 1
+	SFPSHFT	L1, L0, 6, 1
+	SFPMOV	L2, L0, 0
+	SFPSHFT	L2, L0, 7, 1
+	SFPMOV	L2, L0, 0
+	SFPSHFT	L2, L0, 8, 1
+	SFPSHFT	L0, L0, 9, 1
+	SFPSHFT	L0, L0, 10, 1
+	SFPSHFT	L0, L0, -11, 1
+	SFPSHFT	L0, L0, -12, 1
+	SFPMOV	L2, L0, 0
+	SFPSHFT	L2, L1, 0, 0
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	2, L2, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	ret
+	.size	_Z9test_shftv, .-_Z9test_shftv
+	.align	1
+	.globl	_Z12test_complexv
+	.type	_Z12test_complexv, @function
+_Z12test_complexv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L1, 2, 0, 7
+	SFPLOAD	L2, 4, 0, 7
+	SFPLOAD	L2, 4, 0, 7
+	SFPADD	L2, L10, L0, L1, 0
+	SFPADD	L2, L10, L0, L1, 0
+	SFPNOP
+	SFPSTORE	4, L2, 0, 7
+	SFPADD	L0, L10, L0, L1, 0
+	SFPNOP
+	SFPSTORE	4, L0, 0, 7
+	ret
+	.size	_Z12test_complexv, .-_Z12test_complexv
+	.align	1
+	.globl	_Z14test_muli_addiv
+	.type	_Z14test_muli_addiv, @function
+_Z14test_muli_addiv:
+	SFPLOAD	L0, 0, 0, 7
+	SFPADDI	L0, 16704, 0
+	SFPNOP
+	SFPADDI	L0, 16768, 0
+	SFPLOADI	L1, 19456, 1
+	SFPADD	L0, L10, L0, L1, 0
+	SFPNOP
+	SFPMULI	L0, 16768, 0
+	SFPNOP
+	SFPMULI	L0, 16768, 0
+	SFPLOADI	L1, 19456, 1
+	SFPMUL	L0, L0, L1, L9, 0
+	SFPNOP
+	SFPSTORE	2, L0, 0, 7
+	SFPLOADI	L1, 16704, 0
+	SFPADD	L1, L10, L0, L1, 0
+	SFPLOADI	L1, 16768, 0
+	SFPADD	L1, L10, L0, L1, 0
+	SFPLOADI	L1, 19456, 1
+	SFPADD	L1, L10, L0, L1, 0
+	SFPLOADI	L2, 16768, 0
+	SFPMUL	L2, L0, L2, L9, 0
+	SFPLOADI	L2, 16768, 0
+	SFPMUL	L2, L0, L2, L9, 0
+	SFPLOADI	L2, 19456, 1
+	SFPMUL	L0, L0, L2, L9, 0
+	SFPNOP
+	SFPSTORE	4, L0, 0, 7
+	SFPSTORE	6, L1, 0, 7
+	ret
+	.size	_Z14test_muli_addiv, .-_Z14test_muli_addiv
+	.align	1
+	.globl	_Z9test_iaddv
+	.type	_Z9test_iaddv, @function
+_Z9test_iaddv:
+	SFPLOADI	L0, 12, 4
+	TTREPLAY	0, 8, 1, 1
+	SFPIADD	L2, L0, 10, 5
+	SFPIADD	L2, L0, 0, 4
+	SFPIADD	L2, L2, 10, 5
+	SFPMOV	L1, L2, 0
+	SFPIADD	L1, L0, 0, 4
+	SFPIADD	L1, L2, 0, 6
+	SFPIADD	L1, L1, -10, 5
+	SFPIADD	L1, L0, 0, 6
+	SFPMOV	L2, L15, 0
+	SFPIADD	L2, L1, 0, 6
+	SFPMOV	L1, L15, 0
+	SFPIADD	L1, L0, 0, 4
+	SFPMOV	L3, L15, 0
+	SFPIADD	L3, L0, 0, 6
+	SFPMOV	L1, L15, 0
+	SFPIADD	L1, L3, 0, 6
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L1, 0, 7
+	SFPSTORE	6, L2, 0, 7
+	SFPIADD	L0, L15, 0, 8
+	SFPLOADI	L0, 0, 0
+	SFPSTORE	8, L0, 0, 7
+	SFPENCC	3, 10
+	SFPLOADI	L0, 12, 2
+	TTREPLAY	0, 8, 0, 0
+	SFPIADD	L1, L15, 0, 4
+	SFPMOV	L2, L15, 0
+	SFPIADD	L2, L0, 0, 4
+	SFPMOV	L3, L15, 0
+	SFPIADD	L3, L0, 0, 4
+	SFPMOV	L2, L15, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L2, 0, 7
+	SFPSTORE	6, L1, 0, 7
+	SFPMOV	L1, L15, 0
+	SFPIADD	L1, L0, 0, 4
+	SFPMOV	L0, L1, 0
+	SFPSETCC	L0, 0, 4
+	SFPLOADI	L0, 0, 0
+	SFPSTORE	8, L0, 0, 7
+	SFPENCC	3, 10
+	ret
+	.size	_Z9test_iaddv, .-_Z9test_iaddv
+	.align	1
+	.globl	_Z11test_icmp_iv
+	.type	_Z11test_icmp_iv, @function
+_Z11test_icmp_iv:
+	SFPLOADI	L0, 5, 4
+	TTREPLAY	0, 31, 1, 1
+	SFPIADD	L1, L0, -1, 5
+	SFPSETCC	L1, 0, 6
+	SFPIADD	L0, L0, 100, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -2, 5
+	SFPSETCC	L1, 0, 2
+	SFPIADD	L0, L0, 200, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -3, 1
+	SFPIADD	L0, L0, 300, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -4, 9
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPIADD	L0, L0, 400, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -5, 9
+	SFPSETCC	L1, 0, 2
+	SFPIADD	L0, L0, 500, 5
+	SFPCOMPC
+	SFPIADD	L1, L0, -6, 9
+	SFPIADD	L0, L0, 600, 5
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L0, 16, 4
+	TTREPLAY	0, 31, 0, 0
+	SFPSTORE	2, L0, 0, 7
+	ret
+	.size	_Z11test_icmp_iv, .-_Z11test_icmp_iv
+	.align	1
+	.globl	_Z15test_icmp_i_revv
+	.type	_Z15test_icmp_i_revv, @function
+_Z15test_icmp_i_revv:
+	SFPLOADI	L0, 5, 4
+	TTREPLAY	0, 31, 1, 1
+	SFPIADD	L1, L0, -1, 5
+	SFPSETCC	L1, 0, 6
+	SFPIADD	L0, L0, 100, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -2, 5
+	SFPSETCC	L1, 0, 2
+	SFPIADD	L0, L0, 200, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -3, 9
+	SFPSETCC	L1, 0, 2
+	SFPIADD	L0, L0, 300, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -4, 9
+	SFPIADD	L0, L0, 400, 5
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPIADD	L1, L0, -5, 1
+	SFPIADD	L0, L0, 500, 5
+	SFPCOMPC
+	SFPIADD	L1, L0, -6, 9
+	SFPSETCC	L1, 0, 2
+	SFPCOMPC
+	SFPIADD	L0, L0, 600, 5
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L0, 16, 4
+	TTREPLAY	0, 31, 0, 0
+	SFPSTORE	2, L0, 0, 7
+	ret
+	.size	_Z15test_icmp_i_revv, .-_Z15test_icmp_i_revv
+	.align	1
+	.globl	_Z11test_icmp_vv
+	.type	_Z11test_icmp_vv, @function
+_Z11test_icmp_vv:
+	SFPLOADI	L1, 1, 4
+	SFPLOADI	L0, 2, 4
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 6
+	SFPSETCC	L2, 0, 6
+	SFPIADD	L0, L0, 100, 5
+	TTREPLAY	0, 2, 1, 1
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 6
+	SFPSETCC	L2, 0, 2
+	SFPIADD	L0, L0, 200, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 2
+	SFPIADD	L0, L0, 300, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 10
+	SFPSETCC	L2, 0, 2
+	SFPCOMPC
+	SFPIADD	L0, L0, 400, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 10
+	SFPSETCC	L2, 0, 2
+	SFPIADD	L0, L0, 500, 5
+	SFPCOMPC
+	SFPMOV	L2, L0, 0
+	SFPIADD	L2, L1, 0, 10
+	SFPIADD	L0, L0, 600, 5
+	SFPMOV	L1, L0, 2
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L2, 10, 4
+	SFPLOADI	L0, 11, 4
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 6
+	SFPSETCC	L3, 0, 6
+	SFPIADD	L0, L0, 700, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 6
+	SFPSETCC	L3, 0, 2
+	SFPIADD	L0, L0, 800, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 2
+	SFPIADD	L0, L0, 900, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 10
+	SFPSETCC	L3, 0, 2
+	SFPCOMPC
+	SFPIADD	L0, L0, 1000, 5
+	TTREPLAY	0, 2, 0, 0
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 10
+	SFPSETCC	L3, 0, 2
+	SFPIADD	L0, L0, 1100, 5
+	SFPCOMPC
+	SFPMOV	L3, L0, 0
+	SFPIADD	L3, L2, 0, 10
+	SFPIADD	L0, L0, 1200, 5
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPPOPC	0
+	SFPENCC	3, 10
+	SFPSTORE	0, L1, 0, 7
+	ret
+	.size	_Z11test_icmp_vv, .-_Z11test_icmp_vv
+	.align	1
+	.globl	_Z20lots_of_conditionalsv
+	.type	_Z20lots_of_conditionalsv, @function
+_Z20lots_of_conditionalsv:
+	SFPLOADI	L0, 16256, 0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 6
+	SFPCOMPC
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 6
+	SFPCOMPC
+	TTREPLAY	0, 8, 1, 1
+	SFPLOADI	L1, 0, 4
+	SFPPOPC	0
+	SFPSETCC	L1, 0, 6
+	SFPCOMPC
+	SFPENCC	3, 10
+	SFPSETCC	L0, 0, 4
+	SFPSETCC	L0, 0, 0
+	SFPCOMPC
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 2
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 2
+	SFPCOMPC
+	SFPLOADI	L2, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 2
+	SFPCOMPC
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETCC	L2, 0, 6
+	TTREPLAY	0, 8, 0, 0
+	SFPSETCC	L0, 0, 2
+	SFPSETCC	L0, 0, 6
+	SFPCOMPC
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 6
+	SFPSETCC	L0, 0, 2
+	SFPLOADI	L2, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 2
+	SFPSETCC	L0, 0, 6
+	SFPCOMPC
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETCC	L2, 0, 6
+	SFPCOMPC
+	TTREPLAY	0, 3, 0, 0
+	SFPENCC	3, 10
+	SFPSETCC	L0, 0, 4
+	SFPSETCC	L0, 0, 0
+	SFPCOMPC
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPSETCC	L0, 0, 4
+	SFPSETCC	L0, 0, 0
+	SFPCOMPC
+	SFPMOV	L0, L1, 2
+	SFPLOADI	L0, 0, 4
+	SFPPOPC	0
+	SFPSETCC	L0, 0, 6
+	SFPENCC	3, 10
+	ret
+	.size	_Z20lots_of_conditionalsv, .-_Z20lots_of_conditionalsv
+	.align	1
+	.globl	_Z8test_lutv
+	.type	_Z8test_lutv, @function
+_Z8test_lutv:
+	SFPLOADI	L0, 0, 4
+	SFPLOADI	L1, 1, 4
+	SFPLOADI	L2, 2, 4
+	SFPLOADI	L3, 16256, 0
+	SFPLUT	L3, 4
+	SFPNOP
+	SFPLUT	L3, 0
+	SFPNOP
+	SFPSTORE	2, L3, 0, 7
+	ret
+	.size	_Z8test_lutv, .-_Z8test_lutv
+	.align	1
+	.globl	_Z10test_lut2av
+	.type	_Z10test_lut2av, @function
+_Z10test_lut2av:
+	SFPLOADI	L3, 16256, 0
+	SFPLOADI	L0, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPLOADI	L2, 3, 4
+	SFPLOADI	L7, 4, 2
+	SFPLUTFP32	L4, 14
+	SFPNOP
+	SFPSTORE	0, L4, 0, 7
+	SFPLOADI	L7, 0, 2
+	SFPLUTFP32	L0, 10
+	SFPNOP
+	SFPSTORE	2, L0, 0, 7
+	ret
+	.size	_Z10test_lut2av, .-_Z10test_lut2av
+	.align	1
+	.globl	_Z10test_lut2bv
+	.type	_Z10test_lut2bv, @function
+_Z10test_lut2bv:
+	SFPLOADI	L3, 16256, 0
+	SFPLOADI	L0, 16256, 0
+	SFPLOADI	L1, 16384, 0
+	SFPLOADI	L2, 16448, 0
+	SFPLOADI	L4, 16512, 0
+	SFPLOADI	L5, 16544, 0
+	SFPLOADI	L6, 16576, 0
+	SFPLUTFP32	L7, 4
+	SFPNOP
+	SFPSTORE	0, L7, 0, 7
+	SFPLUTFP32	L0, 0
+	SFPNOP
+	SFPSTORE	2, L0, 0, 7
+	ret
+	.size	_Z10test_lut2bv, .-_Z10test_lut2bv
+	.align	1
+	.globl	_Z10test_lut2cv
+	.type	_Z10test_lut2cv, @function
+_Z10test_lut2cv:
+	SFPLOADI	L3, 16256, 0
+	SFPLOADI	L0, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPLOADI	L2, 3, 4
+	SFPLOADI	L4, 4, 4
+	SFPLOADI	L5, 5, 4
+	SFPLOADI	L6, 6, 4
+	SFPLUTFP32	L7, 6
+	SFPNOP
+	SFPSTORE	0, L7, 0, 7
+	SFPLUTFP32	L7, 7
+	SFPNOP
+	SFPSTORE	2, L7, 0, 7
+	SFPLUTFP32	L7, 7
+	SFPNOP
+	SFPSTORE	4, L7, 0, 7
+	SFPLUTFP32	L7, 2
+	SFPNOP
+	SFPSTORE	6, L7, 0, 7
+	SFPLUTFP32	L7, 3
+	SFPNOP
+	SFPSTORE	8, L7, 0, 7
+	SFPLUTFP32	L0, 3
+	SFPNOP
+	SFPSTORE	10, L0, 0, 7
+	ret
+	.size	_Z10test_lut2cv, .-_Z10test_lut2cv
+	.align	1
+	.globl	_Z9test_castv
+	.type	_Z9test_castv, @function
+_Z9test_castv:
+	SFPLOADI	L0, 1, 4
+	SFPCAST L1, L0, 0
+	SFPSTORE	0, L1, 0, 7
+	SFPCAST L1, L0, 1
+	SFPSTORE	2, L1, 0, 7
+	SFPCAST L0, L0, 1
+	SFPSTORE	2, L0, 0, 7
+	ret
+	.size	_Z9test_castv, .-_Z9test_castv
+	.align	1
+	.globl	_Z13test_stochrndi
+	.type	_Z13test_stochrndi, @function
+_Z13test_stochrndi:
+	SFPLOADI	L1, 1, 4
+	SFPCAST L0, L1, 0
+	SFPCAST L0, L1, 1
+	SFPLOADI	L0, 16256, 0
+	SFPSTOCHRND	L2, L0, L0, 0, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 0, 0, 0
+	SFPSTOCHRND	L2, L0, L0, 0, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 1, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 1, 0, 0
+	SFPSTOCHRND	L2, L0, L0, 1, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 2, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 2, 0, 0
+	SFPSTOCHRND	L2, L0, L0, 2, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 3, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 3, 0, 0
+	SFPSTOCHRND	L2, L0, L0, 3, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 6, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 6, 0, 0
+	SFPSTOCHRND	L2, L0, L0, 6, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 7, 1, 0
+	SFPSTOCHRND	L2, L0, L0, 7, 0, 0
+	SFPSTOCHRND	L0, L0, L0, 7, 1, 0
+	SFPLOADI	L0, 3, 4
+	SFPSTOCHRND	L2, L0, L1, 4, 0, 0
+	SFPSTOCHRND	L2, L0, L1, 4, 1, 0
+	SFPSTOCHRND	L2, L0, L1, 4, 1, 0
+	SFPSTOCHRND	L2, L0, L1, 12, 0, 3
+	li	a5,65536
+	addi	a5,a5,-1
+	slli	a0,a0,8
+	and	a0,a0,a5
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a5, 2382364972	# 8e00012c
+	add	a5,a5,a0
+	sw	a5, 0(a4)	# Op(0x8e) - d(lr2) s(lr1)
+	SFPSTOCHRND	L2, L0, L1, 12, 1, 31
+	SFPSTOCHRND	L2, L0, L1, 12, 1, 31
+	SFPSTOCHRND	L2, L0, L1, 5, 0, 0
+	SFPSTOCHRND	L2, L0, L1, 5, 1, 0
+	SFPSTOCHRND	L0, L0, L1, 5, 1, 0
+	SFPSTOCHRND	L0, L0, L1, 13, 0, 3
+	li	a5, 2382364941	# 8e00010d
+	add	a0,a5,a0
+	sw	a0, 0(a4)	# Op(0x8e) - d(lr0) s(lr1)
+	SFPSTOCHRND	L0, L0, L1, 13, 1, 31
+	SFPSTOCHRND	L1, L0, L1, 13, 1, 31
+	ret
+	.size	_Z13test_stochrndi, .-_Z13test_stochrndi
+	.align	1
+	.globl	_Z11subvec_shflv
+	.type	_Z11subvec_shflv, @function
+_Z11subvec_shflv:
+	SFPLOADI	L0, 16256, 0
+	SFPSHFT2	L1, L0, 0, 3
+	SFPNOP
+	SFPSHFT2	L9, L9, 0, 3
+	SFPNOP
+	SFPSHFT2	L0, L0, 0, 4
+	SFPNOP
+	ret
+	.size	_Z11subvec_shflv, .-_Z11subvec_shflv
+	.align	1
+	.globl	_Z9many_regsv
+	.type	_Z9many_regsv, @function
+_Z9many_regsv:
+	SFPLOAD	L7, 0, 0, 7
+	SFPLOAD	L6, 2, 0, 7
+	SFPLOAD	L5, 4, 0, 7
+	SFPLOAD	L4, 6, 0, 7
+	SFPLOAD	L3, 8, 0, 7
+	SFPLOAD	L2, 10, 0, 7
+	SFPLOAD	L1, 12, 0, 7
+	SFPLOAD	L0, 14, 0, 7
+	SFPSTORE	0, L7, 0, 7
+	SFPSTORE	2, L6, 0, 7
+	SFPSTORE	4, L5, 0, 7
+	SFPSTORE	6, L4, 0, 7
+	SFPSTORE	8, L3, 0, 7
+	SFPSTORE	10, L2, 0, 7
+	SFPSTORE	12, L1, 0, 7
+	SFPSTORE	14, L0, 0, 7
+	ret
+	.size	_Z9many_regsv, .-_Z9many_regsv
+	.align	1
+	.globl	_Z3lrav
+	.type	_Z3lrav, @function
+_Z3lrav:
+	SFPSTORE	0, L5, 0, 7
+	SFPSTORE	0, L7, 0, 7
+	SFPSTORE	0, L6, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	0, L2, 0, 7
+	SFPSTORE	0, L3, 0, 7
+	SFPSTORE	0, L4, 0, 7
+	ret
+	.size	_Z3lrav, .-_Z3lrav
+	.align	1
+	.globl	_Z14stupid_examplej
+	.type	_Z14stupid_examplej, @function
+_Z14stupid_examplej:
+	SFPLOAD	L0, 0, 0, 7
+	SFPADDI	L0, 16384, 0
+	SFPLOAD	L1, 2, 0, 7
+	SFPMOV	L1, L1, 1
+	SFPMAD	L1, L0, L1, L9, 0
+	SFPNOP
+	SFPADDI	L1, 16128, 0
+	SFPNOP
+	SFPSTORE	6, L1, 0, 7
+	SFPLOAD	L1, 2, 0, 7
+	TTREPLAY	0, 4, 1, 1
+	SFPLOADI	L2, 16281, 8
+	SFPLOADI	L2, 39322, 10
+	SFPMAD	L1, L0, L1, L2, 0
+	SFPNOP
+	SFPSTORE	8, L1, 0, 7
+	SFPLOADI	L1, 16320, 0
+	TTREPLAY	0, 4, 0, 0
+	SFPSTORE	8, L1, 0, 7
+	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1896939520	# 71110000
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
+	TTREPLAY	0, 4, 0, 0
+	SFPSTORE	10, L1, 0, 7
+	SFPMAD	L1, L10, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 4
+	SFPLOADI	L1, 16640, 0
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 0
+	SFPCOMPC
+	SFPLOADI	L1, 1, 4
+	SFPPUSHC	0
+	SFPLOADI	L2, 16704, 0
+	SFPMAD	L2, L2, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 4
+	SFPLOADI	L2, 16768, 0
+	SFPMAD	L2, L2, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L2, 0, 0
+	SFPCOMPC
+	SFPLOADI	L1, 0, 4
+	SFPPOPC	0
+	SFPSETCC	L1, 0, 6
+	SFPCOMPC
+	SFPEXEXP	L1, L0, 1
+	SFPPUSHC	0
+	SFPSETCC	L1, 0, 4
+	SFPSETEXP	L1, L0, 127, 1
+	SFPSTORE	12, L1, 0, 7
+	SFPPOPC	0
+	SFPCOMPC
+	SFPPUSHC	0
+	SFPLOADI	L1, 16896, 1
+	SFPMAD	L1, L1, L11, L0, 0
+	SFPNOP
+	SFPSETCC	L1, 0, 6
+	SFPABS	L1, L0, 1
+	SFPSTORE	14, L1, 0, 7
+	SFPCOMPC
+	SFPLZ	L1, L0, 0
+	SFPIADD	L1, L1, -19, 5
+	SFPNOT	L1, L1
+	SFPLOADI	L2, 170, 4
+	SFPAND	L1, L2
+	SFPSETEXP	L1, L0, 0, 0
+	SFPMOV	L0, L1, 1
+	SFPSTORE	16, L0, 0, 7
+	SFPPOPC	0
+	SFPENCC	3, 10
+	ret
+	.size	_Z14stupid_examplej, .-_Z14stupid_examplej
+	.align	1
+	.globl	_Z20test_operator_equalsv
+	.type	_Z20test_operator_equalsv, @function
+_Z20test_operator_equalsv:
+	SFPLOADI	L0, 16256, 0
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPMUL	L1, L0, L0, L9, 0
+	SFPNOP
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	2, L1, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPADD	L0, L10, L1, L1, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	2, L1, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPMAD	L0, L11, L1, L0, 0
+	SFPNOP
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	2, L1, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	TTREPLAY	0, 18, 1, 1
+	SFPLOADI	L0, 1, 4
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPIADD	L0, L0, 1, 5
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L1, 1, 4
+	SFPOR	L0, L1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L1, 1, 4
+	SFPAND	L0, L1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L1, 1, 4
+	SFPXOR	L0, L1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPSHFT	L0, L0, 1, 1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	TTREPLAY	0, 18, 0, 0
+	SFPSHFT	L0, L0, -1, 1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPSHFT	L0, L0, 1, 1
+	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	ret
+	.size	_Z20test_operator_equalsv, .-_Z20test_operator_equalsv
+	.align	1
+	.globl	_Z22test_assign_prgm_constv
+	.type	_Z22test_assign_prgm_constv, @function
+_Z22test_assign_prgm_constv:
+	SFPLOADI	L0, 16220, 8
+	SFPLOADI	L0, 65532, 10
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 16366, 8
+	SFPLOADI	L0, 32766, 10
+	SFPCONFIG	13, 0, 0
+	SFPLOADI	L0, 16439, 8
+	SFPLOADI	L0, 16383, 10
+	SFPCONFIG	14, 0, 0
+	SFPLOADI	L0, 1, 4
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 2, 4
+	SFPCONFIG	13, 0, 0
+	SFPLOADI	L0, 3, 4
+	SFPCONFIG	14, 0, 0
+	SFPLOADI	L0, 16256, 0
+	SFPCONFIG	12, 0, 0
+	SFPLOADI	L0, 15360, 1
+	SFPCONFIG	13, 0, 0
+	ret
+	.size	_Z22test_assign_prgm_constv, .-_Z22test_assign_prgm_constv
+	.section	.text.startup,"ax",@progbits
+	.align	1
+	.globl	main
+	.type	main, @function
+main:
+	addi	sp,sp,-16
+	sw	ra,12(sp)
+	sw	s0,8(sp)
+	mv	s0,a0
+	call	_Z15test_load_storev
+	call	_Z8test_addv
+	call	_Z8test_subv
+	call	_Z8test_mulv
+	call	_Z8test_madv
+	call	_Z11test_incdecv
+	li	a1,20
+	li	a0,10
+	call	_Z10test_loadilm
+	SFPLOADI	L0, 16320, 0
+	SFPSTORE	4, L0, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPLOAD	L0, 2, 0, 7
+	SFPSTORE	4, L0, 0, 7
+	SFPLOAD	L0, 0, 0, 7
+	SFPLOADI	L3, 16046, 8
+	SFPLOADI	L3, 5243, 10
+	SFPLOADI	L1, 48793, 8
+	SFPLOADI	L1, 39322, 10
+	SFPMAD	L3, L0, L3, L1, 0
+	SFPLOADI	L1, 16128, 0
+	SFPMAD	L3, L0, L3, L1, 0
+	SFPNOP
+	SFPSTORE	4, L3, 0, 7
+	mv	a0,s0
+	call	_Z32test_setman_setexp_addexp_setsgni
+	call	_Z27test_dreg_conditional_constv
+	call	_Z28test_vhalf_conditional_constv
+	call	_Z22test_vhalf_conditionalv
+	call	_Z21test_creg_conditionalv
+	call	_Z25test_creg_conditional_revv
+	call	_Z28test_conditional_outside_vifv
+	call	_Z12test_bitwisev
+	call	_Z8test_absv
+	call	_Z7test_lzv
+	call	_Z9test_shftv
+	call	_Z12test_complexv
+	call	_Z14test_muli_addiv
+	call	_Z9test_iaddv
+	call	_Z11test_icmp_iv
+	call	_Z11test_icmp_vv
+	SFPLOADI	L0, 0, 4
+	SFPLOADI	L1, 1, 4
+	SFPLOADI	L2, 2, 4
+	SFPLOADI	L3, 16256, 0
+	SFPLUT	L3, 4
+	SFPNOP
+	SFPLUT	L3, 0
+	SFPNOP
+	SFPSTORE	2, L3, 0, 7
+	SFPLOADI	L3, 16256, 0
+	SFPLOADI	L0, 1, 4
+	SFPLOADI	L1, 2, 4
+	SFPLOADI	L2, 3, 4
+	SFPLOADI	L7, 4, 2
+	SFPLUTFP32	L4, 14
+	SFPNOP
+	SFPSTORE	0, L4, 0, 7
+	SFPLOADI	L7, 0, 2
+	SFPLUTFP32	L0, 10
+	SFPNOP
+	SFPSTORE	2, L0, 0, 7
+	call	_Z10test_lut2bv
+	call	_Z10test_lut2cv
+	call	_Z9many_regsv
+	SFPLOADI	L0, 16256, 0
+	SFPSHFT2	L1, L0, 0, 3
+	SFPNOP
+	SFPSHFT2	L9, L9, 0, 3
+	SFPNOP
+	SFPSHFT2	L0, L0, 0, 4
+	SFPNOP
+	mv	a0,s0
+	call	_Z13test_stochrndi
+	mv	a0,s0
+	call	_Z14stupid_examplej
+	call	_Z20test_operator_equalsv
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	li	a0,0
+	addi	sp,sp,16
+	jr	ra
+	.size	main, .-main
+	.globl	_ZN7ckernel13instrn_bufferE
+	.section	.sbss,"aw",@nobits
+	.align	2
+	.type	_ZN7ckernel13instrn_bufferE, @object
+	.size	_ZN7ckernel13instrn_bufferE, 4
+_ZN7ckernel13instrn_bufferE:
+	.zero	4
+	.ident	"GCC: (GNU) 10.2.0"

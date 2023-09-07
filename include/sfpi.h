@@ -127,6 +127,8 @@
 #include <grayskull/sfpi_hw.h>
 #elif defined(ARCH_WORMHOLE)
 #include <wormhole/sfpi_hw.h>
+#elif defined(ARCH_BLACKHOLE)
+#include <blackhole/sfpi_hw.h>
 #endif
 
 #include <sfpi_fp16.h>
@@ -272,7 +274,7 @@ class __vConstFloat : public __vRegBase {
 public:
     constexpr explicit __vConstFloat(int r) : __vRegBase(r) {}
 
-#ifdef ARCH_WORMHOLE
+#if !defined(ARCH_GRAYSKULL)
     sfpi_inline void operator=(const float in) const;
     sfpi_inline void operator=(const s2vFloat16 in) const;
 #endif
@@ -294,7 +296,7 @@ class __vConstIntBase : public __vRegBase {
 public:
     constexpr explicit __vConstIntBase(int r) : __vRegBase(r) {}
 
-#ifdef ARCH_WORMHOLE
+#if !defined(ARCH_GRAYSKULL)
     sfpi_inline void operator=(const int in) const;
 #endif
 
@@ -1239,4 +1241,7 @@ constexpr __LReg l_reg;
 #elif defined(ARCH_WORMHOLE)
 #include <wormhole/sfpi_imp.h>
 #include <wormhole/sfpi_lib.h>
+#elif defined(ARCH_BLACKHOLE)
+#include <blackhole/sfpi_imp.h>
+#include <blackhole/sfpi_lib.h>
 #endif

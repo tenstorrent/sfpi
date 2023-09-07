@@ -1,8 +1,8 @@
-In file included from ../../../include/sfpi.h:1242,
+In file included from ../../../include/sfpi.h:1245,
                  from test.h:17,
                  from warn.cc:11:
-../../../include/wormhole/sfpi_imp.h: In function 'void spill()':
-../../../include/wormhole/sfpi_imp.h:105:11: fatal error: cannot store sfpu register (register spill)
+../../../include/blackhole/sfpi_imp.h: In function 'void spill()':
+../../../include/blackhole/sfpi_imp.h:105:11: fatal error: cannot store sfpu register (register spill)
   105 |     assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, __f32asui(val)));
       |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.
