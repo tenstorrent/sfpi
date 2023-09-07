@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Test the sfpu move pass which will swap operands if possible to avoid a
 // move and otherwise inject a "simple" move to avoid a compiler generated CC
 // safe "long" move later

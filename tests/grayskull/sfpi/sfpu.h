@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 //////////////////////////////////////////////////////////////////////////////
 // sfpu.h: Tensix SFPU emulator for use w/ sfpi
 //   This file provides interface to the sfpu emulator for testing sfpi

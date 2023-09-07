@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 typedef float v64sf __attribute__((vector_size(64*4)));
 
 // Ensures that there is no prologue/epilogue in the generated assembly.

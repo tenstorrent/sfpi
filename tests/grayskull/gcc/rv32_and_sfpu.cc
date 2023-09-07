@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 constexpr unsigned int SFPLOAD_MOD0_REBIAS_EXP = 1;

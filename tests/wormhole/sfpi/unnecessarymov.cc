@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Test cases for compiler generated internal moves
 #include <stdio.h>
 #include <stdlib.h>

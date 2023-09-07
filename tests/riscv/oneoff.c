@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 volatile unsigned char *dstuqi = (unsigned char *)0xffffeeee;
 volatile unsigned short *dstuhi = (unsigned short *)0xffffeeee;
 

@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <cstdio>
 
 volatile unsigned short *dst = (unsigned short *)0xffffeeee;

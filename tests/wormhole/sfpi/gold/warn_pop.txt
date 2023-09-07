@@ -1,5 +1,5 @@
 warn.cc: In function 'void popwithoutpush()':
-warn.cc:113:30: error: malformed program, popc without matching pushc
-  113 |     __builtin_rvtt_wh_sfppopc(0);
+warn.cc:119:30: error: malformed program, popc without matching pushc
+  119 |     __builtin_rvtt_wh_sfppopc(0);
       |     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-warn.cc:111: confused by earlier errors, bailing out
+warn.cc:117: confused by earlier errors, bailing out

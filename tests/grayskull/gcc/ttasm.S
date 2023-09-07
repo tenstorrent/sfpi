@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 	.file	"limits.cc"
 	.option nopic
 	.attribute arch, "rv32i2p0_m2p0_y2p0"

@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Test to be sure uses of vCond work properly
 //
 // vCond came about when the wrapper handled conditionals and its

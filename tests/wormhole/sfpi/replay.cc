@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Test the sfpu replay pass
 // Current implementation is fairly simple and will miss the opportunity to
 // use replay in many "complex" situations (including unrolled loops).  So,
