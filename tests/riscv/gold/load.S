@@ -551,8 +551,8 @@ _Z11hoist_storeU11rvtt_l1_ptrPiS_:
 	li	a4,3
 	lw	a5,0(a1)
 	sw	a4,0(a1)
-	lw	a3,4(a1)
 	lw	a0,0(a0)
+	lw	a3,4(a1)
 	lw	a4,8(a1)
 	add	a5,a5,a3
 	add	a5,a5,a4
@@ -611,8 +611,8 @@ _Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_:
 	lw	a5,0(a1)
 	SFPENCC	3, 10
 	TTNOP
-	lw	a3,4(a1)
 	lw	a0,0(a0)
+	lw	a3,4(a1)
 	lw	a4,8(a1)
 	add	a5,a5,a3
 	add	a5,a5,a4

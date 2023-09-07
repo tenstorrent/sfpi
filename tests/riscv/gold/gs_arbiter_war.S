@@ -139,8 +139,8 @@ _Z5call1U11rvtt_l1_ptrPiS_:
 	call	_Z6simpleU11rvtt_l1_ptrPiS_
 	lw	a5,0(s0)
 	mv	a5,a5	# GS L1 war
-	lw	s0,8(sp)
 	lw	ra,12(sp)
+	lw	s0,8(sp)
 	addi	sp,sp,16
 	add	a0,a0,a5
 	jr	ra
@@ -187,15 +187,14 @@ _Z5call3U11rvtt_l1_ptrPiiiiiiiiiii:
 	mv	t5,a5
 	mv	a4,a7
 	mv	a5,a6
-	mv	a7,t6
-	mv	a0,a0	# GS L1 war
-	mv	a6,t5
 	sw	a0,12(sp)
 	lw	a0,12(sp)
-	addi	sp,sp,16
+	mv	a7,t6
+	mv	a6,t5
 	mv	a3,t4
 	mv	a2,t3
 	mv	a1,t1
+	addi	sp,sp,16
 	tail	_Z11lotsoparamsiiiiiiiiiii
 	.size	_Z5call3U11rvtt_l1_ptrPiiiiiiiiiii, .-_Z5call3U11rvtt_l1_ptrPiiiiiiiiiii
 	.align	1
@@ -214,10 +213,9 @@ _Z11clear_by_llU11rvtt_l1_ptrPiS_:
 	lw	a5,0(a1)
 	lw	a4,4(a1)
 	lw	a6,8(a1)
-	lw	a2,12(a1)
-	mv	a7,a7	# GS L1 war
-	lw	a0,16(a1)
 	add	a3,a5,a4
+	lw	a2,12(a1)
+	lw	a0,16(a1)
 	add	a5,a5,a7
 	add	a5,a5,a4
 	add	a5,a5,a6
@@ -335,8 +333,8 @@ _Z5loop2U11rvtt_l1_ptrPiS_:
 	li	a4,0
 	li	a5,0
 .L31:
-	lw	a2,0(a1)
 	lw	a3,0(a0)
+	lw	a2,0(a1)
 	addi	a0,a0,4
 	add	a5,a5,a2
 	addi	a1,a1,4
@@ -665,15 +663,15 @@ _Z7cancel3U11rvtt_l1_ptrPiS_S_:
 	lw	t0,80(a1)
 	lw	t6,100(a1)
 	add	a2,a2,t4
-	lw	t5,104(a1)
-	lw	t4,124(a1)
 	add	a2,a2,a5
 	add	a2,a2,t1
 	lw	a5,96(a1)
-	add	a4,a4,a7
 	add	a3,a3,a0
+	lw	t5,104(a1)
 	lw	a0,120(a1)
+	lw	t4,124(a1)
 	add	a3,a3,a2
+	add	a4,a4,a7
 	add	a3,a3,t2
 	lw	t1,108(a1)
 	lw	a7,128(a1)
