@@ -48,7 +48,7 @@ static vector<SFPUConditional> sfpu_conditionals;
 inline int SFPUConditional::negate_mod() const
 {
     int op = mod & SFPXCMP_MOD1_CC_MASK;
-    int new_op;
+    int new_op = SFPXCMP_MOD1_CC_GTE;
 
     switch (op) {
     case SFPXCMP_MOD1_CC_LT:
@@ -153,7 +153,7 @@ void SFPUConditional::emit_conditional(int w, bool negate)
         break;
 
     default:
-        fprintf(stderr, "Illegal operation in boolean tree: %d\n", sfpu_conditionals[w].operation);
+        fprintf(stderr, "Illegal operation in boolean tree: %d\n", static_cast<int>(sfpu_conditionals[w].operation));
         throw;
     }
 }

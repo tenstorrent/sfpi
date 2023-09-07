@@ -475,12 +475,12 @@ public:
     sfpi_inline vInt(const __vIntBase in) { assign(in.get()); };
     sfpi_inline vInt(short val) { loadss(val); }
     sfpi_inline vInt(int val) { loadsi(val); }
-#ifndef __clang__
+#ifndef COMPILE_FOR_EMULE
     sfpi_inline vInt(int32_t val) { loadsi(val); }
 #endif
     sfpi_inline vInt(unsigned short val) { loadus(val); }
     sfpi_inline vInt(unsigned int val) { loadui(val); }
-#ifndef __clang__
+#ifndef COMPILE_FOR_EMULE
     sfpi_inline vInt(uint32_t val) { loadui(val); }
 #endif
     sfpi_inline vInt(__vLReg lr) { __vBase::operator=(lr); }
@@ -559,12 +559,12 @@ public:
     sfpi_inline vUInt(const __vIntBase in) { assign(in.get()); }
     sfpi_inline vUInt(short val) { loadss(val); }
     sfpi_inline vUInt(int val) { loadsi(val); }
-#ifndef __clang__
+#ifndef COMPILE_FOR_EMULE
     sfpi_inline vUInt(int32_t val) { loadsi(val); }
 #endif
     sfpi_inline vUInt(unsigned short val) { loadus(val); }
     sfpi_inline vUInt(unsigned int val) { loadui(val); }
-#ifndef __clang__
+#ifndef COMPILE_FOR_EMULE
     sfpi_inline vUInt(uint32_t val) { loadui(val); }
 #endif
     sfpi_inline vUInt(__vLReg lr) { __vBase::operator=(lr); }
