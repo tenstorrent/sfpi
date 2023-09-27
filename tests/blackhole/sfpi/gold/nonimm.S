@@ -923,12 +923,12 @@ _Z4mulii:
 	add	a0,a0,a3
 	sw	a0, 0(a4)	# Op(0x71) - d(lr1)
 	SFPLOADI	L0, 16256, 0
-	TTREPLAY	0, 4, 1, 1
+	TTREPLAY	0, 2, 1, 1
 	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
-	sw	a5, 0(a4)	# Op(0x74) lv(lr0)  d(lr0)
-	SFPNOP
-	TTREPLAY	0, 4, 0, 0
+	TTREPLAY	0, 2, 0, 0
+	TTREPLAY	0, 2, 0, 0
+	TTREPLAY	0, 2, 0, 0
 	SFPSTORE	0, L0, 0, 7
 	SFPSTORE	0, L1, 0, 7
 	ret

@@ -478,6 +478,9 @@ class vInt : public __vIntBase {
 
 public:
     vInt() = default;
+#if !defined(ARCH_GRAYSKULL)
+    sfpi_inline vInt(const __vDReg dreg);
+#endif
     sfpi_inline vInt(const __rvtt_vec_t& in) { assign(in); }
     sfpi_inline vInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
     sfpi_inline vInt(const __vIntBase in) { assign(in.get()); };
@@ -562,6 +565,9 @@ private:
 
 public:
     vUInt() = default;
+#if !defined(ARCH_GRAYSKULL)
+    sfpi_inline vUInt(const __vDReg dreg);
+#endif
     sfpi_inline vUInt(const __rvtt_vec_t& in) { assign(in); }
     sfpi_inline vUInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
     sfpi_inline vUInt(const __vIntBase in) { assign(in.get()); }

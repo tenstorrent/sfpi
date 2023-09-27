@@ -34,6 +34,11 @@ void test_load_store()
     a = dst_reg[0xFFFFFF];
     dst_reg[-1] = a;
     dst_reg[0xFFFFFF] = a;
+
+    vInt i = dst_reg[0];
+    vUInt u = dst_reg[0];
+    dst_reg[0] = i;
+    dst_reg[0] = u;
 }
 
 void test_add()

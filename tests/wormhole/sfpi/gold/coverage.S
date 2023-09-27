@@ -22,6 +22,10 @@ _Z15test_load_storev:
 	SFPLOAD	L0, 16382, 0, 3
 	SFPSTORE	16382, L0, 0, 3
 	SFPSTORE	16382, L0, 0, 3
+	SFPLOAD	L1, 0, 0, 3
+	SFPLOAD	L0, 0, 0, 3
+	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z15test_load_storev, .-_Z15test_load_storev
 	.align	1
@@ -422,12 +426,12 @@ _Z10test_loadilm:
 	SFPLOADI	L0, 16256, 1
 	SFPSTORE	4, L0, 0, 3
 	SFPLOADI	L0, 16256, 1
-	TTREPLAY	0, 3, 1, 1
+	TTREPLAY	0, 2, 1, 1
 	SFPSTORE	4, L0, 0, 3
 	SFPLOADI	L0, 16256, 0
+	TTREPLAY	0, 2, 0, 0
+	TTREPLAY	0, 2, 0, 0
 	SFPSTORE	4, L0, 0, 3
-	SFPLOADI	L0, 16256, 0
-	TTREPLAY	0, 3, 0, 0
 	li	a3, 1895825408	# 71000000
 	add	a3,a3,a2
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)

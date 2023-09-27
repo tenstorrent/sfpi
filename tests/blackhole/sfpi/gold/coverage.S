@@ -22,6 +22,10 @@ _Z15test_load_storev:
 	SFPLOAD	L0, 16382, 0, 7
 	SFPSTORE	16382, L0, 0, 7
 	SFPSTORE	16382, L0, 0, 7
+	SFPLOAD	L1, 0, 0, 7
+	SFPLOAD	L0, 0, 0, 7
+	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z15test_load_storev, .-_Z15test_load_storev
 	.align	1

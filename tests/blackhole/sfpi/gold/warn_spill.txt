@@ -1,4 +1,4 @@
-In file included from ../../../include/sfpi.h:1245,
+In file included from ../../../include/sfpi.h:1251,
                  from test.h:17,
                  from warn.cc:11:
 ../../../include/blackhole/sfpi_imp.h: In function 'void spill()':
