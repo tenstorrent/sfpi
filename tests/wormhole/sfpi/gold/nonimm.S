@@ -202,10 +202,10 @@ _Z6loadiii:
 	TTREPLAY	0, 6, 1, 1
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
 	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	TTREPLAY	0, 6, 0, 0
 	TTREPLAY	0, 6, 0, 0
 	TTREPLAY	0, 6, 0, 0
@@ -231,12 +231,12 @@ _Z9loadii_lvi:
 	sw	a1, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	sw	a2, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	TTREPLAY	0, 7, 0, 0
 	TTREPLAY	0, 7, 0, 0
 	TTREPLAY	0, 7, 0, 0
 	TTREPLAY	0, 7, 0, 0
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	TTREPLAY	0, 7, 0, 0
 	TTREPLAY	0, 7, 0, 0
 	TTREPLAY	0, 7, 0, 0
@@ -260,9 +260,11 @@ _Z9loadstorei:
 	add	a2,a4,a2
 	sw	a2, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 1, 4
-	sw	a2, 0(a5)	# Op(0x72) s(lr0)
+	li	a3, 1913438208	# 720cc000
+	add	a3,a4,a3
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 2, 4
-	sw	a2, 0(a5)	# Op(0x72) s(lr0)
+	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	TTREPLAY	0, 6, 0, 0
 	TTREPLAY	0, 6, 0, 0
 	TTREPLAY	0, 6, 0, 0
@@ -289,7 +291,7 @@ _Z12loadstore_lvi:
 	add	a2,a5,a2
 	sw	a2, 0(a4)	# Op(0x72) s(lr1)
 	SFPLOADI	L0, 1, 4
-	li	a3, 1912651776	# 7200c000
+	li	a3, 1913438208	# 720cc000
 	add	a3,a5,a3
 	sw	a3, 0(a4)	# Op(0x72) s(lr0)
 	SFPLOADI	L0, 2, 4
@@ -811,7 +813,7 @@ _Z8stochrndi:
 	li	a3, 16
 	xor	a3, a3, a5
 	sw	a3, 0(a4)	# Op(0x8e) - d(lr0) s(lr0)
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z8stochrndi, .-_Z8stochrndi
 	.align	1
@@ -839,7 +841,7 @@ _Z11stochrnd_lvi:
 	TTREPLAY	0, 5, 0, 0
 	TTREPLAY	0, 5, 0, 0
 	TTREPLAY	0, 5, 0, 0
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z11stochrnd_lvi, .-_Z11stochrnd_lvi
 	.align	1
@@ -869,8 +871,8 @@ _Z4shfti:
 	li	a3, 16
 	xor	a3, a3, a5
 	sw	a3, 0(a4)	# Op(0x7a) lv(lr1)  d(lr1)
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z4shfti, .-_Z4shfti
 	.align	1
@@ -904,8 +906,8 @@ _Z7shft_lvi:
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
 	TTREPLAY	0, 9, 0, 0
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z7shft_lvi, .-_Z7shft_lvi
 	.align	1

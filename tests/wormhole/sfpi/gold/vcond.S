@@ -122,7 +122,7 @@ _Z19vcond_asbool_inlinei:
 	SFPSETCC	L1, 0, 4
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z19vcond_asbool_inlinei, .-_Z19vcond_asbool_inlinei
 	.align	1
@@ -135,14 +135,14 @@ _Z22vcond_asbool_noninlinei:
 	SFPSETCC	L1, 0, 0
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L16:
 	SFPLOADI	L0, 0, 4
 	SFPSETCC	L1, 0, 4
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z22vcond_asbool_noninlinei, .-_Z22vcond_asbool_noninlinei
 	.align	1
@@ -273,7 +273,7 @@ _Z20vcond_asbool_inline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z20vcond_asbool_inline2i, .-_Z20vcond_asbool_inline2i
 	.align	1
@@ -287,7 +287,7 @@ _Z23vcond_asbool_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L32:
 	SFPLOADI	L0, 0, 4
@@ -295,7 +295,7 @@ _Z23vcond_asbool_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z23vcond_asbool_noninline2i, .-_Z23vcond_asbool_noninline2i
 	.align	1

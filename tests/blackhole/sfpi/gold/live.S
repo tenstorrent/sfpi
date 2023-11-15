@@ -10,11 +10,11 @@
 _Z9abs_setccv:
 	SFPLOADI	L1, 49568, 0
 	SFPLOADI	L0, 49648, 0
-	SFPLOAD	L2, 0, 0, 7
+	SFPLOAD	L2, 0, 0, 3
 	SFPSETCC	L2, 0, 6
 	SFPABS	L0, L1, 1
 	SFPENCC	3, 10
-	SFPSTORE	26, L0, 0, 7
+	SFPSTORE	26, L0, 0, 3
 	ret
 	.size	_Z9abs_setccv, .-_Z9abs_setccv
 	.align	1
@@ -23,11 +23,11 @@ _Z9abs_setccv:
 _Z18rename_move_case2av:
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L0, 16384, 0
-	SFPLOAD	L2, 0, 0, 7
+	SFPLOAD	L2, 0, 0, 3
 	SFPSETCC	L2, 0, 6
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z18rename_move_case2av, .-_Z18rename_move_case2av
 	.align	1
@@ -36,12 +36,12 @@ _Z18rename_move_case2av:
 _Z16copy_move_case2bv:
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L0, 16384, 0
-	SFPLOAD	L2, 0, 0, 7
+	SFPLOAD	L2, 0, 0, 3
 	SFPSETCC	L2, 0, 6
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L1, 0, 7
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z16copy_move_case2bv, .-_Z16copy_move_case2bv
 	.align	1
@@ -50,16 +50,16 @@ _Z16copy_move_case2bv:
 _Z15copy_move_case3v:
 	SFPLOADI	L1, 16256, 0
 	SFPLOADI	L0, 16384, 0
-	SFPLOAD	L2, 0, 0, 7
+	SFPLOAD	L2, 0, 0, 3
 	SFPSETCC	L2, 0, 6
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
 	SFPADDI	L1, 16448, 0
 	SFPNOP
-	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	0, L1, 0, 3
 	SFPADDI	L0, 16512, 0
 	SFPNOP
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z15copy_move_case3v, .-_Z15copy_move_case3v
 	.align	1
@@ -68,14 +68,14 @@ _Z15copy_move_case3v:
 _Z19internal_move_case4v:
 	SFPLOADI	L0, 10, 4
 	SFPLOADI	L2, 20, 4
-	SFPLOAD	L1, 0, 0, 7
+	SFPLOAD	L1, 0, 0, 3
 	SFPSETCC	L1, 0, 6
 	SFPMOV	L1, L2, 0
 	SFPIADD	L1, L0, 0, 6
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
-	SFPSTORE	0, L2, 0, 7
+	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L2, 12, 3
 	ret
 	.size	_Z19internal_move_case4v, .-_Z19internal_move_case4v
 	.align	1
@@ -85,15 +85,15 @@ _Z19internal_move_case5v:
 	SFPLOADI	L3, 10, 4
 	SFPLOADI	L2, 20, 4
 	SFPLOADI	L0, 30, 4
-	SFPLOAD	L1, 0, 0, 7
+	SFPLOAD	L1, 0, 0, 3
 	SFPSETCC	L1, 0, 6
 	SFPMOV	L1, L2, 0
 	SFPIADD	L1, L3, 0, 6
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L3, 0, 7
-	SFPSTORE	0, L2, 0, 7
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L3, 12, 3
+	SFPSTORE	0, L2, 12, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z19internal_move_case5v, .-_Z19internal_move_case5v
 	.align	1
@@ -125,7 +125,7 @@ _Z4bb_1v:
 .L13:
 	call	rand
 	bgt	a0,s0,.L17
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
@@ -133,7 +133,7 @@ _Z4bb_1v:
 .L16:
 	SFPPOPC	0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
@@ -154,7 +154,7 @@ _Z4bb_2v:
 .L23:
 	call	rand
 	bgt	a0,s0,.L25
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
@@ -206,7 +206,7 @@ _Z4bb_3v:
 	call	rand
 	bgt	a0,s0,.L35
 .L27:
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
@@ -240,7 +240,7 @@ _Z4bb_4v:
 	SFPIADD	L0, L0, -2, 9
 	SFPLOADI	L0, 5, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
@@ -250,7 +250,7 @@ _Z4bb_4v:
 	SFPIADD	L0, L0, -4, 9
 	SFPLOADI	L0, 5, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
@@ -274,7 +274,7 @@ _Z11bb_not_livev:
 	call	rand
 	bgt	a0,s0,.L47
 	SFPIADD	L0, L0, -4, 5
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	addi	sp,sp,16
@@ -308,7 +308,7 @@ _Z14popc_unrollingv:
 	SFPIADD	L0, L1, -1, 5
 	SFPPOPC	0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z14popc_unrollingv, .-_Z14popc_unrollingv
 	.align	1
@@ -324,12 +324,12 @@ _Z18double_assign_evenv:
 	SFPLOADI	L3, 5, 4
 	SFPLOADI	L2, 7, 4
 	SFPLOADI	L1, 8, 4
-	SFPSTORE	0, L3, 0, 7
-	SFPSTORE	0, L2, 0, 7
-	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	0, L3, 12, 3
+	SFPSTORE	0, L2, 12, 3
+	SFPSTORE	0, L1, 12, 3
 	SFPNOT	L0, L0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z18double_assign_evenv, .-_Z18double_assign_evenv
 	.align	1
@@ -361,11 +361,11 @@ _Z10generationv:
 	SFPIADD	L3, L0, -12, 5
 	SFPSETCC	L3, 0, 2
 	SFPCOMPC
-	SFPSTORE	28, L2, 0, 7
+	SFPSTORE	28, L2, 12, 3
 	SFPENCC	3, 10
 	SFPIADD	L0, L0, -13, 5
 	SFPSETCC	L0, 0, 6
-	SFPSTORE	28, L1, 0, 7
+	SFPSTORE	28, L1, 12, 3
 	SFPENCC	3, 10
 	ret
 	.size	_Z10generationv, .-_Z10generationv
@@ -394,7 +394,7 @@ _Z21prop_thru_pseudo_livev:
 	SFPIADD	L1, L0, 0, 4
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z21prop_thru_pseudo_livev, .-_Z21prop_thru_pseudo_livev
 	.align	1
@@ -406,7 +406,7 @@ _Z18do_not_fold_assignv:
 	SFPSETCC	L0, 0, 0
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z18do_not_fold_assignv, .-_Z18do_not_fold_assignv
 	.section	.text.startup,"ax",@progbits
@@ -436,7 +436,7 @@ main:
 	SFPSETCC	L0, 0, 0
 	SFPMOV	L0, L1, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	li	a0,0
 	addi	sp,sp,16

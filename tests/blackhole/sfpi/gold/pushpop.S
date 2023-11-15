@@ -242,7 +242,7 @@ _Z10fn_call_nov:
 	SFPPOPC	0
 	call	rand
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
@@ -259,21 +259,21 @@ _Z24control_flow_v_if_switchii:
 	li	a5,10
 	beq	a0,a5,.L30
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L26:
 	SFPIADD	L1, L0, -4, 1
 	SFPLOADI	L0, 5, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L30:
 	SFPIADD	L1, L0, -2, 1
 	SFPLOADI	L0, 3, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L27:
 	SFPIADD	L1, L0, -8, 1
@@ -285,12 +285,12 @@ _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 11, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L29:
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z24control_flow_v_if_switchii, .-_Z24control_flow_v_if_switchii
 	.align	1

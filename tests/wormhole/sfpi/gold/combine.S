@@ -46,8 +46,8 @@ _Z12iadd_i_yes3av:
 	SFPSETCC	L2, 0, 6
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z12iadd_i_yes3av, .-_Z12iadd_i_yes3av
 	.align	1
@@ -131,8 +131,8 @@ _Z11iadd_i_yes7v:
 	SFPIADD	L1, L0, 6, 9
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	0, L1, 0, 3
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L1, 12, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z11iadd_i_yes7v, .-_Z11iadd_i_yes7v
 	.align	1
@@ -143,8 +143,8 @@ _Z11iadd_i_yes8v:
 	SFPIADD	L1, L0, 5, 1
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	2, L0, 0, 3
-	SFPSTORE	4, L1, 0, 3
+	SFPSTORE	2, L0, 12, 3
+	SFPSTORE	4, L1, 12, 3
 	ret
 	.size	_Z11iadd_i_yes8v, .-_Z11iadd_i_yes8v
 	.align	1
@@ -191,7 +191,7 @@ _Z10iadd_i_no3v:
 	SFPIADD	L0, L0, -7, 1
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z10iadd_i_no3v, .-_Z10iadd_i_no3v
 	.align	1
@@ -204,7 +204,7 @@ _Z10iadd_i_no4v:
 	SFPIADD	L1, L1, -7, 5
 	SFPIADD	L0, L0, -6, 5
 	SFPIADD	L0, L0, -9, 5
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z10iadd_i_no4v, .-_Z10iadd_i_no4v
 	.align	1
@@ -276,7 +276,7 @@ _Z10iadd_i_no9v:
 	SFPSETCC	L0, 0, 0
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z10iadd_i_no9v, .-_Z10iadd_i_no9v
 	.align	1
@@ -342,7 +342,7 @@ _Z11iadd_i_no12j:
 	SFPIADD	L1, L0, 0, 2
 	SFPIADD	L0, L0, 2, 5
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z11iadd_i_no12j, .-_Z11iadd_i_no12j
 	.align	1
@@ -352,7 +352,7 @@ _Z13iadd_i_no_bb1i:
 	SFPLOADI	L0, 1, 4
 	SFPIADD	L0, L0, -5, 5
 	bgt	a0,zero,.L37
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L37:
 	li	a5,0
@@ -362,7 +362,7 @@ _Z13iadd_i_no_bb1i:
 	SFPENCC	3, 10
 	addi	a5,a5,1
 	bne	a0,a5,.L35
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z13iadd_i_no_bb1i, .-_Z13iadd_i_no_bb1i
 	.align	1
@@ -418,7 +418,7 @@ _Z12iadd_v_yes4bv:
 	SFPIADD	L1, L0, 0, 0
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z12iadd_v_yes4bv, .-_Z12iadd_v_yes4bv
 	.align	1
@@ -475,7 +475,7 @@ _Z13iadd_v_no_bb1i:
 	SFPLOADI	L1, 2, 4
 	SFPIADD	L0, L1, 0, 6
 	bgt	a0,zero,.L51
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 .L51:
 	li	a5,0
@@ -485,7 +485,7 @@ _Z13iadd_v_no_bb1i:
 	SFPENCC	3, 10
 	addi	a5,a5,1
 	bne	a0,a5,.L49
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z13iadd_v_no_bb1i, .-_Z13iadd_v_no_bb1i
 	.align	1
@@ -497,7 +497,7 @@ _Z7lz_yes1v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z7lz_yes1v, .-_Z7lz_yes1v
 	.align	1
@@ -509,7 +509,7 @@ _Z7lz_yes2v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z7lz_yes2v, .-_Z7lz_yes2v
 	.align	1
@@ -522,7 +522,7 @@ _Z6lz_no1v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L1, 0, 3
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z6lz_no1v, .-_Z6lz_no1v
 	.align	1
@@ -535,7 +535,7 @@ _Z6lz_no2v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z6lz_no2v, .-_Z6lz_no2v
 	.align	1
@@ -548,7 +548,7 @@ _Z6lz_no3v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z6lz_no3v, .-_Z6lz_no3v
 	.align	1
@@ -580,7 +580,7 @@ _Z10exexp_yes1v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z10exexp_yes1v, .-_Z10exexp_yes1v
 	.align	1
@@ -594,7 +594,7 @@ _Z15exexp_yes1_livev:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L1, 0, 3
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z15exexp_yes1_livev, .-_Z15exexp_yes1_livev
 	.align	1
@@ -606,7 +606,7 @@ _Z10exexp_yes2v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z10exexp_yes2v, .-_Z10exexp_yes2v
 	.align	1
@@ -630,7 +630,7 @@ _Z9exexp_no1v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L1, 0, 3
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z9exexp_no1v, .-_Z9exexp_no1v
 	.align	1
@@ -643,7 +643,7 @@ _Z9exexp_no2v:
 	SFPSTORE	0, L10, 0, 3
 	SFPENCC	3, 10
 	SFPSTORE	0, L1, 0, 3
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z9exexp_no2v, .-_Z9exexp_no2v
 	.align	1
@@ -654,7 +654,7 @@ _Z12exexp_no_bb1i:
 	SFPEXEXP	L1, L0, 0
 	bgt	a0,zero,.L72
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 .L72:
 	li	a5,0
@@ -665,7 +665,7 @@ _Z12exexp_no_bb1i:
 	addi	a5,a5,1
 	bne	a0,a5,.L70
 	SFPSTORE	0, L0, 0, 3
-	SFPSTORE	0, L1, 0, 3
+	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z12exexp_no_bb1i, .-_Z12exexp_no_bb1i
 	.align	1
@@ -771,8 +771,8 @@ _Z20mad_reg_pressure_no4v:
 	SFPADD	L2, L10, L2, L3, 0
 	SFPSTORE	0, L3, 0, 3
 	SFPSTORE	0, L2, 0, 3
-	SFPSTORE	2, L1, 0, 3
-	SFPSTORE	2, L0, 0, 3
+	SFPSTORE	2, L1, 12, 3
+	SFPSTORE	2, L0, 12, 3
 	ret
 	.size	_Z20mad_reg_pressure_no4v, .-_Z20mad_reg_pressure_no4v
 	.align	1

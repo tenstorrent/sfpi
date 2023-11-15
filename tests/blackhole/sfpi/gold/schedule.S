@@ -8,22 +8,22 @@
 	.globl	_Z13basic_add_nopv
 	.type	_Z13basic_add_nopv, @function
 _Z13basic_add_nopv:
-	SFPLOAD	L1, 0, 0, 7
-	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L1, 0, 0, 3
+	SFPLOAD	L0, 0, 0, 3
 	SFPADD	L0, L10, L0, L1, 0
 	SFPNOP
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z13basic_add_nopv, .-_Z13basic_add_nopv
 	.align	1
 	.globl	_Z13basic_mul_nopv
 	.type	_Z13basic_mul_nopv, @function
 _Z13basic_mul_nopv:
-	SFPLOAD	L1, 0, 0, 7
-	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L1, 0, 0, 3
+	SFPLOAD	L0, 0, 0, 3
 	SFPMUL	L0, L0, L1, L9, 0
 	SFPNOP
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z13basic_mul_nopv, .-_Z13basic_mul_nopv
 	.align	1
@@ -33,7 +33,7 @@ _Z14basic_addi_nopv:
 	SFPLOADI	L0, 16256, 0
 	SFPADDI	L0, 16256, 0
 	SFPNOP
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z14basic_addi_nopv, .-_Z14basic_addi_nopv
 	.align	1
@@ -43,7 +43,7 @@ _Z14basic_muli_nopv:
 	SFPLOADI	L0, 16256, 0
 	SFPMULI	L0, 16256, 0
 	SFPNOP
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z14basic_muli_nopv, .-_Z14basic_muli_nopv
 	.align	1
@@ -58,7 +58,7 @@ _Z18basic_addi_nop_immi:
 	addi	a0,a0,-1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
 	and	a5,a5,a0
-	li	a3, 1912717312	# 7201c000
+	li	a3, 1912651776	# 7200c000
 	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
 	add	a5,a5,a3
 	sw	a5, 0(a4)	# Op(0x72) s(lr0)
@@ -68,12 +68,12 @@ _Z18basic_addi_nop_immi:
 	.globl	_Z8loop_nopv
 	.type	_Z8loop_nopv, @function
 _Z8loop_nopv:
-	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L0, 0, 0, 3
 	SFPMULI	L0, 16384, 0
 	SFPNOP
 	li	a5,4
 .L8:
-	SFPSTORE	0, L0, 0, 7
+	SFPSTORE	0, L0, 0, 3
 	SFPMULI	L0, 16384, 0
 	SFPNOP
 	addi	a5,a5,-1
@@ -84,12 +84,12 @@ _Z8loop_nopv:
 	.globl	_Z11loop_no_nopv
 	.type	_Z11loop_no_nopv, @function
 _Z11loop_no_nopv:
-	SFPLOAD	L0, 0, 0, 7
+	SFPLOAD	L0, 0, 0, 3
 	SFPMULI	L0, 16384, 0
 	li	a5,4
 .L11:
-	SFPLOAD	L1, 2, 0, 7
-	SFPSTORE	0, L1, 0, 7
+	SFPLOAD	L1, 2, 0, 3
+	SFPSTORE	0, L1, 0, 3
 	SFPMULI	L0, 16384, 0
 	addi	a5,a5,-1
 	bne	a5,zero,.L11
