@@ -511,13 +511,13 @@ _Z7complexU11rvtt_l1_ptrPiS_b:
 	j	.L71
 .L72:
 	lw	a3,0(a1)
-	addi	a5,a5,4
-	add	a0,a0,a3
 	addi	a1,a1,4
+	add	a0,a0,a3
 	ble	a0,a2,.L67
 .L71:
 	lw	a3,0(a5)
 	addi	a4,a4,1
+	addi	a5,a5,4
 	add	a0,a0,a3
 	bgt	a0,a4,.L72
 .L67:
@@ -555,11 +555,12 @@ _Z8complex2U11rvtt_l1_ptrPiS_ii:
 	ble	a0,a6,.L76
 	lw	a5,0(a1)
 	addi	a4,a4,4
+	addi	a1,a1,4
 	add	a0,a0,a5
 	and	a5,a2,a0
-	addi	a1,a1,4
 	bne	a5,zero,.L80
 .L76:
+	mv	a7,a7	# GS L1 war
 	ret
 	.size	_Z8complex2U11rvtt_l1_ptrPiS_ii, .-_Z8complex2U11rvtt_l1_ptrPiS_ii
 	.align	1

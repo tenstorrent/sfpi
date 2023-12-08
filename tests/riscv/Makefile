@@ -10,7 +10,7 @@ CFLAGS = -ffast-math -O3 -std=c++17 -Wall
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
 RV32_CFLAGS = $(CFLAGS) -mgrayskull -march=rv32iy -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions -Wno-unknown-pragmas -fno-use-cxa-atexit -Wno-error=multistatement-macros -Wno-error=parentheses -Wno-error=unused-but-set-variable -Wno-unused-variable
 
-SRCS = rmext.cc load.cc latency.cc gs_arbiter_war.cc
+SRCS = rmext.cc load.cc latency.cc gs_arbiter_war.cc raw.cc
 
 ASMS = $(addprefix rv32/,$(SRCS:.cc=.S))
 EXES = $(addprefix rv32/,$(SRCS:.cc=))
@@ -46,12 +46,14 @@ test: $(ASMS) $(OTHR)
 	cmp rv32/load.S gold/load.S
 	cmp rv32/latency.S gold/latency.S
 	cmp rv32/gs_arbiter_war.S gold/gs_arbiter_war.S
+	cmp rv32/raw.S gold/raw.S
 
 promote:
 	cp rv32/rmext.S gold/rmext.S
 	cp rv32/load.S gold/load.S
 	cp rv32/latency.S gold/latency.S
 	cp rv32/gs_arbiter_war.S gold/gs_arbiter_war.S
+	cp rv32/raw.S gold/raw.S
 
 clean:
 	@rm -rf rv32

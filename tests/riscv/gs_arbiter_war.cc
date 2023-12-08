@@ -10,7 +10,7 @@
 // L1/local_memory arbiter bug
 
 #define l1p __attribute__((rvtt_l1_ptr))
-
+#if 1
 __attribute__ ((noinline))
 int lotsoparams(int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k)
 {
@@ -303,7 +303,7 @@ int complex(int l1p *l1, int *lm, bool c)
 
     return tmp;
 }
-
+#endif
 int complex2(int l1p *l1, int *lm, int m, int n)
 {
     int tmp = *l1;
@@ -331,7 +331,7 @@ int complex2(int l1p *l1, int *lm, int m, int n)
 
     return tmp;
 }
-
+#if 1
 void remove_war1()
 {
     int tmp = 0;
@@ -586,7 +586,7 @@ uint64_t hiloload(tt_uint64_t * l1p p)
     return v.v;
 
 }
-
+#endif
 int main(int argc, char *argv[])
 {
 }
