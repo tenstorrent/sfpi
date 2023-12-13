@@ -1,20 +1,20 @@
 	.file	"limits.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
 	SFPLOAD	L0, 0, 0, 0
-	SFPLOAD	L0, 16383, 0, 0
-	SFPLOAD	L0, 16382, 0, 0
-	SFPLOAD	L0, 16383, 0, 0
-	SFPSTORE	16383, L0, 0, 0
-	SFPSTORE	16382, L0, 0, 0
+	SFPLOAD	L0, 8191, 0, 7
+	SFPLOAD	L0, 8190, 0, 0
+	SFPLOAD	L0, 8191, 0, 0
+	SFPSTORE	8191, L0, 0, 7
+	SFPSTORE	8190, L0, 0, 0
 	SFPLOADI	L0, -1, 2
 	SFPSTORE	0, L0, 0, 0
 	SFPLOADI	L0, -2, 2

@@ -1,10 +1,10 @@
 	.file	"pushpop.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z10simple_yesv
 	.type	_Z10simple_yesv, @function
 _Z10simple_yesv:
@@ -15,7 +15,7 @@ _Z10simple_yesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z10simple_yesv, .-_Z10simple_yesv
-	.align	1
+	.align	2
 	.globl	_Z10double_yesv
 	.type	_Z10double_yesv, @function
 _Z10double_yesv:
@@ -28,7 +28,7 @@ _Z10double_yesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z10double_yesv, .-_Z10double_yesv
-	.align	1
+	.align	2
 	.globl	_Z10both_noyesv
 	.type	_Z10both_noyesv, @function
 _Z10both_noyesv:
@@ -43,7 +43,7 @@ _Z10both_noyesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z10both_noyesv, .-_Z10both_noyesv
-	.align	1
+	.align	2
 	.globl	_Z15consecutive_yesv
 	.type	_Z15consecutive_yesv, @function
 _Z15consecutive_yesv:
@@ -58,7 +58,7 @@ _Z15consecutive_yesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z15consecutive_yesv, .-_Z15consecutive_yesv
-	.align	1
+	.align	2
 	.globl	_Z8else_yesv
 	.type	_Z8else_yesv, @function
 _Z8else_yesv:
@@ -78,7 +78,7 @@ _Z8else_yesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z8else_yesv, .-_Z8else_yesv
-	.align	1
+	.align	2
 	.globl	_Z9block_yesv
 	.type	_Z9block_yesv, @function
 _Z9block_yesv:
@@ -90,7 +90,7 @@ _Z9block_yesv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z9block_yesv, .-_Z9block_yesv
-	.align	1
+	.align	2
 	.globl	_Z16no_yes_no_yes_nov
 	.type	_Z16no_yes_no_yes_nov, @function
 _Z16no_yes_no_yes_nov:
@@ -110,7 +110,7 @@ _Z16no_yes_no_yes_nov:
 	SFPENCC	3, 10
 	ret
 	.size	_Z16no_yes_no_yes_nov, .-_Z16no_yes_no_yes_nov
-	.align	1
+	.align	2
 	.globl	_Z6bb_yesi
 	.type	_Z6bb_yesi, @function
 _Z6bb_yesi:
@@ -140,7 +140,7 @@ _Z6bb_yesi:
 	SFPENCC	3, 10
 	ret
 	.size	_Z6bb_yesi, .-_Z6bb_yesi
-	.align	1
+	.align	2
 	.globl	_Z9func_callv
 	.type	_Z9func_callv, @function
 _Z9func_callv:
@@ -156,7 +156,7 @@ _Z9func_callv:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z9func_callv, .-_Z9func_callv
-	.align	1
+	.align	2
 	.globl	_Z8compc_nov
 	.type	_Z8compc_nov, @function
 _Z8compc_nov:
@@ -171,7 +171,7 @@ _Z8compc_nov:
 	SFPENCC	3, 10
 	ret
 	.size	_Z8compc_nov, .-_Z8compc_nov
-	.align	1
+	.align	2
 	.globl	_Z10cascade_nov
 	.type	_Z10cascade_nov, @function
 _Z10cascade_nov:
@@ -198,7 +198,7 @@ _Z10cascade_nov:
 	SFPENCC	3, 10
 	ret
 	.size	_Z10cascade_nov, .-_Z10cascade_nov
-	.align	1
+	.align	2
 	.globl	_Z12intervene_nov
 	.type	_Z12intervene_nov, @function
 _Z12intervene_nov:
@@ -212,7 +212,7 @@ _Z12intervene_nov:
 	SFPENCC	3, 10
 	ret
 	.size	_Z12intervene_nov, .-_Z12intervene_nov
-	.align	1
+	.align	2
 	.globl	_Z18compc_intervene_nov
 	.type	_Z18compc_intervene_nov, @function
 _Z18compc_intervene_nov:
@@ -228,7 +228,7 @@ _Z18compc_intervene_nov:
 	SFPENCC	3, 10
 	ret
 	.size	_Z18compc_intervene_nov, .-_Z18compc_intervene_nov
-	.align	1
+	.align	2
 	.globl	_Z10fn_call_nov
 	.type	_Z10fn_call_nov, @function
 _Z10fn_call_nov:
@@ -242,12 +242,12 @@ _Z10fn_call_nov:
 	SFPPOPC	0
 	call	rand
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	lw	ra,12(sp)
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z10fn_call_nov, .-_Z10fn_call_nov
-	.align	1
+	.align	2
 	.globl	_Z24control_flow_v_if_switchii
 	.type	_Z24control_flow_v_if_switchii, @function
 _Z24control_flow_v_if_switchii:
@@ -259,21 +259,21 @@ _Z24control_flow_v_if_switchii:
 	li	a5,10
 	beq	a0,a5,.L30
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L26:
 	SFPIADD	L1, L0, -4, 1
 	SFPLOADI	L0, 5, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L30:
 	SFPIADD	L1, L0, -2, 1
 	SFPLOADI	L0, 3, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L27:
 	SFPIADD	L1, L0, -8, 1
@@ -285,15 +285,15 @@ _Z24control_flow_v_if_switchii:
 	SFPLOADI	L0, 11, 4
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L29:
 	SFPENCC	3, 10
 	SFPLOADI	L0, 8, 4
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 	.size	_Z24control_flow_v_if_switchii, .-_Z24control_flow_v_if_switchii
-	.align	1
+	.align	2
 	.globl	_Z25control_flow_pif_continuei
 	.type	_Z25control_flow_pif_continuei, @function
 _Z25control_flow_pif_continuei:
@@ -338,7 +338,7 @@ _Z25control_flow_pif_continuei:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z25control_flow_pif_continuei, .-_Z25control_flow_pif_continuei
-	.align	1
+	.align	2
 	.globl	_Z21control_flow_pif_gotoi
 	.type	_Z21control_flow_pif_gotoi, @function
 _Z21control_flow_pif_gotoi:

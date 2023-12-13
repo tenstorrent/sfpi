@@ -6,7 +6,7 @@
 
 	.file	"limits.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -64,11 +64,11 @@ main:
 	TTMVMUL	0, 1, 2, 3
 	TTNOP
         SFPNOP
-	TTPACR	6, 2, 3, 1, 4, 5, 0
-	TTPACRSETREG	0, 1, 2, 3, 4, 1, 0
-	TTPACRSETREG 1, 0, 2, 3, 4, 1, 0
-	TTPACRSETREG	0, 1, 2, 3, 4, 0, 1
-	TTPACRSETREG	1, 0, 2, 3, 4, 0, 1
+	TTPACR	6, 2, 1, 2, 3, 1, 0, 1, 2, 3, 1, 1
+	TTPACRSETREG	0, 1, 20, 3, 2, 15, 0, 1
+	TTPACRSETREG    1, 0, 15, 3, 2, 15, 0, 1
+	TTPACRSETREG	0, 1, 2, 3, 0, 0, 1, 1
+	TTPACRSETREG	1, 0, 2, 3, 3, 0, 1, 0
 	TTRAREB
 	TTRDCFG	0, 1
 	TTREG2FLOP	0, 1, 2, 3, 4, 5
@@ -118,11 +118,24 @@ main:
 	TTUNPACR	1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 0, 1, 1
 	TTUNPACR	1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1
 	TTUNPACR	1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 1, 1, 0
-	TTUNPACRNOP	1, 2
+	TTUNPACRNOP	1, 5, 3, 2, 3, 0, 1, 1, 2
+	TTUNPACRNOP	1, 5, 3, 2, 2, 1, 0, 1, 2
 	TTWRCFG	2, 1, 3
 	TTXMOV	1, 2
-	TTZEROACC	1, 2, 3
+	TTZEROACC	29, 1, 0, 4, 123
 	TTZEROSRC	2, 1, 0, 1
+	
+        TTCFGSHIFTMASK  1, 2, 3, 4, 2, 5
+        TTMOVDBGB2D     1, 13, 4, 7, 1282
+        TTMOVDBGB2D     0, 13, 4, 7, 1282
+        TTRESOURCEDECL  8, 10, 12
+        SFPARECIP       L1, L2, 0, 7
+        SFPGT   L2, L1, 12, 3
+        SFPLE   L2, L1, 12, 3
+        SFPMUL24      L4, L1, L2, L0, 0
+        SFPMUL24      L4, L1, L2, L0, 0 // XXXX change 0 to 1 after HR fix
+        TTSTREAMWAIT    3, 8, 1, 2
+        TTSTREAMWRCFG   2, 8, 12
 	li	a0,0
 	ret
 	.size	main, .-main

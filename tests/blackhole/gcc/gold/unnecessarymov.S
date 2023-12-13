@@ -1,10 +1,10 @@
 	.file	"unnecessarymov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z6whymovv
 	.type	_Z6whymovv, @function
 _Z6whymovv:
@@ -22,7 +22,7 @@ _Z6whymovv:
 	ret
 	.size	_Z6whymovv, .-_Z6whymovv
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:

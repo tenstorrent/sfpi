@@ -1,10 +1,10 @@
 	.file	"smoke.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z5smokev
 	.type	_Z5smokev, @function
 _Z5smokev:
@@ -81,7 +81,7 @@ _Z5smokev:
 	SFPCONFIG	0, 0, 0
 	SFPLUT	L3, 0
 	.size	_Z5smokev, .-_Z5smokev
-	.align	1
+	.align	2
 	.globl	_Z10smoke_livev
 	.type	_Z10smoke_livev, @function
 _Z10smoke_livev:
@@ -110,7 +110,7 @@ _Z10smoke_livev:
 	SFPCAST L1, L1, 1
 	ret
 	.size	_Z10smoke_livev, .-_Z10smoke_livev
-	.align	1
+	.align	2
 	.globl	_Z7smokierv
 	.type	_Z7smokierv, @function
 _Z7smokierv:
@@ -130,7 +130,7 @@ _Z7smokierv:
 	SFPSTORE	20, L3, 0, 2
 	SFPMOV	L2, L1, 2
 	.size	_Z7smokierv, .-_Z7smokierv
-	.align	1
+	.align	2
 	.globl	_Z8smokiestv
 	.type	_Z8smokiestv, @function
 _Z8smokiestv:
@@ -140,7 +140,7 @@ _Z8smokiestv:
 	SFPSTORE	6, L0, 0, 2
 	ret
 	.size	_Z8smokiestv, .-_Z8smokiestv
-	.align	1
+	.align	2
 	.globl	_Z8assignlrv
 	.type	_Z8assignlrv, @function
 _Z8assignlrv:
@@ -162,8 +162,25 @@ _Z8assignlrv:
 	SFPSTORE	0, L15, 0, 0
 	ret
 	.size	_Z8assignlrv, .-_Z8assignlrv
+	.align	2
+	.globl	_Z11bh_specificv
+	.type	_Z11bh_specificv, @function
+_Z11bh_specificv:
+	SFPMUL24	L0, L1, L2, L0, 0
+	SFPNOP
+	SFPMUL24	L0, L1, L2, L0, 0
+	SFPNOP
+	SFPARECIP	L1, L0, 0, 1
+	SFPARECIP	L0, L1, 0, 2
+	SFPSTORE	20, L0, 0, 2
+	SFPGT	L0, L0, 0, 1
+	SFPLE	L0, L0, 0, 1
+	SFPSTORE	20, L0, 0, 2
+	SFPENCC	3, 10
+	ret
+	.size	_Z11bh_specificv, .-_Z11bh_specificv
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -177,6 +194,17 @@ main:
 	SFPLOAD	L0, 1, 0, 2
 	SFPSETEXP	L0, L1, 0, 0
 	SFPSTORE	6, L0, 0, 2
+	SFPMUL24	L0, L1, L2, L0, 0
+	SFPNOP
+	SFPMUL24	L0, L1, L2, L0, 0
+	SFPNOP
+	SFPARECIP	L1, L0, 0, 1
+	SFPARECIP	L0, L1, 0, 2
+	SFPSTORE	20, L0, 0, 2
+	SFPGT	L0, L0, 0, 1
+	SFPLE	L0, L0, 0, 1
+	SFPSTORE	20, L0, 0, 2
+	SFPENCC	3, 10
 	lw	ra,12(sp)
 	li	a0,0
 	addi	sp,sp,16

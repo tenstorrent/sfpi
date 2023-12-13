@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
     TTI_MULDMAREG(0, 1, 2, 3);
     TTI_MVMUL(0, 1, 2, 3);
     TTI_NOP;
-    TTI_PACR(6, 2, 3, 1, 4, 5, 0);
-    TTI_PACR_SETREG(0, 1, 2, 3, 4, 1, 0);
-    TTI_PACR_SETREG(1, 0, 2, 3, 4, 1, 0);
-    TTI_PACR_SETREG(0, 1, 2, 3, 4, 0, 1);
-    TTI_PACR_SETREG(1, 0, 2, 3, 4, 0, 1);
+    TTI_PACR(6, 2, 1, 2, 3, 1, 0, 1, 2, 3, 1, 1);
+    TTI_PACR_SETREG(0, 1, 20, 3, 2, 15, 0, 1);
+    TTI_PACR_SETREG(1, 0, 15, 3, 1, 1, 1, 0);
+    TTI_PACR_SETREG(0, 1, 2, 3, 0, 0, 1, 1);
+    TTI_PACR_SETREG(1, 0, 2, 3, 3, 0, 1, 0);
     TTI_RAREB;
     TTI_RDCFG(0, 1);
     TTI_REG2FLOP(0, 1, 2, 3, 4, 5);
@@ -153,9 +153,23 @@ int main(int argc, char *argv[])
     TTI_UNPACR(1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 0, 1, 1);
     TTI_UNPACR(1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1);
     TTI_UNPACR(1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 1, 1, 0);
-    TTI_UNPACR_NOP(1, 2);
+    TTI_UNPACR_NOP(1, 5, 3, 2, 3, 0, 1, 1, 2);
+    TTI_UNPACR_NOP(1, 5, 3, 2, 2, 1, 0, 1, 2);
     TTI_WRCFG(2, 1, 3);
     TTI_XMOV(1, 2);
-    TTI_ZEROACC(1, 2, 3);
+    TTI_ZEROACC(29, 1, 0, 4, 123);
+    TTI_ZEROACC(29, 0, 1, 4, 123);
     TTI_ZEROSRC(2, 1, 0, 1);
+
+    // BH specific
+    TTI_CFGSHIFTMASK(1, 2, 3, 4, 2, 5);
+    TTI_MOVDBGB2D(1, 13, 4, 7, 1282);
+    TTI_MOVDBGB2D(0, 13, 4, 7, 1282);
+    TTI_RESOURCEDECL(8, 10, 12);
+    TTI_SFPARECIP(12, 1, 2, 11);
+    TTI_SFPGT(12, 2, 1, 3);
+    TTI_SFPLE(12, 2, 1, 3);
+    TTI_SFPMUL24(1, 2, 3, 4, 8);
+    TTI_STREAMWAIT(3, 8, 1, 2);
+    TTI_STREAMWRCFG(2, 8, 12);
 }

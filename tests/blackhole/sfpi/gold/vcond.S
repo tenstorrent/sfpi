@@ -1,10 +1,10 @@
 	.file	"vcond.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_l2p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z19vcond_inside_inlinev
 	.type	_Z19vcond_inside_inlinev, @function
 _Z19vcond_inside_inlinev:
@@ -12,10 +12,10 @@ _Z19vcond_inside_inlinev:
 	SFPSETCC	L0, 0, 4
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z19vcond_inside_inlinev, .-_Z19vcond_inside_inlinev
-	.align	1
+	.align	2
 	.globl	_Z22vcond_inside_noninlinei
 	.type	_Z22vcond_inside_noninlinei, @function
 _Z22vcond_inside_noninlinei:
@@ -29,7 +29,7 @@ _Z22vcond_inside_noninlinei:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 .L4:
 	SFPPUSHC	0
@@ -40,10 +40,10 @@ _Z22vcond_inside_noninlinei:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z22vcond_inside_noninlinei, .-_Z22vcond_inside_noninlinei
-	.align	1
+	.align	2
 	.globl	_Z20vcond_outside_inlinev
 	.type	_Z20vcond_outside_inlinev, @function
 _Z20vcond_outside_inlinev:
@@ -55,10 +55,10 @@ _Z20vcond_outside_inlinev:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z20vcond_outside_inlinev, .-_Z20vcond_outside_inlinev
-	.align	1
+	.align	2
 	.globl	_Z23vcond_outside_noninlinei
 	.type	_Z23vcond_outside_noninlinei, @function
 _Z23vcond_outside_noninlinei:
@@ -71,7 +71,7 @@ _Z23vcond_outside_noninlinei:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 .L8:
 	SFPLOADI	L1, 0, 4
@@ -81,10 +81,10 @@ _Z23vcond_outside_noninlinei:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z23vcond_outside_noninlinei, .-_Z23vcond_outside_noninlinei
-	.align	1
+	.align	2
 	.globl	_Z19vcond_orphan_inlinei
 	.type	_Z19vcond_orphan_inlinei, @function
 _Z19vcond_orphan_inlinei:
@@ -95,7 +95,7 @@ _Z19vcond_orphan_inlinei:
 	SFPENCC	3, 10
 	ret
 	.size	_Z19vcond_orphan_inlinei, .-_Z19vcond_orphan_inlinei
-	.align	1
+	.align	2
 	.globl	_Z22vcond_orphan_noninlinei
 	.type	_Z22vcond_orphan_noninlinei, @function
 _Z22vcond_orphan_noninlinei:
@@ -113,7 +113,7 @@ _Z22vcond_orphan_noninlinei:
 	SFPENCC	3, 10
 	ret
 	.size	_Z22vcond_orphan_noninlinei, .-_Z22vcond_orphan_noninlinei
-	.align	1
+	.align	2
 	.globl	_Z19vcond_asbool_inlinei
 	.type	_Z19vcond_asbool_inlinei, @function
 _Z19vcond_asbool_inlinei:
@@ -122,10 +122,10 @@ _Z19vcond_asbool_inlinei:
 	SFPSETCC	L1, 0, 4
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 	.size	_Z19vcond_asbool_inlinei, .-_Z19vcond_asbool_inlinei
-	.align	1
+	.align	2
 	.globl	_Z22vcond_asbool_noninlinei
 	.type	_Z22vcond_asbool_noninlinei, @function
 _Z22vcond_asbool_noninlinei:
@@ -135,17 +135,17 @@ _Z22vcond_asbool_noninlinei:
 	SFPSETCC	L1, 0, 0
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L16:
 	SFPLOADI	L0, 0, 4
 	SFPSETCC	L1, 0, 4
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 	.size	_Z22vcond_asbool_noninlinei, .-_Z22vcond_asbool_noninlinei
-	.align	1
+	.align	2
 	.globl	_Z20vcond_inside_inline2v
 	.type	_Z20vcond_inside_inline2v, @function
 _Z20vcond_inside_inline2v:
@@ -154,10 +154,10 @@ _Z20vcond_inside_inline2v:
 	SFPSETCC	L0, 0, 2
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z20vcond_inside_inline2v, .-_Z20vcond_inside_inline2v
-	.align	1
+	.align	2
 	.globl	_Z23vcond_inside_noninline2i
 	.type	_Z23vcond_inside_noninline2i, @function
 _Z23vcond_inside_noninline2i:
@@ -172,7 +172,7 @@ _Z23vcond_inside_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 .L20:
 	SFPPUSHC	0
@@ -184,10 +184,10 @@ _Z23vcond_inside_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z23vcond_inside_noninline2i, .-_Z23vcond_inside_noninline2i
-	.align	1
+	.align	2
 	.globl	_Z21vcond_outside_inline2v
 	.type	_Z21vcond_outside_inline2v, @function
 _Z21vcond_outside_inline2v:
@@ -200,10 +200,10 @@ _Z21vcond_outside_inline2v:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z21vcond_outside_inline2v, .-_Z21vcond_outside_inline2v
-	.align	1
+	.align	2
 	.globl	_Z24vcond_outside_noninline2i
 	.type	_Z24vcond_outside_noninline2i, @function
 _Z24vcond_outside_noninline2i:
@@ -217,7 +217,7 @@ _Z24vcond_outside_noninline2i:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 .L24:
 	SFPLOADI	L1, 0, 4
@@ -228,10 +228,10 @@ _Z24vcond_outside_noninline2i:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z24vcond_outside_noninline2i, .-_Z24vcond_outside_noninline2i
-	.align	1
+	.align	2
 	.globl	_Z20vcond_orphan_inline2i
 	.type	_Z20vcond_orphan_inline2i, @function
 _Z20vcond_orphan_inline2i:
@@ -243,7 +243,7 @@ _Z20vcond_orphan_inline2i:
 	SFPENCC	3, 10
 	ret
 	.size	_Z20vcond_orphan_inline2i, .-_Z20vcond_orphan_inline2i
-	.align	1
+	.align	2
 	.globl	_Z23vcond_orphan_noninline2i
 	.type	_Z23vcond_orphan_noninline2i, @function
 _Z23vcond_orphan_noninline2i:
@@ -263,7 +263,7 @@ _Z23vcond_orphan_noninline2i:
 	SFPENCC	3, 10
 	ret
 	.size	_Z23vcond_orphan_noninline2i, .-_Z23vcond_orphan_noninline2i
-	.align	1
+	.align	2
 	.globl	_Z20vcond_asbool_inline2i
 	.type	_Z20vcond_asbool_inline2i, @function
 _Z20vcond_asbool_inline2i:
@@ -273,10 +273,10 @@ _Z20vcond_asbool_inline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 	.size	_Z20vcond_asbool_inline2i, .-_Z20vcond_asbool_inline2i
-	.align	1
+	.align	2
 	.globl	_Z23vcond_asbool_noninline2i
 	.type	_Z23vcond_asbool_noninline2i, @function
 _Z23vcond_asbool_noninline2i:
@@ -287,7 +287,7 @@ _Z23vcond_asbool_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 .L32:
 	SFPLOADI	L0, 0, 4
@@ -295,10 +295,10 @@ _Z23vcond_asbool_noninline2i:
 	SFPSETCC	L1, 0, 2
 	SFPLOADI	L0, 1, 4
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 12, 3
+	SFPSTORE	0, L0, 12, 7
 	ret
 	.size	_Z23vcond_asbool_noninline2i, .-_Z23vcond_asbool_noninline2i
-	.align	1
+	.align	2
 	.globl	_Z20vcond_inside_inline3v
 	.type	_Z20vcond_inside_inline3v, @function
 _Z20vcond_inside_inline3v:
@@ -309,10 +309,10 @@ _Z20vcond_inside_inline3v:
 	SFPCOMPC
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z20vcond_inside_inline3v, .-_Z20vcond_inside_inline3v
-	.align	1
+	.align	2
 	.globl	_Z23vcond_inside_noninline3i
 	.type	_Z23vcond_inside_noninline3i, @function
 _Z23vcond_inside_noninline3i:
@@ -323,10 +323,10 @@ _Z23vcond_inside_noninline3i:
 	SFPCOMPC
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z23vcond_inside_noninline3i, .-_Z23vcond_inside_noninline3i
-	.align	1
+	.align	2
 	.globl	_Z21vcond_outside_inline3v
 	.type	_Z21vcond_outside_inline3v, @function
 _Z21vcond_outside_inline3v:
@@ -341,10 +341,10 @@ _Z21vcond_outside_inline3v:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z21vcond_outside_inline3v, .-_Z21vcond_outside_inline3v
-	.align	1
+	.align	2
 	.globl	_Z24vcond_outside_noninline3i
 	.type	_Z24vcond_outside_noninline3i, @function
 _Z24vcond_outside_noninline3i:
@@ -359,10 +359,10 @@ _Z24vcond_outside_noninline3i:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z24vcond_outside_noninline3i, .-_Z24vcond_outside_noninline3i
-	.align	1
+	.align	2
 	.globl	_Z27vcond_inside_elseif_inline3v
 	.type	_Z27vcond_inside_elseif_inline3v, @function
 _Z27vcond_inside_elseif_inline3v:
@@ -378,10 +378,10 @@ _Z27vcond_inside_elseif_inline3v:
 	SFPLOADI	L0, 16448, 0
 	SFPPOPC	0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z27vcond_inside_elseif_inline3v, .-_Z27vcond_inside_elseif_inline3v
-	.align	1
+	.align	2
 	.globl	_Z30vcond_inside_elseif_noninline3i
 	.type	_Z30vcond_inside_elseif_noninline3i, @function
 _Z30vcond_inside_elseif_noninline3i:
@@ -397,10 +397,10 @@ _Z30vcond_inside_elseif_noninline3i:
 	SFPLOADI	L0, 16448, 0
 	SFPPOPC	0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z30vcond_inside_elseif_noninline3i, .-_Z30vcond_inside_elseif_noninline3i
-	.align	1
+	.align	2
 	.globl	_Z28vcond_outside_elseif_inline3v
 	.type	_Z28vcond_outside_elseif_inline3v, @function
 _Z28vcond_outside_elseif_inline3v:
@@ -418,10 +418,10 @@ _Z28vcond_outside_elseif_inline3v:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16448, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z28vcond_outside_elseif_inline3v, .-_Z28vcond_outside_elseif_inline3v
-	.align	1
+	.align	2
 	.globl	_Z31vcond_outside_elseif_noninline3i
 	.type	_Z31vcond_outside_elseif_noninline3i, @function
 _Z31vcond_outside_elseif_noninline3i:
@@ -439,10 +439,10 @@ _Z31vcond_outside_elseif_noninline3i:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16448, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z31vcond_outside_elseif_noninline3i, .-_Z31vcond_outside_elseif_noninline3i
-	.align	1
+	.align	2
 	.globl	_Z20vcond_inside_inline4v
 	.type	_Z20vcond_inside_inline4v, @function
 _Z20vcond_inside_inline4v:
@@ -465,10 +465,10 @@ _Z20vcond_inside_inline4v:
 	SFPSETCC	L2, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z20vcond_inside_inline4v, .-_Z20vcond_inside_inline4v
-	.align	1
+	.align	2
 	.globl	_Z23vcond_inside_noninline4i
 	.type	_Z23vcond_inside_noninline4i, @function
 _Z23vcond_inside_noninline4i:
@@ -507,13 +507,13 @@ _Z23vcond_inside_noninline4i:
 	SFPSETCC	L0, 0, 2
 	SFPLOADI	L2, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L2, 0, 3
+	SFPSTORE	0, L2, 0, 7
 	ret
 .L48:
 	SFPMOV	L0, L2, 2
 	j	.L44
 	.size	_Z23vcond_inside_noninline4i, .-_Z23vcond_inside_noninline4i
-	.align	1
+	.align	2
 	.globl	_Z21vcond_outside_inline4v
 	.type	_Z21vcond_outside_inline4v, @function
 _Z21vcond_outside_inline4v:
@@ -538,10 +538,10 @@ _Z21vcond_outside_inline4v:
 	SFPSETCC	L1, 0, 6
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
+	SFPSTORE	0, L0, 0, 7
 	ret
 	.size	_Z21vcond_outside_inline4v, .-_Z21vcond_outside_inline4v
-	.align	1
+	.align	2
 	.globl	_Z24vcond_outside_noninline4i
 	.type	_Z24vcond_outside_noninline4i, @function
 _Z24vcond_outside_noninline4i:
@@ -577,7 +577,7 @@ _Z24vcond_outside_noninline4i:
 	SFPSETCC	L0, 0, 6
 	SFPLOADI	L2, 16384, 0
 	SFPENCC	3, 10
-	SFPSTORE	0, L2, 0, 3
+	SFPSTORE	0, L2, 0, 7
 	ret
 .L56:
 	SFPMOV	L0, L2, 2
