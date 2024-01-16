@@ -133,7 +133,7 @@ main:
         SFPGT   L2, L1, 12, 3
         SFPLE   L2, L1, 12, 3
         SFPMUL24      L4, L1, L2, L0, 0
-        SFPMUL24      L4, L1, L2, L0, 0 // XXXX change 0 to 1 after HR fix
+        SFPMUL24      L4, L1, L2, L0, 1
         TTSTREAMWAIT    3, 8, 1, 2
         TTSTREAMWRCFG   2, 8, 12
 	li	a0,0

@@ -107,7 +107,12 @@ _Z10smoke_livev:
 	SFPSETCC	L0, 0, 2
 	SFPENCC	3, 10
 	SFPSETSGN	L0, L1, 10, 1
-	SFPCAST L1, L1, 1
+	SFPMOV	L0, L1, 2
+	SFPCAST L0, L1, 1
+	SFPSHFT2	L0, L1, 0, 3
+	SFPNOP
+	SFPSTOCHRND	L0, L0, L1, 1, 1, 3
+	SFPSTOCHRND	L0, L0, L1, 1, 1, 0
 	ret
 	.size	_Z10smoke_livev, .-_Z10smoke_livev
 	.align	2

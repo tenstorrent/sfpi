@@ -167,10 +167,9 @@ void smoke_live()
     a = __builtin_rvtt_wh_sfpsetsgn_i_lv(nullptr, a, 10, 0, 0, d);
 
     a = __builtin_rvtt_wh_sfpcast_lv(a, d, 1);
-    //    a = __builtin_rvtt_wh_sfpshft2_e_lv(a, d, 3);
-    // XXXXXX bumping into bad gimple stuff again
-    //a = __builtin_rvtt_wh_sfpstochrnd_i_lv(nullptr, a, 1, 3, d, 1);
-    //    a = __builtin_rvtt_wh_sfpstochrnd_v_lv(a, 1, a, d, 1);
+    a = __builtin_rvtt_wh_sfpshft2_e_lv(a, d, 3);
+    a = __builtin_rvtt_wh_sfpstochrnd_i_lv(nullptr, a, 1, 3, 0, 0, d, 1);
+    a = __builtin_rvtt_wh_sfpstochrnd_v_lv(a, 1, a, d, 1);
 }
 
 void smokier()
