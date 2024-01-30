@@ -1,21 +1,17 @@
 SFPI: Tenstorrent SFPU programming interface
-=============================
+============================================
 
-This repo contains SFPI, its associated tests including and SFPU emulator and
-a TT enhanced RISC-V gcc which exposes intrinsics that generate SFPU
-instructions.
+This repo contains SFPI, its associated tests including an SFPU emulator (complete
+for GS, partial for WH and not supported) and a TT enhanced RISC-V gcc which exposes
+intrinsics that generate SFPU instructions.
 
 ### User Documentation
 
-http://yyz-webservice-02.local.tenstorrent.com/docs/pybuda-docs/index.html
-
-### Internals (implementation) Documentation
-
-https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/home
+https://tenstorrent-metal.github.io/tt-metal/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
 
 ### Building
 1) Clone the sfpi repo and get a branch:
-  git clone https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi
+  git clone git@github.com:tenstorrent-metal/sfpi.git
 
 2) Initialize the submodules:
   git submodule update --init --resursive
@@ -96,7 +92,7 @@ https://yyz-gitlab.local.tenstorrent.com/tenstorrent/sfpi/-/wikis/home
   errors.  This could be cleaned up, but seems to work (strip fails when it
   doesn't recognized the file type).
 
-8) Running the test suite
+8) Running the GCC test suite
   This is not required for typical build/release cycles, but should likely be
   done if the RISCV code paths are altered or any other signficant
   perturbation is made.
