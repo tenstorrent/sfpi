@@ -12,7 +12,12 @@ X86_CC = g++
 X86_CFLAGS = -DCOMPILE_FOR_EMULE $(CFLAGS)
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32iml -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions
+ifeq ($(word 3,$(shell $(RV32_CC) --version)),10.2.0)
+RV32_VARIANT := _m2p0_l2p0
+else
+RV32_VARIANT := _u2p0
+endif
+RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32i$(RV32_VARIANT) -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc
 

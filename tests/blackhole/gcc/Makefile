@@ -5,7 +5,12 @@ INCLUDES = $(SFPI_ROOT)/include/blackhole/ckernel_ops.h
 CFLAGS = -I$(SFPI_ROOT)/include -I$(SFPI_ROOT)/include/blackhole -DARCH_BLACKHOLE -O3 -std=c++17 -Wall
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32il -mabi=ilp32 -mtune=rvtt-b1 -fno-exceptions -fno-rvtt-sfpu-replay
+ifeq ($(word 3,$(shell $(RV32_CC) --version)),10.2.0)
+RV32_VARIANT := _l2p0
+else
+RV32_VARIANT := _u2p0
+endif
+RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32i$(RV32_VARIANT) -mabi=ilp32 -mtune=rvtt-b1 -fno-exceptions -fno-rvtt-sfpu-replay
 
 SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.cc tt.cc
 SRC_ASMS = ttasm.S
