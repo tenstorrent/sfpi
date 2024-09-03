@@ -138,11 +138,11 @@ _Z8test_subv:
 	SFPMAD	L0, L11, L1, L2, 0
 	SFPNOP
 	SFPADDI	L0, 48896, 0
-	SFPMAD	L3, L11, L1, L2, 0
-	SFPLOAD	L2, 0, 0, 7
-	SFPMAD	L2, L11, L2, L3, 0
+	SFPMAD	L2, L11, L1, L2, 0
+	SFPLOAD	L3, 0, 0, 7
+	SFPMAD	L3, L11, L3, L2, 0
 	SFPNOP
-	SFPMAD	L3, L11, L10, L2, 0
+	SFPMAD	L3, L11, L10, L3, 0
 	SFPADD	L2, L10, L1, L0, 0
 	SFPNOP
 	SFPMAD	L2, L11, L2, L3, 0
@@ -342,16 +342,16 @@ _Z8test_madv:
 	.globl	_Z11test_incdecv
 	.type	_Z11test_incdecv, @function
 _Z11test_incdecv:
-	SFPLOADI	L1, 16256, 0
-	SFPADDI	L1, 16256, 0
+	SFPLOADI	L0, 16256, 0
+	SFPADDI	L0, 16256, 0
 	SFPNOP
-	SFPSTORE	0, L1, 0, 7
+	SFPSTORE	0, L0, 0, 7
+	SFPLOADI	L1, 16256, 0
+	SFPADD	L1, L10, L0, L1, 0
+	SFPSTORE	2, L0, 0, 7
+	SFPSTORE	4, L1, 0, 7
 	SFPLOADI	L0, 16256, 0
-	SFPADD	L2, L10, L1, L0, 0
-	SFPSTORE	2, L1, 0, 7
-	SFPSTORE	4, L2, 0, 7
-	SFPLOADI	L0, 16256, 0
-	SFPMAD	L0, L11, L0, L2, 0
+	SFPMAD	L0, L11, L0, L1, 0
 	SFPNOP
 	SFPSTORE	0, L0, 0, 7
 	SFPLOADI	L1, 16256, 0
@@ -396,7 +396,7 @@ _Z10test_loadilm:
 	SFPSTORE	0, L0, 12, 7
 	and	a4,a1,a4
 	li	a3, 1896480768	# 710a0000
-	add	a3,a3,a4
+	add	a3,a4,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr0)
 	srli	a1,a1,16
 	li	a3, 1896349696	# 71080000
@@ -460,13 +460,13 @@ _Z17test_control_flowi:
 	li	a5,0
 	bgt	a0,zero,.L10
 	j	.L9
-.L16:
+.L17:
 	SFPLOAD	L0, 2, 0, 7
 	addi	a5,a5,1
 	beq	a0,a5,.L9
 .L10:
 	andi	a4,a5,1
-	bne	a4,zero,.L16
+	bne	a4,zero,.L17
 	SFPSTORE	4, L0, 0, 7
 	addi	a5,a5,1
 	bne	a0,a5,.L10
@@ -484,9 +484,9 @@ _Z12test_mad_immv:
 	SFPLOADI	L2, 39322, 10
 	SFPMAD	L0, L1, L0, L2, 0
 	SFPLOADI	L2, 16128, 0
-	SFPMAD	L0, L1, L0, L2, 0
+	SFPMAD	L1, L1, L0, L2, 0
 	SFPNOP
-	SFPSTORE	4, L0, 0, 7
+	SFPSTORE	4, L1, 0, 7
 	ret
 	.size	_Z12test_mad_immv, .-_Z12test_mad_immv
 	.align	2
@@ -1649,8 +1649,8 @@ _Z13test_stochrndi:
 	SFPSTOCHRND	L0, L0, L1, 5, 1, 0
 	SFPSTOCHRND	L0, L0, L1, 13, 0, 3
 	li	a5, 2382364941	# 8e00010d
-	add	a0,a5,a0
-	sw	a0, 0(a4)	# Op(0x8e) - d(lr0) s(lr1)
+	add	a5,a5,a0
+	sw	a5, 0(a4)	# Op(0x8e) - d(lr0) s(lr1)
 	SFPSTOCHRND	L0, L0, L1, 13, 1, 31
 	SFPSTOCHRND	L1, L0, L1, 13, 1, 31
 	ret
@@ -1898,9 +1898,9 @@ main:
 	SFPLOADI	L1, 39322, 10
 	SFPMAD	L3, L0, L3, L1, 0
 	SFPLOADI	L1, 16128, 0
-	SFPMAD	L3, L0, L3, L1, 0
+	SFPMAD	L0, L0, L3, L1, 0
 	SFPNOP
-	SFPSTORE	4, L3, 0, 7
+	SFPSTORE	4, L0, 0, 7
 	mv	a0,s0
 	call	_Z32test_setman_setexp_addexp_setsgni
 	call	_Z27test_dreg_conditional_constv
@@ -1967,4 +1967,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"

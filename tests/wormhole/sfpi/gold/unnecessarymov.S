@@ -1,6 +1,6 @@
 	.file	"unnecessarymov.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -27,11 +27,10 @@ _Z6whymovv:
 	.type	_Z11whymov_sqrtv, @function
 _Z11whymov_sqrtv:
 	SFPLOAD	L2, 0, 0, 3
-	SFPLOADI	L3, 1, 4
-	SFPMOV	L0, L2, 0
-	SFPIADD	L0, L3, 0, 6
-	SFPMOV	L1, L0, 2
-	SFPMUL	L0, L0, L0, L9, 0
+	SFPLOADI	L0, 1, 4
+	SFPMOV	L1, L2, 0
+	SFPIADD	L1, L0, 0, 6
+	SFPMUL	L0, L1, L1, L9, 0
 	SFPNOP
 	SFPMUL	L0, L0, L1, L9, 0
 	SFPNOP
@@ -93,4 +92,4 @@ _Z20lots_of_conditionalsv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"
