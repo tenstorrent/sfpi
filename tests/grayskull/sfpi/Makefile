@@ -1,4 +1,8 @@
-SFPI_ROOT ?= ../../..
+ifeq ($(SFPI_ROOT),)
+SFPI_ROOT = ../../..
+else ifeq ($(firstword $(shell ls -id $(SFPI_ROOT))),$(firstword $(shell ls -id ../../..)))
+SFPI_ROOT = ../../..
+endif
 CC_PATH ?= $(SFPI_ROOT)/compiler
 
 INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/grayskull/sfpi_hw.h $(SFPI_ROOT)/include/grayskull/sfpi_imp.h $(SFPI_ROOT)/include/grayskull/sfpi_lib.h $(SFPI_ROOT)/include/grayskull/ckernel_ops.h

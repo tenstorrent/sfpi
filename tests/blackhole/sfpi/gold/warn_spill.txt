@@ -1,8 +1,10 @@
-In file included from /home2/pkeller/src/sfpi/include/sfpi.h:1251,
+In file included from /home/nathan/gcc-12/sfpi/include/sfpi.h:1251,
                  from test.h:17,
                  from warn.cc:11:
-/home2/pkeller/src/sfpi/include/blackhole/sfpi_imp.h: In function 'void spill()':
-/home2/pkeller/src/sfpi/include/blackhole/sfpi_imp.h:105:11: fatal error: cannot store sfpu register (register spill)
+In member function 'void sfpi::vFloat::loadf(float)',
+    inlined from 'sfpi::vFloat::vFloat(float)' at /home/nathan/gcc-12/sfpi/include/sfpi.h:364:46,
+    inlined from 'void spill()' at warn.cc:141:16:
+/home/nathan/gcc-12/sfpi/include/blackhole/sfpi_imp.h:105:11: fatal error: cannot store sfpu register (register spill)
   105 |     assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, __f32asui(val)));
       |     ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.

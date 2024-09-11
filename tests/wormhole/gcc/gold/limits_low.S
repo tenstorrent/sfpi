@@ -1,6 +1,6 @@
 	.file	"limits.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_w2p0"
+	.attribute arch, "rv32i2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -166,11 +166,11 @@ main:
 	SFPSETCC	L1, 0, 0
 	SFPLOADI	L1, 14463, 8
 	SFPLOADI	L1, 32768, 10
-	SFPMAD	L0, L1, L11, L0, 0
+	SFPMAD	L1, L1, L11, L0, 0
 	SFPNOP
-	SFPSETCC	L0, 0, 0
+	SFPSETCC	L1, 0, 0
 	SFPENCC	3, 10
 	li	a0,0
 	ret
 	.size	main, .-main
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"

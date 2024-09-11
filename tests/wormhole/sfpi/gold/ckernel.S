@@ -1,6 +1,6 @@
 	.file	"ckernel.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_w2p0"
+	.attribute arch, "rv32i2p0_m2p0_w"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -81,219 +81,6 @@ _Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0:
 	TTREPLAY	0, 7, 0, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0
-	.align	1
-	.type	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, @function
-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
-	TTREPLAY	0, 32, 1, 1
-	SFPLOAD	L1, 0, 0, 3
-	SFPSETSGN	L0, L1, 0, 1
-	SFPEXEXP	L2, L0, 10
-	SFPSETEXP	L0, L0, 126, 1
-	SFPENCC	3, 10
-	SFPLOADI	L3, 16220, 0
-	SFPMAD	L3, L0, L8, L3, 0
-	SFPNOP
-	SFPMAD	L0, L0, L3, L10, 0
-	SFPSETCC	L2, 0, 4
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPIADD	L2, L2, -1, 9
-	SFPMUL	L0, L0, L0, L9, 0
-	SFPENCC	3, 10
-	SFPSETCC	L1, 0, 0
-	SFPSETSGN	L2, L0, 1, 1
-	SFPSETEXP	L2, L2, 126, 1
-	SFPMAD	L1, L2, L12, L13, 0
-	SFPNOP
-	SFPMUL	L1, L12, L1, L9, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	TTREPLAY	0, 32, 0, 0
-	SFPNOP
-	SFPMAD	L3, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L3, L9, 0
-	SFPNOP
-	SFPMAD	L2, L2, L1, L13, 0
-	SFPNOP
-	SFPMUL	L1, L1, L2, L9, 0
-	SFPEXEXP	L2, L0, 0
-	SFPEXEXP	L3, L1, 0
-	SFPIADD	L2, L3, 0, 6
-	SFPPUSHC	0
-	SFPIADD	L2, L2, 126, 1
-	SFPLOADI	L1, 0, 0
-	SFPLOADI	L2, 0, 4
-	SFPPOPC	0
-	SFPSETEXP	L2, L1, 0, 0
-	SFPMOV	L0, L2, 0
-	SFPENCC	3, 10
-	SFPSTORE	0, L0, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	ret
-	.size	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0
 	.align	1
 	.type	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, @function
 _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
@@ -507,6 +294,219 @@ _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	TTINCRWC	0, 2, 0, 0
 	ret
 	.size	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0
+	.align	1
+	.type	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, @function
+_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
+	TTREPLAY	0, 32, 1, 1
+	SFPLOAD	L1, 0, 0, 3
+	SFPSETSGN	L0, L1, 0, 1
+	SFPEXEXP	L2, L0, 10
+	SFPSETEXP	L0, L0, 126, 1
+	SFPENCC	3, 10
+	SFPLOADI	L3, 16220, 0
+	SFPMAD	L3, L0, L8, L3, 0
+	SFPNOP
+	SFPMAD	L0, L0, L3, L10, 0
+	SFPSETCC	L2, 0, 4
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPIADD	L2, L2, -1, 9
+	SFPMUL	L0, L0, L0, L9, 0
+	SFPENCC	3, 10
+	SFPSETCC	L1, 0, 0
+	SFPSETSGN	L2, L0, 1, 1
+	SFPSETEXP	L2, L2, 126, 1
+	SFPMAD	L1, L2, L12, L13, 0
+	SFPNOP
+	SFPMUL	L1, L12, L1, L9, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 32, 0, 0
+	SFPNOP
+	SFPMAD	L3, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L3, L9, 0
+	SFPNOP
+	SFPMAD	L2, L2, L1, L13, 0
+	SFPNOP
+	SFPMUL	L1, L1, L2, L9, 0
+	SFPEXEXP	L2, L0, 0
+	SFPEXEXP	L3, L1, 0
+	SFPIADD	L2, L3, 0, 6
+	SFPPUSHC	0
+	SFPIADD	L2, L2, 126, 1
+	SFPLOADI	L1, 0, 0
+	SFPLOADI	L2, 0, 4
+	SFPPOPC	0
+	SFPSETEXP	L2, L1, 0, 0
+	SFPMOV	L0, L2, 0
+	SFPENCC	3, 10
+	SFPSTORE	0, L0, 0, 3
+	TTINCRWC	0, 2, 0, 0
+	ret
+	.size	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0
 	.section	.text._Z14calculate_compILb0EL8SfpuType8EEvm,"axG",@progbits,_Z14calculate_compILb0EL8SfpuType8EEvm,comdat
 	.align	1
 	.weak	_Z14calculate_compILb0EL8SfpuType8EEvm
@@ -601,14 +601,14 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	.type	_Z15calculate_clampILb0EEvmmm, @function
 _Z15calculate_clampILb0EEvmmm:
 	li	a4,65536
-	addi	a6,a4,-1
+	addi	a4,a4,-1
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	and	a4,a0,a6
+	and	a0,a0,a4
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	li	a3, 1896939520	# 71110000
-	add	a3,a4,a3
+	add	a3,a0,a3
 	sw	a3, 0(a5)	# Op(0x71) - d(lr1)
-	and	a3,a1,a6
+	and	a3,a1,a4
 	li	a1, 1895890944	# 71010000
 	add	a1,a3,a1
 	sw	a1, 0(a5)	# Op(0x71) - d(lr0)
@@ -618,17 +618,17 @@ _Z15calculate_clampILb0EEvmmm:
 	SFPNOP
 	SFPSETCC	L3, 0, 0
 	li	a1, 1897988096	# 71210000
-	add	a1,a4,a1
+	add	a1,a0,a1
 	sw	a1, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
 	SFPCOMPC
 	SFPMAD	L3, L0, L11, L2, 0
 	SFPNOP
 	SFPSETCC	L3, 0, 4
-	li	a4, 1897988096	# 71210000
-	add	a3,a3,a4
+	li	a0, 1897988096	# 71210000
+	add	a3,a3,a0
 	sw	a3, 0(a5)	# Op(0x71) lv(lr2)  d(lr2)
 	SFPENCC	3, 10
-	and	a4,a2,a6
+	and	a4,a2,a4
 	slli	a4,a4,8
 	li	a2, 1962934304	# 75000020
 	add	a4,a4,a2
@@ -778,73 +778,49 @@ _Z14calculate_tanhILb1EEvv:
 	.weak	_Z18calculate_hardtanhILb0EEvmmm
 	.type	_Z18calculate_hardtanhILb0EEvmmm, @function
 _Z18calculate_hardtanhILb0EEvmmm:
-	li	a5,65536
-	addi	a5,a5,-1
+	li	a3,65536
+	addi	a3,a3,-1
 	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
-	and	a0,a0,a5
-	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
-	li	a3, 1900019712	# 71400000
-	add	a3,a0,a3
-	sw	a3, 0(a4)	# Op(0x71) - d(lr4)
-	and	a1,a1,a5
-	li	a3, 1898971136	# 71300000
-	add	a1,a1,a3
-	sw	a1, 0(a4)	# Op(0x71) - d(lr3)
-	and	a2,a2,a5
-	li	a5, 1897922560	# 71200000
-	add	a2,a2,a5
-	sw	a2, 0(a4)	# Op(0x71) - d(lr2)
+	and	a5,a0,a3
+	lw	a0,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	li	a4, 1898971136	# 71300000
+	add	a4,a5,a4
+	sw	a4, 0(a0)	# Op(0x71) - d(lr3)
+	and	a1,a1,a3
+	li	a4, 1897922560	# 71200000
+	add	a4,a1,a4
+	sw	a4, 0(a0)	# Op(0x71) - d(lr2)
+	and	a4,a2,a3
+	li	a3, 1896873984	# 71100000
+	add	a4,a4,a3
+	sw	a4, 0(a0)	# Op(0x71) - d(lr1)
 	SFPLOAD	L0, 0, 0, 3
-	li	a5, 1962934272	# 75000000
-	slli	a0,a0,8
-	add	a0,a0,a5
-	sw	a0, 0(a4)	# Op(0x75) lv(lr0)  d(lr0)
-	TTREPLAY	0, 13, 1, 1
+	li	a4, 1962934272	# 75000000
+	slli	a5,a5,8
+	add	a5,a5,a4
+	sw	a5, 0(a0)	# Op(0x75) lv(lr0)  d(lr0)
+	TTREPLAY	0, 15, 1, 1
 	SFPNOP
 	SFPSETCC	L0, 0, 0
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
-	SFPADD	L0, L10, L0, L3, 0
+	SFPADD	L0, L10, L0, L2, 0
 	SFPNOP
 	SFPSETCC	L0, 0, 4
 	SFPLOADI	L0, 0, 0
 	SFPENCC	3, 10
-	SFPADD	L0, L10, L0, L2, 0
+	SFPADD	L0, L10, L0, L1, 0
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
 	TTINCRWC	0, 2, 0, 0
 	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
-	TTREPLAY	0, 13, 0, 0
-	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
-	TTREPLAY	0, 13, 0, 0
-	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
-	TTREPLAY	0, 13, 0, 0
-	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
-	TTREPLAY	0, 13, 0, 0
-	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
-	TTREPLAY	0, 13, 0, 0
-	SFPLOAD	L1, 0, 0, 3
-	SFPADD	L1, L10, L1, L4, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 0
-	SFPLOADI	L1, 0, 0
-	SFPENCC	3, 10
-	SFPADD	L1, L10, L1, L3, 0
-	SFPNOP
-	SFPSETCC	L1, 0, 4
-	SFPLOADI	L1, 0, 0
-	SFPENCC	3, 10
-	SFPADD	L1, L10, L1, L2, 0
-	SFPNOP
-	SFPSTORE	0, L1, 0, 3
-	TTINCRWC	0, 2, 0, 0
-	SFPLOAD	L0, 0, 0, 3
-	SFPADD	L0, L10, L0, L4, 0
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 15, 0, 0
 	TTREPLAY	0, 13, 0, 0
 	ret
 	.size	_Z18calculate_hardtanhILb0EEvmmm, .-_Z18calculate_hardtanhILb0EEvmmm
@@ -853,13 +829,13 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	.weak	_Z15calculate_lreluILb0EEvm
 	.type	_Z15calculate_lreluILb0EEvm, @function
 _Z15calculate_lreluILb0EEvm:
-	slli	a0,a0,16
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a4, 1895825408	# 71000000
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	srli	a0,a0,16
-	add	a0,a0,a4
-	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
+	slli	a5,a0,16
+	lui	a4,%hi(_ZN7ckernel13instrn_bufferE)
+	li	a3, 1895825408	# 71000000
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a4)
+	srli	a5,a5,16
+	add	a5,a5,a3
+	sw	a5, 0(a4)	# Op(0x71) - d(lr0)
 	TTREPLAY	0, 6, 1, 1
 	SFPLOAD	L1, 0, 0, 3
 	SFPSETCC	L1, 0, 0
@@ -1339,28 +1315,28 @@ _Z25calculate_gelu_derivativeILb0EEvv:
 	.type	_Z14calculate_sqrtILb0ELi4ELi2EEvv, @function
 _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	TTREPLAY	0, 26, 1, 1
-	SFPLOAD	L3, 0, 0, 3
-	SFPSETCC	L3, 0, 2
-	SFPMOV	L1, L3, 0
-	SFPSHFT	L1, L0, -1, 1
-	SFPIADD	L1, L12, 0, 6
-	SFPMUL	L2, L1, L1, L9, 0
-	SFPLOADI	L0, 48896, 0
-	SFPMUL	L0, L3, L0, L9, 0
+	SFPLOAD	L2, 0, 0, 3
+	SFPSETCC	L2, 0, 2
+	SFPMOV	L0, L2, 0
+	SFPSHFT	L0, L0, -1, 1
+	SFPIADD	L0, L12, 0, 6
+	SFPMUL	L1, L0, L0, L9, 0
+	SFPLOADI	L3, 48896, 0
+	SFPMUL	L3, L2, L3, L9, 0
 	SFPLOADI	L4, 16320, 0
-	SFPMAD	L0, L2, L0, L4, 0
+	SFPMAD	L1, L1, L3, L4, 0
 	SFPNOP
-	SFPMUL	L1, L0, L1, L9, 0
+	SFPMUL	L1, L1, L0, L9, 0
 	SFPNOP
 	SFPMUL	L0, L1, L1, L9, 0
-	SFPLOADI	L2, 48896, 0
-	SFPMUL	L2, L3, L2, L9, 0
+	SFPLOADI	L3, 48896, 0
+	SFPMUL	L3, L2, L3, L9, 0
 	SFPLOADI	L4, 16320, 0
-	SFPMAD	L0, L0, L2, L4, 0
+	SFPMAD	L0, L0, L3, L4, 0
 	SFPNOP
 	SFPMUL	L0, L0, L1, L9, 0
 	SFPNOP
-	SFPMUL	L0, L0, L3, L9, 0
+	SFPMUL	L0, L0, L2, L9, 0
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
 	SFPENCC	3, 10
@@ -1371,29 +1347,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	TTREPLAY	0, 26, 0, 0
 	TTREPLAY	0, 26, 0, 0
 	TTREPLAY	0, 26, 0, 0
-	TTREPLAY	0, 5, 0, 0
-	SFPMOV	L2, L1, 2
-	SFPMUL	L1, L1, L1, L9, 0
-	SFPLOADI	L0, 48896, 0
-	SFPMUL	L0, L3, L0, L9, 0
-	SFPLOADI	L4, 16320, 0
-	SFPMAD	L0, L1, L0, L4, 0
-	SFPNOP
-	SFPMUL	L1, L0, L2, L9, 0
-	SFPNOP
-	SFPMUL	L0, L1, L1, L9, 0
-	SFPLOADI	L2, 48896, 0
-	SFPMUL	L2, L3, L2, L9, 0
-	SFPLOADI	L4, 16320, 0
-	SFPMAD	L0, L0, L2, L4, 0
-	SFPNOP
-	SFPMUL	L0, L0, L1, L9, 0
-	SFPNOP
-	SFPMUL	L0, L0, L3, L9, 0
-	SFPNOP
-	SFPSTORE	0, L0, 0, 3
-	SFPENCC	3, 10
-	TTINCRWC	0, 2, 0, 0
+	TTREPLAY	0, 26, 0, 0
 	ret
 	.size	_Z14calculate_sqrtILb0ELi4ELi2EEvv, .-_Z14calculate_sqrtILb0ELi4ELi2EEvv
 	.section	.text._Z14calculate_sqrtILb1ELi4ELi2EEvv,"axG",@progbits,_Z14calculate_sqrtILb1ELi4ELi2EEvv,comdat
@@ -1424,10 +1378,10 @@ _Z21calculate_exponentialILb0ELb0ELb1EEvt:
 	TTREPLAY	0, 32, 1, 1
 	SFPLOAD	L1, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a4, 1895890944	# 71010000
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	add	a0,a0,a4
-	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a5, 1895890944	# 71010000
+	add	a5,a0,a5
+	sw	a5, 0(a4)	# Op(0x71) - d(lr0)
 	SFPMUL	L1, L1, L0, L9, 0
 	SFPNOP
 	SFPSETSGN	L0, L1, 0, 1
@@ -1667,10 +1621,10 @@ _Z21calculate_exponentialILb0ELb1ELb1EEvt:
 	TTREPLAY	0, 32, 1, 1
 	SFPLOAD	L1, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a4, 1895890944	# 71010000
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	add	a0,a0,a4
-	sw	a0, 0(a5)	# Op(0x71) - d(lr0)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a5, 1895890944	# 71010000
+	add	a5,a0,a5
+	sw	a5, 0(a4)	# Op(0x71) - d(lr0)
 	SFPMUL	L1, L1, L0, L9, 0
 	SFPNOP
 	SFPSETSGN	L0, L1, 0, 1
@@ -1939,10 +1893,10 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	TTREPLAY	0, 13, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a4, 1896939520	# 71110000
-	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	add	a0,a0,a4
-	sw	a0, 0(a5)	# Op(0x71) - d(lr1)
+	lw	a4,%lo(_ZN7ckernel13instrn_bufferE)(a5)
+	li	a5, 1896939520	# 71110000
+	add	a5,a0,a5
+	sw	a5, 0(a4)	# Op(0x71) - d(lr1)
 	SFPMUL	L0, L0, L1, L9, 0
 	SFPNOP
 	SFPMAD	L0, L0, L12, L13, 0
@@ -2084,25 +2038,25 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	.weak	_Z17calculate_dropoutILb0EEvmm
 	.type	_Z17calculate_dropoutILb0EEvmm, @function
 _Z17calculate_dropoutILb0EEvmm:
-	li	a2,65536
-	addi	a2,a2,-1
-	and	a4,a1,a2
+	li	a3,65536
+	addi	a3,a3,-1
+	and	a4,a1,a3
 	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	li	a3, 1946157056	# 74000000
+	li	a2, 1946157056	# 74000000
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
 	slli	a4,a4,8
-	add	a4,a4,a3
+	add	a4,a4,a2
 	TTREPLAY	0, 16, 1, 1
 	SFPLOAD	L0, 0, 0, 3
 	sw	a4, 0(a5)	# Op(0x74) lv(lr0)  d(lr0)
 	SFPNOP
 	SFPSTORE	0, L0, 0, 3
-	and	a2,a0,a2
-	li	a3, 1896480768	# 710a0000
-	srli	a0,a0,16
-	add	a2,a2,a3
-	li	a3, 1896349696	# 71080000
-	add	a3,a0,a3
+	and	a2,a0,a3
+	li	a1, 1896480768	# 710a0000
+	srli	a3,a0,16
+	add	a2,a2,a1
+	li	a1, 1896349696	# 71080000
+	add	a3,a3,a1
 	sw	a2, 0(a5)	# Op(0x71) - d(lr0)
 	sw	a3, 0(a5)	# Op(0x71) lv(lr0)  d(lr0)
 	SFPIADD	L0, L3, 0, 2
@@ -2353,4 +2307,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"

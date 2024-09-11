@@ -1,6 +1,6 @@
 	.file	"load.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y2p0"
+	.attribute arch, "rv32i2p0_y"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -24,8 +24,8 @@ _Z19latency_chain_splitPiiiiii:
 	add	a2,a2,a3
 	add	a1,a1,a0
 	add	a1,a1,a2
-	add	a0,a4,a5
-	add	a0,a1,a0
+	add	a4,a4,a5
+	add	a0,a1,a4
 	ret
 	.size	_Z19latency_chain_splitPiiiiii, .-_Z19latency_chain_splitPiiiiii
 	.align	1
@@ -111,6 +111,7 @@ _Z13load_union_l14__tu:
 	.type	_Z13load_union_ll4__tu, @function
 _Z13load_union_ll4__tu:
 	lw	a0,0(a0)
+	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z13load_union_ll4__tu, .-_Z13load_union_ll4__tu
 	.align	1
@@ -214,25 +215,25 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiii:
 	add	a0,a0,a5
 	add	a0,a0,a6
 	lw	a5,0(sp)
+	lw	a4,4(sp)
 	add	a0,a0,a7
 	add	a5,a0,a5
-	lw	a0,4(sp)
+	add	a5,a5,a4
+	lw	a4,8(sp)
+	lw	a0,36(sp)
+	add	a5,a5,a4
 	lw	a4,12(sp)
-	add	a5,a5,a0
-	lw	a0,8(sp)
-	add	a5,a5,a0
 	add	a5,a5,a4
 	lw	a4,16(sp)
-	lw	a0,20(sp)
 	add	a5,a5,a4
-	add	a5,a5,a0
-	lw	a0,24(sp)
-	add	a5,a5,a0
-	lw	a0,28(sp)
-	add	a5,a5,a0
-	lw	a0,32(sp)
-	add	a5,a5,a0
-	lw	a0,36(sp)
+	lw	a4,20(sp)
+	add	a5,a5,a4
+	lw	a4,24(sp)
+	add	a5,a5,a4
+	lw	a4,28(sp)
+	add	a5,a5,a4
+	lw	a4,32(sp)
+	add	a5,a5,a4
 	add	a0,a5,a0
 	ret
 	.size	_Z11lots_o_argsiiiiiiiiiiiiiiiiii, .-_Z11lots_o_argsiiiiiiiiiiiiiiiiii
@@ -245,29 +246,29 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi:
 	add	a0,a0,a3
 	add	a0,a0,a4
 	add	a0,a0,a5
+	lw	a3,0(sp)
 	add	a0,a0,a6
 	add	a5,a0,a7
-	lw	a0,0(sp)
+	add	a5,a5,a3
+	lw	a3,4(sp)
 	lw	a4,36(sp)
-	add	a5,a5,a0
-	lw	a0,4(sp)
-	lw	a3,0(a4)
-	add	a5,a5,a0
-	lw	a0,8(sp)
-	lw	a4,12(sp)
-	add	a5,a5,a0
-	add	a5,a5,a4
-	lw	a4,16(sp)
-	lw	a0,20(sp)
-	add	a5,a5,a4
-	add	a5,a5,a0
-	lw	a0,24(sp)
-	add	a5,a5,a0
-	lw	a0,28(sp)
-	add	a5,a5,a0
-	lw	a0,32(sp)
-	add	a0,a5,a0
-	add	a0,a0,a3
+	add	a5,a5,a3
+	lw	a3,8(sp)
+	lw	a4,0(a4)
+	add	a5,a5,a3
+	lw	a3,12(sp)
+	add	a5,a5,a3
+	lw	a3,16(sp)
+	add	a5,a5,a3
+	lw	a3,20(sp)
+	add	a5,a5,a3
+	lw	a3,24(sp)
+	add	a5,a5,a3
+	lw	a3,28(sp)
+	add	a5,a5,a3
+	lw	a3,32(sp)
+	add	a5,a5,a3
+	add	a0,a5,a4
 	ret
 	.size	_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi, .-_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi
 	.align	1
@@ -512,10 +513,10 @@ _Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi:
 _Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii:
 	lw	a0,0(a0)
 	add	a2,a2,a3
+	add	a4,a4,a5
 	add	a1,a1,a0
 	add	a1,a1,a2
-	add	a0,a4,a5
-	add	a0,a1,a0
+	add	a0,a1,a4
 	ret
 	.size	_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii, .-_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii
 	.align	1
@@ -798,4 +799,4 @@ global_l1_xo_ptr:
 	.size	global_l1_ptr, 4
 global_l1_ptr:
 	.word	global
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"
