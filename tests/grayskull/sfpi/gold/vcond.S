@@ -1,6 +1,6 @@
 	.file	"vcond.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y2p0"
+	.attribute arch, "rv32i2p0_y"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -402,6 +402,8 @@ _Z20vcond_inside_inline3v:
 	.type	_Z23vcond_inside_noninline3i, @function
 _Z23vcond_inside_noninline3i:
 	SFPLOADI	L0, 16256, 0
+	SFPPUSHC
+	SFPLOADI	L1, 0, 4
 	SFPSETCC	L0, 0, 6
 	TTNOP
 	SFPSETCC	L0, 0, 4
@@ -409,6 +411,11 @@ _Z23vcond_inside_noninline3i:
 	SFPSETCC	L0, 0, 2
 	TTNOP
 	SFPCOMPC
+	TTNOP
+	SFPLOADI	L1, 1, 4
+	SFPPOPC
+	TTNOP
+	SFPSETCC	L1, 0, 2
 	TTNOP
 	SFPLOADI	L0, 16384, 0
 	SFPENCC	3, 10
@@ -504,6 +511,8 @@ _Z30vcond_inside_elseif_noninline3i:
 	SFPCOMPC
 	TTNOP
 	SFPPUSHC
+	SFPPUSHC
+	SFPLOADI	L1, 0, 4
 	SFPSETCC	L0, 0, 6
 	TTNOP
 	SFPSETCC	L0, 0, 4
@@ -511,6 +520,11 @@ _Z30vcond_inside_elseif_noninline3i:
 	SFPSETCC	L0, 0, 2
 	TTNOP
 	SFPCOMPC
+	TTNOP
+	SFPLOADI	L1, 1, 4
+	SFPPOPC
+	TTNOP
+	SFPSETCC	L1, 0, 2
 	TTNOP
 	SFPLOADI	L0, 16448, 0
 	SFPPOPC
@@ -629,7 +643,15 @@ _Z20vcond_inside_inline4v:
 _Z23vcond_inside_noninline4i:
 	SFPLOADI	L2, 16256, 0
 	addi	a5,a0,-1
-	beq	a0,zero,.L48
+	SFPPUSHC
+	SFPENCC	3, 2
+	TTNOP
+	SFPMOV	L0, L2, 0
+	TTNOP
+	TTNOP
+	SFPPOPC
+	TTNOP
+	beq	a0,zero,.L53
 	SFPPUSHC
 	SFPLOADI	L0, 16448, 0
 	SFPMAD	L0, L0, L11, L2, 0
@@ -646,15 +668,9 @@ _Z23vcond_inside_noninline4i:
 	TTNOP
 	SFPPOPC
 	TTNOP
-	beq	a5,a4,.L45
-.L46:
-	SFPLOADI	L1, 16256, 0
-	SFPMAD	L0, L11, L1, L0, 0
-	TTNOP
-	TTNOP
-	SFPPOPC
-	TTNOP
-	beq	a5,zero,.L44
+	bne	a5,a4,.L56
+	j	.L54
+.L55:
 	SFPPUSHC
 	SFPLOADI	L1, 16448, 0
 	SFPMAD	L1, L1, L11, L0, 0
@@ -663,11 +679,16 @@ _Z23vcond_inside_noninline4i:
 	SFPSETCC	L1, 0, 0
 	TTNOP
 	addi	a5,a5,-1
-	bne	a5,a4,.L46
-.L45:
+	beq	a5,a4,.L54
+.L56:
+	SFPLOADI	L1, 16256, 0
+	SFPMAD	L0, L11, L1, L0, 0
+	TTNOP
+	TTNOP
 	SFPPOPC
 	TTNOP
-.L44:
+	bne	a5,zero,.L55
+.L53:
 	SFPPUSHC
 	SFPLOADI	L1, 0, 4
 	SFPSETCC	L0, 0, 6
@@ -690,16 +711,10 @@ _Z23vcond_inside_noninline4i:
 	TTNOP
 	SFPSTORE	0, L2, 0
 	ret
-.L48:
-	SFPPUSHC
-	SFPENCC	3, 2
-	TTNOP
-	SFPMOV	L0, L2, 0
-	TTNOP
-	TTNOP
+.L54:
 	SFPPOPC
 	TTNOP
-	j	.L44
+	j	.L53
 	.size	_Z23vcond_inside_noninline4i, .-_Z23vcond_inside_noninline4i
 	.align	1
 	.globl	_Z21vcond_outside_inline4v
@@ -754,7 +769,15 @@ _Z21vcond_outside_inline4v:
 _Z24vcond_outside_noninline4i:
 	SFPLOADI	L2, 16256, 0
 	addi	a5,a0,-1
-	beq	a0,zero,.L56
+	SFPPUSHC
+	SFPENCC	3, 2
+	TTNOP
+	SFPMOV	L0, L2, 0
+	TTNOP
+	TTNOP
+	SFPPOPC
+	TTNOP
+	beq	a0,zero,.L61
 	SFPLOADI	L0, 16448, 0
 	SFPMAD	L0, L0, L11, L2, 0
 	TTNOP
@@ -770,15 +793,9 @@ _Z24vcond_outside_noninline4i:
 	TTNOP
 	SFPPOPC
 	TTNOP
-	beq	a5,a4,.L53
-.L54:
-	SFPLOADI	L1, 16256, 0
-	SFPMAD	L0, L11, L1, L0, 0
-	TTNOP
-	TTNOP
-	SFPENCC	3, 10
-	TTNOP
-	beq	a5,zero,.L52
+	bne	a5,a4,.L64
+	j	.L62
+.L63:
 	SFPLOADI	L1, 16448, 0
 	SFPMAD	L1, L1, L11, L0, 0
 	TTNOP
@@ -786,11 +803,16 @@ _Z24vcond_outside_noninline4i:
 	SFPSETCC	L1, 0, 0
 	TTNOP
 	addi	a5,a5,-1
-	bne	a5,a4,.L54
-.L53:
+	beq	a5,a4,.L62
+.L64:
+	SFPLOADI	L1, 16256, 0
+	SFPMAD	L0, L11, L1, L0, 0
+	TTNOP
+	TTNOP
 	SFPENCC	3, 10
 	TTNOP
-.L52:
+	bne	a5,zero,.L63
+.L61:
 	SFPLOADI	L1, 0, 4
 	SFPSETCC	L0, 0, 6
 	TTNOP
@@ -812,16 +834,10 @@ _Z24vcond_outside_noninline4i:
 	TTNOP
 	SFPSTORE	0, L2, 0
 	ret
-.L56:
-	SFPPUSHC
-	SFPENCC	3, 2
+.L62:
+	SFPENCC	3, 10
 	TTNOP
-	SFPMOV	L0, L2, 0
-	TTNOP
-	TTNOP
-	SFPPOPC
-	TTNOP
-	j	.L52
+	j	.L61
 	.size	_Z24vcond_outside_noninline4i, .-_Z24vcond_outside_noninline4i
 	.globl	_ZN7ckernel13instrn_bufferE
 	.section	.sbss,"aw",@nobits
@@ -830,4 +846,4 @@ _Z24vcond_outside_noninline4i:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"

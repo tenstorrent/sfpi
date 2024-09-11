@@ -1,4 +1,8 @@
-SFPI_ROOT ?= ../../..
+ifeq ($(SFPI_ROOT),)
+SFPI_ROOT = ../../..
+else ifeq ($(firstword $(shell ls -id $(SFPI_ROOT))),$(firstword $(shell ls -id ../../..)))
+SFPI_ROOT = ../../..
+endif
 CC_PATH ?= $(SFPI_ROOT)/compiler
 
 INCLUDES = $(SFPI_ROOT)/include/sfpi.h $(SFPI_ROOT)/include/sfpi_fp16.h $(SFPI_ROOT)/include/blackhole/sfpi_hw.h $(SFPI_ROOT)/include/blackhole/sfpi_imp.h $(SFPI_ROOT)/include/blackhole/sfpi_lib.h $(SFPI_ROOT)/include/blackhole/ckernel_ops.h
@@ -12,12 +16,7 @@ X86_CC = g++
 X86_CFLAGS = -DCOMPILE_FOR_EMULE $(CFLAGS)
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-ifeq ($(word 3,$(shell $(RV32_CC) --version)),10.2.0)
-RV32_VARIANT := _m2p0_l2p0
-else
-RV32_VARIANT := _u2p0
-endif
-RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32i$(RV32_VARIANT) -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions
+RV32_CFLAGS = $(CFLAGS) -mblackhole -march=rv32i_m2p0_l2p0 -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions
 
 SRCS = kernels.cc coverage.cc live.cc
 

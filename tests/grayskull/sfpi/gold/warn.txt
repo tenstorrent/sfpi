@@ -1,22 +1,42 @@
 In file included from test.h:17,
                  from warn.cc:11:
-../../../include/sfpi.h: In function 'void global()':
+In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
+    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at ../../../include/sfpi.h:369:59,
+    inlined from 'void global()' at warn.cc:29:11:
 ../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../../../include/sfpi.h: In function 'void pointeruse(sfpi::vFloat*)':
+In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
+    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at ../../../include/sfpi.h:369:59,
+    inlined from 'void pointeruse(sfpi::vFloat*)' at warn.cc:34:10:
 ../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../../../include/sfpi.h: In function 'void address()':
+In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
+    inlined from 'void sfpi::vFloat::loadf16(sfpi::s2vFloat16)' at ../../../include/sfpi.h:853:11,
+    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/grayskull/sfpi_imp.h:106:12,
+    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:364:46,
+    inlined from 'void address()' at warn.cc:39:16:
 ../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In function 'void unnit()':
-cc1plus: warning: 'vec.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
+warn.cc: In function 'void unnit()':
+warn.cc:47:18: warning: '<anonymous>' is used uninitialized [-Wuninitialized]
+   47 |     dst_reg[0] = x;
+      |                  ^
+warn.cc:47:18: note: '<anonymous>' declared here
+   47 |     dst_reg[0] = x;
+      |                  ^
+warn.cc:47:18: warning: 'SR.50' is used uninitialized in this function [-Wuninitialized]
+   47 |     dst_reg[0] = x;
+      |                  ^
 In function 'void argcall(sfpi::vFloat)':
 cc1plus: error: invalid declaration for function 'argcall', sfpu types cannot be passed on the stack (missing sfpi_inline?)
-../../../include/sfpi.h: In function 'sfpi::vFloat ret()':
+In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
+    inlined from 'void sfpi::vFloat::loadf16(sfpi::s2vFloat16)' at ../../../include/sfpi.h:853:11,
+    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/grayskull/sfpi_imp.h:106:12,
+    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:364:46,
+    inlined from 'sfpi::vFloat ret()' at warn.cc:57:16:
 ../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,9 +44,12 @@ warn.cc: In function 'void setccnotinsidepushpop()':
 warn.cc:76:33: error: malformed program, sfpsetcc_v outside of pushc/popc
    76 |     __builtin_rvtt_gs_sfpsetcc_v(a, 12);
       |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-In file included from test.h:17,
-                 from warn.cc:11:
-../../../include/sfpi.h: In function '(static initializers for warn.cc)':
+In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
+    inlined from 'void sfpi::vFloat::loadf16(sfpi::s2vFloat16)' at ../../../include/sfpi.h:853:11,
+    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/grayskull/sfpi_imp.h:106:12,
+    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:364:46,
+    inlined from 'void __static_initialization_and_destruction_0(int, int)' at warn.cc:25:8,
+    inlined from '(static initializers for warn.cc)' at warn.cc:77:1:
 ../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

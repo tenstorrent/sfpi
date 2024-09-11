@@ -1,6 +1,6 @@
 	.file	"rmext.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y2p0"
+	.attribute arch, "rv32i2p0_y"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -50,7 +50,9 @@ _Z8load_uqiPVh:
 	.globl	_Z7load_hiPVs
 	.type	_Z7load_hiPVs, @function
 _Z7load_hiPVs:
-	lh	a0,0(a0)
+	lhu	a0,0(a0)
+	slli	a0,a0,16
+	srai	a0,a0,16
 	ret
 	.size	_Z7load_hiPVs, .-_Z7load_hiPVs
 	.align	1
@@ -220,20 +222,23 @@ _Z16triple_store_uqiPVh:
 	.globl	_Z17replace_write_uhiPVt
 	.type	_Z17replace_write_uhiPVt, @function
 _Z17replace_write_uhiPVt:
-	lui	a5,%hi(dstusi)
-	lhu	a4,0(a0)
-	lw	a5,%lo(dstusi)(a5)
-	sw	a4,0(a5)
+	lhu	a5,0(a0)
+	lui	a4,%hi(dstusi)
+	lw	a4,%lo(dstusi)(a4)
+	slli	a5,a5,16
+	srli	a5,a5,16
+	sw	a5,0(a4)
 	ret
 	.size	_Z17replace_write_uhiPVt, .-_Z17replace_write_uhiPVt
 	.align	1
 	.globl	_Z17replace_write_uqiPVh
 	.type	_Z17replace_write_uqiPVh, @function
 _Z17replace_write_uqiPVh:
-	lui	a5,%hi(dstusi)
-	lbu	a4,0(a0)
-	lw	a5,%lo(dstusi)(a5)
-	sw	a4,0(a5)
+	lbu	a5,0(a0)
+	lui	a4,%hi(dstusi)
+	lw	a4,%lo(dstusi)(a4)
+	andi	a5,a5,0xff
+	sw	a5,0(a4)
 	ret
 	.size	_Z17replace_write_uqiPVh, .-_Z17replace_write_uqiPVh
 	.align	1
@@ -385,8 +390,8 @@ _Z8keep_retPVt:
 	.globl	_Z9keep_ret2PVt
 	.type	_Z9keep_ret2PVt, @function
 _Z9keep_ret2PVt:
-	lhu	a3,0(a0)
 	lhu	a5,0(a0)
+	lhu	a3,0(a0)
 	lhu	a4,0(a0)
 	add	a0,a5,a3
 	add	a0,a0,a4
@@ -411,8 +416,8 @@ _Z10real_worldPVt:
 	addi	a5,a5,1
 	sh	a5,0(a0)
 	lhu	zero,0(a0)
-	lhu	a0,2(a0)
-	sub	a0,a5,a0
+	lhu	a4,2(a0)
+	sub	a0,a5,a4
 	seqz	a0,a0
 	ret
 	.size	_Z10real_worldPVt, .-_Z10real_worldPVt
@@ -471,8 +476,6 @@ _Z15mask_and_shift5t:
 	.type	_Z15mask_and_shift6t, @function
 _Z15mask_and_shift6t:
 	addi	a0,a0,1
-	slli	a0,a0,16
-	srli	a0,a0,16
 	slli	a5,a0,4
 	add	a0,a0,a5
 	slli	a0,a0,16
@@ -495,8 +498,6 @@ _Z15mask_and_shift7s:
 	.type	_Z15mask_and_shift8s, @function
 _Z15mask_and_shift8s:
 	addi	a0,a0,1
-	slli	a0,a0,16
-	srli	a0,a0,16
 	slli	a5,a0,4
 	add	a0,a0,a5
 	slli	a0,a0,16
@@ -514,25 +515,25 @@ main:
 	lhu	a4,-274(a5)
 	lbu	a4,-274(a5)
 	lhu	a4,-274(a5)
-	lui	a3,%hi(dstuhi)
-	lw	a2,%lo(dstuhi)(a3)
+	lui	a2,%hi(dstuhi)
+	lw	a3,%lo(dstuhi)(a2)
 	addi	a4,a4,10
-	sh	a4,0(a2)
-	lhu	zero,0(a2)
+	sh	a4,0(a3)
+	lhu	zero,0(a3)
 	lbu	a4,-274(a5)
-	lui	a2,%hi(dstuqi)
-	lw	a1,%lo(dstuqi)(a2)
+	lui	a3,%hi(dstuqi)
+	lw	a1,%lo(dstuqi)(a3)
 	addi	a4,a4,10
 	sb	a4,0(a1)
 	lbu	zero,0(a1)
 	lbu	a4,-274(a5)
-	lw	a1,%lo(dstuhi)(a3)
+	lw	a1,%lo(dstuhi)(a2)
 	addi	a4,a4,10
 	andi	a4,a4,0xff
 	sh	a4,0(a1)
 	lhu	zero,0(a1)
 	lhu	a4,-274(a5)
-	lw	a6,%lo(dstuqi)(a2)
+	lw	a6,%lo(dstuqi)(a3)
 	addi	a4,a4,10
 	sh	a4,0(a1)
 	sh	a4,0(a1)
@@ -541,16 +542,19 @@ main:
 	addi	a4,a4,10
 	sb	a4,0(a6)
 	lbu	zero,0(a6)
-	lw	a2,%lo(dstuqi)(a2)
-	sb	a4,0(a2)
-	lui	a4,%hi(dstusi)
-	lbu	zero,0(a2)
-	lhu	a1,-274(a5)
-	lw	a2,%lo(dstusi)(a4)
-	lw	a4,%lo(dstuhi)(a3)
-	sw	a1,0(a2)
+	lw	a3,%lo(dstuqi)(a3)
+	sb	a4,0(a3)
+	lbu	zero,0(a3)
+	lhu	a4,-274(a5)
+	lui	a3,%hi(dstusi)
+	lw	a1,%lo(dstusi)(a3)
+	slli	a4,a4,16
+	srli	a4,a4,16
+	sw	a4,0(a1)
 	lbu	a3,-274(a5)
-	sw	a3,0(a2)
+	lw	a4,%lo(dstuhi)(a2)
+	andi	a3,a3,0xff
+	sw	a3,0(a1)
 	lhu	a3,-274(a5)
 	addi	a3,a3,10
 	sh	a3,0(a4)
@@ -599,4 +603,4 @@ dstuhi:
 	.size	dstuqi, 4
 dstuqi:
 	.word	-4370
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"

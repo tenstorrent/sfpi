@@ -1,6 +1,6 @@
 	.file	"nonimm.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y2p0"
+	.attribute arch, "rv32i2p0_y"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -65,13 +65,13 @@ _Z13macro_checkedi:
 	sw	a4,0(a5)
 	add	a2,a3,a2
 	sw	a2,0(a5)
+	slli	a4,a0,12
+	li	a2,16773120
+	and	a4,a4,a2
 	li	a2,1915092992
 	add	a3,a3,a2
 	sw	a3,0(a5)
-	slli	a1,a0,12
-	li	a4,16773120
 	li	a3,2030043136
-	and	a4,a1,a4
 	addi	a3,a3,565
 	add	a3,a4,a3
 	li	a2,16777216
@@ -1164,23 +1164,23 @@ _Z11multi_reusei:
 	and	a0,a0,a5
 	li	a5, 2298478593	# 89000001
 	add	a5,a0,a5
-	li	a4,0
-	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
+	li	a3,0
+	sw	a5, 0(a3)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a5,a0,a5
-	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a5, 0(a3)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a5,a0,a5
-	sw	a5, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a5, 0(a3)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a5, 2298478593	# 89000001
 	add	a0,a0,a5
-	sw	a0, 0(a4)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a0, 0(a3)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	SFPSTORE	0, L0, 2
@@ -1267,26 +1267,26 @@ _Z10loop_macroi:
 	.globl	_Z13loop_compileri
 	.type	_Z13loop_compileri, @function
 _Z13loop_compileri:
-	li	a4,65536
 	slli	a0,a0,16
-	addi	a6,a4,-1
 	srai	a0,a0,16
-	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
-	and	a7,a0,a6
-	addi	a2,a0,10
-	addi	a3,a0,20
+	li	a3,65536
+	addi	a3,a3,-1
+	addi	a6,a0,10
+	addi	a2,a0,20
 	addi	a4,a0,30
+	lui	a5,%hi(_ZN7ckernel13instrn_bufferE)
+	and	a1,a0,a3
+	and	a6,a6,a3
+	and	a0,a2,a3
+	and	a4,a4,a3
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(a5)
-	li	a1, 1882259456	# 70310000
-	and	a0,a2,a6
-	and	a3,a3,a6
-	and	a4,a4,a6
-	add	a1,a1,a7
+	li	a3, 1882259456	# 70310000
+	add	a1,a1,a3
 	sw	a1, 0(a5)	# Op(0x70) - d(lr3)
 	li	a2, 1881210880	# 70210000
-	add	a2,a2,a0
+	add	a2,a2,a6
 	sw	a2, 0(a5)	# Op(0x70) - d(lr2)
-	li	a0, 1880162304	# 70110000
+	li	a3, 1880162304	# 70110000
 	add	a3,a3,a0
 	sw	a3, 0(a5)	# Op(0x70) - d(lr1)
 	li	a0, 1879113728	# 70010000
@@ -1385,7 +1385,7 @@ main:
 	and	s2,s0,s3
 	lw	a5,%lo(_ZN7ckernel13instrn_bufferE)(s4)
 	li	a4, 1912733696	# 72020000
-	add	a4,a4,s2
+	add	a4,s2,a4
 	sw	a4, 0(a5)	# Op(0x72) s(lr0)
 	addi	a4,s0,1
 	and	a4,a4,s3
@@ -1485,23 +1485,23 @@ main:
 	and	a5,a4,a5
 	li	a3, 2298478593	# 89000001
 	add	a3,a5,a3
-	li	a2,0
-	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
+	li	a1,0
+	sw	a3, 0(a1)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a3,a5,a3
-	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a3, 0(a1)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a3,a5,a3
-	sw	a3, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a3, 0(a1)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	li	a3, 2298478593	# 89000001
 	add	a5,a5,a3
-	sw	a5, 0(a2)	# Op(0x89) - d(lr0) s(lr0)
+	sw	a5, 0(a1)	# Op(0x89) - d(lr0) s(lr0)
 	TTNOP
 	TTNOP
 	SFPSTORE	0, L0, 2
@@ -1530,19 +1530,19 @@ main:
 	sw	s1,0(a5)
 	add	a0,a4,a0
 	addi	a1,a1,561
-	li	a2,-2113929216
+	li	a3,-2113929216
 	sw	a0,0(a5)
 	add	a1,a4,a1
-	addi	a2,a2,561
-	li	a3,-2097152000
-	sw	a1,0(a5)
-	add	a2,a4,a2
 	addi	a3,a3,561
-	li	t4,-1996488704
-	sw	a2,0(a5)
+	li	a2,-2097152000
+	sw	a1,0(a5)
 	add	a3,a4,a3
-	addi	t4,t4,561
+	addi	a2,a2,561
+	li	t4,-1996488704
 	sw	a3,0(a5)
+	add	a2,a4,a2
+	addi	t4,t4,561
+	sw	a2,0(a5)
 	add	a4,a4,t4
 	sw	a4,0(a5)
 	sw	t3,0(a5)
@@ -1552,8 +1552,8 @@ main:
 	sw	s1,0(a5)
 	sw	a0,0(a5)
 	sw	a1,0(a5)
-	sw	a2,0(a5)
 	sw	a3,0(a5)
+	sw	a2,0(a5)
 	sw	a4,0(a5)
 	sw	t3,0(a5)
 	sw	t1,0(a5)
@@ -1562,8 +1562,8 @@ main:
 	sw	s1,0(a5)
 	sw	a0,0(a5)
 	sw	a1,0(a5)
-	sw	a2,0(a5)
 	sw	a3,0(a5)
+	sw	a2,0(a5)
 	sw	a4,0(a5)
 	sw	t3,0(a5)
 	sw	t1,0(a5)
@@ -1572,55 +1572,55 @@ main:
 	sw	s1,0(a5)
 	sw	a0,0(a5)
 	sw	a1,0(a5)
-	sw	a2,0(a5)
-	addi	a2,s0,20
 	sw	a3,0(a5)
+	sw	a2,0(a5)
 	addi	a0,s0,10
-	and	a3,a2,s3
-	addi	s0,s0,30
+	addi	a3,s0,20
 	li	a2, 1882259456	# 70310000
+	addi	s0,s0,30
 	and	a0,a0,s3
+	and	a3,a3,s3
 	and	s0,s0,s3
 	add	s2,s2,a2
 	sw	a4,0(a5)
 	sw	s2, 0(a5)	# Op(0x70) - d(lr3)
 	lw	a1,%lo(_ZN7ckernel13instrn_bufferE)(s4)
-	li	a4, 1881210880	# 70210000
-	add	a4,a4,a0
-	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
+	li	a2, 1881210880	# 70210000
+	add	a2,a2,a0
+	sw	a2, 0(a1)	# Op(0x70) - d(lr2)
 	li	a5, 1880162304	# 70110000
-	add	a5,a5,a3
+	add	a5,a3,a5
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
-	li	a3, 1879113728	# 70010000
-	add	s0,s0,a3
-	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
+	li	a4, 1879113728	# 70010000
+	add	a4,a4,s0
+	sw	a4, 0(a1)	# Op(0x70) - d(lr0)
 	SFPSTORE	1, L3, 2
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
 	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
-	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
+	sw	a2, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
-	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
+	sw	a4, 0(a1)	# Op(0x70) - d(lr0)
 	SFPSTORE	1, L3, 2
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
 	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
-	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
+	sw	a2, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
-	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
+	sw	a4, 0(a1)	# Op(0x70) - d(lr0)
 	SFPSTORE	1, L3, 2
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
 	SFPSTORE	30, L0, 2
 	TTNOP
 	sw	s2, 0(a1)	# Op(0x70) - d(lr3)
-	sw	a4, 0(a1)	# Op(0x70) - d(lr2)
+	sw	a2, 0(a1)	# Op(0x70) - d(lr2)
 	sw	a5, 0(a1)	# Op(0x70) - d(lr1)
-	sw	s0, 0(a1)	# Op(0x70) - d(lr0)
+	sw	a4, 0(a1)	# Op(0x70) - d(lr0)
 	SFPSTORE	1, L3, 2
 	SFPSTORE	10, L2, 2
 	SFPSTORE	20, L1, 2
@@ -1645,4 +1645,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (GNU) 10.2.0"
+	.ident	"GCC: (gcdc243316e1) 12.2.0"
