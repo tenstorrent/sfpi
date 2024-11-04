@@ -1,3 +1,9 @@
-[submodule "tt-gcc"]
-	path = tt-gcc
-	url = git@github.com:tenstorrent/sfpi-tt-gcc
+[submodule "binutils"]
+	path = binutils
+	url = git@github.com:tenstorrent/sfpi-binutils.git
+[submodule "gcc"]
+	path = gcc
+	url = git@github.com:tenstorrent/sfpi-gcc.git
+[submodule "newlib"]
+	path = newlib
+	url = https://sourceware.org/git/newlib-cygwin.git
