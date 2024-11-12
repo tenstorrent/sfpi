@@ -67,7 +67,27 @@ https://tenstorrent-metal.github.io/tt-metal/latest/tt_metal/apis/kernel_apis/sf
 5) Making the release available (from github)
 
   Upload the tarball and md5 hash as a binary file added to a git
-  hub. Users may automate downloading by ... FIXME
+  hub. Users may automate downloading by augmenting their cmake `CMakeLists.txt` file with something like:
+```
+include(FetchContent)
+FetchContent_Declare(
+    sfpi
+    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-release.tgz
+    URL_HASH MD5=$HASH
+    SOURCE_DIR $INSTALL_LOCATION
+)
+FetchContent_MakeAvailable(sfpi)
+```
+
+where:
+* $REPO is the repository containing the release (`tenstorrent/sfpi` for tenstorrent releases)
+* $VERSION is the version to download
+* $HASH is the md5 hash of the tarball
+* $INSTALL_LOCATION is where to place the tarball's contents.
+
+Refer to cmake documentation for further information about
+`FetchContent`, `FetchContent_Declare` and
+`FetchContent_MakeAvailable`.
 
 8) **WARNING: This section is out of date:**
 
