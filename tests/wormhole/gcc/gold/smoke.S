@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z5smokev
 	.type	_Z5smokev, @function
 _Z5smokev:
@@ -81,7 +81,7 @@ _Z5smokev:
 	SFPCONFIG	0, 0, 0
 	SFPLUT	L3, 0
 	.size	_Z5smokev, .-_Z5smokev
-	.align	1
+	.align	2
 	.globl	_Z10smoke_livev
 	.type	_Z10smoke_livev, @function
 _Z10smoke_livev:
@@ -115,7 +115,7 @@ _Z10smoke_livev:
 	SFPSTOCHRND	L0, L0, L1, 1, 1, 0
 	ret
 	.size	_Z10smoke_livev, .-_Z10smoke_livev
-	.align	1
+	.align	2
 	.globl	_Z7smokierv
 	.type	_Z7smokierv, @function
 _Z7smokierv:
@@ -135,7 +135,7 @@ _Z7smokierv:
 	SFPSTORE	20, L3, 0, 2
 	SFPMOV	L2, L1, 2
 	.size	_Z7smokierv, .-_Z7smokierv
-	.align	1
+	.align	2
 	.globl	_Z8smokiestv
 	.type	_Z8smokiestv, @function
 _Z8smokiestv:
@@ -145,7 +145,7 @@ _Z8smokiestv:
 	SFPSTORE	6, L0, 0, 2
 	ret
 	.size	_Z8smokiestv, .-_Z8smokiestv
-	.align	1
+	.align	2
 	.globl	_Z8assignlrv
 	.type	_Z8assignlrv, @function
 _Z8assignlrv:
@@ -168,7 +168,7 @@ _Z8assignlrv:
 	ret
 	.size	_Z8assignlrv, .-_Z8assignlrv
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -187,4 +187,4 @@ main:
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

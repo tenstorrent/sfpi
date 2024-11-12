@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.type	_Z13calculate_logILb1ELb0EEvm.isra.0, @function
 _Z13calculate_logILb1ELb0EEvm.isra.0:
 	TTREPLAY	0, 21, 1, 1
@@ -38,7 +38,7 @@ _Z13calculate_logILb1ELb0EEvm.isra.0:
 	TTREPLAY	0, 21, 0, 0
 	ret
 	.size	_Z13calculate_logILb1ELb0EEvm.isra.0, .-_Z13calculate_logILb1ELb0EEvm.isra.0
-	.align	1
+	.align	2
 	.type	_Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0, @function
 _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	TTREPLAY	0, 10, 1, 1
@@ -61,7 +61,7 @@ _Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0:
 	TTREPLAY	0, 10, 0, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb1ELb0EEvt.isra.0
-	.align	1
+	.align	2
 	.type	_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0, @function
 _Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0:
 	TTREPLAY	0, 7, 1, 1
@@ -81,7 +81,7 @@ _Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0:
 	TTREPLAY	0, 7, 0, 0
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb1ELb0ELb0EEvt.isra.0
-	.align	1
+	.align	2
 	.type	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, @function
 _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	TTREPLAY	0, 32, 1, 1
@@ -294,7 +294,7 @@ _Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0:
 	TTINCRWC	0, 2, 0, 0
 	ret
 	.size	_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb1ELb0EEvt.isra.0
-	.align	1
+	.align	2
 	.type	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, @function
 _Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
 	TTREPLAY	0, 32, 1, 1
@@ -508,7 +508,7 @@ _Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0:
 	ret
 	.size	_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0, .-_Z21calculate_exponentialILb0ELb0ELb0EEvt.isra.0
 	.section	.text._Z14calculate_compILb0EL8SfpuType8EEvm,"axG",@progbits,_Z14calculate_compILb0EL8SfpuType8EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_compILb0EL8SfpuType8EEvm
 	.type	_Z14calculate_compILb0EL8SfpuType8EEvm, @function
 _Z14calculate_compILb0EL8SfpuType8EEvm:
@@ -552,7 +552,7 @@ _Z14calculate_compILb0EL8SfpuType8EEvm:
 	ret
 	.size	_Z14calculate_compILb0EL8SfpuType8EEvm, .-_Z14calculate_compILb0EL8SfpuType8EEvm
 	.section	.text._Z14calculate_compILb0EL8SfpuType10EEvm,"axG",@progbits,_Z14calculate_compILb0EL8SfpuType10EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_compILb0EL8SfpuType10EEvm
 	.type	_Z14calculate_compILb0EL8SfpuType10EEvm, @function
 _Z14calculate_compILb0EL8SfpuType10EEvm:
@@ -596,7 +596,7 @@ _Z14calculate_compILb0EL8SfpuType10EEvm:
 	ret
 	.size	_Z14calculate_compILb0EL8SfpuType10EEvm, .-_Z14calculate_compILb0EL8SfpuType10EEvm
 	.section	.text._Z15calculate_clampILb0EEvmmm,"axG",@progbits,_Z15calculate_clampILb0EEvmmm,comdat
-	.align	1
+	.align	2
 	.weak	_Z15calculate_clampILb0EEvmmm
 	.type	_Z15calculate_clampILb0EEvmmm, @function
 _Z15calculate_clampILb0EEvmmm:
@@ -667,7 +667,7 @@ _Z15calculate_clampILb0EEvmmm:
 	ret
 	.size	_Z15calculate_clampILb0EEvmmm, .-_Z15calculate_clampILb0EEvmmm
 	.section	.text._Z13calculate_absILb0EEvv,"axG",@progbits,_Z13calculate_absILb0EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z13calculate_absILb0EEvv
 	.type	_Z13calculate_absILb0EEvv, @function
 _Z13calculate_absILb0EEvv:
@@ -686,7 +686,7 @@ _Z13calculate_absILb0EEvv:
 	ret
 	.size	_Z13calculate_absILb0EEvv, .-_Z13calculate_absILb0EEvv
 	.section	.text._Z14calculate_signILb0EEvm,"axG",@progbits,_Z14calculate_signILb0EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_signILb0EEvm
 	.type	_Z14calculate_signILb0EEvm, @function
 _Z14calculate_signILb0EEvm:
@@ -732,7 +732,7 @@ _Z14calculate_signILb0EEvm:
 	ret
 	.size	_Z14calculate_signILb0EEvm, .-_Z14calculate_signILb0EEvm
 	.section	.text._Z17calculate_sigmoidILb0EEvv,"axG",@progbits,_Z17calculate_sigmoidILb0EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z17calculate_sigmoidILb0EEvv
 	.type	_Z17calculate_sigmoidILb0EEvv, @function
 _Z17calculate_sigmoidILb0EEvv:
@@ -754,7 +754,7 @@ _Z17calculate_sigmoidILb0EEvv:
 	ret
 	.size	_Z17calculate_sigmoidILb0EEvv, .-_Z17calculate_sigmoidILb0EEvv
 	.section	.text._Z14calculate_tanhILb1EEvv,"axG",@progbits,_Z14calculate_tanhILb1EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_tanhILb1EEvv
 	.type	_Z14calculate_tanhILb1EEvv, @function
 _Z14calculate_tanhILb1EEvv:
@@ -774,7 +774,7 @@ _Z14calculate_tanhILb1EEvv:
 	ret
 	.size	_Z14calculate_tanhILb1EEvv, .-_Z14calculate_tanhILb1EEvv
 	.section	.text._Z18calculate_hardtanhILb0EEvmmm,"axG",@progbits,_Z18calculate_hardtanhILb0EEvmmm,comdat
-	.align	1
+	.align	2
 	.weak	_Z18calculate_hardtanhILb0EEvmmm
 	.type	_Z18calculate_hardtanhILb0EEvmmm, @function
 _Z18calculate_hardtanhILb0EEvmmm:
@@ -825,7 +825,7 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	ret
 	.size	_Z18calculate_hardtanhILb0EEvmmm, .-_Z18calculate_hardtanhILb0EEvmmm
 	.section	.text._Z15calculate_lreluILb0EEvm,"axG",@progbits,_Z15calculate_lreluILb0EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z15calculate_lreluILb0EEvm
 	.type	_Z15calculate_lreluILb0EEvm, @function
 _Z15calculate_lreluILb0EEvm:
@@ -853,7 +853,7 @@ _Z15calculate_lreluILb0EEvm:
 	ret
 	.size	_Z15calculate_lreluILb0EEvm, .-_Z15calculate_lreluILb0EEvm
 	.section	.text._Z25calculate_tanh_derivativeILb0ELi0EEvv,"axG",@progbits,_Z25calculate_tanh_derivativeILb0ELi0EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z25calculate_tanh_derivativeILb0ELi0EEvv
 	.type	_Z25calculate_tanh_derivativeILb0ELi0EEvv, @function
 _Z25calculate_tanh_derivativeILb0ELi0EEvv:
@@ -876,7 +876,7 @@ _Z25calculate_tanh_derivativeILb0ELi0EEvv:
 	ret
 	.size	_Z25calculate_tanh_derivativeILb0ELi0EEvv, .-_Z25calculate_tanh_derivativeILb0ELi0EEvv
 	.section	.text._Z25calculate_tanh_derivativeILb0ELi1EEvv,"axG",@progbits,_Z25calculate_tanh_derivativeILb0ELi1EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z25calculate_tanh_derivativeILb0ELi1EEvv
 	.type	_Z25calculate_tanh_derivativeILb0ELi1EEvv, @function
 _Z25calculate_tanh_derivativeILb0ELi1EEvv:
@@ -897,7 +897,7 @@ _Z25calculate_tanh_derivativeILb0ELi1EEvv:
 	ret
 	.size	_Z25calculate_tanh_derivativeILb0ELi1EEvv, .-_Z25calculate_tanh_derivativeILb0ELi1EEvv
 	.section	.text._Z15calculate_powerILb1EEvm,"axG",@progbits,_Z15calculate_powerILb1EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z15calculate_powerILb1EEvm
 	.type	_Z15calculate_powerILb1EEvm, @function
 _Z15calculate_powerILb1EEvm:
@@ -922,7 +922,7 @@ _Z15calculate_powerILb1EEvm:
 	ret
 	.size	_Z15calculate_powerILb1EEvm, .-_Z15calculate_powerILb1EEvm
 	.section	.text._Z14calculate_geluILb0EEvv,"axG",@progbits,_Z14calculate_geluILb0EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_geluILb0EEvv
 	.type	_Z14calculate_geluILb0EEvv, @function
 _Z14calculate_geluILb0EEvv:
@@ -952,7 +952,7 @@ _Z14calculate_geluILb0EEvv:
 	ret
 	.size	_Z14calculate_geluILb0EEvv, .-_Z14calculate_geluILb0EEvv
 	.section	.text._Z14calculate_geluILb1EEvv,"axG",@progbits,_Z14calculate_geluILb1EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_geluILb1EEvv
 	.type	_Z14calculate_geluILb1EEvv, @function
 _Z14calculate_geluILb1EEvv:
@@ -983,7 +983,7 @@ _Z14calculate_geluILb1EEvv:
 	ret
 	.size	_Z14calculate_geluILb1EEvv, .-_Z14calculate_geluILb1EEvv
 	.section	.text._Z25calculate_gelu_derivativeILb0EEvv,"axG",@progbits,_Z25calculate_gelu_derivativeILb0EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z25calculate_gelu_derivativeILb0EEvv
 	.type	_Z25calculate_gelu_derivativeILb0EEvv, @function
 _Z25calculate_gelu_derivativeILb0EEvv:
@@ -1310,7 +1310,7 @@ _Z25calculate_gelu_derivativeILb0EEvv:
 	ret
 	.size	_Z25calculate_gelu_derivativeILb0EEvv, .-_Z25calculate_gelu_derivativeILb0EEvv
 	.section	.text._Z14calculate_sqrtILb0ELi4ELi2EEvv,"axG",@progbits,_Z14calculate_sqrtILb0ELi4ELi2EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_sqrtILb0ELi4ELi2EEvv
 	.type	_Z14calculate_sqrtILb0ELi4ELi2EEvv, @function
 _Z14calculate_sqrtILb0ELi4ELi2EEvv:
@@ -1351,7 +1351,7 @@ _Z14calculate_sqrtILb0ELi4ELi2EEvv:
 	ret
 	.size	_Z14calculate_sqrtILb0ELi4ELi2EEvv, .-_Z14calculate_sqrtILb0ELi4ELi2EEvv
 	.section	.text._Z14calculate_sqrtILb1ELi4ELi2EEvv,"axG",@progbits,_Z14calculate_sqrtILb1ELi4ELi2EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z14calculate_sqrtILb1ELi4ELi2EEvv
 	.type	_Z14calculate_sqrtILb1ELi4ELi2EEvv, @function
 _Z14calculate_sqrtILb1ELi4ELi2EEvv:
@@ -1371,7 +1371,7 @@ _Z14calculate_sqrtILb1ELi4ELi2EEvv:
 	ret
 	.size	_Z14calculate_sqrtILb1ELi4ELi2EEvv, .-_Z14calculate_sqrtILb1ELi4ELi2EEvv
 	.section	.text._Z21calculate_exponentialILb0ELb0ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb0ELb0ELb1EEvt,comdat
-	.align	1
+	.align	2
 	.weak	_Z21calculate_exponentialILb0ELb0ELb1EEvt
 	.type	_Z21calculate_exponentialILb0ELb0ELb1EEvt, @function
 _Z21calculate_exponentialILb0ELb0ELb1EEvt:
@@ -1614,7 +1614,7 @@ _Z21calculate_exponentialILb0ELb0ELb1EEvt:
 	ret
 	.size	_Z21calculate_exponentialILb0ELb0ELb1EEvt, .-_Z21calculate_exponentialILb0ELb0ELb1EEvt
 	.section	.text._Z21calculate_exponentialILb0ELb1ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb0ELb1ELb1EEvt,comdat
-	.align	1
+	.align	2
 	.weak	_Z21calculate_exponentialILb0ELb1ELb1EEvt
 	.type	_Z21calculate_exponentialILb0ELb1ELb1EEvt, @function
 _Z21calculate_exponentialILb0ELb1ELb1EEvt:
@@ -1857,7 +1857,7 @@ _Z21calculate_exponentialILb0ELb1ELb1EEvt:
 	ret
 	.size	_Z21calculate_exponentialILb0ELb1ELb1EEvt, .-_Z21calculate_exponentialILb0ELb1ELb1EEvt
 	.section	.text._Z21calculate_exponentialILb1ELb0ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb1ELb0ELb1EEvt,comdat
-	.align	1
+	.align	2
 	.weak	_Z21calculate_exponentialILb1ELb0ELb1EEvt
 	.type	_Z21calculate_exponentialILb1ELb0ELb1EEvt, @function
 _Z21calculate_exponentialILb1ELb0ELb1EEvt:
@@ -1886,7 +1886,7 @@ _Z21calculate_exponentialILb1ELb0ELb1EEvt:
 	ret
 	.size	_Z21calculate_exponentialILb1ELb0ELb1EEvt, .-_Z21calculate_exponentialILb1ELb0ELb1EEvt
 	.section	.text._Z21calculate_exponentialILb1ELb1ELb1EEvt,"axG",@progbits,_Z21calculate_exponentialILb1ELb1ELb1EEvt,comdat
-	.align	1
+	.align	2
 	.weak	_Z21calculate_exponentialILb1ELb1ELb1EEvt
 	.type	_Z21calculate_exponentialILb1ELb1ELb1EEvt, @function
 _Z21calculate_exponentialILb1ELb1ELb1EEvt:
@@ -1918,7 +1918,7 @@ _Z21calculate_exponentialILb1ELb1ELb1EEvt:
 	ret
 	.size	_Z21calculate_exponentialILb1ELb1ELb1EEvt, .-_Z21calculate_exponentialILb1ELb1ELb1EEvt
 	.section	.text._Z13calculate_logILb1ELb1EEvm,"axG",@progbits,_Z13calculate_logILb1ELb1EEvm,comdat
-	.align	1
+	.align	2
 	.weak	_Z13calculate_logILb1ELb1EEvm
 	.type	_Z13calculate_logILb1ELb1EEvm, @function
 _Z13calculate_logILb1ELb1EEvm:
@@ -1962,7 +1962,7 @@ _Z13calculate_logILb1ELb1EEvm:
 	ret
 	.size	_Z13calculate_logILb1ELb1EEvm, .-_Z13calculate_logILb1ELb1EEvm
 	.section	.text._Z20calculate_reciprocalILb0ELi4EEvv,"axG",@progbits,_Z20calculate_reciprocalILb0ELi4EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z20calculate_reciprocalILb0ELi4EEvv
 	.type	_Z20calculate_reciprocalILb0ELi4EEvv, @function
 _Z20calculate_reciprocalILb0ELi4EEvv:
@@ -2000,7 +2000,7 @@ _Z20calculate_reciprocalILb0ELi4EEvv:
 	ret
 	.size	_Z20calculate_reciprocalILb0ELi4EEvv, .-_Z20calculate_reciprocalILb0ELi4EEvv
 	.section	.text._Z20calculate_reciprocalILb1ELi4EEvv,"axG",@progbits,_Z20calculate_reciprocalILb1ELi4EEvv,comdat
-	.align	1
+	.align	2
 	.weak	_Z20calculate_reciprocalILb1ELi4EEvv
 	.type	_Z20calculate_reciprocalILb1ELi4EEvv, @function
 _Z20calculate_reciprocalILb1ELi4EEvv:
@@ -2034,7 +2034,7 @@ _Z20calculate_reciprocalILb1ELi4EEvv:
 	ret
 	.size	_Z20calculate_reciprocalILb1ELi4EEvv, .-_Z20calculate_reciprocalILb1ELi4EEvv
 	.section	.text._Z17calculate_dropoutILb0EEvmm,"axG",@progbits,_Z17calculate_dropoutILb0EEvmm,comdat
-	.align	1
+	.align	2
 	.weak	_Z17calculate_dropoutILb0EEvmm
 	.type	_Z17calculate_dropoutILb0EEvmm, @function
 _Z17calculate_dropoutILb0EEvmm:
@@ -2079,7 +2079,7 @@ _Z17calculate_dropoutILb0EEvmm:
 	ret
 	.size	_Z17calculate_dropoutILb0EEvmm, .-_Z17calculate_dropoutILb0EEvmm
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -2307,4 +2307,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

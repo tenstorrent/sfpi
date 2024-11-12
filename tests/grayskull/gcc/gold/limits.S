@@ -5,7 +5,7 @@
 	.attribute stack_align, 16
 	.text
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -161,4 +161,4 @@ main:
 	li	a0,0
 	ret
 	.size	main, .-main
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

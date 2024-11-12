@@ -4,49 +4,49 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z17load_baseline_uhiPt
 	.type	_Z17load_baseline_uhiPt, @function
 _Z17load_baseline_uhiPt:
 	lhu	a0,0(a0)
 	ret
 	.size	_Z17load_baseline_uhiPt, .-_Z17load_baseline_uhiPt
-	.align	1
+	.align	2
 	.globl	_Z17load_baseline_uqiPh
 	.type	_Z17load_baseline_uqiPh, @function
 _Z17load_baseline_uqiPh:
 	lbu	a0,0(a0)
 	ret
 	.size	_Z17load_baseline_uqiPh, .-_Z17load_baseline_uqiPh
-	.align	1
+	.align	2
 	.globl	_Z16load_baseline_hiPs
 	.type	_Z16load_baseline_hiPs, @function
 _Z16load_baseline_hiPs:
 	lh	a0,0(a0)
 	ret
 	.size	_Z16load_baseline_hiPs, .-_Z16load_baseline_hiPs
-	.align	1
+	.align	2
 	.globl	_Z17load_baseline_uqiPc
 	.type	_Z17load_baseline_uqiPc, @function
 _Z17load_baseline_uqiPc:
 	lbu	a0,0(a0)
 	ret
 	.size	_Z17load_baseline_uqiPc, .-_Z17load_baseline_uqiPc
-	.align	1
+	.align	2
 	.globl	_Z8load_uhiPVt
 	.type	_Z8load_uhiPVt, @function
 _Z8load_uhiPVt:
 	lhu	a0,0(a0)
 	ret
 	.size	_Z8load_uhiPVt, .-_Z8load_uhiPVt
-	.align	1
+	.align	2
 	.globl	_Z8load_uqiPVh
 	.type	_Z8load_uqiPVh, @function
 _Z8load_uqiPVh:
 	lbu	a0,0(a0)
 	ret
 	.size	_Z8load_uqiPVh, .-_Z8load_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z7load_hiPVs
 	.type	_Z7load_hiPVs, @function
 _Z7load_hiPVs:
@@ -55,14 +55,14 @@ _Z7load_hiPVs:
 	srai	a0,a0,16
 	ret
 	.size	_Z7load_hiPVs, .-_Z7load_hiPVs
-	.align	1
+	.align	2
 	.globl	_Z7load_qiPVc
 	.type	_Z7load_qiPVc, @function
 _Z7load_qiPVc:
 	lbu	a0,0(a0)
 	ret
 	.size	_Z7load_qiPVc, .-_Z7load_qiPVc
-	.align	1
+	.align	2
 	.globl	_Z18store_baseline_uhiPt
 	.type	_Z18store_baseline_uhiPt, @function
 _Z18store_baseline_uhiPt:
@@ -74,7 +74,7 @@ _Z18store_baseline_uhiPt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z18store_baseline_uhiPt, .-_Z18store_baseline_uhiPt
-	.align	1
+	.align	2
 	.globl	_Z9store_uhiPVt
 	.type	_Z9store_uhiPVt, @function
 _Z9store_uhiPVt:
@@ -86,7 +86,7 @@ _Z9store_uhiPVt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z9store_uhiPVt, .-_Z9store_uhiPVt
-	.align	1
+	.align	2
 	.globl	_Z9store_uqiPVh
 	.type	_Z9store_uqiPVh, @function
 _Z9store_uqiPVh:
@@ -98,7 +98,7 @@ _Z9store_uqiPVh:
 	lbu	zero,0(a4)
 	ret
 	.size	_Z9store_uqiPVh, .-_Z9store_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z8keep_uqiPVh
 	.type	_Z8keep_uqiPVh, @function
 _Z8keep_uqiPVh:
@@ -111,7 +111,7 @@ _Z8keep_uqiPVh:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z8keep_uqiPVh, .-_Z8keep_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z16double_store_uhiPVt
 	.type	_Z16double_store_uhiPVt, @function
 _Z16double_store_uhiPVt:
@@ -124,7 +124,7 @@ _Z16double_store_uhiPVt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z16double_store_uhiPVt, .-_Z16double_store_uhiPVt
-	.align	1
+	.align	2
 	.globl	_Z20double_store_uhi_retPVt
 	.type	_Z20double_store_uhi_retPVt, @function
 _Z20double_store_uhi_retPVt:
@@ -139,7 +139,7 @@ _Z20double_store_uhi_retPVt:
 	lhu	zero,0(a5)
 	ret
 	.size	_Z20double_store_uhi_retPVt, .-_Z20double_store_uhi_retPVt
-	.align	1
+	.align	2
 	.globl	_Z20double_store_uhi_usePVt
 	.type	_Z20double_store_uhi_usePVt, @function
 _Z20double_store_uhi_usePVt:
@@ -154,7 +154,7 @@ _Z20double_store_uhi_usePVt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z20double_store_uhi_usePVt, .-_Z20double_store_uhi_usePVt
-	.align	1
+	.align	2
 	.globl	_Z21double_store_uhi_use2PVtt
 	.type	_Z21double_store_uhi_use2PVtt, @function
 _Z21double_store_uhi_use2PVtt:
@@ -171,7 +171,7 @@ _Z21double_store_uhi_use2PVtt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z21double_store_uhi_use2PVtt, .-_Z21double_store_uhi_use2PVtt
-	.align	1
+	.align	2
 	.globl	_Z16double_store_uqiPVh
 	.type	_Z16double_store_uqiPVh, @function
 _Z16double_store_uqiPVh:
@@ -186,7 +186,7 @@ _Z16double_store_uqiPVh:
 	lbu	zero,0(a4)
 	ret
 	.size	_Z16double_store_uqiPVh, .-_Z16double_store_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z16triple_store_uhiPVt
 	.type	_Z16triple_store_uhiPVt, @function
 _Z16triple_store_uhiPVt:
@@ -200,7 +200,7 @@ _Z16triple_store_uhiPVt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z16triple_store_uhiPVt, .-_Z16triple_store_uhiPVt
-	.align	1
+	.align	2
 	.globl	_Z16triple_store_uqiPVh
 	.type	_Z16triple_store_uqiPVh, @function
 _Z16triple_store_uqiPVh:
@@ -218,7 +218,7 @@ _Z16triple_store_uqiPVh:
 	lbu	zero,0(a4)
 	ret
 	.size	_Z16triple_store_uqiPVh, .-_Z16triple_store_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z17replace_write_uhiPVt
 	.type	_Z17replace_write_uhiPVt, @function
 _Z17replace_write_uhiPVt:
@@ -230,7 +230,7 @@ _Z17replace_write_uhiPVt:
 	sw	a5,0(a4)
 	ret
 	.size	_Z17replace_write_uhiPVt, .-_Z17replace_write_uhiPVt
-	.align	1
+	.align	2
 	.globl	_Z17replace_write_uqiPVh
 	.type	_Z17replace_write_uqiPVh, @function
 _Z17replace_write_uqiPVh:
@@ -241,7 +241,7 @@ _Z17replace_write_uqiPVh:
 	sw	a5,0(a4)
 	ret
 	.size	_Z17replace_write_uqiPVh, .-_Z17replace_write_uqiPVh
-	.align	1
+	.align	2
 	.globl	_Z14keep_later_usePVt
 	.type	_Z14keep_later_usePVt, @function
 _Z14keep_later_usePVt:
@@ -255,7 +255,7 @@ _Z14keep_later_usePVt:
 	lhu	zero,0(a5)
 	ret
 	.size	_Z14keep_later_usePVt, .-_Z14keep_later_usePVt
-	.align	1
+	.align	2
 	.globl	_Z15keep_later_use2Pt
 	.type	_Z15keep_later_use2Pt, @function
 _Z15keep_later_use2Pt:
@@ -269,7 +269,7 @@ _Z15keep_later_use2Pt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z15keep_later_use2Pt, .-_Z15keep_later_use2Pt
-	.align	1
+	.align	2
 	.globl	_Z15keep_later_use3PVt
 	.type	_Z15keep_later_use3PVt, @function
 _Z15keep_later_use3PVt:
@@ -284,7 +284,7 @@ _Z15keep_later_use3PVt:
 	lhu	zero,0(a5)
 	ret
 	.size	_Z15keep_later_use3PVt, .-_Z15keep_later_use3PVt
-	.align	1
+	.align	2
 	.globl	_Z7keep_bbPVti
 	.type	_Z7keep_bbPVti, @function
 _Z7keep_bbPVti:
@@ -305,7 +305,7 @@ _Z7keep_bbPVti:
 .L27:
 	ret
 	.size	_Z7keep_bbPVti, .-_Z7keep_bbPVti
-	.align	1
+	.align	2
 	.globl	_Z15keep_word_writePVt
 	.type	_Z15keep_word_writePVt, @function
 _Z15keep_word_writePVt:
@@ -318,7 +318,7 @@ _Z15keep_word_writePVt:
 	sw	a5,0(a4)
 	ret
 	.size	_Z15keep_word_writePVt, .-_Z15keep_word_writePVt
-	.align	1
+	.align	2
 	.globl	_Z15keep_word_writePVh
 	.type	_Z15keep_word_writePVh, @function
 _Z15keep_word_writePVh:
@@ -330,7 +330,7 @@ _Z15keep_word_writePVh:
 	sw	a5,0(a4)
 	ret
 	.size	_Z15keep_word_writePVh, .-_Z15keep_word_writePVh
-	.align	1
+	.align	2
 	.globl	_Z17replace_contortedPVt
 	.type	_Z17replace_contortedPVt, @function
 _Z17replace_contortedPVt:
@@ -340,7 +340,7 @@ _Z17replace_contortedPVt:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z17replace_contortedPVt, .-_Z17replace_contortedPVt
-	.align	1
+	.align	2
 	.globl	_Z14keep_word_loadPVj
 	.type	_Z14keep_word_loadPVj, @function
 _Z14keep_word_loadPVj:
@@ -352,7 +352,7 @@ _Z14keep_word_loadPVj:
 	lhu	zero,0(a4)
 	ret
 	.size	_Z14keep_word_loadPVj, .-_Z14keep_word_loadPVj
-	.align	1
+	.align	2
 	.globl	_Z23replace_word_load_storePVj
 	.type	_Z23replace_word_load_storePVj, @function
 _Z23replace_word_load_storePVj:
@@ -363,7 +363,7 @@ _Z23replace_word_load_storePVj:
 	lhu	zero,0(a5)
 	ret
 	.size	_Z23replace_word_load_storePVj, .-_Z23replace_word_load_storePVj
-	.align	1
+	.align	2
 	.globl	_Z18keep_word_load_retPVj
 	.type	_Z18keep_word_load_retPVj, @function
 _Z18keep_word_load_retPVj:
@@ -376,7 +376,7 @@ _Z18keep_word_load_retPVj:
 	lhu	zero,0(a5)
 	ret
 	.size	_Z18keep_word_load_retPVj, .-_Z18keep_word_load_retPVj
-	.align	1
+	.align	2
 	.globl	_Z8keep_retPVt
 	.type	_Z8keep_retPVt, @function
 _Z8keep_retPVt:
@@ -386,7 +386,7 @@ _Z8keep_retPVt:
 	srli	a0,a0,16
 	ret
 	.size	_Z8keep_retPVt, .-_Z8keep_retPVt
-	.align	1
+	.align	2
 	.globl	_Z9keep_ret2PVt
 	.type	_Z9keep_ret2PVt, @function
 _Z9keep_ret2PVt:
@@ -399,7 +399,7 @@ _Z9keep_ret2PVt:
 	srli	a0,a0,16
 	ret
 	.size	_Z9keep_ret2PVt, .-_Z9keep_ret2PVt
-	.align	1
+	.align	2
 	.globl	_Z13replace_paramPVjPt
 	.type	_Z13replace_paramPVjPt, @function
 _Z13replace_paramPVjPt:
@@ -408,7 +408,7 @@ _Z13replace_paramPVjPt:
 	lhu	zero,0(a1)
 	ret
 	.size	_Z13replace_paramPVjPt, .-_Z13replace_paramPVjPt
-	.align	1
+	.align	2
 	.globl	_Z10real_worldPVt
 	.type	_Z10real_worldPVt, @function
 _Z10real_worldPVt:
@@ -421,7 +421,7 @@ _Z10real_worldPVt:
 	seqz	a0,a0
 	ret
 	.size	_Z10real_worldPVt, .-_Z10real_worldPVt
-	.align	1
+	.align	2
 	.globl	_Z14mask_and_shiftt
 	.type	_Z14mask_and_shiftt, @function
 _Z14mask_and_shiftt:
@@ -430,7 +430,7 @@ _Z14mask_and_shiftt:
 	srli	a0,a0,12
 	ret
 	.size	_Z14mask_and_shiftt, .-_Z14mask_and_shiftt
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift2t
 	.type	_Z15mask_and_shift2t, @function
 _Z15mask_and_shift2t:
@@ -441,7 +441,7 @@ _Z15mask_and_shift2t:
 	add	a0,a5,a0
 	ret
 	.size	_Z15mask_and_shift2t, .-_Z15mask_and_shift2t
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift3s
 	.type	_Z15mask_and_shift3s, @function
 _Z15mask_and_shift3s:
@@ -450,7 +450,7 @@ _Z15mask_and_shift3s:
 	srai	a0,a0,12
 	ret
 	.size	_Z15mask_and_shift3s, .-_Z15mask_and_shift3s
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift4s
 	.type	_Z15mask_and_shift4s, @function
 _Z15mask_and_shift4s:
@@ -461,7 +461,7 @@ _Z15mask_and_shift4s:
 	add	a0,a5,a0
 	ret
 	.size	_Z15mask_and_shift4s, .-_Z15mask_and_shift4s
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift5t
 	.type	_Z15mask_and_shift5t, @function
 _Z15mask_and_shift5t:
@@ -471,7 +471,7 @@ _Z15mask_and_shift5t:
 	srli	a0,a0,16
 	ret
 	.size	_Z15mask_and_shift5t, .-_Z15mask_and_shift5t
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift6t
 	.type	_Z15mask_and_shift6t, @function
 _Z15mask_and_shift6t:
@@ -482,7 +482,7 @@ _Z15mask_and_shift6t:
 	srli	a0,a0,16
 	ret
 	.size	_Z15mask_and_shift6t, .-_Z15mask_and_shift6t
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift7s
 	.type	_Z15mask_and_shift7s, @function
 _Z15mask_and_shift7s:
@@ -493,7 +493,7 @@ _Z15mask_and_shift7s:
 	srai	a0,a0,16
 	ret
 	.size	_Z15mask_and_shift7s, .-_Z15mask_and_shift7s
-	.align	1
+	.align	2
 	.globl	_Z15mask_and_shift8s
 	.type	_Z15mask_and_shift8s, @function
 _Z15mask_and_shift8s:
@@ -505,7 +505,7 @@ _Z15mask_and_shift8s:
 	ret
 	.size	_Z15mask_and_shift8s, .-_Z15mask_and_shift8s
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -603,4 +603,4 @@ dstuhi:
 	.size	dstuqi, 4
 dstuqi:
 	.word	-4370
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

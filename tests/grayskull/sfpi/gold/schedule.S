@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z9basic_nopi
 	.type	_Z9basic_nopi, @function
 _Z9basic_nopi:
@@ -41,7 +41,7 @@ _Z9basic_nopi:
 	sw	a5, 0(a4)	# Op(0x70) - d(lr0)
 	ret
 	.size	_Z9basic_nopi, .-_Z9basic_nopi
-	.align	1
+	.align	2
 	.globl	_Z18basic_incrwc_nonopi
 	.type	_Z18basic_incrwc_nonopi, @function
 _Z18basic_incrwc_nonopi:
@@ -78,7 +78,7 @@ _Z18basic_incrwc_nonopi:
 	sw	a5, 0(a4)	# Op(0x70) - d(lr0)
 	ret
 	.size	_Z18basic_incrwc_nonopi, .-_Z18basic_incrwc_nonopi
-	.align	1
+	.align	2
 	.globl	_Z8loop_nopv
 	.type	_Z8loop_nopv, @function
 _Z8loop_nopv:
@@ -94,7 +94,7 @@ _Z8loop_nopv:
 	bne	a5,zero,.L5
 	ret
 	.size	_Z8loop_nopv, .-_Z8loop_nopv
-	.align	1
+	.align	2
 	.globl	_Z10loop_nonopv
 	.type	_Z10loop_nonopv, @function
 _Z10loop_nonopv:
@@ -110,7 +110,7 @@ _Z10loop_nonopv:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z10loop_nonopv, .-_Z10loop_nonopv
-	.align	1
+	.align	2
 	.globl	_Z8loop_nopi
 	.type	_Z8loop_nopi, @function
 _Z8loop_nopi:
@@ -141,4 +141,4 @@ _Z8loop_nopi:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

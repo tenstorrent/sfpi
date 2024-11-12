@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z10simple_yesv
 	.type	_Z10simple_yesv, @function
 _Z10simple_yesv:
@@ -22,7 +22,7 @@ _Z10simple_yesv:
 	TTNOP
 	ret
 	.size	_Z10simple_yesv, .-_Z10simple_yesv
-	.align	1
+	.align	2
 	.globl	_Z10double_yesv
 	.type	_Z10double_yesv, @function
 _Z10double_yesv:
@@ -45,7 +45,7 @@ _Z10double_yesv:
 	TTNOP
 	ret
 	.size	_Z10double_yesv, .-_Z10double_yesv
-	.align	1
+	.align	2
 	.globl	_Z10both_noyesv
 	.type	_Z10both_noyesv, @function
 _Z10both_noyesv:
@@ -71,7 +71,7 @@ _Z10both_noyesv:
 	TTNOP
 	ret
 	.size	_Z10both_noyesv, .-_Z10both_noyesv
-	.align	1
+	.align	2
 	.globl	_Z15consecutive_yesv
 	.type	_Z15consecutive_yesv, @function
 _Z15consecutive_yesv:
@@ -100,7 +100,7 @@ _Z15consecutive_yesv:
 	TTNOP
 	ret
 	.size	_Z15consecutive_yesv, .-_Z15consecutive_yesv
-	.align	1
+	.align	2
 	.globl	_Z8else_yesv
 	.type	_Z8else_yesv, @function
 _Z8else_yesv:
@@ -139,7 +139,7 @@ _Z8else_yesv:
 	TTNOP
 	ret
 	.size	_Z8else_yesv, .-_Z8else_yesv
-	.align	1
+	.align	2
 	.globl	_Z9block_yesv
 	.type	_Z9block_yesv, @function
 _Z9block_yesv:
@@ -158,7 +158,7 @@ _Z9block_yesv:
 	TTNOP
 	ret
 	.size	_Z9block_yesv, .-_Z9block_yesv
-	.align	1
+	.align	2
 	.globl	_Z16no_yes_no_yes_nov
 	.type	_Z16no_yes_no_yes_nov, @function
 _Z16no_yes_no_yes_nov:
@@ -196,7 +196,7 @@ _Z16no_yes_no_yes_nov:
 	TTNOP
 	ret
 	.size	_Z16no_yes_no_yes_nov, .-_Z16no_yes_no_yes_nov
-	.align	1
+	.align	2
 	.globl	_Z6bb_yesi
 	.type	_Z6bb_yesi, @function
 _Z6bb_yesi:
@@ -237,7 +237,7 @@ _Z6bb_yesi:
 	TTNOP
 	ret
 	.size	_Z6bb_yesi, .-_Z6bb_yesi
-	.align	1
+	.align	2
 	.globl	_Z9func_callv
 	.type	_Z9func_callv, @function
 _Z9func_callv:
@@ -260,7 +260,7 @@ _Z9func_callv:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z9func_callv, .-_Z9func_callv
-	.align	1
+	.align	2
 	.globl	_Z8compc_nov
 	.type	_Z8compc_nov, @function
 _Z8compc_nov:
@@ -284,7 +284,7 @@ _Z8compc_nov:
 	TTNOP
 	ret
 	.size	_Z8compc_nov, .-_Z8compc_nov
-	.align	1
+	.align	2
 	.globl	_Z10cascade_nov
 	.type	_Z10cascade_nov, @function
 _Z10cascade_nov:
@@ -335,7 +335,7 @@ _Z10cascade_nov:
 	TTNOP
 	ret
 	.size	_Z10cascade_nov, .-_Z10cascade_nov
-	.align	1
+	.align	2
 	.globl	_Z12intervene_nov
 	.type	_Z12intervene_nov, @function
 _Z12intervene_nov:
@@ -357,7 +357,7 @@ _Z12intervene_nov:
 	TTNOP
 	ret
 	.size	_Z12intervene_nov, .-_Z12intervene_nov
-	.align	1
+	.align	2
 	.globl	_Z18compc_intervene_nov
 	.type	_Z18compc_intervene_nov, @function
 _Z18compc_intervene_nov:
@@ -382,7 +382,7 @@ _Z18compc_intervene_nov:
 	TTNOP
 	ret
 	.size	_Z18compc_intervene_nov, .-_Z18compc_intervene_nov
-	.align	1
+	.align	2
 	.globl	_Z10fn_call_nov
 	.type	_Z10fn_call_nov, @function
 _Z10fn_call_nov:
@@ -409,7 +409,7 @@ _Z10fn_call_nov:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z10fn_call_nov, .-_Z10fn_call_nov
-	.align	1
+	.align	2
 	.globl	_Z24control_flow_v_if_switchii
 	.type	_Z24control_flow_v_if_switchii, @function
 _Z24control_flow_v_if_switchii:
@@ -471,7 +471,7 @@ _Z24control_flow_v_if_switchii:
 	TTNOP
 	j	.L26
 	.size	_Z24control_flow_v_if_switchii, .-_Z24control_flow_v_if_switchii
-	.align	1
+	.align	2
 	.globl	_Z25control_flow_pif_continuei
 	.type	_Z25control_flow_pif_continuei, @function
 _Z25control_flow_pif_continuei:
@@ -527,7 +527,7 @@ _Z25control_flow_pif_continuei:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z25control_flow_pif_continuei, .-_Z25control_flow_pif_continuei
-	.align	1
+	.align	2
 	.globl	_Z21control_flow_pif_gotoi
 	.type	_Z21control_flow_pif_gotoi, @function
 _Z21control_flow_pif_gotoi:
@@ -576,4 +576,4 @@ _Z21control_flow_pif_gotoi:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

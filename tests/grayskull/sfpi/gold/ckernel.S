@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, @function
 _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	li	a5,4
@@ -89,7 +89,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0:
 	bne	a5,zero,.L2
 	ret
 	.size	_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0, .-_ZN7ckernel4sfpu13calculate_logILb1ELb0EEEvm.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0:
 	li	a5,4
@@ -115,7 +115,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0:
 	bne	a5,zero,.L6
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb0EEEvs.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0:
 	li	a5,4
@@ -136,7 +136,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0:
 	bne	a5,zero,.L9
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb0EEEvs.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	li	a4,4
@@ -238,7 +238,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0:
 	bne	a4,zero,.L13
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb0EEEvs.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	li	a4,4
@@ -340,7 +340,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0:
 	bne	a4,zero,.L18
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb0EEEvs.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	SFPLOAD	L0, 0, 1
@@ -409,7 +409,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0:
 	TTINCRWC	0, 4, 0, 0
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType11EEEvm.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	SFPLOAD	L0, 0, 1
@@ -478,7 +478,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0:
 	TTINCRWC	0, 4, 0, 0
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType9EEEvm.isra.0
-	.align	1
+	.align	2
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	SFPLOAD	L0, 0, 1
@@ -528,7 +528,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType7EEEvm.isra.0
 	.section	.text._ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm,"axG",@progbits,_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
@@ -642,7 +642,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType8EEEvm
 	.section	.text._ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm,"axG",@progbits,_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm, @function
 _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
@@ -756,7 +756,7 @@ _ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm, .-_ZN7ckernel4sfpu14calculate_compILb0EL8SfpuType10EEEvm
 	.section	.text._ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm,"axG",@progbits,_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm
 	.type	_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm, @function
 _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
@@ -809,7 +809,7 @@ _ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm:
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm, .-_ZN7ckernel4sfpu15calculate_clampILb0EEEvmmm
 	.section	.text._ZN7ckernel4sfpu13calculate_absILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu13calculate_absILb0EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu13calculate_absILb0EEEvv
 	.type	_ZN7ckernel4sfpu13calculate_absILb0EEEvv, @function
 _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
@@ -840,7 +840,7 @@ _ZN7ckernel4sfpu13calculate_absILb0EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu13calculate_absILb0EEEvv, .-_ZN7ckernel4sfpu13calculate_absILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_signILb0EEEvm,"axG",@progbits,_ZN7ckernel4sfpu14calculate_signILb0EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_signILb0EEEvm
 	.type	_ZN7ckernel4sfpu14calculate_signILb0EEEvm, @function
 _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
@@ -970,7 +970,7 @@ _ZN7ckernel4sfpu14calculate_signILb0EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_signILb0EEEvm, .-_ZN7ckernel4sfpu14calculate_signILb0EEEvm
 	.section	.text._ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv
 	.type	_ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv, @function
 _ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv:
@@ -1013,7 +1013,7 @@ _ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv, .-_ZN7ckernel4sfpu17calculate_sigmoidILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_tanhILb1EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_tanhILb1EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_tanhILb1EEEvv
 	.type	_ZN7ckernel4sfpu14calculate_tanhILb1EEEvv, @function
 _ZN7ckernel4sfpu14calculate_tanhILb1EEEvv:
@@ -1044,7 +1044,7 @@ _ZN7ckernel4sfpu14calculate_tanhILb1EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_tanhILb1EEEvv, .-_ZN7ckernel4sfpu14calculate_tanhILb1EEEvv
 	.section	.text._ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm,"axG",@progbits,_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm
 	.type	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm, @function
 _ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm:
@@ -1093,7 +1093,7 @@ _ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm:
 	ret
 	.size	_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm, .-_ZN7ckernel4sfpu18calculate_hardtanhILb0EEEvmmm
 	.section	.text._ZN7ckernel4sfpu15calculate_lreluILb0EEEvm,"axG",@progbits,_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm
 	.type	_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm, @function
 _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
@@ -1121,7 +1121,7 @@ _ZN7ckernel4sfpu15calculate_lreluILb0EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm, .-_ZN7ckernel4sfpu15calculate_lreluILb0EEEvm
 	.section	.text._ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv
 	.type	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv, @function
 _ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv:
@@ -1176,7 +1176,7 @@ _ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv, .-_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi0EEEvv
 	.section	.text._ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv,"axG",@progbits,_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv
 	.type	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv, @function
 _ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv:
@@ -1219,7 +1219,7 @@ _ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv, .-_ZN7ckernel4sfpu25calculate_tanh_derivativeILb0ELi1EEEvv
 	.section	.text._ZN7ckernel4sfpu15calculate_powerILb1EEEvm,"axG",@progbits,_ZN7ckernel4sfpu15calculate_powerILb1EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu15calculate_powerILb1EEEvm
 	.type	_ZN7ckernel4sfpu15calculate_powerILb1EEEvm, @function
 _ZN7ckernel4sfpu15calculate_powerILb1EEEvm:
@@ -1246,7 +1246,7 @@ _ZN7ckernel4sfpu15calculate_powerILb1EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu15calculate_powerILb1EEEvm, .-_ZN7ckernel4sfpu15calculate_powerILb1EEEvm
 	.section	.text._ZN7ckernel4sfpu14calculate_geluILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_geluILb0EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_geluILb0EEEvv
 	.type	_ZN7ckernel4sfpu14calculate_geluILb0EEEvv, @function
 _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
@@ -1285,7 +1285,7 @@ _ZN7ckernel4sfpu14calculate_geluILb0EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_geluILb0EEEvv, .-_ZN7ckernel4sfpu14calculate_geluILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_geluILb1EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_geluILb1EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_geluILb1EEEvv
 	.type	_ZN7ckernel4sfpu14calculate_geluILb1EEEvv, @function
 _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
@@ -1311,7 +1311,7 @@ _ZN7ckernel4sfpu14calculate_geluILb1EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_geluILb1EEEvv, .-_ZN7ckernel4sfpu14calculate_geluILb1EEEvv
 	.section	.text._ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv,"axG",@progbits,_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv
 	.type	_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv, @function
 _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
@@ -1442,7 +1442,7 @@ _ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv, .-_ZN7ckernel4sfpu25calculate_gelu_derivativeILb0EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv
 	.type	_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv, @function
 _ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv:
@@ -1601,7 +1601,7 @@ _ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv, .-_ZN7ckernel4sfpu14calculate_sqrtILb0ELi4ELi2EEEvv
 	.section	.text._ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv,"axG",@progbits,_ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv
 	.type	_ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv, @function
 _ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv:
@@ -1644,7 +1644,7 @@ _ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv, .-_ZN7ckernel4sfpu14calculate_sqrtILb1ELi4ELi2EEEvv
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
@@ -1759,7 +1759,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs:
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb0ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
@@ -1874,7 +1874,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs:
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb0ELb1ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
@@ -1908,7 +1908,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs:
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb0ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs,"axG",@progbits,_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs
 	.type	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs, @function
 _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
@@ -1947,7 +1947,7 @@ _ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs:
 	ret
 	.size	_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs, .-_ZN7ckernel4sfpu21calculate_exponentialILb1ELb1ELb1EEEvs
 	.section	.text._ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,"axG",@progbits,_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm
 	.type	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm, @function
 _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
@@ -2044,7 +2044,7 @@ _ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm:
 	ret
 	.size	_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm, .-_ZN7ckernel4sfpu13calculate_logILb1ELb1EEEvm
 	.section	.text._ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv,"axG",@progbits,_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv
 	.type	_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv, @function
 _ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv:
@@ -2112,7 +2112,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv, .-_ZN7ckernel4sfpu20calculate_reciprocalILb0ELi4EEEvv
 	.section	.text._ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv,"axG",@progbits,_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv
 	.type	_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv, @function
 _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
@@ -2174,7 +2174,7 @@ _ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv:
 	ret
 	.size	_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv, .-_ZN7ckernel4sfpu20calculate_reciprocalILb1ELi4EEEvv
 	.section	.text._ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm,"axG",@progbits,_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm,comdat
-	.align	1
+	.align	2
 	.weak	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm
 	.type	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, @function
 _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
@@ -2243,7 +2243,7 @@ _ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm:
 	.size	_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm, .-_ZN7ckernel4sfpu17calculate_dropoutILb0EEEvmm
 	.globl	__floatunsisf
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -2345,4 +2345,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

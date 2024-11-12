@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z5macroi
 	.type	_Z5macroi, @function
 _Z5macroi:
@@ -51,7 +51,7 @@ _Z5macroi:
 	sw	a4,0(a5)
 	ret
 	.size	_Z5macroi, .-_Z5macroi
-	.align	1
+	.align	2
 	.globl	_Z13macro_checkedi
 	.type	_Z13macro_checkedi, @function
 _Z13macro_checkedi:
@@ -105,7 +105,7 @@ _Z13macro_checkedi:
 	sw	a4,0(a5)
 	ret
 	.size	_Z13macro_checkedi, .-_Z13macro_checkedi
-	.align	1
+	.align	2
 	.globl	_Z19macro_reuse_checkedi
 	.type	_Z19macro_reuse_checkedi, @function
 _Z19macro_reuse_checkedi:
@@ -140,7 +140,7 @@ _Z19macro_reuse_checkedi:
 	sw	a0,0(a5)
 	ret
 	.size	_Z19macro_reuse_checkedi, .-_Z19macro_reuse_checkedi
-	.align	1
+	.align	2
 	.globl	_Z8load_imms
 	.type	_Z8load_imms, @function
 _Z8load_imms:
@@ -154,7 +154,7 @@ _Z8load_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8load_imms, .-_Z8load_imms
-	.align	1
+	.align	2
 	.globl	_Z8load_regs
 	.type	_Z8load_regs, @function
 _Z8load_regs:
@@ -187,7 +187,7 @@ _Z8load_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8load_regs, .-_Z8load_regs
-	.align	1
+	.align	2
 	.globl	_Z9load_boths
 	.type	_Z9load_boths, @function
 _Z9load_boths:
@@ -212,7 +212,7 @@ _Z9load_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9load_boths, .-_Z9load_boths
-	.align	1
+	.align	2
 	.globl	_Z9loadi_imms
 	.type	_Z9loadi_imms, @function
 _Z9loadi_imms:
@@ -226,7 +226,7 @@ _Z9loadi_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9loadi_imms, .-_Z9loadi_imms
-	.align	1
+	.align	2
 	.globl	_Z9loadi_regs
 	.type	_Z9loadi_regs, @function
 _Z9loadi_regs:
@@ -259,7 +259,7 @@ _Z9loadi_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9loadi_regs, .-_Z9loadi_regs
-	.align	1
+	.align	2
 	.globl	_Z10loadi_boths
 	.type	_Z10loadi_boths, @function
 _Z10loadi_boths:
@@ -284,7 +284,7 @@ _Z10loadi_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10loadi_boths, .-_Z10loadi_boths
-	.align	1
+	.align	2
 	.globl	_Z9store_imms
 	.type	_Z9store_imms, @function
 _Z9store_imms:
@@ -295,7 +295,7 @@ _Z9store_imms:
 	SFPSTORE	40, L0, 2
 	ret
 	.size	_Z9store_imms, .-_Z9store_imms
-	.align	1
+	.align	2
 	.globl	_Z9store_regs
 	.type	_Z9store_regs, @function
 _Z9store_regs:
@@ -325,7 +325,7 @@ _Z9store_regs:
 	sw	a0, 0(a3)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z9store_regs, .-_Z9store_regs
-	.align	1
+	.align	2
 	.globl	_Z10store_boths
 	.type	_Z10store_boths, @function
 _Z10store_boths:
@@ -348,7 +348,7 @@ _Z10store_boths:
 	sw	a0, 0(a3)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z10store_boths, .-_Z10store_boths
-	.align	1
+	.align	2
 	.globl	_Z11store_r_imms
 	.type	_Z11store_r_imms, @function
 _Z11store_r_imms:
@@ -358,7 +358,7 @@ _Z11store_r_imms:
 	SFPSTORE	20, L13, 2
 	ret
 	.size	_Z11store_r_imms, .-_Z11store_r_imms
-	.align	1
+	.align	2
 	.globl	_Z11store_r_regs
 	.type	_Z11store_r_regs, @function
 _Z11store_r_regs:
@@ -387,7 +387,7 @@ _Z11store_r_regs:
 	sw	a0, 0(a3)	# Op(0x72) s(lr13)
 	ret
 	.size	_Z11store_r_regs, .-_Z11store_r_regs
-	.align	1
+	.align	2
 	.globl	_Z12store_r_boths
 	.type	_Z12store_r_boths, @function
 _Z12store_r_boths:
@@ -408,7 +408,7 @@ _Z12store_r_boths:
 	sw	a0, 0(a3)	# Op(0x72) s(lr13)
 	ret
 	.size	_Z12store_r_boths, .-_Z12store_r_boths
-	.align	1
+	.align	2
 	.globl	_Z8addi_imms
 	.type	_Z8addi_imms, @function
 _Z8addi_imms:
@@ -434,7 +434,7 @@ _Z8addi_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8addi_imms, .-_Z8addi_imms
-	.align	1
+	.align	2
 	.globl	_Z8addi_regs
 	.type	_Z8addi_regs, @function
 _Z8addi_regs:
@@ -483,7 +483,7 @@ _Z8addi_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z8addi_regs, .-_Z8addi_regs
-	.align	1
+	.align	2
 	.globl	_Z9addi_boths
 	.type	_Z9addi_boths, @function
 _Z9addi_boths:
@@ -522,7 +522,7 @@ _Z9addi_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9addi_boths, .-_Z9addi_boths
-	.align	1
+	.align	2
 	.globl	_Z11xiadd_i_imms
 	.type	_Z11xiadd_i_imms, @function
 _Z11xiadd_i_imms:
@@ -548,7 +548,7 @@ _Z11xiadd_i_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z11xiadd_i_imms, .-_Z11xiadd_i_imms
-	.align	1
+	.align	2
 	.globl	_Z11xiadd_i_regs
 	.type	_Z11xiadd_i_regs, @function
 _Z11xiadd_i_regs:
@@ -587,7 +587,7 @@ _Z11xiadd_i_regs:
 	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z11xiadd_i_regs, .-_Z11xiadd_i_regs
-	.align	1
+	.align	2
 	.globl	_Z12xiadd_i_boths
 	.type	_Z12xiadd_i_boths, @function
 _Z12xiadd_i_boths:
@@ -615,7 +615,7 @@ _Z12xiadd_i_boths:
 	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z12xiadd_i_boths, .-_Z12xiadd_i_boths
-	.align	1
+	.align	2
 	.globl	_Z10shft_i_imms
 	.type	_Z10shft_i_imms, @function
 _Z10shft_i_imms:
@@ -641,7 +641,7 @@ _Z10shft_i_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10shft_i_imms, .-_Z10shft_i_imms
-	.align	1
+	.align	2
 	.globl	_Z10shft_i_regs
 	.type	_Z10shft_i_regs, @function
 _Z10shft_i_regs:
@@ -689,7 +689,7 @@ _Z10shft_i_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10shft_i_regs, .-_Z10shft_i_regs
-	.align	1
+	.align	2
 	.globl	_Z11shft_i_boths
 	.type	_Z11shft_i_boths, @function
 _Z11shft_i_boths:
@@ -727,7 +727,7 @@ _Z11shft_i_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z11shft_i_boths, .-_Z11shft_i_boths
-	.align	1
+	.align	2
 	.globl	_Z9divp2_imms
 	.type	_Z9divp2_imms, @function
 _Z9divp2_imms:
@@ -753,7 +753,7 @@ _Z9divp2_imms:
 	SFPSTORE	30, L1, 2
 	ret
 	.size	_Z9divp2_imms, .-_Z9divp2_imms
-	.align	1
+	.align	2
 	.globl	_Z9divp2_regs
 	.type	_Z9divp2_regs, @function
 _Z9divp2_regs:
@@ -801,7 +801,7 @@ _Z9divp2_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z9divp2_regs, .-_Z9divp2_regs
-	.align	1
+	.align	2
 	.globl	_Z10divp2_boths
 	.type	_Z10divp2_boths, @function
 _Z10divp2_boths:
@@ -839,7 +839,7 @@ _Z10divp2_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z10divp2_boths, .-_Z10divp2_boths
-	.align	1
+	.align	2
 	.globl	_Z12setexp_i_imms
 	.type	_Z12setexp_i_imms, @function
 _Z12setexp_i_imms:
@@ -865,7 +865,7 @@ _Z12setexp_i_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setexp_i_imms, .-_Z12setexp_i_imms
-	.align	1
+	.align	2
 	.globl	_Z12setexp_i_regs
 	.type	_Z12setexp_i_regs, @function
 _Z12setexp_i_regs:
@@ -913,7 +913,7 @@ _Z12setexp_i_regs:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setexp_i_regs, .-_Z12setexp_i_regs
-	.align	1
+	.align	2
 	.globl	_Z13setexp_i_boths
 	.type	_Z13setexp_i_boths, @function
 _Z13setexp_i_boths:
@@ -951,7 +951,7 @@ _Z13setexp_i_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z13setexp_i_boths, .-_Z13setexp_i_boths
-	.align	1
+	.align	2
 	.globl	_Z12setman_i_imms
 	.type	_Z12setman_i_imms, @function
 _Z12setman_i_imms:
@@ -977,7 +977,7 @@ _Z12setman_i_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setman_i_imms, .-_Z12setman_i_imms
-	.align	1
+	.align	2
 	.globl	_Z12setman_i_regs
 	.type	_Z12setman_i_regs, @function
 _Z12setman_i_regs:
@@ -1015,7 +1015,7 @@ _Z12setman_i_regs:
 	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z12setman_i_regs, .-_Z12setman_i_regs
-	.align	1
+	.align	2
 	.globl	_Z13setman_i_boths
 	.type	_Z13setman_i_boths, @function
 _Z13setman_i_boths:
@@ -1042,7 +1042,7 @@ _Z13setman_i_boths:
 	SFPSTORE	20, L0, 2
 	ret
 	.size	_Z13setman_i_boths, .-_Z13setman_i_boths
-	.align	1
+	.align	2
 	.globl	_Z12setsgn_i_imms
 	.type	_Z12setsgn_i_imms, @function
 _Z12setsgn_i_imms:
@@ -1068,7 +1068,7 @@ _Z12setsgn_i_imms:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setsgn_i_imms, .-_Z12setsgn_i_imms
-	.align	1
+	.align	2
 	.globl	_Z12setsgn_i_regj
 	.type	_Z12setsgn_i_regj, @function
 _Z12setsgn_i_regj:
@@ -1116,7 +1116,7 @@ _Z12setsgn_i_regj:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z12setsgn_i_regj, .-_Z12setsgn_i_regj
-	.align	1
+	.align	2
 	.globl	_Z13setsgn_i_boths
 	.type	_Z13setsgn_i_boths, @function
 _Z13setsgn_i_boths:
@@ -1154,7 +1154,7 @@ _Z13setsgn_i_boths:
 	SFPSTORE	30, L0, 2
 	ret
 	.size	_Z13setsgn_i_boths, .-_Z13setsgn_i_boths
-	.align	1
+	.align	2
 	.globl	_Z11multi_reusei
 	.type	_Z11multi_reusei, @function
 _Z11multi_reusei:
@@ -1186,7 +1186,7 @@ _Z11multi_reusei:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z11multi_reusei, .-_Z11multi_reusei
-	.align	1
+	.align	2
 	.globl	_Z10loop_macroi
 	.type	_Z10loop_macroi, @function
 _Z10loop_macroi:
@@ -1263,7 +1263,7 @@ _Z10loop_macroi:
 	sw	a4,0(a5)
 	ret
 	.size	_Z10loop_macroi, .-_Z10loop_macroi
-	.align	1
+	.align	2
 	.globl	_Z13loop_compileri
 	.type	_Z13loop_compileri, @function
 _Z13loop_compileri:
@@ -1330,7 +1330,7 @@ _Z13loop_compileri:
 .LC0:
 	.string	"%p\n"
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -1645,4 +1645,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

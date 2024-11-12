@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z11remove_add1v
 	.type	_Z11remove_add1v, @function
 _Z11remove_add1v:
@@ -17,7 +17,7 @@ _Z11remove_add1v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z11remove_add1v, .-_Z11remove_add1v
-	.align	1
+	.align	2
 	.globl	_Z15remove_add2_nopv
 	.type	_Z15remove_add2_nopv, @function
 _Z15remove_add2_nopv:
@@ -30,7 +30,7 @@ _Z15remove_add2_nopv:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z15remove_add2_nopv, .-_Z15remove_add2_nopv
-	.align	1
+	.align	2
 	.globl	_Z12replace_add3v
 	.type	_Z12replace_add3v, @function
 _Z12replace_add3v:
@@ -47,7 +47,7 @@ _Z12replace_add3v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_add3v, .-_Z12replace_add3v
-	.align	1
+	.align	2
 	.globl	_Z12replace_sub1v
 	.type	_Z12replace_sub1v, @function
 _Z12replace_sub1v:
@@ -63,7 +63,7 @@ _Z12replace_sub1v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_sub1v, .-_Z12replace_sub1v
-	.align	1
+	.align	2
 	.globl	_Z11remove_and1v
 	.type	_Z11remove_and1v, @function
 _Z11remove_and1v:
@@ -76,7 +76,7 @@ _Z11remove_and1v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z11remove_and1v, .-_Z11remove_and1v
-	.align	1
+	.align	2
 	.globl	_Z15remove_and2_nopv
 	.type	_Z15remove_and2_nopv, @function
 _Z15remove_and2_nopv:
@@ -89,7 +89,7 @@ _Z15remove_and2_nopv:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z15remove_and2_nopv, .-_Z15remove_and2_nopv
-	.align	1
+	.align	2
 	.globl	_Z12replace_and3v
 	.type	_Z12replace_and3v, @function
 _Z12replace_and3v:
@@ -106,7 +106,7 @@ _Z12replace_and3v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_and3v, .-_Z12replace_and3v
-	.align	1
+	.align	2
 	.globl	_Z10remove_or1v
 	.type	_Z10remove_or1v, @function
 _Z10remove_or1v:
@@ -119,7 +119,7 @@ _Z10remove_or1v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z10remove_or1v, .-_Z10remove_or1v
-	.align	1
+	.align	2
 	.globl	_Z14remove_or2_nopv
 	.type	_Z14remove_or2_nopv, @function
 _Z14remove_or2_nopv:
@@ -132,7 +132,7 @@ _Z14remove_or2_nopv:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z14remove_or2_nopv, .-_Z14remove_or2_nopv
-	.align	1
+	.align	2
 	.globl	_Z11replace_or3v
 	.type	_Z11replace_or3v, @function
 _Z11replace_or3v:
@@ -149,7 +149,7 @@ _Z11replace_or3v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z11replace_or3v, .-_Z11replace_or3v
-	.align	1
+	.align	2
 	.globl	_Z16replace_live_or4v
 	.type	_Z16replace_live_or4v, @function
 _Z16replace_live_or4v:
@@ -177,7 +177,7 @@ _Z16replace_live_or4v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z16replace_live_or4v, .-_Z16replace_live_or4v
-	.align	1
+	.align	2
 	.globl	_Z11remove_cmp1v
 	.type	_Z11remove_cmp1v, @function
 _Z11remove_cmp1v:
@@ -193,7 +193,7 @@ _Z11remove_cmp1v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z11remove_cmp1v, .-_Z11remove_cmp1v
-	.align	1
+	.align	2
 	.globl	_Z12replace_cmp2v
 	.type	_Z12replace_cmp2v, @function
 _Z12replace_cmp2v:
@@ -212,7 +212,7 @@ _Z12replace_cmp2v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_cmp2v, .-_Z12replace_cmp2v
-	.align	1
+	.align	2
 	.globl	_Z12replace_muliv
 	.type	_Z12replace_muliv, @function
 _Z12replace_muliv:
@@ -225,7 +225,7 @@ _Z12replace_muliv:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z12replace_muliv, .-_Z12replace_muliv
-	.align	1
+	.align	2
 	.globl	_Z12replace_addiv
 	.type	_Z12replace_addiv, @function
 _Z12replace_addiv:
@@ -238,7 +238,7 @@ _Z12replace_addiv:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z12replace_addiv, .-_Z12replace_addiv
-	.align	1
+	.align	2
 	.globl	_Z12replace_shftv
 	.type	_Z12replace_shftv, @function
 _Z12replace_shftv:
@@ -253,7 +253,7 @@ _Z12replace_shftv:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_shftv, .-_Z12replace_shftv
-	.align	1
+	.align	2
 	.globl	_Z12replace_cregv
 	.type	_Z12replace_cregv, @function
 _Z12replace_cregv:
@@ -280,7 +280,7 @@ _Z12replace_cregv:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z12replace_cregv, .-_Z12replace_cregv
-	.align	1
+	.align	2
 	.globl	_Z2bbi
 	.type	_Z2bbi, @function
 _Z2bbi:
@@ -303,7 +303,7 @@ _Z2bbi:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z2bbi, .-_Z2bbi
-	.align	1
+	.align	2
 	.globl	_Z3bb2i
 	.type	_Z3bb2i, @function
 _Z3bb2i:
@@ -327,7 +327,7 @@ _Z3bb2i:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z3bb2i, .-_Z3bb2i
-	.align	1
+	.align	2
 	.globl	_Z3bb3i
 	.type	_Z3bb3i, @function
 _Z3bb3i:
@@ -342,7 +342,7 @@ _Z3bb3i:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z3bb3i, .-_Z3bb3i
-	.align	1
+	.align	2
 	.globl	_Z10setexp_movv
 	.type	_Z10setexp_movv, @function
 _Z10setexp_movv:
@@ -359,7 +359,7 @@ _Z10setexp_movv:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z10setexp_movv, .-_Z10setexp_movv
-	.align	1
+	.align	2
 	.globl	_Z10setman_movv
 	.type	_Z10setman_movv, @function
 _Z10setman_movv:
@@ -376,7 +376,7 @@ _Z10setman_movv:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z10setman_movv, .-_Z10setman_movv
-	.align	1
+	.align	2
 	.globl	_Z10setsgn_movv
 	.type	_Z10setsgn_movv, @function
 _Z10setsgn_movv:
@@ -393,7 +393,7 @@ _Z10setsgn_movv:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z10setsgn_movv, .-_Z10setsgn_movv
-	.align	1
+	.align	2
 	.globl	_Z12replace_xor3v
 	.type	_Z12replace_xor3v, @function
 _Z12replace_xor3v:
@@ -422,7 +422,7 @@ _Z12replace_xor3v:
 	SFPSTORE	8, L0, 2
 	ret
 	.size	_Z12replace_xor3v, .-_Z12replace_xor3v
-	.align	1
+	.align	2
 	.globl	_Z17swap_const_reg_orv
 	.type	_Z17swap_const_reg_orv, @function
 _Z17swap_const_reg_orv:
@@ -437,7 +437,7 @@ _Z17swap_const_reg_orv:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z17swap_const_reg_orv, .-_Z17swap_const_reg_orv
-	.align	1
+	.align	2
 	.globl	_Z17move_const_reg_orv
 	.type	_Z17move_const_reg_orv, @function
 _Z17move_const_reg_orv:
@@ -448,7 +448,7 @@ _Z17move_const_reg_orv:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z17move_const_reg_orv, .-_Z17move_const_reg_orv
-	.align	1
+	.align	2
 	.globl	_Z18move_const_reg2_orv
 	.type	_Z18move_const_reg2_orv, @function
 _Z18move_const_reg2_orv:
@@ -468,4 +468,4 @@ _Z18move_const_reg2_orv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

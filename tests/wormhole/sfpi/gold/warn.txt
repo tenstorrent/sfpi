@@ -1,22 +1,22 @@
 In file included from test.h:17,
                  from warn.cc:11:
 In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
-    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at /home/nathan/gcc-12/sfpi/include/sfpi.h:369:59,
+    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at ../../../include/sfpi.h:369:59,
     inlined from 'void global()' at warn.cc:29:11:
-/home/nathan/gcc-12/sfpi/include/sfpi.h:798:7: error: cannot write sfpu vector to memory
+../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
-    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at /home/nathan/gcc-12/sfpi/include/sfpi.h:369:59,
+    inlined from 'sfpi::vFloat sfpi::vFloat::operator=(sfpi::vFloat)' at ../../../include/sfpi.h:369:59,
     inlined from 'void pointeruse(sfpi::vFloat*)' at warn.cc:34:10:
-/home/nathan/gcc-12/sfpi/include/sfpi.h:798:7: error: cannot write sfpu vector to memory
+../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
-    inlined from 'void sfpi::vFloat::loadf(float)' at /home/nathan/gcc-12/sfpi/include/wormhole/sfpi_imp.h:105:11,
-    inlined from 'sfpi::vFloat::vFloat(float)' at /home/nathan/gcc-12/sfpi/include/sfpi.h:364:46,
+    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/wormhole/sfpi_imp.h:105:11,
+    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:364:46,
     inlined from 'void address()' at warn.cc:39:16:
-/home/nathan/gcc-12/sfpi/include/sfpi.h:798:7: error: cannot write sfpu vector to memory
+../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 warn.cc: In function 'void unnit()':
@@ -32,10 +32,10 @@ warn.cc:47:18: warning: 'SR.69' is used uninitialized in this function [-Wuninit
 In function 'void argcall(sfpi::vFloat)':
 cc1plus: error: invalid declaration for function 'argcall', sfpu types cannot be passed on the stack (missing sfpi_inline?)
 In member function 'void sfpi::__vBase::assign(sfpi::__rvtt_vec_t)',
-    inlined from 'void sfpi::vFloat::loadf(float)' at /home/nathan/gcc-12/sfpi/include/wormhole/sfpi_imp.h:105:11,
-    inlined from 'sfpi::vFloat::vFloat(float)' at /home/nathan/gcc-12/sfpi/include/sfpi.h:364:46,
+    inlined from 'void sfpi::vFloat::loadf(float)' at ../../../include/wormhole/sfpi_imp.h:105:11,
+    inlined from 'sfpi::vFloat::vFloat(float)' at ../../../include/sfpi.h:364:46,
     inlined from 'sfpi::vFloat ret()' at warn.cc:57:16:
-/home/nathan/gcc-12/sfpi/include/sfpi.h:798:7: error: cannot write sfpu vector to memory
+../../../include/sfpi.h:798:7: error: cannot write sfpu vector to memory
   798 |     v = (initialized) ? __builtin_rvtt_sfpassign_lv(v, in) : in;
       |     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 warn.cc: In function 'void setccnotinsidepushpop()':
@@ -44,9 +44,9 @@ warn.cc:76:33: error: malformed program, sfpsetcc_v outside of pushc/popc
       |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
 In function 'void intinc()':
 cc1plus: warning: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
-In file included from /home/nathan/gcc-12/sfpi/include/sfpi.h:129:
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h: In function 'void crash_mad_uninit()':
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h:149:69: warning: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vFloat, sfpi::vFloat::<unnamed>.sfpi::__vBase::v))' is used uninitialized [-Wuninitialized]
+In file included from ../../../include/sfpi.h:129:
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_mad_uninit()':
+../../../include/wormhole/sfpi_hw.h:149:69: warning: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vFloat, sfpi::vFloat::<unnamed>.sfpi::__vBase::v))' is used uninitialized [-Wuninitialized]
   149 | #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)
       |                                                                     ^
 warn.cc:89:12: note: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vFloat, sfpi::vFloat::<unnamed>.sfpi::__vBase::v))' was declared here
@@ -54,8 +54,8 @@ warn.cc:89:12: note: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vF
       |            ^
 cc1plus: warning: 'b.sfpi::vFloat::<unnamed>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
 cc1plus: warning: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vFloat, sfpi::vFloat::<unnamed>.sfpi::__vBase::v))' is used uninitialized in this function [-Wuninitialized]
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h: In function 'void crash_int_add_fold_uninit()':
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h:176:79: warning: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized [-Wuninitialized]
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_int_add_fold_uninit()':
+../../../include/wormhole/sfpi_hw.h:176:79: warning: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized [-Wuninitialized]
   176 | #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) __builtin_rvtt_wh_sfpxiadd_v(dst, src, mod1)
       |                                                                               ^
 warn.cc:96:10: note: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' was declared here
@@ -63,8 +63,8 @@ warn.cc:96:10: note: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi
       |          ^
 cc1plus: warning: '*(const __vector(64) float*)((char*)&val + offsetof(const sfpi::vInt, sfpi::vInt::<unnamed>.sfpi::__vIntBase::<unnamed>.sfpi::__vBase::v))' is used uninitialized in this function [-Wuninitialized]
 cc1plus: warning: 'x.sfpi::vInt::<unnamed>.sfpi::__vIntBase::<anonymous>.sfpi::__vBase::v' is used uninitialized in this function [-Wuninitialized]
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h: In function 'void crash_cond_uninit()':
-/home/nathan/gcc-12/sfpi/include/wormhole/sfpi_hw.h:121:70: warning: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vInt, sfpi::vInt::<unnamed>.sfpi::__vIntBase::<unnamed>.sfpi::__vBase::v))' is used uninitialized [-Wuninitialized]
+../../../include/wormhole/sfpi_hw.h: In function 'void crash_cond_uninit()':
+../../../include/wormhole/sfpi_hw.h:121:70: warning: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vInt, sfpi::vInt::<unnamed>.sfpi::__vIntBase::<unnamed>.sfpi::__vBase::v))' is used uninitialized [-Wuninitialized]
   121 | #define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps((void *)ckernel::instrn_buffer, v, i, 0, 0, mod1)
       |                                                                      ^
 warn.cc:106:10: note: '*(const __vector(64) float*)((char*)&x + offsetof(sfpi::vInt, sfpi::vInt::<unnamed>.sfpi::__vIntBase::<unnamed>.sfpi::__vBase::v))' was declared here

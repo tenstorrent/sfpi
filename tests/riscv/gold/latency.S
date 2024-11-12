@@ -5,7 +5,7 @@
 	.attribute stack_align, 16
 	.text
 	.globl	__mulsi3
-	.align	1
+	.align	2
 	.globl	_Z17mul_latency_chainiiiiii
 	.type	_Z17mul_latency_chainiiiiii, @function
 _Z17mul_latency_chainiiiiii:
@@ -33,7 +33,7 @@ _Z17mul_latency_chainiiiiii:
 	jr	ra
 	.size	_Z17mul_latency_chainiiiiii, .-_Z17mul_latency_chainiiiiii
 	.globl	__divsi3
-	.align	1
+	.align	2
 	.globl	_Z17div_latency_chainiiiiii
 	.type	_Z17div_latency_chainiiiiii, @function
 _Z17div_latency_chainiiiiii:
@@ -71,7 +71,7 @@ _Z17div_latency_chainiiiiii:
 	jr	ra
 	.size	_Z17div_latency_chainiiiiii, .-_Z17div_latency_chainiiiiii
 	.globl	__modsi3
-	.align	1
+	.align	2
 	.globl	_Z17mod_latency_chainiiiiii
 	.type	_Z17mod_latency_chainiiiiii, @function
 _Z17mod_latency_chainiiiiii:
@@ -109,11 +109,11 @@ _Z17mod_latency_chainiiiiii:
 	jr	ra
 	.size	_Z17mod_latency_chainiiiiii, .-_Z17mod_latency_chainiiiiii
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
 	li	a0,0
 	ret
 	.size	main, .-main
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z23latency_chain_dependentPiiiiii
 	.type	_Z23latency_chain_dependentPiiiiii, @function
 _Z23latency_chain_dependentPiiiiii:
@@ -16,7 +16,7 @@ _Z23latency_chain_dependentPiiiiii:
 	add	a0,a1,a5
 	ret
 	.size	_Z23latency_chain_dependentPiiiiii, .-_Z23latency_chain_dependentPiiiiii
-	.align	1
+	.align	2
 	.globl	_Z19latency_chain_splitPiiiiii
 	.type	_Z19latency_chain_splitPiiiiii, @function
 _Z19latency_chain_splitPiiiiii:
@@ -28,7 +28,7 @@ _Z19latency_chain_splitPiiiiii:
 	add	a0,a1,a4
 	ret
 	.size	_Z19latency_chain_splitPiiiiii, .-_Z19latency_chain_splitPiiiiii
-	.align	1
+	.align	2
 	.globl	_Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii
 	.type	_Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii, @function
 _Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii:
@@ -40,7 +40,7 @@ _Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii:
 	add	a0,a1,a5
 	ret
 	.size	_Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii, .-_Z33latency_chain_dependent_decoratedU11rvtt_l1_ptrPiiiiii
-	.align	1
+	.align	2
 	.globl	_Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii
 	.type	_Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii, @function
 _Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii:
@@ -52,7 +52,7 @@ _Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii:
 	add	a0,a1,a4
 	ret
 	.size	_Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii, .-_Z29latency_chain_split_decoratedU11rvtt_l1_ptrPiiiiii
-	.align	1
+	.align	2
 	.globl	_Z11load_globalv
 	.type	_Z11load_globalv, @function
 _Z11load_globalv:
@@ -60,7 +60,7 @@ _Z11load_globalv:
 	lw	a0,%lo(.LANCHOR0)(a5)
 	ret
 	.size	_Z11load_globalv, .-_Z11load_globalv
-	.align	1
+	.align	2
 	.globl	_Z14load_global_l1v
 	.type	_Z14load_global_l1v, @function
 _Z14load_global_l1v:
@@ -69,7 +69,7 @@ _Z14load_global_l1v:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z14load_global_l1v, .-_Z14load_global_l1v
-	.align	1
+	.align	2
 	.globl	_Z21load_global_l1_xo_ptrv
 	.type	_Z21load_global_l1_xo_ptrv, @function
 _Z21load_global_l1_xo_ptrv:
@@ -79,7 +79,7 @@ _Z21load_global_l1_xo_ptrv:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z21load_global_l1_xo_ptrv, .-_Z21load_global_l1_xo_ptrv
-	.align	1
+	.align	2
 	.globl	_Z18load_global_l1_ptrv
 	.type	_Z18load_global_l1_ptrv, @function
 _Z18load_global_l1_ptrv:
@@ -89,7 +89,7 @@ _Z18load_global_l1_ptrv:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z18load_global_l1_ptrv, .-_Z18load_global_l1_ptrv
-	.align	1
+	.align	2
 	.globl	_Z21load_global_l1_ts_ptrv
 	.type	_Z21load_global_l1_ts_ptrv, @function
 _Z21load_global_l1_ts_ptrv:
@@ -98,7 +98,7 @@ _Z21load_global_l1_ts_ptrv:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z21load_global_l1_ts_ptrv, .-_Z21load_global_l1_ts_ptrv
-	.align	1
+	.align	2
 	.globl	_Z13load_union_l14__tu
 	.type	_Z13load_union_l14__tu, @function
 _Z13load_union_l14__tu:
@@ -106,7 +106,7 @@ _Z13load_union_l14__tu:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z13load_union_l14__tu, .-_Z13load_union_l14__tu
-	.align	1
+	.align	2
 	.globl	_Z13load_union_ll4__tu
 	.type	_Z13load_union_ll4__tu, @function
 _Z13load_union_ll4__tu:
@@ -114,7 +114,7 @@ _Z13load_union_ll4__tu:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z13load_union_ll4__tu, .-_Z13load_union_ll4__tu
-	.align	1
+	.align	2
 	.globl	_Z10load_arrayU11rvtt_l1_ptrP4__ar
 	.type	_Z10load_arrayU11rvtt_l1_ptrP4__ar, @function
 _Z10load_arrayU11rvtt_l1_ptrP4__ar:
@@ -122,7 +122,7 @@ _Z10load_arrayU11rvtt_l1_ptrP4__ar:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z10load_arrayU11rvtt_l1_ptrP4__ar, .-_Z10load_arrayU11rvtt_l1_ptrP4__ar
-	.align	1
+	.align	2
 	.globl	_Z11load_array2U11rvtt_l1_ptrP4__ari
 	.type	_Z11load_array2U11rvtt_l1_ptrP4__ari, @function
 _Z11load_array2U11rvtt_l1_ptrP4__ari:
@@ -132,7 +132,7 @@ _Z11load_array2U11rvtt_l1_ptrP4__ari:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z11load_array2U11rvtt_l1_ptrP4__ari, .-_Z11load_array2U11rvtt_l1_ptrP4__ari
-	.align	1
+	.align	2
 	.globl	_Z11load_arraypU11rvtt_l1_ptrP5__arp
 	.type	_Z11load_arraypU11rvtt_l1_ptrP5__arp, @function
 _Z11load_arraypU11rvtt_l1_ptrP5__arp:
@@ -141,7 +141,7 @@ _Z11load_arraypU11rvtt_l1_ptrP5__arp:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z11load_arraypU11rvtt_l1_ptrP5__arp, .-_Z11load_arraypU11rvtt_l1_ptrP5__arp
-	.align	1
+	.align	2
 	.globl	_Z12load_arrayp2U11rvtt_l1_ptrP5__arp
 	.type	_Z12load_arrayp2U11rvtt_l1_ptrP5__arp, @function
 _Z12load_arrayp2U11rvtt_l1_ptrP5__arp:
@@ -161,13 +161,13 @@ _Z12load_arrayp2U11rvtt_l1_ptrP5__arp:
 	add	a0,a5,a0
 	ret
 	.size	_Z12load_arrayp2U11rvtt_l1_ptrP5__arp, .-_Z12load_arrayp2U11rvtt_l1_ptrP5__arp
-	.align	1
+	.align	2
 	.globl	_Z9differentU11rvtt_l1_ptri
 	.type	_Z9differentU11rvtt_l1_ptri, @function
 _Z9differentU11rvtt_l1_ptri:
 	ret
 	.size	_Z9differentU11rvtt_l1_ptri, .-_Z9differentU11rvtt_l1_ptri
-	.align	1
+	.align	2
 	.globl	_Z20load_global_l1_constv
 	.type	_Z20load_global_l1_constv, @function
 _Z20load_global_l1_constv:
@@ -177,7 +177,7 @@ _Z20load_global_l1_constv:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z20load_global_l1_constv, .-_Z20load_global_l1_constv
-	.align	1
+	.align	2
 	.globl	_Z5cast1v
 	.type	_Z5cast1v, @function
 _Z5cast1v:
@@ -185,7 +185,7 @@ _Z5cast1v:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z5cast1v, .-_Z5cast1v
-	.align	1
+	.align	2
 	.globl	_Z5cast2ii
 	.type	_Z5cast2ii, @function
 _Z5cast2ii:
@@ -196,7 +196,7 @@ _Z5cast2ii:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z5cast2ii, .-_Z5cast2ii
-	.align	1
+	.align	2
 	.globl	_Z5cast3i
 	.type	_Z5cast3i, @function
 _Z5cast3i:
@@ -204,7 +204,7 @@ _Z5cast3i:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z5cast3i, .-_Z5cast3i
-	.align	1
+	.align	2
 	.globl	_Z11lots_o_argsiiiiiiiiiiiiiiiiii
 	.type	_Z11lots_o_argsiiiiiiiiiiiiiiiiii, @function
 _Z11lots_o_argsiiiiiiiiiiiiiiiiii:
@@ -237,7 +237,7 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiii:
 	add	a0,a5,a0
 	ret
 	.size	_Z11lots_o_argsiiiiiiiiiiiiiiiiii, .-_Z11lots_o_argsiiiiiiiiiiiiiiiiii
-	.align	1
+	.align	2
 	.globl	_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi
 	.type	_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi, @function
 _Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi:
@@ -271,7 +271,7 @@ _Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi:
 	add	a0,a5,a4
 	ret
 	.size	_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi, .-_Z11lots_o_argsiiiiiiiiiiiiiiiiiU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z20addr_calc_decorated1U11rvtt_l1_ptrPi
 	.type	_Z20addr_calc_decorated1U11rvtt_l1_ptrPi, @function
 _Z20addr_calc_decorated1U11rvtt_l1_ptrPi:
@@ -279,7 +279,7 @@ _Z20addr_calc_decorated1U11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z20addr_calc_decorated1U11rvtt_l1_ptrPi, .-_Z20addr_calc_decorated1U11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z20addr_calc_decorated2U11rvtt_l1_ptrPi
 	.type	_Z20addr_calc_decorated2U11rvtt_l1_ptrPi, @function
 _Z20addr_calc_decorated2U11rvtt_l1_ptrPi:
@@ -287,7 +287,7 @@ _Z20addr_calc_decorated2U11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z20addr_calc_decorated2U11rvtt_l1_ptrPi, .-_Z20addr_calc_decorated2U11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts
 	.type	_Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts, @function
 _Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts:
@@ -295,7 +295,7 @@ _Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts, .-_Z20addr_calc_decorated3U11rvtt_l1_ptrP4__ts
-	.align	1
+	.align	2
 	.globl	_Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts
 	.type	_Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts, @function
 _Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts:
@@ -303,7 +303,7 @@ _Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts, .-_Z21addr_calc_decorated4aU11rvtt_l1_ptrP4__ts
-	.align	1
+	.align	2
 	.globl	_Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts
 	.type	_Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts, @function
 _Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts:
@@ -311,7 +311,7 @@ _Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts, .-_Z21addr_calc_decorated4bU11rvtt_l1_ptrP4__ts
-	.align	1
+	.align	2
 	.globl	_Z20addr_calc_decorated5U11rvtt_l1_ptrPVi
 	.type	_Z20addr_calc_decorated5U11rvtt_l1_ptrPVi, @function
 _Z20addr_calc_decorated5U11rvtt_l1_ptrPVi:
@@ -319,7 +319,7 @@ _Z20addr_calc_decorated5U11rvtt_l1_ptrPVi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z20addr_calc_decorated5U11rvtt_l1_ptrPVi, .-_Z20addr_calc_decorated5U11rvtt_l1_ptrPVi
-	.align	1
+	.align	2
 	.globl	_Z4plusU11rvtt_l1_ptrP4__ts
 	.type	_Z4plusU11rvtt_l1_ptrP4__ts, @function
 _Z4plusU11rvtt_l1_ptrP4__ts:
@@ -327,7 +327,7 @@ _Z4plusU11rvtt_l1_ptrP4__ts:
 	addi	a0,a0,5
 	ret
 	.size	_Z4plusU11rvtt_l1_ptrP4__ts, .-_Z4plusU11rvtt_l1_ptrP4__ts
-	.align	1
+	.align	2
 	.globl	_Z3uqiU11rvtt_l1_ptrPh
 	.type	_Z3uqiU11rvtt_l1_ptrPh, @function
 _Z3uqiU11rvtt_l1_ptrPh:
@@ -335,7 +335,7 @@ _Z3uqiU11rvtt_l1_ptrPh:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z3uqiU11rvtt_l1_ptrPh, .-_Z3uqiU11rvtt_l1_ptrPh
-	.align	1
+	.align	2
 	.globl	_Z2qiU11rvtt_l1_ptrPc
 	.type	_Z2qiU11rvtt_l1_ptrPc, @function
 _Z2qiU11rvtt_l1_ptrPc:
@@ -343,7 +343,7 @@ _Z2qiU11rvtt_l1_ptrPc:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z2qiU11rvtt_l1_ptrPc, .-_Z2qiU11rvtt_l1_ptrPc
-	.align	1
+	.align	2
 	.globl	_Z3uhiU11rvtt_l1_ptrPt
 	.type	_Z3uhiU11rvtt_l1_ptrPt, @function
 _Z3uhiU11rvtt_l1_ptrPt:
@@ -351,7 +351,7 @@ _Z3uhiU11rvtt_l1_ptrPt:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z3uhiU11rvtt_l1_ptrPt, .-_Z3uhiU11rvtt_l1_ptrPt
-	.align	1
+	.align	2
 	.globl	_Z2hiU11rvtt_l1_ptrPs
 	.type	_Z2hiU11rvtt_l1_ptrPs, @function
 _Z2hiU11rvtt_l1_ptrPs:
@@ -359,7 +359,7 @@ _Z2hiU11rvtt_l1_ptrPs:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z2hiU11rvtt_l1_ptrPs, .-_Z2hiU11rvtt_l1_ptrPs
-	.align	1
+	.align	2
 	.globl	_Z5up_qiU11rvtt_l1_ptrPc
 	.type	_Z5up_qiU11rvtt_l1_ptrPc, @function
 _Z5up_qiU11rvtt_l1_ptrPc:
@@ -367,7 +367,7 @@ _Z5up_qiU11rvtt_l1_ptrPc:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z5up_qiU11rvtt_l1_ptrPc, .-_Z5up_qiU11rvtt_l1_ptrPc
-	.align	1
+	.align	2
 	.globl	_Z6up_uqiU11rvtt_l1_ptrPh
 	.type	_Z6up_uqiU11rvtt_l1_ptrPh, @function
 _Z6up_uqiU11rvtt_l1_ptrPh:
@@ -375,7 +375,7 @@ _Z6up_uqiU11rvtt_l1_ptrPh:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z6up_uqiU11rvtt_l1_ptrPh, .-_Z6up_uqiU11rvtt_l1_ptrPh
-	.align	1
+	.align	2
 	.globl	_Z5up_hiU11rvtt_l1_ptrPs
 	.type	_Z5up_hiU11rvtt_l1_ptrPs, @function
 _Z5up_hiU11rvtt_l1_ptrPs:
@@ -383,7 +383,7 @@ _Z5up_hiU11rvtt_l1_ptrPs:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z5up_hiU11rvtt_l1_ptrPs, .-_Z5up_hiU11rvtt_l1_ptrPs
-	.align	1
+	.align	2
 	.globl	_Z6up_uhiU11rvtt_l1_ptrPt
 	.type	_Z6up_uhiU11rvtt_l1_ptrPt, @function
 _Z6up_uhiU11rvtt_l1_ptrPt:
@@ -391,7 +391,7 @@ _Z6up_uhiU11rvtt_l1_ptrPt:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z6up_uhiU11rvtt_l1_ptrPt, .-_Z6up_uhiU11rvtt_l1_ptrPt
-	.align	1
+	.align	2
 	.globl	_Z7down_qiU11rvtt_l1_ptrPi
 	.type	_Z7down_qiU11rvtt_l1_ptrPi, @function
 _Z7down_qiU11rvtt_l1_ptrPi:
@@ -399,7 +399,7 @@ _Z7down_qiU11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z7down_qiU11rvtt_l1_ptrPi, .-_Z7down_qiU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z8down_uqiU11rvtt_l1_ptrPj
 	.type	_Z8down_uqiU11rvtt_l1_ptrPj, @function
 _Z8down_uqiU11rvtt_l1_ptrPj:
@@ -407,7 +407,7 @@ _Z8down_uqiU11rvtt_l1_ptrPj:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z8down_uqiU11rvtt_l1_ptrPj, .-_Z8down_uqiU11rvtt_l1_ptrPj
-	.align	1
+	.align	2
 	.globl	_Z7down_hiU11rvtt_l1_ptrPi
 	.type	_Z7down_hiU11rvtt_l1_ptrPi, @function
 _Z7down_hiU11rvtt_l1_ptrPi:
@@ -415,7 +415,7 @@ _Z7down_hiU11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z7down_hiU11rvtt_l1_ptrPi, .-_Z7down_hiU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z8down_uhiU11rvtt_l1_ptrPj
 	.type	_Z8down_uhiU11rvtt_l1_ptrPj, @function
 _Z8down_uhiU11rvtt_l1_ptrPj:
@@ -423,19 +423,19 @@ _Z8down_uhiU11rvtt_l1_ptrPj:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z8down_uhiU11rvtt_l1_ptrPj, .-_Z8down_uhiU11rvtt_l1_ptrPj
-	.align	1
+	.align	2
 	.globl	_Z15l1ptrtestreturnU11rvtt_l1_ptrPVi
 	.type	_Z15l1ptrtestreturnU11rvtt_l1_ptrPVi, @function
 _Z15l1ptrtestreturnU11rvtt_l1_ptrPVi:
 	ret
 	.size	_Z15l1ptrtestreturnU11rvtt_l1_ptrPVi, .-_Z15l1ptrtestreturnU11rvtt_l1_ptrPVi
-	.align	1
+	.align	2
 	.globl	_Z30error_drop_attribute_on_returnU11rvtt_l1_ptrPi
 	.type	_Z30error_drop_attribute_on_returnU11rvtt_l1_ptrPi, @function
 _Z30error_drop_attribute_on_returnU11rvtt_l1_ptrPi:
 	ret
 	.size	_Z30error_drop_attribute_on_returnU11rvtt_l1_ptrPi, .-_Z30error_drop_attribute_on_returnU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi
 	.type	_Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi, @function
 _Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi:
@@ -443,20 +443,20 @@ _Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi, .-_Z30error_drop_attribute_on_assignU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z4castPi
 	.type	_Z4castPi, @function
 _Z4castPi:
 	ret
 	.size	_Z4castPi, .-_Z4castPi
-	.align	1
+	.align	2
 	.globl	_Z5storeU11rvtt_l1_ptrPi
 	.type	_Z5storeU11rvtt_l1_ptrPi, @function
 _Z5storeU11rvtt_l1_ptrPi:
 	sw	zero,0(a0)
 	ret
 	.size	_Z5storeU11rvtt_l1_ptrPi, .-_Z5storeU11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z4copyU11rvtt_l1_ptrP4__ts
 	.type	_Z4copyU11rvtt_l1_ptrP4__ts, @function
 _Z4copyU11rvtt_l1_ptrP4__ts:
@@ -464,25 +464,25 @@ _Z4copyU11rvtt_l1_ptrP4__ts:
 	sw	a5,4(a0)
 	ret
 	.size	_Z4copyU11rvtt_l1_ptrP4__ts, .-_Z4copyU11rvtt_l1_ptrP4__ts
-	.align	1
+	.align	2
 	.globl	_Z29error_add_attribute_on_returnPi
 	.type	_Z29error_add_attribute_on_returnPi, @function
 _Z29error_add_attribute_on_returnPi:
 	ret
 	.size	_Z29error_add_attribute_on_returnPi, .-_Z29error_add_attribute_on_returnPi
-	.align	1
+	.align	2
 	.globl	_Z29error_add_attribute_on_assignPi
 	.type	_Z29error_add_attribute_on_assignPi, @function
 _Z29error_add_attribute_on_assignPi:
 	ret
 	.size	_Z29error_add_attribute_on_assignPi, .-_Z29error_add_attribute_on_assignPi
-	.align	1
+	.align	2
 	.globl	_Z24error_l1_ptr_type_param1U11rvtt_l1_ptri
 	.type	_Z24error_l1_ptr_type_param1U11rvtt_l1_ptri, @function
 _Z24error_l1_ptr_type_param1U11rvtt_l1_ptri:
 	ret
 	.size	_Z24error_l1_ptr_type_param1U11rvtt_l1_ptri, .-_Z24error_l1_ptr_type_param1U11rvtt_l1_ptri
-	.align	1
+	.align	2
 	.globl	_Z24error_l1_ptr_type_param2U11rvtt_l1_ptri
 	.type	_Z24error_l1_ptr_type_param2U11rvtt_l1_ptri, @function
 _Z24error_l1_ptr_type_param2U11rvtt_l1_ptri:
@@ -492,14 +492,14 @@ _Z24error_l1_ptr_type_param2U11rvtt_l1_ptri:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z24error_l1_ptr_type_param2U11rvtt_l1_ptri, .-_Z24error_l1_ptr_type_param2U11rvtt_l1_ptri
-	.align	1
+	.align	2
 	.globl	_Z21error_l1_ptr_type_varv
 	.type	_Z21error_l1_ptr_type_varv, @function
 _Z21error_l1_ptr_type_varv:
 	li	a0,1
 	ret
 	.size	_Z21error_l1_ptr_type_varv, .-_Z21error_l1_ptr_type_varv
-	.align	1
+	.align	2
 	.globl	_Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi
 	.type	_Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi, @function
 _Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi:
@@ -507,7 +507,7 @@ _Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi, .-_Z19error_l1_ptr_returnU11rvtt_l1_ptrPVi
-	.align	1
+	.align	2
 	.globl	_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii
 	.type	_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii, @function
 _Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii:
@@ -519,7 +519,7 @@ _Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii:
 	add	a0,a1,a4
 	ret
 	.size	_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii, .-_Z16reg_read_latencyU12rvtt_reg_ptrPiiiiii
-	.align	1
+	.align	2
 	.globl	_Z9many_usesU11rvtt_l1_ptrPiS_
 	.type	_Z9many_usesU11rvtt_l1_ptrPiS_, @function
 _Z9many_usesU11rvtt_l1_ptrPiS_:
@@ -532,7 +532,7 @@ _Z9many_usesU11rvtt_l1_ptrPiS_:
 	sw	a5,4(a1)
 	ret
 	.size	_Z9many_usesU11rvtt_l1_ptrPiS_, .-_Z9many_usesU11rvtt_l1_ptrPiS_
-	.align	1
+	.align	2
 	.globl	_Z5hoistU11rvtt_l1_ptrPiS_
 	.type	_Z5hoistU11rvtt_l1_ptrPiS_, @function
 _Z5hoistU11rvtt_l1_ptrPiS_:
@@ -545,7 +545,7 @@ _Z5hoistU11rvtt_l1_ptrPiS_:
 	add	a0,a5,a0
 	ret
 	.size	_Z5hoistU11rvtt_l1_ptrPiS_, .-_Z5hoistU11rvtt_l1_ptrPiS_
-	.align	1
+	.align	2
 	.globl	_Z11hoist_storeU11rvtt_l1_ptrPiS_
 	.type	_Z11hoist_storeU11rvtt_l1_ptrPiS_, @function
 _Z11hoist_storeU11rvtt_l1_ptrPiS_:
@@ -560,7 +560,7 @@ _Z11hoist_storeU11rvtt_l1_ptrPiS_:
 	add	a0,a5,a0
 	ret
 	.size	_Z11hoist_storeU11rvtt_l1_ptrPiS_, .-_Z11hoist_storeU11rvtt_l1_ptrPiS_
-	.align	1
+	.align	2
 	.globl	_Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i
 	.type	_Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i, @function
 _Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i:
@@ -577,7 +577,7 @@ _Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i:
 	add	a0,a5,a0
 	ret
 	.size	_Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i, .-_Z20hoist_restrict_storeU11rvtt_l1_ptrPiS_i
-	.align	1
+	.align	2
 	.globl	_Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi
 	.type	_Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi, @function
 _Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi:
@@ -590,7 +590,7 @@ _Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi:
 	add	a0,a5,a0
 	ret
 	.size	_Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi, .-_Z20hoist_volatile_loadsU11rvtt_l1_ptrPiPVi
-	.align	1
+	.align	2
 	.globl	_Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi
 	.type	_Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi, @function
 _Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi:
@@ -605,7 +605,7 @@ _Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi:
 	add	a0,a5,a0
 	ret
 	.size	_Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi, .-_Z28hoist_volatile_restrict_loadU11rvtt_l1_ptrPiPVi
-	.align	1
+	.align	2
 	.globl	_Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_
 	.type	_Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_, @function
 _Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_:
@@ -620,7 +620,7 @@ _Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_:
 	add	a0,a5,a0
 	ret
 	.size	_Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_, .-_Z21hoist_unspec_volatileU11rvtt_l1_ptrPiS_
-	.align	1
+	.align	2
 	.globl	_Z5lowerU11rvtt_l1_ptrPiS_i
 	.type	_Z5lowerU11rvtt_l1_ptrPiS_i, @function
 _Z5lowerU11rvtt_l1_ptrPiS_i:
@@ -637,7 +637,7 @@ _Z5lowerU11rvtt_l1_ptrPiS_i:
 	add	a0,a5,a0
 	ret
 	.size	_Z5lowerU11rvtt_l1_ptrPiS_i, .-_Z5lowerU11rvtt_l1_ptrPiS_i
-	.align	1
+	.align	2
 	.globl	_Z6lower2U11rvtt_l1_ptrPiS_i
 	.type	_Z6lower2U11rvtt_l1_ptrPiS_i, @function
 _Z6lower2U11rvtt_l1_ptrPiS_i:
@@ -656,7 +656,7 @@ _Z6lower2U11rvtt_l1_ptrPiS_i:
 	add	a0,a5,a0
 	ret
 	.size	_Z6lower2U11rvtt_l1_ptrPiS_i, .-_Z6lower2U11rvtt_l1_ptrPiS_i
-	.align	1
+	.align	2
 	.globl	_Z11const_addrfi
 	.type	_Z11const_addrfi, @function
 _Z11const_addrfi:
@@ -665,7 +665,7 @@ _Z11const_addrfi:
 	add	a0,a0,a5
 	ret
 	.size	_Z11const_addrfi, .-_Z11const_addrfi
-	.align	1
+	.align	2
 	.globl	_Z11const_addr2i
 	.type	_Z11const_addr2i, @function
 _Z11const_addr2i:
@@ -674,7 +674,7 @@ _Z11const_addr2i:
 	add	a0,a0,a5
 	ret
 	.size	_Z11const_addr2i, .-_Z11const_addr2i
-	.align	1
+	.align	2
 	.globl	_Z11const_addr3i
 	.type	_Z11const_addr3i, @function
 _Z11const_addr3i:
@@ -688,7 +688,7 @@ _Z11const_addr3i:
 	add	a0,a0,a5
 	jr	ra
 	.size	_Z11const_addr3i, .-_Z11const_addr3i
-	.align	1
+	.align	2
 	.globl	_Z11const_addr4i
 	.type	_Z11const_addr4i, @function
 _Z11const_addr4i:
@@ -697,7 +697,7 @@ _Z11const_addr4i:
 	add	a0,a5,a0
 	ret
 	.size	_Z11const_addr4i, .-_Z11const_addr4i
-	.align	1
+	.align	2
 	.globl	_Z19order_of_attribute1U11rvtt_l1_ptrPi
 	.type	_Z19order_of_attribute1U11rvtt_l1_ptrPi, @function
 _Z19order_of_attribute1U11rvtt_l1_ptrPi:
@@ -705,7 +705,7 @@ _Z19order_of_attribute1U11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z19order_of_attribute1U11rvtt_l1_ptrPi, .-_Z19order_of_attribute1U11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z19order_of_attribute2U11rvtt_l1_ptrPi
 	.type	_Z19order_of_attribute2U11rvtt_l1_ptrPi, @function
 _Z19order_of_attribute2U11rvtt_l1_ptrPi:
@@ -713,7 +713,7 @@ _Z19order_of_attribute2U11rvtt_l1_ptrPi:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z19order_of_attribute2U11rvtt_l1_ptrPi, .-_Z19order_of_attribute2U11rvtt_l1_ptrPi
-	.align	1
+	.align	2
 	.globl	_Z8ptr_arr1v
 	.type	_Z8ptr_arr1v, @function
 _Z8ptr_arr1v:
@@ -722,7 +722,7 @@ _Z8ptr_arr1v:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z8ptr_arr1v, .-_Z8ptr_arr1v
-	.align	1
+	.align	2
 	.globl	_Z8ptr_arr2v
 	.type	_Z8ptr_arr2v, @function
 _Z8ptr_arr2v:
@@ -732,7 +732,7 @@ _Z8ptr_arr2v:
 	mv	a0,a0	# GS L1 war
 	ret
 	.size	_Z8ptr_arr2v, .-_Z8ptr_arr2v
-	.align	1
+	.align	2
 	.globl	_Z14real_test_casejjiiiii
 	.type	_Z14real_test_casejjiiiii, @function
 _Z14real_test_casejjiiiii:
@@ -747,7 +747,7 @@ _Z14real_test_casejjiiiii:
 	ret
 	.size	_Z14real_test_casejjiiiii, .-_Z14real_test_casejjiiiii
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -799,4 +799,4 @@ global_l1_xo_ptr:
 	.size	global_l1_ptr, 4
 global_l1_ptr:
 	.word	global
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"
