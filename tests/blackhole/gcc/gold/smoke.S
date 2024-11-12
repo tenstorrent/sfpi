@@ -215,4 +215,4 @@ main:
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

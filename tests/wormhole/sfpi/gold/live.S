@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z9abs_setccv
 	.type	_Z9abs_setccv, @function
 _Z9abs_setccv:
@@ -17,7 +17,7 @@ _Z9abs_setccv:
 	SFPSTORE	26, L0, 0, 3
 	ret
 	.size	_Z9abs_setccv, .-_Z9abs_setccv
-	.align	1
+	.align	2
 	.globl	_Z18rename_move_case2av
 	.type	_Z18rename_move_case2av, @function
 _Z18rename_move_case2av:
@@ -30,7 +30,7 @@ _Z18rename_move_case2av:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z18rename_move_case2av, .-_Z18rename_move_case2av
-	.align	1
+	.align	2
 	.globl	_Z16copy_move_case2bv
 	.type	_Z16copy_move_case2bv, @function
 _Z16copy_move_case2bv:
@@ -44,7 +44,7 @@ _Z16copy_move_case2bv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z16copy_move_case2bv, .-_Z16copy_move_case2bv
-	.align	1
+	.align	2
 	.globl	_Z15copy_move_case3v
 	.type	_Z15copy_move_case3v, @function
 _Z15copy_move_case3v:
@@ -62,7 +62,7 @@ _Z15copy_move_case3v:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z15copy_move_case3v, .-_Z15copy_move_case3v
-	.align	1
+	.align	2
 	.globl	_Z19internal_move_case4v
 	.type	_Z19internal_move_case4v, @function
 _Z19internal_move_case4v:
@@ -78,7 +78,7 @@ _Z19internal_move_case4v:
 	SFPSTORE	0, L2, 12, 3
 	ret
 	.size	_Z19internal_move_case4v, .-_Z19internal_move_case4v
-	.align	1
+	.align	2
 	.globl	_Z19internal_move_case5v
 	.type	_Z19internal_move_case5v, @function
 _Z19internal_move_case5v:
@@ -96,7 +96,7 @@ _Z19internal_move_case5v:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z19internal_move_case5v, .-_Z19internal_move_case5v
-	.align	1
+	.align	2
 	.globl	_Z4bb_1v
 	.type	_Z4bb_1v, @function
 _Z4bb_1v:
@@ -139,7 +139,7 @@ _Z4bb_1v:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z4bb_1v, .-_Z4bb_1v
-	.align	1
+	.align	2
 	.globl	_Z4bb_2v
 	.type	_Z4bb_2v, @function
 _Z4bb_2v:
@@ -173,7 +173,7 @@ _Z4bb_2v:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z4bb_2v, .-_Z4bb_2v
-	.align	1
+	.align	2
 	.globl	_Z4bb_3v
 	.type	_Z4bb_3v, @function
 _Z4bb_3v:
@@ -210,7 +210,7 @@ _Z4bb_3v:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z4bb_3v, .-_Z4bb_3v
-	.align	1
+	.align	2
 	.globl	_Z4bb_4v
 	.type	_Z4bb_4v, @function
 _Z4bb_4v:
@@ -248,7 +248,7 @@ _Z4bb_4v:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z4bb_4v, .-_Z4bb_4v
-	.align	1
+	.align	2
 	.globl	_Z11bb_not_livev
 	.type	_Z11bb_not_livev, @function
 _Z11bb_not_livev:
@@ -272,7 +272,7 @@ _Z11bb_not_livev:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z11bb_not_livev, .-_Z11bb_not_livev
-	.align	1
+	.align	2
 	.globl	_Z14popc_unrollingv
 	.type	_Z14popc_unrollingv, @function
 _Z14popc_unrollingv:
@@ -303,7 +303,7 @@ _Z14popc_unrollingv:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z14popc_unrollingv, .-_Z14popc_unrollingv
-	.align	1
+	.align	2
 	.globl	_Z18double_assign_evenv
 	.type	_Z18double_assign_evenv, @function
 _Z18double_assign_evenv:
@@ -324,7 +324,7 @@ _Z18double_assign_evenv:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z18double_assign_evenv, .-_Z18double_assign_evenv
-	.align	1
+	.align	2
 	.globl	_Z10generationv
 	.type	_Z10generationv, @function
 _Z10generationv:
@@ -361,7 +361,7 @@ _Z10generationv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z10generationv, .-_Z10generationv
-	.align	1
+	.align	2
 	.globl	_Z21prop_thru_pseudo_livev
 	.type	_Z21prop_thru_pseudo_livev, @function
 _Z21prop_thru_pseudo_livev:
@@ -389,7 +389,7 @@ _Z21prop_thru_pseudo_livev:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z21prop_thru_pseudo_livev, .-_Z21prop_thru_pseudo_livev
-	.align	1
+	.align	2
 	.globl	_Z18do_not_fold_assignv
 	.type	_Z18do_not_fold_assignv, @function
 _Z18do_not_fold_assignv:
@@ -402,7 +402,7 @@ _Z18do_not_fold_assignv:
 	ret
 	.size	_Z18do_not_fold_assignv, .-_Z18do_not_fold_assignv
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -441,4 +441,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

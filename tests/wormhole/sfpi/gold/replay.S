@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z9no_replayv
 	.type	_Z9no_replayv, @function
 _Z9no_replayv:
@@ -12,7 +12,7 @@ _Z9no_replayv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z9no_replayv, .-_Z9no_replayv
-	.align	1
+	.align	2
 	.globl	_Z7replay4v
 	.type	_Z7replay4v, @function
 _Z7replay4v:
@@ -25,7 +25,7 @@ _Z7replay4v:
 	TTREPLAY	0, 3, 0, 0
 	ret
 	.size	_Z7replay4v, .-_Z7replay4v
-	.align	1
+	.align	2
 	.globl	_Z7replay6v
 	.type	_Z7replay6v, @function
 _Z7replay6v:
@@ -43,7 +43,7 @@ _Z7replay6v:
 	TTREPLAY	0, 6, 0, 0
 	ret
 	.size	_Z7replay6v, .-_Z7replay6v
-	.align	1
+	.align	2
 	.globl	_Z25replay_load_in_the_middlev
 	.type	_Z25replay_load_in_the_middlev, @function
 _Z25replay_load_in_the_middlev:
@@ -70,7 +70,7 @@ _Z25replay_load_in_the_middlev:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z25replay_load_in_the_middlev, .-_Z25replay_load_in_the_middlev
-	.align	1
+	.align	2
 	.globl	_Z27replay_assignlreg_const_regv
 	.type	_Z27replay_assignlreg_const_regv, @function
 _Z27replay_assignlreg_const_regv:
@@ -88,7 +88,7 @@ _Z27replay_assignlreg_const_regv:
 	TTREPLAY	0, 8, 0, 0
 	ret
 	.size	_Z27replay_assignlreg_const_regv, .-_Z27replay_assignlreg_const_regv
-	.align	1
+	.align	2
 	.globl	_Z18replay_partial_topv
 	.type	_Z18replay_partial_topv, @function
 _Z18replay_partial_topv:
@@ -106,7 +106,7 @@ _Z18replay_partial_topv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z18replay_partial_topv, .-_Z18replay_partial_topv
-	.align	1
+	.align	2
 	.globl	_Z18replay_partial_botv
 	.type	_Z18replay_partial_botv, @function
 _Z18replay_partial_botv:
@@ -124,7 +124,7 @@ _Z18replay_partial_botv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z18replay_partial_botv, .-_Z18replay_partial_botv
-	.align	1
+	.align	2
 	.globl	_Z13replay_nonimmi
 	.type	_Z13replay_nonimmi, @function
 _Z13replay_nonimmi:
@@ -152,7 +152,7 @@ _Z13replay_nonimmi:
 	TTREPLAY	0, 5, 0, 0
 	ret
 	.size	_Z13replay_nonimmi, .-_Z13replay_nonimmi
-	.align	1
+	.align	2
 	.globl	_Z14replay_nonimm2i
 	.type	_Z14replay_nonimm2i, @function
 _Z14replay_nonimm2i:
@@ -210,7 +210,7 @@ _Z14replay_nonimm2i:
 	TTREPLAY	0, 3, 0, 0
 	ret
 	.size	_Z14replay_nonimm2i, .-_Z14replay_nonimm2i
-	.align	1
+	.align	2
 	.globl	_Z14replay_nonimm3i
 	.type	_Z14replay_nonimm3i, @function
 _Z14replay_nonimm3i:
@@ -256,7 +256,7 @@ _Z14replay_nonimm3i:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z14replay_nonimm3i, .-_Z14replay_nonimm3i
-	.align	1
+	.align	2
 	.globl	_Z21replay_jump_in_middleii
 	.type	_Z21replay_jump_in_middleii, @function
 _Z21replay_jump_in_middleii:
@@ -314,7 +314,7 @@ _Z21replay_jump_in_middleii:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z21replay_jump_in_middleii, .-_Z21replay_jump_in_middleii
-	.align	1
+	.align	2
 	.globl	_Z14replay_tti_asmv
 	.type	_Z14replay_tti_asmv, @function
 _Z14replay_tti_asmv:
@@ -399,4 +399,4 @@ _Z14replay_tti_asmv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"
