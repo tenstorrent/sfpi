@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z6loadiffi
 	.type	_Z6loadiffi, @function
 _Z6loadiffi:
@@ -59,7 +59,7 @@ _Z6loadiffi:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z6loadiffi, .-_Z6loadiffi
-	.align	1
+	.align	2
 	.globl	_Z9loadif_lvfi
 	.type	_Z9loadif_lvfi, @function
 _Z9loadif_lvfi:
@@ -262,7 +262,7 @@ _Z9loadif_lvfi:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9loadif_lvfi, .-_Z9loadif_lvfi
-	.align	1
+	.align	2
 	.globl	_Z6loadiii
 	.type	_Z6loadiii, @function
 _Z6loadiii:
@@ -292,7 +292,7 @@ _Z6loadiii:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z6loadiii, .-_Z6loadiii
-	.align	1
+	.align	2
 	.globl	_Z9loadii_lvi
 	.type	_Z9loadii_lvi, @function
 _Z9loadii_lvi:
@@ -386,7 +386,7 @@ _Z9loadii_lvi:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z9loadii_lvi, .-_Z9loadii_lvi
-	.align	1
+	.align	2
 	.globl	_Z9loadstorei
 	.type	_Z9loadstorei, @function
 _Z9loadstorei:
@@ -432,7 +432,7 @@ _Z9loadstorei:
 	sw	a4, 0(a5)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z9loadstorei, .-_Z9loadstorei
-	.align	1
+	.align	2
 	.globl	_Z12loadstore_lvi
 	.type	_Z12loadstore_lvi, @function
 _Z12loadstore_lvi:
@@ -505,7 +505,7 @@ _Z12loadstore_lvi:
 	sw	a5, 0(a4)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z12loadstore_lvi, .-_Z12loadstore_lvi
-	.align	1
+	.align	2
 	.globl	_Z17loadstorefallbacki
 	.type	_Z17loadstorefallbacki, @function
 _Z17loadstorefallbacki:
@@ -532,7 +532,7 @@ _Z17loadstorefallbacki:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z17loadstorefallbacki, .-_Z17loadstorefallbacki
-	.align	1
+	.align	2
 	.globl	_Z20loadstorefallback_lvi
 	.type	_Z20loadstorefallback_lvi, @function
 _Z20loadstorefallback_lvi:
@@ -588,7 +588,7 @@ _Z20loadstorefallback_lvi:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z20loadstorefallback_lvi, .-_Z20loadstorefallback_lvi
-	.align	1
+	.align	2
 	.globl	_Z5fcmpsfi
 	.type	_Z5fcmpsfi, @function
 _Z5fcmpsfi:
@@ -752,7 +752,7 @@ _Z5fcmpsfi:
 	TTNOP
 	ret
 	.size	_Z5fcmpsfi, .-_Z5fcmpsfi
-	.align	1
+	.align	2
 	.globl	_Z7muladdffi
 	.type	_Z7muladdffi, @function
 _Z7muladdffi:
@@ -887,7 +887,7 @@ _Z7muladdffi:
 	SFPSTORE	4, L0, 0
 	ret
 	.size	_Z7muladdffi, .-_Z7muladdffi
-	.align	1
+	.align	2
 	.globl	_Z10muladdf_lvfi
 	.type	_Z10muladdf_lvfi, @function
 _Z10muladdf_lvfi:
@@ -1038,7 +1038,7 @@ _Z10muladdf_lvfi:
 	TTNOP
 	ret
 	.size	_Z10muladdf_lvfi, .-_Z10muladdf_lvfi
-	.align	1
+	.align	2
 	.globl	_Z5icmpsi
 	.type	_Z5icmpsi, @function
 _Z5icmpsi:
@@ -1128,7 +1128,7 @@ _Z5icmpsi:
 	TTNOP
 	ret
 	.size	_Z5icmpsi, .-_Z5icmpsi
-	.align	1
+	.align	2
 	.globl	_Z7muladdii
 	.type	_Z7muladdii, @function
 _Z7muladdii:
@@ -1199,7 +1199,7 @@ _Z7muladdii:
 	TTNOP
 	ret
 	.size	_Z7muladdii, .-_Z7muladdii
-	.align	1
+	.align	2
 	.globl	_Z10muladdi_lvi
 	.type	_Z10muladdi_lvi, @function
 _Z10muladdi_lvi:
@@ -1322,7 +1322,7 @@ _Z10muladdi_lvi:
 	TTNOP
 	ret
 	.size	_Z10muladdi_lvi, .-_Z10muladdi_lvi
-	.align	1
+	.align	2
 	.globl	_Z5otherif
 	.type	_Z5otherif, @function
 _Z5otherif:
@@ -1424,7 +1424,7 @@ _Z5otherif:
 	sw	a3, 0(a5)	# Op(0x72) s(lr0)
 	ret
 	.size	_Z5otherif, .-_Z5otherif
-	.align	1
+	.align	2
 	.globl	_Z8other_lvif
 	.type	_Z8other_lvif, @function
 _Z8other_lvif:
@@ -1506,7 +1506,7 @@ _Z8other_lvif:
 	TTNOP
 	ret
 	.size	_Z8other_lvif, .-_Z8other_lvif
-	.align	1
+	.align	2
 	.globl	_Z4shfti
 	.type	_Z4shfti, @function
 _Z4shfti:
@@ -1556,7 +1556,7 @@ _Z4shfti:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z4shfti, .-_Z4shfti
-	.align	1
+	.align	2
 	.globl	_Z7shft_lvi
 	.type	_Z7shft_lvi, @function
 _Z7shft_lvi:
@@ -1678,7 +1678,7 @@ _Z7shft_lvi:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z7shft_lvi, .-_Z7shft_lvi
-	.align	1
+	.align	2
 	.globl	_Z4mulii
 	.type	_Z4mulii, @function
 _Z4mulii:
@@ -1709,7 +1709,7 @@ _Z4mulii:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z4mulii, .-_Z4mulii
-	.align	1
+	.align	2
 	.globl	_Z13muli_nounrolli
 	.type	_Z13muli_nounrolli, @function
 _Z13muli_nounrolli:
@@ -1734,4 +1734,4 @@ _Z13muli_nounrolli:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

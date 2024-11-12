@@ -173,4 +173,4 @@ main:
 	li	a0,0
 	ret
 	.size	main, .-main
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

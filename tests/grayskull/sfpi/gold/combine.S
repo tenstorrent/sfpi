@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes1v
 	.type	_Z11iadd_i_yes1v, @function
 _Z11iadd_i_yes1v:
@@ -18,7 +18,7 @@ _Z11iadd_i_yes1v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_yes1v, .-_Z11iadd_i_yes1v
-	.align	1
+	.align	2
 	.globl	_Z16iadd_i_yes1_livev
 	.type	_Z16iadd_i_yes1_livev, @function
 _Z16iadd_i_yes1_livev:
@@ -34,7 +34,7 @@ _Z16iadd_i_yes1_livev:
 	TTNOP
 	ret
 	.size	_Z16iadd_i_yes1_livev, .-_Z16iadd_i_yes1_livev
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes2v
 	.type	_Z11iadd_i_yes2v, @function
 _Z11iadd_i_yes2v:
@@ -48,7 +48,7 @@ _Z11iadd_i_yes2v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_yes2v, .-_Z11iadd_i_yes2v
-	.align	1
+	.align	2
 	.globl	_Z12iadd_i_yes3av
 	.type	_Z12iadd_i_yes3av, @function
 _Z12iadd_i_yes3av:
@@ -70,7 +70,7 @@ _Z12iadd_i_yes3av:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z12iadd_i_yes3av, .-_Z12iadd_i_yes3av
-	.align	1
+	.align	2
 	.globl	_Z12iadd_i_yes3bv
 	.type	_Z12iadd_i_yes3bv, @function
 _Z12iadd_i_yes3bv:
@@ -90,7 +90,7 @@ _Z12iadd_i_yes3bv:
 	TTNOP
 	ret
 	.size	_Z12iadd_i_yes3bv, .-_Z12iadd_i_yes3bv
-	.align	1
+	.align	2
 	.globl	_Z12iadd_i_yes3cv
 	.type	_Z12iadd_i_yes3cv, @function
 _Z12iadd_i_yes3cv:
@@ -110,7 +110,7 @@ _Z12iadd_i_yes3cv:
 	TTNOP
 	ret
 	.size	_Z12iadd_i_yes3cv, .-_Z12iadd_i_yes3cv
-	.align	1
+	.align	2
 	.globl	_Z12iadd_i_yes3dv
 	.type	_Z12iadd_i_yes3dv, @function
 _Z12iadd_i_yes3dv:
@@ -128,7 +128,7 @@ _Z12iadd_i_yes3dv:
 	TTNOP
 	ret
 	.size	_Z12iadd_i_yes3dv, .-_Z12iadd_i_yes3dv
-	.align	1
+	.align	2
 	.globl	_Z12iadd_i_yes4av
 	.type	_Z12iadd_i_yes4av, @function
 _Z12iadd_i_yes4av:
@@ -148,7 +148,7 @@ _Z12iadd_i_yes4av:
 	TTNOP
 	ret
 	.size	_Z12iadd_i_yes4av, .-_Z12iadd_i_yes4av
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes5v
 	.type	_Z11iadd_i_yes5v, @function
 _Z11iadd_i_yes5v:
@@ -162,7 +162,7 @@ _Z11iadd_i_yes5v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_yes5v, .-_Z11iadd_i_yes5v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes6v
 	.type	_Z11iadd_i_yes6v, @function
 _Z11iadd_i_yes6v:
@@ -181,7 +181,7 @@ _Z11iadd_i_yes6v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_yes6v, .-_Z11iadd_i_yes6v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes7v
 	.type	_Z11iadd_i_yes7v, @function
 _Z11iadd_i_yes7v:
@@ -197,7 +197,7 @@ _Z11iadd_i_yes7v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z11iadd_i_yes7v, .-_Z11iadd_i_yes7v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes8v
 	.type	_Z11iadd_i_yes8v, @function
 _Z11iadd_i_yes8v:
@@ -213,7 +213,7 @@ _Z11iadd_i_yes8v:
 	SFPSTORE	8, L1, 2
 	ret
 	.size	_Z11iadd_i_yes8v, .-_Z11iadd_i_yes8v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_yes9v
 	.type	_Z11iadd_i_yes9v, @function
 _Z11iadd_i_yes9v:
@@ -232,7 +232,7 @@ _Z11iadd_i_yes9v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_yes9v, .-_Z11iadd_i_yes9v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no1v
 	.type	_Z10iadd_i_no1v, @function
 _Z10iadd_i_no1v:
@@ -248,7 +248,7 @@ _Z10iadd_i_no1v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no1v, .-_Z10iadd_i_no1v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no2v
 	.type	_Z10iadd_i_no2v, @function
 _Z10iadd_i_no2v:
@@ -263,7 +263,7 @@ _Z10iadd_i_no2v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no2v, .-_Z10iadd_i_no2v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no3v
 	.type	_Z10iadd_i_no3v, @function
 _Z10iadd_i_no3v:
@@ -281,7 +281,7 @@ _Z10iadd_i_no3v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z10iadd_i_no3v, .-_Z10iadd_i_no3v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no4v
 	.type	_Z10iadd_i_no4v, @function
 _Z10iadd_i_no4v:
@@ -302,7 +302,7 @@ _Z10iadd_i_no4v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z10iadd_i_no4v, .-_Z10iadd_i_no4v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_no4bv
 	.type	_Z11iadd_i_no4bv, @function
 _Z11iadd_i_no4bv:
@@ -322,7 +322,7 @@ _Z11iadd_i_no4bv:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_no4bv, .-_Z11iadd_i_no4bv
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no5v
 	.type	_Z10iadd_i_no5v, @function
 _Z10iadd_i_no5v:
@@ -337,7 +337,7 @@ _Z10iadd_i_no5v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no5v, .-_Z10iadd_i_no5v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no6v
 	.type	_Z10iadd_i_no6v, @function
 _Z10iadd_i_no6v:
@@ -350,7 +350,7 @@ _Z10iadd_i_no6v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no6v, .-_Z10iadd_i_no6v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no7v
 	.type	_Z10iadd_i_no7v, @function
 _Z10iadd_i_no7v:
@@ -368,7 +368,7 @@ _Z10iadd_i_no7v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no7v, .-_Z10iadd_i_no7v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no8v
 	.type	_Z10iadd_i_no8v, @function
 _Z10iadd_i_no8v:
@@ -388,7 +388,7 @@ _Z10iadd_i_no8v:
 	TTNOP
 	ret
 	.size	_Z10iadd_i_no8v, .-_Z10iadd_i_no8v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_i_no9v
 	.type	_Z10iadd_i_no9v, @function
 _Z10iadd_i_no9v:
@@ -407,7 +407,7 @@ _Z10iadd_i_no9v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z10iadd_i_no9v, .-_Z10iadd_i_no9v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_no10v
 	.type	_Z11iadd_i_no10v, @function
 _Z11iadd_i_no10v:
@@ -440,7 +440,7 @@ _Z11iadd_i_no10v:
 	addi	sp,sp,16
 	jr	ra
 	.size	_Z11iadd_i_no10v, .-_Z11iadd_i_no10v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_no11v
 	.type	_Z11iadd_i_no11v, @function
 _Z11iadd_i_no11v:
@@ -461,7 +461,7 @@ _Z11iadd_i_no11v:
 	TTNOP
 	ret
 	.size	_Z11iadd_i_no11v, .-_Z11iadd_i_no11v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_i_no12j
 	.type	_Z11iadd_i_no12j, @function
 _Z11iadd_i_no12j:
@@ -488,7 +488,7 @@ _Z11iadd_i_no12j:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z11iadd_i_no12j, .-_Z11iadd_i_no12j
-	.align	1
+	.align	2
 	.globl	_Z13iadd_i_no_bb1i
 	.type	_Z13iadd_i_no_bb1i, @function
 _Z13iadd_i_no_bb1i:
@@ -512,7 +512,7 @@ _Z13iadd_i_no_bb1i:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z13iadd_i_no_bb1i, .-_Z13iadd_i_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z11iadd_v_yes1v
 	.type	_Z11iadd_v_yes1v, @function
 _Z11iadd_v_yes1v:
@@ -527,7 +527,7 @@ _Z11iadd_v_yes1v:
 	TTNOP
 	ret
 	.size	_Z11iadd_v_yes1v, .-_Z11iadd_v_yes1v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_v_yes2v
 	.type	_Z11iadd_v_yes2v, @function
 _Z11iadd_v_yes2v:
@@ -542,7 +542,7 @@ _Z11iadd_v_yes2v:
 	TTNOP
 	ret
 	.size	_Z11iadd_v_yes2v, .-_Z11iadd_v_yes2v
-	.align	1
+	.align	2
 	.globl	_Z11iadd_v_yes3v
 	.type	_Z11iadd_v_yes3v, @function
 _Z11iadd_v_yes3v:
@@ -557,7 +557,7 @@ _Z11iadd_v_yes3v:
 	TTNOP
 	ret
 	.size	_Z11iadd_v_yes3v, .-_Z11iadd_v_yes3v
-	.align	1
+	.align	2
 	.globl	_Z12iadd_v_yes4av
 	.type	_Z12iadd_v_yes4av, @function
 _Z12iadd_v_yes4av:
@@ -572,7 +572,7 @@ _Z12iadd_v_yes4av:
 	TTNOP
 	ret
 	.size	_Z12iadd_v_yes4av, .-_Z12iadd_v_yes4av
-	.align	1
+	.align	2
 	.globl	_Z12iadd_v_yes4bv
 	.type	_Z12iadd_v_yes4bv, @function
 _Z12iadd_v_yes4bv:
@@ -588,7 +588,7 @@ _Z12iadd_v_yes4bv:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z12iadd_v_yes4bv, .-_Z12iadd_v_yes4bv
-	.align	1
+	.align	2
 	.globl	_Z10iadd_v_no1v
 	.type	_Z10iadd_v_no1v, @function
 _Z10iadd_v_no1v:
@@ -606,7 +606,7 @@ _Z10iadd_v_no1v:
 	TTNOP
 	ret
 	.size	_Z10iadd_v_no1v, .-_Z10iadd_v_no1v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_v_no2v
 	.type	_Z10iadd_v_no2v, @function
 _Z10iadd_v_no2v:
@@ -624,7 +624,7 @@ _Z10iadd_v_no2v:
 	TTNOP
 	ret
 	.size	_Z10iadd_v_no2v, .-_Z10iadd_v_no2v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_v_no3v
 	.type	_Z10iadd_v_no3v, @function
 _Z10iadd_v_no3v:
@@ -638,7 +638,7 @@ _Z10iadd_v_no3v:
 	TTNOP
 	ret
 	.size	_Z10iadd_v_no3v, .-_Z10iadd_v_no3v
-	.align	1
+	.align	2
 	.globl	_Z10iadd_v_no4v
 	.type	_Z10iadd_v_no4v, @function
 _Z10iadd_v_no4v:
@@ -656,7 +656,7 @@ _Z10iadd_v_no4v:
 	TTNOP
 	ret
 	.size	_Z10iadd_v_no4v, .-_Z10iadd_v_no4v
-	.align	1
+	.align	2
 	.globl	_Z13iadd_v_no_bb1i
 	.type	_Z13iadd_v_no_bb1i, @function
 _Z13iadd_v_no_bb1i:
@@ -681,7 +681,7 @@ _Z13iadd_v_no_bb1i:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z13iadd_v_no_bb1i, .-_Z13iadd_v_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z7lz_yes1v
 	.type	_Z7lz_yes1v, @function
 _Z7lz_yes1v:
@@ -697,7 +697,7 @@ _Z7lz_yes1v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z7lz_yes1v, .-_Z7lz_yes1v
-	.align	1
+	.align	2
 	.globl	_Z7lz_yes2v
 	.type	_Z7lz_yes2v, @function
 _Z7lz_yes2v:
@@ -713,7 +713,7 @@ _Z7lz_yes2v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z7lz_yes2v, .-_Z7lz_yes2v
-	.align	1
+	.align	2
 	.globl	_Z6lz_no1v
 	.type	_Z6lz_no1v, @function
 _Z6lz_no1v:
@@ -730,7 +730,7 @@ _Z6lz_no1v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z6lz_no1v, .-_Z6lz_no1v
-	.align	1
+	.align	2
 	.globl	_Z6lz_no2v
 	.type	_Z6lz_no2v, @function
 _Z6lz_no2v:
@@ -747,7 +747,7 @@ _Z6lz_no2v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z6lz_no2v, .-_Z6lz_no2v
-	.align	1
+	.align	2
 	.globl	_Z6lz_no3v
 	.type	_Z6lz_no3v, @function
 _Z6lz_no3v:
@@ -764,7 +764,7 @@ _Z6lz_no3v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z6lz_no3v, .-_Z6lz_no3v
-	.align	1
+	.align	2
 	.globl	_Z9lz_no_bb1i
 	.type	_Z9lz_no_bb1i, @function
 _Z9lz_no_bb1i:
@@ -788,7 +788,7 @@ _Z9lz_no_bb1i:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9lz_no_bb1i, .-_Z9lz_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z10exexp_yes1v
 	.type	_Z10exexp_yes1v, @function
 _Z10exexp_yes1v:
@@ -804,7 +804,7 @@ _Z10exexp_yes1v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z10exexp_yes1v, .-_Z10exexp_yes1v
-	.align	1
+	.align	2
 	.globl	_Z15exexp_yes1_livev
 	.type	_Z15exexp_yes1_livev, @function
 _Z15exexp_yes1_livev:
@@ -823,7 +823,7 @@ _Z15exexp_yes1_livev:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z15exexp_yes1_livev, .-_Z15exexp_yes1_livev
-	.align	1
+	.align	2
 	.globl	_Z10exexp_yes2v
 	.type	_Z10exexp_yes2v, @function
 _Z10exexp_yes2v:
@@ -839,7 +839,7 @@ _Z10exexp_yes2v:
 	SFPSTORE	0, L1, 2
 	ret
 	.size	_Z10exexp_yes2v, .-_Z10exexp_yes2v
-	.align	1
+	.align	2
 	.globl	_Z10exexp_yes3v
 	.type	_Z10exexp_yes3v, @function
 _Z10exexp_yes3v:
@@ -854,7 +854,7 @@ _Z10exexp_yes3v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z10exexp_yes3v, .-_Z10exexp_yes3v
-	.align	1
+	.align	2
 	.globl	_Z9exexp_no1v
 	.type	_Z9exexp_no1v, @function
 _Z9exexp_no1v:
@@ -873,7 +873,7 @@ _Z9exexp_no1v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z9exexp_no1v, .-_Z9exexp_no1v
-	.align	1
+	.align	2
 	.globl	_Z9exexp_no2v
 	.type	_Z9exexp_no2v, @function
 _Z9exexp_no2v:
@@ -890,7 +890,7 @@ _Z9exexp_no2v:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z9exexp_no2v, .-_Z9exexp_no2v
-	.align	1
+	.align	2
 	.globl	_Z12exexp_no_bb1i
 	.type	_Z12exexp_no_bb1i, @function
 _Z12exexp_no_bb1i:
@@ -913,7 +913,7 @@ _Z12exexp_no_bb1i:
 	SFPSTORE	0, L0, 2
 	ret
 	.size	_Z12exexp_no_bb1i, .-_Z12exexp_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z8mad_yes1v
 	.type	_Z8mad_yes1v, @function
 _Z8mad_yes1v:
@@ -926,7 +926,7 @@ _Z8mad_yes1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z8mad_yes1v, .-_Z8mad_yes1v
-	.align	1
+	.align	2
 	.globl	_Z8mad_yes2v
 	.type	_Z8mad_yes2v, @function
 _Z8mad_yes2v:
@@ -943,7 +943,7 @@ _Z8mad_yes2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z8mad_yes2v, .-_Z8mad_yes2v
-	.align	1
+	.align	2
 	.globl	_Z8mad_yes3v
 	.type	_Z8mad_yes3v, @function
 _Z8mad_yes3v:
@@ -962,7 +962,7 @@ _Z8mad_yes3v:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z8mad_yes3v, .-_Z8mad_yes3v
-	.align	1
+	.align	2
 	.globl	_Z17mad_maybe_future1v
 	.type	_Z17mad_maybe_future1v, @function
 _Z17mad_maybe_future1v:
@@ -986,7 +986,7 @@ _Z17mad_maybe_future1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z17mad_maybe_future1v, .-_Z17mad_maybe_future1v
-	.align	1
+	.align	2
 	.globl	_Z17mad_maybe_future2v
 	.type	_Z17mad_maybe_future2v, @function
 _Z17mad_maybe_future2v:
@@ -1007,7 +1007,7 @@ _Z17mad_maybe_future2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z17mad_maybe_future2v, .-_Z17mad_maybe_future2v
-	.align	1
+	.align	2
 	.globl	_Z13mad_live_yes1v
 	.type	_Z13mad_live_yes1v, @function
 _Z13mad_live_yes1v:
@@ -1025,7 +1025,7 @@ _Z13mad_live_yes1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13mad_live_yes1v, .-_Z13mad_live_yes1v
-	.align	1
+	.align	2
 	.globl	_Z20mad_reg_pressure_no4v
 	.type	_Z20mad_reg_pressure_no4v, @function
 _Z20mad_reg_pressure_no4v:
@@ -1050,7 +1050,7 @@ _Z20mad_reg_pressure_no4v:
 	SFPSTORE	4, L0, 2
 	ret
 	.size	_Z20mad_reg_pressure_no4v, .-_Z20mad_reg_pressure_no4v
-	.align	1
+	.align	2
 	.globl	_Z7mad_no1v
 	.type	_Z7mad_no1v, @function
 _Z7mad_no1v:
@@ -1067,7 +1067,7 @@ _Z7mad_no1v:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z7mad_no1v, .-_Z7mad_no1v
-	.align	1
+	.align	2
 	.globl	_Z7mad_no2v
 	.type	_Z7mad_no2v, @function
 _Z7mad_no2v:
@@ -1084,7 +1084,7 @@ _Z7mad_no2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z7mad_no2v, .-_Z7mad_no2v
-	.align	1
+	.align	2
 	.globl	_Z7mad_no3v
 	.type	_Z7mad_no3v, @function
 _Z7mad_no3v:
@@ -1104,7 +1104,7 @@ _Z7mad_no3v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z7mad_no3v, .-_Z7mad_no3v
-	.align	1
+	.align	2
 	.globl	_Z12mad_live_no1v
 	.type	_Z12mad_live_no1v, @function
 _Z12mad_live_no1v:
@@ -1125,7 +1125,7 @@ _Z12mad_live_no1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z12mad_live_no1v, .-_Z12mad_live_no1v
-	.align	1
+	.align	2
 	.globl	_Z12mad_live_no2v
 	.type	_Z12mad_live_no2v, @function
 _Z12mad_live_no2v:
@@ -1147,7 +1147,7 @@ _Z12mad_live_no2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z12mad_live_no2v, .-_Z12mad_live_no2v
-	.align	1
+	.align	2
 	.globl	_Z10mad_no_bb1i
 	.type	_Z10mad_no_bb1i, @function
 _Z10mad_no_bb1i:
@@ -1169,7 +1169,7 @@ _Z10mad_no_bb1i:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z10mad_no_bb1i, .-_Z10mad_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z9addi_yes1v
 	.type	_Z9addi_yes1v, @function
 _Z9addi_yes1v:
@@ -1180,7 +1180,7 @@ _Z9addi_yes1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9addi_yes1v, .-_Z9addi_yes1v
-	.align	1
+	.align	2
 	.globl	_Z15addi_yes_caveatv
 	.type	_Z15addi_yes_caveatv, @function
 _Z15addi_yes_caveatv:
@@ -1196,7 +1196,7 @@ _Z15addi_yes_caveatv:
 	SFPSTORE	4, L0, 0
 	ret
 	.size	_Z15addi_yes_caveatv, .-_Z15addi_yes_caveatv
-	.align	1
+	.align	2
 	.globl	_Z9addi_yes2v
 	.type	_Z9addi_yes2v, @function
 _Z9addi_yes2v:
@@ -1213,7 +1213,7 @@ _Z9addi_yes2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9addi_yes2v, .-_Z9addi_yes2v
-	.align	1
+	.align	2
 	.globl	_Z9addi_yes3v
 	.type	_Z9addi_yes3v, @function
 _Z9addi_yes3v:
@@ -1229,7 +1229,7 @@ _Z9addi_yes3v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9addi_yes3v, .-_Z9addi_yes3v
-	.align	1
+	.align	2
 	.globl	_Z9addi_yes4v
 	.type	_Z9addi_yes4v, @function
 _Z9addi_yes4v:
@@ -1249,7 +1249,7 @@ _Z9addi_yes4v:
 	SFPSTORE	0, L1, 0
 	ret
 	.size	_Z9addi_yes4v, .-_Z9addi_yes4v
-	.align	1
+	.align	2
 	.globl	_Z13addi_yes_imm1j
 	.type	_Z13addi_yes_imm1j, @function
 _Z13addi_yes_imm1j:
@@ -1266,7 +1266,7 @@ _Z13addi_yes_imm1j:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_yes_imm1j, .-_Z13addi_yes_imm1j
-	.align	1
+	.align	2
 	.globl	_Z13addi_yes_imm2j
 	.type	_Z13addi_yes_imm2j, @function
 _Z13addi_yes_imm2j:
@@ -1283,7 +1283,7 @@ _Z13addi_yes_imm2j:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_yes_imm2j, .-_Z13addi_yes_imm2j
-	.align	1
+	.align	2
 	.globl	_Z13addi_yes_imm3j
 	.type	_Z13addi_yes_imm3j, @function
 _Z13addi_yes_imm3j:
@@ -1300,7 +1300,7 @@ _Z13addi_yes_imm3j:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_yes_imm3j, .-_Z13addi_yes_imm3j
-	.align	1
+	.align	2
 	.globl	_Z13addi_yes_imm4j
 	.type	_Z13addi_yes_imm4j, @function
 _Z13addi_yes_imm4j:
@@ -1317,7 +1317,7 @@ _Z13addi_yes_imm4j:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_yes_imm4j, .-_Z13addi_yes_imm4j
-	.align	1
+	.align	2
 	.globl	_Z14addi_live_yes1v
 	.type	_Z14addi_live_yes1v, @function
 _Z14addi_live_yes1v:
@@ -1333,7 +1333,7 @@ _Z14addi_live_yes1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z14addi_live_yes1v, .-_Z14addi_live_yes1v
-	.align	1
+	.align	2
 	.globl	_Z14addi_live_yes2v
 	.type	_Z14addi_live_yes2v, @function
 _Z14addi_live_yes2v:
@@ -1349,7 +1349,7 @@ _Z14addi_live_yes2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z14addi_live_yes2v, .-_Z14addi_live_yes2v
-	.align	1
+	.align	2
 	.globl	_Z21addi_live_yes3_futurev
 	.type	_Z21addi_live_yes3_futurev, @function
 _Z21addi_live_yes3_futurev:
@@ -1366,7 +1366,7 @@ _Z21addi_live_yes3_futurev:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z21addi_live_yes3_futurev, .-_Z21addi_live_yes3_futurev
-	.align	1
+	.align	2
 	.globl	_Z21addi_live_yes4_futurev
 	.type	_Z21addi_live_yes4_futurev, @function
 _Z21addi_live_yes4_futurev:
@@ -1384,7 +1384,7 @@ _Z21addi_live_yes4_futurev:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z21addi_live_yes4_futurev, .-_Z21addi_live_yes4_futurev
-	.align	1
+	.align	2
 	.globl	_Z13addi_live_no2v
 	.type	_Z13addi_live_no2v, @function
 _Z13addi_live_no2v:
@@ -1402,7 +1402,7 @@ _Z13addi_live_no2v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_live_no2v, .-_Z13addi_live_no2v
-	.align	1
+	.align	2
 	.globl	_Z13addi_live_no3v
 	.type	_Z13addi_live_no3v, @function
 _Z13addi_live_no3v:
@@ -1421,7 +1421,7 @@ _Z13addi_live_no3v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_live_no3v, .-_Z13addi_live_no3v
-	.align	1
+	.align	2
 	.globl	_Z13addi_live_no4v
 	.type	_Z13addi_live_no4v, @function
 _Z13addi_live_no4v:
@@ -1440,7 +1440,7 @@ _Z13addi_live_no4v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z13addi_live_no4v, .-_Z13addi_live_no4v
-	.align	1
+	.align	2
 	.globl	_Z8addi_no1v
 	.type	_Z8addi_no1v, @function
 _Z8addi_no1v:
@@ -1458,7 +1458,7 @@ _Z8addi_no1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z8addi_no1v, .-_Z8addi_no1v
-	.align	1
+	.align	2
 	.globl	_Z8addi_no2v
 	.type	_Z8addi_no2v, @function
 _Z8addi_no2v:
@@ -1472,7 +1472,7 @@ _Z8addi_no2v:
 	SFPSTORE	0, L2, 0
 	ret
 	.size	_Z8addi_no2v, .-_Z8addi_no2v
-	.align	1
+	.align	2
 	.globl	_Z11addi_no_bb1i
 	.type	_Z11addi_no_bb1i, @function
 _Z11addi_no_bb1i:
@@ -1495,7 +1495,7 @@ _Z11addi_no_bb1i:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z11addi_no_bb1i, .-_Z11addi_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z9muli_yes1v
 	.type	_Z9muli_yes1v, @function
 _Z9muli_yes1v:
@@ -1506,7 +1506,7 @@ _Z9muli_yes1v:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z9muli_yes1v, .-_Z9muli_yes1v
-	.align	1
+	.align	2
 	.globl	_Z15muli_yes_caveatv
 	.type	_Z15muli_yes_caveatv, @function
 _Z15muli_yes_caveatv:
@@ -1522,7 +1522,7 @@ _Z15muli_yes_caveatv:
 	SFPSTORE	4, L0, 0
 	ret
 	.size	_Z15muli_yes_caveatv, .-_Z15muli_yes_caveatv
-	.align	1
+	.align	2
 	.globl	_Z18add_plus_half_yes1v
 	.type	_Z18add_plus_half_yes1v, @function
 _Z18add_plus_half_yes1v:
@@ -1579,7 +1579,7 @@ _Z18add_plus_half_yes1v:
 	SFPSTORE	36, L0, 0
 	ret
 	.size	_Z18add_plus_half_yes1v, .-_Z18add_plus_half_yes1v
-	.align	1
+	.align	2
 	.globl	_Z18add_plus_half_yes2v
 	.type	_Z18add_plus_half_yes2v, @function
 _Z18add_plus_half_yes2v:
@@ -1592,7 +1592,7 @@ _Z18add_plus_half_yes2v:
 	SFPSTORE	4, L0, 0
 	ret
 	.size	_Z18add_plus_half_yes2v, .-_Z18add_plus_half_yes2v
-	.align	1
+	.align	2
 	.globl	_Z18add_plus_half_yes3v
 	.type	_Z18add_plus_half_yes3v, @function
 _Z18add_plus_half_yes3v:
@@ -1607,7 +1607,7 @@ _Z18add_plus_half_yes3v:
 	SFPSTORE	8, L1, 0
 	ret
 	.size	_Z18add_plus_half_yes3v, .-_Z18add_plus_half_yes3v
-	.align	1
+	.align	2
 	.globl	_Z30add_plus_half_live_yes1_futurev
 	.type	_Z30add_plus_half_live_yes1_futurev, @function
 _Z30add_plus_half_live_yes1_futurev:
@@ -1627,7 +1627,7 @@ _Z30add_plus_half_live_yes1_futurev:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z30add_plus_half_live_yes1_futurev, .-_Z30add_plus_half_live_yes1_futurev
-	.align	1
+	.align	2
 	.globl	_Z30add_plus_half_live_yes2_futurev
 	.type	_Z30add_plus_half_live_yes2_futurev, @function
 _Z30add_plus_half_live_yes2_futurev:
@@ -1646,7 +1646,7 @@ _Z30add_plus_half_live_yes2_futurev:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z30add_plus_half_live_yes2_futurev, .-_Z30add_plus_half_live_yes2_futurev
-	.align	1
+	.align	2
 	.globl	_Z30add_plus_half_live_yes3_futurev
 	.type	_Z30add_plus_half_live_yes3_futurev, @function
 _Z30add_plus_half_live_yes3_futurev:
@@ -1667,7 +1667,7 @@ _Z30add_plus_half_live_yes3_futurev:
 	SFPSTORE	12, L0, 0
 	ret
 	.size	_Z30add_plus_half_live_yes3_futurev, .-_Z30add_plus_half_live_yes3_futurev
-	.align	1
+	.align	2
 	.globl	_Z22add_plus_half_live_no1v
 	.type	_Z22add_plus_half_live_no1v, @function
 _Z22add_plus_half_live_no1v:
@@ -1686,7 +1686,7 @@ _Z22add_plus_half_live_no1v:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z22add_plus_half_live_no1v, .-_Z22add_plus_half_live_no1v
-	.align	1
+	.align	2
 	.globl	_Z22add_plus_half_live_no2v
 	.type	_Z22add_plus_half_live_no2v, @function
 _Z22add_plus_half_live_no2v:
@@ -1705,7 +1705,7 @@ _Z22add_plus_half_live_no2v:
 	SFPSTORE	8, L0, 0
 	ret
 	.size	_Z22add_plus_half_live_no2v, .-_Z22add_plus_half_live_no2v
-	.align	1
+	.align	2
 	.globl	_Z17add_plus_half_no1j
 	.type	_Z17add_plus_half_no1j, @function
 _Z17add_plus_half_no1j:
@@ -1727,7 +1727,7 @@ _Z17add_plus_half_no1j:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z17add_plus_half_no1j, .-_Z17add_plus_half_no1j
-	.align	1
+	.align	2
 	.globl	_Z17add_plus_half_no2v
 	.type	_Z17add_plus_half_no2v, @function
 _Z17add_plus_half_no2v:
@@ -1743,7 +1743,7 @@ _Z17add_plus_half_no2v:
 	SFPSTORE	4, L0, 0
 	ret
 	.size	_Z17add_plus_half_no2v, .-_Z17add_plus_half_no2v
-	.align	1
+	.align	2
 	.globl	_Z20add_plus_half_no_bb1i
 	.type	_Z20add_plus_half_no_bb1i, @function
 _Z20add_plus_half_no_bb1i:
@@ -1765,7 +1765,7 @@ _Z20add_plus_half_no_bb1i:
 	SFPSTORE	0, L0, 0
 	ret
 	.size	_Z20add_plus_half_no_bb1i, .-_Z20add_plus_half_no_bb1i
-	.align	1
+	.align	2
 	.globl	_Z10complexishv
 	.type	_Z10complexishv, @function
 _Z10complexishv:
@@ -1841,4 +1841,4 @@ _Z10complexishv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

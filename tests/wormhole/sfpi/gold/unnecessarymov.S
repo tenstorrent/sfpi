@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z6whymovv
 	.type	_Z6whymovv, @function
 _Z6whymovv:
@@ -22,7 +22,7 @@ _Z6whymovv:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z6whymovv, .-_Z6whymovv
-	.align	1
+	.align	2
 	.globl	_Z11whymov_sqrtv
 	.type	_Z11whymov_sqrtv, @function
 _Z11whymov_sqrtv:
@@ -39,7 +39,7 @@ _Z11whymov_sqrtv:
 	SFPSTORE	0, L0, 0, 3
 	ret
 	.size	_Z11whymov_sqrtv, .-_Z11whymov_sqrtv
-	.align	1
+	.align	2
 	.globl	_Z11test_icmp_vv
 	.type	_Z11test_icmp_vv, @function
 _Z11test_icmp_vv:
@@ -66,7 +66,7 @@ _Z11test_icmp_vv:
 	SFPSTORE	0, L2, 12, 3
 	ret
 	.size	_Z11test_icmp_vv, .-_Z11test_icmp_vv
-	.align	1
+	.align	2
 	.globl	_Z20lots_of_conditionalsv
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
@@ -92,4 +92,4 @@ _Z20lots_of_conditionalsv:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"

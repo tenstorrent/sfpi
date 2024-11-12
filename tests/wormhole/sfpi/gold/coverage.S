@@ -4,7 +4,7 @@
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
-	.align	1
+	.align	2
 	.globl	_Z15test_load_storev
 	.type	_Z15test_load_storev, @function
 _Z15test_load_storev:
@@ -28,7 +28,7 @@ _Z15test_load_storev:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z15test_load_storev, .-_Z15test_load_storev
-	.align	1
+	.align	2
 	.globl	_Z8test_addv
 	.type	_Z8test_addv, @function
 _Z8test_addv:
@@ -111,7 +111,7 @@ _Z8test_addv:
 	SFPSTORE	40, L0, 0, 3
 	ret
 	.size	_Z8test_addv, .-_Z8test_addv
-	.align	1
+	.align	2
 	.globl	_Z8test_subv
 	.type	_Z8test_subv, @function
 _Z8test_subv:
@@ -199,7 +199,7 @@ _Z8test_subv:
 	SFPSTORE	36, L0, 0, 3
 	ret
 	.size	_Z8test_subv, .-_Z8test_subv
-	.align	1
+	.align	2
 	.globl	_Z8test_mulv
 	.type	_Z8test_mulv, @function
 _Z8test_mulv:
@@ -281,7 +281,7 @@ _Z8test_mulv:
 	SFPSTORE	40, L0, 0, 3
 	ret
 	.size	_Z8test_mulv, .-_Z8test_mulv
-	.align	1
+	.align	2
 	.globl	_Z8test_madv
 	.type	_Z8test_madv, @function
 _Z8test_madv:
@@ -338,7 +338,7 @@ _Z8test_madv:
 	SFPSTORE	38, L0, 0, 3
 	ret
 	.size	_Z8test_madv, .-_Z8test_madv
-	.align	1
+	.align	2
 	.globl	_Z11test_incdecv
 	.type	_Z11test_incdecv, @function
 _Z11test_incdecv:
@@ -373,7 +373,7 @@ _Z11test_incdecv:
 	TTREPLAY	0, 11, 0, 0
 	ret
 	.size	_Z11test_incdecv, .-_Z11test_incdecv
-	.align	1
+	.align	2
 	.globl	_Z10test_loadilm
 	.type	_Z10test_loadilm, @function
 _Z10test_loadilm:
@@ -452,7 +452,7 @@ _Z10test_loadilm:
 	SFPSTORE	14, L0, 0, 3
 	ret
 	.size	_Z10test_loadilm, .-_Z10test_loadilm
-	.align	1
+	.align	2
 	.globl	_Z17test_control_flowi
 	.type	_Z17test_control_flowi, @function
 _Z17test_control_flowi:
@@ -473,7 +473,7 @@ _Z17test_control_flowi:
 .L9:
 	ret
 	.size	_Z17test_control_flowi, .-_Z17test_control_flowi
-	.align	1
+	.align	2
 	.globl	_Z12test_mad_immv
 	.type	_Z12test_mad_immv, @function
 _Z12test_mad_immv:
@@ -489,7 +489,7 @@ _Z12test_mad_immv:
 	SFPSTORE	4, L1, 0, 3
 	ret
 	.size	_Z12test_mad_immv, .-_Z12test_mad_immv
-	.align	1
+	.align	2
 	.globl	_Z16test_exman_exexpv
 	.type	_Z16test_exman_exexpv, @function
 _Z16test_exman_exexpv:
@@ -506,7 +506,7 @@ _Z16test_exman_exexpv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z16test_exman_exexpv, .-_Z16test_exman_exexpv
-	.align	1
+	.align	2
 	.globl	_Z32test_setman_setexp_addexp_setsgni
 	.type	_Z32test_setman_setexp_addexp_setsgni, @function
 _Z32test_setman_setexp_addexp_setsgni:
@@ -568,7 +568,7 @@ _Z32test_setman_setexp_addexp_setsgni:
 	SFPSTORE	4, L1, 0, 3
 	ret
 	.size	_Z32test_setman_setexp_addexp_setsgni, .-_Z32test_setman_setexp_addexp_setsgni
-	.align	1
+	.align	2
 	.globl	_Z27test_dreg_conditional_constv
 	.type	_Z27test_dreg_conditional_constv, @function
 _Z27test_dreg_conditional_constv:
@@ -649,7 +649,7 @@ _Z27test_dreg_conditional_constv:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z27test_dreg_conditional_constv, .-_Z27test_dreg_conditional_constv
-	.align	1
+	.align	2
 	.globl	_Z28test_vhalf_conditional_constv
 	.type	_Z28test_vhalf_conditional_constv, @function
 _Z28test_vhalf_conditional_constv:
@@ -720,7 +720,7 @@ _Z28test_vhalf_conditional_constv:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z28test_vhalf_conditional_constv, .-_Z28test_vhalf_conditional_constv
-	.align	1
+	.align	2
 	.globl	_Z22test_vhalf_conditionalv
 	.type	_Z22test_vhalf_conditionalv, @function
 _Z22test_vhalf_conditionalv:
@@ -784,7 +784,7 @@ _Z22test_vhalf_conditionalv:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z22test_vhalf_conditionalv, .-_Z22test_vhalf_conditionalv
-	.align	1
+	.align	2
 	.globl	_Z30test_vhalf_conditional_reversev
 	.type	_Z30test_vhalf_conditional_reversev, @function
 _Z30test_vhalf_conditional_reversev:
@@ -865,7 +865,7 @@ _Z30test_vhalf_conditional_reversev:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z30test_vhalf_conditional_reversev, .-_Z30test_vhalf_conditional_reversev
-	.align	1
+	.align	2
 	.globl	_Z21test_creg_conditionalv
 	.type	_Z21test_creg_conditionalv, @function
 _Z21test_creg_conditionalv:
@@ -931,7 +931,7 @@ _Z21test_creg_conditionalv:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z21test_creg_conditionalv, .-_Z21test_creg_conditionalv
-	.align	1
+	.align	2
 	.globl	_Z25test_creg_conditional_revv
 	.type	_Z25test_creg_conditional_revv, @function
 _Z25test_creg_conditional_revv:
@@ -997,7 +997,7 @@ _Z25test_creg_conditional_revv:
 	SFPSTORE	16, L0, 0, 3
 	ret
 	.size	_Z25test_creg_conditional_revv, .-_Z25test_creg_conditional_revv
-	.align	1
+	.align	2
 	.globl	_Z28test_conditional_outside_vifv
 	.type	_Z28test_conditional_outside_vifv, @function
 _Z28test_conditional_outside_vifv:
@@ -1024,7 +1024,7 @@ _Z28test_conditional_outside_vifv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z28test_conditional_outside_vifv, .-_Z28test_conditional_outside_vifv
-	.align	1
+	.align	2
 	.globl	_Z12test_bitwisev
 	.type	_Z12test_bitwisev, @function
 _Z12test_bitwisev:
@@ -1093,7 +1093,7 @@ _Z12test_bitwisev:
 	SFPSTORE	30, L0, 12, 3
 	ret
 	.size	_Z12test_bitwisev, .-_Z12test_bitwisev
-	.align	1
+	.align	2
 	.globl	_Z8test_absv
 	.type	_Z8test_absv, @function
 _Z8test_absv:
@@ -1111,7 +1111,7 @@ _Z8test_absv:
 	SFPSTORE	6, L0, 0, 3
 	ret
 	.size	_Z8test_absv, .-_Z8test_absv
-	.align	1
+	.align	2
 	.globl	_Z7test_lzv
 	.type	_Z7test_lzv, @function
 _Z7test_lzv:
@@ -1137,7 +1137,7 @@ _Z7test_lzv:
 	SFPSTORE	4, L2, 0, 3
 	ret
 	.size	_Z7test_lzv, .-_Z7test_lzv
-	.align	1
+	.align	2
 	.globl	_Z9test_shftv
 	.type	_Z9test_shftv, @function
 _Z9test_shftv:
@@ -1162,7 +1162,7 @@ _Z9test_shftv:
 	SFPSTORE	4, L0, 12, 3
 	ret
 	.size	_Z9test_shftv, .-_Z9test_shftv
-	.align	1
+	.align	2
 	.globl	_Z12test_complexv
 	.type	_Z12test_complexv, @function
 _Z12test_complexv:
@@ -1179,7 +1179,7 @@ _Z12test_complexv:
 	SFPSTORE	4, L0, 0, 3
 	ret
 	.size	_Z12test_complexv, .-_Z12test_complexv
-	.align	1
+	.align	2
 	.globl	_Z14test_muli_addiv
 	.type	_Z14test_muli_addiv, @function
 _Z14test_muli_addiv:
@@ -1214,7 +1214,7 @@ _Z14test_muli_addiv:
 	SFPSTORE	6, L1, 0, 3
 	ret
 	.size	_Z14test_muli_addiv, .-_Z14test_muli_addiv
-	.align	1
+	.align	2
 	.globl	_Z9test_iaddv
 	.type	_Z9test_iaddv, @function
 _Z9test_iaddv:
@@ -1264,7 +1264,7 @@ _Z9test_iaddv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z9test_iaddv, .-_Z9test_iaddv
-	.align	1
+	.align	2
 	.globl	_Z11test_icmp_iv
 	.type	_Z11test_icmp_iv, @function
 _Z11test_icmp_iv:
@@ -1307,7 +1307,7 @@ _Z11test_icmp_iv:
 	SFPSTORE	2, L0, 12, 3
 	ret
 	.size	_Z11test_icmp_iv, .-_Z11test_icmp_iv
-	.align	1
+	.align	2
 	.globl	_Z15test_icmp_i_revv
 	.type	_Z15test_icmp_i_revv, @function
 _Z15test_icmp_i_revv:
@@ -1350,7 +1350,7 @@ _Z15test_icmp_i_revv:
 	SFPSTORE	2, L0, 12, 3
 	ret
 	.size	_Z15test_icmp_i_revv, .-_Z15test_icmp_i_revv
-	.align	1
+	.align	2
 	.globl	_Z11test_icmp_vv
 	.type	_Z11test_icmp_vv, @function
 _Z11test_icmp_vv:
@@ -1431,7 +1431,7 @@ _Z11test_icmp_vv:
 	SFPSTORE	0, L1, 12, 3
 	ret
 	.size	_Z11test_icmp_vv, .-_Z11test_icmp_vv
-	.align	1
+	.align	2
 	.globl	_Z20lots_of_conditionalsv
 	.type	_Z20lots_of_conditionalsv, @function
 _Z20lots_of_conditionalsv:
@@ -1506,7 +1506,7 @@ _Z20lots_of_conditionalsv:
 	SFPENCC	3, 10
 	ret
 	.size	_Z20lots_of_conditionalsv, .-_Z20lots_of_conditionalsv
-	.align	1
+	.align	2
 	.globl	_Z8test_lutv
 	.type	_Z8test_lutv, @function
 _Z8test_lutv:
@@ -1521,7 +1521,7 @@ _Z8test_lutv:
 	SFPSTORE	2, L3, 0, 3
 	ret
 	.size	_Z8test_lutv, .-_Z8test_lutv
-	.align	1
+	.align	2
 	.globl	_Z10test_lut2av
 	.type	_Z10test_lut2av, @function
 _Z10test_lut2av:
@@ -1539,7 +1539,7 @@ _Z10test_lut2av:
 	SFPSTORE	2, L0, 0, 3
 	ret
 	.size	_Z10test_lut2av, .-_Z10test_lut2av
-	.align	1
+	.align	2
 	.globl	_Z10test_lut2bv
 	.type	_Z10test_lut2bv, @function
 _Z10test_lut2bv:
@@ -1558,7 +1558,7 @@ _Z10test_lut2bv:
 	SFPSTORE	2, L0, 0, 3
 	ret
 	.size	_Z10test_lut2bv, .-_Z10test_lut2bv
-	.align	1
+	.align	2
 	.globl	_Z10test_lut2cv
 	.type	_Z10test_lut2cv, @function
 _Z10test_lut2cv:
@@ -1589,7 +1589,7 @@ _Z10test_lut2cv:
 	SFPSTORE	10, L0, 0, 3
 	ret
 	.size	_Z10test_lut2cv, .-_Z10test_lut2cv
-	.align	1
+	.align	2
 	.globl	_Z9test_castv
 	.type	_Z9test_castv, @function
 _Z9test_castv:
@@ -1602,7 +1602,7 @@ _Z9test_castv:
 	SFPSTORE	2, L0, 0, 3
 	ret
 	.size	_Z9test_castv, .-_Z9test_castv
-	.align	1
+	.align	2
 	.globl	_Z13test_stochrndi
 	.type	_Z13test_stochrndi, @function
 _Z13test_stochrndi:
@@ -1655,7 +1655,7 @@ _Z13test_stochrndi:
 	SFPSTOCHRND	L1, L0, L1, 13, 1, 31
 	ret
 	.size	_Z13test_stochrndi, .-_Z13test_stochrndi
-	.align	1
+	.align	2
 	.globl	_Z11subvec_shflv
 	.type	_Z11subvec_shflv, @function
 _Z11subvec_shflv:
@@ -1668,7 +1668,7 @@ _Z11subvec_shflv:
 	SFPNOP
 	ret
 	.size	_Z11subvec_shflv, .-_Z11subvec_shflv
-	.align	1
+	.align	2
 	.globl	_Z9many_regsv
 	.type	_Z9many_regsv, @function
 _Z9many_regsv:
@@ -1690,7 +1690,7 @@ _Z9many_regsv:
 	SFPSTORE	14, L0, 0, 3
 	ret
 	.size	_Z9many_regsv, .-_Z9many_regsv
-	.align	1
+	.align	2
 	.globl	_Z3lrav
 	.type	_Z3lrav, @function
 _Z3lrav:
@@ -1704,7 +1704,7 @@ _Z3lrav:
 	SFPSTORE	0, L4, 12, 3
 	ret
 	.size	_Z3lrav, .-_Z3lrav
-	.align	1
+	.align	2
 	.globl	_Z14stupid_examplej
 	.type	_Z14stupid_examplej, @function
 _Z14stupid_examplej:
@@ -1786,7 +1786,7 @@ _Z14stupid_examplej:
 	SFPENCC	3, 10
 	ret
 	.size	_Z14stupid_examplej, .-_Z14stupid_examplej
-	.align	1
+	.align	2
 	.globl	_Z20test_operator_equalsv
 	.type	_Z20test_operator_equalsv, @function
 _Z20test_operator_equalsv:
@@ -1842,7 +1842,7 @@ _Z20test_operator_equalsv:
 	SFPSTORE	0, L0, 12, 3
 	ret
 	.size	_Z20test_operator_equalsv, .-_Z20test_operator_equalsv
-	.align	1
+	.align	2
 	.globl	_Z22test_assign_prgm_constv
 	.type	_Z22test_assign_prgm_constv, @function
 _Z22test_assign_prgm_constv:
@@ -1868,7 +1868,7 @@ _Z22test_assign_prgm_constv:
 	ret
 	.size	_Z22test_assign_prgm_constv, .-_Z22test_assign_prgm_constv
 	.section	.text.startup,"ax",@progbits
-	.align	1
+	.align	2
 	.globl	main
 	.type	main, @function
 main:
@@ -1967,4 +1967,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g96bd106687d) 12.2.0"
