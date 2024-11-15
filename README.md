@@ -5,7 +5,7 @@ This repo contains SFPI.
 
 * sfpi header files in `include`
 * TT-enhanced RISC-V `binutils` in binutils submodule
-* TT-enahanced RISC-V `gcc` in gcc submodule
+* TT-enhanced RISC-V `gcc` in gcc submodule
 * standard newlib in `newlib` submodule
 * tests in `tests`
 * build and release scripts in `scripts`
@@ -19,13 +19,13 @@ upstream version. (There may be other reasons to increment.)
 
 ### User Documentation
 
-https://tenstorrent-metal.github.io/tt-metal/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
+https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
 
 ### Building
 1) Clone the sfpi repo, & initialize submodules:
 ```
   git clone git@github.com:tenstorrent-metal/sfpi.git
-  git submodule update --init --resursive
+  git submodule update --init --recursive
 ```
 
 2) Build the compiler:
@@ -99,7 +99,7 @@ Refer to cmake documentation for further information about
 
   Running the GCC test suite
   This is not required for typical build/release cycles, but should likely be
-  done if the RISCV code paths are altered or any other signficant
+  done if the RISCV code paths are altered or any other significant
   perturbation is made.
 
   The following recipe comes from HelpRack w/ some modifications for issues I
