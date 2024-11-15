@@ -34,7 +34,8 @@ https://tenstorrent-metal.github.io/tt-metal/latest/tt_metal/apis/kernel_apis/sf
 ```
 
   This will configure and build using the toplevel `configure` and
-  `Makefile.in`, which originate from the RISC-V repo. The build is
+  `Makefile.in`, which originate from the RISC-V repo
+  (https://github.com/riscv-collab/riscv-gnu-toolchain). The build is
   performed in a `build` subdirectory and a `sfpi/src-hashes` file is
   created there to record the source tree state at the start of a
   build. When making a release, you will want this to match upstream
@@ -47,9 +48,9 @@ https://tenstorrent-metal.github.io/tt-metal/latest/tt_metal/apis/kernel_apis/sf
 3) Build and running the sfpi tests:
 
 ```
-    mkdir -s ../tests build
-    make -C build.tests all
-    make -C build.tests test
+    ln -s ../tests build
+    make -C build/tests all
+    make -C build/tests test
 ```
 
   If the `all` target succeeds, the compiler at least exports the
