@@ -117,7 +117,7 @@ is OK to build one newlib and one linux toolchain with the same prefix.
 But you should avoid building two newlib or two linux toolchains with
 the same prefix.
 
-If building a linux toolchain on a MacOS system, or on a Windows system
+If building a linux toolchain on a macOS system, or on a Windows system
 using the Linux subsystem or cygwin, you must ensure that the filesystem
 is case-sensitive.  A build on a case-insensitive filesystem will fail when
 building glibc because \*.os and \*.oS files will clobber each other during
@@ -189,9 +189,9 @@ rv64imac with lp64 and rv64imafc with lp64 will reuse this multi-lib set.
 The Dejagnu test suite has been ported to RISC-V. This can be run with a
 simulator for the elf and linux toolchains. The simulator can be selected
 by the SIM variable in the Makefile, e.g. SIM=qemu, SIM=gdb, or SIM=spike
-(experimental).In addition, the simulator can also be selected with the 
-configure time option `--with-sim=`.However, the testsuite allowlist is 
-only mintained for qemu.Other simulators might get extra failures.
+(experimental). In addition, the simulator can also be selected with the
+configure time option `--with-sim=`. However, the testsuite allowlist is
+only maintained for qemu. Other simulators might get extra failures.
 To test GCC, run the following commands:
 
     ./configure --prefix=$RISCV --disable-linux --with-arch=rv64ima # or --with-arch=rv32ima
@@ -212,14 +212,14 @@ Note:
 
 ### Development
 
-This section is only for developer or advanced user, or you want to build
-toolchain with your own source tree.
+This section is only for developers or advanced users, or if you want to build
+a toolchain with your own source tree.
 
 #### Update Source Tree
 
-`riscv-gnu-toolchain` contain stable but not latest source for each submodule,
-in case you want to using latest develoment tree, you can use following command
-to upgrade all submodule.
+`riscv-gnu-toolchain` contains stable but not latest source for each submodule,
+if you want to use the latest development tree, you can use the following command
+to upgrade all submodules.
 
     git submodule update --remote
 
