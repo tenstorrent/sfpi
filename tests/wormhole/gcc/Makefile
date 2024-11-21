@@ -9,7 +9,7 @@ INCLUDES = $(SFPI_ROOT)/include/wormhole/ckernel_ops.h
 CFLAGS = -I$(SFPI_ROOT)/include -I$(SFPI_ROOT)/include/wormhole -DARCH_WORMHOLE -O3 -std=c++17 -Wall
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mwormhole -march=rv32iw -mabi=ilp32 -mtune=rvtt-b1 -fno-exceptions -fno-rvtt-sfpu-replay
+RV32_CFLAGS = $(CFLAGS) -mcpu=tt-wh -fno-exceptions -fno-rvtt-sfpu-replay
 
 SRCS = smoke.cc limits.cc nonimm.cc rv32_and_sfpu.cc sfplut.cc unnecessarymov.cc tt.cc
 SRC_ASMS = ttasm.S
@@ -57,6 +57,9 @@ test: rv32/smoke.S rv32/limits.S rv32/limits_low.S rv32/limits_high.S rv32/nonim
 	cmp rv32/limits_high.S gold/limits_high.S
 	cmp rv32/nonimm.S gold/nonimm.S
 	cmp rv32/unnecessarymov.S gold/unnecessarymov.S
+	cmp rv32/rv32_and_sfpu.S gold/rv32_and_sfpu.S
+	cmp rv32/sfplut.S gold/sfplut.S
+	cmp rv32/tt.S gold/tt.S
 
 promote:
 	cp rv32/smoke.S gold/smoke.S
@@ -65,6 +68,9 @@ promote:
 	cp rv32/limits_high.S gold/limits_high.S
 	cp rv32/nonimm.S gold/nonimm.S
 	cp rv32/unnecessarymov.S gold/unnecessarymov.S
+	cp rv32/rv32_and_sfpu.S gold/rv32_and_sfpu.S
+	cp rv32/sfplut.S gold/sfplut.S
+	cp rv32/tt.S gold/tt.S
 
 clean:
 	@rm -rf x86

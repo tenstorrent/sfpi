@@ -8,7 +8,7 @@ CFLAGS = -ffast-math -O3 -std=c++17 -Wall
 # Enabling -g here results in unreadable asm, but testing should occur both ways...
 
 RV32_CC ?= $(CC_PATH)/bin/riscv32-unknown-elf-g++
-RV32_CFLAGS = $(CFLAGS) -mgrayskull -march=rv32iy -mtune=rvtt-b1 -mabi=ilp32 -fno-exceptions -Wno-unknown-pragmas -fno-use-cxa-atexit -Wno-error=multistatement-macros -Wno-error=parentheses -Wno-error=unused-but-set-variable -Wno-unused-variable
+RV32_CFLAGS = $(CFLAGS) -mcpu=tt-gs -fno-exceptions -Wno-unknown-pragmas -fno-use-cxa-atexit -Wno-error=multistatement-macros -Wno-error=parentheses -Wno-error=unused-but-set-variable -Wno-unused-variable
 
 SRCS = rmext.cc load.cc latency.cc gs_arbiter_war.cc
 

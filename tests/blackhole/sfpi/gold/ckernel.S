@@ -1,6 +1,6 @@
 	.file	"ckernel.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_m2p0_l2p0"
+	.attribute arch, "rv32i2p0_m2p0_xttbh1p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -799,7 +799,7 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	slli	a5,a5,8
 	add	a5,a5,a4
 	sw	a5, 0(a0)	# Op(0x75) lv(lr0)  d(lr0)
-	TTREPLAY	0, 15, 1, 1
+	TTREPLAY	0, 13, 1, 1
 	SFPNOP
 	SFPSETCC	L0, 0, 0
 	SFPLOADI	L0, 0, 0
@@ -815,12 +815,24 @@ _Z18calculate_hardtanhILb0EEvmmm:
 	TTINCRWC	0, 2, 0, 0
 	SFPLOAD	L0, 0, 0, 7
 	SFPADD	L0, L10, L0, L3, 0
-	TTREPLAY	0, 15, 0, 0
-	TTREPLAY	0, 15, 0, 0
-	TTREPLAY	0, 15, 0, 0
-	TTREPLAY	0, 15, 0, 0
-	TTREPLAY	0, 15, 0, 0
-	TTREPLAY	0, 15, 0, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
+	TTREPLAY	0, 13, 0, 0
+	SFPLOAD	L0, 0, 0, 7
+	SFPADD	L0, L10, L0, L3, 0
 	TTREPLAY	0, 13, 0, 0
 	ret
 	.size	_Z18calculate_hardtanhILb0EEvmmm, .-_Z18calculate_hardtanhILb0EEvmmm
@@ -2307,4 +2319,4 @@ main:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (gcdc243316e1) 12.2.0"
+	.ident	"GCC: (g323f2891276) 12.2.0"

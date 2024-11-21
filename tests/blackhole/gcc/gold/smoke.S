@@ -1,6 +1,6 @@
 	.file	"smoke.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_l2p0"
+	.attribute arch, "rv32i2p0_m2p0_xttbh1p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -215,4 +215,4 @@ main:
 	addi	sp,sp,16
 	jr	ra
 	.size	main, .-main
-	.ident	"GCC: (g96bd106687d) 12.2.0"
+	.ident	"GCC: (g323f2891276) 12.2.0"
