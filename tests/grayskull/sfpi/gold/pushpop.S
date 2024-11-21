@@ -1,6 +1,6 @@
 	.file	"pushpop.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_xttgs1p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -576,4 +576,4 @@ _Z21control_flow_pif_gotoi:
 	.size	_ZN7ckernel13instrn_bufferE, 4
 _ZN7ckernel13instrn_bufferE:
 	.zero	4
-	.ident	"GCC: (g96bd106687d) 12.2.0"
+	.ident	"GCC: (g323f2891276) 12.2.0"

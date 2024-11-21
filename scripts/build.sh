@@ -26,7 +26,7 @@ export LC_ALL=C
 
 cd build
 test -e Makefile ||
-    ../configure --prefix="$(pwd)/sfpi/compiler" --disable-multilib --with-arch=rv32i --disable-gdb
+    ../configure --prefix="$(pwd)/sfpi/compiler" --disable-multilib --with-arch=rv32i --with-abi=ilp32 --disable-gdb
 nice make -j${NCPUS:-1}
 cd ~-
 

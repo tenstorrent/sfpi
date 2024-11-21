@@ -1,6 +1,6 @@
 	.file	"limits.cc"
 	.option nopic
-	.attribute arch, "rv32i2p0_y"
+	.attribute arch, "rv32i2p0_xttgs1p0"
 	.attribute unaligned_access, 0
 	.attribute stack_align, 16
 	.text
@@ -161,4 +161,4 @@ main:
 	li	a0,0
 	ret
 	.size	main, .-main
-	.ident	"GCC: (g96bd106687d) 12.2.0"
+	.ident	"GCC: (g323f2891276) 12.2.0"
