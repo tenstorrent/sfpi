@@ -4,7 +4,7 @@ set -eo pipefail
 BIN="$(dirname "$0")"
 
 NCPUS=$(grep -c '^processor' /proc/cpuinfo)
-if test "$BIN" != "scripts"; then
+if ! test "$BIN" -ef "scripts"; then
     echo "run this script from repo's top directory" 1>&2
     exit 1
 fi
