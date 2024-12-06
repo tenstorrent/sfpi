@@ -49,8 +49,8 @@ https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/l
 
 ```
     ln -s ../tests build
-    CC_PATH=$pwd)/build/sfpi/compiler make -C build/tests all
-    CC_PATH=$pwd)/build/sfpi/compiler make -C build/tests test
+    CC_PATH=$(pwd)/build/sfpi/compiler make -C build/tests all
+    CC_PATH=$(pwd)/build/sfpi/compiler make -C build/tests test
 ```
 
   If the `all` target succeeds, the compiler at least exports the
