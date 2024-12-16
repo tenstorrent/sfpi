@@ -95,88 +95,28 @@ Refer to cmake documentation for further information about
 `FetchContent`, `FetchContent_Declare` and
 `FetchContent_MakeAvailable`.
 
-8) **WARNING: This section is out of date:**
-
-  Running the GCC test suite
-  This is not required for typical build/release cycles, but should likely be
-  done if the RISCV code paths are altered or any other significant
-  perturbation is made.
-
-  The following recipe comes from HelpRack w/ some modifications for issues I
-  ran into.
-
-  Prerequisites
-  The following programs should be installed on your system.
-    * dejagnu, libglib2.0-dev, libfdt-dev, libpixman-1-dev, zlib1g-dev, libgtk-3-dev, expect, ninja
-  (Note: I installed the above with conda)
-
-8a) Build as above
-
-8b) run
-   make check build-sim -j12
-
-This command also runs test suites which you can inspect in the "$SFPI_ROOT/tt-gcc/build-gcc-newlib-stage2/gcc/testsuite/gcc" directory. The files to inspect are "gcc.log" and "gcc.sum"
-
-Preparing the system to support qemu emulation
-8c) Create a file named "riscv32-unknown-elf-run" in the $SFPI_ROOT/compiler/bin
-directory with the following script:
-
+8) Running the toolchain test suites:
 ```
-#!/bin/bash
-RISC_V_SYSROOT=$SFPI_ROOT/compiler/riscv32-unknown-elf
-qemu-args=()
-while [[ "$1" != "" ]]
-do
-    case "$1" in
-    -Wq,*) qemu_args+=("$(echo "$1" | cut -d, -f2-)");;
-    *) break;;
-    esac
-    shift
-done
-xlen="$(readelf -h $1 | grep 'Class' | cut -d: -f 2 | xargs echo |
-sed 's/^ELF//')"
-qemu-riscv$xlen -r 5.10 "${qemu_args[@]}" -L ${RISC_V_SYSROOT} "$@"
+  scripts/build.sh --test
 ```
 
-8d) Mark this file as executable
-  chmod +x riscv32-unknown-elf-run
-The above will run some tests and put the results in gcc.log and gcc.sum under $SFPI_ROOT/build-gcc-newlib-stage2/gcc/testsuite/gcc
+This will build qemu and the riscv dejagnu components, and then run the testsuites.
 
-8e) Set PATH and LD_LIBRARY_PATH
-  export PATH=$SFPI_ROOT/compiler/bin:$PATH
-  export LD_LIBRARY_PATH=$SFPI_ROOT/compiler/lib:$LD_LIBRARY_PATH
+If you just want a binutils or gcc:
+```
+  scripts/build.sh --test-binutils
+```
+or
+```
+  scripts/build.sh --test-gcc
+```
 
-8f) Create a test directory. You can place this directory wherever you want
+9) Running the gcc testsuite with specific options:
+```
+PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/test-infra/bin:$PATH \
+make -C build/build-gcc-newlib-stage2/gcc check-gcc "RUNTESTFLAGS=--target_board=riscv-sim/-march=rv32i/-mabi=ilp32/-mcmodel=medlow"
+```
 
-8g) Copy the dejagnu configuration file from $SFPI_ROOT/tt-gcc/build-gcc-newlib-stage2/gcc/testsuite/gcc/site.exp to your "test" directory
-
-8h) Edit "site.exp" and add the path to target_boards to this file. Append the following line to the
-end of the file (expand $SFPI_ROOT manually):
-  lappend boards_dir "$SFPI_ROOT/tt-gcc/riscv-dejagnu/baseboards"
-
-8i) To run all the tests in the GCC test suite
-  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc
-Or, eg, use "riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow/-mgrayskull"
-which runs the SFPU passes and found a couple bugs when first run.
-
-8j) To run a particular test suite, e.g., compile.exp, execute.exp etc.
-  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc execute.exp
-
-8k) To run a single test file eg. gcc.c-torture/execute/fprintf-1.c
-  runtest -target_board="riscv-sim/-march=rv32iy/-mabi=ilp32/-mcmodel=medlow" -tool gcc execute.exp=fprintf-1*
-
-Debug tips:
- - use -verbose to see what the heck is going on
- - change $SFPI_ROOT/compiler/share/dejagnu/dg.exp "set keep 0" to "set keep 1" to keep the executable around
- - look in gcc/testsuite/lib/gcc-dg.exp for the OPTIONS lists to whittle down
-   and run fewer variations
-
-8l) After running a single test as in 8k, the log file will list the options
-to gcc that were used to run the test.  Add the path to the compiler to
-compile just that single case.  Some tests are compilation tests and this will
-be sufficient, other tests run filters on output or run the simulator to
-generate a result.  These are more complicated and take some digging.
-
-8m) check "gcc.log" and "gcc.sum" to view the log and summary of the executed tests, respectively.
-
-8n) check "testrun.log" and "testrun.sum" to view the log and summary of the runtest command.
+Alter the value passed to RUNTESTFLAGS as desired, for instance
+`riscv-sim/mcpu=ttwh`.  Add `-v` options to get more logging to the
+resulting dejagnu log file.
