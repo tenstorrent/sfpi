@@ -7,18 +7,6 @@ AC_PROG_GREP
 AC_PATH_PROG([BASH], [bash],
 	[AC_MSG_ERROR([bash not found])])
 
-AC_PATH_PROGS_FEATURE_CHECK([GAWK], [gawk awk],
-	[AS_IF([$ac_path_GAWK --version 2>&1 | $FGREP GNU >/dev/null],
-		[ac_cv_path_GAWK=$ac_path_GAWK ac_path_GAWK_found=:])],
-	[AC_MSG_ERROR([GNU Awk not found])])
-AC_SUBST([GAWK], [$ac_cv_path_GAWK])
-
-AC_PATH_PROGS_FEATURE_CHECK([GSED], [gsed sed],
-	[AS_IF([$ac_path_GSED --version 2>&1 | $FGREP GNU >/dev/null],
-		[ac_cv_path_GSED=$ac_path_GSED ac_path_GSED_found=:])],
-	[AC_MSG_ERROR([GNU sed not found])])
-AC_SUBST([GSED], [$ac_cv_path_GSED])
-
 need_gcc_external_libraries="no"
 AC_CHECK_LIB(gmp, __gmpz_init, ,
         [need_gcc_external_libraries="yes"])
@@ -174,8 +162,6 @@ AC_ARG_WITH(target_cxxflags,
 AC_SUBST(target_cxxflags, $with_target_cxxflags)
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([scripts/wrapper/awk/awk], [chmod +x scripts/wrapper/awk/awk])
-AC_CONFIG_FILES([scripts/wrapper/sed/sed], [chmod +x scripts/wrapper/sed/sed])
 
 AC_ARG_WITH(host,
 	[AS_HELP_STRING([--with-host=x86_64-w64-mingw32],

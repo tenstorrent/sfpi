@@ -1,0 +1,14 @@
+#!/bin/bash
+
+qemu_args=()
+while [[ "$1" != "" ]]
+do
+    case "$1" in
+    -Wq,*) qemu_args+=("$(echo "$1" | cut -d, -f2-)");;
+    *) break;;
+    esac
+    shift
+done
+
+
+qemu-riscv32 "${qemu_args[@]}" "$@"

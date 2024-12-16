@@ -1,6 +1,7 @@
 srcdir := @abs_top_srcdir@
 builddir := @abs_top_builddir@
 INSTALL_DIR := @prefix@
+test_infradir := $(builddir)/test-infra
 
 GCC_SRCDIR := @with_gcc_src@
 BINUTILS_SRCDIR := @with_binutils_src@
@@ -34,24 +35,13 @@ WITH_TUNE ?= @WITH_TUNE@
 WITH_ISA_SPEC ?= @WITH_ISA_SPEC@
 SYSROOT := $(INSTALL_DIR)/sysroot
 ENABLE_LIBSANITIZER ?= @enable_libsanitizer@
-QEMU_TARGETS ?= @qemu_targets@
+QEMU_TARGETS ?= riscv32-linux-user
 
 SHELL := /bin/sh
-AWK := @GAWK@
-SED := @GSED@
-PATH := $(INSTALL_DIR)/bin:$(PATH)
-
-# Check to see if we need wrapper scripts for awk/sed (which point to
-# gawk/gsed on platforms where these aren't the default), otherwise
-# don't override these as the wrappers don't always work.
-ifneq (@GSED@,/bin/sed)
-	PATH := $(builddir)/scripts/wrapper/sed:$(PATH)
-endif
-ifneq (@GAWK@,/usr/bin/gawk)
-	PATH := $(builddir)/scripts/wrapper/awk:$(PATH)
-endif
-
-export PATH AWK SED
+SED := sed
+AWK := awk
+PATH := $(INSTALL_DIR)/bin:$(test_infradir)/bin:$(PATH)
+export PATH
 
 MULTILIB_FLAGS := @multilib_flags@
 MULTILIB_GEN := @multilib_gen@
@@ -171,9 +161,7 @@ report-gdb: report-gdb-@default_target@
 
 .PHONY: build-sim
 ifeq ($(SIM),qemu)
-QEMU_CPU=$(shell $(srcdir)/scripts/march-to-cpu-opt $(WITH_ARCH))
-SIM_PATH:=$(srcdir)/scripts/wrapper/qemu
-SIM_PREPARE:=PATH="$(SIM_PATH):$(INSTALL_DIR)/bin:$(PATH)" RISC_V_SYSROOT="$(SYSROOT)" QEMU_CPU="$(QEMU_CPU)"
+SIM_PREPARE:=
 SIM_STAMP:= stamps/build-qemu
 else
 ifeq ($(SIM),spike)
@@ -196,6 +184,12 @@ else
 $(error "Only support SIM=spike, SIM=gdb or SIM=qemu (default).")
 endif
 endif
+endif
+
+.PHONY: infra
+infra: build-sim stamps/build-dejagnu
+ifeq ($(SIM),qemu)
+	cp $(srcdir)/scripts/riscv32-unknown-elf-run $(test_infradir)/bin
 endif
 
 build-sim: $(SIM_STAMP)
@@ -847,7 +841,7 @@ stamps/build-qemu: $(QEMU_SRCDIR) $(QEMU_SRC_GIT)
 	rm -rf $@ $(notdir $@)
 	mkdir $(notdir $@)
 	cd $(notdir $@) && $</configure \
-		--prefix=$(INSTALL_DIR) \
+		--prefix=$(test_infradir) \
 		--target-list=$(QEMU_TARGETS) \
 		--interp-prefix=$(INSTALL_DIR)/sysroot \
 		--python=python3
@@ -860,7 +854,7 @@ stamps/build-dejagnu: $(srcdir)/riscv-dejagnu $(srcdir)/riscv-dejagnu/.git
 	rm -rf $@ $(notdir $@)
 	mkdir $(notdir $@)
 	cd $(notdir $@) && $</configure \
-		--prefix=$(INSTALL_DIR)
+		--prefix=$(test_infradir)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
 	mkdir -p $(dir $@)
