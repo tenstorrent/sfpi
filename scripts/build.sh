@@ -51,18 +51,31 @@ done
 export LC_ALL=C
 
 # configure, if this is the first time
-test -e build/Makefile ||
-    (cd build ; ../configure --prefix="$(pwd)/sfpi/compiler" --disable-multilib --with-arch=rv32i --with-abi=ilp32 --disable-gdb)
+if ! test -e build/Makefile ; then
+    (cd build
+     set -x
+     ../configure --prefix="$(pwd)/sfpi/compiler" \
+		  --with-multilib-generator='rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--' \
+		  --with-arch=rv32i --with-abi=ilp32 --disable-gdb)
+fi
 
 # build the toolchain
-nice make -C build -j$NCPUS
+(set -x; nice make -C build -j$NCPUS)
 
 # maybe the test infra
-$infra && nice make -C build infra -j$NCPUS
+if $infra ; then
+    (set -x; nice make -C build infra -j$NCPUS)
+fi
 
 # maybe test
-$test && nice make -C build check -j$NCPUS
+if $test ; then
+    (set -x; nice make -C build check -j$NCPUS)
+fi
 
-$test_binutils && nice make -C build check-binutils -j$NCPUS
+if $test_binutils ; then
+    (set -x; nice make -C build check-binutils -j$NCPUS)
+fi
 
-$test_gcc && nice make -C build check-gcc -j$NCPUS
+if $test_gcc ; then
+   (set -x; nice make -C build check-gcc -j$NCPUS)
+fi
