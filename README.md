@@ -7,10 +7,13 @@ This repo contains SFPI.
 * TT-enhanced RISC-V `binutils` in binutils submodule
 * TT-enhanced RISC-V `gcc` in gcc submodule
 * standard newlib in `newlib` submodule
+* standard qemu in `qemu` submodule
+* RiscV dejagnu harness in `riscv-dejagnu` submodule
 * tests in `tests`
 * build and release scripts in `scripts`
 
-GCC, Binutils and Newlib are (naturally) released under their own licenses.
+GCC, Binutils, Newlib, Qemu and Dejagnu are (naturally) released under
+their own licenses.
 
 The release versioning here is simply an integral version
 numbering. The major version /does not/ indicate API breaking
@@ -40,6 +43,10 @@ https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/l
   created there to record the source tree state at the start of a
   build. When making a release, you will want this to match upstream
   committed sources.
+
+  You may add a `--checking=VALUE` option to control gcc's checking --
+  see gcc's documentation.  The default is `release`. Note this does
+  not control how gcc itself is optimized.
 
   If the build is interrupted, you can of course enter the appropriate
   subdirectory and manually resume after correcting the problem --

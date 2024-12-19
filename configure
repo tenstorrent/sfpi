@@ -603,6 +603,7 @@ configure_host
 target_cxxflags
 target_cflags
 cmodel
+bugurl_option
 gcc_checking
 musl_multilib_names
 newlib_multilib_names
@@ -681,6 +682,7 @@ with_sim
 enable_multilib
 with_multilib_generator
 enable_gcc_checking
+with_bugurl
 with_cmodel
 with_target_cflags
 with_target_cxxflags
@@ -1353,6 +1355,7 @@ Optional Packages:
                           Multi-libs configuration string, only supported for
                           bare-metal/elf toolchain, this option implied
                           --enable-multilib
+  --with-bugurl           URL to report bugs to
   --with-cmodel           Select the code model to use when building libc and
                           libgcc [--with-cmodel=medlow]
   --with-target-cflags    Add extra target flags for C for library code
@@ -3384,6 +3387,18 @@ else
   gcc_checking=""
 
 fi
+
+
+# Check whether --with-bugurl was given.
+if test "${with_bugurl+set}" = set; then :
+  withval=$with_bugurl;
+else
+  with_bugurl=unsupported
+
+fi
+
+bugurl_option=--with-bugurl=$with_bugurl
+
 
 
 # Check whether --with-cmodel was given.

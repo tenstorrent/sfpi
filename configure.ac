@@ -1,3 +1,7 @@
+# WARNING: This was originally the generic riscv toolchain configure
+# script, the bits that do not build a tenstorrent riscv32-elf
+# toolchain and qemu are likely bitrotted.
+
 AC_INIT(riscv-toolchain, 1.0)
 
 AC_PROG_CC
@@ -135,6 +139,14 @@ AC_ARG_ENABLE(gcc-checking,
 AS_IF([test "x$enable_gcc_checking" != x],
 	[AC_SUBST(gcc_checking, --enable-checking=$enable_gcc_checking)],
 	[AC_SUBST(gcc_checking, "")])
+
+AC_ARG_WITH(bugurl,
+        [AS_HELP_STRING([--with-bugurl],
+		[URL to report bugs to])],
+        [],
+        [with_bugurl=unsupported]
+        )
+AC_SUBST(bugurl_option, --with-bugurl=$with_bugurl)
 
 AC_ARG_WITH(cmodel,
 	[AS_HELP_STRING([--with-cmodel],

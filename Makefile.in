@@ -1,3 +1,7 @@
+# WARNING: This was originally the generic riscv toolchain makefile,
+# the bits that do not build a tenstorrent riscv32-elf toolchain and
+# qemu are likely bitrotted.
+
 srcdir := @abs_top_srcdir@
 builddir := @abs_top_builddir@
 INSTALL_DIR := @prefix@
@@ -49,11 +53,12 @@ ifeq ($(MULTILIB_GEN),)
 NEWLIB_MULTILIB_NAMES := @newlib_multilib_names@
 GCC_MULTILIB_FLAGS := $(MULTILIB_FLAGS)
 else
-NEWLIB_MULTILIB_NAMES := $(shell echo "$(MULTILIB_GEN)" | $(SED) 's/;/\n/g'| $(AWK) '{split($$0,a,"-"); printf "%s-%s ", a[1],a[2]}')
+NEWLIB_MULTILIB_NAMES := $(shell echo "@newlib_multilib_names@ $(MULTILIB_GEN)" | $(SED) 's/ /\n/g'| $(AWK) '{split($$0,a,"-"); printf "%s-%s ", a[1],a[2]}')
 GCC_MULTILIB_FLAGS := $(MULTILIB_FLAGS) --with-multilib-generator="$(MULTILIB_GEN)"
 endif
 GLIBC_MULTILIB_NAMES := @glibc_multilib_names@
 GCC_CHECKING_FLAGS := @gcc_checking@
+BUGURL_OPTION := @bugurl_option@
 
 XLEN := $(shell echo $(WITH_ARCH) | tr A-Z a-z | sed 's/.*rv\([0-9]*\).*/\1/')
 ifneq ($(XLEN),32)
@@ -291,6 +296,7 @@ stamps/build-binutils-linux: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check
 		--disable-sim \
 		--disable-libdecnumber \
 		--disable-readline \
+		$(BUGURL_OPTION) \
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
@@ -394,6 +400,7 @@ stamps/build-gcc-linux-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutil
 		--disable-bootstrap \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		$(MULTILIB_FLAGS) \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -429,6 +436,7 @@ stamps/build-gcc-linux-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) $(addprefix stamps/b
 		--disable-bootstrap \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		$(MULTILIB_FLAGS) \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -483,6 +491,7 @@ stamps/build-gcc-linux-native: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-gcc-lin
 		--disable-bootstrap \
                 --with-native-system-header-dir=$(INSTALL_DIR)/native/include \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		$(MULTILIB_FLAGS) \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -512,6 +521,7 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		--disable-sim \
 		--disable-libdecnumber \
 		--disable-readline \
+		$(BUGURL_OPTION) \
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
@@ -561,6 +571,7 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 		--disable-tm-clone-registry \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		$(GCC_MULTILIB_FLAGS) \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -661,6 +672,7 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		--disable-tm-clone-registry \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		$(GCC_MULTILIB_FLAGS) \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -694,6 +706,7 @@ stamps/build-binutils-musl: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-
 		--disable-sim \
 		--disable-libdecnumber \
 		--disable-readline \
+		$(BUGURL_OPTION) \
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
@@ -723,6 +736,7 @@ stamps/build-gcc-musl-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils
 		--disable-bootstrap \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		--disable-multilib \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
@@ -791,6 +805,7 @@ stamps/build-gcc-musl-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-musl-lin
 		--disable-bootstrap \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(BUGURL_OPTION) \
 		--disable-multilib \
 		$(WITH_ABI) \
 		$(WITH_ARCH) \
