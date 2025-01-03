@@ -1,0 +1,126 @@
+multilibs: *
+# these fails occur with stock gcc 12.4.0
+FAIL: gcc.c-torture/execute/20000822-1.c   -O0  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -O1  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -O2  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -Os  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/20000822-1.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/921215-1.c   -O0  execution test
+FAIL: gcc.c-torture/execute/931002-1.c   -O0  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O0  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O1  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O2  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -Os  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/fprintf-2.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/nestfunc-1.c   -O0  execution test
+FAIL: gcc.c-torture/execute/nestfunc-2.c   -O0  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O0  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O1  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O2  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O3 -fomit-frame-pointer -funroll-loops -fpeel-loops -ftracer -finline-functions  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -Os  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/nestfunc-3.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O0  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O1  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O2  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -Os  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/nestfunc-5.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O0  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O1  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O2  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -Os  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/nestfunc-6.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O0  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O1  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O2  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -Os  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/printf-2.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O0  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O1  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O2  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O3 -fomit-frame-pointer -funroll-loops -fpeel-loops -ftracer -finline-functions  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O3 -g  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -Os  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.c-torture/execute/user-printf.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/analyzer/pr104308.c  (test for warnings, line 9)
+FAIL: gcc.dg/analyzer/pr104308.c  (test for warnings, line 10)
+FAIL: gcc.dg/debug/btf/btf-datasec-1.c scan-assembler-times 0xf000003[\t ]+[^\n]*btt_info 2
+FAIL: gcc.dg/debug/btf/btf-datasec-1.c scan-assembler-times 0[\t ]+[^\n]*bts_offset 7
+FAIL: gcc.dg/debug/btf/btf-datasec-1.c scan-assembler-times ascii ".data.0"[\t ]+[^\n]*btf_aux_string 1
+FAIL: gcc.dg/debug/btf/btf-datasec-1.c scan-assembler-times ascii ".rodata.0"[\t ]+[^\n]*btf_aux_string 1
+FAIL: c-c++-common/patchable_function_entry-decl.c  -Wc++-compat   scan-assembler-times nop|NOP|SWYM 2
+FAIL: c-c++-common/patchable_function_entry-default.c  -Wc++-compat   scan-assembler-times nop|NOP|SWYM 3
+FAIL: c-c++-common/patchable_function_entry-definition.c  -Wc++-compat   scan-assembler-times nop|NOP|SWYM 1
+FAIL: c-c++-common/spec-barrier-1.c  -Wc++-compat  (test for excess errors)
+FAIL: gcc.dg/trampoline-1.c execution test
+FAIL: gcc.dg/uninit-pred-9_b.c bogus warning (test for bogus messages, line 20)
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O0  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O1  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O2  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -Os  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/fp-double-convert-float-1.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O0  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O1  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O2  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -Os  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-1.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O0  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O1  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O2  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -Os  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/fp-uint64-convert-double-2.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O0  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O1  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O2  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/pr86389.c   -Os  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/pr86389.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O0  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O0 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O1  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O1 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O3 -g -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -Os  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -Os -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/stackalign/nested-5.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O0  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O0 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O1  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O1 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O3 -g  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O3 -g -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -Os  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -Os -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -flto -fno-use-linker-plugin -flto-partition=none -fpic execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  execution test
+FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects -fpic execution test
+FAIL: gcc.dg/tree-ssa/tailcall-7-run.c execution test

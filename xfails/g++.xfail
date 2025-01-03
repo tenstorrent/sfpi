@@ -1,0 +1,31 @@
+multilibs: *
+# these fails occur with stock gcc 12.4.0
+FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++98  scan-assembler-times nop|NOP|SWYM 2
+FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++14  scan-assembler-times nop|NOP|SWYM 2
+FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++17  scan-assembler-times nop|NOP|SWYM 2
+FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++20  scan-assembler-times nop|NOP|SWYM 2
+FAIL: c-c++-common/patchable_function_entry-default.c  -std=gnu++98  scan-assembler-times nop|NOP|SWYM 3
+FAIL: c-c++-common/patchable_function_entry-default.c  -std=gnu++14  scan-assembler-times nop|NOP|SWYM 3
+FAIL: c-c++-common/patchable_function_entry-default.c  -std=gnu++17  scan-assembler-times nop|NOP|SWYM 3
+FAIL: c-c++-common/patchable_function_entry-default.c  -std=gnu++20  scan-assembler-times nop|NOP|SWYM 3
+FAIL: c-c++-common/patchable_function_entry-definition.c  -std=gnu++98  scan-assembler-times nop|NOP|SWYM 1
+FAIL: c-c++-common/patchable_function_entry-definition.c  -std=gnu++14  scan-assembler-times nop|NOP|SWYM 1
+FAIL: c-c++-common/patchable_function_entry-definition.c  -std=gnu++17  scan-assembler-times nop|NOP|SWYM 1
+FAIL: c-c++-common/patchable_function_entry-definition.c  -std=gnu++20  scan-assembler-times nop|NOP|SWYM 1
+FAIL: c-c++-common/spec-barrier-1.c  -std=gnu++98 (test for excess errors)
+FAIL: c-c++-common/spec-barrier-1.c  -std=gnu++14 (test for excess errors)
+FAIL: c-c++-common/spec-barrier-1.c  -std=gnu++17 (test for excess errors)
+FAIL: c-c++-common/spec-barrier-1.c  -std=gnu++20 (test for excess errors)
+FAIL: g++.dg/abi/pure-virtual1.C  -std=c++98 (test for excess errors)
+FAIL: g++.dg/abi/pure-virtual1.C  -std=c++14 (test for excess errors)
+FAIL: g++.dg/abi/pure-virtual1.C  -std=c++17 (test for excess errors)
+FAIL: g++.dg/abi/pure-virtual1.C  -std=c++20 (test for excess errors)
+FAIL: g++.dg/cpp2a/decomp2.C  -std=gnu++14 execution test
+FAIL: g++.dg/cpp2a/decomp2.C  -std=gnu++17 execution test
+FAIL: g++.dg/cpp2a/decomp2.C  -std=gnu++20 execution test
+FAIL: g++.dg/opt/const7.C  -std=c++14  scan-assembler-symbol-section symbol b_var (found _ZL5b_var) has section ^\\.(const|rodata)|\\[RO\\] (found .srodata)
+FAIL: g++.dg/opt/const7.C  -std=c++17  scan-assembler-symbol-section symbol b_var (found _ZL5b_var) has section ^\\.(const|rodata)|\\[RO\\] (found .srodata)
+FAIL: g++.dg/opt/const7.C  -std=c++20  scan-assembler-symbol-section symbol b_var (found _ZL5b_var) has section ^\\.(const|rodata)|\\[RO\\] (found .srodata)
+FAIL: g++.dg/warn/Wstringop-overflow-6.C  -std=gnu++14 (test for excess errors)
+FAIL: g++.dg/warn/Wstringop-overflow-6.C  -std=gnu++17 (test for excess errors)
+FAIL: g++.dg/warn/Wstringop-overflow-6.C  -std=gnu++20 (test for excess errors)

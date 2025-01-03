@@ -118,6 +118,19 @@ or
   scripts/build.sh --test-gcc
 ```
 
+After the dejagnu tests have executed, the summary files (`$tool.sum`)
+are post processed using local xfail files in the `xfails`
+directory. This filters out additional fails that are due to
+limitations of the test environment or deemed expected for some other
+reason. The post processed files are placed in the `build` directory,
+the originals are left unchanged.
+
+Note that these dejagnu test runs are idempotent. If you want to
+repeat a test run you will need to delete the stamp file in
+`build/stamps` (`check-binutils-newlib` or `check-gcc-newlib`). Note
+that the post processing is run each time, and thus the processed
+summary files will change if the xfail files are adjusted.
+
 9) Running the gcc testsuite with specific options:
 ```
 PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/test-infra/bin:$PATH \
