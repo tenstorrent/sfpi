@@ -1,0 +1,15 @@
+
+multilibs: *
+# these fails occur with stock binutils 2.39
+FAIL: --gc-sections with --defsym
+FAIL: --gc-sections with KEEP
+FAIL: --gc-sections with __start_SECTIONNAME
+FAIL: ld-plugin/lto-3r
+FAIL: ld-plugin/lto-5r
+FAIL: LTO 5 symbol
+FAIL: PR ld/19317 (2)
+FAIL: LTO 3b
+FAIL: LTO 5
+FAIL: PR ld/19317 (3)
+FAIL: Run pr24406-1
+FAIL: Build pr22983

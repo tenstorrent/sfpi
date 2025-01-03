@@ -14,26 +14,28 @@ if ! test "$NCPUS" ; then
 fi
 
 infra=false
-test=false
 test_gcc=false
 test_binutils=false
 gcc_checking=release
+multilib='--with-multilib-generator=rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--serial) NCPUS=1 ;;
 	--infra) infra=true ;;
-	--test) infra=true test=true test_gcc=false test_binutils=false ;;
-	--test-gcc) infra=true test=false test_gcc=true ;;
-	--test-binutils) infra=true test=false test_binutils=true ;;
+	--test) infra=true test_gcc=true test_binutils=true ;;
+	--test-gcc) infra=true test_gcc=true ;;
+	--test-binutils) infra=true test_binutils=true ;;
+	--checking) gcc_checking=all ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
-	-*) echo "Unknown option '$1'" >2 ; exit 2 ;;
+	--monolib) multilib=--disable-multilib ;;
+	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
     shift
 done
 
 if [ "$#" -ne 0 ] ; then
-    echo "Unknown argument '$1'" >2
+    echo "Unknown argument '$1'" >&2
     exit 2
 fi
 
@@ -63,7 +65,7 @@ if ! test -e build/Makefile ; then
      set -x
      ../configure --prefix="$(pwd)/sfpi/compiler" $bugurl_option \
 		  --enable-gcc-checking="$gcc_checking" \
-		  --with-multilib-generator='rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--' \
+		  "$multilib" \
 		  --with-arch=rv32i --with-abi=ilp32 --disable-gdb)
 fi
 
@@ -75,15 +77,19 @@ if $infra ; then
     (set -x; nice make -C build infra -j$NCPUS)
 fi
 
-# maybe test
-if $test ; then
-    (set -x; nice make -C build check -j$NCPUS)
-fi
-
 if $test_binutils ; then
     (set -x; nice make -C build check-binutils -j$NCPUS)
+    for sum in $(find build/build-binutils-newlib -name '*.sum')
+    do
+	(set -x; nice $BIN/local-xfails.py --output build --xfails xfails $sum)
+    done
 fi
 
 if $test_gcc ; then
    (set -x; nice make -C build check-gcc -j$NCPUS)
+    for sum in $(find build/build-gcc-newlib-stage2 -name '*.sum')
+    do
+	(set -x; nice $BIN/local-xfails.py --output build --xfails xfails $sum)
+    done
 fi
+
