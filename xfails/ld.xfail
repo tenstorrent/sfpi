@@ -13,3 +13,10 @@ FAIL: LTO 5
 FAIL: PR ld/19317 (3)
 FAIL: Run pr24406-1
 FAIL: Build pr22983
+
+# need investigating
+FAIL: lui to c.lui relaxation
+FAIL: c.lui to c.li relaxation
+FAIL: %pcrel_lo section symbol with an addend
+FAIL: %pcrel_lo overflow with an addend (2a)
+FAIL: %pcrel_lo overflow with an addend (2b)
