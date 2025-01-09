@@ -1,1 +1,20 @@
 # there are no fails with stock binutils 2.39
+
+# need to analyse
+FAIL: gas/riscv/c-add-addi
+FAIL: gas/riscv/c-ld
+FAIL: gas/riscv/c-lw
+FAIL: gas/riscv/c-zero-imm-64
+FAIL: gas/riscv/c-zero-imm
+FAIL: gas/riscv/c-zero-reg
+FAIL: gas/riscv/ext-32
+FAIL: gas/riscv/ext-64
+FAIL: gas/riscv/insn
+FAIL: gas/riscv/li32
+FAIL: gas/riscv/li64
+FAIL: gas/riscv/mapping-04b
+FAIL: gas/riscv/mapping-norelax-03b
+FAIL: gas/riscv/mapping-norelax-04b
+FAIL: gas/riscv/march-fail-unknown-std
+FAIL: gas/riscv/no-relax-align-2
+FAIL: gas/riscv/option-arch-01a

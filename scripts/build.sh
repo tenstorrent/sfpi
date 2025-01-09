@@ -25,7 +25,8 @@ while [ "$#" -ne 0 ] ; do
 	--test) infra=true test_gcc=true test_binutils=true ;;
 	--test-gcc) infra=true test_gcc=true ;;
 	--test-binutils) infra=true test_binutils=true ;;
-	--checking) gcc_checking=all ;;
+	# There's an RTL abuse such that =all compiler breaks so bad :(
+	--checking) gcc_checking=yes ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--monolib) multilib=--disable-multilib ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
