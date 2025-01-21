@@ -17,6 +17,7 @@ infra=false
 test_gcc=false
 test_binutils=false
 gcc_checking=release
+BUILD=build
 multilib='--with-multilib-generator=rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -29,6 +30,7 @@ while [ "$#" -ne 0 ] ; do
 	--checking) gcc_checking=yes ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--monolib) multilib=--disable-multilib ;;
+	--dir=*) BUILD="${1#*=}" ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
@@ -40,10 +42,10 @@ if [ "$#" -ne 0 ] ; then
     exit 2
 fi
 
-if ! test -d build ; then
-    mkdir -p build/sfpi
+if ! test -d $BUILD ; then
+    mkdir -p $BUILD/sfpi
     # extract git hashes for here and each submodule
-    "$BIN/git-hash.sh" > build/sfpi/src-hashes
+    "$BIN/git-hash.sh" > $BUILD/sfpi/src-hashes
 fi
 
 # Clean the environment
@@ -56,13 +58,13 @@ done
 export LC_ALL=C
 
 # configure, if this is the first time
-if ! test -e build/Makefile ; then
+if ! test -e $BUILD/Makefile ; then
     bugurl_option=
     if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	bugurl_option=--with-bugurl='https://github.com/tenstorrent/tt-metal'
     fi
-    (cd build
+    (cd $BUILD
      set -x
      ../configure --prefix="$(pwd)/sfpi/compiler" $bugurl_option \
 		  --enable-gcc-checking="$gcc_checking" \
@@ -71,26 +73,26 @@ if ! test -e build/Makefile ; then
 fi
 
 # build the toolchain
-(set -x; nice make -C build -j$NCPUS)
+(set -x; nice make -C $BUILD -j$NCPUS)
 
 # maybe the test infra
 if $infra ; then
-    (set -x; nice make -C build infra -j$NCPUS)
+    (set -x; nice make -C $BUILD infra -j$NCPUS)
 fi
 
 if $test_binutils ; then
-    (set -x; nice make -C build check-binutils -j$NCPUS)
-    for sum in $(find build/build-binutils-newlib -name '*.sum')
+    (set -x; nice make -C $BUILD check-binutils -j$NCPUS)
+    for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
     do
-	(set -x; nice $BIN/local-xfails.py --output build --xfails xfails $sum)
+	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
     done
 fi
 
 if $test_gcc ; then
-   (set -x; nice make -C build check-gcc -j$NCPUS)
-    for sum in $(find build/build-gcc-newlib-stage2 -name '*.sum')
+   (set -x; nice make -C $BUILD check-gcc -j$NCPUS)
+    for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
-	(set -x; nice $BIN/local-xfails.py --output build --xfails xfails $sum)
+	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
     done
 fi
 
