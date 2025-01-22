@@ -46,3 +46,13 @@ FAIL: c-c++-common/pr69669.c  -std=gnu++17  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++20  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++98  scan-rtl-dump-times final "mem:QI" 1
 FAIL: g++.dg/opt/pr103756.C   (test for excess errors)
+
+# timeout (in a checking build)
+multilibs: *
+FAIL: g++.dg/torture/pr31863.C   -O0  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -O1  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -O2  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -O2 -flto -fno-use-linker-plugin -flto-partition=none  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -O2 -flto -fuse-linker-plugin -fno-fat-lto-objects  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -O3 -g  (test for excess errors)
+FAIL: g++.dg/torture/pr31863.C   -Os  (test for excess errors)
