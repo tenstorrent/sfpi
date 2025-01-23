@@ -227,7 +227,7 @@ FAIL: gcc.dg/Wstringop-overflow-68.c  (test for warnings, line 98)
 FAIL: gcc.dg/Wstringop-overflow-68.c  (test for warnings, line 99)
 
 # To investigate
-multilibs: */-march=rv32i_xttgs/* */-march=rv32im_xttwh/*
+multilibs: */cpu=tt-gs */cpu=tt-wh
 FAIL: c-c++-common/pr69669.c  -Wc++-compat   scan-rtl-dump-times final "mem:QI" 1
 FAIL: gcc.dg/20141029-1.c scan-rtl-dump-times final "mem/v(/.)*:HI" 4
 FAIL: gcc.dg/loop-unswitch-6.c (test for excess errors)

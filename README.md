@@ -42,7 +42,8 @@ https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/l
   performed in a `build` subdirectory and a `sfpi/src-hashes` file is
   created there to record the source tree state at the start of a
   build. When making a release, you will want this to match upstream
-  committed sources.
+  committed sources. If you want to build in a different subdirectory
+  use the `--dir=$DIR` option.
 
   You may add a `--checking=VALUE` option to control gcc's checking --
   see gcc's documentation.  The default is `release`. Note this does
@@ -131,7 +132,18 @@ repeat a test run you will need to delete the stamp file in
 that the post processing is run each time, and thus the processed
 summary files will change if the xfail files are adjusted.
 
-9) Running the gcc testsuite with specific options:
+9) Running the TT-specific parts of the toolchain tests.
+```
+  scripts/build.sh --test-tt
+```
+
+This will run just the tt-specific subdirectories of the compiler
+testsuites.  The summary files are copied to the build directory /but/
+are not post processed as described above. Unlike running the full
+testsuite, this operation is /not/ idempotent -- there is no need to
+delete a stamp file to rerun them.
+
+10) Running the gcc testsuite with specific options:
 ```
 PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/test-infra/bin:$PATH \
 make -C build/build-gcc-newlib-stage2/gcc check-gcc "RUNTESTFLAGS=--target_board=riscv-sim/-march=rv32i/-mabi=ilp32/-mcmodel=medlow"
