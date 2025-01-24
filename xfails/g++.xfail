@@ -40,7 +40,7 @@ FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z2okIsEjjj:\\n[^:]*\\n[\\t ]+sh
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z3badIcEjjj:\\n[^:]+[\\t ]+sb[\\t ]+a.,9\\(sp\\)\\n[\\t ]+lbu[\\t ]+zero,9\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z3badIsEjjj:\\n[^:]*\\n[\\t ]+sh[\\t ]+a.,10\\(sp\\)\\n[\\t ]+lhu[\\t ]+zero,10\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 
-multilibs: /cpu=tt-gs /cpu=tt-wh
+multilibs: *
 FAIL: c-c++-common/pr69669.c  -std=gnu++14  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++17  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++20  scan-rtl-dump-times final "mem:QI" 1
