@@ -1,6 +1,7 @@
 # there are no fails with stock binutils 2.39
 
 # need to analyse
+multilibs: riscv-sim/*
 FAIL: gas/riscv/c-add-addi
 FAIL: gas/riscv/c-ld
 FAIL: gas/riscv/c-lw

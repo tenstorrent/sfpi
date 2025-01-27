@@ -1,4 +1,4 @@
-multilibs: *
+multilibs: riscv-sim/*
 # these fails occur with stock gcc 12.4.0
 FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++98  scan-assembler-times nop|NOP|SWYM 2
 FAIL: c-c++-common/patchable_function_entry-decl.c  -std=gnu++14  scan-assembler-times nop|NOP|SWYM 2
@@ -31,26 +31,26 @@ FAIL: g++.dg/warn/Wstringop-overflow-6.C  -std=gnu++17 (test for excess errors)
 FAIL: g++.dg/warn/Wstringop-overflow-6.C  -std=gnu++20 (test for excess errors)
 
 # To investigate
-multilibs: / /cpu=tt-bh /cpu=tt-gs
+multilibs: riscv-sim riscv-sim/cpu=tt-bh riscv-sim/cpu=tt-gs
 FAIL: g++.target/tt/pr13.C (test for excess errors)
 
-multilibs: / /cpu=tt-bh
+multilibs: riscv-sim/ riscv-sim/cpu=tt-bh
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z2okIcEjjj:\\n[^:]*\\n[\\t ]+sb[\\t ]+a.,8\\(sp\\)\\n[\\t ]+lbu[\\t ]+zero,8\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z2okIsEjjj:\\n[^:]*\\n[\\t ]+sh[\\t ]+a.,8\\(sp\\)\\n[\\t ]+lhu[\\t ]+zero,8\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z3badIcEjjj:\\n[^:]+[\\t ]+sb[\\t ]+a.,9\\(sp\\)\\n[\\t ]+lbu[\\t ]+zero,9\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 FAIL: g++.target/tt/raw-race-1.C scan-assembler _Z3badIsEjjj:\\n[^:]*\\n[\\t ]+sh[\\t ]+a.,10\\(sp\\)\\n[\\t ]+lhu[\\t ]+zero,10\\(sp\\)\\n[\\t ]+lw[\\t ]+a.,8\\(sp\\)\\n
 
-multilibs: */cpu=gs */cpu=wh
+multilibs: riscv-sim/cpu=gs riscv-sim/cpu=wh
 FAIL: c-c++-common/pr69669.c  -std=gnu++14  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++17  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++20  scan-rtl-dump-times final "mem:QI" 1
 FAIL: c-c++-common/pr69669.c  -std=gnu++98  scan-rtl-dump-times final "mem:QI" 1
 
-multilibs: */cpu=gs */cpu=wh
+multilibs: riscv-sim/cpu=gs riscv-sim/cpu=wh
 FAIL: g++.dg/opt/pr103756.C   (test for excess errors)
 
 # timeout (in a checking build)
-multilibs: *
+multilibs: riscv-sim/*
 FAIL: g++.dg/torture/pr31863.C   -O0  (test for excess errors)
 FAIL: g++.dg/torture/pr31863.C   -O1  (test for excess errors)
 FAIL: g++.dg/torture/pr31863.C   -O2  (test for excess errors)
