@@ -119,8 +119,22 @@
 
 #include <type_traits>
 
+#if __riscv_tt_grayskull
+#define ARCH_GRAYSKULL 1
+#endif
+#if __riscv_tt_wormhole
+#define ARCH_WORMHOLE 1
+#endif
+#if __riscv_tt_blackhole
+#define ARCH_BLACKHOLE 1
+#endif
 #if defined(ARCH_WORMHOLE_B0)
 #define ARCH_WORMHOLE 1
+#endif
+
+#if defined(ARCH_GRAYSKULL) + defined(ARCH_WORMHOLE) + defined(ARCH_BLACKHOLE) != 1
+#error "Exactly one SFPI architecture must be selected"
+#include "stop now, no good will come"
 #endif
 
 #if defined(ARCH_GRAYSKULL)

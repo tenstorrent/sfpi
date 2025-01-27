@@ -109,7 +109,7 @@ namespace sfpi {
 
 #elif __GNUC__
 #if !__has_builtin(__builtin_rvtt_wh_sfpload)
-#error TT builtins not found: compile with -mwormhole -march=rv32iw -mabi=ilp32
+#error TT builtins not found: compile with -march=rv32im_xttwh -mabi=ilp32
 #include <fails to compile without extensions>
 #endif // !__has_builtin(__builtin_rvtt_wh_sfpload)
 
