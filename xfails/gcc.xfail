@@ -1,4 +1,4 @@
-multilibs: *
+multilibs: riscv-sim/*
 # these fails occur with stock gcc 12.4.0
 FAIL: gcc.c-torture/execute/20000822-1.c   -O0  execution test
 FAIL: gcc.c-torture/execute/20000822-1.c   -O1  execution test
@@ -126,7 +126,7 @@ FAIL: gcc.dg/torture/stackalign/nested-6.c   -O2 -flto -fuse-linker-plugin -fno-
 FAIL: gcc.dg/tree-ssa/tailcall-7-run.c execution test
 
 # To investigate
-multilibs: */cpu=tt-gs */cpu=tt-wh
+multilibs: riscv-sim/cpu=tt-gs riscv-sim/cpu=tt-wh
 FAIL: c-c++-common/pr69669.c  -Wc++-compat   scan-rtl-dump-times final "mem:QI" 1
 FAIL: gcc.dg/20141029-1.c scan-rtl-dump-times final "mem/v(/.)*:HI" 4
 FAIL: gcc.dg/loop-unswitch-6.c (test for excess errors)

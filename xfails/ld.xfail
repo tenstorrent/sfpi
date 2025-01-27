@@ -1,5 +1,5 @@
 
-multilibs: *
+multilibs: riscv-sim/*
 # these fails occur with stock binutils 2.39
 FAIL: --gc-sections with --defsym
 FAIL: --gc-sections with KEEP
@@ -15,6 +15,7 @@ FAIL: Run pr24406-1
 FAIL: Build pr22983
 
 # need investigating
+multilibs: riscv-sim/*
 FAIL: lui to c.lui relaxation
 FAIL: c.lui to c.li relaxation
 FAIL: %pcrel_lo section symbol with an addend
