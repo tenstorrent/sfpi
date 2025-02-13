@@ -759,8 +759,7 @@ sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
 
 sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
 {
-    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlreg(vConstNeg1.get());
-    return __builtin_rvtt_sfpmad(neg1, b.get(), a.get(), 0);
+  return a + -b;
 }
 
 }
