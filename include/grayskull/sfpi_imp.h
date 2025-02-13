@@ -90,9 +90,8 @@ sfpi_inline __vCond vFloat::operator>=(const float x) const { return __vCond(__v
 
 sfpi_inline vFloat vFloat::operator-=(const vFloat a)
 {
-    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlreg(vConstNeg1.get());
-    assign(__builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE));
-    return v;
+  *this += -a;
+  return *this;
 }
 
 sfpi_inline vFloat::vFloat(const __vDReg dreg)
