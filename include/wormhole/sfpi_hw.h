@@ -343,8 +343,8 @@ constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1_AND_COPY4 = 2;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1 = 3;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLSHR1 = 4;
-constexpr unsigned int SFPSHFT2_MOD1_SHFT_IMM = 5;
-constexpr unsigned int SFPSHFT2_MOD1_SHFT_LREG = 6;
+constexpr unsigned int SFPSHFT2_MOD1_SHFT_LREG = 5;
+constexpr unsigned int SFPSHFT2_MOD1_SHFT_IMM = 6;
 
 constexpr unsigned int SFPSWAP_MOD1_SWAP = 0;
 constexpr unsigned int SFPSWAP_MOD1_VEC_MIN_MAX = 1;
