@@ -294,4 +294,8 @@ sfpi_inline void vec_min_max(__vBase& dst, __vBase& src)
     __builtin_rvtt_sfpswap(dst.get(), src.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
 }
 
+sfpi_inline vInt rand() {
+  return vInt(__builtin_rvtt_sfpmov_config(SFPCONFIG_SRC_RAND));
+}
+
 } // namespace sfpi
