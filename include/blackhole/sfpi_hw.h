@@ -196,6 +196,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_bh_sfpconfig_v(l0, config_dest)
 
+#define __builtin_rvtt_sfpmov_config(src) __builtin_rvtt_bh_sfpmov_config(src)
+
 #endif // __GNUC__
 
 #endif // COMPILE_FOR_EMULE
@@ -222,6 +224,7 @@ constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = 12;
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 7;
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
+constexpr unsigned int SFPMOV_MOD1_CONFIG = 8;
 
 constexpr unsigned int SFPMAD_MOD1_OFFSET_NONE = 0;
 
@@ -355,6 +358,8 @@ constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 = 5;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
+
+constexpr unsigned int SFPCONFIG_SRC_RAND = 9;
 
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST0 = 0;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST1 = 1;
