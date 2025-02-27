@@ -1,9 +1,9 @@
 [submodule "binutils"]
 	path = binutils
-	url = git@github.com:tenstorrent/sfpi-binutils.git
+	url = https://github.com/tenstorrent/sfpi-binutils.git
 [submodule "gcc"]
 	path = gcc
-	url = git@github.com:tenstorrent/sfpi-gcc.git
+	url = https://github.com/tenstorrent/sfpi-gcc.git
 [submodule "newlib"]
 	path = newlib
 	url = https://sourceware.org/git/newlib-cygwin.git
