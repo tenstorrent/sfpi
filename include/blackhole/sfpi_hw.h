@@ -198,6 +198,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfpmov_config(src) __builtin_rvtt_bh_sfpmov_config(src)
 #define __builtin_rvtt_sfparecip(src, mod) __builtin_rvtt_bh_sfparecip(src, mod)
+#define __builtin_rvtt_sfpmul24(a, b, mod) __builtin_rvtt_bh_sfpmul24(a, b, mod)
 
 #endif // __GNUC__
 
@@ -255,6 +256,12 @@ constexpr unsigned int SFPABS_MOD1_FLOAT = 1;
 constexpr unsigned int SFPARECIP_MOD1_RECIP = 0;
 constexpr unsigned int SFPARECIP_MOD1_COND_RECIP = 1;
 constexpr unsigned int SFPARECIP_MOD1_EXP = 2;
+
+constexpr unsigned int SFPMUL24_MOD1_NONE = 0;
+constexpr unsigned int SFPMUL24_MOD1_LOWER = 0;
+constexpr unsigned int SFPMUL24_MOD1_UPPER = 1;
+constexpr unsigned int SFPMUL24_MOD1_SRCA_LREG7 = 4;
+constexpr unsigned int SFPMUL24_MOD1_DST_LREG7 = 8;
 
 constexpr unsigned int SFPIADD_MOD1_ARG_LREG_DST = 0;
 constexpr unsigned int SFPIADD_MOD1_ARG_IMM = 1;
