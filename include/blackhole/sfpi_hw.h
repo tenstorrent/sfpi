@@ -197,6 +197,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_bh_sfpconfig_v(l0, config_dest)
 
 #define __builtin_rvtt_sfpmov_config(src) __builtin_rvtt_bh_sfpmov_config(src)
+#define __builtin_rvtt_sfparecip(src, mod) __builtin_rvtt_bh_sfparecip(src, mod)
 
 #endif // __GNUC__
 
@@ -250,6 +251,10 @@ constexpr unsigned int SFPEXEXP_MOD1_SET_CC_SGN_COMP_EXP = 10;
 
 constexpr unsigned int SFPABS_MOD1_INT = 0;
 constexpr unsigned int SFPABS_MOD1_FLOAT = 1;
+
+constexpr unsigned int SFPARECIP_MOD1_RECIP = 0;
+constexpr unsigned int SFPARECIP_MOD1_COND_RECIP = 1;
+constexpr unsigned int SFPARECIP_MOD1_EXP = 2;
 
 constexpr unsigned int SFPIADD_MOD1_ARG_LREG_DST = 0;
 constexpr unsigned int SFPIADD_MOD1_ARG_IMM = 1;
