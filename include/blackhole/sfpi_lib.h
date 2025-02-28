@@ -298,4 +298,15 @@ sfpi_inline vInt rand() {
   return vInt(__builtin_rvtt_sfpmov_config(SFPCONFIG_SRC_RAND));
 }
 
+template<bool uncond = true>
+sfpi_inline vFloat approx_recip(const vFloat &src)
+{
+  return vFloat(__builtin_rvtt_sfparecip(src.get(), uncond ? SFPARECIP_MOD1_RECIP : SFPARECIP_MOD1_COND_RECIP));
+}
+
+sfpi_inline vFloat approx_exp(const vFloat &src)
+{
+  return vFloat(__builtin_rvtt_sfparecip(src.get(), SFPARECIP_MOD1_EXP));
+}
+
 } // namespace sfpi
