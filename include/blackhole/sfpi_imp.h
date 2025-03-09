@@ -89,8 +89,8 @@ sfpi_inline __vCond vFloat::operator>=(const float x) const { return __vCond(__v
 
 sfpi_inline vFloat vFloat::operator-=(const vFloat a)
 {
-  *this += -a;
-  return *this;
+  operator+= (-a);
+  return v;
 }
 
 sfpi_inline vFloat::vFloat(const __vDReg dreg)

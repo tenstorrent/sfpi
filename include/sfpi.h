@@ -759,7 +759,8 @@ sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
 
 sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
 {
-  return a + -b;
+  // Do not use sfpmad here, the optimizer will handle that.
+  return fp_add(a, -b);
 }
 
 }
