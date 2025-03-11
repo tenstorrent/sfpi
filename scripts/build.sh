@@ -70,7 +70,7 @@ if ! test -e $BUILD/Makefile ; then
      ../configure --prefix="$(pwd)/sfpi/compiler" $bugurl_option \
 		  --enable-gcc-checking="$gcc_checking" \
 		  "$multilib" \
-		  --with-arch=rv32i --with-abi=ilp32 --disable-gdb)
+		  --with-arch=rv32i --with-abi=ilp32 --enable-gdb)
 fi
 
 # build the toolchain

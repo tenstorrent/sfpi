@@ -106,8 +106,10 @@ else
 musl: stamps/build-gcc-musl-stage2
 endif
 ifeq (@enable_gdb@,--enable-gdb)
+ifneq ($(GDB_SRCDIR),$(BINUTILS_SRCDIR))
 newlib: stamps/build-gdb-newlib
 linux: stamps/build-gdb-linux
+endif
 endif
 linux-native: stamps/build-gcc-linux-native
 
@@ -506,6 +508,12 @@ stamps/build-gcc-linux-native: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-gcc-lin
 # NEWLIB
 #
 
+ifneq ($(GDB_SRCDIR) @enable_gdb@,$(BINUTILS_SRCDIR) --enable-gdb)
+BINUTILS_GDB_FLAGS := --disable-gdb --disable-sim --disable-libdecnumber --disable-readline
+else
+BINUTILS_GDB_FLAGS := --enable-gdb $(GDB_TARGET_FLAGS)
+endif
+
 stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-write-permission
 	rm -rf $@ $(notdir $@)
 	mkdir $(notdir $@)
@@ -517,10 +525,7 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		@with_guile@ \
 		--disable-werror \
 		$(BINUTILS_TARGET_FLAGS) \
-		--disable-gdb \
-		--disable-sim \
-		--disable-libdecnumber \
-		--disable-readline \
+		$(BINUTILS_GDB_FLAGS) \
 		$(BUGURL_OPTION) \
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
