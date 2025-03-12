@@ -1227,7 +1227,7 @@ constexpr __LReg l_reg;
 //////////////////////////////////////////////////////////////////////////////
 #define v_if(x)             \
 {                           \
-   __vCCCtrl __cc;          \
+   sfpi::__vCCCtrl __cc;    \
    __cc.mark_top();         \
    __cc.cc_if(x);
 
@@ -1245,7 +1245,7 @@ constexpr __LReg l_reg;
 
 #define v_block             \
 {                           \
-    __vCCCtrl __cc;
+    sfpi::__vCCCtrl __cc;
 
 #define v_and(x)            \
     __cc.mark_top();        \
