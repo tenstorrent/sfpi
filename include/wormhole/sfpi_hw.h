@@ -322,8 +322,13 @@ constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
-constexpr unsigned int SFPCAST_MOD1_RND_EVEN = 0;
-constexpr unsigned int SFPCAST_MOD1_RND_STOCH = 1;
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = 0;
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = 1;
+// Deprecate these two names (renamed due to features added in Blackhole)
+__attribute__((__deprecated__("use SFPCAST_MOD1_INT32_TO_FP32_RNE instead")))
+constexpr unsigned int SFPCAST_MOD1_RND_EVEN = SFPCAST_MOD1_INT32_TO_FP32_RNE;
+__attribute__((__deprecated__("use SFPCAST_MOD1_INT32_TO_FP32_RNS instead")))
+constexpr unsigned int SFPCAST_MOD1_RND_STOCH = SFPCAST_MOD1_INT32_TO_FP32_RNS;
 
 constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
 constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;
