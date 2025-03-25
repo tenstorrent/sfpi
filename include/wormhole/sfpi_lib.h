@@ -184,7 +184,7 @@ sfpi_inline vType reinterpret(const __vBase v)
 
 sfpi_inline vFloat int32_to_float(vInt in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpcast(in.get(), round_mode ? SFPCAST_MOD1_RND_STOCH : SFPCAST_MOD1_RND_EVEN);
+    return __builtin_rvtt_sfpcast(in.get(), round_mode ? SFPCAST_MOD1_INT32_TO_FP32_RNS : SFPCAST_MOD1_INT32_TO_FP32_RNE);
 }
 
 sfpi_inline vUInt float_to_fp16a(vFloat in, int round_mode = 1)
