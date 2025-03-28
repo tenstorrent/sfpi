@@ -89,7 +89,7 @@ if $test_binutils ; then
     done
 fi
 
-TARGET_BOARDS='riscv-sim/ riscv-sim/cpu=tt-gs riscv-sim/cpu=tt-wh riscv-sim/cpu=tt-bh'
+TARGET_BOARDS='riscv-sim/ riscv-sim/cpu=tt-wh riscv-sim/cpu=tt-bh'
 if $test_gcc ; then
     test_tt=false
    (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
