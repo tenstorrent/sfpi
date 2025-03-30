@@ -24,6 +24,16 @@ upstream version. (There may be other reasons to increment.)
 
 https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
 
+### Obtaining Full Source
+
+The Github-provided source tarballs (sfpi-$VERSION.tar.gz) do not
+contain the submodule sourece code. To obtain the full sources:
+
+* Clone the sfpi repo: `git clone https://github.com/tenstorrent/sfpi.git`
+* Enter the repo: `cd sfpi`
+* Checkout the release using the tag: `git checkout $VERSION`
+* Update the submodules: `git submodule update --init --recursive`
+
 ### Building
 1) Clone the sfpi repo, & initialize submodules:
 ```
