@@ -516,6 +516,9 @@ public:
     sfpi_inline vInt operator^=(const vInt b) { this->__vIntBase::operator^=(b); return v; }
     sfpi_inline vInt operator~() const { return this->__vIntBase::operator~<vInt>(); }
 
+    sfpi_inline vInt operator+() const { return *this + 0; }
+    sfpi_inline vInt operator-() const { return vInt(0) - *this; }
+  
     sfpi_inline vInt operator+(int32_t val) const { return this->__vIntBase::add<vInt>(val, SFPXIADD_MOD1_SIGNED); }
     template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
     sfpi_inline vInt operator+(const vType val) const { return this->__vIntBase::operator+<vInt>(val); }
@@ -543,10 +546,14 @@ public:
 
     sfpi_inline vInt operator<<(unsigned amt) const;
     sfpi_inline vInt operator<<=(unsigned amt) { *this = *this << amt; return *this; }
+    sfpi_inline vInt operator<<(vInt amt) const;
+    sfpi_inline vInt operator<<=(vInt amt) { *this = *this << amt; return *this; }
 #if defined(ARCH_BLACKHOLE)
     // arithmetic shifts added in blackhole
     sfpi_inline vInt operator>>(unsigned amt) const;
     sfpi_inline vInt operator>>=(unsigned amt) { *this = *this >> amt; return *this; }
+    sfpi_inline vInt operator>>(vInt amt) const;
+    sfpi_inline vInt operator>>=(vInt amt) { *this = *this >> amt; return *this; }
 #endif
 
     // Conditionals
@@ -635,9 +642,13 @@ public:
 
     sfpi_inline vUInt operator<<(unsigned amt) const;
     sfpi_inline vUInt operator<<=(unsigned amt) { *this = *this << amt; return *this; }
+    sfpi_inline vUInt operator<<(vInt amt) const;
+    sfpi_inline vUInt operator<<=(vInt amt) { *this = *this << amt; return *this; }
 
     sfpi_inline vUInt operator>>(unsigned amt) const;
     sfpi_inline vUInt operator>>=(unsigned amt) { *this = *this >> amt; return *this; }
+    sfpi_inline vUInt operator>>(vInt amt) const;
+    sfpi_inline vUInt operator>>=(vInt amt) { *this = *this >> amt; return *this; }
 
     // Conditionals
     sfpi_inline const __vCond operator==(int32_t val) const;

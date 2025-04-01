@@ -161,14 +161,26 @@ sfpi_inline void __vConstIntBase::operator=(const int in) const
 vInt vInt::operator<<(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_ARITHMETIC);
 }
+vInt vInt::operator<<(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), amt.get(), SFPSHFT_MOD1_ARITHMETIC);
+}
 vInt vInt::operator>>(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), -amt, SFPSHFT_MOD1_ARITHMETIC);
+}
+vInt vInt::operator>>(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_ARITHMETIC);
 }
 vUInt vUInt::operator<<(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_LOGICAL);
 }
+vUInt vUInt::operator<<(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), amt.get(), SFPSHFT_MOD1_LOGICAL);
+}
 vUInt vUInt::operator>>(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), -amt, SFPSHFT_MOD1_LOGICAL);
+}
+vUInt vUInt::operator>>(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_LOGICAL);
 }
 
 enum class LRegs {
