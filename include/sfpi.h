@@ -339,10 +339,6 @@ public:
     sfpi_inline __vCond operator<=(const vInt x) const;
     sfpi_inline __vCond operator>(const vInt x) const;
     sfpi_inline __vCond operator>=(const vInt x) const;
-
-    // Shifts
-    sfpi_inline __vIntBase operator<<(uint32_t amt) const;
-    sfpi_inline vUInt operator>>(uint32_t amt) const;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -478,13 +474,6 @@ class __vIntBase : public __vBase {
     sfpi_inline vType operator-=(const __vIntBase val);
     template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
     sfpi_inline vType operator-=(const __vConstIntBase val);
-
-    // Shifts
-    template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator<<(uint32_t amt) const;
-    template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
-    sfpi_inline vType operator<<=(uint32_t amt);
-
 };
 
 class vInt : public __vIntBase {
@@ -552,8 +541,13 @@ public:
     sfpi_inline vInt operator--(const int) { *this -= 1; return *this; }
     sfpi_inline vInt operator--() { vInt tmp = *this; *this -= 1; return tmp; }
 
-    sfpi_inline vInt operator<<(uint32_t amt) const { return this->__vIntBase::operator<<<vInt>(amt); }
-    sfpi_inline vInt operator<<=(uint32_t amt) { this->__vIntBase::operator<<=<vInt>(amt); return v; }
+    sfpi_inline vInt operator<<(unsigned amt) const;
+    sfpi_inline vInt operator<<=(unsigned amt) { *this = *this << amt; return *this; }
+#if defined(ARCH_BLACKHOLE)
+    // arithmetic shifts added in blackhole
+    sfpi_inline vInt operator>>(unsigned amt) const;
+    sfpi_inline vInt operator>>=(unsigned amt) { *this = *this >> amt; return *this; }
+#endif
 
     // Conditionals
     sfpi_inline const __vCond operator==(int32_t val) const;
@@ -639,10 +633,11 @@ public:
     sfpi_inline vUInt operator--(const int) { *this -= 1; return *this; }
     sfpi_inline vUInt operator--() { vUInt tmp = *this; *this -= 1; return tmp; }
 
-    sfpi_inline vUInt operator<<(uint32_t amt) const { return this->__vIntBase::operator<<<vUInt>(amt); }
-    sfpi_inline vUInt operator>>(uint32_t amt) const;
-    sfpi_inline vUInt operator<<=(uint32_t amt) { this->__vIntBase::operator<<=<vUInt>(amt); return v; }
-    sfpi_inline vUInt operator>>=(uint32_t amt);
+    sfpi_inline vUInt operator<<(unsigned amt) const;
+    sfpi_inline vUInt operator<<=(unsigned amt) { *this = *this << amt; return *this; }
+
+    sfpi_inline vUInt operator>>(unsigned amt) const;
+    sfpi_inline vUInt operator>>=(unsigned amt) { *this = *this >> amt; return *this; }
 
     // Conditionals
     sfpi_inline const __vCond operator==(int32_t val) const;
@@ -910,19 +905,6 @@ sfpi_inline vType __vIntBase::operator~() const
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
-sfpi_inline vType __vIntBase::operator<<(uint32_t amt) const
-{
-    return __builtin_rvtt_sfpshft_i(v, amt);
-}
-
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
-sfpi_inline vType __vIntBase::operator<<=(uint32_t amt)
-{
-    assign((static_cast<vType>(*this) << amt).get());
-    return v;
-}
-
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
 sfpi_inline vType __vIntBase::add(int32_t val, unsigned int mod_base) const
 {
     return __builtin_rvtt_sfpxiadd_i(v, val, mod_base);
@@ -999,17 +981,6 @@ sfpi_inline vType __vIntBase::operator-=(const __vConstIntBase val)
 {
     __rvtt_vec_t c = __builtin_rvtt_sfpassignlreg(val.get());
     assign(__builtin_rvtt_sfpxiadd_v(c, v, SFPXIADD_MOD1_IS_SUB));
-    return v;
-}
-
-sfpi_inline vUInt vUInt::operator>>(uint32_t amt) const
-{
-    return __builtin_rvtt_sfpshft_i(v, -amt);
-}
-
-sfpi_inline vUInt vUInt::operator>>=(uint32_t amt)
-{
-    assign((*this >> amt).get());
     return v;
 }
 
@@ -1092,17 +1063,26 @@ sfpi_inline __vCond __vConstIntBase::operator<=(const vInt x) const { return __v
 sfpi_inline __vCond __vConstIntBase::operator>(const vInt x) const { return __vCond(__vCond::__vCondGT, __vIntBase(*this), x, 0); }
 sfpi_inline __vCond __vConstIntBase::operator>=(const vInt x) const { return __vCond(__vCond::__vCondGTE, __vIntBase(*this), x, 0); }
 
-sfpi_inline __vIntBase __vConstIntBase::operator<<(uint32_t amt) const
-{
-    __rvtt_vec_t v = __builtin_rvtt_sfpassignlreg(reg);
-    return __builtin_rvtt_sfpshft_i(v, amt);
+#if !defined(ARCH_BLACKHOLE)
+vInt vInt::operator<<(unsigned amt) const {
+  return __builtin_rvtt_sfpshft_i(get(), amt);
 }
-
-sfpi_inline vUInt __vConstIntBase::operator>>(uint32_t amt) const
-{
-    __rvtt_vec_t v = __builtin_rvtt_sfpassignlreg(reg);
-    return __builtin_rvtt_sfpshft_i(v, -amt);
+vInt vInt::operator<<(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), amt.get());
 }
+vUInt vUInt::operator<<(unsigned amt) const {
+  return __builtin_rvtt_sfpshft_i(get(), amt);
+}
+vUInt vUInt::operator<<(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), amt.get());
+}
+vUInt vUInt::operator>>(unsigned amt) const {
+  return __builtin_rvtt_sfpshft_i(get(), -amt);
+}
+vUInt vUInt::operator>>(vInt amt) const {
+  return __builtin_rvtt_sfpshft_v(get(), (-amt).get());
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline vFloat::vFloat(const __vConstFloat creg)

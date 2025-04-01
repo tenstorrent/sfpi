@@ -68,8 +68,8 @@ namespace sfpi {
 
 #define __builtin_rvtt_sfplz(src, mod1) sfpu_rvtt_sfplz(src, mod1)
 
-#define __builtin_rvtt_sfpshft_i(dst, imm12) sfpu_rvtt_sfpshft_i(dst, imm12)
-#define __builtin_rvtt_sfpshft_v(dst, src) sfpu_rvtt_sfpshft_v(dst, src)
+#define __builtin_rvtt_sfpshft_i(src, imm12, mod1) sfpu_rvtt_sfpshft_i(src, imm12, mod1)
+#define __builtin_rvtt_sfpshft_v(src, shft, mod1) sfpu_rvtt_sfpshft_v(src, shft, mmod1)
 
 #define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) sfpu_rvtt_sfpxiadd_i(imm12, src, mod1)
 #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) sfpu_rvtt_sfpxiadd_v(dst, src, mod1)
@@ -169,8 +169,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfplz(src, mod1) __builtin_rvtt_bh_sfplz(src, mod1)
 
-#define __builtin_rvtt_sfpshft_i(dst, imm12) __builtin_rvtt_bh_sfpshft_i((void *)ckernel::instrn_buffer, dst, imm12, 0, 0)
-#define __builtin_rvtt_sfpshft_v(dst, src) __builtin_rvtt_bh_sfpshft_v(dst, src)
+#define __builtin_rvtt_sfpshft_i(src, imm12, mod1) __builtin_rvtt_bh_sfpshft_i((void *)ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
+#define __builtin_rvtt_sfpshft_v(src, shft, mod1) __builtin_rvtt_bh_sfpshft_v(src, shft, mod1)
 
 #define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) __builtin_rvtt_bh_sfpxiadd_i((void *)ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
 #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) __builtin_rvtt_bh_sfpxiadd_v(dst, src, mod1)
@@ -359,6 +359,9 @@ constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT16 = 6;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT16 = 7;
 constexpr unsigned int SFPSTOCHRND_MOD1_CONV_MASK = 7;
 constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
+
+constexpr unsigned int SFPSHFT_MOD1_LOGICAL = 0;
+constexpr unsigned int SFPSHFT_MOD1_ARITHMETIC = 2;
 
 constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
