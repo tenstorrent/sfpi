@@ -176,6 +176,11 @@ sfpi_inline vUInt shft(const vUInt v, const vInt amt)
     return __builtin_rvtt_sfpshft_v(v.get(), amt.get());
 }
 
+sfpi_inline vUInt shft(const vUInt v, int amt)
+{
+  return __builtin_rvtt_sfpshft_i(v.get(), amt);
+}
+
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType reinterpret(const __vBase v)
 {
