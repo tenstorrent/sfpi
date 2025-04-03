@@ -193,13 +193,13 @@ endif
 endif
 endif
 
-.PHONY: infra
-infra: build-sim stamps/build-dejagnu
+.PHONY: build-dejagnu
+build-dejagnu: stamps/build-dejagnu
+
+build-sim: $(SIM_STAMP)
 ifeq ($(SIM),qemu)
 	cp $(srcdir)/scripts/riscv32-unknown-elf-run $(test_infradir)/bin
 endif
-
-build-sim: $(SIM_STAMP)
 
 stamps/check-write-permission:
 	mkdir -p $(INSTALL_DIR)/.test || \

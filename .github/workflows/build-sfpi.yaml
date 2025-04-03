@@ -1,0 +1,45 @@
+name: "Build SFPI"
+
+on:
+  workflow_dispatch:
+    inputs:
+      architecture:
+        required: false
+        default: x86_64
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+
+run-name: Build $${ inputs.architecture }} SFPI
+jobs:
+  build:
+    runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || ''}}
+    steps:
+      - name: Checkout repo & submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Installl packages
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install expect
+      - name: Build toolchain
+        run: scripts/build.sh
+      - name: Build test harness
+        run: scripts/build.sh --dejagnu
+      - name: Run tests
+        run: scripts/build.sh --test-tt
+      - name: Release toolchain
+        run: scripts/release.sh
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.architecture }}-build
+          path: build/sfpi-*
+          compression-level: 0
+      - name: Upload tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.architecture }}-tests
+          path: build/*.sum

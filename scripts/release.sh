@@ -72,7 +72,7 @@ if $debian; then
     echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
 
     # Create Debian package structure
-    PKGDIR="$BUILD/sfpi-deb"
+    PKGDIR="$BUILD/debian"
     DEBIAN="$PKGDIR/DEBIAN"
     INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
 
