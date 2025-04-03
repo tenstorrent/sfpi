@@ -35,5 +35,7 @@ tar cf - include | (cd $BUILD/sfpi && tar xf -)
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
 
-(cd $BUILD ; tar czf sfpi-release.tgz sfpi)
-md5sum $BUILD/sfpi-release.tgz > $BUILD/sfpi.md5
+IDENT=sfpi-$(uname -m)-$(uname -s)
+
+(cd $BUILD ; tar czf $IDENT.tgz sfpi)
+md5sum $BUILD/$IDENT.tgz > $BUILD/$IDENT.md5
