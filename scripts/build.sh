@@ -31,6 +31,7 @@ while [ "$#" -ne 0 ] ; do
 	--checking) gcc_checking=all ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
+	--dejagnu) dejagnu=true ;;
 	--infra) dejagnu=true sim=true ;;
 	--monolib) multilib=--disable-multilib ;;
 	--serial) NCPUS=1 ;;
