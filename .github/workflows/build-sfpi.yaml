@@ -11,7 +11,7 @@ on:
           - x86_64
           - aarch64
 
-run-name: Build $${ inputs.architecture }} SFPI
+run-name: Build ${{ inputs.architecture }} SFPI
 jobs:
   build:
     runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || ''}}
