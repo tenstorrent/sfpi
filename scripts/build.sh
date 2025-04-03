@@ -14,7 +14,8 @@ if ! test "$NCPUS" ; then
 fi
 
 gcc_checking=release
-infra=false
+dejagnu=false
+sim=false
 test_binutils=false
 test_gcc=false
 test_tt=false
@@ -30,13 +31,13 @@ while [ "$#" -ne 0 ] ; do
 	--checking) gcc_checking=all ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
-	--infra) infra=true ;;
+	--infra) dejagnu=true sim=true ;;
 	--monolib) multilib=--disable-multilib ;;
 	--serial) NCPUS=1 ;;
-	--test) infra=true test_gcc=true test_binutils=true ;;
-	--test-binutils) infra=true test_binutils=true ;;
-	--test-gcc) infra=true test_gcc=true ;;
-	--test-tt) infra=true test_tt=true ;;
+	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
+	--test-binutils) dejagnu=true test_binutils=true ;;
+	--test-gcc) dejagnu=true sim==true test_gcc=true ;;
+	--test-tt) dejagnu=true test_tt=true ;;
 	--tt-built) tt_built=true ;;
 	--tt-version=*) tt_version="${1#*=}" ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
@@ -99,8 +100,11 @@ fi
 (set -x; nice make -C $BUILD -j$NCPUS)
 
 # maybe the test infra
-if $infra ; then
-    (set -x; nice make -C $BUILD infra -j$NCPUS)
+if $dejagnu ; then
+    (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS)
+fi
+if $sim ; then
+    (set -x; nice make -C $BUILD build-sim -j$NCPUS)
 fi
 
 if $test_binutils ; then
