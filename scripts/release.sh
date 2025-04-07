@@ -37,3 +37,32 @@ find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 
 (cd $BUILD ; tar czf sfpi-release.tgz sfpi)
 md5sum $BUILD/sfpi-release.tgz > $BUILD/sfpi.md5
+
+# Create Debian package structure
+PKGDIR="$BUILD/sfpi-deb"
+DEBIAN="$PKGDIR/DEBIAN"
+INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
+
+rm -rf "$PKGDIR"
+mkdir -p "$DEBIAN" "$INSTALL_DIR"
+
+# Extract the release tgz into the installation directory
+tar -xzf "$BUILD/sfpi-release.tgz" -C "$PKGDIR/opt/tenstorrent"
+
+# Create a control file for the package
+cat > "$DEBIAN/control" <<EOF
+Package: sfpi
+Version: 1.0.0
+Section: base
+Priority: optional
+Architecture: amd64
+Maintainer: Tenstorrent <support@tenstorrent.com>
+Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1)
+Description: Tenstorrent SFPI Release
+ This package installs the sfpi release to /opt/tenstorrent/sfpi
+EOF
+
+# Build the .deb package
+dpkg-deb --build "$PKGDIR" "$BUILD/sfpi.deb"
+
+echo "Debian package created at: $BUILD/sfpi.deb"
