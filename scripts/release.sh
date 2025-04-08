@@ -35,8 +35,10 @@ tar cf - include | (cd $BUILD/sfpi && tar xf -)
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
 
-(cd $BUILD ; tar czf sfpi-release.tgz sfpi)
-md5sum $BUILD/sfpi-release.tgz > $BUILD/sfpi.md5
+IDENT=sfpi-$(uname -m)-$(uname -s)
+
+(cd $BUILD ; tar czf $IDENT.tgz sfpi)
+md5sum $BUILD/$IDENT.tgz > $BUILD/$IDENT.md5
 
 # Create Debian package structure
 PKGDIR="$BUILD/sfpi-deb"
@@ -47,7 +49,7 @@ rm -rf "$PKGDIR"
 mkdir -p "$DEBIAN" "$INSTALL_DIR"
 
 # Extract the release tgz into the installation directory
-tar -xzf "$BUILD/sfpi-release.tgz" -C "$PKGDIR/opt/tenstorrent"
+tar -xzf "$BUILD/$IDENT.tgz" -C "$PKGDIR/opt/tenstorrent"
 
 # Create a control file for the package
 cat > "$DEBIAN/control" <<EOF
@@ -64,6 +66,6 @@ Description: Tenstorrent SFPI Release
 EOF
 
 # Build the .deb package
-dpkg-deb --build "$PKGDIR" "$BUILD/sfpi.deb"
+dpkg-deb --build "$PKGDIR" "$BUILD/$IDENT.deb"
 
-echo "Debian package created at: $BUILD/sfpi.deb"
+echo "Debian package created at: $BUILD/$IDENT.deb"
