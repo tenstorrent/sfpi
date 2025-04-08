@@ -10,10 +10,12 @@ fi
 
 BUILD=build
 force=false
+debian=false
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--dir=*) BUILD="${1#*=}" ;;
 	--force) force=true ;;
+        --debian) debian=true ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
@@ -40,6 +42,7 @@ IDENT=sfpi-$(uname -m)-$(uname -s)
 (cd $BUILD ; tar czf $IDENT.tgz sfpi)
 md5sum $BUILD/$IDENT.tgz > $BUILD/$IDENT.md5
 
+if $debian; then
 # Create Debian package structure
 PKGDIR="$BUILD/sfpi-deb"
 DEBIAN="$PKGDIR/DEBIAN"
@@ -69,3 +72,4 @@ EOF
 dpkg-deb --build "$PKGDIR" "$BUILD/$IDENT.deb"
 
 echo "Debian package created at: $BUILD/$IDENT.deb"
+fi
