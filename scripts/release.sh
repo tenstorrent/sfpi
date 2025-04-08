@@ -57,6 +57,7 @@ Section: base
 Priority: optional
 Architecture: amd64
 Maintainer: Tenstorrent <support@tenstorrent.com>
+Homepage: https://github.com/tenstorrent/sfpi
 Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1)
 Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
