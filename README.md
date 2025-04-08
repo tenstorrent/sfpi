@@ -96,6 +96,10 @@ contain the submodule sourece code. To obtain the full sources:
   and a `.tgz` or `.md5` extension respectively. The host binaries
   therein are stripped.
 
+  Supplying the `--debian` option additionally builds a `.deb` Debian package.
+  The Debian control metadata automatically infers the system architecture (e.g., amd64, arm64)
+  and package version from Git tags.
+
 5) Making the release available (from github)
 
   Upload the tarball and md5 hash as a binary file added to a git
