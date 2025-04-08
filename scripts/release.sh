@@ -44,24 +44,24 @@ md5sum $BUILD/$IDENT.tgz > $BUILD/$IDENT.md5
 
 if $debian; then
 
-ARCH=$(dpkg --print-architecture)
-VERSION=$(git describe --tags --always | sed 's/^v//; s/-/~/g')
+    ARCH=$(dpkg --print-architecture)
+    VERSION=$(git describe --tags --always | sed 's/^v//; s/-/~/g')
 
-echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
+    echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
 
-# Create Debian package structure
-PKGDIR="$BUILD/sfpi-deb"
-DEBIAN="$PKGDIR/DEBIAN"
-INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
+    # Create Debian package structure
+    PKGDIR="$BUILD/sfpi-deb"
+    DEBIAN="$PKGDIR/DEBIAN"
+    INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
 
-rm -rf "$PKGDIR"
-mkdir -p "$DEBIAN" "$INSTALL_DIR"
+    rm -rf "$PKGDIR"
+    mkdir -p "$DEBIAN" "$INSTALL_DIR"
 
-# Extract the release tgz into the installation directory
-tar -xzf "$BUILD/$IDENT.tgz" -C "$PKGDIR/opt/tenstorrent"
+    # Extract the release tgz into the installation directory
+    tar -xzf "$BUILD/$IDENT.tgz" -C "$PKGDIR/opt/tenstorrent"
 
-# Create a control file for the package
-cat > "$DEBIAN/control" <<EOF
+    # Create a control file for the package
+    cat > "$DEBIAN/control" <<EOF
 Package: sfpi
 Version: $VERSION
 Section: base
@@ -74,8 +74,8 @@ Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
 EOF
 
-# Build the .deb package
-dpkg-deb --build "$PKGDIR" "$BUILD/$IDENT.deb"
+    # Build the .deb package
+    dpkg-deb --build "$PKGDIR" "$BUILD/$IDENT.deb"
 
-echo "INFO: Debian package created at: $BUILD/$IDENT.deb"
+    echo "INFO: Debian package created at: $BUILD/$IDENT.deb"
 fi
