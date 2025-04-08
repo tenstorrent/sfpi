@@ -47,6 +47,8 @@ if $debian; then
 ARCH=$(dpkg --print-architecture)
 VERSION=$(git describe --tags --always | sed 's/^v//; s/-/~/g')
 
+echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
+
 # Create Debian package structure
 PKGDIR="$BUILD/sfpi-deb"
 DEBIAN="$PKGDIR/DEBIAN"
@@ -75,5 +77,5 @@ EOF
 # Build the .deb package
 dpkg-deb --build "$PKGDIR" "$BUILD/$IDENT.deb"
 
-echo "Debian package created at: $BUILD/$IDENT.deb"
+echo "INFO: Debian package created at: $BUILD/$IDENT.deb"
 fi
