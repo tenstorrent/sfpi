@@ -43,6 +43,10 @@ IDENT=sfpi-$(uname -m)-$(uname -s)
 md5sum $BUILD/$IDENT.tgz > $BUILD/$IDENT.md5
 
 if $debian; then
+
+ARCH=$(dpkg --print-architecture)
+VERSION=$(git describe --tags --always | sed 's/^v//; s/-/~/g')
+
 # Create Debian package structure
 PKGDIR="$BUILD/sfpi-deb"
 DEBIAN="$PKGDIR/DEBIAN"
@@ -57,10 +61,10 @@ tar -xzf "$BUILD/$IDENT.tgz" -C "$PKGDIR/opt/tenstorrent"
 # Create a control file for the package
 cat > "$DEBIAN/control" <<EOF
 Package: sfpi
-Version: 1.0.0
+Version: $VERSION
 Section: base
 Priority: optional
-Architecture: amd64
+Architecture: $ARCH
 Maintainer: Tenstorrent <support@tenstorrent.com>
 Homepage: https://github.com/tenstorrent/sfpi
 Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1)
