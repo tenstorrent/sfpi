@@ -63,6 +63,8 @@ contain the submodule sourece code. To obtain the full sources:
   subdirectory and manually resume after correcting the problem --
   such build would not be suitable for releasing though.
 
+  See below about the various `--test` options that may also be used.
+
 3) Build and running the sfpi tests:
 
 ```
@@ -84,19 +86,26 @@ contain the submodule sourece code. To obtain the full sources:
   scripts/release.sh
 ```
 
-  This will verify the source hashes are unchanged from when the build
-  started, and create both a tarball `sfpi-release.tgz` and an md5
-  `sfpi.md5` in the build directory. The host binaries therein are stripped.
+  The same `--dir=$DIR` option as the build script is accepted. It
+  will verify the source hashes are unchanged from when the build
+  started. You may override this check with the `--force` option, but
+  /be careful/.
+
+  Both a tarball and an md5 file are created in the build
+  directory.  These have a basename of`sfpi-$(uname -m)-$(uname -s)`
+  and a `.tgz` or `.md5` extension respectively. The host binaries
+  therein are stripped.
 
 5) Making the release available (from github)
 
   Upload the tarball and md5 hash as a binary file added to a git
-  hub. Users may automate downloading by augmenting their cmake `CMakeLists.txt` file with something like:
+  hub. Users may automate downloading by augmenting their cmake `CMakeLists.txt`
+  file with something like:
 ```
 include(FetchContent)
 FetchContent_Declare(
     sfpi
-    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-release.tgz
+    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64-Linux.tgz
     URL_HASH MD5=$HASH
     SOURCE_DIR $INSTALL_LOCATION
 )
@@ -156,9 +165,10 @@ delete a stamp file to rerun them.
 10) Running the gcc testsuite with specific options:
 ```
 PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/test-infra/bin:$PATH \
-make -C build/build-gcc-newlib-stage2/gcc check-gcc "RUNTESTFLAGS=--target_board=riscv-sim/-march=rv32i/-mabi=ilp32/-mcmodel=medlow"
+make -C build/build-gcc-newlib-stage2/gcc check-gcc \
+    "RUNTESTFLAGS=--target_board=riscv-sim/mcpu=tt-bh"
 ```
 
 Alter the value passed to RUNTESTFLAGS as desired, for instance
-`riscv-sim/mcpu=ttwh`.  Add `-v` options to get more logging to the
+`riscv-sim/mcpu=tt-wh`.  Add `-v` options to get more logging to the
 resulting dejagnu log file.
