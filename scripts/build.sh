@@ -13,40 +13,61 @@ if ! test "$NCPUS" ; then
     NCPUS=1
 fi
 
-infra=false
-test_gcc=false
-test_binutils=false
-test_tt=false
 gcc_checking=release
+infra=false
+test_binutils=false
+test_gcc=false
+test_tt=false
+tt_built=false
+tt_version=
 BUILD=build
+if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
+    tt_built=true
+fi
 multilib='--with-multilib-generator=rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
-	--serial) NCPUS=1 ;;
-	--infra) infra=true ;;
-	--test) infra=true test_gcc=true test_binutils=true ;;
-	--test-gcc) infra=true test_gcc=true ;;
-	--test-tt) infra=true test_tt=true ;;
-	--test-binutils) infra=true test_binutils=true ;;
 	--checking) gcc_checking=all ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
-	--monolib) multilib=--disable-multilib ;;
 	--dir=*) BUILD="${1#*=}" ;;
+	--infra) infra=true ;;
+	--monolib) multilib=--disable-multilib ;;
+	--serial) NCPUS=1 ;;
+	--test) infra=true test_gcc=true test_binutils=true ;;
+	--test-binutils) infra=true test_binutils=true ;;
+	--test-gcc) infra=true test_gcc=true ;;
+	--test-tt) infra=true test_tt=true ;;
+	--tt-built) tt_built=true ;;
+	--tt-version=*) tt_version="${1#*=}" ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
     shift
 done
-
 if [ "$#" -ne 0 ] ; then
     echo "Unknown argument '$1'" >&2
     exit 2
+fi
+
+# figure version, now we know tt_built
+if test -r $BUILD/version ; then
+     tt_version=$(cat $BUILD/version)
+elif test "$tt_version" ; then
+    :
+elif $tt_built ; then
+    # tt-versioning
+    tt_version=$(cat version)
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null) 
+    if test "$branch" && test "$branch" != "main" ; then
+	tt_version="$tt_version-${branch##*/}"
+    fi
 fi
 
 if ! test -d $BUILD ; then
     mkdir -p $BUILD/sfpi
     # extract git hashes for here and each submodule
     "$BIN/git-hash.sh" > $BUILD/sfpi/src-hashes
+    echo $tt_version > $BUILD/version
 fi
 
 # Clean the environment
@@ -60,14 +81,15 @@ export LC_ALL=C
 
 # configure, if this is the first time
 if ! test -e $BUILD/Makefile ; then
-    bugurl_option=
-    if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
+    ident_options=()
+    if $tt_built ; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
-	bugurl_option=--with-bugurl='https://github.com/tenstorrent/tt-metal'
+	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
+		       --with-pkgversion="tenstorrent/sfpi:$tt_version")
     fi
     (cd $BUILD
      set -x
-     ../configure --prefix="$(pwd)/sfpi/compiler" $bugurl_option \
+     ../configure --prefix="$(pwd)/sfpi/compiler" "${ident_options[@]}" \
 		  --enable-gcc-checking="$gcc_checking" \
 		  "$multilib" \
 		  --with-arch=rv32i --with-abi=ilp32 --enable-gdb)

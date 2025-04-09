@@ -146,7 +146,12 @@ AC_ARG_WITH(bugurl,
         [],
         [with_bugurl=unsupported]
         )
-AC_SUBST(bugurl_option, --with-bugurl=$with_bugurl)
+
+AC_ARG_WITH(pkgversion,
+        [AS_HELP_STRING([--with-pkgversionl],
+		[Package in version string])],
+        )
+AC_SUBST(ident_options, "--with-bugurl=$with_bugurl ${with_pkgversion+--with-pkgversion=}${with_pkgversion}")
 
 AC_ARG_WITH(cmodel,
 	[AS_HELP_STRING([--with-cmodel],
