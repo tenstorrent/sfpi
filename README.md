@@ -27,7 +27,7 @@ https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/l
 ### Obtaining Full Source
 
 The Github-provided source tarballs (sfpi-$VERSION.tar.gz) do not
-contain the submodule sourece code. To obtain the full sources:
+contain the submodule source code. To obtain the full sources:
 
 * Clone the sfpi repo: `git clone https://github.com/tenstorrent/sfpi.git`
 * Enter the repo: `cd sfpi`
@@ -57,7 +57,7 @@ contain the submodule sourece code. To obtain the full sources:
 
   You may add a `--checking=VALUE` option to control gcc's checking --
   see gcc's documentation.  The default is `release`. Note this does
-  not control how gcc itself is optimized.
+  not control how gcc itself is optimized (which is usually `-O2`).
 
   If the build is interrupted, you can of course enter the appropriate
   subdirectory and manually resume after correcting the problem --
@@ -82,6 +82,16 @@ contain the submodule sourece code. To obtain the full sources:
   is the same as a set of gold-standard files. This is unfortunately brittle.
 
 4) Create a release
+
+  * Update the `version` file to the new version number. That version
+  will be augmented by the git branch name (the last component of a
+  `/`-separated branch name), unless you're on `main`. This is
+  recorded in a `version` file placed in the build directory.
+
+  * Then build a release as described above.
+
+  * To create the release artifacts:
+
 ```
   scripts/release.sh
 ```
@@ -97,13 +107,16 @@ contain the submodule sourece code. To obtain the full sources:
   therein are stripped.
 
   Supplying the `--debian` option additionally builds a `.deb` Debian package.
-  The Debian control metadata automatically infers the system architecture (e.g., amd64, arm64)
-  and package version from Git tags.
+  The Debian control metadata automatically infers the system architecture
+  (e.g., amd64, arm64).
 
 5) Making the release available (from github)
 
   Upload the tarball and md5 hash as a binary file added to a git
-  hub. Users may automate downloading by augmenting their cmake `CMakeLists.txt`
+  hub. You'll want to set the version tag to be the same as the
+  version string created during the build process.
+
+  Users may automate downloading by augmenting their cmake `CMakeLists.txt`
   file with something like:
 ```
 include(FetchContent)

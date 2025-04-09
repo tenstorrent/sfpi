@@ -603,7 +603,7 @@ configure_host
 target_cxxflags
 target_cflags
 cmodel
-bugurl_option
+ident_options
 gcc_checking
 musl_multilib_names
 newlib_multilib_names
@@ -683,6 +683,7 @@ enable_multilib
 with_multilib_generator
 enable_gcc_checking
 with_bugurl
+with_pkgversion
 with_cmodel
 with_target_cflags
 with_target_cxxflags
@@ -1356,6 +1357,7 @@ Optional Packages:
                           bare-metal/elf toolchain, this option implied
                           --enable-multilib
   --with-bugurl           URL to report bugs to
+  --with-pkgversionl      Package in version string
   --with-cmodel           Select the code model to use when building libc and
                           libgcc [--with-cmodel=medlow]
   --with-target-cflags    Add extra target flags for C for library code
@@ -3397,7 +3399,14 @@ else
 
 fi
 
-bugurl_option=--with-bugurl=$with_bugurl
+
+
+# Check whether --with-pkgversion was given.
+if test "${with_pkgversion+set}" = set; then :
+  withval=$with_pkgversion;
+fi
+
+ident_options="--with-bugurl=$with_bugurl ${with_pkgversion+--with-pkgversion=}${with_pkgversion}"
 
 
 
