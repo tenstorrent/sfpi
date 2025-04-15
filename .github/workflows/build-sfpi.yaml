@@ -30,13 +30,13 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install expect
       - name: Build toolchain
-        run: scripts/build.sh
+        run: scripts/build.sh --tt-built
       - name: Build test harness
         run: scripts/build.sh --dejagnu
       - name: Run tests
         run: scripts/build.sh --test-tt
       - name: Release toolchain
-        run: scripts/release.sh
+        run: scripts/release.sh --tt-built --debian
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
