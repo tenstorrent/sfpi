@@ -3,6 +3,10 @@ name: "Build SFPI"
 on:
   workflow_dispatch:
     inputs:
+      tag:
+        required: false
+        default: main
+        type: string
       architecture:
         required: false
         default: x86_64
@@ -11,7 +15,7 @@ on:
           - x86_64
           - aarch64
 
-run-name: Build ${{ inputs.architecture }} SFPI
+run-name: Build ${{ inputs.architecture }} SFPI ${{ inputs.tag }}
 jobs:
   build:
     runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || ''}}
@@ -19,6 +23,7 @@ jobs:
       - name: Checkout repo & submodules
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag }}
           submodules: recursive
       - name: Installl packages
         run: |
