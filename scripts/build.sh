@@ -59,8 +59,8 @@ elif test "$tt_version" ; then
 elif $tt_built ; then
     # tt-versioning
     tt_version=$(cat version)
-    branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
-    if test "$branch" && test "$branch" != "main" ; then
+    if branch=$(git symbolic-ref --short HEAD 2>/dev/null) && \
+	    test "$branch" != "main" ; then
 	tt_version="$tt_version-${branch##*/}"
     fi
 fi
