@@ -39,7 +39,7 @@ fi
 # extract git hashes for here and each submodule
 "$BIN/git-hash.sh" > $BUILD/src-hashes.post
 if ! cmp -s $BUILD/sfpi/src-hashes $BUILD/src-hashes.post ; then
-    echo "source tree has changed since build started" 1>&2
+    echo "*** WARNING: Source tree has changed since build started ***" 1>&2
     if ! $force ; then
 	exit 1
     fi
@@ -51,6 +51,7 @@ else
     echo "No $BUILD/version file present" 1>&2
     exit 1
 fi
+echo "INFO: Version: $tt_version"
 
 # Copy include tree
 tar cf - include | tar xf - -C $BUILD/sfpi
@@ -61,8 +62,9 @@ find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 NAME=sfpi-$(uname -m)-$(uname -s)
 
 tar czf $BUILD/$NAME.tgz  -C $BUILD sfpi
-md5sum $BUILD/$NAME.tgz > $BUILD/$NAME.md5
-echo "INFO: $BUILD/$NAME.tgz and $BUILD/$NAME.md5 created"
+(cd $BUILD ; md5sum $NAME.tgz) > $BUILD/$NAME.md5
+echo "INFO: Taball: $BUILD/$NAME.tgz"
+echo "INFO: MD5: $BUILD/$NAME.md5"
 
 if $debian; then
 
