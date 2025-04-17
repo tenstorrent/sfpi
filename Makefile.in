@@ -17,17 +17,17 @@ GDB_SRCDIR := @with_gdb_src@
 QEMU_SRCDIR := @with_qemu_src@
 SPIKE_SRCDIR := @with_spike_src@
 PK_SRCDIR := @with_pk_src@
-
+MFC := @with_mfc@
 SIM ?= @WITH_SIM@
 
-ifeq ($(srcdir)/riscv-gcc,$(GCC_SRCDIR))
+ifeq ($(srcdir)/gcc,$(GCC_SRCDIR))
 # We need a relative source dir for the gcc configure, to make msys2 mingw64
 # builds work.  Mayberelsrcdir is relative if a relative path was used to run
 # configure, otherwise absolute, so we have to check.
 mayberelsrcdir := @top_srcdir@
 gccsrcdir := $(shell case $(mayberelsrcdir) in \
-		  ([\\/]* | ?:[\\/]*)  echo $(mayberelsrcdir)/riscv-gcc ;; \
-		  (*)  echo ../$(mayberelsrcdir)/riscv-gcc ;; \
+		  ([\\/]* | ?:[\\/]*)  echo $(mayberelsrcdir)/gcc ;; \
+		  (*)  echo ../$(mayberelsrcdir)/gcc ;; \
 		esac)
 else
 gccsrcdir := $(abspath $(GCC_SRCDIR))
@@ -65,7 +65,7 @@ ifneq ($(XLEN),32)
 	XLEN := 64
 endif
 
-make_tuple = riscv$(1)-unknown-$(2)
+make_tuple = riscv$(1)-$(MFC)-$(2)
 LINUX_TUPLE  ?= $(call make_tuple,$(XLEN),linux-gnu)
 NEWLIB_TUPLE ?= $(call make_tuple,$(XLEN),elf)
 MUSL_TUPLE ?= $(call make_tuple,$(XLEN),linux-musl)
@@ -198,7 +198,7 @@ build-dejagnu: stamps/build-dejagnu
 
 build-sim: $(SIM_STAMP)
 ifeq ($(SIM),qemu)
-	cp $(srcdir)/scripts/riscv32-unknown-elf-run $(test_infradir)/bin
+	cp $(srcdir)/scripts/$(NEWLIB_TUPLE)-run $(test_infradir)/bin
 endif
 
 stamps/check-write-permission:
