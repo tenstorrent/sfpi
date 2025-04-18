@@ -28,7 +28,7 @@ jobs:
       - name: Installl packages
         run: |
           sudo apt-get update
-          sudo apt-get -y install expect
+          sudo apt-get -y install expect libgmp-devel libmpfr-dev libmpc-dev libisl-dev libstd-dev
       - name: Build toolchain
         run: scripts/build.sh --tt-built
       - name: Build test harness
