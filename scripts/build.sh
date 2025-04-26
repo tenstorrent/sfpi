@@ -8,7 +8,7 @@ if ! test "$BIN" -ef "scripts"; then
     exit 1
 fi
 
-NCPUS=$(grep -c '^processor' /proc/cpuinfo)
+NCPUS=$(nproc)
 if ! test "$NCPUS" ; then
     NCPUS=1
 fi
@@ -94,7 +94,7 @@ if ! test -e $BUILD/Makefile ; then
      ../configure --prefix="$(pwd)/sfpi/compiler" "${ident_options[@]}" \
 		  --enable-gcc-checking="$gcc_checking" \
 		  "$multilib" \
-		  --with-arch=rv32i --with-abi=ilp32 --enable-gdb)
+		  --with-arch=rv32i --with-abi=ilp32 --disable-gdb)
 fi
 
 # build the toolchain
