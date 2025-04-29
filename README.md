@@ -101,14 +101,11 @@ contain the submodule source code. To obtain the full sources:
   started. You may override this check with the `--force` option, but
   /be careful/.
 
-  Both a tarball and an md5 file are created in the build
-  directory.  These have a basename of`sfpi-$(uname -m)-$(uname -s)`
-  and a `.tgz` or `.md5` extension respectively. The host binaries
-  therein are stripped.
-
-  Supplying the `--debian` option additionally builds a `.deb` Debian package.
-  The Debian control metadata automatically infers the system architecture
-  (e.g., amd64, arm64).
+  Both a `.tgz` tarball and a `.deb` Debian package are created in the
+  build directory. Also a `.md5` checksum file is created. These all
+  have a basename of`sfpi-$(uname -m)_$(uname -s)`. The host binaries
+  therein are stripped. The Debian control metadata automatically
+  infers the system architecture (e.g., amd64, arm64).
 
 5) Making the release available (from github)
 
@@ -122,7 +119,7 @@ contain the submodule source code. To obtain the full sources:
 include(FetchContent)
 FetchContent_Declare(
     sfpi
-    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64-Linux.tgz
+    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64_Linux.tgz
     URL_HASH MD5=$HASH
     SOURCE_DIR $INSTALL_LOCATION
 )
