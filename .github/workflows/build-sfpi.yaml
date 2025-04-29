@@ -5,7 +5,7 @@ on:
     inputs:
       tag:
         required: false
-        default: main
+        default:
         type: string
       architecture:
         required: false
@@ -15,15 +15,15 @@ on:
           - x86_64
           - aarch64
 
-run-name: Build ${{ inputs.architecture }} SFPI ${{ inputs.tag }}
+run-name: Build ${{ inputs.architecture }} SFPI ${{ inputs.tag || github.ref }}
 jobs:
   build:
-    runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || ''}}
+    runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || '' }}
     steps:
       - name: Checkout repo & submodules
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.tag || github.ref }}
           submodules: recursive
       - name: Installl packages
         run: |
@@ -36,7 +36,7 @@ jobs:
       - name: Run tests
         run: scripts/build.sh --test-tt
       - name: Release toolchain
-        run: scripts/release.sh --tt-built --debian
+        run: scripts/release.sh --tt-built
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:

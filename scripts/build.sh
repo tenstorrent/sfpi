@@ -8,10 +8,7 @@ if ! test "$BIN" -ef "scripts"; then
     exit 1
 fi
 
-NCPUS=$(grep -c '^processor' /proc/cpuinfo)
-if ! test "$NCPUS" ; then
-    NCPUS=1
-fi
+NCPUS=$(nproc)
 
 gcc_checking=release
 dejagnu=false
