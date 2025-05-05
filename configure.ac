@@ -95,6 +95,14 @@ AC_SUBST(WITH_TUNE, --with-tune=$with_tune)
 AC_SUBST(WITH_ISA_SPEC, --with-isa-spec=$with_isa_spec)
 AC_SUBST(WITH_SIM, $with_sim)
 
+AC_ARG_WITH(mfc,
+	[AS_HELP_STRING([--with-mfc=unknown],
+		[Sets the target tripple manufacturer])],
+	[],
+	[with_mfc=unknown]
+	)
+AC_SUBST(with_mfc, $with_mfc)
+
 AC_ARG_ENABLE(multilib,
 	[AS_HELP_STRING([--enable-multilib],
 		[build both RV32 and RV64 runtime libraries (only RV64 for musl libc) @<:@--disable-multilib@:>@])],

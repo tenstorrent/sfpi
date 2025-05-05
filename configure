@@ -641,7 +641,7 @@ newlib_multilib_names
 glibc_multilib_names
 multilib_flags
 multilib_gen
-triple_mfc
+with_mfc
 WITH_SIM
 WITH_ISA_SPEC
 WITH_TUNE
@@ -3932,7 +3932,7 @@ else $as_nop
 
 fi
 
-triple_mfc=$with_mfc
+with_mfc=$with_mfc
 
 
 # Check whether --enable-multilib was given.
