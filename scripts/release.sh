@@ -51,7 +51,7 @@ find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 NAME=sfpi-$(uname -m)_$(uname -s)
 
 tar czf $BUILD/$NAME.tgz -C $BUILD sfpi
-echo "INFO: Taball: $BUILD/$NAME.tgz"
+echo "INFO: Tarball: $BUILD/$NAME.tgz"
 
 ARCH=$(dpkg --print-architecture)
 VERSION="$tt_version"
@@ -83,7 +83,7 @@ Priority: optional
 Architecture: $ARCH
 Maintainer: $MAINTAINER
 Homepage: https://github.com/tenstorrent/sfpi
-Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1)
+Depends: 
 Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
 EOF
