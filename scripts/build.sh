@@ -90,6 +90,7 @@ if ! test -e $BUILD/Makefile ; then
      set -x
      ../configure --prefix="$(pwd)/sfpi/compiler" "${ident_options[@]}" \
 		  --enable-gcc-checking="$gcc_checking" \
+		  --without-system-zlib --without-zstd \
 		  "$multilib" \
 		  --with-arch=rv32i --with-abi=ilp32 --enable-gdb)
 fi

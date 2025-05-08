@@ -83,7 +83,7 @@ Priority: optional
 Architecture: $ARCH
 Maintainer: $MAINTAINER
 Homepage: https://github.com/tenstorrent/sfpi
-Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1), libisl23 (>= 0.24), libz3-4 (>= 4.8.12-1), libzstd (>= 1.4.8)
+Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1), libisl23 (>= 0.24)
 Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
 EOF
