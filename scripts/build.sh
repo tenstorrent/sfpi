@@ -22,7 +22,7 @@ BUILD=build
 if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
     tt_built=true
 fi
-multilib='--with-multilib-generator=rv32i_xttgs-ilp32-- rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
+multilib='--with-multilib-generator=rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--checking) gcc_checking=all ;;

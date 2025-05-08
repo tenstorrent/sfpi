@@ -12,9 +12,7 @@
 
 #include <cstdint>
 
-#if defined(ARCH_GRAYSKULL)
-#include <grayskull/sfpi_hw.h>
-#elif defined(ARCH_WORMHOLE)
+#if defined(ARCH_WORMHOLE)
 #include <wormhole/sfpi_hw.h>
 #elif defined(ARCH_BLACKHOLE)
 #include <blackhole/sfpi_hw.h>
