@@ -5,7 +5,7 @@
  */
 
 ///////////////////////////////////////////////////////////////////////////////
-// sfpi_lib.h: SFPu Interface library implementation for Grayskull
+// sfpi_lib.h: SFPu Interface library implementation for Wormhole
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -114,7 +114,6 @@ sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
 
 sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
 {
-    // Grayskull HW bug, is this useful?  Should there be a "Half" form?
     // Odd: dst is both man and result so undergoes a type change
     // If man is not used later, compiler renames tmp and doesn't issue a mov
     return __builtin_rvtt_sfpsetman_v(man.get(), v.get());
