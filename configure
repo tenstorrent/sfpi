@@ -629,6 +629,7 @@ with_binutils_src
 with_gcc_src
 enable_gdb
 with_guile
+with_zstd
 with_system_zlib
 configure_host
 target_cxxflags
@@ -722,6 +723,7 @@ with_target_cflags
 with_target_cxxflags
 with_host
 with_system_zlib
+with_zstd
 with_guile
 enable_gdb
 with_gcc_src
@@ -1398,6 +1400,7 @@ Optional Packages:
                           Sets the host for the tools, you probably want
                           nothing
   --without-system-zlib   use the builtin copy of zlib from GCC
+  --without-zstd          do not use zstd
   --with-guile            Set which guile to use, if any
   --with-gcc-src          Set gcc source path, use builtin source by default
   --with-binutils-src     Set binutils source path, use builtin source by
@@ -4113,6 +4116,31 @@ then :
 
 else $as_nop
   with_system_zlib=--without-system-zlib
+
+fi
+
+
+# Check whether --with-zstd was given.
+if test ${with_zstd+y}
+then :
+  withval=$with_zstd;
+else $as_nop
+  with_zstd=yes
+
+fi
+
+if test "x$with_zstd" != xno
+then :
+  if test "x$with_zstd" != xyes
+then :
+  with_zstd=--with-zstd=$with_zstd
+
+else $as_nop
+  with_zstd=--with-zstd
+
+fi
+else $as_nop
+  with_zstd=--without-zstd
 
 fi
 

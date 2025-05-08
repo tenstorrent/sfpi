@@ -210,6 +210,18 @@ AS_IF([test "x$with_system_zlib" != xno],
 	[AC_SUBST(with_system_zlib,--with-system-zlib)],
 	[AC_SUBST(with_system_zlib,--without-system-zlib)])
 
+AC_ARG_WITH(zstd,
+	[AS_HELP_STRING([--without-zstd],
+		[do not use zstd])],
+	[],
+	[with_zstd=yes]
+	)
+AS_IF([test "x$with_zstd" != xno],
+	AS_IF([test "x$with_zstd" != xyes],
+  	  [AC_SUBST(with_zstd,--with-zstd=$with_zstd)],
+	  [AC_SUBST(with_zstd,--with-zstd)]),
+	[AC_SUBST(with_zstd,--without-zstd)])
+
 AC_ARG_WITH(guile,
 	[AC_HELP_STRING([--with-guile],
 			[Set which guile to use, if any])],
