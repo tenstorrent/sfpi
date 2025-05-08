@@ -119,9 +119,6 @@
 
 #include <type_traits>
 
-#if __riscv_tt_grayskull
-#define ARCH_GRAYSKULL 1
-#endif
 #if __riscv_tt_wormhole
 #define ARCH_WORMHOLE 1
 #endif
@@ -132,14 +129,12 @@
 #define ARCH_WORMHOLE 1
 #endif
 
-#if defined(ARCH_GRAYSKULL) + defined(ARCH_WORMHOLE) + defined(ARCH_BLACKHOLE) != 1
+#if defined(ARCH_WORMHOLE) + defined(ARCH_BLACKHOLE) != 1
 #error "Exactly one SFPI architecture must be selected"
 #include "stop now, no good will come"
 #endif
 
-#if defined(ARCH_GRAYSKULL)
-#include <grayskull/sfpi_hw.h>
-#elif defined(ARCH_WORMHOLE)
+#if defined(ARCH_WORMHOLE)
 #include <wormhole/sfpi_hw.h>
 #elif defined(ARCH_BLACKHOLE)
 #include <blackhole/sfpi_hw.h>
@@ -288,10 +283,8 @@ class __vConstFloat : public __vRegBase {
 public:
     constexpr explicit __vConstFloat(int r) : __vRegBase(r) {}
 
-#if !defined(ARCH_GRAYSKULL)
     sfpi_inline void operator=(const float in) const;
     sfpi_inline void operator=(const s2vFloat16 in) const;
-#endif
 
     // Construct operator classes from operations
     sfpi_inline vFloat operator+(const vFloat b) const;
@@ -310,9 +303,7 @@ class __vConstIntBase : public __vRegBase {
 public:
     constexpr explicit __vConstIntBase(int r) : __vRegBase(r) {}
 
-#if !defined(ARCH_GRAYSKULL)
     sfpi_inline void operator=(const int in) const;
-#endif
 
     // Construct operator classes from operations
     template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>* = nullptr>
@@ -481,9 +472,7 @@ class vInt : public __vIntBase {
 
 public:
     vInt() = default;
-#if !defined(ARCH_GRAYSKULL)
     sfpi_inline vInt(const __vDReg dreg);
-#endif
     sfpi_inline vInt(const __rvtt_vec_t& in) { assign(in); }
     sfpi_inline vInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
     sfpi_inline vInt(const __vIntBase in) { assign(in.get()); };
@@ -580,9 +569,7 @@ private:
 
 public:
     vUInt() = default;
-#if !defined(ARCH_GRAYSKULL)
     sfpi_inline vUInt(const __vDReg dreg);
-#endif
     sfpi_inline vUInt(const __rvtt_vec_t& in) { assign(in); }
     sfpi_inline vUInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
     sfpi_inline vUInt(const __vIntBase in) { assign(in.get()); }
@@ -1246,10 +1233,7 @@ constexpr __LReg l_reg;
 }
 
 //////////////////////////////////////////////////////////////////////////////
-#if defined(ARCH_GRAYSKULL)
-#include <grayskull/sfpi_imp.h>
-#include <grayskull/sfpi_lib.h>
-#elif defined(ARCH_WORMHOLE)
+#if defined(ARCH_WORMHOLE)
 #include <wormhole/sfpi_imp.h>
 #include <wormhole/sfpi_lib.h>
 #elif defined(ARCH_BLACKHOLE)
