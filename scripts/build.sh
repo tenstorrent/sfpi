@@ -94,6 +94,7 @@ elif $tt_built ; then
 	# just use the final component of a branch name
 	tt_version="${tt_version%-*-g*}-${branch##*/}"
     fi
+    tt_version="${tt_version#v}"
 fi
 echo "INFO: Version: $tt_version"
 
