@@ -56,6 +56,7 @@ elif test "$tt_version" ; then
 elif $tt_built ; then
     # tt-versioning
     tt_version=$(git describe --tags --match 'v*.*.*')
+    tt_version="${tt_version#v}"
     tagged_head=true
     if echo "$tt_version" | grep -qe '-[0-9]+g[0-9a-f]+$' ; then
 	tagged_head=false
@@ -94,7 +95,6 @@ elif $tt_built ; then
 	# just use the final component of a branch name
 	tt_version="${tt_version%-*-g*}-${branch##*/}"
     fi
-    tt_version="${tt_version#v}"
 fi
 echo "INFO: Version: $tt_version"
 
