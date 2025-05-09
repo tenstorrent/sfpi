@@ -55,12 +55,48 @@ elif test "$tt_version" ; then
     :
 elif $tt_built ; then
     # tt-versioning
-    tt_version=$(cat version)
-    if branch=$(git symbolic-ref --short HEAD 2>/dev/null) && \
-	    test "$branch" != "main" ; then
-	tt_version="$tt_version-${branch##*/}"
+    tt_version=$(git describe --tags --match 'v*.*.*')
+    tt_version="${tt_version#v}"
+    tagged_head=true
+    if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
+	tagged_head=false
+    fi
+    head=$(git rev-parse --symbolic-full-name HEAD)
+    branch=
+    if test $head = "HEAD" ; then
+	# detached head
+	if ! $tagged_head ; then
+	    # Not tagged, figure out a branch name to add
+	    oIFS="$IFS"
+	    local= origin=
+	    # refs becomes a CSV
+	    refs=$(git show -s --pretty=%D HEAD 2>/dev/null | sed 's/HEAD -> //' 's/, /s/g')
+	    IFS=,
+	    for ref in $refs
+	    do
+		case $label in
+		    # shouldn't happen
+		    'tag: *') ;;
+		    'origin/*') origin=$ref ;;
+		    '*') branch=$ref ;;
+		esac
+	    done
+	    IFS="$oIFS"
+	    if test -z "$branch" ; then
+		branch="$origin"
+	    fi
+	fi
+    elif ! $tagged_head || test $head != refs/heads/main ; then
+	# not tagged or not main, use branch name
+	branch=$head
+    fi
+
+    if test -n "$branch" ; then
+	# just use the final component of a branch name
+	tt_version="${tt_version%-*-g*}-${branch##*/}"
     fi
 fi
+echo "INFO: Version: $tt_version"
 
 if ! test -d $BUILD ; then
     mkdir -p $BUILD/sfpi
