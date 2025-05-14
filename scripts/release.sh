@@ -50,8 +50,8 @@ find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 
 NAME=sfpi-$(uname -m)_$(uname -s)
 
-tar czf $BUILD/$NAME.tgz -C $BUILD sfpi
-echo "INFO: Tarball: $BUILD/$NAME.tgz"
+tar cJf $BUILD/$NAME.txz -C $BUILD sfpi
+echo "INFO: Tarball: $BUILD/$NAME.txz"
 
 ARCH=$(dpkg --print-architecture)
 VERSION="$tt_version"
@@ -66,8 +66,8 @@ INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
 rm -rf "$PKGDIR"
 mkdir -p "$DEBIAN" "$INSTALL_DIR"
 
-# Extract the release tgz into the installation directory
-tar -xzf "$BUILD/$NAME.tgz" -C "$PKGDIR/opt/tenstorrent"
+# Extract the release txz into the installation directory
+tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
 
 MAINTAINER="Tenstorrent <support@tenstorrent.com>"
 if ! $tt_built ; then
@@ -93,5 +93,5 @@ dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
 
 echo "INFO: Debian package created at: $BUILD/$NAME.deb"
 
-(cd $BUILD ; md5sum -b $NAME.{tgz,deb}) > $BUILD/$NAME.md5
+(cd $BUILD ; md5sum -b $NAME.{txz,deb}) > $BUILD/$NAME.md5
 echo "INFO: MD5: $BUILD/$NAME.md5"
