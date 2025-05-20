@@ -199,6 +199,7 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpmov_config(src) __builtin_rvtt_bh_sfpmov_config(src)
 #define __builtin_rvtt_sfparecip(src, mod) __builtin_rvtt_bh_sfparecip(src, mod)
 #define __builtin_rvtt_sfpmul24(a, b, mod) __builtin_rvtt_bh_sfpmul24(a, b, mod)
+#define __builtin_rvtt_sfprecord(start, len, exec) __builtin_rvtt_bh_sfprecord(start, len, exec)
 
 #endif // __GNUC__
 

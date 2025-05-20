@@ -196,6 +196,8 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 
+#define __builtin_rvtt_sfprecord(start, len, exec) __builtin_rvtt_wh_sfprecord(start, len, exec)
+
 #endif // __GNUC__
 
 #endif // COMPILE_FOR_EMULE
