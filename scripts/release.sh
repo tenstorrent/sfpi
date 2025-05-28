@@ -53,26 +53,30 @@ NAME=sfpi-$(uname -m)_$(uname -s)
 tar cJf $BUILD/$NAME.txz -C $BUILD sfpi
 echo "INFO: Tarball: $BUILD/$NAME.txz"
 
-ARCH=$(dpkg --print-architecture)
-VERSION="$tt_version"
+(cd $BUILD ; md5sum -b $NAME.txz) > $BUILD/$NAME.md5
+echo "INFO: MD5: $BUILD/$NAME.md5"
 
-echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
+if grep -q '^ID=ubuntu' /etc/os-release; then
+    ARCH=$(dpkg --print-architecture)
+    VERSION="$tt_version"
 
-# Create Debian package structure
-PKGDIR="$BUILD/debian"
-DEBIAN="$PKGDIR/DEBIAN"
-INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
+    echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
 
-rm -rf "$PKGDIR"
-mkdir -p "$DEBIAN" "$INSTALL_DIR"
+    # Create Debian package structure
+    PKGDIR="$BUILD/debian"
+    DEBIAN="$PKGDIR/DEBIAN"
+    INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
 
-# Extract the release txz into the installation directory
-tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
+    rm -rf "$PKGDIR"
+    mkdir -p "$DEBIAN" "$INSTALL_DIR"
 
-MAINTAINER="Tenstorrent <support@tenstorrent.com>"
-if ! $tt_built ; then
-    MAINTAINER="Unmaintained"
-fi
+    # Extract the release txz into the installation directory
+    tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
+
+    MAINTAINER="Tenstorrent <support@tenstorrent.com>"
+    if ! $tt_built ; then
+        MAINTAINER="Unmaintained"
+    fi
 
 # Create a control file for the package
 cat > "$DEBIAN/control" <<EOF
@@ -88,10 +92,8 @@ Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
 EOF
 
-# Build the .deb package
-dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
+    # Build the .deb package
+    dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
 
-echo "INFO: Debian package created at: $BUILD/$NAME.deb"
-
-(cd $BUILD ; md5sum -b $NAME.{txz,deb}) > $BUILD/$NAME.md5
-echo "INFO: MD5: $BUILD/$NAME.md5"
+    echo "INFO: Debian package created at: $BUILD/$NAME.deb"
+fi
