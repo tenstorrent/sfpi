@@ -68,6 +68,8 @@ jobs:
       - name: Install packages
         run: |
           dnf install -y autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk  bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel rpm-build ruby ruby-devel
+      - name: Git Hack
+        run: git config --global --add safe.directory '*'
       - name: Build toolchain
         run: scripts/build.sh --tt-built
       - name: Build test harness
