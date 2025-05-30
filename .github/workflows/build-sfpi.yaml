@@ -67,7 +67,7 @@ jobs:
           submodules: recursive
       - name: Install packages
         run: |
-          dnf install -y autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk  bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel rpm-build ruby ruby-devel
+          dnf install -y expect autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel rpm-build ruby ruby-devel
       - name: Get FPM
         run: gem install fpm
       - name: Git Hack
