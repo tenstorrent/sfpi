@@ -54,47 +54,40 @@ tar cJf $BUILD/$NAME.txz -C $BUILD sfpi
 echo "INFO: Tarball: $BUILD/$NAME.txz"
 md5=($NAME.txz)
 
-if type dpkg-deb 2>&1 >/dev/null ; then
-    ARCH=$(dpkg --print-architecture)
-    VERSION="$tt_version"
-
-    echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
-
-    # Create Debian package structure
-    PKGDIR="$BUILD/debian"
-    DEBIAN="$PKGDIR/DEBIAN"
-    INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
-
-    rm -rf "$PKGDIR"
-    mkdir -p "$DEBIAN" "$INSTALL_DIR"
-
-    # Extract the release txz into the installation directory
-    tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
-
-    MAINTAINER="Tenstorrent <support@tenstorrent.com>"
-    if ! $tt_built ; then
-	MAINTAINER="Unmaintained"
-    fi
-
-    # Create a control file for the package
-    cat > "$DEBIAN/control" <<EOF
-Package: sfpi
-Version: $VERSION
-Section: base
-Priority: optional
-Architecture: $ARCH
-Maintainer: $MAINTAINER
-Homepage: https://github.com/tenstorrent/sfpi
-Depends: libgmp10 (>= 2:6.2.1), libmpfr6 (>= 4.1.0), libmpc3 (>= 1.2.1), libisl23 (>= 0.24)
-Description: Tenstorrent SFPI Release
- This package installs the sfpi release to /opt/tenstorrent/sfpi
-EOF
-
-    # Build the .deb package
-    dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
+if type dpkg-deb >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
+    fpm -s dir -t deb \
+        -n sfpi \
+        -v $tt_version \
+        -C ./build/sfpi \
+        --prefix /opt/tenstorrent/sfpi \
+        --depends "libgmp >= 6.2.1" \
+        --depends "libmpfr >= 4.1.0" \
+        --depends "libmpc >= 1.2.1" \
+        --depends "libisl >= 0.24" \
+        --architecture amd64 \
+        --rpm-auto-add-directories \
+        --rpm-rpmbuild-define "_build_id_links none" \
+        -p build/$NAME.rpm
 
     echo "INFO: Debian package created at: $BUILD/$NAME.deb"
     md5+=($NAME.deb)
+fi
+
+if type rpmbuild >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
+    fpm -s dir -t rpm \
+        -n sfpi \
+        -v $tt_version \
+        -C ./build/sfpi \
+        --prefix /opt/tenstorrent/sfpi \
+        --depends "gmp >= 6.2.0" \
+        --depends "mpfr >= 4.1.0" \
+        --depends "libmpc >= 1.2.1" \
+        --architecture amd64 \
+        --rpm-auto-add-directories \
+        --rpm-rpmbuild-define "_build_id_links none" \
+        -p build/$NAME.rpm
+
+    md5+=($NAME.rpm)
 fi
 
 (cd $BUILD ; md5sum -b ${md5[@]}) > $BUILD/$NAME.md5

@@ -17,7 +17,7 @@ on:
 
 run-name: Build ${{ inputs.architecture }} SFPI ${{ inputs.tag || github.ref }}
 jobs:
-  build:
+  build-ubuntu:
     runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || '' }}
     steps:
       - name: Checkout repo & submodules
@@ -30,23 +30,62 @@ jobs:
       - name: Install packages
         run: |
           sudo apt-get update
-          sudo apt-get -y install expect libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+          sudo apt-get -y install expect libgmp-dev libmpfr-dev libmpc-dev libisl-dev ruby-full
       - name: Build toolchain
         run: scripts/build.sh --tt-built
       - name: Build test harness
         run: scripts/build.sh --dejagnu
       - name: Run tests
         run: scripts/build.sh --test-tt
+      - name: Get FPM
+        run: gem install fpm
       - name: Release toolchain
         run: scripts/release.sh --tt-built
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.architecture }}-build
+          name: ${{ inputs.architecture }}-build-ubuntu
           path: build/sfpi-*
           compression-level: 0
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.architecture }}-tests
+          name: ${{ inputs.architecture }}-tests-ubuntu
+          path: build/*.sum
+
+  build-alma:
+    runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || '' }}
+    container:
+      image: quay.io/pypa/manylinux_2_34_x86_64
+    steps:
+      - name: Checkout repo & submodules
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 64
+          fetch-tags: true
+          submodules: recursive
+      - name: Install packages
+        run: |
+          dnf install -y autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk  bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel rpm-build ruby ruby-devel
+      - name: Build toolchain
+        run: scripts/build.sh --tt-built
+      - name: Build test harness
+        run: scripts/build.sh --dejagnu
+      - name: Run tests
+        run: scripts/build.sh --test-tt
+      - name: Get FPM
+        run: gem install fpm
+      - name: Release toolchain
+        run: scripts/release.sh --tt-built
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.architecture }}-build-alma
+          path: build/sfpi-*
+          compression-level: 0
+      - name: Upload tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.architecture }}-tests-alma
           path: build/*.sum
