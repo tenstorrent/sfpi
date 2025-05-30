@@ -52,30 +52,32 @@ NAME=sfpi-$(uname -m)_$(uname -s)
 
 tar cJf $BUILD/$NAME.txz -C $BUILD sfpi
 echo "INFO: Tarball: $BUILD/$NAME.txz"
+md5=($NAME.txz)
 
-ARCH=$(dpkg --print-architecture)
-VERSION="$tt_version"
+if type dpkg-deb 2>&1 >/dev/null ; then
+    ARCH=$(dpkg --print-architecture)
+    VERSION="$tt_version"
 
-echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
+    echo "INFO: Creating Debian package for architecture: $ARCH with version: $VERSION"
 
-# Create Debian package structure
-PKGDIR="$BUILD/debian"
-DEBIAN="$PKGDIR/DEBIAN"
-INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
+    # Create Debian package structure
+    PKGDIR="$BUILD/debian"
+    DEBIAN="$PKGDIR/DEBIAN"
+    INSTALL_DIR="$PKGDIR/opt/tenstorrent/sfpi"
 
-rm -rf "$PKGDIR"
-mkdir -p "$DEBIAN" "$INSTALL_DIR"
+    rm -rf "$PKGDIR"
+    mkdir -p "$DEBIAN" "$INSTALL_DIR"
 
-# Extract the release txz into the installation directory
-tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
+    # Extract the release txz into the installation directory
+    tar -xJf "$BUILD/$NAME.txz" -C "$PKGDIR/opt/tenstorrent"
 
-MAINTAINER="Tenstorrent <support@tenstorrent.com>"
-if ! $tt_built ; then
-    MAINTAINER="Unmaintained"
-fi
+    MAINTAINER="Tenstorrent <support@tenstorrent.com>"
+    if ! $tt_built ; then
+	MAINTAINER="Unmaintained"
+    fi
 
-# Create a control file for the package
-cat > "$DEBIAN/control" <<EOF
+    # Create a control file for the package
+    cat > "$DEBIAN/control" <<EOF
 Package: sfpi
 Version: $VERSION
 Section: base
@@ -88,10 +90,12 @@ Description: Tenstorrent SFPI Release
  This package installs the sfpi release to /opt/tenstorrent/sfpi
 EOF
 
-# Build the .deb package
-dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
+    # Build the .deb package
+    dpkg-deb --build "$PKGDIR" "$BUILD/$NAME.deb"
 
-echo "INFO: Debian package created at: $BUILD/$NAME.deb"
+    echo "INFO: Debian package created at: $BUILD/$NAME.deb"
+    md5+=($NAME.deb)
+fi
 
-(cd $BUILD ; md5sum -b $NAME.{txz,deb}) > $BUILD/$NAME.md5
+(cd $BUILD ; md5sum -b ${md5[@]}) > $BUILD/$NAME.md5
 echo "INFO: MD5: $BUILD/$NAME.md5"
