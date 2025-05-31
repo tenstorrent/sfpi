@@ -64,7 +64,7 @@ if type dpkg-deb >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --depends "libmpfr >= 4.1.0" \
         --depends "libmpc >= 1.2.1" \
         --depends "libisl >= 0.24" \
-        --architecture amd64 \
+        --architecture native \
         --rpm-auto-add-directories \
         --rpm-rpmbuild-define "_build_id_links none" \
         -p build/$NAME.deb
@@ -82,7 +82,7 @@ if type rpmbuild >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --depends "gmp >= 6.2.0" \
         --depends "mpfr >= 4.1.0" \
         --depends "libmpc >= 1.2.1" \
-        --architecture amd64 \
+        --architecture native \
         --rpm-auto-add-directories \
         --rpm-rpmbuild-define "_build_id_links none" \
         -p build/$NAME.rpm
