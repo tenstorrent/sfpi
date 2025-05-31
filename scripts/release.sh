@@ -67,7 +67,7 @@ if type dpkg-deb >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --architecture amd64 \
         --rpm-auto-add-directories \
         --rpm-rpmbuild-define "_build_id_links none" \
-        -p build/$NAME.rpm
+        -p build/$NAME.deb
 
     echo "INFO: Debian package created at: $BUILD/$NAME.deb"
     md5+=($NAME.deb)
@@ -87,6 +87,7 @@ if type rpmbuild >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --rpm-rpmbuild-define "_build_id_links none" \
         -p build/$NAME.rpm
 
+    echo "INFO: RPM package created at: $BUILD/$NAME.rpm"
     md5+=($NAME.rpm)
 fi
 
