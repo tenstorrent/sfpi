@@ -65,6 +65,11 @@ if type dpkg-deb >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --depends "libmpc >= 1.2.1" \
         --depends "libisl >= 0.24" \
         --architecture native \
+	--license "Apache-2.0" \
+        --url "https://github.com/tenstorrent/sfpi" \
+	--description "Tenstorrent SFPI compiler tools" \
+        --maintainer "Tenstorrent <support@tenstorrent.com>" \
+	--vendor "Tenstorrent" \
         --rpm-auto-add-directories \
         --rpm-rpmbuild-define "_build_id_links none" \
         -p build/$NAME.deb
@@ -83,6 +88,11 @@ if type rpmbuild >/dev/null 2>&1 && type fpm >/dev/null 2>&1 ; then
         --depends "mpfr >= 4.1.0" \
         --depends "libmpc >= 1.2.1" \
         --architecture native \
+	--license "Apache-2.0" \
+        --url "https://github.com/tenstorrent/sfpi" \
+	--description "Tenstorrent SFPI compiler tools" \
+        --maintainer "Tenstorrent <support@tenstorrent.com>" \
+	--vendor "Tenstorrent" \
         --rpm-auto-add-directories \
         --rpm-rpmbuild-define "_build_id_links none" \
         -p build/$NAME.rpm
