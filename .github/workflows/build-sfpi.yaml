@@ -5,20 +5,35 @@ on:
     inputs:
       tag:
         required: false
+        description: Version tag to checkout
         default:
         type: string
-      architecture:
-        required: false
+      arch:
+        required: true
+        description: Host architecture
         default: x86_64
         type: choice
         options:
-          - x86_64
           - aarch64
+          - x86_64
+      box:
+        required: true
+        description: Container to run on
+        default: none
+        type: choice
+        options:
+          - none
+          - Alma
 
-run-name: Build ${{ inputs.architecture }} SFPI ${{ inputs.tag || github.ref }}
+env:
+  SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
+
+run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
-    runs-on: ubuntu-22.04${{ inputs.architecture == 'aarch64' && '-arm' || '' }}
+    runs-on: ubuntu-22.04${{ inputs.arch == 'aarch64' && '-arm' || '' }}
+    container:
+      image: ${{ inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null }}
     steps:
       - name: Checkout repo & submodules
         uses: actions/checkout@v4
@@ -27,10 +42,22 @@ jobs:
           fetch-depth: 64
           fetch-tags: true
           submodules: recursive
+      - name: Tell Git it is safe
+        run: git config --global --add safe.directory '*'
       - name: Install packages
         run: |
-          sudo apt-get update
-          sudo apt-get -y install expect libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+          pkgs="expect autoconf automake python3"
+          pkgs+=" gawk bison flex texinfo patchutils ruby"
+          if type apt-get >/dev/null 2>&1 ; then
+            $SUDO apt-get update
+            $SUDO apt-get -y install $pkgs rpm
+            $SUDO apt-get -y install libisl-dev libmpc-dev libmpfr-dev libgmp-dev gcc g++
+          else
+            $SUDO dnf install -y $pkgs rpm-build
+            $SUDO dnf install -y libmpc-devel mpfr-devel gmp-devel gcc gcc-c++
+          fi
+      - name: Get FPM
+        run: $SUDO gem install fpm
       - name: Build toolchain
         run: scripts/build.sh --tt-built
       - name: Build test harness
@@ -38,15 +65,15 @@ jobs:
       - name: Run tests
         run: scripts/build.sh --test-tt
       - name: Release toolchain
-        run: scripts/release.sh --tt-built
+        run: scripts/release.sh --ci --tt-built
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.architecture }}-build
+          name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}build
           path: build/sfpi-*
           compression-level: 0
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.architecture }}-tests
+          name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}tests
           path: build/*.sum
