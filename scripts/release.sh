@@ -79,26 +79,27 @@ fi
 # get the set of shared objects we use:
 sos=$(find build/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
 	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
-echo $sos
 pkgs=
 for so in $sos
 do
+    echo $so
     case $so in
 	/*/ld-linux-*.so*) ;;
 	linux-vdso.so*) ;;  # vdso
 	libc.so*) ;; # c library
 	libexpat.so*) ;;
 	libgcc_s.so*) ;; # compiler support
-	libgmp.so*) ;;
-	libisl.so*) ;;
+	libgmp.so*) pkgs+=" libgmp10:gmp";;
+	libisl.so*) pkgs+=" libisl23:isl";;
 	liblzma.so*) ;;
 	libm.so*) ;; # c library
-	libmpc.so*) ;;
-	libmpfr.so*) ;;
+	libmpc.so*) pkgs+=" libmpc3:libmpc";;
+	libmpfr.so*) pkgs+=" libmpfr6:mpfr";;
 	libncursesw.so*) ;;
 	libstdc++.so*) ;; # C++ std lib
 	libtinfo.so*) ;;
 	*) echo "WARNING: unknown shared object $so" >&2 ;;
+    esac
 done
 
 # TODO: We should probably scan both cc1plus and gdb to get a set of
@@ -106,10 +107,12 @@ done
 # exhaustively check every executable)
 
 # Required libs
+if false ; then
 pkgs="libmpc3:libmpc libmpfr6:mpfr libgmp10:gmp"
 # optional isl pkg
 if ldd $BUILD/sfpi/compiler/libexec/gcc/riscv32-tt-elf/*/cc1plus | grep -q 'libisl\.' ; then
     pkgs+=" libisl23:isl"
+fi
 fi
 
 deb_deps=()
@@ -118,7 +121,7 @@ rpm_dep=()
 for pkg in $pkgs
 do
     if $ondeb ; then
-	if version=$(dpkg-query -f '${Version}' -W ${pkg/:.*/} 2>/dev/null) ; then
+	if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null) ; then
 	    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]] ; then
 		version=${BASH_REMATCH[2]}
 	    else
@@ -136,59 +139,10 @@ do
 	echo "WARNING: Cannot determine $pkg version used" 1>&2
     else
 	echo "INFO: $pkg >= $version"
-	deb_deps+=(--depends "${pkg/:.*/} >= $version")
-	rpm_deps+=(--depends "${pkg/.*:/} >= $version")
+	deb_deps+=(--depends "${pkg/:*/} >= $version")
+	rpm_deps+=(--depends "${pkg/*:/} >= $version")
     fi
 done
-
-if false ; then
-# determine versions we used
-for dev in ${libs[@]} ; do
-    lib=$dev
-    if $ondeb ; then
-	# mapping from lib$dev-dev to user lib is complex, getting dependencies is simple
-	if depends=$(dpkg-query -f '${Depends}' -W lib$dev-dev 2>/dev/null) ; then
-	    # libgmp-dev, libmpfr6 (= 4.1.0-3build3)
-	    # libgmp10 (= 2:6.2.1+dfsg-3ubuntu1), libgmpxx4ldbl (= 2:6.2.1+dfsg-3ubuntu1)
-	    IFSsave="$IFS"
-	    IFS=,
-	    for dep in $depends
-	    do
-		if [[ $dep =~ ^(lib$dev[0-9]*)\ \(=\ ([0-9]+:)?([0-9.]*).*\)$ ]] ; then
-		    lib=${BASH_REMATCH[1]}
-		    version=${BASH_REMATCH[3]}
-		    break;
-		fi
-	    done
-	    IFS="$IFSsave"
-	    echo "depend is $dep"
-	    #lib="${dep%% *}"
-	    #version=$(echo "$dep" | sed -e 's/^.* (= //' -e 's/[^0-9.:].*//')
-	else
-	    version=
-	fi
-    elif $onrpm ; then
-	# mapping from $foo-devel to user lib is simple, getting dependencies is hard
-	if version=$(rpm -q --qf '%[VERSION}' lib$dev 2>/dev/null) ; then
-	    lib=lib$dev
-	elif version=$(rpm -q --qf '%[VERSION}' $dev 2>/dev/null) ; then
-	    lib=$dev
-	else
-	    version=
-	fi
-    else
-	version=
-    fi
-    # 2:6.2.1+dfsg-3ubuntu1
-    # version=$(echo "$version" | sed -e 's/^[0-9]*://' -e 's/[^0-9.].*//')
-    if test -z "$version" ; then
-	echo "WARNING: Cannot determine $dev version used" 1>&2
-    else
-	echo "INFO: $lib >= $version"
-	fpm_options+=(--depends "$lib >= $version")
-    fi
-done
-fi
 
 rm -f $BUILD/$NAME.txz
 tar cJf $BUILD/$NAME.txz -C $BUILD sfpi
