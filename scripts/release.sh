@@ -4,7 +4,7 @@ set -eo pipefail
 BIN="$(dirname "$0")"
 
 if ! test "$BIN" -ef "scripts"; then
-    echo "run this script from repo's top directory" 1>&2
+    echo "run this script from repo's top directory" >&2
     exit 1
 fi
 
@@ -31,7 +31,7 @@ if ! $ci ; then
     # extract git hashes for here and each submodule
     "$BIN/git-hash.sh" > $BUILD/src-hashes.post
     if ! cmp -s $BUILD/sfpi/src-hashes $BUILD/src-hashes.post ; then
-	echo "*** WARNING: Source tree has changed since build started ***" 1>&2
+	echo "*** WARNING: Source tree has changed since build started ***" >&2
 	if ! $force ; then
 	    exit 1
 	fi
@@ -41,7 +41,7 @@ fi
 if test -r $BUILD/version ; then
      tt_version=$(cat $BUILD/version)
 else
-    echo "No $BUILD/version file present" 1>&2
+    echo "No $BUILD/version file present" >&2
     exit 1
 fi
 echo "INFO: Version: $tt_version"
@@ -123,7 +123,7 @@ do
 	version=
     fi
     if test -z "$version" ; then
-	echo "WARNING: Cannot determine $pkg version used" 1>&2
+	echo "WARNING: Cannot determine $pkg version used" >&2
     else
 	echo "INFO: $pkg >= $version"
 	deb_deps+=(--depends "${pkg/:*/} >= $version")
