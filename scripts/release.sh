@@ -76,25 +76,49 @@ else
     fpm_options+=(--maintainer Unmaintained --vendor Unknown)
 fi
 
+# get the set of shared objects we use:
+sos=$(find build/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
+	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
+echo $sos
+pkgs=
+for so in $sos
+do
+    case $so in
+	/*/ld-linux-*.so*) ;;
+	linux-vdso.so*) ;;  # vdso
+	libc.so*) ;; # c library
+	libexpat.so*) ;;
+	libgcc_s.so*) ;; # compiler support
+	libgmp.so*) ;;
+	libisl.so*) ;;
+	liblzma.so*) ;;
+	libm.so*) ;; # c library
+	libmpc.so*) ;;
+	libmpfr.so*) ;;
+	libncursesw.so*) ;;
+	libstdc++.so*) ;; # C++ std lib
+	libtinfo.so*) ;;
+	*) echo "WARNING: unknown shared object $so" >&2 ;;
+done
+
+# TODO: We should probably scan both cc1plus and gdb to get a set of
+# dependencies (I think those will cover the set of needs, rather than
+# exhaustively check every executable)
+
 # Required libs
-deb_libs=(libmpc3 libmpfr6 libgmp10)
-rpm_libs=(libmpc mpfr gmp)
-# optional isl lib
+pkgs="libmpc3:libmpc libmpfr6:mpfr libgmp10:gmp"
+# optional isl pkg
 if ldd $BUILD/sfpi/compiler/libexec/gcc/riscv32-tt-elf/*/cc1plus | grep -q 'libisl\.' ; then
-    deb_libs+=(libisl23)
-    rpm_libs+=(isl)
+    pkgs+=" libisl23:isl"
 fi
 
 deb_deps=()
 rpm_dep=()
 
-for ((ix=0; ix!=${#deb_libs[@]}; ix++))
+for pkg in $pkgs
 do
-    deb_lib=${deb_libs[ix]}
-    rpm_lib=${rpm_libs[ix]}
     if $ondeb ; then
-	lib=$deb_lib
-	if version=$(dpkg-query -f '${Version}' -W $deb_lib 2>/dev/null) ; then
+	if version=$(dpkg-query -f '${Version}' -W ${pkg/:.*/} 2>/dev/null) ; then
 	    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]] ; then
 		version=${BASH_REMATCH[2]}
 	    else
@@ -102,21 +126,18 @@ do
 	    fi
 	fi
     elif $onrpm ; then
-	lib=$rpm_lib
-	if version=$(rpm -q --qf '%{VERSION}' $rpm_lib 2>/dev/null) ; then
-	    # sometimes version is prefixed by the package name
-	    : # version=${version/#$rpm_lib-/}
+	if version=$(rpm -q --qf '%{VERSION}' ${pkg/*:/} 2>/dev/null) ; then
+	    :
 	fi
     else
-	lib=$deb_lib/$rpm_lib
 	version=
     fi
     if test -z "$version" ; then
-	echo "WARNING: Cannot determine $lib version used" 1>&2
+	echo "WARNING: Cannot determine $pkg version used" 1>&2
     else
-	echo "INFO: $lib >= $version"
-	deb_deps+=(--depends "$deb_lib >= $version")
-	rpm_deps+=(--depends "$rpm_lib >= $version")
+	echo "INFO: $pkg >= $version"
+	deb_deps+=(--depends "${pkg/:.*/} >= $version")
+	rpm_deps+=(--depends "${pkg/.*:/} >= $version")
     fi
 done
 
