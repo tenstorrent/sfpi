@@ -76,44 +76,30 @@ else
     fpm_options+=(--maintainer Unmaintained --vendor Unknown)
 fi
 
-# get the set of shared objects we use:
-sos=$(find build/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
-	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
+# Get the set of shared objects we use and figure what packages they come from.
 pkgs=
-for so in $sos
+for so in $(find build/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
+	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
 do
-    echo $so
     case $so in
-	/*/ld-linux-*.so*) ;;
-	linux-vdso.so*) ;;  # vdso
+	/*/ld-linux-*.so*) ;; # loader
+	linux-vdso.so*) ;;  # kernel vdso
 	libc.so*) ;; # c library
-	libexpat.so*) ;;
+	libexpat.so*) pkgs+=" libexpat1:expat";;
 	libgcc_s.so*) ;; # compiler support
 	libgmp.so*) pkgs+=" libgmp10:gmp";;
 	libisl.so*) pkgs+=" libisl23:isl";;
-	liblzma.so*) ;;
+	liblzma.so*) pkgs+=" liblzma5:xz-libs";;
 	libm.so*) ;; # c library
 	libmpc.so*) pkgs+=" libmpc3:libmpc";;
 	libmpfr.so*) pkgs+=" libmpfr6:mpfr";;
-	libncursesw.so*) ;;
+	libncursesw.so*) pkgs+=" libncursesw6:ncurses-libs";;
 	libstdc++.so*) ;; # C++ std lib
-	libtinfo.so*) ;;
+	libtinfo.so*) pkgs+=" libtinfo6:ncurses-libs";;
+	libz.so*) pkgs+=" zlib1g:zlib-ng-compat";;
 	*) echo "WARNING: unknown shared object $so" >&2 ;;
     esac
 done
-
-# TODO: We should probably scan both cc1plus and gdb to get a set of
-# dependencies (I think those will cover the set of needs, rather than
-# exhaustively check every executable)
-
-# Required libs
-if false ; then
-pkgs="libmpc3:libmpc libmpfr6:mpfr libgmp10:gmp"
-# optional isl pkg
-if ldd $BUILD/sfpi/compiler/libexec/gcc/riscv32-tt-elf/*/cc1plus | grep -q 'libisl\.' ; then
-    pkgs+=" libisl23:isl"
-fi
-fi
 
 deb_deps=()
 rpm_dep=()
