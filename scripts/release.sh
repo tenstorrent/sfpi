@@ -78,7 +78,7 @@ fi
 
 # Get the set of shared objects we use and figure what packages they come from.
 pkgs=
-for so in $(find build/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
+for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
 	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
 do
     case $so in
