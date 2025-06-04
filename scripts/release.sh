@@ -78,8 +78,9 @@ fi
 
 # Get the set of shared objects we use and figure what packages they come from.
 pkgs=
-for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | grep '^[^ ]*:  *ELF 64-bit ' | \
-	  cut -d: -f1 | xargs -n1 ldd | tr " " "\t" | cut -f2 | sort -u)
+for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
+		grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs -n1 ldd | \
+		sed -e '/:$/d' -e "s/^[ \t]\+//" -e 's/ .*//' | sort -u)
 do
     case $so in
 	/*/ld-linux-*.so*) ;; # loader
