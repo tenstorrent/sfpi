@@ -255,9 +255,9 @@ class __DestReg {
  public:
     sfpi_inline const __vDReg operator[](const int i) const { return dreg[i]; }
     // Make these void - ugly as these aren't really inc/dec
-    sfpi_inline void operator++() const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
-    sfpi_inline void operator++(const int) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
-    sfpi_inline void operator+=(const int i) const { __builtin_rvtt_sfpincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
+    sfpi_inline void operator++() const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
+    sfpi_inline void operator++(const int) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
+    sfpi_inline void operator+=(const int i) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
