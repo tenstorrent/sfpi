@@ -19,7 +19,6 @@ namespace sfpi {
 
 #define sfpi_inline inline
 
-#define __builtin_rvtt_sfpincrwc(cr, d, b, a) sfpu_rvtt_sfpincrwc(cr, d, b, a)
 #define __builtin_rvtt_sfpassign_lv(v, in) (in)
 #define __builtin_rvtt_sfpload(mod0, mode, addr) sfpu_rvtt_sfpload(mod0, mode, addr)
 #define __builtin_rvtt_sfpassignlreg(lr) sfpu_rvtt_sfpassignlreg(lr)
@@ -124,7 +123,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpxbool(t, a, b) __builtin_rvtt_sfpxbool(t, a, b)
 #define __builtin_rvtt_sfpxcondb(s, i) __builtin_rvtt_sfpxcondb(s, i)
 #define __builtin_rvtt_sfpxcondi(i) __builtin_rvtt_sfpxcondi(i)
-#define __builtin_rvtt_sfpincrwc(cr, d, b, a) __builtin_rvtt_sfpincrwc(cr, d, b, a)
 
 #define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_wh_sfpassign_lv(v, in)
 #define __builtin_rvtt_sfpload(mod0, mode, addr) __builtin_rvtt_wh_sfpload((void *)ckernel::instrn_buffer, mod0, mode, addr, 0, 0)
