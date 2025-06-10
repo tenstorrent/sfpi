@@ -41,4 +41,12 @@ replay_insn(unsigned start, unsigned length) {
   return (0x04 << 24) | (start << 14) | (length << 4);
 }
 
+template<bool Static=false>
+[[gnu::always_inline]] inline void insn(uint32_t insn) {
+  __builtin_rvtt_ttinsn(Static, insn);
+}
+
+// For use by ckernel_ops.h expansion
+#define LLTT_INSN(STATIC, ENCODING) ::lltt::insn<STATIC>(ENCODING)
+
 } // namespace 
