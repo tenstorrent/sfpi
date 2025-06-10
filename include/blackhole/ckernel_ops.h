@@ -11,6 +11,9 @@
 
 #pragma once
 
+#warning "ckernel_ops.h should not be included, use lltt.h instead"
+
+#if 0
 #define TT_OP(opcode, params) ( (opcode << 24) + params )
 #define INSTRUCTION_WORD(x) __asm__ __volatile__(".ttinsn %0" : : "i" ((x))) // Swizzle 32 bits into the instruction stream.
 
@@ -1211,3 +1214,4 @@
 #define TTI_ZEROSRC(zero_val, write_mode, bank_mask, src_mask) \
   INSTRUCTION_WORD(TT_OP_ZEROSRC(zero_val, write_mode, bank_mask, src_mask) )
 
+#endif
