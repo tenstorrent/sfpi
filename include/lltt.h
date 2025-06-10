@@ -15,7 +15,10 @@
 #include "stop now, no good will come"
 #endif
 
+extern volatile uint32_t __instrn_buffer[];
+
 namespace lltt {
+constexpr inline volatile uint32_t *[[gnu::rvtt_reg_ptr]] instrn_buffer = ::__instrn_buffer;
 
 enum ExecBool : bool {NoExec, Exec};
 
@@ -29,10 +32,15 @@ record(unsigned start, unsigned length) {
   __builtin_rvtt_ttreplay(start, length, false, false);
 }
 
-[[gnu::always_inline]] constexpr std::uint32_t
-replay_insn(unsigned start, unsigned length) {
-  // Perhaps another builtin?
-  return (0x04 << 24) | (start << 14) | (length << 4);
+[[gnu::always_inline]] constexpr std::uint32_t replay_insn(unsigned start, unsigned length) {
+  return TT_OP_REPLAY(start, length, 0, 0);
 }
+
+[[gnu::always_inline]] inline void insn(uint32_t insn) {
+  __builtin_rvtt_ttinsn((void *)&instrn_buffer[0], insn);
+}
+
+// For use by ckernel_ops.h expansion
+#define LLTT_INSN(ENCODING) ::lltt::insn(ENCODING)
 
 } // namespace 
