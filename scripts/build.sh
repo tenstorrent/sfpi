@@ -12,6 +12,7 @@ NCPUS=$(nproc)
 
 gcc_checking=release
 dejagnu=false
+gdb=false
 sim=false
 test_binutils=false
 test_gcc=false
@@ -29,6 +30,7 @@ while [ "$#" -ne 0 ] ; do
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
+	--gdb) gdb=true ;;
 	--infra) dejagnu=true sim=true ;;
 	--monolib) multilib=--disable-multilib ;;
 	--serial) NCPUS=1 ;;
@@ -122,6 +124,8 @@ if ! test -e $BUILD/Makefile ; then
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
 		       --with-pkgversion="tenstorrent/sfpi:$tt_version")
     fi
+    enable_gdb=--disable-gdb
+    $gdb && enable_gdb=--enable-gdb
     (cd $BUILD
      set -x
      ../configure --prefix="$(pwd)/sfpi/compiler" "${ident_options[@]}" \
@@ -129,7 +133,7 @@ if ! test -e $BUILD/Makefile ; then
 		  --enable-gcc-checking="$gcc_checking" \
 		  --without-system-zlib --without-zstd \
 		  "$multilib" \
-		  --with-arch=rv32i --with-abi=ilp32 --enable-gdb)
+		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
 fi
 
 # build the toolchain

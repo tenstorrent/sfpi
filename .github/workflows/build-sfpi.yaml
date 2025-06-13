@@ -59,7 +59,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --tt-built
+        run: scripts/build.sh --gdb --tt-built
       - name: Build test harness
         run: scripts/build.sh --dejagnu
       - name: Run tests
