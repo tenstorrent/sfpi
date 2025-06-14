@@ -50,7 +50,8 @@ echo "INFO: Version: $tt_version"
 tar cf - include | tar xf - -C $BUILD/sfpi
 
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-    grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
+    grep '^[^ ]*:  *ELF 64-bit ' | egrep -v '(/cc1plus|/lto1)' |  cut -d: -f1 | \
+    xargs strip -g
 
 NAME=sfpi-$(uname -m)_$(uname -s)
 
