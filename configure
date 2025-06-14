@@ -627,6 +627,7 @@ with_glibc_src
 with_newlib_src
 with_binutils_src
 with_gcc_src
+gcc_debug_flags
 enable_gdb
 with_guile
 with_zstd
@@ -726,6 +727,7 @@ with_system_zlib
 with_zstd
 with_guile
 enable_gdb
+enable_debug
 with_gcc_src
 with_binutils_src
 with_newlib_src
@@ -1372,7 +1374,8 @@ Optional Features:
   --enable-gcc-checking   Enable gcc internal checking, it will make gcc very
                           slow, only enable it when developing gcc
                           [--disable-gcc-checking]
-  --disable-gdb           Don't build GDB, as it's not upstream
+  --disable-gdb           Don't build GDB
+  --disable-debug         Enable GCC debug build
   --enable-libsanitizer   Build libsanitizer, which only supports rv64
   --enable-qemu-system    Build qemu with system-mode emulation
 
@@ -4182,6 +4185,25 @@ else $as_nop
   enable_gdb=--disable-gdb
 
 fi
+
+# Check whether --enable-debug was given.
+if test ${enable_debug+y}
+then :
+  enableval=$enable_debug;
+else $as_nop
+  enable_debug=no
+
+fi
+
+
+if test "x$enable_debug" != xno
+then :
+  gcc_debug_flags='CXXFLAGS="-g3 -O0"'
+else $as_nop
+  gcc_debug_flags=
+fi
+gcc_debug_flags=$gcc_debug_flags
+
 
 
 

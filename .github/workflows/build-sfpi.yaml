@@ -24,11 +24,19 @@ on:
         options:
           - none
           - Alma
+      checking:
+        description: GCC checking
+        default: ''
+        type: string
+      debug:
+        description: GCC debugging
+        default: false
+        type: boolean
 
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
 
-run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
+run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}${{ inputs.checking != '' && ' GCC checking:' || '' }}${{ inputs.checking }}
 jobs:
   build:
     runs-on: ubuntu-22.04${{ inputs.arch == 'aarch64' && '-arm' || '' }}
@@ -51,7 +59,7 @@ jobs:
           if type apt-get >/dev/null 2>&1 ; then
             $SUDO apt-get update
             $SUDO apt-get -y install $pkgs rpm
-            $SUDO apt-get -y install libisl-dev libmpc-dev libmpfr-dev libgmp-dev gcc g++
+            $SUDO apt-get -y install libmpc-dev libmpfr-dev libgmp-dev gcc g++
           else
             $SUDO dnf install -y $pkgs rpm-build
             $SUDO dnf install -y libmpc-devel mpfr-devel gmp-devel gcc gcc-c++
@@ -59,7 +67,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built
+        run: scripts/build.sh --gdb --tt-built ${{ inputs.checking != '' && '--checking=' || '' }}${{ inputs.checking }} ${{ inputs.debug && '--debug' || '' }}
       - name: Build test harness
         run: scripts/build.sh --dejagnu
       - name: Run tests

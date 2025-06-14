@@ -58,7 +58,7 @@ GCC_MULTILIB_FLAGS := $(MULTILIB_FLAGS) --with-multilib-generator="$(MULTILIB_GE
 endif
 GLIBC_MULTILIB_NAMES := @glibc_multilib_names@
 # really need a better place to put --without-isl
-GCC_CHECKING_FLAGS := @gcc_checking@ --without-isl
+GCC_CHECKING_FLAGS := @gcc_checking@ --without-isl @gcc_debug_flags@
 IDENT_OPTIONS := @ident_options@
 
 XLEN := $(shell echo $(WITH_ARCH) | tr A-Z a-z | sed 's/.*rv\([0-9]*\).*/\1/')
