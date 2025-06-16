@@ -36,7 +36,7 @@ on:
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
 
-run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}${{ inputs.checking != '' && ' GCC checking:' || '' }}${{ inputs.checking }}
+run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}${{ inputs.checking != '' && ' Checking:' || '' }}${{ inputs.checking }}${{ inputs.debug && ' Debug: on' || ''}} 
 jobs:
   build:
     runs-on: ubuntu-22.04${{ inputs.arch == 'aarch64' && '-arm' || '' }}
