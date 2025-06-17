@@ -27,17 +27,6 @@ while [ "$#" -ne 0 ] ; do
     shift
 done
 
-if ! $ci ; then
-    # extract git hashes for here and each submodule
-    "$BIN/git-hash.sh" > $BUILD/src-hashes.post
-    if ! cmp -s $BUILD/sfpi/src-hashes $BUILD/src-hashes.post ; then
-	echo "*** WARNING: Source tree has changed since build started ***" >&2
-	if ! $force ; then
-	    exit 1
-	fi
-    fi
-fi
-
 if test -r $BUILD/version ; then
      tt_version=$(cat $BUILD/version)
 else
@@ -45,6 +34,17 @@ else
     exit 1
 fi
 echo "INFO: Version: $tt_version"
+
+if ! $ci ; then
+    # extract git hashes for here and each submodule
+    $BIN/git-hash.sh "$tt_version" > $BUILD/README.post
+    if ! cmp -s $BUILD/sfpi/README.txt $BUILD/README.post ; then
+	echo "*** WARNING: Source tree has changed since build started ***" >&2
+	if ! $force ; then
+	    exit 1
+	fi
+    fi
+fi
 
 # Copy include tree
 tar cf - include | tar xf - -C $BUILD/sfpi
@@ -62,7 +62,7 @@ type rpmbuild >/dev/null 2>&1 && mkrpm=true
 # whether we're on a particular package type
 ondeb=false
 onrpm=false
-dpkg-query -f '${Version}' -W libc-bin >/dev/null 2>&1 && ondeb=true
+dpkg-query -f '${Version}' -W libc6 >/dev/null 2>&1 && ondeb=true
 ! $ondeb && rpm -q --qf '%{VERSION}' glibc >/dev/null 2>&1 && onrpm=true
 
 fpm_options=(-s dir -n sfpi -C $BUILD/sfpi --prefix /opt/tenstorrent/sfpi)
@@ -85,7 +85,7 @@ do
     case $so in
 	/*/ld-linux-*.so*) ;; # loader
 	linux-vdso.so*) ;;  # kernel vdso
-	libc.so*) ;; # c library
+	libc.so*) pkgs+='libc6:glibc' ;; # c library
 	libexpat.so*) pkgs+=" libexpat1:expat";;
 	libgcc_s.so*) ;; # compiler support
 	libgmp.so*) pkgs+=" libgmp10:gmp";;
@@ -95,7 +95,7 @@ do
 	libmpc.so*) pkgs+=" libmpc3:libmpc";;
 	libmpfr.so*) pkgs+=" libmpfr6:mpfr";;
 	libncursesw.so*) pkgs+=" libncursesw6:ncurses-libs";;
-	libstdc++.so*) ;; # C++ std lib
+	libstdc++.so*) pkgs+=" libstdc++6:libstdc++" ;; # C++ std lib 
 	libtinfo.so*) pkgs+=" libtinfo6:ncurses-libs";;
 	libz.so*) pkgs+=" zlib1g:zlib-ng-compat";;
 	*) echo "WARNING: unknown shared object $so" >&2 ;;

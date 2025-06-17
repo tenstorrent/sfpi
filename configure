@@ -1372,7 +1372,7 @@ Optional Features:
   --enable-gcc-checking   Enable gcc internal checking, it will make gcc very
                           slow, only enable it when developing gcc
                           [--disable-gcc-checking]
-  --disable-gdb           Don't build GDB, as it's not upstream
+  --disable-gdb           Don't build GDB
   --enable-libsanitizer   Build libsanitizer, which only supports rv64
   --enable-qemu-system    Build qemu with system-mode emulation
 
