@@ -101,16 +101,18 @@ contain the submodule source code. To obtain the full sources:
   started. You may override this check with the `--force` option, but
   /be careful/.
 
-  Both a `.tgz` tarball and a `.deb` Debian package are created in the
-  build directory. Also a `.md5` checksum file is created. These all
-  have a basename of`sfpi-$(uname -m)_$(uname -s)`. The host binaries
-  therein are stripped. The Debian control metadata automatically
-  infers the system architecture (e.g., amd64, arm64).
+  A `.txz` tarball will be created, along with `.deb` and/or `.rpm`
+  packages, if the necessary packagers are available. (GEM utility FPM
+  is used.) Also a `.md5` checksum file is created. These all have a
+  basename of`sfpi-$(uname -m)_$(uname -s)`. The host binaries therein
+  are stripped. The package dependencies are determined by looking at
+  executable shared object requirements and inferring the packages
+  from that.
 
 5) Making the release available (from github)
 
-  Upload the tarball and md5 hash as a binary file added to a git
-  hub. You'll want to set the version tag to be the same as the
+  Upload the release files and md5 hash as a binary file added to a
+  git hub. You'll want to set the version tag to be the same as the
   version string created during the build process.
 
   Users may automate downloading by augmenting their cmake `CMakeLists.txt`
@@ -119,7 +121,7 @@ contain the submodule source code. To obtain the full sources:
 include(FetchContent)
 FetchContent_Declare(
     sfpi
-    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64_Linux.tgz
+    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64_Linux.txz
     URL_HASH MD5=$HASH
     SOURCE_DIR $INSTALL_LOCATION
 )
@@ -135,6 +137,10 @@ where:
 Refer to cmake documentation for further information about
 `FetchContent`, `FetchContent_Declare` and
 `FetchContent_MakeAvailable`.
+
+A more sophisticated mechanism is used by Tenstorent's `tt-metal` repo
+-- see `tt_metal/sfpi-version.sh` and its uses in
+`tt_metal/hw/CMakeLists.txt` & `install_dependencies.sh`.
 
 8) Running the toolchain test suites:
 ```

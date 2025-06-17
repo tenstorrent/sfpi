@@ -2,7 +2,7 @@
 # script, the bits that do not build a tenstorrent riscv32-elf
 # toolchain and qemu are likely bitrotted.
 
-AC_INIT(riscv-toolchain, 1.0)
+AC_INIT([riscv-toolchain],[1.0])
 
 AC_PROG_CC
 AC_PROG_FGREP
@@ -223,8 +223,7 @@ AS_IF([test "x$with_zstd" != xno],
 	[AC_SUBST(with_zstd,--without-zstd)])
 
 AC_ARG_WITH(guile,
-	[AC_HELP_STRING([--with-guile],
-			[Set which guile to use, if any])],
+	[AS_HELP_STRING([--with-guile],[Set which guile to use, if any])],
 	[],
 	[with_guile=default]
 	)
@@ -235,7 +234,7 @@ AS_IF([test "x$with_guile" != xdefault],
 
 AC_ARG_ENABLE(gdb,
 	[AS_HELP_STRING([--disable-gdb],
-		[Don't build GDB, as it's not upstream])],
+		[Don't build GDB])],
 	[],
 	[enable_gdb=yes]
 	)
@@ -247,8 +246,7 @@ AS_IF([test "x$enable_gdb" != xno],
 AC_DEFUN([AX_ARG_WITH_SRC],
 	[{m4_pushdef([opt_name], with_$1_src)
 	  AC_ARG_WITH($1-src,
-		[AC_HELP_STRING([--with-$1-src],
-				[Set $1 source path, use builtin source by default])],
+		[AS_HELP_STRING([--with-$1-src],[Set $1 source path, use builtin source by default])],
 		[],
 		[opt_name=default]
 		)
@@ -269,8 +267,7 @@ AX_ARG_WITH_SRC(spike, spike)
 AX_ARG_WITH_SRC(pk, pk)
 
 AC_ARG_WITH(linux-headers-src,
-	[AC_HELP_STRING([--with-linux-headers-src],
-			[Set linux-headers source path, use builtin source by default])],
+	[AS_HELP_STRING([--with-linux-headers-src],[Set linux-headers source path, use builtin source by default])],
 	[],
 	[with_linux_headers_src=default]
 	)
