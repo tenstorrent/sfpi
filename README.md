@@ -7,7 +7,7 @@ This repo contains SFPI.
 * TT-enhanced RISC-V `binutils` in binutils submodule
 * TT-enhanced RISC-V `gcc` in gcc submodule
 * standard newlib in `newlib` submodule
-* standard qemu in `qemu` submodule
+* standard qemu cloned on demand
 * RiscV dejagnu harness in `riscv-dejagnu` submodule
 * tests in `tests`
 * build and release scripts in `scripts`
