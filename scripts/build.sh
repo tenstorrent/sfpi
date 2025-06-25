@@ -36,7 +36,7 @@ while [ "$#" -ne 0 ] ; do
 	--serial) NCPUS=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
 	--test-binutils) dejagnu=true test_binutils=true ;;
-	--test-gcc) dejagnu=true sim==true test_gcc=true ;;
+	--test-gcc) dejagnu=true sim=true test_gcc=true ;;
 	--test-tt) dejagnu=true test_tt=true ;;
 	--tt-built) tt_built=true ;;
 	--tt-version=*) tt_version="${1#*=}" ;;
@@ -140,6 +140,9 @@ if $dejagnu ; then
     (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS)
 fi
 if $sim ; then
+    if ! test -e qemu ; then
+	git clone --depth 64 --branch v7.2.15 https://gitlab.com/qemu-project/qemu.git
+    fi
     (set -x; nice make -C $BUILD build-sim -j$NCPUS)
 fi
 
