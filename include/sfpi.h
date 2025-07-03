@@ -125,12 +125,14 @@
 #if __riscv_tt_blackhole
 #define ARCH_BLACKHOLE 1
 #endif
-#if defined(ARCH_WORMHOLE_B0)
-#define ARCH_WORMHOLE 1
-#endif
 
 #if defined(ARCH_WORMHOLE) + defined(ARCH_BLACKHOLE) != 1
 #error "Exactly one SFPI architecture must be selected"
+#include "stop now, no good will come"
+#endif
+
+#if !__has_builtin(__builtin_rvtt_synth_opcode)
+#error "Compiler does not support TT builtins"
 #include "stop now, no good will come"
 #endif
 

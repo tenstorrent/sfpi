@@ -11,24 +11,6 @@
 
 namespace sfpi {
 
-// GCC implementation leverages the riscv specific code paths and so the
-// builtin name space uses riscv.  Call the builtins through the TT
-// specific macros w/ the rvtt namespace
-
-#ifdef __clang__
-#if !__has_builtin(__builtin_rvtt_sfp_load)
-#error TT builtins not found: clang not supported
-#include <fails to compile without extensions>
-#endif // !__has_builtin(__builtin_rvtt_wh_sfpload)
-
-#define sfpi_inline inline
-
-#elif __GNUC__
-#if !__has_builtin(__builtin_rvtt_wh_sfpload)
-#error TT builtins not found: compile with -march=rv32im_xttwh -mabi=ilp32
-#include <fails to compile without extensions>
-#endif // !__has_builtin(__builtin_rvtt_wh_sfpload)
-
 typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define sfpi_inline __attribute__((always_inline)) inline
@@ -110,8 +92,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_wh_sfpshft2_e(src, mod)
 
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
-
-#endif // __GNUC__
 
 constexpr unsigned int SFP_LREG_COUNT = 8;
 
