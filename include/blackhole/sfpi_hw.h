@@ -31,8 +31,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_bh_sfpxloadi((void *)ckernel::instrn_buffer, mod0, imm16, 0, 0)
 #define __builtin_rvtt_sfpstore(src, mod0, mode, addr) __builtin_rvtt_bh_sfpstore((void *)ckernel::instrn_buffer, src, mod0, mode, addr, 0, 0)
 #define __builtin_rvtt_sfpmov(src, mod1) __builtin_rvtt_bh_sfpmov(src, mod1)
-#define __builtin_rvtt_sfpnop() __builtin_rvtt_bh_sfpnop()
-#define __builtin_rvtt_sfpillegal() __builtin_rvtt_bh_sfpillegal()
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_rvtt_bh_sfpencc(imm12, mod1)
 #define __builtin_rvtt_sfppushc() __builtin_rvtt_bh_sfppushc(0)
