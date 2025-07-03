@@ -15,89 +15,6 @@ namespace sfpi {
 // builtin name space uses riscv.  Call the builtins through the TT
 // specific macros w/ the rvtt namespace
 
-#ifdef COMPILE_FOR_EMULE
-
-#define sfpi_inline inline
-
-#define __builtin_rvtt_sfpassign_lv(v, in) (in)
-#define __builtin_rvtt_sfpload(mod0, mode, addr) sfpu_rvtt_sfpload(mod0, mode, addr)
-#define __builtin_rvtt_sfpassignlreg(lr) sfpu_rvtt_sfpassignlreg(lr)
-#define __builtin_rvtt_sfppreservelreg(x, n)
-#define __builtin_rvtt_sfpxloadi(mod0, imm16) sfpu_rvtt_sfploadi(mod0, imm16)
-#define __builtin_rvtt_sfpstore(src, mod0, mode, addr) sfpu_rvtt_sfpstore(src, mod0, addr)
-#define __builtin_rvtt_sfpmov(src, mod1) sfpu_rvtt_sfpmov(src, mod1)
-#define __builtin_rvtt_sfpnop() sfpu_rvtt_sfpnop()
-#define __builtin_rvtt_sfpillegal() sfpu_rvtt_sfpillegal()
-
-#define __builtin_rvtt_sfpencc(imm12, mod1) sfpu_rvtt_sfpencc(imm12, mod1)
-#define __builtin_rvtt_sfppushc() sfpu_rvtt_sfppushc(0)
-#define __builtin_rvtt_sfppopc() sfpu_rvtt_sfppopc()
-#define __builtin_rvtt_sfpsetcc_v(src, mod1) sfpu_rvtt_sfpsetcc_v(src, mod1)
-#define __builtin_rvtt_sfpsetcc_i(imm12, mod1) sfpu_rvtt_sfpsetcc_i(imm12, mod1)
-#define __builtin_rvtt_sfpxfcmps(v, f, mod1) sfpu_rvtt_sfpxfcmps(v, f, mod1)
-#define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) sfpu_rvtt_sfpxfcmpv(v1, v2, mod1)
-#define __builtin_rvtt_sfpxicmps(v, i, mod1) sfpu_rvtt_sfpxicmps(v, i, mod1)
-#define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) sfpu_rvtt_sfpxicmpv(v1, v2, mod1)
-#define __builtin_rvtt_sfpxvif() 0
-#define __builtin_rvtt_sfpxbool(t, a, b) sfpu_rvtt_sfpxbool(t, a, b)
-#define __builtin_rvtt_sfpxcondb(s, i) sfpu_rvtt_sfpxcondb(s, i)
-#define __builtin_rvtt_sfpxcondi(i) sfpu_rvtt_sfpxcondi(i)
-#define __builtin_rvtt_sfpcompc() sfpu_rvtt_sfpcompc()
-
-#define __builtin_rvtt_sfpadd(va, vb, mod1) sfpu_rvtt_sfpadd(va, vb, mod1)
-#define __builtin_rvtt_sfpmul(va, vb, mod1) sfpu_rvtt_sfpmul(va, vb, mod1)
-#define __builtin_rvtt_sfpmad(va, vb, vc, mod1) sfpu_rvtt_sfpmad(va, vb, vc, mod1)
-
-#define __builtin_rvtt_sfpexexp(src, mod1) sfpu_rvtt_sfpexexp(src, mod1)
-#define __builtin_rvtt_sfpexman(src, mod1) sfpu_rvtt_sfpexman(src, mod1)
-
-#define __builtin_rvtt_sfpsetexp_i(imm12, src) sfpu_rvtt_sfpsetexp_i(imm12, src)
-#define __builtin_rvtt_sfpsetexp_v(dst, src) sfpu_rvtt_sfpsetexp_v(dst, src)
-
-#define __builtin_rvtt_sfpsetman_i(imm12, src, mod) sfpu_rvtt_sfpsetman_i(imm12, src, mod)
-#define __builtin_rvtt_sfpsetman_v(dst, src) sfpu_rvtt_sfpsetman_v(dst, src)
-
-#define __builtin_rvtt_sfpabs(src, mod1) sfpu_rvtt_sfpabs(src, mod1)
-#define __builtin_rvtt_sfpand(dst, src) sfpu_rvtt_sfpand(dst, src)
-#define __builtin_rvtt_sfpor(dst, src) sfpu_rvtt_sfpor(dst, src)
-#define __builtin_rvtt_sfpxor(dst, src) sfpu_rvtt_sfpxor(dst, src)
-#define __builtin_rvtt_sfpnot(src) sfpu_rvtt_sfpnot(src)
-
-#define __builtin_rvtt_sfpdivp2(imm12, src, mod1) sfpu_rvtt_sfpdivp2(imm12, src, mod1)
-
-#define __builtin_rvtt_sfplz(src, mod1) sfpu_rvtt_sfplz(src, mod1)
-
-#define __builtin_rvtt_sfpshft_i(dst, imm12) sfpu_rvtt_sfpshft_i(dst, imm12)
-#define __builtin_rvtt_sfpshft_v(dst, src) sfpu_rvtt_sfpshft_v(dst, src)
-
-#define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) sfpu_rvtt_sfpxiadd_i(imm12, src, mod1)
-#define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) sfpu_rvtt_sfpxiadd_v(dst, src, mod1)
-
-#define __builtin_rvtt_sfpsetsgn_i(imm12, src) sfpu_rvtt_sfpsetsgn_i(imm12, src)
-#define __builtin_rvtt_sfpsetsgn_v(dst, src) sfpu_rvtt_sfpsetsgn_v(dst, src)
-
-#define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod0) sfpu_rvtt_sfplut(l0, l1, l2, dst, mod0)
-#define __builtin_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0) sfpu_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0)
-#define __builtin_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0) sfpu_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0)
-
-#define __builtin_rvtt_sfpcast(src, mod1) sfpu_rvtt_sfpcast(src, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) sfpu_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1)
-#define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) sfpu_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1)
-
-#define __builtin_rvtt_sfptransp(l0, l1, l2, l3) sfpu_rvtt_sfptransp(l0, l1, l2, l3)
-
-#define __builtin_rvtt_sfpshft2_i(dst, imm) sfpu_rvtt_sfpshft2_i(dst, imm)
-#define __builtin_rvtt_sfpshft2_v(dst, src) sfpu_rvtt_sfpshft2_v(dst, src)
-#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod) sfpu_rvtt_sfpshft2_g(l0, l1, l2, l3, mod)
-#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3) sfpu_rvtt_sfpshft2_ge(src, l0, l1, l2, l3)
-#define __builtin_rvtt_sfpshft2_e(src, mod) sfpu_rvtt_sfpshft2_e(src, mod)
-
-#define __builtin_rvtt_sfpswap(dst, src, mod) sfpu_rvtt_sfpswap(dst, src, mod)
-
-#define __builtin_rvtt_sfpconfig_v(l0, config_dest) sfpu_rvtt_sfpconfig_v(l0, config_dest)
-
-#else // COMPILE_FOR_EMULE
-
 #ifdef __clang__
 #if !__has_builtin(__builtin_rvtt_sfp_load)
 #error TT builtins not found: clang not supported
@@ -195,8 +112,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 
 #endif // __GNUC__
-
-#endif // COMPILE_FOR_EMULE
 
 constexpr unsigned int SFP_LREG_COUNT = 8;
 
