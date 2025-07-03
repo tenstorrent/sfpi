@@ -48,6 +48,9 @@ namespace sfpi {
 #define __builtin_rvtt_sfpmul(va, vb, mod1) sfpu_rvtt_sfpmul(va, vb, mod1)
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) sfpu_rvtt_sfpmad(va, vb, vc, mod1)
 
+#define __builtin_rvtt_sfpmuli(v, imm, mod1) sfpu_rvtt_sfpmuli(v, imm, mod1)
+#define __builtin_rvtt_sfpaddi(v, imm, mod1) sfpu_rvtt_sfpaddi(v, imm, mod1)
+
 #define __builtin_rvtt_sfpexexp(src, mod1) sfpu_rvtt_sfpexexp(src, mod1)
 #define __builtin_rvtt_sfpexman(src, mod1) sfpu_rvtt_sfpexman(src, mod1)
 
