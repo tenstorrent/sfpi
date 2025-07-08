@@ -37,7 +37,7 @@ contain the submodule source code. To obtain the full sources:
 ### Building
 1) Clone the sfpi repo, & initialize submodules:
 ```
-  git clone git@github.com:tenstorrent-metal/sfpi.git
+  git clone git@github.com:tenstorrent/sfpi.git
   git submodule update --init --recursive
 ```
 
