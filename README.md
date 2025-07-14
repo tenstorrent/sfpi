@@ -20,6 +20,10 @@ numbering. The major version /does not/ indicate API breaking
 changes. It will be incremented when updating the compiler to a new
 upstream version. (There may be other reasons to increment.)
 
+**For any issues with this software please file an issue at
+`https://github.com/tenstorrent/tt-metal`, and mark it with an `sfpi`
+label.**
+
 ### User Documentation
 
 https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
@@ -33,6 +37,9 @@ contain the submodule source code. To obtain the full sources:
 * Enter the repo: `cd sfpi`
 * Checkout the release using the tag: `git checkout $VERSION`
 * Update the submodules: `git submodule update --init --recursive`
+
+In the binary releases, you may examing `sfpi/README.txt`, which lists
+the submodules, their locations and hashes.
 
 ### Building
 1) Clone the sfpi repo, & initialize submodules:
@@ -65,7 +72,7 @@ contain the submodule source code. To obtain the full sources:
 
   See below about the various `--test` options that may also be used.
 
-3) Build and running the sfpi tests:
+3) Build and running the local sfpi tests:
 
 ```
     ln -s ../tests build
