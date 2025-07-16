@@ -10,7 +10,8 @@
 
 #pragma once
 
-#warning "ckernel_ops.h should not be included, use lltt.h instead"
+#warning "ckernel_ops.h is deprecated, use lltt.h instead"
+#include "../lltt.h"
 
 #if 0
 #define TT_OP(opcode, params) ( (opcode << 24) + params )
