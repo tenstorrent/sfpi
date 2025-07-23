@@ -148,7 +148,9 @@ fi
 
 fails=0
 unresolved=0
+testing=false
 if $test_binutils ; then
+    testing=true
     (set -x; nice make -C $BUILD -j$NCPUS check-binutils)
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
     do
@@ -160,8 +162,9 @@ fi
 
 TARGET_BOARDS='riscv-sim/ riscv-sim/cpu=tt-wh riscv-sim/cpu=tt-bh'
 if $test_gcc ; then
+    testing=true
     test_tt=false
-   (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
+    (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
     for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
 	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
@@ -171,6 +174,7 @@ if $test_gcc ; then
 fi
 
 if $test_tt; then
+    testing=true
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
     for cc in gcc g++
     do
@@ -189,6 +193,6 @@ if [[ $fails != 0 ]] ; then
 elif [[ $unresolved != 0 ]] ; then
     echo "ERROR: $unresolved tests are unresolved, that's bad" >&2
     exit 1
-else
+elif $testing ; then
     echo "Tests passed. Yay!"
 fi
