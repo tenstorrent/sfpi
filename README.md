@@ -24,6 +24,17 @@ upstream version. (There may be other reasons to increment.)
 `https://github.com/tenstorrent/tt-metal`, and mark it with an `sfpi`
 label.**
 
+If you are reporting an internal compiler (ICE) error when using
+`tt-metal`, please follow this procedure to obtain a reproducible test
+case:
+
+* Enable map file generation: `export TT_METAL_KERNEL_MAP=1`
+* Run your program or test, capturing the output: `pytest ... |& tee bug.log`
+* Copy the log file: `cp bug.log ~/.cache/tt-metal-cache`
+* Create a tarball of `tt-metal-cache`: `tar cf bug.tar -C ~/.cache tt-metal-cache`
+* Attach that tarball to your bug report.
+* Please describe what the bug is.
+
 ### User Documentation
 
 https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
