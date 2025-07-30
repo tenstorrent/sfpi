@@ -1,5 +1,1 @@
 # there are no fails with stock binutils 2.39
-
-# trying to read outside of a section.
-multilibs: riscv-sim/*
-FAIL: binutils-all/riscv/unknown
