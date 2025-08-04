@@ -57,7 +57,7 @@ elif test "$tt_version" ; then
     :
 elif $tt_built ; then
     # tt-versioning
-    tt_version=$(git describe --tags --match 'v*.*.*')
+    tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude 'v*-*')
     tt_version="${tt_version#v}"
     tagged_head=true
     if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
@@ -196,3 +196,4 @@ elif [[ $unresolved != 0 ]] ; then
 elif $testing ; then
     echo "Tests passed. Yay!"
 fi
+echo "INFO: Version: $tt_version"
