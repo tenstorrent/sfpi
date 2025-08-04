@@ -56,5 +56,7 @@ format Directory Branch Tag-Ref Hash Git-Repo
 get-hash .
 for submodule in $(git config --file .gitmodules --get-regexp "\.path$" | cut -d' ' -f2)
 do
-    get-hash ./$submodule
+    if [[ -d $submodule ]] ; then
+	get-hash ./$submodule
+    fi
 done
