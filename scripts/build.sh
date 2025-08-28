@@ -147,7 +147,8 @@ if $sim ; then
 fi
 
 fails=0
-unresolved=0
+unresolveds=0
+errors=0
 testing=false
 if $test_binutils ; then
     testing=true
@@ -155,8 +156,9 @@ if $test_binutils ; then
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
     do
 	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL' $BUILD/$(basename $sum) || true)))
-	unresolved=$((unresolved + $(grep -c '^UNRESOLVED' $BUILD/$(basename $sum) || true)))
+	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$(basename $sum) || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$(basename $sum) || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$(basename $sum) || true)))
     done
 fi
 
@@ -168,8 +170,9 @@ if $test_gcc ; then
     for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
 	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL' $BUILD/$(basename $sum) || true)))
-	unresolved=$((unresolved + $(grep -c '^UNRESOLVED' $BUILD/$(basename $sum) || true)))
+	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$(basename $sum) || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$(basename $sum) || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$(basename $sum) || true)))
     done
 fi
 
@@ -179,21 +182,30 @@ if $test_tt; then
     for cc in gcc g++
     do
 	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $BUILD)
-	fails=$((fails + $(grep -c '^FAIL' $BUILD/$cc.sum || true)))
-	unresolved=$((unresolved + $(grep -c '^UNRESOLVED' $BUILD/$cc.sum || true)))
+	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$cc.sum || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$cc.sum || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$cc.sum || true)))
     done
 fi
 
-if [[ $fails != 0 ]] ; then
-    echo "ERROR: $fails tests failed" >&2
-    if [[ $unresolved != 0 ]] ; then
-	echo "ERROR: $unresolved tests are unresolved" >&2
+echo "INFO: Version: $tt_version"
+
+if $testing ; then
+    ok=true
+    if [[ $errors != 0 ]] ; then
+	echo "ERROR: $errors tests are borked" >&2
+	ok=false
     fi
-    exit 1
-elif [[ $unresolved != 0 ]] ; then
-    echo "ERROR: $unresolved tests are unresolved, that's bad" >&2
-    exit 1
-elif $testing ; then
+    if [[ $unresolveds != 0 ]] ; then
+	echo "ERROR: $unresolveds tests are unresolved" >&2
+	ok=false
+    fi
+    if [[ $fails != 0 ]] ; then
+	echo "ERROR: $fails tests failed" >&2
+	ok=false
+    fi
+    if ! $ok; then
+	exit 1
+    fi
     echo "Tests passed. Yay!"
 fi
-echo "INFO: Version: $tt_version"
