@@ -52,7 +52,7 @@ tar cf - include | tar xf - -C $BUILD/sfpi
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
 
-NAME=sfpi-$(uname -m)_$(uname -s)_${tt_version}
+NAME=sfpi_${tt_version}_$(uname -m)
 
 # whether we can build a particular package type
 mkdeb=true
