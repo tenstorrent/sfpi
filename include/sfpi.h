@@ -119,26 +119,14 @@
 
 #include <type_traits>
 
-#if __riscv_tt_wormhole
-#define ARCH_WORMHOLE 1
-#endif
-#if __riscv_tt_blackhole
-#define ARCH_BLACKHOLE 1
-#endif
-
-#if defined(ARCH_WORMHOLE) + defined(ARCH_BLACKHOLE) != 1
-#error "Exactly one SFPI architecture must be selected"
-#include "stop now, no good will come"
-#endif
-
 #if !__has_builtin(__builtin_rvtt_synth_opcode)
 #error "Compiler does not support TT builtins"
 #include "stop now, no good will come"
 #endif
 
-#if defined(ARCH_WORMHOLE)
+#if __riscv_tt_wormhole
 #include <wormhole/sfpi_hw.h>
-#elif defined(ARCH_BLACKHOLE)
+#elif __riscv_tt_blackhole
 #include <blackhole/sfpi_hw.h>
 #endif
 
@@ -535,7 +523,7 @@ public:
     sfpi_inline vInt operator<<=(unsigned amt) { *this = *this << amt; return *this; }
     sfpi_inline vInt operator<<(vInt amt) const;
     sfpi_inline vInt operator<<=(vInt amt) { *this = *this << amt; return *this; }
-#if defined(ARCH_BLACKHOLE)
+#if __riscv_tt_blackhole
     // arithmetic shifts added in blackhole
     sfpi_inline vInt operator>>(unsigned amt) const;
     sfpi_inline vInt operator>>=(unsigned amt) { *this = *this >> amt; return *this; }
@@ -1055,7 +1043,7 @@ sfpi_inline __vCond __vConstIntBase::operator<=(const vInt x) const { return __v
 sfpi_inline __vCond __vConstIntBase::operator>(const vInt x) const { return __vCond(__vCond::__vCondGT, __vIntBase(*this), x, 0); }
 sfpi_inline __vCond __vConstIntBase::operator>=(const vInt x) const { return __vCond(__vCond::__vCondGTE, __vIntBase(*this), x, 0); }
 
-#if !defined(ARCH_BLACKHOLE)
+#if __riscv_tt_wormhole
 vInt vInt::operator<<(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), amt);
 }
@@ -1227,10 +1215,10 @@ constexpr __LReg l_reg;
 }
 
 //////////////////////////////////////////////////////////////////////////////
-#if defined(ARCH_WORMHOLE)
+#if __riscv_tt_wormhole
 #include <wormhole/sfpi_imp.h>
 #include <wormhole/sfpi_lib.h>
-#elif defined(ARCH_BLACKHOLE)
+#elif __riscv_tt_blackhole
 #include <blackhole/sfpi_imp.h>
 #include <blackhole/sfpi_lib.h>
 #endif

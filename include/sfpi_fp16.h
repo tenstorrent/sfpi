@@ -12,9 +12,9 @@
 
 #include <cstdint>
 
-#if defined(ARCH_WORMHOLE)
+#if __riscv_tt_wormhole
 #include <wormhole/sfpi_hw.h>
-#elif defined(ARCH_BLACKHOLE)
+#elif __riscv_tt_blackhole
 #include <blackhole/sfpi_hw.h>
 #endif
 
