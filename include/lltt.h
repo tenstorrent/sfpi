@@ -36,11 +36,12 @@ record(unsigned start, unsigned length) {
   return TT_OP_REPLAY(start, length, 0, 0);
 }
 
+template<bool Static=false>
 [[gnu::always_inline]] inline void insn(uint32_t insn) {
-  __builtin_rvtt_ttinsn((void *)&instrn_buffer[0], insn);
+  __builtin_rvtt_ttinsn(&instrn_buffer[0], Static, insn);
 }
 
 // For use by ckernel_ops.h expansion
-#define LLTT_INSN(ENCODING) ::lltt::insn(ENCODING)
+#define LLTT_INSN(STATIC, ENCODING) ::lltt::insn<STATIC>(ENCODING)
 
 } // namespace 
