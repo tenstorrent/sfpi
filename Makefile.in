@@ -1,5 +1,5 @@
 # WARNING: This was originally the generic riscv toolchain makefile,
-# the bits that do not build a tenstorrent riscv32-elf toolchain and
+# the bits that do not build a tenstorrent riscv-elf toolchain and
 # qemu are likely bitrotted.
 
 srcdir := @abs_top_srcdir@
@@ -10,13 +10,8 @@ test_infradir := $(builddir)/test-infra
 GCC_SRCDIR := @with_gcc_src@
 BINUTILS_SRCDIR := @with_binutils_src@
 NEWLIB_SRCDIR := @with_newlib_src@
-GLIBC_SRCDIR := @with_glibc_src@
-MUSL_SRCDIR := @with_musl_src@
-LINUX_HEADERS_SRCDIR := @with_linux_headers_src@
 GDB_SRCDIR := @with_gdb_src@
 QEMU_SRCDIR := @with_qemu_src@
-SPIKE_SRCDIR := @with_spike_src@
-PK_SRCDIR := @with_pk_src@
 MFC := @with_mfc@
 SIM ?= @WITH_SIM@
 
@@ -56,20 +51,11 @@ else
 NEWLIB_MULTILIB_NAMES := $(shell echo "@newlib_multilib_names@ $(MULTILIB_GEN)" | $(SED) 's/ /\n/g'| $(AWK) '{split($$0,a,"-"); printf "%s-%s ", a[1],a[2]}')
 GCC_MULTILIB_FLAGS := $(MULTILIB_FLAGS) --with-multilib-generator="$(MULTILIB_GEN)"
 endif
-GLIBC_MULTILIB_NAMES := @glibc_multilib_names@
+
 # really need a better place to put --without-isl
 GCC_CHECKING_FLAGS := @gcc_checking@ --without-isl
 IDENT_OPTIONS := @ident_options@
-
-XLEN := $(shell echo $(WITH_ARCH) | tr A-Z a-z | sed 's/.*rv\([0-9]*\).*/\1/')
-ifneq ($(XLEN),32)
-	XLEN := 64
-endif
-
-make_tuple = riscv$(1)-$(MFC)-$(2)
-LINUX_TUPLE  ?= $(call make_tuple,$(XLEN),linux-gnu)
-NEWLIB_TUPLE ?= $(call make_tuple,$(XLEN),elf)
-MUSL_TUPLE ?= $(call make_tuple,$(XLEN),linux-musl)
+NEWLIB_TUPLE ?= riscv-$(MFC)-elf
 
 CFLAGS_FOR_TARGET := $(CFLAGS_FOR_TARGET_EXTRA) @target_cflags@ @cmodel@
 CXXFLAGS_FOR_TARGET := $(CXXFLAGS_FOR_TARGET_EXTRA) @target_cxxflags@ @cmodel@
@@ -80,88 +66,56 @@ BINUTILS_NATIVE_FLAGS := $(BINUTILS_NATIVE_FLAGS_EXTRA)
 GDB_TARGET_FLAGS := --without-expat --without-python $(GDB_TARGET_FLAGS_EXTRA)
 GDB_NATIVE_FLAGS := $(GDB_NATIVE_FLAGS_EXTRA)
 
-GLIBC_TARGET_FLAGS := $(GLIBC_TARGET_FLAGS_EXTRA)
-GLIBC_CC_FOR_TARGET ?= $(LINUX_TUPLE)-gcc
-GLIBC_CXX_FOR_TARGET ?= $(LINUX_TUPLE)-g++
-GLIBC_TARGET_BOARDS ?= $(shell echo "$(GLIBC_MULTILIB_NAMES)" | sed 's!\([_a-z0-9]*\)-\([_a-z0-9]*\)!riscv-sim/-march=\1/-mabi=\2/@cmodel@!g')
-
 NEWLIB_CC_FOR_TARGET ?= $(NEWLIB_TUPLE)-gcc
 NEWLIB_CXX_FOR_TARGET ?= $(NEWLIB_TUPLE)-g++
 NEWLIB_TARGET_BOARDS ?= $(shell echo "$(NEWLIB_MULTILIB_NAMES)" | sed 's!\([_a-z0-9]*\)-\([_a-z0-9]*\)!riscv-sim/-march=\1/-mabi=\2/@cmodel@!g')
 NEWLIB_NANO_TARGET_BOARDS ?= $(shell echo "$(NEWLIB_MULTILIB_NAMES)" | sed 's!\([_a-z0-9]*\)-\([_a-z0-9]*\)!riscv-sim-nano/-march=\1/-mabi=\2/@cmodel@!g')
 
-MUSL_TARGET_FLAGS := $(MUSL_TARGET_FLAGS_EXTRA)
-MUSL_CC_FOR_TARGET ?= $(MUSL_TUPLE)-gcc
-MUSL_CXX_FOR_TARGET ?= $(MUSL_TUPLE)-g++
-
 CONFIGURE_HOST   = @configure_host@
 
 all: @default_target@
 newlib: stamps/build-gcc-newlib-stage2
-linux: stamps/build-gcc-linux-stage2
-ifneq (,$(findstring riscv32,$(MUSL_TUPLE)))
-.PHONY: musl
-musl:
-	@echo "musl only supports 64bit builds." && exit 1
-else
-musl: stamps/build-gcc-musl-stage2
-endif
 ifeq (@enable_gdb@,--enable-gdb)
 ifneq ($(GDB_SRCDIR),$(BINUTILS_SRCDIR))
 newlib: stamps/build-gdb-newlib
-linux: stamps/build-gdb-linux
 endif
 endif
-linux-native: stamps/build-gcc-linux-native
 
 .PHONY: build-binutils build-gdb build-gcc1 build-libc build-gcc2 build-qemu
 build-binutils: stamps/build-binutils-@default_target@
 build-gdb: stamps/build-gdb-@default_target@
 build-gcc%: stamps/build-gcc-@default_target@-stage%
-ifeq (@default_target@,linux)
-build-libc: $(addprefix stamps/build-glibc-linux-,$(GLIBC_MULTILIB_NAMES))
-else
 build-libc: stamps/build-newlib stamps/build-newlib-nano \
 	stamps/merge-newlib-nano
-endif
 build-qemu: stamps/build-qemu
 
 REGRESSION_TEST_LIST = gcc
 
 .PHONY: check
 check: check-@default_target@
-.PHONY: check-linux check-newlib
-check-linux: $(patsubst %,check-%-linux,$(REGRESSION_TEST_LIST))
 check-newlib: $(patsubst %,check-%-newlib,$(REGRESSION_TEST_LIST))
 check-newlib-nano: $(patsubst %,check-%-newlib-nano,$(REGRESSION_TEST_LIST))
 .PHONY: check-gcc check-gcc-linux check-gcc-newlib check-gcc-newlib-nano
 check-gcc: check-gcc-@default_target@
-check-gcc-linux: stamps/check-gcc-linux
 check-gcc-newlib: stamps/check-gcc-newlib
 check-gcc-newlib-nano: stamps/check-gcc-newlib-nano
-.PHONY: check-dhrystone check-dhrystone-linux check-dhrystone-newlib
-check-dhrystone: check-dhrystone-@default_target@
 .PHONY: check-binutils check-binutils-linux check-binutils-newlib
 check-binutils: check-binutils-@default_target@
-check-binutils-linux: stamps/check-binutils-linux
 check-binutils-newlib: stamps/check-binutils-newlib
 check-binutils-newlib-nano: stamps/check-binutils-newlib-nano
-.PHONY: check-gdb check-gdb-linux check-gdb-newlib
+.PHONY: check-gdb check-gdb-newlib
 check-gdb: check-gdb-@default_target@
-check-gdb-linux: stamps/check-gdb-linux
 check-gdb-newlib: stamps/check-gdb-newlib
 check-gdb-newlib-nano: stamps/check-gdb-newlib-nano
 
 .PHONY: report
 report: report-@default_target@
-.PHONY: report-linux report-newlib report-newlib-nano
+.PHONY: report-newlib report-newlib-nano
 report-linux: $(patsubst %,report-%-linux,$(REGRESSION_TEST_LIST))
 report-newlib: $(patsubst %,report-%-newlib,$(REGRESSION_TEST_LIST))
 report-newlib-nano: $(patsubst %,report-%-newlib-nano,$(REGRESSION_TEST_LIST))
 .PHONY: report-gcc
 report-gcc: report-gcc-@default_target@
-.PHONY: report-dhrystone
-report-dhrystone: report-dhrystone-@default_target@
 .PHONY: report-binutils
 report-binutils: report-binutils-@default_target@
 .PHONY: report-gdb
@@ -209,15 +163,6 @@ stamps/check-write-permission:
 		 "another path, or use 'sudo make' if you *REALLY* want to" \
 		 "install into '$(INSTALL_DIR)'" && exit 1)
 	rm -r $(INSTALL_DIR)/.test
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-linux-headers:
-	mkdir -p $(SYSROOT)/usr/
-ifdef LINUX_HEADERS_SRCDIR
-	cp -a $(LINUX_HEADERS_SRCDIR) $(SYSROOT)/usr/
-else
-	cp -a $(srcdir)/linux-headers/include $(SYSROOT)/usr/
-endif
 	mkdir -p $(dir $@) && touch $@
 
 #
@@ -276,234 +221,6 @@ $(srcdir)/%/.git:
 	cd $(srcdir) && \
 	flock `git rev-parse --git-dir`/config git submodule init $(dir $@) && \
 	flock `git rev-parse --git-dir`/config git submodule update $(dir $@)
-
-#
-# GLIBC
-#
-
-stamps/build-binutils-linux: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-write-permission
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-# CC_FOR_TARGET is required for the ld testsuite.
-	cd $(notdir $@) && CC_FOR_TARGET=$(GLIBC_CC_FOR_TARGET) $</configure \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		$(MULTILIB_FLAGS) \
-		@with_guile@ \
-		--disable-werror \
-		--disable-nls \
-		$(BINUTILS_TARGET_FLAGS) \
-		--disable-gdb \
-		--disable-sim \
-		--disable-libdecnumber \
-		--disable-readline \
-		$(IDENT_OPTIONS) \
-		$(WITH_ISA_SPEC)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gdb-linux: $(GDB_SRCDIR) $(GDB_SRC_GIT)
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-# CC_FOR_TARGET is required for the ld testsuite.
-	cd $(notdir $@) && CC_FOR_TARGET=$(GLIBC_CC_FOR_TARGET) $</configure \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		$(MULTILIB_FLAGS) \
-		@with_guile@ \
-		--disable-werror \
-		--disable-nls \
-		$(GDB_TARGET_FLAGS) \
-		--enable-gdb \
-		--disable-gas \
-		--disable-binutils \
-		--disable-ld \
-		--disable-gold \
-		--disable-gprof
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-glibc-linux-headers: $(GLIBC_SRCDIR) $(GLIBC_SRC_GIT) stamps/build-gcc-linux-stage1
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && CC="$(GLIBC_CC_FOR_TARGET)" $</configure \
-		--host=$(LINUX_TUPLE) \
-		--prefix=$(SYSROOT)/usr \
-		--enable-shared \
-		--with-headers=$(LINUX_HEADERS_SRCDIR) \
-		--disable-multilib \
-		--enable-kernel=3.0.0
-	$(MAKE) -C $(notdir $@) install-headers
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-glibc-linux-%: $(GLIBC_SRCDIR) $(GLIBC_SRC_GIT) stamps/build-gcc-linux-stage1
-ifeq ($(MULTILIB_FLAGS),--enable-multilib)
-	$(eval $@_ARCH := $(word 4,$(subst -, ,$@)))
-	$(eval $@_ABI := $(word 5,$(subst -, ,$@)))
-else
-	$(eval $@_ARCH := )
-	$(eval $@_ABI := )
-endif
-	$(eval $@_LIBDIRSUFFIX := $(if $($@_ABI),$(shell echo $($@_ARCH) | sed 's/.*rv\([0-9]*\).*/\1/')/$($@_ABI),))
-	$(eval $@_XLEN := $(if $($@_ABI),$(shell echo $($@_ARCH) | sed 's/.*rv\([0-9]*\).*/\1/'),$(XLEN)))
-	$(eval $@_CFLAGS := $(if $($@_ABI),-march=$($@_ARCH) -mabi=$($@_ABI),))
-	$(eval $@_LIBDIROPTS := $(if $@_LIBDIRSUFFIX,--libdir=/usr/lib$($@_LIBDIRSUFFIX) libc_cv_slibdir=/lib$($@_LIBDIRSUFFIX) libc_cv_rtlddir=/lib,))
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && \
-		CC="$(GLIBC_CC_FOR_TARGET) $($@_CFLAGS)" \
-		CXX="this-is-not-the-compiler-youre-looking-for" \
-		CFLAGS="$(CFLAGS_FOR_TARGET) -g -O2 $($@_CFLAGS)" \
-		CXXFLAGS="$(CXXFLAGS_FOR_TARGET) -g -O2 $($@_CFLAGS)" \
-		ASFLAGS="$(ASFLAGS_FOR_TARGET) $($@_CFLAGS)" \
-		$</configure \
-		--host=$(call make_tuple,$($@_XLEN),linux-gnu) \
-		--prefix=/usr \
-		--disable-werror \
-		--enable-shared \
-		--enable-obsolete-rpc \
-		--with-headers=$(LINUX_HEADERS_SRCDIR) \
-		$(MULTILIB_FLAGS) \
-		--enable-kernel=3.0.0 \
-		$(GLIBC_TARGET_FLAGS) \
-		$($@_LIBDIROPTS)
-	$(MAKE) -C $(notdir $@)
-	+flock $(SYSROOT)/.lock $(MAKE) -C $(notdir $@) install install_root=$(SYSROOT)
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gcc-linux-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils-linux \
-                               stamps/build-linux-headers
-	if test -f $</contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" = "true"; then cd $< && ./contrib/download_prerequisites; fi
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		--with-newlib \
-		--without-headers \
-		--disable-shared \
-		--disable-threads \
-		@with_system_zlib@ \
-		--enable-tls \
-		--enable-languages=c \
-		--disable-libatomic \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-libquadmath \
-		--disable-libgomp \
-		--disable-nls \
-		--disable-bootstrap \
-		--src=$(gccsrcdir) \
-		$(GCC_CHECKING_FLAGS) \
-		$(IDENT_OPTIONS) \
-		$(MULTILIB_FLAGS) \
-		$(WITH_ABI) \
-		$(WITH_ARCH) \
-		$(WITH_TUNE) \
-		$(WITH_ISA_SPEC) \
-		CFLAGS_FOR_TARGET="-O2 $(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="-O2 $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@) inhibit-libc=true all-gcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true install-gcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true all-target-libgcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true install-target-libgcc
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gcc-linux-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) $(addprefix stamps/build-glibc-linux-,$(GLIBC_MULTILIB_NAMES)) \
-                               stamps/build-glibc-linux-headers
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		--with-pkgversion="$(GCCPKGVER)" \
-		@with_system_zlib@ \
-		--enable-shared \
-		--enable-tls \
-		--enable-languages=c,c++,fortran \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-libquadmath \
-		$(ENABLE_LIBSANITIZER) \
-		--disable-nls \
-		--disable-bootstrap \
-		--src=$(gccsrcdir) \
-		$(GCC_CHECKING_FLAGS) \
-		$(IDENT_OPTIONS) \
-		$(MULTILIB_FLAGS) \
-		$(WITH_ABI) \
-		$(WITH_ARCH) \
-		$(WITH_TUNE) \
-		$(WITH_ISA_SPEC) \
-		CFLAGS_FOR_TARGET="-O2 $(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="-O2 $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	cp -a $(INSTALL_DIR)/$(LINUX_TUPLE)/lib* $(SYSROOT)
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-binutils-linux-native: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/build-gcc-linux-stage2 stamps/check-write-permission
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
-		--host=$(LINUX_TUPLE) \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR)/native \
-		$(MULTILIB_FLAGS) \
-		@with_guile@ \
-		--disable-werror \
-		--disable-nls \
-		$(BINUTILS_NATIVE_FLAGS) \
-		--disable-gdb \
-		--disable-sim \
-		--disable-libdecnumber \
-		--disable-readline \
-		$(WITH_ISA_SPEC)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gcc-linux-native: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-gcc-linux-stage2 stamps/build-binutils-linux-native
-	if test -f $</contrib/download_prerequisites; then cd $< && ./contrib/download_prerequisites; fi
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
-		--host=$(LINUX_TUPLE) \
-		--target=$(LINUX_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR)/native \
-		--without-system-zlib \
-		--enable-shared \
-		--enable-tls \
-		--enable-languages=c,c++,fortran \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-libquadmath \
-		--disable-nls \
-		--disable-bootstrap \
-                --with-native-system-header-dir=$(INSTALL_DIR)/native/include \
-		$(GCC_CHECKING_FLAGS) \
-		$(IDENT_OPTIONS) \
-		$(MULTILIB_FLAGS) \
-		$(WITH_ABI) \
-		$(WITH_ARCH) \
-		$(WITH_TUNE) \
-		$(WITH_ISA_SPEC) \
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	cp -a $(INSTALL_DIR)/$(LINUX_TUPLE)/lib* $(SYSROOT)
-	mkdir -p $(dir $@) && touch $@
 
 #
 # NEWLIB
@@ -688,140 +405,6 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		CXXFLAGS_FOR_TARGET="-Os $(CXXFLAGS_FOR_TARGET)"
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-#
-# MUSL
-#
-
-stamps/build-binutils-musl: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-write-permission
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-# CC_FOR_TARGET is required for the ld testsuite.
-	cd $(notdir $@) && CC_FOR_TARGET=$(MUSL_CC_FOR_TARGET) $</configure \
-		--target=$(MUSL_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		$(MULTILIB_FLAGS) \
-		@with_guile@ \
-		--disable-werror \
-		--disable-nls \
-		$(BINUTILS_TARGET_FLAGS) \
-		--disable-gdb \
-		--disable-sim \
-		--disable-libdecnumber \
-		--disable-readline \
-		$(IDENT_OPTIONS) \
-		$(WITH_ISA_SPEC)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gcc-musl-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils-musl \
-                               stamps/build-linux-headers
-	if test -f $</contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" = "true"; then cd $< && ./contrib/download_prerequisites; fi
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
-		--target=$(MUSL_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--without-headers \
-		--disable-shared \
-		--disable-threads \
-		@with_system_zlib@ \
-		--enable-tls \
-		--enable-languages=c \
-		--disable-libatomic \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-libquadmath \
-		--disable-libgomp \
-		--disable-nls \
-		--disable-bootstrap \
-		--src=$(gccsrcdir) \
-		$(GCC_CHECKING_FLAGS) \
-		$(IDENT_OPTIONS) \
-		--disable-multilib \
-		$(WITH_ABI) \
-		$(WITH_ARCH) \
-		$(WITH_TUNE) \
-		$(WITH_ISA_SPEC) \
-		CFLAGS_FOR_TARGET="-O2 $(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="-O2 $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@) inhibit-libc=true all-gcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true install-gcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true all-target-libgcc
-	$(MAKE) -C $(notdir $@) inhibit-libc=true install-target-libgcc
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-musl-linux-headers: $(MUSL_SRCDIR) stamps/build-gcc-musl-stage1
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && CC="$(MUSL_CC_FOR_TARGET)" $</configure \
-		--host=$(MUSL_TUPLE) \
-		--prefix=$(SYSROOT)/usr \
-		--enable-shared \
-		--with-headers=$(LINUX_HEADERS_SRCDIR) \
-		--disable-multilib \
-		--enable-kernel=3.0.0
-	$(MAKE) -C $(notdir $@) install-headers
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-musl-linux: $(MUSL_SRCDIR) stamps/build-gcc-musl-stage1
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && \
-		CC="$(MUSL_CC_FOR_TARGET) $($@_CFLAGS)" \
-		CXX="$(MUSL_CXX_FOR_TARGET) $($@_CFLAGS)" \
-		CFLAGS="$(CFLAGS_FOR_TARGET) -g -O2 $($@_CFLAGS)" \
-		CXXFLAGS="$(CXXFLAGS_FOR_TARGET) -g -O2 $($@_CFLAGS)" \
-		ASFLAGS="$(ASFLAGS_FOR_TARGET) $($@_CFLAGS)" \
-		$</configure \
-		--host=$(MUSL_TUPLE) \
-		--prefix=$(SYSROOT) \
-		--disable-werror \
-		--enable-shared \
-		$(MUSL_TARGET_FLAGS)
-	$(MAKE) -C $(notdir $@)
-	+flock $(SYSROOT)/.lock $(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
-
-stamps/build-gcc-musl-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-musl-linux \
-                               stamps/build-musl-linux-headers
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	# Disable libsanitizer for now
-	# https://github.com/google/sanitizers/issues/1080
-	cd $(notdir $@) && $</configure \
-		--target=$(MUSL_TUPLE) \
-		$(CONFIGURE_HOST) \
-		--prefix=$(INSTALL_DIR) \
-		--with-sysroot=$(SYSROOT) \
-		@with_system_zlib@ \
-		--enable-shared \
-		--enable-tls \
-		--enable-languages=c,c++ \
-		--disable-libmudflap \
-		--disable-libssp \
-		--disable-libquadmath \
-		--disable-libsanitizer \
-		--disable-nls \
-		--disable-bootstrap \
-		--src=$(gccsrcdir) \
-		$(GCC_CHECKING_FLAGS) \
-		$(IDENT_OPTIONS) \
-		--disable-multilib \
-		$(WITH_ABI) \
-		$(WITH_ARCH) \
-		$(WITH_TUNE) \
-		$(WITH_ISA_SPEC) \
-		CFLAGS_FOR_TARGET="-O2 $(CFLAGS_FOR_TARGET)" \
-		CXXFLAGS_FOR_TARGET="-O2 $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	cp -a $(INSTALL_DIR)/$(MUSL_TUPLE)/lib* $(SYSROOT)
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-spike: $(SPIKE_SRCDIR) $(SPIKE_SRC_GIT)

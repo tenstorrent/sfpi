@@ -1385,7 +1385,7 @@ Optional Packages:
   --with-isa-spec=2.2     Set the default ISA spec version, default to 2.2,
                           available options: 2.2, 20190608, 20191213
   --with-sim=qemu         Sets the base RISC-V Simulator, defaults to qemu
-  --with-mfc=unknown      Sets the target tripple manufacturer
+  --with-mfc=unknown      Sets the target triple manufacturer
   --with-multilib-generator
                           Multi-libs configuration string, only supported for
                           bare-metal/elf toolchain, this option implied
