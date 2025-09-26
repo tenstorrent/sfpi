@@ -1,5 +1,5 @@
 # WARNING: This was originally the generic riscv toolchain configure
-# script, the bits that do not build a tenstorrent riscv32-elf
+# script, the bits that do not build a tenstorrent riscv-elf
 # toolchain and qemu are likely bitrotted.
 
 AC_INIT([riscv-toolchain],[1.0])
@@ -97,7 +97,7 @@ AC_SUBST(WITH_SIM, $with_sim)
 
 AC_ARG_WITH(mfc,
 	[AS_HELP_STRING([--with-mfc=unknown],
-		[Sets the target tripple manufacturer])],
+		[Sets the target triple manufacturer])],
 	[],
 	[with_mfc=unknown]
 	)
