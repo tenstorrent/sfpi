@@ -52,13 +52,15 @@ fi
 
 # figure version, now we know tt_built
 if test -r $BUILD/version ; then
-     tt_version=$(cat $BUILD/version)
-elif test "$tt_version" ; then
-    :
-elif $tt_built ; then
+    tt_version=$(cat $BUILD/version)
+elif [[ "$tt_version" == "" ]] ; then
     # tt-versioning
-    tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude 'v*-*')
-    tt_version="${tt_version#v}"
+    tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
+		     --exclude 'v*-*' 2>/dev/null \
+		     | sed 's/^v//' || true)
+    if ! [[ $tt_version ]] ; then
+	tt_version=0
+    fi
     tagged_head=true
     if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
 	tagged_head=false
@@ -71,7 +73,8 @@ elif $tt_built ; then
 	    # Not tagged, figure out a branch name to add
 	    origin=
 	    refs=$(git show -s --pretty=%D HEAD 2>/dev/null \
-		       | sed -e 's/^HEAD -> //' -e 's/ //g' -e 's/,/ /g')
+		       | sed -e 's/^HEAD -> //' -e 's/ //g' -e 's/,/ /g' \
+		    || true)
 	    for ref in $refs
 	    do
 		case $ref in
@@ -94,6 +97,13 @@ elif $tt_built ; then
     if test -n "$branch" ; then
 	# just use the final component of a branch name
 	tt_version="${tt_version%-*-g*}-${branch##*/}"
+    fi
+
+    url=$(git config --get remote.origin.url \
+	      | sed -e 's/[^:]*://' -e 's+//[^/]*/++' \
+		    -e 's+/[^/]*\(\.git\)\?$++')
+    if ! $tt_built || [[ $url != 'tenstorrent' ]] ; then
+	tt_version="$url-$tt_version"
     fi
 fi
 echo "INFO: Version: $tt_version"
