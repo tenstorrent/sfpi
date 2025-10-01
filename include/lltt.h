@@ -15,7 +15,13 @@
 #include "stop now, no good will come"
 #endif
 
+#define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
+
+extern volatile uint32_t __instrn_buffer[];
+
 namespace lltt {
+constexpr inline volatile uint32_t *[[gnu::rvtt_reg_ptr]] __instrn_buffer = ::__instrn_buffer;
 
 enum ExecBool : bool {NoExec, Exec};
 
