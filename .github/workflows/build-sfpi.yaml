@@ -19,7 +19,7 @@ on:
       box:
         required: true
         description: Container to run on
-        default: none
+        default: Alma
         type: choice
         options:
           - none
