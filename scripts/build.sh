@@ -191,7 +191,7 @@ if $test_tt; then
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
     for cc in gcc g++
     do
-	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $BUILD)
+	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.{sum,log} $BUILD)
 	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$cc.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$cc.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$cc.sum || true)))
