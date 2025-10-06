@@ -17,6 +17,8 @@
 
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
   __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
+#define __builtin_rvtt_ttinsn(STATIC, ENCODING) \
+  __builtin_rvtt_ttinsn(lltt::__instrn_buffer, STATIC, ENCODING)
 
 extern volatile uint32_t __instrn_buffer[];
 
