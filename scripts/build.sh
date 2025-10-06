@@ -23,7 +23,9 @@ BUILD=build
 if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
     tt_built=true
 fi
-multilib='--with-multilib-generator=rv32im_xttwh-ilp32-- rv32im_xttbh-ilp32--'
+arch=rv32im_xttwhraw
+abi=ilp32
+multilib='rv32im_xttwhraw-ilp32--xttwh rv32im_zaamo_zba_zbb_zaamo-ilp32--xttbh'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--checking) gcc_checking=all ;;
@@ -32,7 +34,6 @@ while [ "$#" -ne 0 ] ; do
 	--dejagnu) dejagnu=true ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
-	--monolib) multilib=--disable-multilib ;;
 	--serial) NCPUS=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
 	--test-binutils) dejagnu=true test_binutils=true ;;
@@ -138,8 +139,9 @@ if ! test -e $BUILD/Makefile ; then
 		  --with-mfc=tt \
 		  --enable-gcc-checking="$gcc_checking" \
 		  --without-system-zlib --without-zstd \
-		  "$multilib" \
-		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
+		  --with-multilib-generator="$multilib" \
+		  --with-arch="$arch" --with-abi="$abi" \
+		  $enable_gdb)
 fi
 
 # build the toolchain
@@ -172,7 +174,7 @@ if $test_binutils ; then
     done
 fi
 
-TARGET_BOARDS='riscv-sim/ riscv-sim/cpu=tt-wh riscv-sim/cpu=tt-bh'
+TARGET_BOARDS='riscv-sim/'
 if $test_gcc ; then
     testing=true
     test_tt=false
