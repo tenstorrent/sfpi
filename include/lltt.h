@@ -8,12 +8,9 @@
 
 #pragma once
 
-#include <cstdint>
+#if __riscv_xtttensixwh || __riscv_xtttensixbh
 
-#if !__riscv_tt_wormhole && !__riscv_tt_blackhole
-#error "A TT architecture must be selected"
-#include "stop now, no good will come"
-#endif
+#include <cstdint>
 
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
   __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
@@ -42,3 +39,5 @@ replay_insn(unsigned start, unsigned length) {
 }
 
 } // namespace 
+
+#endif
