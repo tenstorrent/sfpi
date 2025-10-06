@@ -12,9 +12,9 @@
 
 #include <cstdint>
 
-#if __riscv_tt_wormhole
+#if __riscv_xtttensixwh
 #include <wormhole/sfpi_hw.h>
-#elif __riscv_tt_blackhole
+#elif __riscv_xtttensixbh
 #include <blackhole/sfpi_hw.h>
 #endif
 
