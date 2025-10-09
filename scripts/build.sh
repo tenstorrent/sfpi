@@ -55,12 +55,16 @@ fi
 if test -r $BUILD/version ; then
     tt_version=$(cat $BUILD/version)
 elif [[ "$tt_version" == "" ]] ; then
-    # tt-versioning
-    tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
-		     --exclude 'v*-*' 2>/dev/null \
-		     | sed 's/^v//' || true)
-    if ! [[ $tt_version ]] ; then
-	tt_version=0
+    # match and exclude are globs, not regexes. This is close enough.
+    if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
+			  --exclude '*-*' 2>/dev/null) ; then
+	# legacy version numbering with a 'v' prefix.
+	tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
+			 --exclude 'v*-*' 2>/dev/null \
+			 | sed 's/^v//' || true)
+	if ! [[ $tt_version ]] ; then
+	    tt_version=0
+	fi
     fi
     tagged_head=true
     if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
@@ -146,7 +150,7 @@ fi
 # build the toolchain
 (set -x; nice make -C $BUILD -j$NCPUS)
 
-# maybe the test infra
+# maybe make the test infra
 if $dejagnu ; then
     (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS)
 fi
@@ -162,15 +166,18 @@ unresolveds=0
 errors=0
 testing=false
 TARGET_BOARDS='riscv-sim/'
+tests=$BUILD/tests
 if $test_binutils ; then
     testing=true
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
+    mkdir -p $tests
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
     do
-	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$(basename $sum) || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$(basename $sum) || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$(basename $sum) || true)))
+	cp ${sum%sum}log $tests
+	(set -x; nice $BIN/local-xfails.py --output $tests --xfails xfails $sum)
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$(basename $sum) || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$(basename $sum) || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$(basename $sum) || true)))
     done
 fi
 
@@ -178,24 +185,27 @@ if $test_gcc ; then
     testing=true
     test_tt=false
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
+    mkdir -p $tests
     for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
-	(set -x; nice $BIN/local-xfails.py --output $BUILD --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$(basename $sum) || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$(basename $sum) || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$(basename $sum) || true)))
+	cp ${sum%sum}log $tests
+	(set -x; nice $BIN/local-xfails.py --output $tests --xfails xfails $sum)
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$(basename $sum) || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$(basename $sum) || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$(basename $sum) || true)))
     done
 fi
 
 if $test_tt; then
     testing=true
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
+    mkdir -p $tests
     for cc in gcc g++
     do
-	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $BUILD)
-	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$cc.sum || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$cc.sum || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$cc.sum || true)))
+	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.{sum,log} $tests
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$cc.sum || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$cc.sum || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$cc.sum || true)))
     done
 fi
 
