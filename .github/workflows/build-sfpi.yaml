@@ -74,12 +74,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}build
-          path: build/sfpi_*_*.*
+          path: build/release/*
           compression-level: 0
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}tests
           path: |
-            build/*.sum
-            build/*.log
+            build/tests/*
