@@ -54,12 +54,16 @@ fi
 if test -r $BUILD/version ; then
     tt_version=$(cat $BUILD/version)
 elif [[ "$tt_version" == "" ]] ; then
-    # tt-versioning
-    tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
-		     --exclude 'v*-*' 2>/dev/null \
-		     | sed 's/^v//' || true)
-    if ! [[ $tt_version ]] ; then
-	tt_version=0
+    # match and exclude are globs, not regexes. This is close enough.
+    if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
+			  --exclude '*-*' 2>/dev/null) ; then
+	# legacy version numbering with a 'v' prefix.
+	tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
+			 --exclude 'v*-*' 2>/dev/null \
+			 | sed 's/^v//' || true)
+	if ! [[ $tt_version ]] ; then
+	    tt_version=0
+	fi
     fi
     tagged_head=true
     if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
@@ -191,7 +195,7 @@ if $test_tt; then
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
     for cc in gcc g++
     do
-	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $BUILD)
+	(set -x; cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.{sum,log} $BUILD)
 	fails=$((fails + $(grep -c '^FAIL:' $BUILD/$cc.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $BUILD/$cc.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $BUILD/$cc.sum || true)))

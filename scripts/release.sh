@@ -52,7 +52,9 @@ tar cf - include | tar xf - -C $BUILD/sfpi
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
 
-NAME=sfpi_${tt_version:-UNKNOWN}_$(uname -m)
+source $BIN/sfpi-version.sh
+
+NAME=sfpi_${tt_version:-UNKNOWN}_${sfpi_arch}_${sfpi_dist}
 
 # whether we can build a particular package type
 mkdeb=true
@@ -98,6 +100,7 @@ do
 	libstdc++.so*) pkgs+=" libstdc++6:libstdc++" ;; # C++ std lib 
 	libtinfo.so*) pkgs+=" libtinfo6:ncurses-libs";;
 	libz.so*) pkgs+=" zlib1g:zlib-ng-compat";;
+	libzstd.so*) pkgs+=" libzstd1:libzstd";;
 	*) echo "WARNING: unknown shared object $so" >&2 ;;
     esac
 done

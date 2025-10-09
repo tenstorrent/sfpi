@@ -80,4 +80,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}tests
-          path: build/*.sum
+          path: |
+            build/*.sum
+            build/*.log
