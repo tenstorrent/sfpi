@@ -25,7 +25,6 @@ if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
 fi
 arch=rv32im
 abi=ilp32
-multilib='rv32im-ilp32--xtttensixwh rv32im_zaamo_zba_zbb_zaamo-ilp32--xtttensixbh'
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--checking) gcc_checking=all ;;
@@ -139,7 +138,7 @@ if ! test -e $BUILD/Makefile ; then
 		  --with-mfc=tt \
 		  --enable-gcc-checking="$gcc_checking" \
 		  --without-system-zlib --without-zstd \
-		  "$multilib" \
+		  --enable-multilib \
 		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
 fi
 
