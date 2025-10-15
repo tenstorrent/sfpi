@@ -105,14 +105,14 @@ AC_SUBST(with_mfc, $with_mfc)
 
 AC_ARG_ENABLE(multilib,
 	[AS_HELP_STRING([--enable-multilib],
-		[build both RV32 and RV64 runtime libraries (only RV64 for musl libc) @<:@--disable-multilib@:>@])],
+		[Enable multilib])],
 	[],
 	[enable_multilib=no]
 	)
 
 AC_ARG_WITH(multilib-generator,
 	[AS_HELP_STRING([--with-multilib-generator],
-		[Multi-libs configuration string, only supported for bare-metal/elf toolchain, this option implied --enable-multilib])],
+		[Multi-libs configuration string, implies --enable-multilib])],
 	[],
 	[with_multilib_generator=no]
 	)

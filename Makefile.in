@@ -292,6 +292,7 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 		--disable-libgomp \
 		--disable-nls \
 		--disable-tm-clone-registry \
+		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
 		$(IDENT_OPTIONS) \
@@ -393,6 +394,7 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		--disable-libgomp \
 		--disable-nls \
 		--disable-tm-clone-registry \
+		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
 		$(IDENT_OPTIONS) \
