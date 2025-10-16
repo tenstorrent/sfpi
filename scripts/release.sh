@@ -52,7 +52,7 @@ fi
 tar cf - include | tar xf - -C $BUILD/sfpi
 
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-    grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
+    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
 eval $($BIN/sfpi-version.sh RELEASE $tt_version)
 
@@ -67,8 +67,8 @@ if ! $txz_only ; then
     # tuples of debian:fedora names
     pkgs=
     for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-		    grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs -n1 ldd | \
-		    sed -e '/:$/d' -e "s/^[ \t]\+//" -e 's/ .*//' | sort -u)
+		    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs ldd | \
+		    sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d | sort -u)
     do
 	case $so in
 	    /*/ld-linux-*.so*) ;; # loader
