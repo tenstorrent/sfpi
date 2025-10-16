@@ -121,8 +121,7 @@ the submodules, their locations and hashes.
 
   A `.txz` tarball will be created, along with `.deb` and/or `.rpm`
   packages, if the necessary packagers are available. (GEM utility FPM
-  is used.) Also a `.md5` checksum file is created. These all have a
-  basename of`sfpi-$(uname -m)_$(uname -s)`. The host binaries therein
+  is used.) Also a `.md5` checksum file is created. The host binaries therein
   are stripped. The package dependencies are determined by looking at
   executable shared object requirements and inferring the packages
   from that.
@@ -139,7 +138,7 @@ the submodules, their locations and hashes.
 include(FetchContent)
 FetchContent_Declare(
     sfpi
-    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-x86_64_Linux.txz
+    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-$VERSION-x86_64_Linux.txz
     URL_HASH MD5=$HASH
     SOURCE_DIR $INSTALL_LOCATION
 )

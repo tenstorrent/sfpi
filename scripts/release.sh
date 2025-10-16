@@ -12,9 +12,6 @@ BUILD=build
 ci=false
 force=false
 tt_built=false
-if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
-    tt_built=true
-fi
 txz_only=false
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -52,9 +49,9 @@ fi
 tar cf - include | tar xf - -C $BUILD/sfpi
 
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-    grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs strip -g
+    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
-eval $($BIN/sfpi-version.sh RELEASE $tt_version)
+eval $($BIN/sfpi-info.sh RELEASE $tt_version)
 
 rm -rf $BUILD/release
 mkdir $BUILD/release
@@ -67,8 +64,8 @@ if ! $txz_only ; then
     # tuples of debian:fedora names
     pkgs=
     for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-		    grep '^[^ ]*:  *ELF 64-bit ' | cut -d: -f1 | xargs -n1 ldd | \
-		    sed -e '/:$/d' -e "s/^[ \t]\+//" -e 's/ .*//' | sort -u)
+		    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs ldd | \
+		    sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d | sort -u)
     do
 	case $so in
 	    /*/ld-linux-*.so*) ;; # loader
