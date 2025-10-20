@@ -3,7 +3,7 @@
 set -eo pipefail
 BIN="$(dirname "$0")"
 
-if ! test "$BIN" -ef "scripts"; then
+if ! [[ "$BIN" -ef "scripts" ]]; then
     echo "run this script from repo's top directory" >&2
     exit 1
 fi
@@ -26,7 +26,7 @@ while [ "$#" -ne 0 ] ; do
     shift
 done
 
-if test -r $BUILD/version ; then
+if [[ -r $BUILD/version ]]; then
      tt_version=$(cat $BUILD/version)
 else
     echo "No $BUILD/version file present" >&2
@@ -111,7 +111,7 @@ if ! $txz_only ; then
 		case $sfpi_releaser in
 		    debian)
 			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null) ; then
-			    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]] ; then
+			    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]]; then
 				version=${BASH_REMATCH[2]}
 			    else
 				version=
@@ -127,7 +127,7 @@ if ! $txz_only ; then
 			version=
 			;;
 		esac
-		if test -z "$version" ; then
+		if [[ -z "$version" ]]; then
 		    echo "WARNING: Cannot determine $pkg version used" >&2
 		else
 		    echo "INFO: $pkg >= $version"

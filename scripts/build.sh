@@ -3,7 +3,7 @@
 set -eo pipefail
 BIN="$(dirname "$0")"
 
-if ! test "$BIN" -ef "scripts"; then
+if ! [[ "$BIN" -ef "scripts" ]]; then
     echo "run this script from repo's top directory" 1>&2
     exit 1
 fi
@@ -20,9 +20,6 @@ test_tt=false
 tt_built=false
 tt_version=
 BUILD=build
-if test $(hostname | cut -d- -f-3) = 'tt-metal-dev' ; then
-    tt_built=true
-fi
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--checking) gcc_checking=all ;;
@@ -49,9 +46,9 @@ if [ "$#" -ne 0 ] ; then
 fi
 
 # figure version, now we know tt_built
-if test -r $BUILD/version ; then
+if [[ -r $BUILD/version ]]; then
     tt_version=$(cat $BUILD/version)
-elif [[ "$tt_version" == "" ]] ; then
+elif [[ "$tt_version" == "" ]]; then
     # match and exclude are globs, not regexes. This is close enough.
     if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
 			  --exclude '*-*' 2>/dev/null) ; then
@@ -59,7 +56,7 @@ elif [[ "$tt_version" == "" ]] ; then
 	tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
 			 --exclude 'v*-*' 2>/dev/null \
 			 | sed 's/^v//' || true)
-	if ! [[ $tt_version ]] ; then
+	if ! [[ $tt_version ]]; then
 	    tt_version=0
 	fi
     fi
@@ -69,7 +66,7 @@ elif [[ "$tt_version" == "" ]] ; then
     fi
     head=$(git rev-parse --symbolic-full-name HEAD)
     branch=
-    if [[ $head = "HEAD" ]] ; then
+    if [[ $head = "HEAD" ]]; then
 	# detached head
 	if ! $tagged_head ; then
 	    # Not tagged, figure out a branch name to add
@@ -87,16 +84,16 @@ elif [[ "$tt_version" == "" ]] ; then
 		    *) branch=$ref ;;
 		esac
 	    done
-	    if [[ -z $branch ]] ; then
+	    if [[ -z $branch ]]; then
 		branch="$origin"
 	    fi
 	fi
-    elif ! $tagged_head || test $head != refs/heads/main ; then
+    elif ! $tagged_head || [[ $head != refs/heads/main ]]; then
 	# not tagged or not main, use branch name
 	branch=${head#refs/heads/}
     fi
 
-    if test -n "$branch" ; then
+    if [[ -n "$branch" ]]; then
 	# just use the final component of a branch name
 	tt_version="${tt_version%-*-g*}-${branch##*/}"
     fi
@@ -104,13 +101,13 @@ elif [[ "$tt_version" == "" ]] ; then
     url=$(git config --get remote.origin.url \
 	      | sed -e 's/[^:]*://' -e 's+//[^/]*/++' \
 		    -e 's+/[^/]*\(\.git\)\?$++')
-    if ! $tt_built || [[ $url != 'tenstorrent' ]] ; then
+    if [[ $url != 'tenstorrent' ]]; then
 	tt_version="$url-$tt_version"
     fi
 fi
 echo "INFO: Version: $tt_version"
 
-if ! test -d $BUILD ; then
+if ! [[ -d $BUILD ]]; then
     mkdir -p $BUILD/sfpi
     # extract git hashes for here and each submodule
     $BIN/git-hash.sh "$tt_version" >$BUILD/sfpi/README.txt
@@ -127,12 +124,15 @@ done
 export LC_ALL=C
 
 # configure, if this is the first time
-if ! test -e $BUILD/Makefile ; then
+if ! [[ -e $BUILD/Makefile ]]; then
     ident_options=()
     if $tt_built ; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
 		       --with-pkgversion="tenstorrent/sfpi:$tt_version")
+    else
+	ident_options=(--with-bugurl='unsupported'
+		       --with-pkgversion="tenstorrent/sfpi-DIY:$tt_version")
     fi
     (cd $BUILD
      set -x
@@ -152,7 +152,7 @@ if $dejagnu ; then
     (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS)
 fi
 if $sim ; then
-    if ! test -e qemu ; then
+    if ! [[ -e qemu ]]; then
 	git clone --depth 64 --branch v7.2.15 https://gitlab.com/qemu-project/qemu.git
     fi
     (set -x; nice make -C $BUILD build-sim -j$NCPUS)
@@ -210,15 +210,15 @@ echo "INFO: Version: $tt_version"
 
 if $testing ; then
     ok=true
-    if [[ $errors != 0 ]] ; then
+    if [[ $errors != 0 ]]; then
 	echo "ERROR: $errors tests are borked" >&2
 	ok=false
     fi
-    if [[ $unresolveds != 0 ]] ; then
+    if [[ $unresolveds != 0 ]]; then
 	echo "ERROR: $unresolveds tests are unresolved" >&2
 	ok=false
     fi
-    if [[ $fails != 0 ]] ; then
+    if [[ $fails != 0 ]]; then
 	echo "ERROR: $fails tests failed" >&2
 	ok=false
     fi
