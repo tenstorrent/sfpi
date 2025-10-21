@@ -155,3 +155,7 @@ if $mkrpm ; then
 fi
 (cd $BUILD ; md5sum -b $(eval echo $NAME.{$md5})) > $BUILD/$NAME.md5
 echo "INFO: MD5: $BUILD/$NAME.md5"
+
+rm -rf $BUILD/release
+mkdir $BUILD/release
+cp $BUILD/$NAME.* $BUILD/release
