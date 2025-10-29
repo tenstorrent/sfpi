@@ -88,9 +88,9 @@ if ! $txz_only ; then
 	esac
     done
 
-    case $sfpi_dist in
-	linux)
-	    echo "INFO: Building packages for common linux distro kinds"
+    case $sfpi_pkg in
+	deb|rpm)
+	    echo "INFO: Building $sfpi_pkg package for $sfpi_dist distro kinds"
 	    fpm_options=(-s dir -n sfpi -C $BUILD/sfpi --prefix /opt/tenstorrent/sfpi)
 	    fpm_options+=(--architecture native)
 	    fpm_options+=(--license "Apache 2.0/GPL 2,3/LGPL 2.1")
@@ -108,7 +108,7 @@ if ! $txz_only ; then
 
 	    for pkg in $pkgs
 	    do
-		case $sfpi_releaser in
+		case $sfpi_dist in
 		    debian)
 			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null) ; then
 			    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]]; then
@@ -136,16 +136,18 @@ if ! $txz_only ; then
 		fi
 	    done
 
-	    # _ in version is verboten
-	    fpm -t deb -v "${tt_version//_/-}" "${fpm_options[@]}" "${deb_deps[@]}" \
-		-p $BUILD/release/$sfpi_filename.deb
-	    echo "INFO: Debian: $BUILD/release/$sfpi_filename.deb"
-
-	    # - in version is verboten
-	    fpm -t rpm -v "${tt_version//-/_}" "${fpm_options[@]}" "${rpm_deps[@]}" \
-		-p $BUILD/release/$sfpi_filename.rpm \
-		--rpm-auto-add-directories --rpm-rpmbuild-define "_build_id_links none"
-	    echo "INFO: RPM: $BUILD/release/$sfpi_filename.rpm"
+	    if [[ $sfpi_pkg = deb ]] ; then
+		# _ in version is verboten
+		fpm -t deb -v "${tt_version//_/-}" "${fpm_options[@]}" "${deb_deps[@]}" \
+		    -p $BUILD/release/$sfpi_filename.deb
+		echo "INFO: Debian: $BUILD/release/$sfpi_filename.deb"
+	    elif [[ $sfpi_pkg = rpm ]] ; then
+		# - in version is verboten
+		fpm -t rpm -v "${tt_version//-/_}" "${fpm_options[@]}" "${rpm_deps[@]}" \
+		    -p $BUILD/release/$sfpi_filename.rpm \
+		    --rpm-auto-add-directories --rpm-rpmbuild-define "_build_id_links none"
+		echo "INFO: RPM: $BUILD/release/$sfpi_filename.rpm"
+	    fi
 	    ;;
 	*)
 	    echo "WARNING: Unknown packaging system on $sfpi_releaser" >&2

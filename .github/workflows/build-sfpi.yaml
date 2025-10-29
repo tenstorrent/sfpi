@@ -24,10 +24,6 @@ on:
         options:
           - none
           - Alma
-      checking:
-        description: GCC checking
-        default: ''
-        type: string
 
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
@@ -50,20 +46,20 @@ jobs:
         run: git config --global --add safe.directory '*'
       - name: Install packages
         run: |
-          pkgs="expect autoconf automake python3"
-          pkgs+=" gawk bison flex texinfo patchutils ruby"
+          pkgs="autoconf automake bison expect flex gawk python3 texinfo"
+          pkgs+=" patchutils ruby"
           if type apt-get >/dev/null 2>&1 ; then
             $SUDO apt-get update
             $SUDO apt-get -y install $pkgs rpm
-            $SUDO apt-get -y install libmpc-dev libmpfr-dev libgmp-dev gcc g++
+            $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
           else
             $SUDO dnf install -y $pkgs rpm-build
-            $SUDO dnf install -y libmpc-devel mpfr-devel gmp-devel gcc gcc-c++
+            $SUDO dnf install -y expat-devel gmp-devel libmpc-devel mpfr-devel gcc gcc-c++
           fi
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built ${{ inputs.checking != '' && '--checking=' || '' }}${{ inputs.checking }}
+        run: scripts/build.sh --gdb --tt-built
       - name: Build test harness
         run: scripts/build.sh --dejagnu
       - name: Run tests
