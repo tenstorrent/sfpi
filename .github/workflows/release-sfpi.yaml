@@ -1,0 +1,74 @@
+xname: "Release SFPI"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: false
+        description: Version tag to checkout
+        default:
+        type: string
+
+run-name: Releasing SFPI ${{ inputs.tag || github.ref }}
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [aarch64, x86_64]
+        box: [none, Alma]
+        exclude:
+          - arch: aarch64
+            box: Alma
+    uses: ./.github/workflows/build-sfpi.yaml
+    with:
+      tag: ${{ inputs.tag }}
+      arch: ${{ matrix.arch }}
+      box: ${{ matrix.box }}
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 1
+          fetch-tags: false
+          submodules: false
+      - name: Download builds
+        uses: actions/download-artifact@v5
+        with:
+          path: release
+          pattern: build-*
+          merge-multiple: true
+      - name: Download tests
+        uses: actions/download-artifact@v5
+        with:
+          path: tests
+          pattern: tests-*
+          merge-multiple: true
+      - name: Create sfpi-version
+        shell: bash
+        run: |
+          scripts/sfpi-info.sh release/*.md5
+          rm release/*.md5
+          mv sfpi-version release
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
+          name: SFPI-release
+          path: release/*
+      - name: Upload tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: SFPI-tests
+          path: tests/*
+      - name: Display version
+        shell: bash
+        run: ./scripts/version.sh "### Version" >> $GITHUB_STEP_SUMMARY
+      - name: Remove individual builds & tests
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            build-*
+            tests-*
