@@ -268,6 +268,8 @@ for summary in args.summaries:
   except FileNotFoundError:
     print(f"{xfails}: No xfails present")
   with open(summary) as fin:
-    with open(args.output + '/' + outname, 'w') as fout:
+    outpath=args.output
+    if os.path.isdir(outpath):
+      outpath = outpath + '/' + outname
+    with open(outpath, 'w') as fout:
       processFails(summary, tool, fails, fin, fout)
-  
