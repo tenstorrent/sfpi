@@ -1,0 +1,13 @@
+name: "Release SFPI"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: false
+        description: Version tag to checkout
+        default:
+        type: string
+
+run-name: Releasing SFPI $${ inputs.tag || github.ref }}
+jobs:
