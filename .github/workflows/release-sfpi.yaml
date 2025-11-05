@@ -9,5 +9,81 @@ on:
         default:
         type: string
 
-run-name: Releasing SFPI $${ inputs.tag || github.ref }}
+run-name: Releasing SFPI ${{ inputs.tag || github.ref }}
 jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, x86_64]
+        box: [none, Alma]
+        exclude:
+          - arch: aarch64
+            box: Alma
+    uses: ./.github/workflows/build-sfpi.yaml
+    with:
+      tag: ${{ inputs.tag }}
+      arch: ${{ matrix.arch }}
+      box: ${{ matrix.box }}
+      key: ${{ matrix.arch }}-${{ matrix.box }}
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 1
+          fetch-tags: false
+          submodules: false
+      - name: Download builds
+        uses: actions/download-artifact@v5
+        with:
+          path: pkg
+          pattern: build-*
+          merge-multiple: true
+      - name: Download tests
+        uses: actions/download-artifact@v5
+        with:
+          path: tst
+          pattern: tests-*
+          merge-multiple: true
+      - name: Create sfpi-version
+        shell: bash
+        run: |
+          scripts/sfpi-info.sh pkg/*.md5
+          rm pkg/*.md5
+          source ./sfpi-version
+          mv sfpi-version pkg
+          echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
+          echo version=${sfpi_version//./_} >> $GITHUB_ENV
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
+          name: SFPI-${{ env.version }}-packages
+          path: pkg/*
+      - name: Upload tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: SFPI-${{ env.version }}-tests
+          path: tst/*
+      - name: Gather configs
+        uses: actions/download-artifact@v5
+        with:
+          path: cfg
+          pattern: config-*
+          merge-multiple: true
+      - name: Show configs
+        shell: bash
+        run: |
+          for file in cfg/config-*; do
+            echo "* $(cat $file)" >>$GITHUB_STEP_SUMMARY
+          done
+      - name: Remove intermediate artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            build-*
+            tests-*
+            config-*

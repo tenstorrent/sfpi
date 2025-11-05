@@ -1,6 +1,21 @@
 name: "Build SFPI"
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        required: false
+        type: string
+      arch:
+        required: true
+        type: string
+      box:
+        required: true
+        type: string
+      key:
+        required: false
+        type: string
+
   workflow_dispatch:
     inputs:
       tag:
@@ -19,7 +34,7 @@ on:
       box:
         required: true
         description: Container to run on
-        default: Alma
+        default: none
         type: choice
         options:
           - none
@@ -28,7 +43,7 @@ on:
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
 
-run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}${{ inputs.checking != '' && ' Checking:' || '' }}${{ inputs.checking }}
+run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
     runs-on: ubuntu-22.04${{ inputs.arch == 'aarch64' && '-arm' || '' }}
@@ -69,12 +84,29 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}build
+          name: build-${{ inputs.arch }}-${{ inputs.box }}
           path: build/release/*
           compression-level: 0
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.arch }}-${{ inputs.box != 'none' && format('{0}-', inputs.box) || '' }}tests
-          path: |
-            build/tests/*
+          name: tests-${{ inputs.arch }}-${{ inputs.box }}
+          path: build/tests/*
+      - id: version
+        name: Gather config
+        shell: bash
+        run: |
+          eval $(./scripts/sfpi-info.sh RELEASE $(cat build/version))
+          config="$sfpi_version $sfpi_arch $sfpi_dist ($sfpi_pkg)"
+          if [[ -z "${{ inputs.key }}" ]]; then
+            echo "### $config" >>$GITHUB_STEP_SUMMARY
+          else
+            mkdir -p outputs
+            echo "$config" >outputs/config-${{ inputs.key }}
+          fi
+      - name: Upload config
+        if: ${{ inputs.key }} != ""
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-${{ inputs.arch }}-${{ inputs.box }}
+          path: outputs/config-*
