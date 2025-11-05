@@ -153,34 +153,35 @@ research that from the above clues. If required components are missing
 the build will fail, sometimes with a clueful message. Please report
 any additional packages or issues you encounter by filing an issue at
 https://github.com/tenstorrent/tt-metal/issues
-
 EOF
 
-echo | dupstderr
-echo "Fetching the repository ..." | dupstderr
-if ! [[ -d .git ]]; then
-    if [[ -t 0 ]]; then
-	read -p "Confirm you have read and understood the above:" yes
-	if ! [[ $yes =~ ^[Yy] ]]; then
-	    echo "Assuming you have anyway" >&2
-	fi
+if ! [[ -d .git ]] && [[ -t 0 ]]; then
+    echo >&2
+    read -p "Confirm you have read and understood the above:" yes
+    if ! [[ $yes =~ ^[Yy] ]]; then
+	echo "Assuming you have anyway" >&2
     fi
-    (set -x; \
-     git clone -b $sfpi_version --depth 1 $sfpi_repo .; \
-     git submodule update --depth 1 --init --recursive; \
-     )
+fi
+
+echo | dupstderr
+if ! [[ -d .git ]]; then
+    echo "Fetching the repository ..." | dupstderr
+    (set -x; git -c "advice.detachedHead=false" clone -b $sfpi_version --depth 1 $sfpi_repo .)
 else
+    echo "Updating the repository ..." | dupstderr
     (set -x; \
      git fetch --depth 1 $sfpi_repo $sfpi_version; \
-     git checkout $sfpi_version; \
-     git submodule update --depth 1 --init --recursive; \
-     )
+     git -c "advice.detachedHead=false" checkout $sfpi_version)
 fi
+(set -x; git submodule update --depth 1 --init --recursive)
 
 echo | dupstderr
 echo "Building ..." | dupstderr
 (set -x; rm -rf build)
 (set -x; scripts/build.sh --test-tt 2>&1)
+
+echo | dupstderr
+echo "Packaging ..." | dupstderr
 (set -x; scripts/release.sh --txz-only 1>&2)
 
 cp build/release/$sfpi_filename ..

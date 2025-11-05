@@ -158,6 +158,8 @@ if $sim ; then
     (set -x; nice make -C $BUILD build-sim -j$NCPUS)
 fi
 
+eval $($BIN/sfpi-info.sh RELEASE $tt_version)
+
 fails=0
 unresolveds=0
 errors=0
@@ -170,11 +172,12 @@ if $test_binutils ; then
     mkdir -p $tests
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
     do
-	cp ${sum%sum}log $tests
-	(set -x; nice $BIN/local-xfails.py --output $tests --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL:' $tests/$(basename $sum) || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$(basename $sum) || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $tests/$(basename $sum) || true)))
+	dst=$(basename -s .sum $sum)-${sfpi_arch}_${sfpi_dist}
+	cp ${sum%sum}log $tests/$dst.log
+	(set -x; nice $BIN/local-xfails.py --output $tests/$dst.sum --xfails xfails $sum)
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
     done
 fi
 
@@ -185,11 +188,12 @@ if $test_gcc ; then
     mkdir -p $tests
     for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
-	cp ${sum%sum}log $tests
-	(set -x; nice $BIN/local-xfails.py --output $tests --xfails xfails $sum)
-	fails=$((fails + $(grep -c '^FAIL:' $tests/$(basename $sum) || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$(basename $sum) || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $tests/$(basename $sum) || true)))
+	dst=$(basename -s .sum $sum)-${sfpi_arch}_${sfpi_dist}
+	cp ${sum%sum}log $tests/$dst.log
+	(set -x; nice $BIN/local-xfails.py --output $tests/$dst.sum --xfails xfails $sum)
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
     done
 fi
 
@@ -199,10 +203,12 @@ if $test_tt; then
     mkdir -p $tests
     for cc in gcc g++
     do
-	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.{sum,log} $tests
-	fails=$((fails + $(grep -c '^FAIL:' $tests/$cc.sum || true)))
-	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$cc.sum || true)))
-	errors=$((errors + $(grep -c '^ERROR:' $tests/$cc.sum || true)))
+	dst=$cc-${sfpi_arch}_${sfpi_dist}
+	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $tests/$dst.sum
+	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.log $tests/$dst.log
+	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
+	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
     done
 fi
 
