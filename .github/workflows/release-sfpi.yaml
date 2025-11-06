@@ -1,4 +1,4 @@
-xname: "Release SFPI"
+name: "Release SFPI"
 
 on:
   workflow_dispatch:
