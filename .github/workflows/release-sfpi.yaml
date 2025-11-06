@@ -63,9 +63,6 @@ jobs:
         with:
           name: SFPI-tests
           path: tests/*
-      - name: Display version
-        shell: bash
-        run: ./scripts/version.sh "### Version" >> $GITHUB_STEP_SUMMARY
       - name: Remove individual builds & tests
         uses: geekyeggo/delete-artifact@v5
         with:

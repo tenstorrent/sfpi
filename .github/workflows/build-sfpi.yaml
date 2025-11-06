@@ -91,4 +91,6 @@ jobs:
           path: build/tests/*
       - name: Display version
         shell: bash
-        run: ./scripts/version.sh "### Version" >> $GITHUB_STEP_SUMMARY
+        run: |
+          eval $(./scripts/sfpi-info.sh RELEASE $(cat build/version))
+          echo "### $sfpi_version $sfpi_arch $sfpi_dist ($sfpi_pkg)" >> $GITHUB_STEP_SUMMARY
