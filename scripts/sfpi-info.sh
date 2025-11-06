@@ -129,7 +129,16 @@ fi
 mkdir -p $src
 cd $src
 
-cat >&1 >&2 <<EOF
+# duplicate to stderr if it's different to stdout
+dupstderr () {
+    if [[ $(readlink /dev/fd/1) != $(readlink /dev/fd/2) ]]; then
+	tee -a /dev/fd/2
+    else
+	cat
+    fi
+}
+
+dupstderr <<EOF
 Building SFPI $sfpi_version
 Working Directory: $src
 
@@ -147,11 +156,14 @@ https://github.com/tenstorrent/tt-metal/issues
 
 EOF
 
-echo >&1 >&2
-echo "Fetching the repository ..." >&1 >&2
+echo | dupstderr
+echo "Fetching the repository ..." | dupstderr
 if ! [[ -d .git ]]; then
-    if tty -s ; then
+    if [[ -t 0 ]]; then
 	read -p "Confirm you have read and understood the above:" yes
+	if ! [[ $yes =~ ^[Yy] ]]; then
+	    echo "Assuming you have anyway" >&2
+	fi
     fi
     (set -x; \
      git clone -b $sfpi_version --depth 1 $sfpi_repo .; \
@@ -165,12 +177,12 @@ else
      )
 fi
 
-echo >&1 >&2
-echo "Building ..." >&1 >&2
+echo | dupstderr
+echo "Building ..." | dupstderr
 (set -x; rm -rf build)
 (set -x; scripts/build.sh --test-tt 2>&1)
 (set -x; scripts/release.sh --txz-only 1>&2)
 
 cp build/release/$sfpi_filename ..
 
-echo "SFPI build completed" >&1 >&2
+echo "SFPI build completed" | dupstderr
