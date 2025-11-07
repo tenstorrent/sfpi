@@ -40,7 +40,7 @@ jobs:
       - name: Download builds
         uses: actions/download-artifact@v5
         with:
-          path: rel
+          path: pkg
           pattern: build-*
           merge-multiple: true
       - name: Download tests
@@ -52,17 +52,17 @@ jobs:
       - name: Create sfpi-version
         shell: bash
         run: |
-          scripts/sfpi-info.sh rel/*.md5
+          scripts/sfpi-info.sh pkg/*.md5
           rm rel/*.md5
           source ./sfpi-version
-          mv sfpi-version rel
+          mv sfpi-version pkg
           echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
-          echo version=$sfpi_version >> $GITHUB_ENV
+          echo version=${sfpi_version//./_} >> $GITHUB_ENV
       - name: Upload release
         uses: actions/upload-artifact@v4
         with:
-          name: SFPI-${{ env.version }}-release
-          path: rel/*
+          name: SFPI-${{ env.version }}-packages
+          path: pkg/*
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
