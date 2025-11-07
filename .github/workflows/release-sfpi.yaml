@@ -40,41 +40,44 @@ jobs:
       - name: Download builds
         uses: actions/download-artifact@v5
         with:
-          path: builds
+          path: rel
           pattern: build-*
           merge-multiple: true
       - name: Download tests
         uses: actions/download-artifact@v5
         with:
-          path: tests
+          path: tst
           pattern: tests-*
           merge-multiple: true
       - name: Create sfpi-version
         shell: bash
         run: |
-          scripts/sfpi-info.sh builds/*.md5
-          rm builds/*.md5
-          mv sfpi-version builds
+          scripts/sfpi-info.sh rel/*.md5
+          rm rel/*.md5
+          source sfpu-version
+          mv sfpi-version rel
+          echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
+          echo version=$sfpi_version >> $GITHUB_ENV
       - name: Upload release
         uses: actions/upload-artifact@v4
         with:
-          name: SFPI-release
-          path: builds/*
+          name: SFPI-${{ env.version }}-release
+          path: rel/*
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: SFPI-tests
-          path: tests/*
+          name: SFPI-${{ env.version }}-tests
+          path: tst/*
       - name: Gather configs
         uses: actions/download-artifact@v5
         with:
-          path: configs
+          path: cfg
           pattern: config-*
           merge-multiple: true
       - name: Show configs
         shell: bash
         run: |
-          for file in configs/config-*; do
+          for file in cfg/config-*; do
             echo "* $(cat $file)" >>$GITHUB_STEP_SUMMARY
           done
       - name: Remove intermediate artifacts
