@@ -30,6 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 1
+          fetch-tags: false
+          submodules: false
       - name: Download builds
         uses: actions/download-artifact@v5
         with:
