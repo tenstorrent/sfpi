@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           scripts/sfpi-info.sh pkg/*.md5
-          rm rel/*.md5
+          rm pkg/*.md5
           source ./sfpi-version
           mv sfpi-version pkg
           echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
