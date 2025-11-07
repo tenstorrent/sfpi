@@ -170,6 +170,7 @@ if ! [[ -d .git ]]; then
 else
     echo "Updating the repository ..." | dupstderr
     (set -x; \
+     git fetch origin "refs/tags/$sfpi_version:refs/tags/$sfpi_version"
      git fetch --depth 1 $sfpi_repo $sfpi_version; \
      git -c "advice.detachedHead=false" checkout $sfpi_version)
 fi
