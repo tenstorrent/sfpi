@@ -54,7 +54,7 @@ jobs:
         run: |
           scripts/sfpi-info.sh rel/*.md5
           rm rel/*.md5
-          source sfpu-version
+          source ./sfpi-version
           mv sfpi-version rel
           echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
           echo version=$sfpi_version >> $GITHUB_ENV
