@@ -161,21 +161,18 @@ if ! [[ -d .git ]] && [[ -t 0 ]]; then
     if ! [[ $yes =~ ^[Yy] ]]; then
 	echo "Assuming you have anyway" >&2
     fi
+    echo | dupstderr
+    echo "Cloning the repository ..." | dupstderr
+    (set -x
+     git clone --depth 1 $sfpi_repo .)
 fi
-
 echo | dupstderr
-if ! [[ -d .git ]]; then
-    echo "Fetching the repository ..." | dupstderr
-    (set -x
-     git -c "advice.detachedHead=false" clone -b $sfpi_version --depth 1 $sfpi_repo .)
-else
-    echo "Updating the repository ..." | dupstderr
-    (set -x
-     git fetch origin "refs/tags/$sfpi_version:refs/tags/$sfpi_version"
-     git fetch --depth 1 $sfpi_repo $sfpi_version
-     git -c "advice.detachedHead=false" checkout $sfpi_version)
-fi
-(set -x; git submodule update --depth 1 --init --recursive)
+echo "Fetching sfpi $sfpi_version ..." | dupstderr
+(set -x
+ git fetch --depth 1 origin "refs/tags/$sfpi_version:refs/tags/$sfpi_version"
+ git fetch --depth 1 origin $sfpi_version
+ git -c "advice.detachedHead=false" checkout $sfpi_version
+ git submodule update --depth 1 --init --recursive)
 
 echo | dupstderr
 echo "Building ..." | dupstderr
