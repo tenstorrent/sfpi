@@ -100,15 +100,21 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP32 = 3;
-constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = 12;
+constexpr unsigned int SFPLOAD_MOD0_FMT_BOB32 = 4; // Bag Of Bits
+constexpr unsigned int SFPLOAD_MOD0_FMT_SM32 = 12;
+__attribute__((__deprecated__("use SFPLOAD_MOD0_FMT_SM32 instead")))
+constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = SFPLOAD_MOD0_FMT_SM32;
 constexpr unsigned int SFPLOAD_ADDR_MODE_NOINC = 3;
 
 constexpr unsigned int SFPSTORE_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP32 = 3;
+constexpr unsigned int SFPSTORE_MOD0_FMT_BOB32 = 4; // Bag Of Bits
 constexpr unsigned int SFPSTORE_MOD0_FMT_UINT16 = 6;
-constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = 12;
+constexpr unsigned int SFPSTORE_MOD0_FMT_SM32 = 12;
+__attribute__((__deprecated__("use SFPSTORE_MOD0_FMT_SM32 instead")))
+constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = SFPSTORE_MOD0_FMT_SM32;
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 3;
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;

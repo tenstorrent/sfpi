@@ -62,7 +62,10 @@ sfpi_inline vFloat __vDReg::operator=(const float f) const
 template <typename vecType, typename std::enable_if_t<std::is_base_of<__vBase, vecType>::value>*>
 sfpi_inline vecType __vDReg::operator=(const vecType vec) const
 {
-    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FMT_INT32_TO_SM, SFPSTORE_ADDR_MODE_NOINC, reg);
+    auto mod = SFPSTORE_MOD0_FMT_BOB32;
+    if constexpr (std::is_base_of<vInt, vecType>::value)
+        mod = SFPSTORE_MOD0_FMT_SM32;
+    __builtin_rvtt_sfpstore(vec.get(), mod, SFPSTORE_ADDR_MODE_NOINC, reg);
     return vec;
 }
 
@@ -118,13 +121,13 @@ sfpi_inline void __vIntBase::loadui(uint32_t val)
 
 sfpi_inline vInt::vInt(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_INT32_TO_SM, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_SM32, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
     initialized = true;
 }
 
 sfpi_inline vUInt::vUInt(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_INT32_TO_SM, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
     initialized = true;
 }
 
