@@ -112,7 +112,6 @@ constexpr unsigned int SFPSTORE_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP32 = 3;
 constexpr unsigned int SFPSTORE_MOD0_FMT_UINT16 = 6;
-constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = 12;
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 7;
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
