@@ -104,15 +104,15 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP32 = 3;
-constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = 12;
+constexpr unsigned int SFPLOAD_MOD0_FMT_BOB32 = 12; // Bag Of Bits
 constexpr unsigned int SFPLOAD_ADDR_MODE_NOINC = 7;
 
 constexpr unsigned int SFPSTORE_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP32 = 3;
+constexpr unsigned int SFPSTORE_MOD0_FMT_BOB32 = 4; // Bag Of Bits
 constexpr unsigned int SFPSTORE_MOD0_FMT_UINT16 = 6;
-constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = 12;
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 7;
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
@@ -236,7 +236,8 @@ constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = 0; // Round Nearest Evne
-constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = 1; // Round Nearest Stachastic
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = 1; // Round Nearest Stochastic
+// This conversion has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 2; // Sign-Mag to 2's compl
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
 // Deprecate these two names
