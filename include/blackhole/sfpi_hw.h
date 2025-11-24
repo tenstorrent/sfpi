@@ -119,6 +119,14 @@ constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
 constexpr unsigned int SFPMOV_MOD1_CONFIG = 8;
 
 constexpr unsigned int SFPMAD_MOD1_OFFSET_NONE = 0;
+constexpr unsigned int SFPMAD_MOD1_SRCA_LREG7 = 4;
+constexpr unsigned int SFPMAD_MOD1_DST_LREG7 = 8;
+
+constexpr unsigned int SFPADD_MOD1_SRCA_LREG7 = 4;
+constexpr unsigned int SFPADD_MOD1_DST_LREG7 = 8;
+
+constexpr unsigned int SFPMUL_MOD1_SRCA_LREG7 = 4;
+constexpr unsigned int SFPMUL_MOD1_DST_LREG7 = 8;
 
 constexpr unsigned int SFPLOADI_MOD0_FLOATB = 0;
 constexpr unsigned int SFPLOADI_MOD0_FLOATA = 1;
@@ -252,8 +260,9 @@ constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 
 constexpr unsigned int SFPSHFT_MOD1_LOGICAL = 0;
 constexpr unsigned int SFPSHFT_MOD1_ARITHMETIC = 2;
-constexpr unsigned int SFPSHFT_MOD1_SRCA_LREG7 = 4;
-constexpr unsigned int SFPSHFT_MOD1_DST_LREG7 = 8;
+constexpr unsigned int SFPSHFT_MOD1_SHIFT_IMM = 0;
+constexpr unsigned int SFPSHFT_MOD1_SHIFT_LREGC = 1;
+constexpr unsigned int SFPSHFT_MOD1_SRC_LREGC = 4;
 
 constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
