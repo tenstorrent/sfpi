@@ -119,6 +119,14 @@ constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
 constexpr unsigned int SFPMOV_MOD1_CONFIG = 8;
 
 constexpr unsigned int SFPMAD_MOD1_OFFSET_NONE = 0;
+constexpr unsigned int SFPMAD_MOD1_SRCA_LREG7_MASK = 4;
+constexpr unsigned int SFPMAD_MOD1_DST_LREG7_MASK = 8;
+
+constexpr unsigned int SFPADD_MOD1_SRCA_LREG7_MASK = 4;
+constexpr unsigned int SFPADD_MOD1_DST_LREG7_MASK = 8;
+
+constexpr unsigned int SFPMUL_MOD1_SRCA_LREG7_MASK = 4;
+constexpr unsigned int SFPMUL_MOD1_DST_LREG7_MASK = 8;
 
 constexpr unsigned int SFPLOADI_MOD0_FLOATB = 0;
 constexpr unsigned int SFPLOADI_MOD0_FLOATA = 1;
@@ -150,8 +158,12 @@ constexpr unsigned int SFPARECIP_MOD1_EXP = 2;
 constexpr unsigned int SFPMUL24_MOD1_NONE = 0;
 constexpr unsigned int SFPMUL24_MOD1_LOWER = 0;
 constexpr unsigned int SFPMUL24_MOD1_UPPER = 1;
-constexpr unsigned int SFPMUL24_MOD1_SRCA_LREG7 = 4;
-constexpr unsigned int SFPMUL24_MOD1_DST_LREG7 = 8;
+constexpr unsigned int SFPMUL24_MOD1_SRCA_LREG7_MASK = 4;
+constexpr unsigned int SFPMUL24_MOD1_DST_LREG7_MASK = 8;
+__attribute__((__deprecated__("use SFPMUL24_MOD1_SRCA_LREG7_MASK instead")))
+constexpr unsigned int SFPMUL24_MOD1_SRCA_LREG7 = SFPMUL24_MOD1_SRCA_LREG7_MASK;
+__attribute__((__deprecated__("use SFPMUL24_MOD1_SRCA_DST_MASK instead")))
+constexpr unsigned int SFPMUL24_MOD1_DST_LREG7 = SFPMUL24_MOD1_DST_LREG7_MASK;
 
 constexpr unsigned int SFPIADD_MOD1_ARG_LREG_DST = 0;
 constexpr unsigned int SFPIADD_MOD1_ARG_IMM = 1;
@@ -252,8 +264,9 @@ constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 
 constexpr unsigned int SFPSHFT_MOD1_LOGICAL = 0;
 constexpr unsigned int SFPSHFT_MOD1_ARITHMETIC = 2;
-constexpr unsigned int SFPSHFT_MOD1_SRCA_LREG7 = 4;
-constexpr unsigned int SFPSHFT_MOD1_DST_LREG7 = 8;
+constexpr unsigned int SFPSHFT_MOD1_SHIFT_IMM_MASK = 0;
+constexpr unsigned int SFPSHFT_MOD1_SHIFT_LREGC_MASK = 1;
+constexpr unsigned int SFPSHFT_MOD1_SRC_LREGC_MASK = 4;
 
 constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
