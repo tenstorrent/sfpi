@@ -120,9 +120,15 @@ sfpi_inline void __vIntBase::loadui(uint32_t val)
 
 sfpi_inline vInt::vInt(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpcast(__builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC, dreg.get()),
-                               SFPCAST_MOD1_SM32_TO_INT32);
+    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
     initialized = true;
+
+    // SFPCAST sign-mag to int32 has a bug where -0 converts to mostneg.  So
+    // don't use that.
+    v_if (*this < 0) {
+      v = __builtin_rvtt_sfpsetsgn_i(0, get());
+      *this = 0 - *this;
+    } v_endif;
 }
 
 sfpi_inline vUInt::vUInt(const __vDReg dreg)
