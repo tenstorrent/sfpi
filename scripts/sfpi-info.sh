@@ -16,7 +16,7 @@
 
 # For the realm of elves, releasing the toolchain
 # eval $($FILE RELEASE $version) -- generate sfpi variables for release
-# $FILE *.md5 -- emit variable initializations from md5 file(s)
+# $FILE HASH $dir -- emit variable initializations from hash file(s)
 
 # For the realm of dwarves, building the toolchain
 # $FILE BUILD [$DIR]
@@ -26,7 +26,7 @@ set -e
 if [[ ${#1} = 0 ]]; then
     cat >&2 <<EOF
 Usage:
-$0 *.md5	 - generate release information
+$0 HASH [\$DIR]	 - generate release information
 $0 RELEASE \$VER - generate release names
 $0 SHELL [\$PKG] - shell use for PKG
 $0 CMAKE [\$PKG] - CMAKE use for PKG
@@ -36,13 +36,15 @@ EOF
 fi
 
 version_file="sfpi-version"
-if [[ ${1-} =~ '.md5'$ ]]; then
-    # convert md5 files into sfpi-version file
+hashtype=sha256
+if [[ ${1-} = HASH ]]; then
+    # convert sha256 files into sfpi-version file
     version=
     exit_code=0
     echo '# sfpi version information' >$version_file
     echo 'sfpi_repo=https://github.com/tenstorrent/sfpi' >>$version_file
-    for file in "$@"
+    echo "sfpi_hashtype=$hashtype" >>$version_file
+    for file in ${2-.}/*.$hashtype
     do
 	ver="${file##*/sfpi_}"
 	ver="${ver%%_*}"
@@ -55,7 +57,7 @@ if [[ ${1-} =~ '.md5'$ ]]; then
 	    echo sfpi_version=$version >>$version_file
 	fi
     done
-    sed 's/^\([0-9a-f]*\) \*sfpi_[^_]*_\([^.]*\)\.\(.*\)$/sfpi_\2_\3_md5=\1/' "$@" >>$version_file
+    sed 's/^\([0-9a-f]*\) \*sfpi_[^_]*_\([^.]*\)\.\(.*\)$/sfpi_\2_\3_hash=\1/' ${2-.}/*.$hashtype >>$version_file
     echo "$version_file for $version created"
     exit $exit_code
 fi
@@ -63,6 +65,7 @@ fi
 if [[ ${1-} = RELEASE ]]; then
     # releaser of sfpi
     sfpi_version=$2
+    sfpi_hashtype=$hashtype
 else
     source $(dirname $0)/$version_file
 fi
@@ -101,7 +104,7 @@ if [[ ${1-} != RELEASE ]]; then
 	sfpi_pkg=$2
     fi
     sfpi_filename+=".$sfpi_pkg"
-    sfpi_md5=$(eval echo "\${sfpi_${sfpi_arch}_${sfpi_dist}_${sfpi_pkg}_md5-}")
+    sfpi_hash=$(eval echo "\${sfpi_${sfpi_arch}_${sfpi_dist}_${sfpi_pkg}_hash-}")
     unset sfpi_builton
 fi
 
