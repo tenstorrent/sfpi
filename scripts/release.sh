@@ -155,5 +155,5 @@ if ! $txz_only ; then
     esac
 fi
 
-(cd $BUILD/release ; md5sum -b $sfpi_filename.* > $sfpi_filename.md5)
-echo "INFO: MD5: $BUILD/release/$sfpi_filename.md5"
+(cd $BUILD/release ; ${sfpi_hashtype}sum -b $sfpi_filename.* > $sfpi_filename.${sfpi_hashtype})
+echo "INFO: ${sfpi_hashtype:u}: $BUILD/release/$sfpi_filename.${sfpi_hashtype}"
