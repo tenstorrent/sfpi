@@ -201,7 +201,7 @@ delete a stamp file to rerun them.
 
 10) Running the gcc testsuite with specific options:
 ```
-PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/test-infra/bin:$PATH \
+PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/infra/bin:$PATH \
 make -C build/build-gcc-newlib-stage2/gcc check-gcc \
     "RUNTESTFLAGS=--target_board=riscv-sim/mcpu=tt-bh"
 ```
