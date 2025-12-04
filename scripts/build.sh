@@ -158,7 +158,7 @@ if $sim ; then
     (set -x; nice make -C $BUILD build-sim -j$NCPUS)
 fi
 
-eval $($BIN/sfpi-info.sh RELEASE $tt_version)
+eval $($BIN/sfpi-info.sh VERSION $tt_version)
 
 fails=0
 unresolveds=0

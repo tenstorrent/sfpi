@@ -51,7 +51,7 @@ tar cf - include | tar xf - -C $BUILD/sfpi
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
-eval $($BIN/sfpi-info.sh RELEASE $tt_version)
+eval $($BIN/sfpi-info.sh VERSION $tt_version)
 
 rm -rf $BUILD/release
 mkdir $BUILD/release
