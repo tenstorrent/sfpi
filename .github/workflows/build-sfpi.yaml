@@ -96,7 +96,7 @@ jobs:
         name: Gather config
         shell: bash
         run: |
-          eval $(./scripts/sfpi-info.sh RELEASE $(cat build/version))
+          eval $(./scripts/sfpi-info.sh VERSION $(cat build/version))
           config="$sfpi_version $sfpi_arch $sfpi_dist ($sfpi_pkg)"
           if [[ -z "${{ inputs.key }}" ]]; then
             echo "### $config" >>$GITHUB_STEP_SUMMARY
