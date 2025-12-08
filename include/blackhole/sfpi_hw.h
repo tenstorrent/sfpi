@@ -252,6 +252,8 @@ constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 
 constexpr unsigned int SFPSHFT_MOD1_LOGICAL = 0;
 constexpr unsigned int SFPSHFT_MOD1_ARITHMETIC = 2;
+constexpr unsigned int SFPSHFT_MOD1_SRCA_LREG7 = 4;
+constexpr unsigned int SFPSHFT_MOD1_DST_LREG7 = 8;
 
 constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
 constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
