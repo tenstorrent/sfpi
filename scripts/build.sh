@@ -19,6 +19,7 @@ test_gcc=false
 test_tt=false
 tt_built=false
 tt_version=
+small_build=
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -29,6 +30,7 @@ while [ "$#" -ne 0 ] ; do
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
 	--serial) NCPUS=1 ;;
+	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
 	--test-binutils) dejagnu=true test_binutils=true ;;
 	--test-gcc) dejagnu=true sim=true test_gcc=true ;;
@@ -145,17 +147,17 @@ if ! [[ -e $BUILD/Makefile ]]; then
 fi
 
 # build the toolchain
-(set -x; nice make -C $BUILD -j$NCPUS)
+(set -x; nice make -C $BUILD -j$NCPUS $small_build)
 
 # maybe make the test infra
 if $dejagnu ; then
-    (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS)
+    (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS $small_build)
 fi
 if $sim ; then
     if ! [[ -e qemu ]]; then
 	git clone --depth 64 --branch v7.2.15 https://gitlab.com/qemu-project/qemu.git
     fi
-    (set -x; nice make -C $BUILD build-sim -j$NCPUS)
+    (set -x; nice make -C $BUILD build-sim -j$NCPUS $small_build)
 fi
 
 eval $($BIN/sfpi-info.sh VERSION $tt_version)
