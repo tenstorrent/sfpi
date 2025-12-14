@@ -63,20 +63,27 @@ jobs:
         run: |
           pkgs="autoconf automake bison expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby"
-          if type apt-get >/dev/null 2>&1 ; then
-            $SUDO apt-get update
-            $SUDO apt-get -y install $pkgs rpm
-            $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
-          else
-            $SUDO dnf install -y $pkgs rpm-build
-            $SUDO dnf install -y expat-devel gmp-devel libmpc-devel mpfr-devel gcc gcc-c++
-          fi
+          eval $(./scripts/sfpi-info.sh VERSION 0)
+          case $sfpi_dist in
+            debian)
+              $SUDO apt-get update
+              $SUDO apt-get -y install $pkgs rpm
+              $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
+            ;;
+            fedora)
+              $SUDO dnf install -y $pkgs rpm-build
+              $SUDO dnf install -y expat-devel gmp-devel libmpc-devel mpfr-devel gcc gcc-c++
+            ;;
+            *)
+              echo "Unknown distro, winging it"
+            ;;
+          esac
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built
+        run: scripts/build.sh --gdb --tt-built --small
       - name: Build test harness
-        run: scripts/build.sh --dejagnu
+        run: scripts/build.sh --dejagnu --small
       - name: Run tests
         run: scripts/build.sh --test-tt
       - name: Release toolchain

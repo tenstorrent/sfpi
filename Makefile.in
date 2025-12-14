@@ -14,6 +14,11 @@ GDB_SRCDIR := @with_gdb_src@
 QEMU_SRCDIR := @with_qemu_src@
 MFC := @with_mfc@
 SIM ?= @WITH_SIM@
+ifeq ($(SMALL_BUILD),1)
+override SMALL_BUILD = rm -rf $(1)
+else
+override SMALL_BUILD = 
+endif
 
 ifeq ($(srcdir)/gcc,$(GCC_SRCDIR))
 # We need a relative source dir for the gcc configure, to make msys2 mingw64
@@ -163,7 +168,7 @@ stamps/check-write-permission:
 		 "another path, or use 'sudo make' if you *REALLY* want to" \
 		 "install into '$(INSTALL_DIR)'" && exit 1)
 	rm -r $(INSTALL_DIR)/.test
-	mkdir -p $(dir $@) && touch $@
+	mkdir -p $(@D) && touch $@
 
 #
 # Rule for auto init submodules
@@ -219,8 +224,8 @@ endif
 
 $(srcdir)/%/.git:
 	cd $(srcdir) && \
-	flock `git rev-parse --git-dir`/config git submodule init $(dir $@) && \
-	flock `git rev-parse --git-dir`/config git submodule update $(dir $@)
+	flock `git rev-parse --git-dir`/config git submodule init $(@D) && \
+	flock `git rev-parse --git-dir`/config git submodule update $(@D)
 
 #
 # NEWLIB
@@ -233,10 +238,10 @@ BINUTILS_GDB_FLAGS := --enable-gdb $(GDB_TARGET_FLAGS)
 endif
 
 stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-write-permission
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
+	rm -rf $@ $(@F)
+	mkdir $(@F)
 # CC_FOR_TARGET is required for the ld testsuite.
-	cd $(notdir $@) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
+	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -246,15 +251,16 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		$(BINUTILS_GDB_FLAGS) \
 		$(IDENT_OPTIONS) \
 		$(WITH_ISA_SPEC)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D) && touch $@
 
 stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
+	rm -rf $@ $(@F)
+	mkdir $(@F)
 # CC_FOR_TARGET is required for the ld testsuite.
-	cd $(notdir $@) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
+	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -267,15 +273,16 @@ stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
 		--disable-ld \
 		--disable-gold \
 		--disable-gprof
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D) && touch $@
 
 stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils-newlib
 	if test -f $</contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" = "true"; then cd $< && ./contrib/download_prerequisites; fi
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -303,14 +310,15 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 		$(WITH_ISA_SPEC) \
 		CFLAGS_FOR_TARGET="-Os $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-Os $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@) all-gcc
-	$(MAKE) -C $(notdir $@) install-gcc
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F) all-gcc
+	$(MAKE) -C $(@F) install-gcc
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D) && touch $@
 
 stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-stage1
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -320,14 +328,15 @@ stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-
 		--enable-newlib-register-fini \
 		CFLAGS_FOR_TARGET="-O2 -D_POSIX_MODE -ffunction-sections -fdata-sections $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-O2 -D_POSIX_MODE -ffunction-sections -fdata-sections $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D) && touch $@
 
 stamps/build-newlib-nano: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-stage1
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(builddir)/install-newlib-nano \
@@ -344,9 +353,10 @@ stamps/build-newlib-nano: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-ne
 		--disable-nls \
 		CFLAGS_FOR_TARGET="-Os -ffunction-sections -fdata-sections $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-Os -ffunction-sections -fdata-sections $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D) && touch $@
 
 stamps/merge-newlib-nano: stamps/build-newlib-nano stamps/build-newlib
 # Copy nano library files into newlib install dir.
@@ -369,13 +379,14 @@ stamps/merge-newlib-nano: stamps/build-newlib-nano stamps/build-newlib
 	mkdir -p $(INSTALL_DIR)/$(NEWLIB_TUPLE)/include/newlib-nano; \
 	cp $(builddir)/install-newlib-nano/$(NEWLIB_TUPLE)/include/newlib.h \
 		$(INSTALL_DIR)/$(NEWLIB_TUPLE)/include/newlib-nano/newlib.h; \
-	mkdir -p $(dir $@) && touch $@
+	$(call SMALL_BUILD, $(builddir)/install-newlib-nano)
+	mkdir -p $(@D) && touch $@
 
 stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib \
 		stamps/merge-newlib-nano
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -405,65 +416,67 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		$(WITH_ISA_SPEC) \
 		CFLAGS_FOR_TARGET="-Os $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-Os $(CXXFLAGS_FOR_TARGET)"
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@) && touch $@
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	mkdir -p $(@D) && touch $@
 
 stamps/build-spike: $(SPIKE_SRCDIR) $(SPIKE_SRC_GIT)
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--prefix=$(INSTALL_DIR)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@)
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	mkdir -p $(@D)
 	date > $@
 
 stamps/build-pk32: $(PK_SRCDIR) stamps/build-gcc-newlib-stage2
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--prefix=$(INSTALL_DIR) \
 		--host=$(NEWLIB_TUPLE) \
 		--with-arch=rv32gc
-	$(MAKE) -C $(notdir $@)
-	cp $(notdir $@)/pk $(INSTALL_DIR)/$(NEWLIB_TUPLE)/bin/pk32
-	mkdir -p $(dir $@)
+	$(MAKE) -C $(@F)
+	cp $(@F)/pk $(INSTALL_DIR)/$(NEWLIB_TUPLE)/bin/pk32
+	mkdir -p $(@D)
 	date > $@
 
 stamps/build-pk64: $(PK_SRCDIR) stamps/build-gcc-newlib-stage2
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--prefix=$(INSTALL_DIR) \
 		--host=$(NEWLIB_TUPLE) \
 		--with-arch=rv64gc
-	$(MAKE) -C $(notdir $@)
-	cp $(notdir $@)/pk $(INSTALL_DIR)/$(NEWLIB_TUPLE)/bin/pk64
-	mkdir -p $(dir $@)
+	$(MAKE) -C $(@F)
+	cp $(@F)/pk $(INSTALL_DIR)/$(NEWLIB_TUPLE)/bin/pk64
+	mkdir -p $(@D)
 	date > $@
 
 stamps/build-qemu: $(QEMU_SRCDIR) $(QEMU_SRC_GIT)
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--prefix=$(test_infradir) \
 		--target-list=$(QEMU_TARGETS) \
 		--interp-prefix=$(INSTALL_DIR)/sysroot \
 		--python=python3
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@)
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D)
 	date > $@
 
 stamps/build-dejagnu: $(srcdir)/riscv-dejagnu $(srcdir)/riscv-dejagnu/.git
-	rm -rf $@ $(notdir $@)
-	mkdir $(notdir $@)
-	cd $(notdir $@) && $</configure \
+	rm -rf $@ $(@F)
+	mkdir $(@F)
+	cd $(@F) && $</configure \
 		--prefix=$(test_infradir)
-	$(MAKE) -C $(notdir $@)
-	$(MAKE) -C $(notdir $@) install
-	mkdir -p $(dir $@)
+	$(MAKE) -C $(@F)
+	$(MAKE) -C $(@F) install
+	$(call SMALL_BUILD, $(@F))
+	mkdir -p $(@D)
 	date > $@
 
 .PHONY: check-gcc-tt
@@ -473,17 +486,17 @@ check-gcc-tt: stamps/build-gcc-newlib-stage2 stamps/build-dejagnu
 
 stamps/check-gcc-newlib: stamps/build-gcc-newlib-stage2 $(SIM_STAMP) stamps/build-dejagnu
 	$(SIM_PREPARE) $(MAKE) -C build-gcc-newlib-stage2 check-gcc "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)'"
-	mkdir -p $(dir $@)
+	mkdir -p $(@D)
 	date > $@
 
 stamps/check-gcc-newlib-nano: stamps/build-gcc-newlib-stage2 $(SIM_STAMP) stamps/build-dejagnu
 	$(SIM_PREPARE) $(MAKE) -C build-gcc-newlib-stage2 check-gcc "RUNTESTFLAGS=--target_board='$(NEWLIB_NANO_TARGET_BOARDS)'"
-	mkdir -p $(dir $@)
+	mkdir -p $(@D)
 	date > $@
 
 stamps/check-gcc-linux: stamps/build-gcc-linux-stage2 $(SIM_STAMP) stamps/build-dejagnu
 	$(SIM_PREPARE) $(MAKE) -C build-gcc-linux-stage2 check-gcc "RUNTESTFLAGS=--target_board='$(GLIBC_TARGET_BOARDS)'"
-	mkdir -p $(dir $@)
+	mkdir -p $(@D)
 	date > $@
 
 .PHONY: check-dhrystone-newlib check-dhrystone-newlib-nano
