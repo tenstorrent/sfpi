@@ -1067,13 +1067,13 @@ vUInt vUInt::operator>>(vInt amt) const {
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline vFloat::vFloat(const __vConstFloat creg)
 {
-    v = __builtin_rvtt_sfpreadlreg(creg.get());
+    v = __builtin_rvtt_sfpassignlreg(creg.get());
     initialized = true;
 }
 
 sfpi_inline __vIntBase::__vIntBase(const __vConstIntBase creg)
 {
-    v = __builtin_rvtt_sfpreadlreg(creg.get());
+    v = __builtin_rvtt_sfpassignlreg(creg.get());
     initialized = true;
 }
 
