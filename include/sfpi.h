@@ -790,7 +790,7 @@ sfpi_inline void __vBase::assign(const __rvtt_vec_t in)
 
 sfpi_inline void __vBase::operator=(__vLReg lr)
 {
-    v = __builtin_rvtt_sfpassignlreg(lr.get());
+    v = __builtin_rvtt_sfpreadlreg(lr.get());
     initialized = true;
 }
 
