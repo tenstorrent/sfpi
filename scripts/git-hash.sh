@@ -1,15 +1,10 @@
 #! /bin/bash
 
-# $exec OUTPUT-NAME USES-LIST
-# Generates a string literal encoding the git repo:
-# $UpstreamURL($RemoteBranch) $LocalBranch:$Hash [$N ahead]-opt dirty-opt
-# UpstreamURL is either a local pathname, or a git repo
-
 set -e
 version="$1"
 
 format () {
-    printf "%-17s  %-20s  %-28s  %-12s %s\n" "$@"
+    printf "| %-17s  | %-20s  | %-28s  | %-12s | %s |\n" "$@"
 }    
 get-hash () {
     local dir=$1
@@ -50,9 +45,14 @@ get-hash () {
     format "$dir" "$branch" "$tag" "$hash" "$url"
 }
 
-echo "Version: $version"
-echo "Built from:"
+cat<<EOF
+Version: $version
+
+Built from:
+
+EOF
 format Directory Branch Tag-Ref Hash Git-Repo
+format --------- ------ ------- ---- --------
 get-hash .
 for submodule in $(git config --file .gitmodules --get-regexp "\.path$" | cut -d' ' -f2)
 do

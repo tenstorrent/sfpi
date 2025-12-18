@@ -20,20 +20,40 @@ numbering. The major version /does not/ indicate API breaking
 changes. It will be incremented when updating the compiler to a new
 upstream version. (There may be other reasons to increment.)
 
+### Reporting a Bug
+
 **For any issues with this software please file an issue at
 `https://github.com/tenstorrent/tt-metal`, and mark it with an `sfpi`
-label.**
+label. Do not try an dfile a report in this repo.**
 
-If you are reporting an internal compiler (ICE) error when using
-`tt-metal`, please follow this procedure to obtain a reproducible test
-case:
+If you are reporting when using `tt-metal`, please follow the following
+procedure to obtain a reproducible test case:
 
-* Enable map file generation: `export TT_METAL_KERNEL_MAP=1`
+* Enable some logging:
+```
+export TT_METAL_LOG_KERNELS_COMPILE_COMMANDS=1 TT_METAL_KERNEL_MAP=1 
+export TT_METAL_LOGGER_LEVEL=info TT_METAL_LOGGER_TYPES=BuildKernels,LLRuntime 
+export TT_METAL_LOGGER_FILE=$(pwd)/logger.log
+```
+
 * Run your program or test, capturing the output: `pytest ... |& tee bug.log`
-* Copy the log file: `cp bug.log ~/.cache/tt-metal-cache`
-* Create a tarball of `tt-metal-cache`: `tar cf bug.tar -C ~/.cache tt-metal-cache`
+* Copy the log files: `cp logger.log bug.log ~/.cache/tt-metal-cache`
+* Create a tarball of `tt-metal-cache`: `tar czf bug.tgz -C ~/.cache tt-metal-cache`
 * Attach that tarball to your bug report.
-* Please describe what the bug is.
+* Please describe what the bug is (in excrutiating detail).
+
+If you're doing something different, add `-save-temps=obj
+-fdump-tree-all -fdump-rtl-all` to the compilation line.  Tar up the
+intermediate files so-produed and record the command line you used.
+
+In either case, also determine the version of the compiler you are using:
+```
+path/to/install/sfpi/compiler/bin/riscv-tt-elf-g++ --version
+```
+
+**Remember, I am unlikely to be familiar with your problem domain. I do
+not have your header files. It's probably difficult, if not impossible,
+to reproduce your development environment.**
 
 ### User Documentation
 
@@ -41,18 +61,19 @@ https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/l
 
 ### Obtaining Full Source
 
-The Github-provided source tarballs (sfpi-$VERSION.tar.gz) do not
+The Github-provided source tarballs (sfpi-$VERSION.tar) do not
 contain the submodule source code. To obtain the full sources:
 
 * Clone the sfpi repo: `git clone https://github.com/tenstorrent/sfpi.git`
 * Enter the repo: `cd sfpi`
 * Checkout the release using the tag: `git checkout $VERSION`
-* Update the submodules: `git submodule update --init --recursive`
+* Update the submodules: `git submodule update --depth 1 --init --recursive`
 
-In the binary releases, you may examing `sfpi/README.txt`, which lists
+In the binary releases, you may examine `sfpi/README.md`, which lists
 the submodules, their locations and hashes.
 
 ### Building
+
 1) Clone the sfpi repo, & initialize submodules:
 ```
   git clone git@github.com:tenstorrent/sfpi.git
@@ -66,8 +87,8 @@ the submodules, their locations and hashes.
 
   This will configure and build using the toplevel `configure` and
   `Makefile.in`, which originate from the RISC-V repo
-  (https://github.com/riscv-collab/riscv-gnu-toolchain). The build is
-  performed in a `build` subdirectory and a `sfpi/src-hashes` file is
+  (`https://github.com/riscv-collab/riscv-gnu-toolchain`). The build is
+  performed in a `build` subdirectory and a `hashes.pre` file is
   created there to record the source tree state at the start of a
   build. When making a release, you will want this to match upstream
   committed sources. If you want to build in a different subdirectory
@@ -101,14 +122,9 @@ the submodules, their locations and hashes.
 
 4) Create a release
 
-  * Update the `version` file to the new version number. That version
-  will be augmented by the git branch name (the last component of a
-  `/`-separated branch name), unless you're on `main`. This is
-  recorded in a `version` file placed in the build directory.
+  * Build a release as described above.
 
-  * Then build a release as described above.
-
-  * To create the release artifacts:
+  * Create the release artifacts:
 
 ```
   scripts/release.sh
@@ -119,45 +135,81 @@ the submodules, their locations and hashes.
   started. You may override this check with the `--force` option, but
   /be careful/.
 
-  A `.txz` tarball will be created, along with `.deb` and/or `.rpm`
-  packages, if the necessary packagers are available. (GEM utility FPM
-  is used.) Also a `.md5` checksum file is created. The host binaries therein
-  are stripped. The package dependencies are determined by looking at
-  executable shared object requirements and inferring the packages
-  from that.
+  A `.txz` tarball will be created in a `release` directory, along
+  with `.deb` or `.rpm` packages. Also a `.hash` file is created.
 
 5) Making the release available (from github)
 
-  Upload the release files and md5 hash as a binary file added to a
-  git hub. You'll want to set the version tag to be the same as the
-  version string created during the build process.
+  Create an `sfpi-version` file from the hash files generated during
+  the release process (you may have several, by building and
+  releasing on several hosts):
+
+```
+  scripts/sfpi-info.sh CREATE [$DIRS]
+```
+
+  Where `$DIRS` are the directories containing the `.hash` files.  You
+  will probably have to edit the created file to adjust the sfpi_url
+  value.
+
+  Upload the release files and sfpi-version to a github
+  release. You'll want to set the version tag to be the same as the
+  version string created during the build process (and mentioned in
+  the sfpi-version file)
 
   Users may automate downloading by augmenting their cmake `CMakeLists.txt`
   file with something like:
 ```
-include(FetchContent)
-FetchContent_Declare(
-    sfpi
-    URL https://github.com/$REPO/releases/download/$VERSION/sfpi-$VERSION-x86_64_Linux.txz
-    URL_HASH MD5=$HASH
-    SOURCE_DIR $INSTALL_LOCATION
+# sfpi-info.sh generates a cmake script, which we include just below.
+execute_process(
+    COMMAND
+        PATH_TO/sfpi-info.sh CMAKE txz
+    OUTPUT_FILE ${SFPI_BASE}/sfpi-version.cmake
+    COMMAND_ERROR_IS_FATAL ANY
 )
-FetchContent_MakeAvailable(sfpi)
+# sfpi-info.sh sources sfpi-version, if either changes we should reconfigure
+set_property(
+    DIRECTORY
+    APPEND
+    PROPERTY
+        CMAKE_CONFIGURE_DEPENDS
+            "PATH_TO/sfpi-info.sh;../sfpi-version"
+)
+# this script sets a bunch of variables of the form SFPI_snake_case_name
+include(${SFPI_BASE}/sfpi-version.cmake)
+if(NOT "${SFPI_hash}" STREQUAL "")
+    # download a toolchain
+    include(FetchContent)
+    FetchContent_Declare(
+        sfpi
+        URL
+            "${SFPI_url}/${SFPI_filename}"
+        URL_HASH "${SFPI_HASHTYPE}=${SFPI_hash}"
+        SOURCE_DIR
+        "${SFPI_BASE}/sfpi"
+    )
+    FetchContent_MakeAvailable(sfpi)
+else()
+    message(FATAL "No downloadable SFPI tarball for ${SFPI_arch} ${SFPI_dist}")
+endif()
 ```
-
-where:
-* $REPO is the repository containing the release (`tenstorrent/sfpi` for tenstorrent releases)
-* $VERSION is the version to download
-* $HASH is the md5 hash of the tarball
-* $INSTALL_LOCATION is where to place the tarball's contents.
 
 Refer to cmake documentation for further information about
 `FetchContent`, `FetchContent_Declare` and
 `FetchContent_MakeAvailable`.
 
-A more sophisticated mechanism is used by Tenstorent's `tt-metal` repo
--- see `tt_metal/sfpi-version.sh` and its uses in
+A variant of this mechanism is used by Tenstorent's `tt-metal` repo
+-- see `tt_metal/sfpi-info.sh` and its uses in
 `tt_metal/hw/CMakeLists.txt` & `install_dependencies.sh`.
+
+To download from a shell script use:
+```
+eval $(path/to/sfpi-info.sh SHELL [$pkg])
+```
+
+where `$pkg` is the desired package type (defaults to your system's
+package format). This will set a bunch of `sfpi_foo` variables your
+script may examine.
 
 8) Running the toolchain test suites:
 ```
@@ -179,7 +231,7 @@ After the dejagnu tests have executed, the summary files (`$tool.sum`)
 are post processed using local xfail files in the `xfails`
 directory. This filters out additional fails that are due to
 limitations of the test environment or deemed expected for some other
-reason. The post processed files are placed in the `build` directory,
+reason. The post processed files are placed in a `build/tests` directory,
 the originals are left unchanged.
 
 Note that these dejagnu test runs are idempotent. If you want to

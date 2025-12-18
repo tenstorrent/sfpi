@@ -112,8 +112,14 @@ echo "INFO: Version: $tt_version"
 if ! [[ -d $BUILD ]]; then
     mkdir -p $BUILD/sfpi
     # extract git hashes for here and each submodule
-    $BIN/git-hash.sh "$tt_version" >$BUILD/sfpi/README.txt
+    $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.pre
     echo $tt_version > $BUILD/version
+
+    # Generate a README.md
+    head -n 3 <README.md >$BUILD/sfpi/README.md
+    cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
+    echo >>$BUILD/sfpi/README.md
+    sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
 fi
 
 # Clean the environment

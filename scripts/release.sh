@@ -36,8 +36,8 @@ echo "INFO: Version: $tt_version"
 
 if ! $ci ; then
     # extract git hashes for here and each submodule
-    $BIN/git-hash.sh "$tt_version" > $BUILD/README.post
-    if ! cmp -s $BUILD/sfpi/README.txt $BUILD/README.post ; then
+    $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.post
+    if ! cmp -s $BUILD/hashes.pre $BUILD/hashes.post ; then
 	echo "*** WARNING: Source tree has changed since build started ***" >&2
 	if ! $force ; then
 	    exit 1
