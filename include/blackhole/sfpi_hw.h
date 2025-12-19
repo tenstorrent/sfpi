@@ -15,7 +15,6 @@ typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
-#define __builtin_rvtt_sfpassignlreg(lr) __builtin_rvtt_sfpassignlreg(lr)
 #define __builtin_rvtt_sfpxicmps(v, i, mod1) __builtin_rvtt_sfpxicmps(ckernel::instrn_buffer, v, i, 0, 0, mod1)
 #define __builtin_rvtt_sfpxicmpv(v1, v2, mod1) __builtin_rvtt_sfpxicmpv(v1, v2, mod1)
 #define __builtin_rvtt_sfpxvif() __builtin_rvtt_sfpxvif()
