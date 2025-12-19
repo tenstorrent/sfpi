@@ -24,7 +24,7 @@ upstream version. (There may be other reasons to increment.)
 
 **For any issues with this software please file an issue at
 `https://github.com/tenstorrent/tt-metal`, and mark it with an `sfpi`
-label. Do not try an dfile a report in this repo.**
+label. Do not try to file a report in this repo.**
 
 If you are reporting when using `tt-metal`, please follow the following
 procedure to obtain a reproducible test case:
