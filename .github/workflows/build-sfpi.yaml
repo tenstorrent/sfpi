@@ -12,6 +12,10 @@ on:
       box:
         required: true
         type: string
+      incremental:
+        required: true
+        type: boolean
+        default: true
       key:
         required: false
         type: string
@@ -39,6 +43,10 @@ on:
         options:
           - none
           - Alma
+      incremental:
+        required: true
+        type: boolean
+        default: true
 
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
@@ -62,7 +70,7 @@ jobs:
       - name: Install packages
         run: |
           pkgs="autoconf automake bison expect flex gawk python3 texinfo"
-          pkgs+=" patchutils ruby"
+          pkgs+=" patchutils ruby wget"
           eval $(./scripts/sfpi-info.sh VERSION 0)
           case $sfpi_dist in
             debian)
@@ -81,7 +89,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built --small
+        run: scripts/build.sh --gdb --tt-built --small ${{ ! inputs.incremental && '--full' || null }}
       - name: Build test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run tests
@@ -104,7 +112,7 @@ jobs:
         shell: bash
         run: |
           eval $(./scripts/sfpi-info.sh VERSION $(cat build/version))
-          config="$sfpi_version $sfpi_arch $sfpi_dist ($sfpi_pkg)"
+          config="$sfpi_version ${sfpi_base_version:+(}$sfpi_base_version${sfpi_base_version:+)} $sfpi_arch $sfpi_dist ($sfpi_pkg)"
           if [[ -z "${{ inputs.key }}" ]]; then
             echo "### $config" >>$GITHUB_STEP_SUMMARY
           else

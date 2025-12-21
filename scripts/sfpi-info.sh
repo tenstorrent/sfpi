@@ -27,7 +27,7 @@ if [[ ${#1} = 0 ]]; then
     cat >&2 <<EOF
 Usage:
 $0 CREATE [\$DIRS] - generate release information
-$0 VERSION \$VER - generate release names
+$0 VERSION \$VER [\$BASE] - generate release names
 $0 SHELL [\$PKG] - shell use for PKG
 $0 CMAKE [\$PKG] - CMAKE use for PKG
 $0 BUILD [\$DIR] - clone and build a toolchain
@@ -36,13 +36,14 @@ EOF
 fi
 
 version_file="sfpi-version"
+repo="https://github.com/tenstorrent/sfpi"
 hashtype=sha256
 if [[ ${1-} = CREATE ]]; then
     # create sfpi-version file
     version=
     exit_code=0
     echo '# sfpi version information' >$version_file
-    echo 'sfpi_repo=https://github.com/tenstorrent/sfpi' >>$version_file
+    echo "sfpi_repo=$repo" >>$version_file
     echo "sfpi_hashtype=$hashtype" >>$version_file
     shift
     if [[ ${#1} = 0 ]]; then
@@ -78,7 +79,9 @@ fi
 if [[ ${1-} = VERSION ]]; then
     # releaser of sfpi
     sfpi_version=$2
+    sfpi_base_version=${3-}
     sfpi_hashtype=$hashtype
+    sfpi_repo="$repo"
 else
     source $(dirname $0)/$version_file
 fi

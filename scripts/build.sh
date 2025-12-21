@@ -20,6 +20,7 @@ test_tt=false
 tt_built=false
 tt_version=
 small_build=
+incremental=true
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -27,6 +28,7 @@ while [ "$#" -ne 0 ] ; do
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
+	--full) incremental=false ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
 	--serial) NCPUS=1 ;;
@@ -42,7 +44,7 @@ while [ "$#" -ne 0 ] ; do
     esac
     shift
 done
-if [ "$#" -ne 0 ] ; then
+if [[ "$#" -ne 0 ]]; then
     echo "Unknown argument '$1'" >&2
     exit 2
 fi
@@ -53,7 +55,7 @@ if [[ -r $BUILD/version ]]; then
 elif [[ "$tt_version" == "" ]]; then
     # match and exclude are globs, not regexes. This is close enough.
     if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
-			  --exclude '*-*' 2>/dev/null) ; then
+			  --exclude '*-*' 2>/dev/null); then
 	# legacy version numbering with a 'v' prefix.
 	tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
 			 --exclude 'v*-*' 2>/dev/null \
@@ -63,14 +65,14 @@ elif [[ "$tt_version" == "" ]]; then
 	fi
     fi
     tagged_head=true
-    if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$' ; then
+    if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$'; then
 	tagged_head=false
     fi
     head=$(git rev-parse --symbolic-full-name HEAD)
     branch=
     if [[ $head = "HEAD" ]]; then
 	# detached head
-	if ! $tagged_head ; then
+	if ! $tagged_head; then
 	    # Not tagged, figure out a branch name to add
 	    origin=
 	    refs=$(git show -s --pretty=%D HEAD 2>/dev/null \
@@ -109,14 +111,38 @@ elif [[ "$tt_version" == "" ]]; then
 fi
 echo "INFO: Version: $tt_version"
 
-if ! [[ -d $BUILD ]]; then
+base_version=${tt_version%%-*}
+if [[ $tt_version = $base_version ]]; then
+    incremental=false
+fi
+
+if [[ -d $BUILD ]]; then
+    incremental=false
+else
     mkdir -p $BUILD/sfpi
+    if $incremental; then
+	eval $($BIN/sfpi-info.sh VERSION $base_version )
+	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
+	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
+	else
+	    incremental=false
+	fi
+    fi
+
     # extract git hashes for here and each submodule
     $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.pre
     echo $tt_version > $BUILD/version
 
     # Generate a README.md
     head -n 3 <README.md >$BUILD/sfpi/README.md
+    if $incremental; then
+	echo Incremental build using $base_version
+	echo "**Incremental build using $base_version**" >>$BUILD/sfpi/README.md
+    else
+	echo Full build
+	base_version=
+    fi
+    echo $base_version >>$BUILD/version
     cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
     echo >>$BUILD/sfpi/README.md
     sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
@@ -134,7 +160,7 @@ export LC_ALL=C
 # configure, if this is the first time
 if ! [[ -e $BUILD/Makefile ]]; then
     ident_options=()
-    if $tt_built ; then
+    if $tt_built; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
 		       --with-pkgversion="tenstorrent/sfpi:$tt_version")
@@ -150,16 +176,27 @@ if ! [[ -e $BUILD/Makefile ]]; then
 		  --without-system-zlib --without-zstd \
 		  --enable-multilib \
 		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
+    if $incremental; then
+	(set -x; make -C $BUILD stamps/check-write-permission)
+	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
+	do
+	    if ! [[ $file =~ -stage2$ ]]; then
+		mkdir -p $BUILD/$(dirname $file)
+		echo Inremental $file
+		echo Incremental >$BUILD/$file
+	    fi
+	done
+    fi
 fi
 
 # build the toolchain
 (set -x; nice make -C $BUILD -j$NCPUS $small_build)
 
 # maybe make the test infra
-if $dejagnu ; then
+if $dejagnu; then
     (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS $small_build)
 fi
-if $sim ; then
+if $sim; then
     if ! [[ -e qemu ]]; then
 	git clone --depth 64 --branch v7.2.15 https://gitlab.com/qemu-project/qemu.git
     fi
@@ -174,7 +211,7 @@ errors=0
 testing=false
 TARGET_BOARDS='riscv-sim/'
 tests=$BUILD/tests
-if $test_binutils ; then
+if $test_binutils; then
     testing=true
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
     mkdir -p $tests
@@ -189,7 +226,7 @@ if $test_binutils ; then
     done
 fi
 
-if $test_gcc ; then
+if $test_gcc; then
     testing=true
     test_tt=false
     (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
@@ -221,8 +258,11 @@ if $test_tt; then
 fi
 
 echo "INFO: Version: $tt_version"
+if $incremental; then
+    echo "INFO: Base: $base_version"
+fi
 
-if $testing ; then
+if $testing; then
     ok=true
     if [[ $errors != 0 ]]; then
 	echo "ERROR: $errors tests are borked" >&2

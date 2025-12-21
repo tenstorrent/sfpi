@@ -27,7 +27,8 @@ while [ "$#" -ne 0 ] ; do
 done
 
 if [[ -r $BUILD/version ]]; then
-     tt_version=$(cat $BUILD/version)
+    tt_version=$(head -1 $BUILD/version)
+    base_version=$(tail -1 $BUILD/version)
 else
     echo "No $BUILD/version file present" >&2
     exit 1
@@ -51,7 +52,7 @@ tar cf - include | tar xf - -C $BUILD/sfpi
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
-eval $($BIN/sfpi-info.sh VERSION $tt_version)
+eval $($BIN/sfpi-info.sh VERSION $tt_version $base_version)
 
 rm -rf $BUILD/release
 mkdir $BUILD/release
