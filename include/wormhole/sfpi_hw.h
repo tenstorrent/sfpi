@@ -11,7 +11,7 @@
 
 namespace sfpi {
 
-typedef float __rvtt_vec_t __attribute__((vector_size(64*4)));
+using __rvtt_vec_t = ::__xtt_vector;
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
