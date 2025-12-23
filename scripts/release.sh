@@ -27,17 +27,16 @@ while [ "$#" -ne 0 ] ; do
 done
 
 if [[ -r $BUILD/version ]]; then
-    tt_version=$(head -1 $BUILD/version)
-    base_version=$(tail -1 $BUILD/version)
+    source $BUILD/version
 else
     echo "No $BUILD/version file present" >&2
     exit 1
 fi
-echo "INFO: Version: $tt_version"
+echo "INFO: Version: $sfpi_version"
 
 if ! $ci ; then
     # extract git hashes for here and each submodule
-    $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.post
+    $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.post
     if ! cmp -s $BUILD/hashes.pre $BUILD/hashes.post ; then
 	echo "*** WARNING: Source tree has changed since build started ***" >&2
 	if ! $force ; then
@@ -52,13 +51,16 @@ tar cf - include | tar xf - -C $BUILD/sfpi
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
-eval $($BIN/sfpi-info.sh VERSION $tt_version $base_version)
-
 rm -rf $BUILD/release
 mkdir $BUILD/release
 
+eval $($BIN/sfpi-info.sh HASH <$BUILD/version)
+version_file=$BUILD/release/$sfpi_filename.version
+cp $BUILD/version $version_file
+
 tar cJf $BUILD/release/$sfpi_filename.txz -C $BUILD sfpi
 echo "INFO: Tarball: $BUILD/release/$sfpi_filename.txz"
+$BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.txz <$BUILD/version >>$version_file
 
 if ! $txz_only ; then
     # Get the set of shared objects we use and figure what packages they come from.
@@ -139,22 +141,20 @@ if ! $txz_only ; then
 
 	    if [[ $sfpi_pkg = deb ]] ; then
 		# _ in version is verboten
-		fpm -t deb -v "${tt_version//_/-}" "${fpm_options[@]}" "${deb_deps[@]}" \
+		fpm -t deb -v "${sfpi_version//_/-}" "${fpm_options[@]}" "${deb_deps[@]}" \
 		    -p $BUILD/release/$sfpi_filename.deb
 		echo "INFO: Debian: $BUILD/release/$sfpi_filename.deb"
 	    elif [[ $sfpi_pkg = rpm ]] ; then
 		# - in version is verboten
-		fpm -t rpm -v "${tt_version//-/_}" "${fpm_options[@]}" "${rpm_deps[@]}" \
+		fpm -t rpm -v "${sfpi_version//-/_}" "${fpm_options[@]}" "${rpm_deps[@]}" \
 		    -p $BUILD/release/$sfpi_filename.rpm \
 		    --rpm-auto-add-directories --rpm-rpmbuild-define "_build_id_links none"
 		echo "INFO: RPM: $BUILD/release/$sfpi_filename.rpm"
 	    fi
+	    $BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.$sfpi_pkg <$BUILD/version >>$version_file
 	    ;;
 	*)
 	    echo "WARNING: Unknown packaging system on $sfpi_releaser" >&2
 	    ;;
     esac
 fi
-
-(cd $BUILD/release ; ${sfpi_hashtype}sum -b $sfpi_filename.* > $sfpi_filename.${sfpi_hashtype})
-echo "INFO: ${sfpi_hashtype:u}: $BUILD/release/$sfpi_filename.${sfpi_hashtype}"
