@@ -54,7 +54,7 @@ fi
 
 # figure version, now we know tt_built
 if [[ -r $BUILD/version ]]; then
-    eval $BUILD/version
+    source $BUILD/version
 elif [[ "$tt_version" == "" ]]; then
     # match and exclude are globs, not regexes. This is close enough.
     if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
