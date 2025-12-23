@@ -13,14 +13,16 @@ NCPUS=$(nproc)
 gcc_checking=release
 dejagnu=false
 enable_gdb=--disable-gdb
+incremental=true
 sim=false
+small_build=
 test_binutils=false
 test_gcc=false
 test_tt=false
 tt_built=false
+tt_base=
+tt_label=
 tt_version=
-small_build=
-incremental=true
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -31,6 +33,7 @@ while [ "$#" -ne 0 ] ; do
 	--full) incremental=false ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
+	--label=*) tt_label="${1#*=}" ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
@@ -111,9 +114,10 @@ elif [[ "$tt_version" == "" ]]; then
 fi
 echo "INFO: Version: $tt_version"
 
-base_version=${tt_version%%-*}
-if [[ $tt_version = $base_version ]]; then
+tt_base=${tt_version%%-*}
+if [[ $tt_version = $tt_base ]]; then
     incremental=false
+    tt_base=
 fi
 
 if [[ -d $BUILD ]]; then
@@ -121,28 +125,30 @@ if [[ -d $BUILD ]]; then
 else
     mkdir -p $BUILD/sfpi
     if $incremental; then
-	eval $($BIN/sfpi-info.sh VERSION $base_version )
+	eval $($BIN/sfpi-info.sh VERSION $tt_base)
 	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
 	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
 	else
 	    incremental=false
+	    tt_base=
 	fi
     fi
 
     # extract git hashes for here and each submodule
     $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.pre
-    echo $tt_version > $BUILD/version
+    echo "tt_version=$tt_version" > $BUILD/version
 
     # Generate a README.md
     head -n 3 <README.md >$BUILD/sfpi/README.md
     if $incremental; then
-	echo Incremental build using $base_version
-	echo "**Incremental build using $base_version**" >>$BUILD/sfpi/README.md
+	echo Incremental build using $tt_base
+	echo "**Incremental build using $tt_base**" >>$BUILD/sfpi/README.md
     else
 	echo Full build
-	base_version=
+	tt_base=
     fi
-    echo $base_version >>$BUILD/version
+    echo "tt_base=$tt_base" >>$BUILD/version
+    echo "tt_label=$tt_label" >>$BUILD/version
     cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
     echo >>$BUILD/sfpi/README.md
     sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
@@ -163,10 +169,10 @@ if ! [[ -e $BUILD/Makefile ]]; then
     if $tt_built; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
-		       --with-pkgversion="tenstorrent/sfpi:$tt_version")
+		       --with-pkgversion="tenstorrent/sfpi:$tt_version${tt_label:+[}$tt_label${tt_label:+]}")
     else
 	ident_options=(--with-bugurl='unsupported'
-		       --with-pkgversion="tenstorrent/sfpi-DIY:$tt_version")
+		       --with-pkgversion="tenstorrent/sfpi-DIY:$tt_version${tt_label:+[}$tt_label${tt_label:+]}")
     fi
     (cd $BUILD
      set -x
@@ -259,7 +265,10 @@ fi
 
 echo "INFO: Version: $tt_version"
 if $incremental; then
-    echo "INFO: Base: $base_version"
+    echo "INFO: Base: $tt_base"
+fi
+if [[ -n $tt_label ]]; then
+    echo "INFO: Label: $tt_label"
 fi
 
 if $testing; then

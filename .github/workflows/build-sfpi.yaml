@@ -47,6 +47,9 @@ on:
         required: true
         type: boolean
         default: true
+      label:
+        required: false
+        type: string
 
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
@@ -89,7 +92,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built --small ${{ ! inputs.incremental && '--full' || null }}
+        run: scripts/build.sh --gdb --tt-built --small ${{ ! inputs.incremental && '--full' || null }} ${{ ! inputs.label && format('--label={0}', inputs.label) || null }}
       - name: Build test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run tests

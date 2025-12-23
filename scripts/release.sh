@@ -27,8 +27,7 @@ while [ "$#" -ne 0 ] ; do
 done
 
 if [[ -r $BUILD/version ]]; then
-    tt_version=$(head -1 $BUILD/version)
-    base_version=$(tail -1 $BUILD/version)
+    source $BUILD/version
 else
     echo "No $BUILD/version file present" >&2
     exit 1
