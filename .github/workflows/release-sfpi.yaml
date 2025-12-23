@@ -26,11 +26,11 @@ jobs:
             box: Alma
     uses: ./.github/workflows/build-sfpi.yaml
     with:
-      tag: ${{ inputs.tag }}
-      arch: ${{ matrix.arch }}
-      box: ${{ matrix.box }}
-      incremental: ${{ inputs.incremental }}
-      key: ${{ matrix.arch }}-${{ matrix.box }}
+      tag: ${{inputs.tag}}
+      arch: ${{matrix.arch}}
+      box: ${{matrix.box}}
+      incremental: ${{inputs.incremental}}
+      key: ${{matrix.arch}}-${{matrix.box}}
       label: ${{github.run_number}}
   release:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{inputs.tag || github.ref}}
           fetch-depth: 1
           fetch-tags: false
           submodules: false
@@ -67,12 +67,12 @@ jobs:
       - name: Upload release
         uses: actions/upload-artifact@v4
         with:
-          name: SFPI-${{ env.version }}-packages
+          name: SFPI-${{env.version}}-packages
           path: pkg/*
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: SFPI-${{ env.version }}-tests
+          name: SFPI-${{env.version}}-tests
           path: tst/*
       - name: Gather configs
         uses: actions/download-artifact@v5
