@@ -19,6 +19,9 @@ on:
       key:
         required: false
         type: string
+      build_id:
+        required: false
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -49,19 +52,19 @@ on:
         default: true
 
 env:
-  SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
+  SUDO: ${{inputs.box == 'none' && 'sudo' || ''}}
 
-run-name: Build ${{ inputs.arch }} SFPI ${{ inputs.tag || github.ref }}${{ inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
+run-name: Build ${{inputs.arch}} SFPI ${{inputs.tag || github.ref}}${{inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
-    runs-on: ubuntu-22.04${{ inputs.arch == 'aarch64' && '-arm' || '' }}
+    runs-on: ubuntu-22.04${{inputs.arch == 'aarch64' && '-arm' || ''}}
     container:
-      image: ${{ inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null }}
+      image: ${{inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null}}
     steps:
       - name: Checkout repo & submodules
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{inputs.tag || github.ref}}
           fetch-depth: 64
           fetch-tags: true
           submodules: recursive
@@ -71,7 +74,7 @@ jobs:
         run: |
           pkgs="autoconf automake bison expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby wget"
-          eval $(./scripts/sfpi-info.sh VERSION 0)
+          eval $(./scripts/sfpi-info.sh DIST </dev/null)
           case $sfpi_dist in
             debian)
               $SUDO apt-get update
@@ -89,7 +92,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built --small ${{ ! inputs.incremental && '--full' || null }}
+        run: scripts/build.sh --gdb --tt-built --small ${{!inputs.incremental && '--full' || null}} ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
       - name: Build test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run tests
@@ -99,29 +102,33 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ inputs.arch }}-${{ inputs.box }}
+          name: build-${{inputs.arch}}-${{inputs.box}}
           path: build/release/*
           compression-level: 0
       - name: Upload tests
         uses: actions/upload-artifact@v4
         with:
-          name: tests-${{ inputs.arch }}-${{ inputs.box }}
+          name: tests-${{inputs.arch}}-${{inputs.box}}
           path: build/tests/*
       - id: version
         name: Gather config
         shell: bash
         run: |
-          eval $(./scripts/sfpi-info.sh VERSION $(cat build/version))
-          config="$sfpi_version ${sfpi_base_version:+(}$sfpi_base_version${sfpi_base_version:+)} $sfpi_arch $sfpi_dist ($sfpi_pkg)"
-          if [[ -z "${{ inputs.key }}" ]]; then
+          eval $(./scripts/sfpi-info.sh DIST <build/version)
+          config="$sfpi_version"
+          if [[ -n $sfpi_base ]]; then
+              config+=" ($sfpi_base)"
+          fi
+          config+=" $sfpi_arch $sfpi_dist ($sfpi_pkg)"
+          if [[ -z "${{inputs.key}}" ]]; then
             echo "### $config" >>$GITHUB_STEP_SUMMARY
           else
             mkdir -p outputs
-            echo "$config" >outputs/config-${{ inputs.key }}
+            echo "$config" >outputs/config-${{inputs.key}}
           fi
       - name: Upload config
-        if: ${{ inputs.key }} != ""
+        if: ${{inputs.key}} != ""
         uses: actions/upload-artifact@v4
         with:
-          name: config-${{ inputs.arch }}-${{ inputs.box }}
+          name: config-${{inputs.arch}}-${{inputs.box}}
           path: outputs/config-*
