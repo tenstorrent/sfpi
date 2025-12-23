@@ -19,6 +19,9 @@ on:
       key:
         required: false
         type: string
+      label:
+        required: false
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -47,9 +50,6 @@ on:
         required: true
         type: boolean
         default: true
-      label:
-        required: false
-        type: string
 
 env:
   SUDO: ${{ inputs.box == 'none' && 'sudo' || '' }}
