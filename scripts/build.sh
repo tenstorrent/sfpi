@@ -13,14 +13,13 @@ NCPUS=$(nproc)
 gcc_checking=release
 dejagnu=false
 enable_gdb=--disable-gdb
-incremental=true
 sim=false
 small_build=
 test_binutils=false
 test_gcc=false
 test_tt=false
 tt_built=false
-tt_base=
+tt_base=*
 tt_label=
 tt_version=
 BUILD=build
@@ -30,7 +29,7 @@ while [ "$#" -ne 0 ] ; do
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
-	--full) incremental=false ;;
+	--full) tt_base= ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
 	--label=*) tt_label="${1#*=}" ;;
@@ -114,41 +113,38 @@ elif [[ "$tt_version" == "" ]]; then
 fi
 echo "INFO: Version: $tt_version"
 
-tt_base=${tt_version%%-*}
-if [[ $tt_version = $tt_base ]]; then
-    incremental=false
-    tt_base=
+if [[ -n $tt_base ]]; then
+    tt_base=${tt_version%%-*}
+    if [[ $tt_version = $tt_base ]]; then
+	tt_base=
+    fi
 fi
 
-if [[ -d $BUILD ]]; then
-    incremental=false
-else
+if ! [[ -d $BUILD ]]; then
     mkdir -p $BUILD/sfpi
-    if $incremental; then
+    if [[ -n $tt_base ]]; then
 	eval $($BIN/sfpi-info.sh VERSION $tt_base)
 	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
 	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
 	else
-	    incremental=false
 	    tt_base=
 	fi
     fi
 
     # extract git hashes for here and each submodule
     $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.pre
-    echo "tt_version=$tt_version" > $BUILD/version
 
     # Generate a README.md
     head -n 3 <README.md >$BUILD/sfpi/README.md
-    if $incremental; then
+    if [[ -n $tt_base ]]; then
 	echo Incremental build using $tt_base
 	echo "**Incremental build using $tt_base**" >>$BUILD/sfpi/README.md
-    else
-	echo Full build
-	tt_base=
     fi
-    echo "tt_base=$tt_base" >>$BUILD/version
-    echo "tt_label=$tt_label" >>$BUILD/version
+    cat <<EOF >$BUILD/version
+tt_version=$tt_version
+tt_base=$tt_base
+tt_label=$tt_label
+EOF
     cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
     echo >>$BUILD/sfpi/README.md
     sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
@@ -182,7 +178,7 @@ if ! [[ -e $BUILD/Makefile ]]; then
 		  --without-system-zlib --without-zstd \
 		  --enable-multilib \
 		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
-    if $incremental; then
+    if [[ -n $tt_base ]]; then
 	(set -x; make -C $BUILD stamps/check-write-permission)
 	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
 	do
@@ -264,7 +260,7 @@ if $test_tt; then
 fi
 
 echo "INFO: Version: $tt_version"
-if $incremental; then
+if [[ -n $tt_base ]]; then
     echo "INFO: Base: $tt_base"
 fi
 if [[ -n $tt_label ]]; then

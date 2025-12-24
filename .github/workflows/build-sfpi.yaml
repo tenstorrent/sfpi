@@ -117,7 +117,7 @@ jobs:
           source build/version
           eval $(./scripts/sfpi-info.sh VERSION $tt_version $tt_base)
           config="$sfpi_version"
-          if [[ -n $sfpi_base_version ]];
+          if [[ -n $sfpi_base_version ]]; then
               config+=" ($sfpi_base_version)"
           fi
           config+=" $sfpi_arch $sfpi_dist ($sfpi_pkg)"
