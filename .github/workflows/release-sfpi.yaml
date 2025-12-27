@@ -58,10 +58,9 @@ jobs:
       - name: Create sfpi-version
         shell: bash
         run: |
-          scripts/sfpi-info.sh CREATE pkg
-          source ./sfpi-version
-          rm pkg/*.$sfpi_hashtype
-          mv sfpi-version pkg
+          scripts/sfpi-info.sh MERGE pkg/sfpi_*.version >pkg/sfpi-version
+          source pkg/sfpi-version
+          rm pkg/sfpi_*.version
           echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
           echo version=${sfpi_version//./_} >> $GITHUB_ENV
       - name: Upload release

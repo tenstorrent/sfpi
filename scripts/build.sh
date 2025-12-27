@@ -19,9 +19,9 @@ test_binutils=false
 test_gcc=false
 test_tt=false
 tt_built=false
-tt_base=*
-tt_label=
-tt_version=
+sfpi_base=*
+sfpi_label=
+sfpi_version=
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
@@ -29,10 +29,10 @@ while [ "$#" -ne 0 ] ; do
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
-	--full) tt_base= ;;
+	--full) sfpi_base= ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
-	--label=*) tt_label="${1#*=}" ;;
+	--label=*) sfpi_label="${1#*=}" ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
@@ -40,7 +40,7 @@ while [ "$#" -ne 0 ] ; do
 	--test-gcc) dejagnu=true sim=true test_gcc=true ;;
 	--test-tt) dejagnu=true test_tt=true ;;
 	--tt-built) tt_built=true ;;
-	--tt-version=*) tt_version="${1#*=}" ;;
+	--version=*) sfpi_version="${1#*=}" ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
@@ -54,20 +54,20 @@ fi
 # figure version, now we know tt_built
 if [[ -r $BUILD/version ]]; then
     source $BUILD/version
-elif [[ "$tt_version" == "" ]]; then
+elif [[ "$sfpi_version" == "" ]]; then
     # match and exclude are globs, not regexes. This is close enough.
-    if ! tt_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
+    if ! sfpi_version=$(git describe --tags --match '[0-9]*.[0-9]*.[0-9]*' \
 			  --exclude '*-*' 2>/dev/null); then
 	# legacy version numbering with a 'v' prefix.
-	tt_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
+	sfpi_version=$(git describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' \
 			 --exclude 'v*-*' 2>/dev/null \
 			 | sed 's/^v//' || true)
-	if ! [[ $tt_version ]]; then
-	    tt_version=0
+	if ! [[ $sfpi_version ]]; then
+	    sfpi_version=0
 	fi
     fi
     tagged_head=true
-    if echo "$tt_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$'; then
+    if echo "$sfpi_version" | grep -qe '-[0-9]\+-g[0-9a-f]\+$'; then
 	tagged_head=false
     fi
     head=$(git rev-parse --symbolic-full-name HEAD)
@@ -101,50 +101,59 @@ elif [[ "$tt_version" == "" ]]; then
 
     if [[ -n "$branch" ]]; then
 	# just use the final component of a branch name
-	tt_version="${tt_version%-*-g*}-${branch##*/}"
+	sfpi_version="${sfpi_version%-*-g*}-${branch##*/}"
     fi
 
     url=$(git config --get remote.origin.url \
 	      | sed -e 's/[^:]*://' -e 's+//[^/]*/++' \
 		    -e 's+/[^/]*\(\.git\)\?$++')
     if [[ $url != 'tenstorrent' ]]; then
-	tt_version="$url-$tt_version"
+	sfpi_version="$url-$sfpi_version"
     fi
 fi
-echo "INFO: Version: $tt_version"
+echo "INFO: Version: $sfpi_version"
 
-if [[ -n $tt_base ]]; then
-    tt_base=${tt_version%%-*}
-    if [[ $tt_version = $tt_base ]]; then
-	tt_base=
+if [[ -n $sfpi_base ]]; then
+    sfpi_base=${sfpi_version%%-*}
+    if [[ $sfpi_version = $sfpi_base ]]; then
+	sfpi_base=
     fi
 fi
 
 if ! [[ -d $BUILD ]]; then
     mkdir -p $BUILD/sfpi
-    if [[ -n $tt_base ]]; then
-	eval $($BIN/sfpi-info.sh VERSION $tt_base)
+    sfpi_repo=$(git config --get remote.origin.url)
+    if [[ $sfpi_repo =~ ^git@ ]]; then
+	sfpi_repo=${sfpi_repo/://}
+	sfpi_repo=${sfpi_repo/git@/https://}
+    fi
+    cat <<EOF >$BUILD/version
+sfpi_repo='${sfpi_repo%.git}'
+sfpi_version='$sfpi_version'
+sfpi_base='$sfpi_base'
+sfpi_label='$sfpi_label'
+sfpi_hashtype=sha256
+EOF
+    if [[ -n $sfpi_base ]]; then
+	eval $($BIN/sfpi-info.sh BASE <$BUILD/version)
 	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
 	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
 	else
-	    tt_base=
+	    # No such base available
+	    sfpi_base=
+	    sed -i '/sfpi_base=/s/=.*/=/' $BUILD/version
 	fi
     fi
 
     # extract git hashes for here and each submodule
-    $BIN/git-hash.sh "$tt_version" >$BUILD/hashes.pre
+    $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.pre
 
     # Generate a README.md
     head -n 3 <README.md >$BUILD/sfpi/README.md
-    if [[ -n $tt_base ]]; then
-	echo Incremental build using $tt_base
-	echo "**Incremental build using $tt_base**" >>$BUILD/sfpi/README.md
+    if [[ -n $sfpi_base ]]; then
+	echo Incremental build using $sfpi_base
+	echo "**Incremental build using $sfpi_base**" >>$BUILD/sfpi/README.md
     fi
-    cat <<EOF >$BUILD/version
-tt_version=$tt_version
-tt_base=$tt_base
-tt_label=$tt_label
-EOF
     cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
     echo >>$BUILD/sfpi/README.md
     sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
@@ -165,10 +174,10 @@ if ! [[ -e $BUILD/Makefile ]]; then
     if $tt_built; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
-		       --with-pkgversion="tenstorrent/sfpi:$tt_version${tt_label:+[}$tt_label${tt_label:+]}")
+		       --with-pkgversion="tenstorrent/sfpi:$sfpi_version${sfpi_label:+[}$sfpi_label${sfpi_label:+]}")
     else
 	ident_options=(--with-bugurl='unsupported'
-		       --with-pkgversion="tenstorrent/sfpi-DIY:$tt_version${tt_label:+[}$tt_label${tt_label:+]}")
+		       --with-pkgversion="tenstorrent/sfpi-DIY:$sfpi_version${sfpi_label:+[}$sfpi_label${sfpi_label:+]}")
     fi
     (cd $BUILD
      set -x
@@ -178,7 +187,7 @@ if ! [[ -e $BUILD/Makefile ]]; then
 		  --without-system-zlib --without-zstd \
 		  --enable-multilib \
 		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
-    if [[ -n $tt_base ]]; then
+    if [[ -n $sfpi_base ]]; then
 	(set -x; make -C $BUILD stamps/check-write-permission)
 	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
 	do
@@ -204,8 +213,6 @@ if $sim; then
     fi
     (set -x; nice make -C $BUILD build-sim -j$NCPUS $small_build)
 fi
-
-eval $($BIN/sfpi-info.sh VERSION $tt_version)
 
 fails=0
 unresolveds=0
@@ -259,12 +266,12 @@ if $test_tt; then
     done
 fi
 
-echo "INFO: Version: $tt_version"
-if [[ -n $tt_base ]]; then
-    echo "INFO: Base: $tt_base"
+echo "INFO: Version: $sfpi_version"
+if [[ -n $sfpi_base ]]; then
+    echo "INFO: Base: $sfpi_base"
 fi
-if [[ -n $tt_label ]]; then
-    echo "INFO: Label: $tt_label"
+if [[ -n $sfpi_label ]]; then
+    echo "INFO: Label: $sfpi_label"
 fi
 
 if $testing; then

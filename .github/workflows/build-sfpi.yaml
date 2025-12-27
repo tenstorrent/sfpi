@@ -74,7 +74,7 @@ jobs:
         run: |
           pkgs="autoconf automake bison expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby wget"
-          eval $(./scripts/sfpi-info.sh VERSION 0)
+          eval $(./scripts/sfpi-info.sh DIST </dev/null)
           case $sfpi_dist in
             debian)
               $SUDO apt-get update
@@ -114,11 +114,10 @@ jobs:
         name: Gather config
         shell: bash
         run: |
-          source build/version
-          eval $(./scripts/sfpi-info.sh VERSION $tt_version $tt_base)
+          eval $(./scripts/sfpi-info.sh DIST <build/version)
           config="$sfpi_version"
-          if [[ -n $sfpi_base_version ]]; then
-              config+=" ($sfpi_base_version)"
+          if [[ -n $sfpi_base ]]; then
+              config+=" ($sfpi_base)"
           fi
           config+=" $sfpi_arch $sfpi_dist ($sfpi_pkg)"
           if [[ -z "${{inputs.key}}" ]]; then
