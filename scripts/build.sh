@@ -32,7 +32,12 @@ while [ "$#" -ne 0 ] ; do
 	--full) sfpi_base= ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
-	--build=*) sfpi_build="${1#*=}" ;;
+	--build-id=*) sfpi_build="${1#*=}"
+		      if ! [[ $sfpi_build =~ ^[0-9]*$ ]]; then
+			  echo "$1 is not a decimal number" >&2
+			  exit 1
+		      fi
+		      ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
@@ -49,10 +54,6 @@ done
 if [[ "$#" -ne 0 ]]; then
     echo "Unknown argument '$1'" >&2
     exit 2
-fi
-if ! [[ $sfpi_build =~ ^[0-9]*$ ]]; then
-    echo "--build=$sfpi_build is not a decimal number" >&2
-    exit 1
 fi
 
 # figure version, now we know tt_built

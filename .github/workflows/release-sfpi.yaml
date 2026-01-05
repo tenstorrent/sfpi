@@ -31,7 +31,7 @@ jobs:
       box: ${{matrix.box}}
       incremental: ${{inputs.incremental}}
       key: ${{matrix.arch}}-${{matrix.box}}
-      build: ${{github.run_number}}
+      build_id: ${{github.run_number}}
   release:
     runs-on: ubuntu-latest
     needs: build
