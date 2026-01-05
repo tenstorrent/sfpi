@@ -796,7 +796,7 @@ sfpi_inline void __vBase::operator=(__vLReg lr)
 
 sfpi_inline __rvtt_vec_t __vLReg::operator=(__vBase& v) const
 {
-    __builtin_rvtt_sfpwritelreg(v.get(), reg);
+    __builtin_rvtt_sfppreservelreg(v.get(), reg);
     return v.get();
 }
 
