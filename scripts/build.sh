@@ -225,6 +225,7 @@ errors=0
 testing=false
 TARGET_BOARDS='riscv-sim/'
 tests=$BUILD/tests
+eval $($BIN/sfpi-info.sh DIST <$BUILD/version)
 if $test_binutils; then
     testing=true
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
