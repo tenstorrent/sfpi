@@ -77,7 +77,7 @@ sfpi_inline void __vDReg::operator=(const __vDReg dreg) const
 
 sfpi_inline vFloat __vDReg::operator=(const __vConstFloat creg) const
 {
-    __rvtt_vec_t lr = __builtin_rvtt_sfpassignlreg(creg.get());
+    __rvtt_vec_t lr = __builtin_rvtt_sfpreadlreg(creg.get());
     __builtin_rvtt_sfpstore(lr, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
     return vFloat(lr);
 }
@@ -92,7 +92,7 @@ sfpi_inline __vCond vFloat::operator>=(const float x) const { return __vCond(__v
 
 sfpi_inline vFloat vFloat::operator-=(const vFloat a)
 {
-    __rvtt_vec_t neg1 = __builtin_rvtt_sfpassignlreg(vConstNeg1.get());
+    __rvtt_vec_t neg1 = __builtin_rvtt_sfpreadlreg(vConstNeg1.get());
     assign(__builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE));
     return v;
 }

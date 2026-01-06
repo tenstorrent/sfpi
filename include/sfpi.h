@@ -464,7 +464,7 @@ public:
     vInt() = default;
     sfpi_inline vInt(const __vDReg dreg);
     sfpi_inline vInt(const __rvtt_vec_t& in) { assign(in); }
-    sfpi_inline vInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
+    sfpi_inline vInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpreadlreg(creg.get()); initialized = true; }
     sfpi_inline vInt(const __vIntBase in) { assign(in.get()); };
     sfpi_inline vInt(short val) { loadss(val); }
     sfpi_inline vInt(int val) { loadsi(val); }
@@ -557,7 +557,7 @@ public:
     vUInt() = default;
     sfpi_inline vUInt(const __vDReg dreg);
     sfpi_inline vUInt(const __rvtt_vec_t& in) { assign(in); }
-    sfpi_inline vUInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpassignlreg(creg.get()); initialized = true; }
+    sfpi_inline vUInt(const __vConstIntBase creg) { v = __builtin_rvtt_sfpreadlreg(creg.get()); initialized = true; }
     sfpi_inline vUInt(const __vIntBase in) { assign(in.get()); }
     sfpi_inline vUInt(short val) { loadss(val); }
     sfpi_inline vUInt(int val) { loadsi(val); }
@@ -790,13 +790,13 @@ sfpi_inline void __vBase::assign(const __rvtt_vec_t in)
 
 sfpi_inline void __vBase::operator=(__vLReg lr)
 {
-    v = __builtin_rvtt_sfpassignlreg(lr.get());
+    v = __builtin_rvtt_sfpreadlreg(lr.get());
     initialized = true;
 }
 
 sfpi_inline __rvtt_vec_t __vLReg::operator=(__vBase& v) const
 {
-    __builtin_rvtt_sfppreservelreg(v.get(), reg);
+    __builtin_rvtt_sfpwritelreg(v.get(), reg);
     return v.get();
 }
 
@@ -899,7 +899,7 @@ sfpi_inline vType __vIntBase::operator+(const __vIntBase val) const
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
 sfpi_inline vType __vIntBase::operator+(const __vConstIntBase val) const
 {
-    __rvtt_vec_t c = __builtin_rvtt_sfpassignlreg(val.get());
+    __rvtt_vec_t c = __builtin_rvtt_sfpreadlreg(val.get());
     return __builtin_rvtt_sfpxiadd_v(c, v, 0);
 }
 
@@ -918,7 +918,7 @@ sfpi_inline vType __vIntBase::operator-(const __vIntBase val) const
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
 sfpi_inline vType __vIntBase::operator-(const __vConstIntBase val) const
 {
-    __rvtt_vec_t c = __builtin_rvtt_sfpassignlreg(val.get());
+    __rvtt_vec_t c = __builtin_rvtt_sfpreadlreg(val.get());
     return __builtin_rvtt_sfpxiadd_v(c, v, SFPXIADD_MOD1_IS_SUB);
 }
 
@@ -938,7 +938,7 @@ sfpi_inline vType __vIntBase::operator+=(const __vIntBase val)
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
 sfpi_inline vType __vIntBase::operator+=(const __vConstIntBase val)
 {
-    __rvtt_vec_t c = __builtin_rvtt_sfpassignlreg(val.get());
+    __rvtt_vec_t c = __builtin_rvtt_sfpreadlreg(val.get());
     assign(__builtin_rvtt_sfpxiadd_v(c, v, 0));
     return v;
 }
@@ -959,7 +959,7 @@ sfpi_inline vType __vIntBase::operator-=(const __vIntBase val)
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
 sfpi_inline vType __vIntBase::operator-=(const __vConstIntBase val)
 {
-    __rvtt_vec_t c = __builtin_rvtt_sfpassignlreg(val.get());
+    __rvtt_vec_t c = __builtin_rvtt_sfpreadlreg(val.get());
     assign(__builtin_rvtt_sfpxiadd_v(c, v, SFPXIADD_MOD1_IS_SUB));
     return v;
 }
@@ -1067,13 +1067,13 @@ vUInt vUInt::operator>>(vInt amt) const {
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline vFloat::vFloat(const __vConstFloat creg)
 {
-    v = __builtin_rvtt_sfpassignlreg(creg.get());
+    v = __builtin_rvtt_sfpreadlreg(creg.get());
     initialized = true;
 }
 
 sfpi_inline __vIntBase::__vIntBase(const __vConstIntBase creg)
 {
-    v = __builtin_rvtt_sfpassignlreg(creg.get());
+    v = __builtin_rvtt_sfpreadlreg(creg.get());
     initialized = true;
 }
 
