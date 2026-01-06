@@ -48,6 +48,7 @@ on:
           - Alma
       incremental:
         required: true
+        description: Compiler-only build
         type: boolean
         default: true
 
