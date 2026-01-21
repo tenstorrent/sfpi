@@ -288,14 +288,32 @@ sfpi_inline __rvtt_vec_t subvec_shflshr1(const __vBase& src)
     return __builtin_rvtt_sfpshft2_e(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
 
-sfpi_inline void vec_swap(__vBase& dst, __vBase& src)
+sfpi_inline void vec_swap(vFloat& a, vFloat& b)
 {
-    __builtin_rvtt_sfpswap(dst.get(), src.get(), SFPSWAP_MOD1_SWAP);
+  auto r = __builtin_rvtt_sfpswap2(a.get(), b.get(), SFPSWAP_MOD1_SWAP);
+  a = vFloat(__builtin_rvtt_sfpselect2 (r, 0));
+  b = vFloat(__builtin_rvtt_sfpselect2 (r, 1));
 }
 
-sfpi_inline void vec_min_max(__vBase& dst, __vBase& src)
+sfpi_inline void vec_swap(__vIntBase& a, __vIntBase& b)
 {
-    __builtin_rvtt_sfpswap(dst.get(), src.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
+  auto r = __builtin_rvtt_sfpswap2(a.get(), b.get(), SFPSWAP_MOD1_SWAP);
+  a = __vIntBase(__builtin_rvtt_sfpselect2 (r, 0));
+  b = __vIntBase(__builtin_rvtt_sfpselect2 (r, 1));
+}
+
+sfpi_inline void vec_min_max(vFloat& a, vFloat& b)
+{
+  auto r = __builtin_rvtt_sfpswap2(a.get(), b.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
+  a = vFloat(__builtin_rvtt_sfpselect2 (r, 0));
+  b = vFloat(__builtin_rvtt_sfpselect2 (r, 1));
+}
+
+sfpi_inline void vec_min_max(__vIntBase& a, __vIntBase& b)
+{
+  auto r = __builtin_rvtt_sfpswap2(a.get(), b.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
+  a = __vIntBase(__builtin_rvtt_sfpselect2 (r, 0));
+  b = __vIntBase(__builtin_rvtt_sfpselect2 (r, 1));
 }
 
 } // namespace sfpi
