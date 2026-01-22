@@ -128,7 +128,7 @@ jobs:
             echo "$config" >outputs/config-${{inputs.key}}
           fi
       - name: Upload config
-        if: ${{inputs.key}} != ""
+        if: ${{inputs.key != ''}}
         uses: actions/upload-artifact@v4
         with:
           name: config-${{inputs.arch}}-${{inputs.box}}
