@@ -6,7 +6,7 @@
 	url = https://github.com/tenstorrent/sfpi-gcc.git
 [submodule "newlib"]
 	path = newlib
-	url = https://sourceware.org/git/newlib-cygwin.git
+	url = https://github.com/tenstorrent-forks/newlib-cygwin-mirror
 [submodule "riscv-dejagnu"]
 	path = riscv-dejagnu
 	url = https://github.com/riscv-collab/riscv-dejagnu.git
