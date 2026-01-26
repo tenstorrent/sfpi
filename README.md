@@ -57,7 +57,7 @@ to reproduce your development environment.**
 
 ### User Documentation
 
-https://docs.tenstorrent.com/tt-metalium/latest/tt_metal/apis/kernel_apis/sfpu/llk.html
+https://docs.tenstorrent.com/tt-metal/latest/tt-metalium/index.html
 
 ### Obtaining Full Source
 
