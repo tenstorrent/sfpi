@@ -271,9 +271,14 @@ sfpi_inline vUInt float_to_int16(vFloat in, int round_mode = 1)
                                         SFPSTOCHRND_MOD1_FP32_TO_INT16);
 }
 
-sfpi_inline void subvec_transp(__vBase& l0, __vBase& l1, __vBase& l2, __vBase& l3)
+sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
 {
-    __builtin_rvtt_sfptransp(l0.get(), l1.get(), l2.get(), l3.get());
+    __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
+}
+
+sfpi_inline void subvec_transp(_vIntBase& a, __vIntBase& b, vIntBase& c, __vIntBase& d)
+{
+    __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
 }
 
 sfpi_inline __rvtt_vec_t subvec_shflror1(const __vBase& src)
