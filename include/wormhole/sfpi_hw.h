@@ -77,7 +77,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpcast(src, mod1) __builtin_rvtt_wh_sfpcast(src, mod1)
 #define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_i(ckernel::instrn_buffer, mode, imm8, 0, 0, srcc, mod1)
 #define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_v(mode, srcb, srcc, mod1)
-#define __builtin_rvtt_sfptransp(l0, l1, l2, l3) __builtin_rvtt_wh_sfptransp(l0, l1, l2, l3)
 
 #define __builtin_rvtt_sfpshft2_i(dst, imm) __builtin_rvtt_wh_sfpshft2_i(dst, imm)
 #define __builtin_rvtt_sfpshft2_v(dst, src) __builtin_rvtt_wh_sfpshft2_v(dst, src)
