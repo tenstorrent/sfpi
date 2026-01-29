@@ -276,7 +276,7 @@ sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
     __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
 }
 
-sfpi_inline void subvec_transp(_vIntBase& a, __vIntBase& b, vIntBase& c, __vIntBase& d)
+sfpi_inline void subvec_transp(__vIntBase& a, __vIntBase& b, __vIntBase& c, __vIntBase& d)
 {
     __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
 }
