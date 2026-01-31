@@ -283,7 +283,7 @@ sfpi_inline vUInt float_to_int16(vFloat in, int round_mode = 1)
 
 sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
 {
-    auto r = __builtin_rvtt_sfptransp2(a.get(), b.get(), c.get(), d.get());
+    auto r = __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
     a = vFloat(__builtin_rvtt_sfpselect4 (r, 0));
     b = vFloat(__builtin_rvtt_sfpselect4 (r, 1));
     c = vFloat(__builtin_rvtt_sfpselect4 (r, 2));
@@ -292,7 +292,7 @@ sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
 
 sfpi_inline void subvec_transp(__vIntBase& a, __vIntBase& b, __vIntBase& c, __vIntBase& d)
 {
-    auto r = __builtin_rvtt_sfptransp2(a.get(), b.get(), c.get(), d.get());
+    auto r = __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
     a = __vIntBase(__builtin_rvtt_sfpselect4 (r, 0));
     b = __vIntBase(__builtin_rvtt_sfpselect4 (r, 1));
     c = __vIntBase(__builtin_rvtt_sfpselect4 (r, 2));
