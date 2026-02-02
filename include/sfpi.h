@@ -60,7 +60,7 @@
 //   the code as if executing if/then/else in C++, for example:
 //     __vCCCtrl cc;
 //     vFloat v = dst_reg[0];
-//     cc.cc_if(v < 5.0F); {
+//     cc.cc_v_if().cc_cond(v < 5.0F); {
 //         // if side
 //     } cc.cc_else(); {
 //         // else side
@@ -694,23 +694,25 @@ class __vCond {
 //////////////////////////////////////////////////////////////////////////////
 class __vCCCtrl {
 protected:
-    int top;
-    int push_count;
+    unsigned dep = 0;
+    unsigned depth = 0;
 
 public:
-    sfpi_inline __vCCCtrl();
+    sfpi_inline __vCCCtrl() = default;
     sfpi_inline ~__vCCCtrl();
 
-    sfpi_inline void cc_if(const __vCond& op) const;
-    sfpi_inline void cc_if(const __vIntBase& b) const;
-    sfpi_inline void cc_else() const;
-    sfpi_inline void cc_elseif(const __vCond& cond) const;
-    sfpi_inline void cc_elseif(const __vIntBase& b) const;
+    // Moveable, not copyable
+    sfpi_inline __vCCCtrl(__vCCCtrl &&src);
+    sfpi_inline __vCCCtrl &operator=(__vCCCtrl &&src);
 
-    sfpi_inline void mark_top();
-    sfpi_inline void push();
-    sfpi_inline void pop();
+    sfpi_inline __vCCCtrl &cc_if();
+    sfpi_inline __vCCCtrl &cc_else();
 
+    sfpi_inline void cc_cond(const __vCond& op);
+    sfpi_inline void cc_cond(const __vIntBase& b);
+    sfpi_inline __vCCCtrl &cc_push();
+    sfpi_inline __vCCCtrl &cc_pop();
+  
     static sfpi_inline void enable_cc();
 };
 
@@ -1119,58 +1121,60 @@ sfpi_inline const __vCond vUInt::operator>(const __vIntBase src) const { return 
 sfpi_inline const __vCond vUInt::operator>=(const __vIntBase src) const { return __vCond(__vCond::__vCondGTE, src, *this, 0); }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline __vCCCtrl::__vCCCtrl() : push_count(0)
+sfpi_inline __vCCCtrl &__vCCCtrl::cc_if()
 {
-    push();
+    dep = __builtin_rvtt_sfpxvif();
+    return *this;
 }
 
-sfpi_inline void __vCCCtrl::cc_if(const __vCond& op) const
+sfpi_inline void __vCCCtrl::cc_cond(const __vCond& op)
 {
-    __builtin_rvtt_sfpxcondb(op.get(), top);
+    __builtin_rvtt_sfpxcondb(op.get(), dep);
 }
 
-sfpi_inline void __vCCCtrl::cc_if(const __vIntBase& v) const
+sfpi_inline void __vCCCtrl::cc_cond(const __vIntBase& v)
 {
-    __builtin_rvtt_sfpxcondb(__vCond(__vCond::__vCondNE, v, 0, 0).get(), top);
+    __builtin_rvtt_sfpxcondb(__vCond(__vCond::__vCondNE, v, 0, 0).get(), dep);
 }
 
-sfpi_inline void __vCCCtrl::cc_elseif(const __vCond& op) const
-{
-    cc_if(op);
-}
-
-sfpi_inline void __vCCCtrl::cc_elseif(const __vIntBase& v) const
-{
-    cc_if(v);
-}
-
-sfpi_inline void __vCCCtrl::cc_else() const
+sfpi_inline __vCCCtrl &__vCCCtrl::cc_else()
 {
     __builtin_rvtt_sfpcompc();
+    return *this;    
+}
+
+sfpi_inline __vCCCtrl &__vCCCtrl::cc_push()
+ {
+   depth++;
+   __builtin_rvtt_sfppushc();
+   return *this;
+ }
+
+sfpi_inline __vCCCtrl &__vCCCtrl::cc_pop()
+ {
+   for (unsigned ix = depth; ix--;)
+      __builtin_rvtt_sfppopc();
+   return *this;
+ }
+
+sfpi_inline __vCCCtrl::__vCCCtrl(__vCCCtrl &&src)
+    : dep (src.dep), depth (src.depth)
+{
+  src.dep = 0;
+  src.depth = 0;
 }
 
 sfpi_inline __vCCCtrl::~__vCCCtrl()
 {
-    while (push_count != 0) {
-        pop();
-    }
+  cc_pop();
 }
 
-sfpi_inline void __vCCCtrl::mark_top()
+sfpi_inline __vCCCtrl &__vCCCtrl::operator=(__vCCCtrl &&src)
 {
-    top = __builtin_rvtt_sfpxvif();
-}
-
-sfpi_inline void __vCCCtrl::push()
-{
-    push_count++;
-    __builtin_rvtt_sfppushc();
-}
-
-sfpi_inline void __vCCCtrl::pop()
-{
-    push_count--;
-    __builtin_rvtt_sfppopc();
+  cc_pop();
+  dep = src.dep, depth = src.depth;
+  src.dep = 0, src.depth = 0;
+  return *this;
 }
 
 sfpi_inline void __vCCCtrl::enable_cc()
@@ -1185,34 +1189,32 @@ constexpr __LReg l_reg;
 } // namespace sfpi
 
 //////////////////////////////////////////////////////////////////////////////
-#define v_if(x)             \
-{                           \
-   sfpi::__vCCCtrl __cc;    \
-   __cc.mark_top();         \
-   __cc.cc_if(x);
+// C++17: In a function-call expression, the expression that names the function
+// is sequenced before every argument expression and every default argument. [expr.pre]
 
-#define v_elseif(x)         \
-    __cc.cc_else();         \
-    __cc.push();            \
-    __cc.mark_top();        \
-    __cc.cc_elseif(x);
+    
+#define v_if(x)                                 \
+  { sfpi::__vCCCtrl __cc;                       \
+  __cc.cc_push().cc_if().cc_cond(x); {
 
-#define v_else              \
-    __cc.cc_else();
+#define v_elseif(x)    }                        \
+  __cc.cc_else().cc_push().cc_if().cc_cond(x); {
 
-#define v_endif             \
-}
+#define v_else         }                        \
+  __cc.cc_else(); {
 
-#define v_block             \
-{                           \
-    sfpi::__vCCCtrl __cc;
+#define v_endif        }                        \
+  }
 
-#define v_and(x)            \
-    __cc.mark_top();        \
-    __cc.cc_if(x)
+#define v_block                                 \
+  { sfpi::__vCCCtrl __cc;                       \
+  __cc.cc_push();
 
-#define v_endblock          \
-}
+#define v_and(x)                                \
+  __cc.cc_if().cc_cond(x)
+
+#define v_endblock                              \
+  }
 
 //////////////////////////////////////////////////////////////////////////////
 #if __riscv_xtttensixwh
