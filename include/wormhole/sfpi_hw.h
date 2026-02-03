@@ -78,12 +78,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_i(ckernel::instrn_buffer, mode, imm8, 0, 0, srcc, mod1)
 #define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_wh_sfpstochrnd_v(mode, srcb, srcc, mod1)
 
-#define __builtin_rvtt_sfpshft2_i(dst, imm) __builtin_rvtt_wh_sfpshft2_i(dst, imm)
-#define __builtin_rvtt_sfpshft2_v(dst, src) __builtin_rvtt_wh_sfpshft2_v(dst, src)
-#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod) __builtin_rvtt_wh_sfpshft2_g(l0, l1, l2, l3, mod)
-#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3) __builtin_rvtt_wh_sfpshft2_ge(src, l0, l1, l2, l3)
-#define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_wh_sfpshft2_e(src, mod)
-
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_wh_sfpconfig_v(l0, config_dest)
 
 constexpr unsigned int SFP_LREG_COUNT = 8;
@@ -236,11 +230,11 @@ constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT16 = 7;
 constexpr unsigned int SFPSTOCHRND_MOD1_CONV_MASK = 7;
 constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 
-constexpr unsigned int SFPSHFT2_MOD1_COPY4 = 0;
-constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_CHAINED_COPY4 = 1;
-constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1_AND_COPY4 = 2;
-constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLROR1 = 3;
-constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFLSHR1 = 4;
+constexpr unsigned int SFPSHFT2_MOD1_MOV3_ZERO1 = 0;   // mov3_zer01
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHR4 = 1;  // shr4
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_MOV3_SHFL_SHR1 = 2; // mov3_shfl_shr1
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFL_ROR4 = 3; // shfl_ror4
+constexpr unsigned int SFPSHFT2_MOD1_SUBVEC_SHFL_SHR4 = 4; // shfl_shr4
 constexpr unsigned int SFPSHFT2_MOD1_SHFT_LREG = 5;
 constexpr unsigned int SFPSHFT2_MOD1_SHFT_IMM = 6;
 
