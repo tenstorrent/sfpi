@@ -300,15 +300,13 @@ sfpi_inline void subvec_transp(__vIntBase& a, __vIntBase& b, __vIntBase& c, __vI
 }
 
 sfpi_inline __rvtt_vec_t subvec_shflror1(const __vBase& src)
-
 {
-    return __builtin_rvtt_sfpshft2_e(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLROR1);
+    return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLROR1);
 }
 
 sfpi_inline __rvtt_vec_t subvec_shflshr1(const __vBase& src)
-
 {
-    return __builtin_rvtt_sfpshft2_e(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
+    return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
 
 sfpi_inline void vec_swap(vFloat& a, vFloat& b)

@@ -78,12 +78,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_bh_sfpstochrnd_i(ckernel::instrn_buffer, mode, imm8, 0, 0, srcc, mod1)
 #define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_bh_sfpstochrnd_v(mode, srcb, srcc, mod1)
 
-#define __builtin_rvtt_sfpshft2_i(dst, imm) __builtin_rvtt_bh_sfpshft2_i(dst, imm)
-#define __builtin_rvtt_sfpshft2_v(dst, src) __builtin_rvtt_bh_sfpshft2_v(dst, src)
-#define __builtin_rvtt_sfpshft2_g(l0, l1, l2, l3, mod) __builtin_rvtt_bh_sfpshft2_g(l0, l1, l2, l3, mod)
-#define __builtin_rvtt_sfpshft2_ge(src, l0, l1, l2, l3) __builtin_rvtt_bh_sfpshft2_ge(src, l0, l1, l2, l3)
-#define __builtin_rvtt_sfpshft2_e(src, mod) __builtin_rvtt_bh_sfpshft2_e(src, mod)
-
 #define __builtin_rvtt_sfpconfig_v(l0, config_dest) __builtin_rvtt_bh_sfpconfig_v(l0, config_dest)
 
 #define __builtin_rvtt_sfpmov_config(src) __builtin_rvtt_bh_sfpmov_config(src)
