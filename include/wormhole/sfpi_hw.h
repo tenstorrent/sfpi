@@ -40,9 +40,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpmul(va, vb, mod1) __builtin_rvtt_wh_sfpmul(va, vb, mod1)
 #define __builtin_rvtt_sfpmad(va, vb, vc, mod1) __builtin_rvtt_wh_sfpmad(va, vb, vc, mod1)
 
-#define __builtin_rvtt_sfpexexp(src, mod1) __builtin_rvtt_wh_sfpexexp(src, mod1)
-#define __builtin_rvtt_sfpexman(src, mod1) __builtin_rvtt_wh_sfpexman(src, mod1)
-
 #define __builtin_rvtt_sfpsetexp_i(imm12, src) __builtin_rvtt_wh_sfpsetexp_i(ckernel::instrn_buffer, imm12, 0, 0, src)
 #define __builtin_rvtt_sfpsetexp_v(dst, src) __builtin_rvtt_wh_sfpsetexp_v(dst, src)
 
