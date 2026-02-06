@@ -22,12 +22,10 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpxcondb(s, i) __builtin_rvtt_sfpxcondb(s, i)
 #define __builtin_rvtt_sfpxcondi(i) __builtin_rvtt_sfpxcondi(i)
 
-#define __builtin_rvtt_sfpassign_lv(v, in) __builtin_rvtt_wh_sfpassign_lv(v, in)
 #define __builtin_rvtt_sfpload(mod0, mode, addr) __builtin_rvtt_wh_sfpload(ckernel::instrn_buffer, mod0, mode, addr, 0, 0)
 
 #define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_wh_sfpxloadi(ckernel::instrn_buffer, mod0, imm16, 0, 0)
 #define __builtin_rvtt_sfpstore(src, mod0, mode, addr) __builtin_rvtt_wh_sfpstore(ckernel::instrn_buffer, src, mod0, mode, addr, 0, 0)
-#define __builtin_rvtt_sfpmov(src, mod1) __builtin_rvtt_wh_sfpmov(src, mod1)
 
 #define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_rvtt_wh_sfpencc(imm12, mod1)
 #define __builtin_rvtt_sfppushc() __builtin_rvtt_wh_sfppushc(0)
