@@ -70,10 +70,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpsetsgn_i(imm12, src) __builtin_rvtt_bh_sfpsetsgn_i(ckernel::instrn_buffer, imm12, 0, 0, src)
 #define __builtin_rvtt_sfpsetsgn_v(dst, src) __builtin_rvtt_bh_sfpsetsgn_v(dst, src)
 
-#define __builtin_rvtt_sfplut(l0, l1, l2, dst, mod0) __builtin_rvtt_bh_sfplut(l0, l1, l2, dst, mod0)
-#define __builtin_rvtt_sfplutfp32_3r(l0, l1, l2, l3, mod0) __builtin_rvtt_bh_sfplutfp32_3r(l0, l1, l2, l3, mod0)
-#define __builtin_rvtt_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0) __builtin_rvtt_bh_sfplutfp32_6r(l0, l1, l2, l4, l5, l6, l3, mod0)
-
 #define __builtin_rvtt_sfpcast(src, mod1) __builtin_rvtt_bh_sfpcast(src, mod1)
 #define __builtin_rvtt_sfpstochrnd_i(mode, imm8, srcc, mod1) __builtin_rvtt_bh_sfpstochrnd_i(ckernel::instrn_buffer, mode, imm8, 0, 0, srcc, mod1)
 #define __builtin_rvtt_sfpstochrnd_v(mode, srcb, srcc, mod1) __builtin_rvtt_bh_sfpstochrnd_v(mode, srcb, srcc, mod1)
