@@ -53,8 +53,8 @@ using __rvtt_vec_t = ::__xtt_vector;
 
 #define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_rvtt_bh_sfpdivp2(ckernel::instrn_buffer, imm12, 0, 0, src, mod1)
 
-#define __builtin_rvtt_sfpshft_i(src, imm12, mod1) __builtin_rvtt_bh_sfpshft_i(ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
-#define __builtin_rvtt_sfpshft_v(src, shft, mod1) __builtin_rvtt_bh_sfpshft_v(src, shft, mod1)
+#define __builtin_rvtt_sfpshft_i(src, imm12, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
+#define __builtin_rvtt_sfpshft_v(src, shft, mod1) __builtin_rvtt_sfpshft_v(src, shft, mod1)
 
 #define __builtin_rvtt_sfpxiadd_i(src, imm12, mod1) __builtin_rvtt_bh_sfpxiadd_i(ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
 #define __builtin_rvtt_sfpxiadd_v(dst, src, mod1) __builtin_rvtt_bh_sfpxiadd_v(dst, src, mod1)
