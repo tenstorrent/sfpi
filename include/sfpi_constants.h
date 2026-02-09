@@ -155,6 +155,8 @@ constexpr unsigned int SFPENCC_MOD1_EI_RI = 10;
 constexpr unsigned int SFPPUSHC_MOD1_PUSH = 0;
 constexpr unsigned int SFPPUSHC_MOD1_REPLACE = 1;
 
+constexpr unsigned int SFPPOPC_MOD1_POP = 0;
+
 constexpr unsigned int SFPLZ_MOD1_CC_NONE = 0;
 constexpr unsigned int SFPLZ_MOD1_CC_NE0 = 2;
 constexpr unsigned int SFPLZ_MOD1_CC_COMP = 8;

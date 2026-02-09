@@ -1147,14 +1147,14 @@ sfpi_inline __vCCCtrl &__vCCCtrl::cc_else()
 sfpi_inline __vCCCtrl &__vCCCtrl::cc_push()
  {
    depth++;
-   __builtin_rvtt_sfppushc();
+   __builtin_rvtt_sfppushc(SFPPUSHC_MOD1_PUSH);
    return *this;
  }
 
 sfpi_inline __vCCCtrl &__vCCCtrl::cc_pop()
  {
    for (unsigned ix = depth; ix--;)
-      __builtin_rvtt_sfppopc();
+      __builtin_rvtt_sfppopc(SFPPOPC_MOD1_POP);
    return *this;
  }
 
