@@ -27,14 +27,8 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpxloadi(mod0, imm16) __builtin_rvtt_wh_sfpxloadi(ckernel::instrn_buffer, mod0, imm16, 0, 0)
 #define __builtin_rvtt_sfpstore(src, mod0, mode, addr) __builtin_rvtt_wh_sfpstore(ckernel::instrn_buffer, src, mod0, mode, addr, 0, 0)
 
-#define __builtin_rvtt_sfpencc(imm12, mod1) __builtin_rvtt_wh_sfpencc(imm12, mod1)
-#define __builtin_rvtt_sfppushc() __builtin_rvtt_wh_sfppushc(0)
-#define __builtin_rvtt_sfppopc() __builtin_rvtt_wh_sfppopc(0)
-#define __builtin_rvtt_sfpsetcc_v(src, mod1) __builtin_rvtt_wh_sfpsetcc_v(src, mod1)
-#define __builtin_rvtt_sfpsetcc_i(imm12, mod1) __builtin_rvtt_wh_sfpsetcc_i(imm12, mod1)
 #define __builtin_rvtt_sfpxfcmps(v, f, mod1) __builtin_rvtt_wh_sfpxfcmps(ckernel::instrn_buffer, v, f, 0, 0, mod1)
 #define __builtin_rvtt_sfpxfcmpv(v1, v2, mod1) __builtin_rvtt_wh_sfpxfcmpv(v1, v2, mod1)
-#define __builtin_rvtt_sfpcompc() __builtin_rvtt_wh_sfpcompc()
 
 #define __builtin_rvtt_sfpadd(va, vb, mod1) __builtin_rvtt_wh_sfpadd(va, vb, mod1)
 #define __builtin_rvtt_sfpmul(va, vb, mod1) __builtin_rvtt_wh_sfpmul(va, vb, mod1)
