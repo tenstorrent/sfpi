@@ -124,6 +124,7 @@
 #include "stop now, no good will come"
 #endif
 
+#include "sfpi_constants.h"
 #if __riscv_xtttensixwh
 #include <wormhole/sfpi_hw.h>
 #elif __riscv_xtttensixbh
