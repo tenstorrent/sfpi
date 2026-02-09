@@ -46,11 +46,6 @@ using __rvtt_vec_t = ::__xtt_vector;
 #define __builtin_rvtt_sfpsetman_i(imm12, src, mod) __builtin_rvtt_bh_sfpsetman_i(ckernel::instrn_buffer, imm12, 0, 0, src, mod)
 #define __builtin_rvtt_sfpsetman_v(dst, src) __builtin_rvtt_bh_sfpsetman_v(dst, src)
 
-#define __builtin_rvtt_sfpand(dst, src) __builtin_rvtt_bh_sfpand(dst, src)
-#define __builtin_rvtt_sfpor(dst, src) __builtin_rvtt_bh_sfpor(dst, src)
-#define __builtin_rvtt_sfpxor(dst, src) __builtin_rvtt_bh_sfpxor(dst, src)
-#define __builtin_rvtt_sfpnot(src) __builtin_rvtt_bh_sfpnot(src)
-
 #define __builtin_rvtt_sfpdivp2(imm12, src, mod1) __builtin_rvtt_bh_sfpdivp2(ckernel::instrn_buffer, imm12, 0, 0, src, mod1)
 
 #define __builtin_rvtt_sfpshft_i(src, imm12, mod1) __builtin_rvtt_bh_sfpshft_i(ckernel::instrn_buffer, src, imm12, 0, 0, mod1)
