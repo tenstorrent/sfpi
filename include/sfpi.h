@@ -1048,22 +1048,22 @@ sfpi_inline __vCond __vConstIntBase::operator>=(const vInt x) const { return __v
 
 #if __riscv_xtttensixwh
 vInt vInt::operator<<(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), amt);
+  return __builtin_rvtt_sfpshft_i(get(), amt, 0);
 }
 vInt vInt::operator<<(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), amt.get());
+  return __builtin_rvtt_sfpshft_v(get(), amt.get(), 0);
 }
 vUInt vUInt::operator<<(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), amt);
+  return __builtin_rvtt_sfpshft_i(get(), amt, 0);
 }
 vUInt vUInt::operator<<(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), amt.get());
+  return __builtin_rvtt_sfpshft_v(get(), amt.get(), 0);
 }
 vUInt vUInt::operator>>(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), -amt);
+  return __builtin_rvtt_sfpshft_i(get(), -amt, 0);
 }
 vUInt vUInt::operator>>(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), (-amt).get());
+  return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), 0);
 }
 #endif
 
