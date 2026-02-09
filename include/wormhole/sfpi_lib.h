@@ -172,12 +172,12 @@ sfpi_inline vInt abs(const vInt v)
 
 sfpi_inline vUInt shft(const vUInt v, const vInt amt)
 {
-    return __builtin_rvtt_sfpshft_v(v.get(), amt.get());
+    return __builtin_rvtt_sfpshft_v(v.get(), amt.get(), 0);
 }
 
 sfpi_inline vUInt shft(const vUInt v, int amt)
 {
-  return __builtin_rvtt_sfpshft_i(v.get(), amt);
+    return __builtin_rvtt_sfpshft_i(v.get(), amt, 0);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
