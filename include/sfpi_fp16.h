@@ -12,11 +12,15 @@
 
 #include <cstdint>
 
-#if __riscv_xtttensixwh
-#include <wormhole/sfpi_hw.h>
-#elif __riscv_xtttensixbh
-#include <blackhole/sfpi_hw.h>
+#if !__has_builtin(__builtin_rvtt_synth_opcode)
+#error "Compiler does not support TENSIX builtins"
+#include "stop now, no good will come"
 #endif
+
+#include "sfpi_constants.h"
+#include "sfpi_builtins.h"
+
+#define sfpi_inline __attribute__((always_inline)) inline
 
 namespace sfpi {
 
