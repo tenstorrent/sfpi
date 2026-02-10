@@ -1,11 +1,11 @@
 /*
- * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ * SPDX-FileCopyrightText: © 2023-2026 Tenstorrent Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 ///////////////////////////////////////////////////////////////////////////////
-// sfpi_lib.h: SFPu Interface library implementation for Wormhole
+// sfpi_lib.h: SFPu Interface library free functions
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -172,13 +172,25 @@ sfpi_inline vInt abs(const vInt v)
 
 sfpi_inline vUInt shft(const vUInt v, const vInt amt)
 {
-    return __builtin_rvtt_sfpshft_v(v.get(), amt.get(), 0);
+    return __builtin_rvtt_sfpshft_v(v.get(), amt.get(), SFPSHFT_MOD1_LOGICAL);
 }
 
 sfpi_inline vUInt shft(const vUInt v, int amt)
 {
-    return __builtin_rvtt_sfpshft_i(v.get(), amt, 0);
+    return __builtin_rvtt_sfpshft_i(v.get(), amt, SFPSHFT_MOD1_LOGICAL);
 }
+
+#if __riscv_xtttensixbh
+sfpi_inline vInt shft(const vInt v, const vInt amt)
+{
+    return __builtin_rvtt_sfpshft_v(v.get(), amt.get(), SFPSHFT_MOD1_ARITHMETIC);
+}
+
+sfpi_inline vInt shft(const vInt v, int amt)
+{
+    return __builtin_rvtt_sfpshft_i(v.get(), amt, SFPSHFT_MOD1_ARITHMETIC);
+}
+#endif
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType reinterpret(const __vBase v)
@@ -326,5 +338,22 @@ sfpi_inline void vec_min_max(__vIntBase& a, __vIntBase& b)
     a = __vIntBase(__builtin_rvtt_sfpselect2 (r, 0));
     b = __vIntBase(__builtin_rvtt_sfpselect2 (r, 1));
 }
+
+#if __riscv_xtttensixbh
+sfpi_inline vInt rand() {
+  return vInt(__builtin_rvtt_sfpmov_config(SFPCONFIG_SRC_RAND));
+}
+
+template<bool uncond = true>
+sfpi_inline vFloat approx_recip(const vFloat &src)
+{
+  return vFloat(__builtin_rvtt_sfparecip(src.get(), uncond ? SFPARECIP_MOD1_RECIP : SFPARECIP_MOD1_COND_RECIP));
+}
+
+sfpi_inline vFloat approx_exp(const vFloat &src)
+{
+  return vFloat(__builtin_rvtt_sfparecip(src.get(), SFPARECIP_MOD1_EXP));
+}
+#endif
 
 } // namespace sfpi
