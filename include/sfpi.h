@@ -125,15 +125,15 @@
 #endif
 
 #include "sfpi_constants.h"
-#if __riscv_xtttensixwh
-#include <wormhole/sfpi_hw.h>
-#elif __riscv_xtttensixbh
-#include <blackhole/sfpi_hw.h>
-#endif
+#include "sfpi_builtins.h"
 
-#include <sfpi_fp16.h>
+#define sfpi_inline __attribute__((always_inline)) inline
+
+#include "sfpi_fp16.h"
 
 namespace sfpi {
+
+using __rvtt_vec_t = ::__xtt_vector;
 
 //////////////////////////////////////////////////////////////////////////////
 // Interface
