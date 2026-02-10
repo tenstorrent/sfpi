@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: © 2023 Tenstorrent Inc.
+ * SPDX-FileCopyrightText: © 2023-2026 Tenstorrent Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -1220,8 +1220,8 @@ constexpr __LReg l_reg;
 //////////////////////////////////////////////////////////////////////////////
 #if __riscv_xtttensixwh
 #include <wormhole/sfpi_imp.h>
-#include <wormhole/sfpi_lib.h>
 #elif __riscv_xtttensixbh
 #include <blackhole/sfpi_imp.h>
-#include <blackhole/sfpi_lib.h>
 #endif
+
+#include <sfpi_lib.h>
