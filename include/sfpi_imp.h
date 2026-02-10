@@ -5,7 +5,7 @@
  */
 
 ///////////////////////////////////////////////////////////////////////////////
-// sfpi_imp.h: SFPu Interface implementation for Blackhole
+// sfpi_imp.h: SFPu Interface implementation
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -62,7 +62,12 @@ sfpi_inline vFloat __vDReg::operator=(const float f) const
 template <typename vecType, typename std::enable_if_t<std::is_base_of<__vBase, vecType>::value>*>
 sfpi_inline vecType __vDReg::operator=(const vecType vec) const
 {
-    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FMT_BOB32, SFPSTORE_ADDR_MODE_NOINC, reg);
+    auto mod = SFPSTORE_MOD0_FMT_BOB32;
+#if __riscv_xtttensixwh
+    if constexpr (std::is_base_of<vInt, vecType>::value)
+        mod = SFPSTORE_MOD0_FMT_SM32;
+#endif
+    __builtin_rvtt_sfpstore(vec.get(), mod, SFPSTORE_ADDR_MODE_NOINC, reg);
     return vec;
 }
 
@@ -89,8 +94,13 @@ sfpi_inline __vCond vFloat::operator>=(const float x) const { return __vCond(__v
 
 sfpi_inline vFloat vFloat::operator-=(const vFloat a)
 {
-  operator+= (-a);
-  return v;
+#if __riscv_xtttensixwh
+    __rvtt_vec_t neg1 = __builtin_rvtt_sfpreadlreg(vConstNeg1.get());
+    assign(__builtin_rvtt_sfpmad(neg1, a.get(), v, SFPMAD_MOD1_OFFSET_NONE));
+#else // __riscv_xtttensixbh
+    operator+= (-a);
+#endif
+    return v;
 }
 
 sfpi_inline vFloat::vFloat(const __vDReg dreg)
@@ -117,7 +127,11 @@ sfpi_inline void __vIntBase::loadui(uint32_t val)
 
 sfpi_inline vInt::vInt(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    unsigned mod0 = SFPLOAD_MOD0_FMT_BOB32;
+#if __riscv_xtttensixwh
+    mod0 = SFPLOAD_MOD0_FMT_SM32;
+#endif
+    v = __builtin_rvtt_sfpload(mod0, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
     initialized = true;
 }
 
@@ -158,6 +172,7 @@ sfpi_inline void __vConstIntBase::operator=(const int in) const
     __builtin_rvtt_sfpconfig_v(tmp.get(), get());
 }
 
+#if __riscv_xtttensixbh
 vInt vInt::operator<<(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_ARITHMETIC);
 }
@@ -182,6 +197,7 @@ vUInt vUInt::operator>>(unsigned amt) const {
 vUInt vUInt::operator>>(vInt amt) const {
   return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_LOGICAL);
 }
+#endif
 
 enum class LRegs {
     LReg0 = 0,

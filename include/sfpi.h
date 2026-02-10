@@ -1218,10 +1218,5 @@ constexpr __LReg l_reg;
   }
 
 //////////////////////////////////////////////////////////////////////////////
-#if __riscv_xtttensixwh
-#include <wormhole/sfpi_imp.h>
-#elif __riscv_xtttensixbh
-#include <blackhole/sfpi_imp.h>
-#endif
-
-#include <sfpi_lib.h>
+#include "sfpi_imp.h"
+#include "sfpi_lib.h"
