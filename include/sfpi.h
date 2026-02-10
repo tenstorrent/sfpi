@@ -1046,7 +1046,6 @@ sfpi_inline __vCond __vConstIntBase::operator<=(const vInt x) const { return __v
 sfpi_inline __vCond __vConstIntBase::operator>(const vInt x) const { return __vCond(__vCond::__vCondGT, __vIntBase(*this), x, 0); }
 sfpi_inline __vCond __vConstIntBase::operator>=(const vInt x) const { return __vCond(__vCond::__vCondGTE, __vIntBase(*this), x, 0); }
 
-#if __riscv_xtttensixwh
 vInt vInt::operator<<(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_LOGICAL);
 }
@@ -1059,39 +1058,20 @@ vUInt vUInt::operator<<(unsigned amt) const {
 vUInt vUInt::operator<<(vInt amt) const {
   return __builtin_rvtt_sfpshft_v(get(), amt.get(), SFPSHFT_MOD1_LOGICAL);
 }
-vUInt vUInt::operator>>(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), -amt, SFPSHFT_MOD1_LOGICAL);
-}
-vUInt vUInt::operator>>(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_LOGICAL);
-}
-#endif
 #if __riscv_xtttensixbh
-vInt vInt::operator<<(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_ARITHMETIC);
-}
-vInt vInt::operator<<(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), amt.get(), SFPSHFT_MOD1_ARITHMETIC);
-}
 vInt vInt::operator>>(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), -amt, SFPSHFT_MOD1_ARITHMETIC);
 }
 vInt vInt::operator>>(vInt amt) const {
   return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_ARITHMETIC);
 }
-vUInt vUInt::operator<<(unsigned amt) const {
-  return __builtin_rvtt_sfpshft_i(get(), amt, SFPSHFT_MOD1_LOGICAL);
-}
-vUInt vUInt::operator<<(vInt amt) const {
-  return __builtin_rvtt_sfpshft_v(get(), amt.get(), SFPSHFT_MOD1_LOGICAL);
-}
+#endif
 vUInt vUInt::operator>>(unsigned amt) const {
   return __builtin_rvtt_sfpshft_i(get(), -amt, SFPSHFT_MOD1_LOGICAL);
 }
 vUInt vUInt::operator>>(vInt amt) const {
   return __builtin_rvtt_sfpshft_v(get(), (-amt).get(), SFPSHFT_MOD1_LOGICAL);
 }
-#endif
 
 
 //////////////////////////////////////////////////////////////////////////////
