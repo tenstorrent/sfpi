@@ -125,48 +125,46 @@ sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
     return __builtin_rvtt_sfpdivp2(in.get(), exp, SFPSDIVP2_MOD1_ADD);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
     return __builtin_rvtt_sfpsetsgn_i(v.get(), sgn, 0);
 }
 
 template <typename vTypeA, typename vTypeB,
-    typename std::enable_if_t<std::is_base_of<__vBase, vTypeA>::value>* = nullptr,
-    typename std::enable_if_t<std::is_base_of<__vBase, vTypeB>::value>* = nullptr>
-sfpi_inline vTypeA copysgn(const vTypeA v, const vTypeB sgn)
-{
-    return __builtin_rvtt_sfpsetsgn_v(v.get(), sgn.get(), 0);
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
+sfpi_inline vTypeA copysgn (const vTypeA v, const vTypeB sgn) {
+  return __builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
-sfpi_inline vType copysgn(const vType v, const vInt sgn)
-{
-    return __builtin_rvtt_sfpsetsgn_v(v.get(), sgn.get(), 0);
+template <typename vType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+sfpi_inline vType copysgn(const vType v, const vInt sgn) {
+  return __builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0);
 }
 
 // Old names for compatibility
 template <typename vTypeA, typename vTypeB,
-    typename std::enable_if_t<std::is_base_of<__vBase, vTypeA>::value>* = nullptr,
-    typename std::enable_if_t<std::is_base_of<__vBase, vTypeB>::value>* = nullptr>
-sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
-{
-    return copysgn(v, sgn);
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
+sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn) {
+  return copysgn (v, sgn);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
-sfpi_inline vType setsgn(const vType v, const vInt sgn)
-{
-    return copysgn(v, sgn);
+template <typename vType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+sfpi_inline vType setsgn (const vType v, const vInt sgn) {
+  return copysgn (v, sgn);
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vInt lz(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_CC_NONE));
 }
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
+template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vInt lz_nosgn(const vType v)
 {
     return vInt(__builtin_rvtt_sfplz(v.get(), SFPLZ_MOD1_NOSGN_CC_NONE));
@@ -204,8 +202,8 @@ sfpi_inline vInt shft(const vInt v, int amt)
 }
 #endif
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
-sfpi_inline vType reinterpret(const __vBase v)
+template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+sfpi_inline vType reinterpret(const impl_::vVal v)
 {
     return vType(v.get());
 }
@@ -313,12 +311,12 @@ sfpi_inline void subvec_transp(__vIntBase& a, __vIntBase& b, __vIntBase& c, __vI
     d = __vIntBase(__builtin_rvtt_sfpselect4 (r, 3));
 }
 
-sfpi_inline __rvtt_vec_t subvec_shflror1(const __vBase& src)
+sfpi_inline impl_::sfpu_t subvec_shflror1(const impl_::vVal& src)
 {
     return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLROR1);
 }
 
-sfpi_inline __rvtt_vec_t subvec_shflshr1(const __vBase& src)
+sfpi_inline impl_::sfpu_t subvec_shflshr1(const impl_::vVal& src)
 {
     return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
