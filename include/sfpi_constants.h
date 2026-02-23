@@ -13,10 +13,8 @@ namespace sfpi {
 
 constexpr unsigned int SFP_LREG_COUNT = 8;
 
-// size is 1024 rows x 16 cols by 16 bits OR 512 rows by 16 cols by 32 bits
 constexpr unsigned int SFP_DESTREG_STRIDE = 2;
-constexpr unsigned int SFP_DESTREG_MAX_SIZE = 1024;
-constexpr unsigned int SFP_DESTREG_MAX_ADDR = (SFP_DESTREG_MAX_SIZE / SFP_DESTREG_STRIDE);
+constexpr unsigned int SFP_DESTREG_COUNT = 0x400 / SFP_DESTREG_STRIDE;
 
 constexpr unsigned int SFPLOAD_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
