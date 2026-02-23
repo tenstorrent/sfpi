@@ -165,14 +165,6 @@ sfpi_inline unsigned int __f32asui(const float val)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-template<class Type, int N>
-class __RegFile {
-
-public:
-    sfpi_inline Type operator[](const int x) const;
-};
-
-//////////////////////////////////////////////////////////////////////////////
 class __vRegBase {
 protected:
     int reg;
@@ -183,19 +175,11 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-class __vRegBaseInitializer {
-    int n;
-
- public:
-    constexpr __vRegBaseInitializer(int in) : n(in) {}
-    constexpr int get() const { return n; }
-};
-
-//////////////////////////////////////////////////////////////////////////////
 class __vDReg : public __vRegBase {
 private:
-    template<class Type, int N> friend class __RegFile;
-    constexpr explicit __vDReg(const __vRegBaseInitializer i) : __vRegBase(i.get() * SFP_DESTREG_STRIDE) {}
+    friend class __DestReg;
+  
+    constexpr explicit __vDReg(unsigned i) : __vRegBase(i) {}
 
 public:
     // Assign register to register
@@ -240,33 +224,30 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////
 class __DestReg {
- private:
-    __RegFile<__vDReg, SFP_DESTREG_MAX_ADDR> dreg;
-
  public:
-    sfpi_inline const __vDReg operator[](const int i) const { return dreg[i]; }
+    sfpi_inline const __vDReg operator[](int ix) const {
+      return __vDReg(ix * SFP_DESTREG_STRIDE); }
+
     // Make these void - ugly as these aren't really inc/dec
-    sfpi_inline void operator++() const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
-    sfpi_inline void operator++(const int) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE, 0, 0); }
-    sfpi_inline void operator+=(const int i) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
+    sfpi_inline void operator++() const { *this += 1; }
+    sfpi_inline void operator++(int) const { *this += 1; }
+    sfpi_inline void operator+=(int i) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
 };
+
 
 //////////////////////////////////////////////////////////////////////////////
 class __vLReg : public __vRegBase {
  private:
-    template<class Type, int N> friend class __RegFile;
-    constexpr explicit __vLReg(const __vRegBaseInitializer i) : __vRegBase(i.get()) {}
+    constexpr explicit __vLReg(unsigned ix) : __vRegBase(ix) {}
+    friend class __LReg;
 
  public:
     sfpi_inline __rvtt_vec_t operator=(__vBase& v) const;
 };
 
 class __LReg {
- private:
-    __RegFile<__vLReg, SFP_LREG_COUNT> lreg;
-
  public:
-    sfpi_inline const __vLReg operator[](const enum LRegs lr) const { return lreg[static_cast<std::underlying_type<LRegs>::type>(lr)]; }
+    sfpi_inline const __vLReg operator[](enum LRegs lr) const { return __vLReg(unsigned(lr)); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -741,11 +722,6 @@ sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
   return fp_add(a, -b);
 }
 
-}
-
-template<class TYPE, int N>
-sfpi_inline TYPE __RegFile<TYPE, N>::operator[](const int x) const {
-    return TYPE(__vRegBaseInitializer(x));
 }
 
 sfpi_inline vInt __vDReg::operator=(const int i) const
