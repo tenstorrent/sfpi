@@ -188,6 +188,19 @@ public:
   sfpi_inline void operator=(Type t) const {
     __builtin_rvtt_sfpconfig_v(t.get(), get());
   }
+
+  template<typename U,
+           std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
+  sfpi_inline void operator=(U u) const {
+    operator=(Type(u));
+  }
+  template<typename U,
+           std::enable_if_t<std::conjunction<std::is_base_of<Type, vInt>,
+                                             std::negation<std::is_same<U, vInt>>,
+                                             std::is_constructible<vInt, U const &>>::value>* = nullptr>
+  sfpi_inline void operator=(U u) const {
+    operator=(vInt(u));
+  }
 };
 
 
@@ -215,7 +228,6 @@ public:
     sfpi_inline vFloat operator-(const vFloat b) const;
     sfpi_inline vFloat operator-() const;
     sfpi_inline vFloat operator*(const vFloat b) const;
-
     // Conditionals
     sfpi_inline __vCond operator==(const float x) const;
     sfpi_inline __vCond operator!=(const float x) const;
@@ -361,14 +373,14 @@ public:
     sfpi_inline vFloat operator=(__vLReg lr) { __vBase::operator=(lr); return v; }
 
     // Construct operator from operations
-    sfpi_inline vFloat operator+(const vFloat b) const;
+  //    sfpi_inline vFloat operator+(const vFloat b) const;
     sfpi_inline vFloat operator+=(const vFloat);
-    sfpi_inline vFloat operator-(const vFloat b) const;
-    sfpi_inline vFloat operator-(const float b) const;
-    sfpi_inline vFloat operator-(const s2vFloat16 b) const;
+  //sfpi_inline vFloat operator-(const vFloat b) const;
+  //  sfpi_inline vFloat operator-(const float b) const;
+  //  sfpi_inline vFloat operator-(const s2vFloat16 b) const;
     sfpi_inline vFloat operator-=(const vFloat);
-    sfpi_inline vFloat operator-() const;
-    sfpi_inline vFloat operator*(const vFloat b) const;
+  //  sfpi_inline vFloat operator-() const;
+  //  sfpi_inline vFloat operator*(const vFloat b) const;
     sfpi_inline vFloat operator*=(const vFloat);
     sfpi_inline vFloat operator++(const int) { *this += 1; return *this; }
     sfpi_inline vFloat operator++() { vFloat tmp = *this; *this += 1; return tmp; }
@@ -724,20 +736,21 @@ constexpr __vConst<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 //////////////////////////////////////////////////////////////////////////////
 namespace sfpi_int {
 
-sfpi_inline vFloat fp_add(const vFloat a, const vFloat b)
-{
+sfpi_inline vFloat fp_add(vFloat a, vFloat b) {
     return __builtin_rvtt_sfpadd(a.get(), b.get(), 0);
 }
 
-sfpi_inline vFloat fp_mul(const vFloat a, const vFloat b)
-{
+sfpi_inline vFloat fp_mul(vFloat a, vFloat b) {
     return __builtin_rvtt_sfpmul(a.get(), b.get(), 0);
 }
 
-sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b)
-{
+sfpi_inline vFloat fp_neg(vFloat a) {
+    return __builtin_rvtt_sfpmov(a.get(), SFPMOV_MOD1_COMPSIGN);
+}
+
+sfpi_inline vFloat fp_sub(const vFloat a, const vFloat b) {
   // Do not use sfpmad here, the optimizer will handle that.
-  return fp_add(a, -b);
+  return fp_add(a, fp_neg (b));
 }
 
 }
@@ -798,11 +811,13 @@ sfpi_inline __rvtt_vec_t __vLReg::operator=(__vBase& v) const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline vFloat vFloat::operator+(const vFloat b) const { return sfpi_int::fp_add(*this, b); }
-sfpi_inline vFloat vFloat::operator-(const vFloat b) const { return sfpi_int::fp_sub(*this, b); }
-sfpi_inline vFloat vFloat::operator-(const float b) const { return sfpi_int::fp_add(*this, vFloat(-b)); }
-sfpi_inline vFloat vFloat::operator-(const s2vFloat16 b) const { return sfpi_int::fp_add(*this, b.negate()); }
-sfpi_inline vFloat vFloat::operator*(const vFloat b) const { return sfpi_int::fp_mul(*this, b); }
+sfpi_inline vFloat operator+(vFloat a, vFloat b) { return sfpi_int::fp_add(a, b); }
+
+sfpi_inline vFloat operator-(vFloat a, vFloat b) { return sfpi_int::fp_sub(a, b); }
+//sfpi_inline vFloat operator-(vFloat a, float b) const { return sfpi_int::fp_add(*this, vFloat(-b)); }
+//sfpi_inline vFloat vFloat::operator-(const s2vFloat16 b) const { return sfpi_int::fp_add(*this, b.negate()); }
+sfpi_inline vFloat operator*(vFloat a, vFloat b) { return sfpi_int::fp_mul(a, b); }
+
 sfpi_inline __vCond vFloat::operator==(const s2vFloat16 x) const { return __vCond(__vCond::__vCondEQ, *this, x); }
 sfpi_inline __vCond vFloat::operator!=(const s2vFloat16 x) const { return __vCond(__vCond::__vCondNE, *this, x); }
 sfpi_inline __vCond vFloat::operator<(const s2vFloat16 x) const { return __vCond(__vCond::__vCondLT, *this, x); }
@@ -828,11 +843,7 @@ sfpi_inline vFloat vFloat::operator+=(const vFloat a)
     return v;
 }
 
-sfpi_inline vFloat vFloat::operator-() const
-{
-    return __builtin_rvtt_sfpmov(v, SFPMOV_MOD1_COMPSIGN);
-    return v;
-}
+sfpi_inline vFloat operator-(vFloat a) { return sfpi_int::fp_neg (a); }
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
 {
