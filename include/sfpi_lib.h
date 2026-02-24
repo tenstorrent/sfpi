@@ -109,7 +109,7 @@ sfpi_inline vFloat setexp(const vFloat v, const __vIntBase exp)
 
 sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
 {
-    return __builtin_rvtt_sfpsetman_i(man, v.get(), 0);
+    return __builtin_rvtt_sfpsetman_i(man, v.get());
 }
 
 sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
