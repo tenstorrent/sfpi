@@ -16,6 +16,12 @@ constexpr unsigned int SFP_LREG_COUNT = 8;
 constexpr unsigned int SFP_DESTREG_STRIDE = 2;
 constexpr unsigned int SFP_DESTREG_COUNT = 0x400 / SFP_DESTREG_STRIDE;
 
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFP_SRCSREG_STRIDE = 2;
+constexpr unsigned int SFP_SRCSREG_COUNT = 0x10 / SFP_SRCSREG_STRIDE;
+constexpr unsigned int SFP_SRCSREG_BASE = 0x400;
+#endif
+
 constexpr unsigned int SFPLOAD_MOD0_FMT_SRCB = 0;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16B = 2;

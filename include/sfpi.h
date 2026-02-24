@@ -117,6 +117,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+// Until sfpi compiler grows proper quasar tensix support fake what we need
+// looking at ARCH_QUASAR
+#if ARCH_QUASAR && !defined(__riscv_xtttensixqsr)
+#define __riscv_xtttensixqsr 1
+#endif
+
 #include <type_traits>
 
 #if !__has_builtin(__builtin_rvtt_synth_opcode)
@@ -178,6 +184,9 @@ public:
 class __vDReg : public __vRegBase {
 private:
     friend class __DestReg;
+#if __riscv_xtttensixqsr
+    template<unsigned> friend class __SrcSReg;
+#endif
   
     constexpr explicit __vDReg(unsigned i) : __vRegBase(i) {}
 
@@ -234,6 +243,24 @@ class __DestReg {
     sfpi_inline void operator+=(int i) const { __builtin_rvtt_ttincrwc(0, SFP_DESTREG_STRIDE * i, 0, 0); }
 };
 
+#if __riscv_xtttensixqsr
+template<unsigned Slice>
+class __SrcSReg {
+  unsigned offset = SFP_SRCSREG_BASE + Slice * (SFP_SRCSREG_STRIDE * SFP_SRCSREG_COUNT);
+
+public:
+  sfpi_inline const __vDReg operator[](int ix) const {
+    return __vDReg(ix * SFP_SRCSREG_STRIDE + offset);
+  }
+
+  sfpi_inline auto &operator++() { *this += 1; return *this; }
+  sfpi_inline auto operator++(int) { auto orig = *this; *this += 1; return orig; }
+  sfpi_inline auto &operator+=(int ix) { offset += ix * SFP_SRCSREG_STRIDE; return *this; }
+};
+using UnpackSrcS = __SrcSReg<0>;
+using ComputeSrcS = __SrcSReg<1>;
+using PackSrcS = __SrcSReg<2>;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 class __vLReg : public __vRegBase {
