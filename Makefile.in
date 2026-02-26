@@ -298,6 +298,7 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 		--disable-libquadmath \
 		--disable-libgomp \
 		--disable-nls \
+		--disable-plugin \
 		--disable-tm-clone-registry \
 		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
@@ -404,6 +405,7 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		--disable-libquadmath \
 		--disable-libgomp \
 		--disable-nls \
+		--disable-plugin \
 		--disable-tm-clone-registry \
 		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
