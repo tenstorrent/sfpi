@@ -97,26 +97,26 @@ sfpi_inline vInt exman9(const vFloat v)
 
 sfpi_inline vFloat setexp(const vFloat v, const uint32_t exp)
 {
-    return __builtin_rvtt_sfpsetexp_i(exp, v.get());
+    return __builtin_rvtt_sfpsetexp_i(v.get(), exp);
 }
 
 sfpi_inline vFloat setexp(const vFloat v, const __vIntBase exp)
 {
     // Odd: dst is both exponent and result so undergoes a type change
     // If exp is not used later, compiler renames tmp and doesn't issue a mov
-    return __builtin_rvtt_sfpsetexp_v(exp.get(), v.get());
+  return __builtin_rvtt_sfpsetexp_v(v.get(), exp.get());
 }
 
 sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
 {
-    return __builtin_rvtt_sfpsetman_i(man, v.get());
+    return __builtin_rvtt_sfpsetman_i(v.get(), man);
 }
 
 sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
 {
     // Odd: dst is both man and result so undergoes a type change
     // If man is not used later, compiler renames tmp and doesn't issue a mov
-    return __builtin_rvtt_sfpsetman_v(man.get(), v.get());
+    return __builtin_rvtt_sfpsetman_v(v.get(), man.get());
 }
 
 sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
@@ -127,7 +127,7 @@ sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
-    return __builtin_rvtt_sfpsetsgn_i(sgn, v.get());
+    return __builtin_rvtt_sfpsetsgn_i(v.get(), sgn);
 }
 
 template <typename vTypeA, typename vTypeB,
@@ -135,17 +135,13 @@ template <typename vTypeA, typename vTypeB,
     typename std::enable_if_t<std::is_base_of<__vBase, vTypeB>::value>* = nullptr>
 sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn)
 {
-    // Odd: dst is both sgn and result so undergoes a type change
-    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
-    return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
+    return __builtin_rvtt_sfpsetsgn_v(v.get(), sgn.get());
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const vInt sgn)
 {
-    // Odd: dst is both sgn and result so undergoes a type change
-    // If sgn is not used later, compiler renames tmp and doesn't issue a mov
-    return __builtin_rvtt_sfpsetsgn_v(sgn.get(), v.get());
+  return __builtin_rvtt_sfpsetsgn_v(v.get(), sgn.get());
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
