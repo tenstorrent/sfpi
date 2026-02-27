@@ -818,18 +818,18 @@ sfpi_inline vFloat vFloat::operator-() const
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
 {
-    assign(__builtin_rvtt_sfpxloadi(val.get_format(), val.get()));
+    assign(__builtin_rvtt_sfpxloadi(val.get(), val.get_format()));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void __vIntBase::loadss(int16_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_SHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(val, SFPLOADI_MOD0_SHORT));
 }
 
 sfpi_inline void __vIntBase::loadus(uint16_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(SFPLOADI_MOD0_USHORT, val));
+    assign(__builtin_rvtt_sfpxloadi(val, SFPLOADI_MOD0_USHORT));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
@@ -1220,7 +1220,7 @@ sfpi_inline __vCond __vDReg::operator>=(const float x) const { return __vCond(__
 template <>
 sfpi_inline vFloat __vDReg::operator=(const vFloat vec) const
 {
-    __builtin_rvtt_sfpstore(vec.get(), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
+    __builtin_rvtt_sfpstore(vec.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
     return vec;
 }
 
@@ -1253,20 +1253,20 @@ sfpi_inline vecType __vDReg::operator=(const vecType vec) const
     if constexpr (std::is_base_of<vInt, vecType>::value)
         mod = SFPSTORE_MOD0_FMT_SM32;
 #endif
-    __builtin_rvtt_sfpstore(vec.get(), mod, SFPSTORE_ADDR_MODE_NOINC, reg);
+    __builtin_rvtt_sfpstore(vec.get(), reg, mod, SFPSTORE_ADDR_MODE_NOINC);
     return vec;
 }
 
 sfpi_inline void __vDReg::operator=(const __vDReg dreg) const
 {
     vFloat tmp = dreg;
-    __builtin_rvtt_sfpstore(tmp.get(), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
+    __builtin_rvtt_sfpstore(tmp.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
 }
 
 sfpi_inline vFloat __vDReg::operator=(const __vConstFloat creg) const
 {
     __rvtt_vec_t lr = __builtin_rvtt_sfpreadlreg(creg.get());
-    __builtin_rvtt_sfpstore(lr, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC, reg);
+    __builtin_rvtt_sfpstore(lr, reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
     return vFloat(lr);
 }
 
@@ -1291,24 +1291,24 @@ sfpi_inline vFloat vFloat::operator-=(const vFloat a)
 
 sfpi_inline vFloat::vFloat(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    v = __builtin_rvtt_sfpload(dreg.get(), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC);
     initialized = true;
 }
 
 sfpi_inline void vFloat::loadf(const float val)
 {
-    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_FLOAT, __f32asui(val)));
+    assign(__builtin_rvtt_sfpxloadi(__f32asui(val), SFPXLOADI_MOD0_FLOAT));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void __vIntBase::loadsi(int32_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_INT32, val));
+    assign(__builtin_rvtt_sfpxloadi(val, SFPXLOADI_MOD0_INT32));
 }
 
 sfpi_inline void __vIntBase::loadui(uint32_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(SFPXLOADI_MOD0_UINT32, val));
+    assign(__builtin_rvtt_sfpxloadi(val, SFPXLOADI_MOD0_UINT32));
 }
 
 sfpi_inline vInt::vInt(const __vDReg dreg)
@@ -1317,13 +1317,13 @@ sfpi_inline vInt::vInt(const __vDReg dreg)
 #if __riscv_xtttensixwh
     mod0 = SFPLOAD_MOD0_FMT_SM32;
 #endif
-    v = __builtin_rvtt_sfpload(mod0, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    v = __builtin_rvtt_sfpload(dreg.get(), mod0, SFPLOAD_ADDR_MODE_NOINC);
     initialized = true;
 }
 
 sfpi_inline vUInt::vUInt(const __vDReg dreg)
 {
-    v = __builtin_rvtt_sfpload(SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC, dreg.get());
+    v = __builtin_rvtt_sfpload(dreg.get(), SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC);
     initialized = true;
 }
 
