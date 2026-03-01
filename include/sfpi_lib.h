@@ -121,7 +121,7 @@ sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
 
 sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
 {
-    return __builtin_rvtt_sfpdivp2(exp, in.get(), SFPSDIVP2_MOD1_ADD);
+    return __builtin_rvtt_sfpdivp2(in.get(), exp, SFPSDIVP2_MOD1_ADD);
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vBase, vType>::value>* = nullptr>
@@ -201,82 +201,82 @@ sfpi_inline vFloat int32_to_float(vInt in, int round_mode = 1)
 
 sfpi_inline vUInt float_to_fp16a(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_FP16A);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_FP16A);
 }
 
 sfpi_inline vUInt float_to_fp16b(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_FP16B);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_FP16B);
 }
 
 sfpi_inline vUInt float_to_uint8(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_UINT8);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_UINT8);
 }
 
 sfpi_inline vUInt float_to_int8(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_INT8);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_INT8);
 }
 
 sfpi_inline vUInt int32_to_uint8(vInt in, vUInt descale, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_v(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        descale.get(),
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_UINT8);
+    return __builtin_rvtt_sfpstochrnd_v
+        (in.get(),descale.get(),
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_INT32_TO_UINT8);
 }
 
 sfpi_inline vUInt int32_to_uint8(vInt in, unsigned int descale, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        descale,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_UINT8 | SFPSTOCHRND_MOD1_IMM8);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), descale,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_INT32_TO_UINT8 | SFPSTOCHRND_MOD1_IMM8);
 }
 
 sfpi_inline vUInt int32_to_int8(vInt in, vUInt descale, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_v(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        descale.get(),
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_INT8);
+    return __builtin_rvtt_sfpstochrnd_v
+        (in.get(), descale.get(),
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_INT32_TO_INT8);
 }
 
 sfpi_inline vUInt int32_to_int8(vInt in, unsigned int descale, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        descale,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_INT32_TO_INT8 | SFPSTOCHRND_MOD1_IMM8);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), descale,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_INT32_TO_INT8 | SFPSTOCHRND_MOD1_IMM8);
 }
 
 sfpi_inline vUInt float_to_uint16(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_UINT16);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_UINT16);
 }
 
 sfpi_inline vUInt float_to_int16(vFloat in, int round_mode = 1)
 {
-    return __builtin_rvtt_sfpstochrnd_i(round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
-                                        0,
-                                        in.get(),
-                                        SFPSTOCHRND_MOD1_FP32_TO_INT16);
+    return __builtin_rvtt_sfpstochrnd_i
+        (in.get(), 0,
+         round_mode ? SFPSTOCHRND_RND_STOCH : SFPSTOCHRND_RND_EVEN,
+         SFPSTOCHRND_MOD1_FP32_TO_INT16);
 }
 
 sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
