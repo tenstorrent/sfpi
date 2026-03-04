@@ -337,7 +337,7 @@ sfpi_inline void vec_min_max(__vIntBase& a, __vIntBase& b)
 
 #if __riscv_xtttensixbh
 sfpi_inline vInt rand() {
-  return vInt(__builtin_rvtt_sfpmov_config(SFPCONFIG_SRC_RAND));
+  return vInt(__builtin_rvtt_sfpreadconfig(SFPCONFIG_SRC_RAND));
 }
 
 template<bool uncond = true>
