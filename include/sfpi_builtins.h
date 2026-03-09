@@ -23,6 +23,6 @@ namespace sfpi {
 #define __builtin_rvtt_sfpsetman_i(src, imm) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0)
 #define __builtin_rvtt_sfpsetsgn_i(src, imm) __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(src, imm, mode, mod1) __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mode, mod1)
+#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 } // namespace sfpi

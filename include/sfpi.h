@@ -1163,7 +1163,7 @@ sfpi_inline __vCCCtrl &__vCCCtrl::operator=(__vCCCtrl &&src)
 
 sfpi_inline void __vCCCtrl::enable_cc()
 {
-    __builtin_rvtt_sfpencc(SFPENCC_IMM12_BOTH, SFPENCC_MOD1_EI_RI);
+    __builtin_rvtt_sfpencc(SFPENCC_MOD1_EI_RI, SFPENCC_IMM12_BOTH);
 }
 
 //////////////////////////////////////////////////////////////////////////////
