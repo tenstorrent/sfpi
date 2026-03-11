@@ -63,7 +63,7 @@ jobs:
       image: ${{inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null}}
     steps:
       - name: Checkout repo & submodules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{inputs.tag || github.ref}}
           fetch-depth: 64
@@ -101,13 +101,13 @@ jobs:
       - name: Release toolchain
         run: scripts/release.sh --ci --tt-built
       - name: Upload build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-${{inputs.arch}}-${{inputs.box}}
           path: build/release/*
           compression-level: 0
       - name: Upload tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tests-${{inputs.arch}}-${{inputs.box}}
           path: build/tests/*
@@ -129,7 +129,7 @@ jobs:
           fi
       - name: Upload config
         if: ${{inputs.key != ''}}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: config-${{inputs.arch}}-${{inputs.box}}
           path: outputs/config-*
