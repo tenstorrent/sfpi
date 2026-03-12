@@ -818,18 +818,18 @@ sfpi_inline vFloat vFloat::operator-() const
 
 sfpi_inline void vFloat::loadf16(const s2vFloat16 val)
 {
-    assign(__builtin_rvtt_sfpxloadi(val.get(), val.get_format()));
+    assign(__builtin_rvtt_sfploadi(val.get(), val.get_format()));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 sfpi_inline void __vIntBase::loadss(int16_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(val, SFPLOADI_MOD0_SHORT));
+    assign(__builtin_rvtt_sfploadi(val, SFPLOADI_MOD0_SHORT));
 }
 
 sfpi_inline void __vIntBase::loadus(uint16_t val)
 {
-    assign(__builtin_rvtt_sfpxloadi(val, SFPLOADI_MOD0_USHORT));
+    assign(__builtin_rvtt_sfploadi(val, SFPLOADI_MOD0_USHORT));
 }
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<__vIntBase, vType>::value>*>
