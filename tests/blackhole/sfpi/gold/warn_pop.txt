@@ -1,5 +1,0 @@
-warn.cc: In function 'void popwithoutpush()':
-warn.cc:119:5: error: '__builtin_rvtt_wh_sfppopc' was not declared in this scope; did you mean '__builtin_rvtt_bh_sfppopc'?
-  119 |     __builtin_rvtt_wh_sfppopc(0);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~
-      |     __builtin_rvtt_bh_sfppopc

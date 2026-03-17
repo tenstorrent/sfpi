@@ -104,23 +104,7 @@ the submodules, their locations and hashes.
 
   See below about the various `--test` options that may also be used.
 
-3) Build and running the local sfpi tests:
-
-```
-    ln -s ../tests build
-    CC_PATH=$(pwd)/build/sfpi/compiler make -C build/tests all
-    CC_PATH=$(pwd)/build/sfpi/compiler make -C build/tests test
-```
-
-  If the `all` target succeeds, the compiler at least exports the
-  right intrinsics for use w/ the synced sfpi. If it fails to build,
-  there is likely a sync error (submodule out of date) between what
-  the compiler is exposing and what sfpi is calling.
-
-  The `test` target builds kernels and verifies the resulting assembly
-  is the same as a set of gold-standard files. This is unfortunately brittle.
-
-4) Create a release
+3) Create a release
 
   * Build a release as described above.
 
@@ -136,21 +120,21 @@ the submodules, their locations and hashes.
   /be careful/.
 
   A `.txz` tarball will be created in a `release` directory, along
-  with `.deb` or `.rpm` packages. Also a `.hash` file is created.
+  with `.deb` or `.rpm` packages. Also a `.version` file is created.
 
-5) Making the release available (from github)
+4) Making the release available (from github)
 
   Create an `sfpi-version` file from the hash files generated during
   the release process (you may have several, by building and
   releasing on several hosts):
 
 ```
-  scripts/sfpi-info.sh CREATE [$DIRS]
+  scripts/sfpi-info.sh MERGE $VERSION_FILES
 ```
 
-  Where `$DIRS` are the directories containing the `.hash` files.  You
-  will probably have to edit the created file to adjust the sfpi_url
-  value.
+  Where `$VERSION_FILES` are the `.version` files created by one or
+  more releases.  You will probably have to edit the created file to
+  adjust the sfpi_url value.
 
   Upload the release files and sfpi-version to a github
   release. You'll want to set the version tag to be the same as the
@@ -211,7 +195,7 @@ where `$pkg` is the desired package type (defaults to your system's
 package format). This will set a bunch of `sfpi_foo` variables your
 script may examine.
 
-8) Running the toolchain test suites:
+5) Running the toolchain test suites:
 ```
   scripts/build.sh --test
 ```
@@ -240,7 +224,7 @@ repeat a test run you will need to delete the stamp file in
 that the post processing is run each time, and thus the processed
 summary files will change if the xfail files are adjusted.
 
-9) Running the TT-specific parts of the toolchain tests.
+6) Running the TT-specific parts of the toolchain tests.
 ```
   scripts/build.sh --test-tt
 ```
@@ -251,7 +235,7 @@ are not post processed as described above. Unlike running the full
 testsuite, this operation is /not/ idempotent -- there is no need to
 delete a stamp file to rerun them.
 
-10) Running the gcc testsuite with specific options:
+7) Running the gcc testsuite with specific options:
 ```
 PATH=$(pwd)/build/sfpi/compiler/bin:$(pwd)/build/infra/bin:$PATH \
 make -C build/build-gcc-newlib-stage2/gcc check-gcc \
