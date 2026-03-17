@@ -84,6 +84,8 @@ constexpr unsigned int SFPEXEXP_MOD1_SET_CC_SGN_EXP = 2;
 constexpr unsigned int SFPEXEXP_MOD1_SET_CC_COMP_EXP = 8;
 constexpr unsigned int SFPEXEXP_MOD1_SET_CC_SGN_COMP_EXP = 10;
 
+constexpr unsigned int SFPSETEXP_MOD1_CPY = 2;
+
 constexpr unsigned int SFPABS_MOD1_INT = 0;
 constexpr unsigned int SFPABS_MOD1_FLOAT = 1;
 
