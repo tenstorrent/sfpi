@@ -316,7 +316,6 @@ public:
     sfpi_inline __vBase() : initialized(false) {}
 
     sfpi_inline __rvtt_vec_t get() const { return v; }
-    sfpi_inline __rvtt_vec_t& get() { return v; }
 
     // Associate variable w/ a value pre-loaded into a particular lreg
     sfpi_inline void operator=(__vLReg lr);
