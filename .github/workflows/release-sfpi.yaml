@@ -45,13 +45,13 @@ jobs:
           fetch-tags: false
           submodules: false
       - name: Download builds
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: pkg
           pattern: build-*
           merge-multiple: true
       - name: Download tests
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: tst
           pattern: tests-*
@@ -75,7 +75,7 @@ jobs:
           name: SFPI-${{env.version}}-tests
           path: tst/*
       - name: Gather configs
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: cfg
           pattern: config-*
@@ -87,7 +87,7 @@ jobs:
             echo "* $(cat $file)" >>$GITHUB_STEP_SUMMARY
           done
       - name: Remove intermediate artifacts
-        uses: geekyeggo/delete-artifact@v5
+        uses: geekyeggo/delete-artifact@v6
         with:
           name: |
             build-*
