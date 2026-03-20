@@ -66,7 +66,19 @@ if [[ $1 = MERGE ]]; then
 	    fi
 	done <$file
     done
-    echo '# sfpi version information'
+
+    # releases must be MAJOR.MINOR.MICRO
+    if [[ $sfpi_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	echo "# sfpi release $sfpi_version"
+    else
+	echo "# sfpi trial $sfpi_version"
+	echo
+	echo '		#######################################'
+	echo '		###   NOT A RELEASE, DO NOT DEPLOY  ###'
+	echo '		#######################################'
+    fi
+    echo
+
     for var in ${vars[@]}; do
 	eval val="\$$var"
 	echo "$var='$val'"
