@@ -194,6 +194,7 @@ constexpr unsigned int SFPCAST_MOD1_RND_STOCH = SFPCAST_MOD1_INT32_TO_FP32_RNS;
 
 constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
 constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;
+constexpr unsigned int SFPSTOCHRND_RND_ZERO = 2;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16A = 0;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16B = 1;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT8 = 2;
