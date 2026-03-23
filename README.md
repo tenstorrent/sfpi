@@ -9,7 +9,6 @@ This repo contains SFPI.
 * standard newlib in `newlib` submodule
 * standard qemu cloned on demand
 * RiscV dejagnu harness in `riscv-dejagnu` submodule
-* tests in `tests`
 * build and release scripts in `scripts`
 
 GCC, Binutils, Newlib, Qemu and Dejagnu are (naturally) released under
