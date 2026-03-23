@@ -201,6 +201,58 @@ public:
 
   // Associate variable w/ a value pre-loaded into a particular lreg
   sfpi_inline void operator= (vLReg lr);
+
+public:
+  sfpi_inline sfpu_t int_and (vVal b) const {
+    return __builtin_rvtt_sfpand (get (), b.get ());
+  }
+  sfpi_inline sfpu_t int_or (vVal b) const {
+    return __builtin_rvtt_sfpor (get (), b.get ());
+  }
+  sfpi_inline sfpu_t int_xor (vVal b) const {
+    return __builtin_rvtt_sfpxor (get (), b.get ());
+  }
+  sfpi_inline sfpu_t int_not () const {
+    return __builtin_rvtt_sfpnot (get ());
+  }
+
+public:
+  sfpi_inline sfpu_t int_add (vVal b, bool is_signed) const {
+    return __builtin_rvtt_sfpxiadd_v (get (), b.get (), is_signed ? SFPXIADD_MOD1_SIGNED : 0);
+  }
+  sfpi_inline sfpu_t int_add (int32_t b, bool is_signed) const {
+    return __builtin_rvtt_sfpxiadd_i (get (), b, is_signed ? SFPXIADD_MOD1_SIGNED : 0);
+  }
+  sfpi_inline sfpu_t int_sub (vVal b, bool is_signed) const {
+    // subtracts the first op from the second op, because, why not :)
+    return __builtin_rvtt_sfpxiadd_v (b.get (), get (), (is_signed ? SFPXIADD_MOD1_SIGNED : 0) | SFPXIADD_MOD1_IS_SUB);
+  }
+  sfpi_inline sfpu_t int_sub (int32_t b, bool is_signed) const {
+    // subtracts the first op from the second op, because, why not :)
+    return __builtin_rvtt_sfpxiadd_i (get (), b, (is_signed ? SFPXIADD_MOD1_SIGNED : 0) | SFPXIADD_MOD1_IS_SUB);
+  }
+  sfpi_inline sfpu_t int_shift (vVal b, bool is_signed) const {
+    return __builtin_rvtt_sfpshft_v (get (), b.get (),
+#if __riscv_xtttensixbh
+                                     is_signed ? SFPSHFT_MOD1_ARITHMETIC :
+#endif
+                                     SFPSHFT_MOD1_LOGICAL);
+  }
+  sfpi_inline sfpu_t int_shift (int b, bool is_signed) const {
+    return __builtin_rvtt_sfpshft_i (get (), b,
+#if __riscv_xtttensixbh
+                                     is_signed ? SFPSHFT_MOD1_ARITHMETIC :
+#endif
+                                     SFPSHFT_MOD1_LOGICAL);
+  }
+
+public:
+  sfpi_inline sfpu_t flt_add (vVal b) const {
+    return __builtin_rvtt_sfpadd (get (), b.get (), 0);
+  }
+  sfpi_inline sfpu_t flt_mul (vVal b) const {
+    return __builtin_rvtt_sfpmul (get (), b.get (), 0);
+  }
 };
 }
 
@@ -414,17 +466,17 @@ public:
 };
 
 sfpi_inline vFloat operator+ (vFloat a, vFloat b) {
-  return __builtin_rvtt_sfpadd (a.get (), b.get (), 0);
+  return a.flt_add (b);
 }
 sfpi_inline vFloat operator- (vFloat a, vFloat b) {
-// Do not use sfpmad here, the optimizer will handle that.
-  return __builtin_rvtt_sfpadd (a.get (), (-b).get (), 0);
+  // Do not use sfpmad here, the optimizer will handle that.
+  return a.flt_add (-b);
 }
 sfpi_inline vFloat operator- (vFloat a, float b) {
   return a - vFloat (b);
 }
 sfpi_inline vFloat operator* (vFloat a, vFloat b) {
-  return __builtin_rvtt_sfpmul (a.get (), b.get (), 0);
+  return a.flt_mul (b);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -509,44 +561,47 @@ public:
   sfpi_inline vInt &operator^= (vInt);
 };
 sfpi_inline vInt operator+ (vInt a, vInt b) {
-  return __builtin_rvtt_sfpxiadd_v (b.get (), a.get (), SFPXIADD_MOD1_SIGNED);
+  return a.int_add (b, true);
 }
 sfpi_inline vInt operator+ (vInt a, int32_t b) {
-  return __builtin_rvtt_sfpxiadd_i (a.get (), b, SFPXIADD_MOD1_SIGNED);
+  return a.int_add (b, true);
 }
 sfpi_inline vInt operator- (vInt a, vInt b) {
   // operands does a - b
-  return __builtin_rvtt_sfpxiadd_v (b.get (), a.get (), SFPXIADD_MOD1_SIGNED | SFPXIADD_MOD1_IS_SUB);
+  return a.int_sub (b, true);
 }
 sfpi_inline vInt operator- (vInt a, int32_t b) {
-  return __builtin_rvtt_sfpxiadd_i (a.get (), b, SFPXIADD_MOD1_SIGNED | SFPXIADD_MOD1_IS_SUB);
+  return a.int_sub (b, true);
 }
-// FIXME: Use vUint
 sfpi_inline vInt operator<< (vInt vec, unsigned amt) {
-  return __builtin_rvtt_sfpshft_i (vec.get (), amt, SFPSHFT_MOD1_LOGICAL);
+  return vec.int_shift (amt, true);
 }
+// FIXME: amt shoult be vUInt
 sfpi_inline vInt operator<< (vInt vec, vInt amt) {
-  return __builtin_rvtt_sfpshft_v (vec.get (), amt.get (), SFPSHFT_MOD1_LOGICAL);
+  return vec.int_shift (amt, true);
 }
 
 #if __riscv_xtttensixbh
 // arithmetic shifts added in blackhole
 sfpi_inline vInt operator>>(vInt vec, unsigned amt) {
-  return __builtin_rvtt_sfpshft_i (vec.get (), -int(amt), SFPSHFT_MOD1_ARITHMETIC);
+  return vec.int_shift (-amt, true);
 }
 
 sfpi_inline vInt operator>>(vInt vec, vInt amt) {
-  return __builtin_rvtt_sfpshft_v (vec.get (), (-amt).get (), SFPSHFT_MOD1_ARITHMETIC);
+  return vec.int_shift (-amt, true);
 }
 #endif
+sfpi_inline vInt operator~ (vInt a) {
+  return a.int_not ();
+}
 sfpi_inline vInt operator& (vInt a, vInt b) {
-  return __builtin_rvtt_sfpand (a.get (), b.get ());
+  return a.int_and (b);
 }
 sfpi_inline vInt operator| (vInt a, vInt b) {
-  return __builtin_rvtt_sfpor (a.get (), b.get ());
+  return a.int_or (b);
 }
 sfpi_inline vInt operator^ (vInt a, vInt b) {
-  return __builtin_rvtt_sfpxor (a.get (), b.get ());
+  return a.int_xor (b);
 }
 
 sfpi_inline vInt vInt::operator- () const {
@@ -828,6 +883,8 @@ public:
     sfpi_inline vUInt(uint32_t val) { loadui(val); }
     sfpi_inline vUInt(impl_::vLReg lr) { impl_::vVal::operator=(lr); }
     sfpi_inline vUInt(const __vCond vc);
+  sfpi_inline vUInt (vInt v) : vUInt (v.get ()) {
+  }
 
     // Assignment
     sfpi_inline vUInt operator=(const vUInt in ) { assign(in.v); return v; }
@@ -1207,8 +1264,8 @@ sfpi_inline __vCond operator<=(const s2vFloat16 a, const vFloat b) { return b >=
 sfpi_inline __vCond operator>(const s2vFloat16 a, const vFloat b) { return b < a; }
 sfpi_inline __vCond operator>=(const s2vFloat16 a, const vFloat b) { return b <= a; }
 
-sfpi_inline vInt operator+(int a, vInt b) { return b + a; }
-sfpi_inline vInt operator-(int a, vInt b) { return vInt (a) - b; }
+sfpi_inline vInt operator+(int32_t a, vInt b) { return b + a; }
+sfpi_inline vInt operator-(int32_t a, vInt b) { return vInt (a) - b; }
 #if 0
 sfpi_inline __vCond operator==(const int a, const vInt b) { return b == a; }
 sfpi_inline __vCond operator!=(const int a, const vInt b) { return b != a; }
@@ -1217,8 +1274,8 @@ sfpi_inline __vCond operator<=(const int a, const vInt b) { return b >= a; }
 sfpi_inline __vCond operator>(const int a, const vInt b) { return b < a; }
 sfpi_inline __vCond operator>=(const int a, const vInt b) { return b <= a; }
 #endif
-sfpi_inline vInt operator+(const int32_t a, const vInt b) { return b + a; }
-sfpi_inline vInt operator-(const int32_t a, const vInt b) { return vInt(a) - b; }
+//sfpi_inline vInt operator+(const int32_t a, const vInt b) { return b + a; }
+//sfpi_inline vInt operator-(const int32_t a, const vInt b) { return vInt(a) - b; }
 sfpi_inline vInt operator&(const int32_t a, const vInt b) { return b & a; }
 sfpi_inline vInt operator|(const int32_t a, const vInt b) { return b | a; }
 sfpi_inline vInt operator^(const int32_t a, const vInt b) { return b ^ a; }

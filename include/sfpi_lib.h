@@ -100,31 +100,27 @@ sfpi_inline vFloat setexp(const vFloat v, const uint32_t exp)
     return __builtin_rvtt_sfpsetexp_i(v.get(), exp, 0);
 }
 
-sfpi_inline vFloat setexp(const vFloat v, const __vIntBase exp)
-{
-    return __builtin_rvtt_sfpsetexp_v(v.get(), exp.get(), 0);
+sfpi_inline vFloat setexp(vFloat v, vUInt exp) {
+    return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), 0);
 }
 
-sfpi_inline vFloat copyexp(const vFloat v, const __vIntBase exp)
-{
-    return __builtin_rvtt_sfpsetexp_v(v.get(), exp.get(), SFPSETEXP_MOD1_CPY);
+sfpi_inline vFloat copyexp (vFloat v, vFloat exp) {
+    return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), SFPSETEXP_MOD1_CPY);
 }
 
-sfpi_inline vFloat setman(const vFloat v, const uint32_t man)
-{
+sfpi_inline vFloat setman (vFloat v, unsigned man) {
     return __builtin_rvtt_sfpsetman_i(v.get(), man, 0);
 }
 
-sfpi_inline vFloat setman(const vFloat v, const __vIntBase man)
-{
-    return __builtin_rvtt_sfpsetman_v(v.get(), man.get(), 0);
+sfpi_inline vFloat setman (vFloat v, vUInt man) {
+    return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
-sfpi_inline vFloat addexp(const vFloat in, const int32_t exp)
-{
-    return __builtin_rvtt_sfpdivp2(in.get(), exp, SFPSDIVP2_MOD1_ADD);
+sfpi_inline vFloat addexp (vFloat in, unsigned exp) {
+    return __builtin_rvtt_sfpdivp2 (in.get (), exp, SFPSDIVP2_MOD1_ADD);
 }
 
+// FIXME: These hould be restricted to vFloat and vSMag
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vType setsgn(const vType v, const int32_t sgn)
 {
