@@ -295,22 +295,26 @@ sfpi_inline vUInt float_to_int16 (vFloat in, int rounding = RoundMode::Stochasti
        SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline void subvec_transp(vFloat& a, vFloat& b, vFloat& c, vFloat& d)
-{
-    auto r = __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
-    a = vFloat(__builtin_rvtt_sfpselect4 (r, 0));
-    b = vFloat(__builtin_rvtt_sfpselect4 (r, 1));
-    c = vFloat(__builtin_rvtt_sfpselect4 (r, 2));
-    d = vFloat(__builtin_rvtt_sfpselect4 (r, 3));
+sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
+  a = __builtin_rvtt_sfpselect4 (r, 0);
+  b = __builtin_rvtt_sfpselect4 (r, 1);
+  c = __builtin_rvtt_sfpselect4 (r, 2);
+  d = __builtin_rvtt_sfpselect4 (r, 3);
 }
-
-sfpi_inline void subvec_transp(__vIntBase& a, __vIntBase& b, __vIntBase& c, __vIntBase& d)
-{
-    auto r = __builtin_rvtt_sfptransp(a.get(), b.get(), c.get(), d.get());
-    a = __vIntBase(__builtin_rvtt_sfpselect4 (r, 0));
-    b = __vIntBase(__builtin_rvtt_sfpselect4 (r, 1));
-    c = __vIntBase(__builtin_rvtt_sfpselect4 (r, 2));
-    d = __vIntBase(__builtin_rvtt_sfpselect4 (r, 3));
+sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
+  a = __builtin_rvtt_sfpselect4 (r, 0);
+  b = __builtin_rvtt_sfpselect4 (r, 1);
+  c = __builtin_rvtt_sfpselect4 (r, 2);
+  d = __builtin_rvtt_sfpselect4 (r, 3);
+}
+sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
+  a = __builtin_rvtt_sfpselect4 (r, 0);
+  b = __builtin_rvtt_sfpselect4 (r, 1);
+  c = __builtin_rvtt_sfpselect4 (r, 2);
+  d = __builtin_rvtt_sfpselect4 (r, 3);
 }
 
 sfpi_inline impl_::sfpu_t subvec_shflror1(const impl_::vVal& src)
@@ -323,32 +327,32 @@ sfpi_inline impl_::sfpu_t subvec_shflshr1(const impl_::vVal& src)
     return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
 
-sfpi_inline void vec_swap(vFloat& a, vFloat& b)
-{
-    auto r = __builtin_rvtt_sfpswap(a.get(), b.get(), SFPSWAP_MOD1_SWAP);
-    a = vFloat(__builtin_rvtt_sfpselect2 (r, 0));
-    b = vFloat(__builtin_rvtt_sfpselect2 (r, 1));
+sfpi_inline void vec_swap (vFloat & a, vFloat &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
+}
+sfpi_inline void vec_swap (vInt &a, vInt &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
+}
+sfpi_inline void vec_swap (vUInt &a, vUInt &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
 }
 
-sfpi_inline void vec_swap(__vIntBase& a, __vIntBase& b)
-{
-    auto r = __builtin_rvtt_sfpswap(a.get(), b.get(), SFPSWAP_MOD1_SWAP);
-    a = __vIntBase(__builtin_rvtt_sfpselect2 (r, 0));
-    b = __vIntBase(__builtin_rvtt_sfpselect2 (r, 1));
+sfpi_inline void vec_min_max (vFloat &a, vFloat &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
 }
-
-sfpi_inline void vec_min_max(vFloat& a, vFloat& b)
-{
-    auto r = __builtin_rvtt_sfpswap(a.get(), b.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
-    a = vFloat(__builtin_rvtt_sfpselect2 (r, 0));
-    b = vFloat(__builtin_rvtt_sfpselect2 (r, 1));
-}
-
-sfpi_inline void vec_min_max(__vIntBase& a, __vIntBase& b)
-{
-    auto r = __builtin_rvtt_sfpswap(a.get(), b.get(), SFPSWAP_MOD1_VEC_MIN_MAX);
-    a = __vIntBase(__builtin_rvtt_sfpselect2 (r, 0));
-    b = __vIntBase(__builtin_rvtt_sfpselect2 (r, 1));
+// FIXME: Use vSMag
+sfpi_inline void vec_min_max (vInt &a, vInt &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
 }
 
 #if __riscv_xtttensixbh
