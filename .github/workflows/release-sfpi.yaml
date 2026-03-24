@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        arch: [aarch64, x86_64]
+        arch: [${{inputs.tag && 'aarch64,' || ''}} x86_64]
         box: [none, Alma]
         exclude:
           - arch: aarch64
