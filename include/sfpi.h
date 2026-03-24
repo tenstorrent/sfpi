@@ -636,8 +636,10 @@ sfpi_inline vInt operator+ (vInt a, int32_t b) {
   return a.int_add (b, true);
 }
 sfpi_inline vInt operator- (vInt a, vInt b) {
-  // operands does a - b
   return a.int_sub (b, true);
+}
+sfpi_inline vUInt operator- (vUInt a, vInt b) {
+  return a.int_sub (b, false);
 }
 sfpi_inline vInt operator- (vInt a, int32_t b) {
   return a.int_sub (b, true);
@@ -1555,6 +1557,23 @@ sfpi_inline  __vCond operator< (vInt a, int32_t b) { return __vCond(__vCond::__v
 sfpi_inline  __vCond operator> (vInt a, int32_t b) { return  __vCond(__vCond::__vCondGT, a, b, SFPXIADD_MOD1_SIGNED); }
 sfpi_inline  __vCond operator<= (vInt a, int32_t b) { return  __vCond(__vCond::__vCondLTE, a, b, SFPXIADD_MOD1_SIGNED); }
 sfpi_inline  __vCond operator>= (vInt a, int32_t b) { return __vCond(__vCond::__vCondGTE, a, b, SFPXIADD_MOD1_SIGNED); }
+
+// FIXME: These should be deprecated and removed -- mixing signed and unsigned
+// in compares is not sensible. Sadly user code does this because the old
+// iplementatiion permitted it :(
+sfpi_inline  __vCond operator== (vInt a, vUInt b) { return a == vInt (a); }
+sfpi_inline  __vCond operator!= (vInt a, vUInt b) { return a != vInt (a); }
+sfpi_inline  __vCond operator< (vInt a, vUInt b) { return a < vInt (a); }
+sfpi_inline  __vCond operator> (vInt a, vUInt b) { return a > vInt (a); }
+sfpi_inline  __vCond operator<= (vInt a, vUInt b) { return a <= vInt (a); }
+sfpi_inline  __vCond operator>= (vInt a, vUInt b) { return a >= vInt (a); }
+
+sfpi_inline  __vCond operator== (vInt a, uint32_t b) { return a == int32_t (b); }
+sfpi_inline  __vCond operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
+sfpi_inline  __vCond operator< (vInt a, uint32_t b) { return a < int32_t (b); }
+sfpi_inline  __vCond operator> (vInt a, uint32_t b) { return a > int32_t (b); }
+sfpi_inline  __vCond operator<= (vInt a, uint32_t b) { return a <= int32_t (b); }
+sfpi_inline  __vCond operator>= (vInt a, uint32_t b) { return a >= int32_t (b); }
 
 
 //////////////////////////////////////////////////////////////////////////////
