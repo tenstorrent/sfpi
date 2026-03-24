@@ -22,6 +22,10 @@ on:
       build_id:
         required: false
         type: string
+      txz:
+        required: false
+        type: boolean
+        default: true
 
   workflow_dispatch:
     inputs:
@@ -49,6 +53,10 @@ on:
       incremental:
         required: true
         description: Compiler-only build
+        type: boolean
+        default: true
+      txz:
+        required: false
         type: boolean
         default: true
 
@@ -99,7 +107,7 @@ jobs:
       - name: Run tests
         run: scripts/build.sh --test-tt
       - name: Release toolchain
-        run: scripts/release.sh --ci --tt-built
+        run: scripts/release.sh --ci --tt-built ${{!inputs.txz && '--no-txz' || null}}
       - name: Upload build
         uses: actions/upload-artifact@v6
         with:

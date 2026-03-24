@@ -1,0 +1,24 @@
+name: "Development SFPI"
+
+on:
+  workflow_dispatch:
+    inputs:
+      incremental:
+        required: true
+        description: Compiler-only build
+        type: boolean
+        default: true
+      all:
+        required: true
+        description: All targets
+        type: boolean
+        default: false
+
+run-name: Trial build SFPI ${{github.ref}}
+jobs:
+  dev:
+    uses: ./.github/workflows/release-sfpi.yaml
+    with:
+      incremental: ${{inputs.incremental}}
+      all: ${{inputs.all}}
+      id_prefix: 'dev-'
