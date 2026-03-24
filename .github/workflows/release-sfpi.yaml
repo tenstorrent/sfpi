@@ -48,7 +48,7 @@ jobs:
       tag: ${{inputs.tag}}
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
-      incremental: ${{inputs.tag ? false : inputs.incremental}}
+      incremental: ${{inputs.tag && false || inputs.incremental}}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
       txz: ${{inputs.tag || inputs.all || matrix.box == "none"}}
