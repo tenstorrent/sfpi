@@ -1561,12 +1561,12 @@ sfpi_inline  __vCond operator>= (vInt a, int32_t b) { return __vCond(__vCond::__
 // FIXME: These should be deprecated and removed -- mixing signed and unsigned
 // in compares is not sensible. Sadly user code does this because the old
 // iplementatiion permitted it :(
-sfpi_inline  __vCond operator== (vInt a, vUInt b) { return a == vInt (a); }
-sfpi_inline  __vCond operator!= (vInt a, vUInt b) { return a != vInt (a); }
-sfpi_inline  __vCond operator< (vInt a, vUInt b) { return a < vInt (a); }
-sfpi_inline  __vCond operator> (vInt a, vUInt b) { return a > vInt (a); }
-sfpi_inline  __vCond operator<= (vInt a, vUInt b) { return a <= vInt (a); }
-sfpi_inline  __vCond operator>= (vInt a, vUInt b) { return a >= vInt (a); }
+sfpi_inline  __vCond operator== (vInt a, vUInt b) { return a == vInt (b); }
+sfpi_inline  __vCond operator!= (vInt a, vUInt b) { return a != vInt (b); }
+sfpi_inline  __vCond operator< (vInt a, vUInt b) { return a < vInt (b); }
+sfpi_inline  __vCond operator> (vInt a, vUInt b) { return a > vInt (b); }
+sfpi_inline  __vCond operator<= (vInt a, vUInt b) { return a <= vInt (b); }
+sfpi_inline  __vCond operator>= (vInt a, vUInt b) { return a >= vInt (b); }
 
 sfpi_inline  __vCond operator== (vInt a, uint32_t b) { return a == int32_t (b); }
 sfpi_inline  __vCond operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
