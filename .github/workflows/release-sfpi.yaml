@@ -8,49 +8,47 @@ on:
         description: Version tag to checkout
         default:
         type: string
-      incremental:
-        required: true
-        description: Compiler-only build
-        type: boolean
-        default: true
       all:
-        required: true
         description: All targets
         type: boolean
-        default: false
-
-  workflow_call:
-    inputs: 
-      incremental:
-        required: true
+        default: true
+      full:
+        description: Complete build
         type: boolean
         default: true
+
+  workflow_call:
+    inputs:
+      full:
+        type: boolean
+        default: false
       all:
-        required: true
         type: boolean
         default: false
       id_prefix:
-        required: true
         type: string
         default: 'X-'
 
-run-name: Releasing SFPI ${{inputs.tag || github.ref}}
+run-name: Release build SFPI ${{inputs.tag || github.ref}}
 jobs:
   archs:
     runs-on: ubuntu-latest
     outputs:
-      archs: ${{ steps.archs.outputs.archs }}
+      archs: ${{steps.archs.outputs.archs}}
     steps:
       - name: Set target architectures
         id: archs
         shell: bash
         run: |
           archs=
-          if [[ -n '${{inputs.tag}}' ]] || ${{inputs.all}}; then
+          all=${{inputs.all}}
+          if [[ -n '${{inputs.tag}}' ]]; then
+            all=true
+          fi
+          if [[ -z $all ]] || $all; then
             archs='"aarch64", '
           fi
           echo 'archs=['"$archs"'"x86_64"]' >> $GITHUB_OUTPUT
-
   build:
     needs: archs
     strategy:
@@ -66,7 +64,7 @@ jobs:
       tag: ${{inputs.tag}}
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
-      incremental: ${{inputs.tag && false || inputs.incremental}}
+      full: ${{inputs.tag || inputs.full }}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{inputs.id_prefix}}${{github.run_number}}
       txz: ${{inputs.tag || inputs.all || matrix.box == 'none'}}
