@@ -11,6 +11,7 @@ fi
 BUILD=build
 ci=false
 force=false
+no_txz=false
 tt_built=false
 txz_only=false
 while [ "$#" -ne 0 ] ; do
@@ -20,6 +21,7 @@ while [ "$#" -ne 0 ] ; do
 	--force) force=true ;;
 	--tt-built) tt_built=true ;;
 	--txz-only) txz_only=true ;;
+	--no-txz) no_txz=true ;;
 	-*) echo "Unknown option '$1'" >&2 ; exit 2 ;;
 	*) break ;;
     esac
@@ -39,7 +41,7 @@ if ! $ci ; then
     $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.post
     if ! cmp -s $BUILD/hashes.pre $BUILD/hashes.post ; then
 	echo "*** WARNING: Source tree has changed since build started ***" >&2
-	if ! $force ; then
+	if ! $force; then
 	    exit 1
 	fi
     fi
@@ -58,11 +60,13 @@ eval $($BIN/sfpi-info.sh HASH <$BUILD/version)
 version_file=$BUILD/release/$sfpi_filename.version
 cp $BUILD/version $version_file
 
-tar cJf $BUILD/release/$sfpi_filename.txz -C $BUILD sfpi
-echo "INFO: Tarball: $BUILD/release/$sfpi_filename.txz"
-$BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.txz <$BUILD/version >>$version_file
+if ! $no_txz; then
+    tar cJf $BUILD/release/$sfpi_filename.txz -C $BUILD sfpi
+    echo "INFO: Tarball: $BUILD/release/$sfpi_filename.txz"
+    $BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.txz <$BUILD/version >>$version_file
+fi
 
-if ! $txz_only ; then
+if ! $txz_only; then
     # Get the set of shared objects we use and figure what packages they come from.
     # tuples of debian:fedora names
     pkgs=
@@ -99,7 +103,7 @@ if ! $txz_only ; then
 	    fpm_options+=(--license "Apache 2.0/GPL 2,3/LGPL 2.1")
 	    fpm_options+=(--url "https://github.com/tenstorrent/sfpi")
 	    fpm_options+=(--description "Tenstorrent SFPI compiler tools")
-	    if $tt_built ; then
+	    if $tt_built; then
 		fpm_options+=(--maintainer "Tenstorrent <support@tenstorrent.com>" \
 					   --vendor "Tenstorrent")
 	    else
@@ -113,7 +117,7 @@ if ! $txz_only ; then
 	    do
 		case $sfpi_dist in
 		    debian)
-			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null) ; then
+			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null); then
 			    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]]; then
 				version=${BASH_REMATCH[2]}
 			    else
@@ -122,7 +126,7 @@ if ! $txz_only ; then
 			fi
 			;;
 		    fedora)
-			if version=$(rpm -q --qf '%{VERSION}' ${pkg/*:/} 2>/dev/null) ; then
+			if version=$(rpm -q --qf '%{VERSION}' ${pkg/*:/} 2>/dev/null); then
 			    :
 			fi
 			;;
@@ -139,12 +143,12 @@ if ! $txz_only ; then
 		fi
 	    done
 
-	    if [[ $sfpi_pkg = deb ]] ; then
+	    if [[ $sfpi_pkg = deb ]]; then
 		# _ in version is verboten
 		fpm -t deb -v "${sfpi_version//_/-}" "${fpm_options[@]}" "${deb_deps[@]}" \
 		    -p $BUILD/release/$sfpi_filename.deb
 		echo "INFO: Debian: $BUILD/release/$sfpi_filename.deb"
-	    elif [[ $sfpi_pkg = rpm ]] ; then
+	    elif [[ $sfpi_pkg = rpm ]]; then
 		# - in version is verboten
 		fpm -t rpm -v "${sfpi_version//-/_}" "${fpm_options[@]}" "${rpm_deps[@]}" \
 		    -p $BUILD/release/$sfpi_filename.rpm \

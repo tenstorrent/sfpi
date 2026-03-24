@@ -13,14 +13,50 @@ on:
         description: Compiler-only build
         type: boolean
         default: true
+      all:
+        required: true
+        description: All targets
+        type: boolean
+        default: false
+
+  workflow_call:
+    inputs: 
+      incremental:
+        required: true
+        type: boolean
+        default: true
+      all:
+        required: true
+        type: boolean
+        default: false
+      id_prefix:
+        required: true
+        type: string
+        default: 'X-'
 
 run-name: Releasing SFPI ${{inputs.tag || github.ref}}
 jobs:
+  archs:
+    runs-on: ubuntu-latest
+    outputs:
+      archs: ${{ steps.archs.outputs.archs }}
+    steps:
+      - name: Set target architectures
+        id: archs
+        shell: bash
+        run: |
+          archs=
+          if [[ -n '${{inputs.tag}}' ]] || ${{inputs.all}}; then
+            archs='"aarch64", '
+          fi
+          echo 'archs=['"$archs"'"x86_64"]' >> $GITHUB_OUTPUT
+
   build:
+    needs: archs
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        arch: [aarch64, x86_64]
+        arch: ${{fromJSON(needs.archs.outputs.archs)}}
         box: [none, Alma]
         exclude:
           - arch: aarch64
@@ -30,9 +66,11 @@ jobs:
       tag: ${{inputs.tag}}
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
-      incremental: ${{inputs.incremental}}
+      incremental: ${{inputs.tag && false || inputs.incremental}}
       key: ${{matrix.arch}}-${{matrix.box}}
-      build_id: ${{github.run_number}}
+      build_id: ${{inputs.id_prefix}}${{github.run_number}}
+      txz: ${{inputs.tag || inputs.all || matrix.box == 'none'}}
+
   release:
     runs-on: ubuntu-latest
     needs: build
