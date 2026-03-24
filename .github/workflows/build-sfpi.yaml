@@ -12,49 +12,16 @@ on:
       box:
         required: true
         type: string
-      incremental:
+      full:
         required: true
         type: boolean
-        default: true
+        default: false
       key:
         required: false
         type: string
       build_id:
         required: false
         type: string
-      txz:
-        required: false
-        type: boolean
-        default: true
-
-  workflow_dispatch:
-    inputs:
-      tag:
-        required: false
-        description: Version tag to checkout
-        default:
-        type: string
-      arch:
-        required: true
-        description: Host architecture
-        default: x86_64
-        type: choice
-        options:
-          - aarch64
-          - x86_64
-      box:
-        required: true
-        description: Container to run on
-        default: none
-        type: choice
-        options:
-          - none
-          - Alma
-      incremental:
-        required: true
-        description: Compiler-only build
-        type: boolean
-        default: true
       txz:
         required: false
         type: boolean
@@ -101,7 +68,7 @@ jobs:
       - name: Get FPM
         run: $SUDO gem install fpm
       - name: Build toolchain
-        run: scripts/build.sh --gdb --tt-built --small ${{!inputs.incremental && '--full' || null}} ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
+        run: scripts/build.sh --gdb --tt-built --small ${{inputs.full && '--full' || null}} ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
       - name: Build test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run tests

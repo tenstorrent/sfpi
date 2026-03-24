@@ -33,8 +33,8 @@ while [ "$#" -ne 0 ] ; do
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
 	--build-id=*) sfpi_build="${1#*=}"
-		      if ! [[ $sfpi_build =~ ^[0-9]*$ ]]; then
-			  echo "$1 is not a decimal number" >&2
+		      if ! [[ $sfpi_build =~ ^([a-z]+-)?[0-9]+$ ]]; then
+			  echo "$1 is malformed" >&2
 			  exit 1
 		      fi
 		      ;;
