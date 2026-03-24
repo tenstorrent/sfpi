@@ -51,7 +51,7 @@ jobs:
       incremental: ${{inputs.tag && false || inputs.incremental}}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
-      txz: ${{inputs.tag || inputs.all || matrix.box == "none"}}
+      txz: ${{inputs.tag || inputs.all || matrix.box == 'none'}}
 
   release:
     runs-on: ubuntu-latest
