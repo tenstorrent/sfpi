@@ -40,14 +40,14 @@ jobs:
       archs: ${{ steps.archs.outputs.archs }}
     steps:
       - name: Set target architectures
-      - id: archs
-      shell: bash
-      run: |
-        archs=
-        if [[ -n '${{inputs.tag}}' ]] || ${{inputs.all}}; then
-           archs='"aarch64", '
-        fi
-        echo 'archs=['"$archs"'"x86_64"]' >> $GITHUB_OUTPUT
+        id: archs
+        shell: bash
+        run: |
+          archs=
+          if [[ -n '${{inputs.tag}}' ]] || ${{inputs.all}}; then
+            archs='"aarch64", '
+          fi
+          echo 'archs=['"$archs"'"x86_64"]' >> $GITHUB_OUTPUT
 
   build:
     needs: archs
