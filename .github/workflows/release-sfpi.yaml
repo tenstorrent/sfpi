@@ -28,7 +28,7 @@ jobs:
       all: ${{steps.plan.outputs.all}}
     steps:
       - name: Set target architectures
-        id: archs
+        id: plan
         shell: bash
         run: |
           all='${{inputs.all}}'
