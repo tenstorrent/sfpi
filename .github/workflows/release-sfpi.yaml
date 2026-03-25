@@ -64,10 +64,10 @@ jobs:
       tag: ${{inputs.tag}}
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
-      full: ${{inputs.tag || inputs.full }}
+      full: ${{inputs.full }}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{inputs.id_prefix}}${{github.run_number}}
-      txz: ${{inputs.tag || inputs.all || matrix.box == 'none'}}
+      txz: ${{inputs.all || matrix.box == 'none'}}
 
   release:
     runs-on: ubuntu-latest
