@@ -11,50 +11,50 @@ on:
       all:
         description: All targets
         type: boolean
-        default: true
+        default: false
       full:
         description: Complete build
         type: boolean
-        default: true
-
-  workflow_call:
-    inputs:
-      full:
-        type: boolean
         default: false
-      all:
-        type: boolean
-        default: false
-      id_prefix:
-        type: string
-        default: 'X-'
 
-run-name: Release build SFPI ${{inputs.tag || github.ref}}
+run-name: Release SFPI ${{inputs.tag || github.ref}}
 jobs:
-  archs:
+  plan:
+    name: Plan configuration
     runs-on: ubuntu-latest
     outputs:
-      archs: ${{steps.archs.outputs.archs}}
+      archs: ${{steps.plan.outputs.archs}}
+      full: ${{steps.plan.outputs.full}}
+      all: ${{steps.plan.outputs.all}}
     steps:
-      - name: Set target architectures
-        id: archs
+      - name: Compute settings
+        id: plan
         shell: bash
         run: |
-          archs=
-          all=${{inputs.all}}
+          all='${{inputs.all}}'
+          full='${{inputs.full}}'
+          archs='["x86_64"'
           if [[ -n '${{inputs.tag}}' ]]; then
             all=true
+            full=true
           fi
-          if [[ -z $all ]] || $all; then
-            archs='"aarch64", '
+          if $all; then
+            archs+=', "aarch64"'
           fi
-          echo 'archs=['"$archs"'"x86_64"]' >> $GITHUB_OUTPUT
+          archs+=']'
+          echo "all=$all"
+          echo "full=$full"
+          echo "archs=$archs"
+          echo "all=$all" >>$GITHUB_OUTPUT
+          echo "full=$full" >>$GITHUB_OUTPUT
+          echo "archs=$archs" >>$GITHUB_OUTPUT
   build:
-    needs: archs
+    name: Build toolchains
+    needs: plan
     strategy:
       fail-fast: true
       matrix:
-        arch: ${{fromJSON(needs.archs.outputs.archs)}}
+        arch: ${{fromJSON(needs.plan.outputs.archs)}}
         box: [none, Alma]
         exclude:
           - arch: aarch64
@@ -64,12 +64,13 @@ jobs:
       tag: ${{inputs.tag}}
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
-      full: ${{inputs.full }}
+      full: ${{fromJSON(needs.plan.outputs.full)}}
       key: ${{matrix.arch}}-${{matrix.box}}
-      build_id: ${{inputs.id_prefix}}${{github.run_number}}
-      txz: ${{inputs.all || matrix.box == 'none'}}
+      build_id: ${{github.run_number}}
+      txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
 
   release:
+    name: Create Artifacts
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -99,7 +100,7 @@ jobs:
           source pkg/sfpi-version
           rm pkg/sfpi_*.version
           echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
-          echo version=${sfpi_version//./_} >> $GITHUB_ENV
+          echo version=${sfpi_version//./_} >>$GITHUB_ENV
       - name: Upload release
         uses: actions/upload-artifact@v6
         with:

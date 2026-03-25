@@ -33,6 +33,7 @@ env:
 run-name: Build ${{inputs.arch}} SFPI ${{inputs.tag || github.ref}}${{inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
+    name: Build ${{inputs.arch}}-${{inputs.box != 'none' && format('-{0}', inputs.box) || ''}}
     runs-on: ubuntu-22.04${{inputs.arch == 'aarch64' && '-arm' || ''}}
     container:
       image: ${{inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null}}
@@ -92,6 +93,9 @@ jobs:
         run: |
           eval $(./scripts/sfpi-info.sh DIST <build/version)
           config="$sfpi_version"
+          if [[ -n ${{inputs.build_id}} ]]; then
+            config+=" [${{inputs.build_id}}]"
+          fi
           if [[ -n $sfpi_base ]]; then
               config+=" ($sfpi_base)"
           fi
