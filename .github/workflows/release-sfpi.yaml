@@ -20,7 +20,7 @@ on:
 run-name: Release SFPI ${{inputs.tag || github.ref}}
 jobs:
   plan:
-    name: Plan configuration
+    name: Plan
     runs-on: ubuntu-latest
     outputs:
       archs: ${{steps.plan.outputs.archs}}
@@ -49,7 +49,7 @@ jobs:
           echo "full=$full" >>$GITHUB_OUTPUT
           echo "archs=$archs" >>$GITHUB_OUTPUT
   build:
-    name: Build toolchains
+    name: Toolchains
     needs: plan
     strategy:
       fail-fast: true
@@ -70,7 +70,7 @@ jobs:
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
 
   release:
-    name: Create Artifacts
+    name: Artifacts
     runs-on: ubuntu-latest
     needs: build
     steps:
