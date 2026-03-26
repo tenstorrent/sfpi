@@ -945,18 +945,53 @@ sfpi_inline __vCond operator<=(const s2vFloat16 a, const vFloat b) { return b >=
 sfpi_inline __vCond operator>(const s2vFloat16 a, const vFloat b) { return b < a; }
 sfpi_inline __vCond operator>=(const s2vFloat16 a, const vFloat b) { return b <= a; }
 
+sfpi_inline vUInt operator&(vUInt a, uint32_t b) { return a & vUInt (b); }
+sfpi_inline vUInt operator|(vUInt a, uint32_t b) { return a | vUInt (b); }
+sfpi_inline vUInt operator^(vUInt a, uint32_t b) { return a ^ vUInt (b); }
+
+sfpi_inline vUInt operator&(vUInt a, int b) { return a & uint32_t (b); }
+sfpi_inline vUInt operator|(vUInt a, int b) { return a | uint32_t (b); }
+sfpi_inline vUInt operator^(vUInt a, int b) { return a ^ uint32_t (b); }
+
+sfpi_inline vUInt operator&(vUInt a, unsigned b) { return a & uint32_t (b); }
+sfpi_inline vUInt operator|(vUInt a, unsigned b) { return a | uint32_t (b); }
+sfpi_inline vUInt operator^(vUInt a, unsigned b) { return a ^ uint32_t (b); }
+
+
 sfpi_inline vInt operator+(int32_t a, vInt b) { return b + a; }
 sfpi_inline vInt operator-(int32_t a, vInt b) { return vInt (a) - b; }
 //sfpi_inline vInt operator+(const int32_t a, const vInt b) { return b + a; }
 //sfpi_inline vInt operator-(const int32_t a, const vInt b) { return vInt(a) - b; }
+sfpi_inline vUInt operator+(const int32_t a, const vUInt b) { return b + a; }
+sfpi_inline vUInt operator-(const int32_t a, const vUInt b) { return vUInt(a) - b; }
+
+sfpi_inline vInt operator&(vInt a, int32_t b) { return a & vInt (b); }
+sfpi_inline vInt operator|(vInt a, int32_t b) { return a | vInt (b); }
+sfpi_inline vInt operator^(vInt a, int32_t b) { return a ^ vInt (b); }
+
+sfpi_inline vInt operator&(vInt a, int b) { return a & int32_t (b); }
+sfpi_inline vInt operator|(vInt a, int b) { return a | int32_t (b); }
+sfpi_inline vInt operator^(vInt a, int b) { return a ^ int32_t (b); }
+
+sfpi_inline vInt operator&(vInt a, unsigned b) { return a & int32_t (b); }
+sfpi_inline vInt operator|(vInt a, unsigned b) { return a | int32_t (b); }
+sfpi_inline vInt operator^(vInt a, unsigned b) { return a ^ int32_t (b); }
+
+sfpi_inline vUInt operator&(vInt a, const vUInt b) { return a & vInt (b); }
+sfpi_inline vUInt operator|(vInt a, const vUInt b) { return a | vInt (b); }
+sfpi_inline vUInt operator^(vInt a, const vUInt b) { return a ^ vInt (b); }
+
+sfpi_inline vUInt operator&(vUInt a, const vInt b) { return a & vUInt (b); }
+sfpi_inline vUInt operator|(vUInt a, const vInt b) { return a | vUInt (b); }
+sfpi_inline vUInt operator^(vUInt a, const vInt b) { return a ^ vUInt (b); }
+
 sfpi_inline vInt operator&(const int32_t a, const vInt b) { return b & a; }
 sfpi_inline vInt operator|(const int32_t a, const vInt b) { return b | a; }
 sfpi_inline vInt operator^(const int32_t a, const vInt b) { return b ^ a; }
-sfpi_inline vUInt operator+(const int32_t a, const vUInt b) { return b + a; }
-sfpi_inline vUInt operator-(const int32_t a, const vUInt b) { return vUInt(a) - b; }
-sfpi_inline vUInt operator&(const int32_t a, const vUInt b) { return b & a; }
-sfpi_inline vUInt operator|(const int32_t a, const vUInt b) { return b | a; }
-sfpi_inline vUInt operator^(const int32_t a, const vUInt b) { return b ^ a; }
+
+sfpi_inline vUInt operator&(const uint32_t a, const vUInt b) { return b & a; }
+sfpi_inline vUInt operator|(const uint32_t a, const vUInt b) { return b | a; }
+sfpi_inline vUInt operator^(const uint32_t a, const vUInt b) { return b ^ a; }
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline vInt::vInt (vUInt val)
