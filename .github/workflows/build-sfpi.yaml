@@ -33,21 +33,21 @@ env:
 run-name: Build ${{inputs.arch}} SFPI ${{inputs.tag || github.ref}}${{inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
-    name: Build ${{inputs.arch}}-${{inputs.box != 'none' && format('-{0}', inputs.box) || ''}}
+    name: Build ${{inputs.arch}}${{inputs.box != 'none' && format('-{0}', inputs.box) || ''}}
     runs-on: ubuntu-22.04${{inputs.arch == 'aarch64' && '-arm' || ''}}
     container:
       image: ${{inputs.box == 'alma' && format('quay.io/pypa/manylinux_2_34_{0}', inputs.arch) || null}}
     steps:
-      - name: Checkout repo & submodules
+      - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{inputs.tag || github.ref}}
           fetch-depth: 64
           fetch-tags: true
           submodules: recursive
-      - name: Tell Git it is safe
+      - name: Tweak Git
         run: git config --global --add safe.directory '*'
-      - name: Install packages
+      - name: Install Packages
         run: |
           pkgs="autoconf automake bison expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby wget"
@@ -66,29 +66,29 @@ jobs:
               echo "Unknown distro, winging it"
             ;;
           esac
-      - name: Get FPM
+      - name: Install FPM
         run: $SUDO gem install fpm
-      - name: Build toolchain
+      - name: Build Toolchain
         run: scripts/build.sh --gdb --tt-built --small ${{inputs.full && '--full' || null}} ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
-      - name: Build test harness
+      - name: Build Test harness
         run: scripts/build.sh --dejagnu --small
-      - name: Run tests
+      - name: Run Tests
         run: scripts/build.sh --test-tt
-      - name: Release toolchain
+      - name: Package toolchain
         run: scripts/release.sh --ci --tt-built ${{!inputs.txz && '--no-txz' || null}}
-      - name: Upload build
+      - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
           name: build-${{inputs.arch}}-${{inputs.box}}
           path: build/release/*
           compression-level: 0
-      - name: Upload tests
+      - name: Upload results
         uses: actions/upload-artifact@v6
         with:
           name: tests-${{inputs.arch}}-${{inputs.box}}
           path: build/tests/*
       - id: version
-        name: Gather config
+        name: Record config
         shell: bash
         run: |
           eval $(./scripts/sfpi-info.sh DIST <build/version)
