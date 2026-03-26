@@ -405,8 +405,7 @@ public:
                                        val.get_format ())) {
   }
   sfpi_inline vFloat (float f)
-      : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f),
-                                        SFPXLOADI_MOD0_FLOAT)) {
+      : vVal (__builtin_rvtt_sfpxloads (impl_::float_as_uint (f), 0, 32)) {
   }
 
   // Assignment
@@ -488,10 +487,10 @@ public:
       : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {
   }
   sfpi_inline vInt (int32_t val)
-      : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_INT32)) {
+      : vVal (__builtin_rvtt_sfpxloads (val, 1, 32)) {
   }
   sfpi_inline vInt (uint32_t val)
-      : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {
+      : vVal (__builtin_rvtt_sfpxloads (val, 0, 32)) {
   }
   
   sfpi_inline vInt (int val) : vInt (int32_t (val)) { }
@@ -558,10 +557,10 @@ public:
       : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {
   }
   sfpi_inline vUInt (int32_t val)
-      : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_INT32)) {
+      : vVal (__builtin_rvtt_sfpxloads (val, 1, 32)) {
   }
   sfpi_inline vUInt (uint32_t val)
-      : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {
+      : vVal (__builtin_rvtt_sfpxloads (val, 0, 32)) {
   }
 
   sfpi_inline vUInt (int val) : vUInt (int32_t (val)) { }
