@@ -957,6 +957,15 @@ sfpi_inline vUInt operator-(const int32_t a, const vUInt b) { return vUInt(a) - 
 sfpi_inline vUInt operator&(const int32_t a, const vUInt b) { return b & a; }
 sfpi_inline vUInt operator|(const int32_t a, const vUInt b) { return b | a; }
 sfpi_inline vUInt operator^(const int32_t a, const vUInt b) { return b ^ a; }
+
+sfpi_inline vUInt operator&(vInt a, const vUInt b) { return a & vInt (b); }
+sfpi_inline vUInt operator|(vInt a, const vUInt b) { return a | vInt (b); }
+sfpi_inline vUInt operator^(vInt a, const vUInt b) { return a ^ vInt (b); }
+
+sfpi_inline vUInt operator&(vUInt a, const vInt b) { return a & vUInt (b); }
+sfpi_inline vUInt operator|(vUInt a, const vInt b) { return a | vUInt (b); }
+sfpi_inline vUInt operator^(vUInt a, const vInt b) { return a ^ vUInt (b); }
+
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline vInt::vInt (vUInt val)
