@@ -252,6 +252,8 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {}
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
+sfpi::vInt::vInt(const impl_::vCond vc)
+    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vInt::operator= (vInt in)-> vInt & { assign(in.v); return *this; }
 auto sfpi::vInt::operator= (impl_::vLReg lr)-> vInt & { impl_::vVal::operator= (lr); return *this; }
@@ -320,6 +322,8 @@ sfpi::vUInt::vUInt (uint32_t val)
 
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
+sfpi::vUInt::vUInt(const impl_::vCond vc)
+    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vUInt::operator= (vUInt in)-> vUInt & { assign (in.get ()); return *this; }
 auto sfpi::vUInt::operator= (impl_::vLReg lr)-> vUInt & { impl_::vVal::operator= (lr); return *this; }

@@ -165,13 +165,15 @@ public:
 };
 
 sfpi_inline vFloat operator+ (vFloat);
-sfpi_inline vFloat operator+ (vFloat, vFloat);
-sfpi_inline vFloat operator+ (float, vFloat);
 sfpi_inline vFloat operator- (vFloat);
+
+sfpi_inline vFloat operator+ (vFloat, vFloat);
 sfpi_inline vFloat operator- (vFloat, vFloat);
+sfpi_inline vFloat operator* (vFloat, vFloat);
+
+sfpi_inline vFloat operator+ (float, vFloat);
 sfpi_inline vFloat operator- (vFloat, float);
 sfpi_inline vFloat operator- (float, vFloat);
-sfpi_inline vFloat operator* (vFloat, vFloat);
 sfpi_inline vFloat operator* (float, vFloat);
 
 //////////////////////////////////////////////////////////////////////////////
@@ -212,31 +214,46 @@ public:
 };
 
 sfpi_inline vInt operator+ (vInt);
-sfpi_inline vInt operator+ (vInt, vInt);
-sfpi_inline vInt operator+ (vInt, int32_t);
 sfpi_inline vInt operator- (vInt);
+sfpi_inline vInt operator~ (vInt);
+
+sfpi_inline vInt operator+ (vInt, vInt);
 sfpi_inline vInt operator- (vInt, vInt);
-sfpi_inline vInt operator- (vInt, int32_t);
-sfpi_inline vInt operator<< (vInt, unsigned);
+
 sfpi_inline vInt operator<< (vInt, vUInt);
 #if __riscv_xtttensixbh
 // arithmetic shifts added in blackhole
-sfpi_inline vInt operator>> (vInt, unsigned);
 sfpi_inline vInt operator>> (vInt, vUInt);
 #endif
-sfpi_inline vInt operator~ (vInt);
 sfpi_inline vInt operator& (vInt, vInt);
-sfpi_inline vInt operator& (vInt, int32_t);
-sfpi_inline vInt operator& (vInt, int);
-sfpi_inline vInt operator& (vInt, unsigned);
 sfpi_inline vInt operator| (vInt, vInt);
-sfpi_inline vInt operator| (vInt, int32_t);
-sfpi_inline vInt operator| (vInt, int);
-sfpi_inline vInt operator| (vInt, unsigned);
 sfpi_inline vInt operator^ (vInt, vInt);
+
+sfpi_inline vInt operator<< (vInt, unsigned);
+#if __riscv_xtttensixbh
+// arithmetic shifts added in blackhole
+sfpi_inline vInt operator>> (vInt, unsigned);
+#endif
+
+sfpi_inline vInt operator+ (vInt, int32_t);
+sfpi_inline vInt operator- (vInt, int32_t);
+sfpi_inline vInt operator& (vInt, int32_t);
+sfpi_inline vInt operator| (vInt, int32_t);
 sfpi_inline vInt operator^ (vInt, int32_t);
+
+sfpi_inline vInt operator& (vInt, int);
+sfpi_inline vInt operator| (vInt, int);
 sfpi_inline vInt operator^ (vInt, int);
+
+sfpi_inline vInt operator& (vInt, unsigned);
+sfpi_inline vInt operator| (vInt, unsigned);
 sfpi_inline vInt operator^ (vInt, unsigned);
+
+sfpi_inline vInt operator+ (int32_t a, vInt b) { return b + a; }
+sfpi_inline vInt operator- (int32_t a, vInt b) { return vInt (a) - b; }
+sfpi_inline vInt operator& (int32_t a, vInt b) { return b & a; }
+sfpi_inline vInt operator| (int32_t a, vInt b) { return b | a; }
+sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
 
 //////////////////////////////////////////////////////////////////////////////
 class vUInt : public impl_::vVal {
@@ -261,102 +278,101 @@ public:
 
   // Operations
   sfpi_inline vUInt operator++ ();
-  sfpi_inline vUInt operator++ (int);
   sfpi_inline vUInt operator-- ();
+
+  sfpi_inline vUInt operator++ (int);
   sfpi_inline vUInt operator-- (int);
 
   sfpi_inline vUInt &operator+= (vUInt);
   sfpi_inline vUInt &operator-= (vUInt);
-  sfpi_inline vUInt &operator<<= (unsigned);
   sfpi_inline vUInt &operator<<= (vUInt);
-  sfpi_inline vUInt &operator>>= (unsigned);
   sfpi_inline vUInt &operator>>= (vUInt);
   sfpi_inline vUInt &operator&= (vUInt);
   sfpi_inline vUInt &operator|= (vUInt);
   sfpi_inline vUInt &operator^= (vUInt);
+
+  sfpi_inline vUInt &operator<<= (unsigned);
+  sfpi_inline vUInt &operator>>= (unsigned);
 };
 
 sfpi_inline vUInt operator+ (vUInt);
-sfpi_inline vUInt operator+ (vUInt, vUInt);
-sfpi_inline vUInt operator+ (vUInt, int32_t);
 sfpi_inline vUInt operator- (vUInt);
-sfpi_inline vUInt operator- (vUInt, vUInt);
-sfpi_inline vUInt operator- (vUInt, vInt);
-sfpi_inline vUInt operator- (vUInt, int32_t);
-sfpi_inline vUInt operator<< (vUInt, unsigned);
-sfpi_inline vUInt operator<< (vUInt, vUInt);
-sfpi_inline vUInt operator>> (vUInt, unsigned);
-sfpi_inline vUInt operator>> (vUInt, vUInt);
 sfpi_inline vUInt operator~ (vUInt);
+
+sfpi_inline vUInt operator+ (vUInt, vUInt);
+sfpi_inline vUInt operator- (vUInt, vUInt);
+sfpi_inline vUInt operator<< (vUInt, vUInt);
+sfpi_inline vUInt operator>> (vUInt, vUInt);
 sfpi_inline vUInt operator& (vUInt, vUInt);
-sfpi_inline vUInt operator& (vUInt, vInt);
-sfpi_inline vUInt operator& (vInt, vUInt);
-sfpi_inline vUInt operator& (vUInt, uint32_t);
-sfpi_inline vUInt operator& (vUInt, unsigned);
-sfpi_inline vUInt operator& (vUInt, int);
-
 sfpi_inline vUInt operator| (vUInt, vUInt);
-sfpi_inline vUInt operator| (vUInt, vInt);
-sfpi_inline vUInt operator| (vInt, vUInt);
-sfpi_inline vUInt operator| (vUInt, uint32_t);
-sfpi_inline vUInt operator| (vUInt, unsigned);
-sfpi_inline vUInt operator| (vUInt, int);
-
 sfpi_inline vUInt operator^ (vUInt, vUInt);
-sfpi_inline vUInt operator^ (vUInt, vInt);
-sfpi_inline vUInt operator^ (vInt, vUInt);
+
+sfpi_inline vUInt operator<< (vUInt, unsigned);
+sfpi_inline vUInt operator>> (vUInt, unsigned);
+
+sfpi_inline vUInt operator+ (vUInt, int32_t);
+sfpi_inline vUInt operator- (vUInt, int32_t);
+
+sfpi_inline vUInt operator& (vUInt, uint32_t);
+sfpi_inline vUInt operator| (vUInt, uint32_t);
 sfpi_inline vUInt operator^ (vUInt, uint32_t);
+
+sfpi_inline vUInt operator- (vUInt, vInt);
+sfpi_inline vUInt operator& (vUInt, vInt);
+sfpi_inline vUInt operator| (vUInt, vInt);
+sfpi_inline vUInt operator^ (vUInt, vInt);
+
+sfpi_inline vUInt operator& (vInt, vUInt);
+sfpi_inline vUInt operator| (vInt, vUInt);
+sfpi_inline vUInt operator^ (vInt, vUInt);
+
+sfpi_inline vUInt operator& (vUInt, unsigned);
+sfpi_inline vUInt operator| (vUInt, unsigned);
 sfpi_inline vUInt operator^ (vUInt, unsigned);
+
+sfpi_inline vUInt operator& (vUInt, int);
+sfpi_inline vUInt operator| (vUInt, int);
 sfpi_inline vUInt operator^ (vUInt, int);
+
+sfpi_inline vUInt operator+ (int32_t a, vUInt b) { return b + a; }
+sfpi_inline vUInt operator- (int32_t a, vUInt b) { return vUInt (a) - b; }
+sfpi_inline vUInt operator& (int32_t a, vUInt b) { return b & uint32_t (a); }
+sfpi_inline vUInt operator| (int32_t a, vUInt b) { return b | uint32_t (a); }
+sfpi_inline vUInt operator^ (int32_t a, vUInt b) { return b ^ uint32_t (a); }
 
 //////////////////////////////////////////////////////////////////////////////
 // Comparisons
-sfpi_inline impl_::vCond operator== (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::EQ, a, b); }
-sfpi_inline impl_::vCond operator!= (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::NE, a, b); }
-sfpi_inline impl_::vCond operator< (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::LT, a, b); }
-sfpi_inline impl_::vCond operator<= (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::LTE, a, b); }
-sfpi_inline impl_::vCond operator> (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::GT, a, b); }
-sfpi_inline impl_::vCond operator>= (vFloat a, vFloat b) { return impl_::vCond(impl_::vCond::GTE, a, b); }
+sfpi_inline impl_::vCond operator== (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::EQ, a, b); }
+sfpi_inline impl_::vCond operator!= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::NE, a, b); }
+sfpi_inline impl_::vCond operator< (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::LT, a, b); }
+sfpi_inline impl_::vCond operator> (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::GT, a, b); }
+sfpi_inline impl_::vCond operator<= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::LTE, a, b); }
+sfpi_inline impl_::vCond operator>= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::GTE, a, b); }
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline impl_::vCond operator== (vFloat a, float b) { return impl_::vCond(impl_::vCond::EQ, a, b); }
-sfpi_inline impl_::vCond operator!= (vFloat a, float b) { return impl_::vCond(impl_::vCond::NE, a, b); }
-sfpi_inline impl_::vCond operator< (vFloat a, float b) { return impl_::vCond(impl_::vCond::LT, a, b); }
-sfpi_inline impl_::vCond operator<= (vFloat a, float b) { return impl_::vCond(impl_::vCond::LTE, a, b); }
-sfpi_inline impl_::vCond operator> (vFloat a, float b) { return impl_::vCond(impl_::vCond::GT, a, b); }
-sfpi_inline impl_::vCond operator>= (vFloat a, float b) { return impl_::vCond(impl_::vCond::GTE, a, b); }
+sfpi_inline impl_::vCond operator== (vFloat a, float b) { return impl_::vCond (impl_::vCond::EQ, a, b); }
+sfpi_inline impl_::vCond operator!= (vFloat a, float b) { return impl_::vCond (impl_::vCond::NE, a, b); }
+sfpi_inline impl_::vCond operator< (vFloat a, float b) { return impl_::vCond (impl_::vCond::LT, a, b); }
+sfpi_inline impl_::vCond operator> (vFloat a, float b) { return impl_::vCond (impl_::vCond::GT, a, b); }
+sfpi_inline impl_::vCond operator<= (vFloat a, float b) { return impl_::vCond (impl_::vCond::LTE, a, b); }
+sfpi_inline impl_::vCond operator>= (vFloat a, float b) { return impl_::vCond (impl_::vCond::GTE, a, b); }
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline impl_::vCond operator==(const float a, const vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!=(const float a, const vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator<(const float a, const vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator<=(const float a, const vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>(const float a, const vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator>=(const float a, const vFloat b) { return b <= a; }
-sfpi_inline impl_::vCond operator==(const s2vFloat16 a, const vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!=(const s2vFloat16 a, const vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator<(const s2vFloat16 a, const vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator<=(const s2vFloat16 a, const vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>(const s2vFloat16 a, const vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator>=(const s2vFloat16 a, const vFloat b) { return b <= a; }
+sfpi_inline impl_::vCond operator== (float a, vFloat b) { return b == a; }
+sfpi_inline impl_::vCond operator!= (float a, vFloat b) { return b != a; }
+sfpi_inline impl_::vCond operator< (float a, vFloat b) { return b > a; }
+sfpi_inline impl_::vCond operator> (float a, vFloat b) { return b < a; }
+sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
+sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
 
-sfpi_inline vInt operator+(int32_t a, vInt b) { return b + a; }
-sfpi_inline vInt operator-(int32_t a, vInt b) { return vInt (a) - b; }
+sfpi_inline impl_::vCond operator== (s2vFloat16 a, vFloat b) { return b == a; }
+sfpi_inline impl_::vCond operator!= (s2vFloat16 a, vFloat b) { return b != a; }
+sfpi_inline impl_::vCond operator< (s2vFloat16 a, vFloat b) { return b > a; }
+sfpi_inline impl_::vCond operator> (s2vFloat16 a, vFloat b) { return b < a; }
+sfpi_inline impl_::vCond operator<= (s2vFloat16 a, vFloat b) { return b >= a; }
+sfpi_inline impl_::vCond operator>= (s2vFloat16 a, vFloat b) { return b <= a; }
 
-sfpi_inline vInt operator&(const int32_t a, const vInt b) { return b & a; }
-sfpi_inline vInt operator|(const int32_t a, const vInt b) { return b | a; }
-sfpi_inline vInt operator^(const int32_t a, const vInt b) { return b ^ a; }
-
-sfpi_inline vUInt operator&(const int32_t a, const vUInt b) { return b & uint32_t (a); }
-sfpi_inline vUInt operator|(const int32_t a, const vUInt b) { return b | uint32_t (a); }
-sfpi_inline vUInt operator^(const int32_t a, const vUInt b) { return b ^ uint32_t (a); }
-
-sfpi_inline vUInt operator+(const int32_t a, const vUInt b) { return b + a; }
-sfpi_inline vUInt operator-(const int32_t a, const vUInt b) { return vUInt(a) - b; }
 //////////////////////////////////////////////////////////////////////////////
-
-sfpi_inline vInt::vInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get())) {}
 
 sfpi_inline  impl_::vCond operator== (vInt a, vInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, SFPXIADD_MOD1_SIGNED); }
 sfpi_inline  impl_::vCond operator!= (vInt a, vInt b) { return impl_::vCond (impl_::vCond::NE, b, a, SFPXIADD_MOD1_SIGNED); }
@@ -366,12 +382,12 @@ sfpi_inline  impl_::vCond operator<= (vInt a, vInt b) { return impl_::vCond (imp
 sfpi_inline  impl_::vCond operator>= (vInt a, vInt b) { return impl_::vCond (impl_::vCond::GTE, b, a, SFPXIADD_MOD1_SIGNED); }
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline  impl_::vCond operator== (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::EQ, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator!= (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::NE, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator< (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::LT, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator> (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::GT, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator<= (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::LTE, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator>= (vInt a, int32_t b) { return impl_::vCond(impl_::vCond::GTE, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator== (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::EQ, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator!= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::NE, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator< (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::LT, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator> (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::GT, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator<= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::LTE, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  impl_::vCond operator>= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::GTE, a, b, SFPXIADD_MOD1_SIGNED); }
 
 sfpi_inline  impl_::vCond operator== (vInt a, int b) { return a == int32_t (b); }
 sfpi_inline  impl_::vCond operator!= (vInt a, int b) { return a != int32_t (b); }
@@ -406,9 +422,6 @@ sfpi_inline  impl_::vCond operator>= (vInt a, unsigned b) { return a >= uint32_t
 
 //////////////////////////////////////////////////////////////////////////////
 
-sfpi_inline vUInt::vUInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get())) {}
-
 sfpi_inline  impl_::vCond operator== (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, 0); }
 sfpi_inline  impl_::vCond operator!= (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::NE, b, a, 0); }
 sfpi_inline  impl_::vCond operator< (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::LT, b, a, 0); }
@@ -417,12 +430,12 @@ sfpi_inline  impl_::vCond operator<= (vUInt a, vUInt b) { return impl_::vCond (i
 sfpi_inline  impl_::vCond operator>= (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::GTE, b, a, 0); }
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline  impl_::vCond operator== (vUInt a, uint32_t b) { return impl_::vCond(impl_::vCond::EQ, a, b, 0); }
-sfpi_inline  impl_::vCond operator!= (vUInt a, uint32_t b) { return impl_::vCond(impl_::vCond::NE, a, b, 0); }
-sfpi_inline  impl_::vCond operator< (vUInt a, uint32_t b) { return impl_::vCond(impl_::vCond::LT, a, b, 0); }
-sfpi_inline  impl_::vCond operator> (vUInt a, uint32_t b) { return  impl_::vCond(impl_::vCond::GT, a, b, 0); }
-sfpi_inline  impl_::vCond operator<= (vUInt a, uint32_t b) { return  impl_::vCond(impl_::vCond::LTE, a, b, 0); }
-sfpi_inline  impl_::vCond operator>= (vUInt a, uint32_t b) { return impl_::vCond(impl_::vCond::GTE, a, b, 0); }
+sfpi_inline  impl_::vCond operator== (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::EQ, a, b, 0); }
+sfpi_inline  impl_::vCond operator!= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::NE, a, b, 0); }
+sfpi_inline  impl_::vCond operator< (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::LT, a, b, 0); }
+sfpi_inline  impl_::vCond operator> (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::GT, a, b, 0); }
+sfpi_inline  impl_::vCond operator<= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::LTE, a, b, 0); }
+sfpi_inline  impl_::vCond operator>= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::GTE, a, b, 0); }
 
 sfpi_inline  impl_::vCond operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
 sfpi_inline  impl_::vCond operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
