@@ -223,7 +223,7 @@ enum RoundMode {
 }
 
 namespace impl_ {
-unsigned rounding_to_stochrnd_rnd (int mode) {
+sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (int mode) {
   return mode == RoundMode::NearestEven ? SFPSTOCHRND_RND_EVEN
       : mode == RoundMode::Stochastic ? SFPSTOCHRND_RND_STOCH
 #if __riscv_xtttensixbh
