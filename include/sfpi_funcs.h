@@ -22,6 +22,8 @@ uint32_t sfpi::impl_::float_as_uint (float val) {
   return U (val);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// impl_::vCond definitions
 sfpi::impl_::vCond::vCond (BoolOp t, vCond a, vCond b) {
   result = __builtin_rvtt_sfpxbool (t, a.get (), b.get ());
 }
@@ -51,7 +53,9 @@ sfpi::impl_::vCond::CC::CC (CC &&src)
   src.dep = 0;
   src.depth = 0;
 }
+
 sfpi::impl_::vCond::CC::~CC () { pop (); }
+
 auto sfpi::impl_::vCond::CC::operator= (CC &&src)-> CC & {
   pop ();
   dep = src.dep, depth = src.depth;
@@ -63,10 +67,9 @@ auto sfpi::impl_::vCond::CC::if_()-> CC & {
   dep = __builtin_rvtt_sfpxvif ();
   return *this;
 }
-auto sfpi::impl_::vCond::CC::else_()-> CC &
-{
-    __builtin_rvtt_sfpcompc ();
-    return *this;    
+auto sfpi::impl_::vCond::CC::else_()-> CC & {
+  __builtin_rvtt_sfpcompc ();
+  return *this;    
 }
 
 auto sfpi::impl_::vCond::CC::cond (vCond op)-> void {
@@ -84,6 +87,7 @@ auto sfpi::impl_::vCond::CC::push ()-> CC & {
   __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
   return *this;
 }
+
 auto sfpi::impl_::vCond::CC::pop ()-> CC & {
   for (unsigned ix = depth; ix--;)
     __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
@@ -93,6 +97,88 @@ auto sfpi::impl_::vCond::CC::pop ()-> CC & {
 auto sfpi::impl_::operator&& (vCond a, vCond b)-> vCond { return vCond (vCond::And, a, b); }
 auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::Or, a, b); }
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
+
+//////////////////////////////////////////////////////////////////////////////
+// impl_::vDReg definitions
+auto sfpi::impl_::vDReg::operator=(vFloat vec) const-> vFloat {
+  __builtin_rvtt_sfpstore(vec.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
+  return vec;
+}
+
+auto sfpi::impl_::vDReg::operator= (double d) const-> vFloat {
+  vFloat v (static_cast<float> (d));
+  *this = v;
+  return v;
+}
+
+template <typename vecType,
+          typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, vecType>::value>*>
+auto sfpi::impl_::vDReg::operator= (vecType vec) const-> vecType {
+  auto mod = SFPSTORE_MOD0_FMT_BOB32;
+#if __riscv_xtttensixwh
+  if constexpr (std::is_base_of<vInt, vecType>::value)
+                   mod = SFPSTORE_MOD0_FMT_SM32;
+#endif
+  __builtin_rvtt_sfpstore (vec.get (), reg, mod, SFPSTORE_ADDR_MODE_NOINC);
+  return vec;
+}
+
+auto sfpi::impl_::vDReg::operator=(const impl_::vDReg dreg) const-> void {
+  vFloat tmp = dreg;
+  __builtin_rvtt_sfpstore (tmp.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
+}
+
+auto sfpi::impl_::vDReg::operator= (s2vFloat16 f) const-> vFloat {
+  vFloat v (f);
+  *this = v;
+  return v;
+}
+
+auto sfpi::impl_::vDReg::operator= (const float f) const-> vFloat {
+  vFloat v (f);
+  *this = v;
+  return v;
+}
+auto sfpi::impl_::vDReg::operator= (const int i) const-> vInt {
+  vInt v(i);
+  *this = v;
+  return v;
+}
+
+auto sfpi::impl_::vDReg::operator= (const unsigned int i) const-> vUInt {
+  vUInt v(i);
+  *this = v;
+  return v;
+}
+
+auto sfpi::impl_::vDReg::operator- () const-> vFloat {
+  vFloat tmp = *this;
+  return __builtin_rvtt_sfpmov (tmp.get (), SFPMOV_MOD1_COMPSIGN);
+}
+
+auto sfpi::impl_::vDReg::operator+ (const vFloat b) const-> vFloat { return vFloat (*this) + b; }
+auto sfpi::impl_::vDReg::operator- (const vFloat b) const-> vFloat { return vFloat (*this) - b; }
+auto sfpi::impl_::vDReg::operator* (const vFloat b) const-> vFloat  { return vFloat (*this) * b; }
+
+auto sfpi::impl_::vDReg::operator== (const float x) const-> vCond { return vCond (vCond::EQ, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator!= (const float x) const-> vCond { return vCond (vCond::NE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator< (const float x) const-> vCond { return vCond (vCond::LT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator> (const float x) const-> vCond { return vCond (vCond::GT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator<= (const float x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator>= (const float x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
+
+auto sfpi::impl_::vDReg::operator== (const s2vFloat16 x) const-> vCond {return vCond (vCond::EQ, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator!= (const s2vFloat16 x) const-> vCond { return vCond (vCond::NE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator< (const s2vFloat16 x) const-> vCond { return vCond (vCond::LT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator> (const s2vFloat16 x) const-> vCond { return vCond (vCond::GT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator<= (const s2vFloat16 x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator>= (const s2vFloat16 x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator== (const vFloat x) const-> vCond {return vCond (vCond::EQ, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator!= (const vFloat x) const-> vCond { return vCond (vCond::NE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator< (const vFloat x) const-> vCond { return vCond (vCond::LT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator> (const vFloat x) const-> vCond { return vCond (vCond::GT, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator<= (const vFloat x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
+auto sfpi::impl_::vDReg::operator>= (const vFloat x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
 
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions

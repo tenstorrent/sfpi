@@ -241,7 +241,7 @@ private:
 public:
     // Assign register to register
     template <typename vecType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vecType>::value>* = nullptr>
-    sfpi_inline vecType operator=(const vecType vec) const;
+    sfpi_inline vecType operator=(vecType vec) const;
     sfpi_inline void operator=(const vDReg dreg) const;
     sfpi_inline vFloat operator=(const s2vFloat16 f) const;
     sfpi_inline vInt operator=(const int i) const;
