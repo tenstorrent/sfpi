@@ -237,14 +237,14 @@ public:
     // subtracts the first op from the second op, because, why not :)
     return __builtin_rvtt_sfpxiadd_i (get (), b, (is_signed ? SFPXIADD_MOD1_SIGNED : 0) | SFPXIADD_MOD1_IS_SUB);
   }
-  sfpi_inline sfpu_t int_shift (vVal b, bool is_signed) const {
+  sfpi_inline sfpu_t int_shift (vVal b, bool is_signed __attribute__((unused))) const {
     return __builtin_rvtt_sfpshft_v (get (), b.get (),
 #if __riscv_xtttensixbh
                                      is_signed ? SFPSHFT_MOD1_ARITHMETIC :
 #endif
                                      SFPSHFT_MOD1_LOGICAL);
   }
-  sfpi_inline sfpu_t int_shift (int b, bool is_signed) const {
+  sfpi_inline sfpu_t int_shift (int b, bool is_signed __attribute__((unused))) const {
     return __builtin_rvtt_sfpshft_i (get (), b,
 #if __riscv_xtttensixbh
                                      is_signed ? SFPSHFT_MOD1_ARITHMETIC :
