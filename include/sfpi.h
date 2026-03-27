@@ -452,18 +452,6 @@ sfpi_inline  impl_::vCond operator<= (vUInt a, int b) { return a <= uint32_t (b)
 sfpi_inline  impl_::vCond operator>= (vUInt a, int b) { return a >= uint32_t (b); }
 
 //////////////////////////////////////////////////////////////////////////////
-// LRegs
-
-enum class LRegs : uint8_t {
-  LReg0, LReg1, LReg2, LReg3, LReg4, LReg5, LReg6, LReg7,
-  LRegCount = SFP_LREG_COUNT,
-};
-
-//////////////////////////////////////////////////////////////////////////////
-constexpr impl_::vDReg::DestRegFile dst_reg;
-constexpr impl_::vLReg::LRegFile l_reg;
-
-//////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function
 // is sequenced before every argument expression and every default argument. [expr.pre]
 
@@ -491,6 +479,17 @@ constexpr impl_::vLReg::LRegFile l_reg;
 
 #define v_endblock                              \
   }
+
+//////////////////////////////////////////////////////////////////////////////
+// LRegs
+
+enum class LRegs : uint8_t {
+  LReg0, LReg1, LReg2, LReg3, LReg4, LReg5, LReg6, LReg7,
+  LRegCount = SFP_LREG_COUNT,
+};
+
+constexpr impl_::vDReg::DestRegFile dst_reg;
+constexpr impl_::vLReg::LRegFile l_reg;
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
