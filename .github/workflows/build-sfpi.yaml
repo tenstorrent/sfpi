@@ -49,13 +49,13 @@ jobs:
         run: git config --global --add safe.directory '*'
       - name: Install Packages
         run: |
-          pkgs="autoconf automake bison expect flex gawk python3 texinfo"
+          pkgs="autoconf automake bison dejagnu expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby wget"
           eval $(./scripts/sfpi-info.sh DIST </dev/null)
           case $sfpi_dist in
             debian)
               $SUDO apt-get update
-              $SUDO apt-get -y install $pkgs rpm
+              $SUDO apt-get -y install $pkgs
               $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
             ;;
             fedora)

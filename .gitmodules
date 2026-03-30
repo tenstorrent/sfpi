@@ -7,6 +7,3 @@
 [submodule "newlib"]
 	path = newlib
 	url = https://github.com/tenstorrent-forks/newlib-cygwin-mirror
-[submodule "riscv-dejagnu"]
-	path = riscv-dejagnu
-	url = https://github.com/riscv-collab/riscv-dejagnu.git
