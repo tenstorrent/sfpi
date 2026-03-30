@@ -189,7 +189,7 @@ sfpi::vFloat::vFloat (impl_::vDReg dreg)
 sfpi::vFloat::vFloat (s2vFloat16 val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), val.get_format ())) {}
 sfpi::vFloat::vFloat (float f)
-    : vVal (__builtin_rvtt_sfpxloads (impl_::float_as_uint (f), 0, 32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
 
 auto sfpi::vFloat::operator= (vFloat in)-> vFloat & { assign (in.get ()); return *this; }
 auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
@@ -247,9 +247,9 @@ sfpi::vInt::vInt (int16_t val)
 sfpi::vInt::vInt (uint16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vInt::vInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloads (val, 1, 32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vInt::vInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloads (val, 0, 32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {}
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
@@ -316,9 +316,9 @@ sfpi::vUInt::vUInt (int16_t val)
 sfpi::vUInt::vUInt (uint16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vUInt::vUInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloads (val, 1, 32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vUInt::vUInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloads (val, 0, 32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}

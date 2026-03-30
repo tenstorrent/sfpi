@@ -15,7 +15,7 @@ namespace sfpi {
 #define __builtin_rvtt_sfpxicmps(src, imm, mod1) __builtin_rvtt_sfpxicmps(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpxfcmps(src, imm, mod1) __builtin_rvtt_sfpxfcmps(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpxiadd_i(src, imm, mod1) __builtin_rvtt_sfpxiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpxloads(imm, signedness, bits) __builtin_rvtt_sfpxloads(ckernel::instrn_buffer, imm, 0, 0, signedness, bits)
+#define __builtin_rvtt_sfpxloadi(imm, bits) __builtin_rvtt_sfpxloadi(ckernel::instrn_buffer, imm, 0, 0, bits)
 
 #define __builtin_rvtt_sfploadi(imm, mod0) __builtin_rvtt_sfploadi(ckernel::instrn_buffer, imm, 0, 0, mod0)
 
