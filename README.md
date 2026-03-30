@@ -8,11 +8,10 @@ This repo contains SFPI.
 * TT-enhanced RISC-V `gcc` in gcc submodule
 * standard newlib in `newlib` submodule
 * standard qemu cloned on demand
-* RiscV dejagnu harness in `riscv-dejagnu` submodule
 * build and release scripts in `scripts`
 
-GCC, Binutils, Newlib, Qemu and Dejagnu are (naturally) released under
-their own licenses.
+GCC, Binutils, Newlib and Qemu are (naturally) released under their
+own licenses.
 
 The release versioning here is simply an integral version
 numbering. The major version /does not/ indicate API breaking
@@ -199,7 +198,7 @@ script may examine.
   scripts/build.sh --test
 ```
 
-This will build qemu and the riscv dejagnu components, and then run the testsuites.
+This will build qemu component, and then run the testsuites.
 
 If you just want a binutils or gcc:
 ```

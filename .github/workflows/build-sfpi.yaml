@@ -49,7 +49,7 @@ jobs:
         run: git config --global --add safe.directory '*'
       - name: Install Packages
         run: |
-          pkgs="autoconf automake bison expect flex gawk python3 texinfo"
+          pkgs="autoconf automake bison dejagnu expect flex gawk python3 texinfo"
           pkgs+=" patchutils ruby wget"
           eval $(./scripts/sfpi-info.sh DIST </dev/null)
           case $sfpi_dist in
