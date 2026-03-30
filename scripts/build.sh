@@ -209,6 +209,7 @@ fi
 (set -x; nice make -C $BUILD -j$NCPUS $small_build)
 
 # maybe make the test infra
+dejagnu=false
 if $dejagnu; then
     (set -x; nice make -C $BUILD build-dejagnu -j$NCPUS $small_build)
 fi
@@ -224,8 +225,15 @@ unresolveds=0
 errors=0
 testing=false
 TARGET_BOARDS='riscv-sim/'
+set -x
+export DEJAGNU=$(realpath $BUILD)/dejagnu.exp
+if ! [[ -f $BIN/dejagnu.exp ]]; then
+    echo "lappend boards_dir \"$(realpath $BIN)\"" > $BUILD/dejagnu.exp
+fi
+set +x
 tests=$BUILD/tests
 eval $($BIN/sfpi-info.sh DIST <$BUILD/version)
+
 if $test_binutils; then
     testing=true
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
