@@ -55,7 +55,7 @@ jobs:
           case $sfpi_dist in
             debian)
               $SUDO apt-get update
-              $SUDO apt-get -y install $pkgs rpm
+              $SUDO apt-get -y install $pkgs
               $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
             ;;
             fedora)

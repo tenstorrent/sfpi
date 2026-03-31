@@ -193,7 +193,7 @@ Building SFPI $sfpi_version
 Working Directory: $src
 
 Install (or otherwise provide) the following components:
-Common names: autoconf automake bison expect flex gawk patchutils python3 texinfo
+Common names: autoconf automake bison dejagnu expect flex gawk patchutils python3 texinfo
 Debian names: gcc g++ libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev
 Fedora names: gcc gcc-c++ expat-devel gmp-devel libmpc-devel mpfr-devel
 
