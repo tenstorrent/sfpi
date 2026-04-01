@@ -4,7 +4,8 @@
 
 srcdir := @abs_top_srcdir@
 builddir := @abs_top_builddir@
-INSTALL_DIR := @prefix@
+SFPI_INSTALL_DIR := @prefix@
+INSTALL_DIR := $(SFPI_INSTALL_DIR)/compiler
 test_infradir := $(builddir)/infra
 
 GCC_SRCDIR := @with_gcc_src@
@@ -78,13 +79,29 @@ NEWLIB_NANO_TARGET_BOARDS ?= $(shell echo "$(NEWLIB_MULTILIB_NAMES)" | sed 's!\(
 
 CONFIGURE_HOST   = @configure_host@
 
-all: @default_target@
+all: @default_target@ headers
 newlib: stamps/build-gcc-newlib-stage2
 ifeq (@enable_gdb@,--enable-gdb)
 ifneq ($(GDB_SRCDIR),$(BINUTILS_SRCDIR))
 newlib: stamps/build-gdb-newlib
 endif
 endif
+
+.PHONY: headers
+headers: $(SFPI_INSTALL_DIR)/include/sfpi_builtins.def
+	@mkdir -p $(SFPI_INSTALL_DIR)/include ; \
+	for file in $(srcdir)/include/*; \
+	do \
+	if test $$file -nt $(SFPI_INSTALL_DIR)/include/$$(basename $$file); then \
+	  (set -x; cp $$file $(SFPI_INSTALL_DIR)/include) ; \
+	fi ; \
+	done
+
+$(SFPI_INSTALL_DIR)/include/sfpi_builtins.def: \
+	  $(GCC_SRCDIR)/gcc/config/riscv/tt/rvtt-insn.def \
+	  $(srcdir)/scripts/gen-decls.py
+	@mkdir -p $(SFPI_INSTALL_DIR)/include
+	$(srcdir)/scripts/gen-decls.py --version="$$(. ./version; echo SFPI $$sfpi_version)" $< >$@
 
 .PHONY: build-binutils build-gdb build-gcc1 build-libc build-gcc2 build-qemu
 build-binutils: stamps/build-binutils-@default_target@

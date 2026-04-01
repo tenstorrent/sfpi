@@ -9,9 +9,10 @@
 //////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include "sfpi_builtins.def"
+
 namespace sfpi {
 
-// Argument reordering here is temporary shim
 #define __builtin_rvtt_sfpxicmps(src, imm, mod1) __builtin_rvtt_sfpxicmps(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpxfcmps(src, imm, mod1) __builtin_rvtt_sfpxfcmps(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpxiadd_i(src, imm, mod1) __builtin_rvtt_sfpxiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
