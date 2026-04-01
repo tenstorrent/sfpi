@@ -8,7 +8,7 @@
 
 #pragma once
 
-#if __riscv_xtttensixwh || __riscv_xtttensixbh
+#include "tensix_builtins.h"
 
 #include <cstdint>
 
@@ -39,5 +39,3 @@ replay_insn(unsigned start, unsigned length) {
 }
 
 } // namespace 
-
-#endif

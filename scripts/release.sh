@@ -47,9 +47,6 @@ if ! $ci ; then
     fi
 fi
 
-# Copy include tree
-tar cf - include | tar xf - -C $BUILD/sfpi
-
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
     sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
 
