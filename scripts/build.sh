@@ -184,14 +184,16 @@ if ! [[ -e $BUILD/Makefile ]]; then
 	ident_options=(--with-bugurl='unsupported'
 		       --with-pkgversion="tenstorrent/sfpi-DIY:$sfpi_version${sfpi_build:+[}$sfpi_build${sfpi_build:+]}")
     fi
-    (cd $BUILD
+    (srcdir=$(pwd)
+     cd $BUILD
      set -x
-     ../configure --prefix="$(pwd)/sfpi/compiler" "${ident_options[@]}" \
-		  --with-mfc=tt \
-		  --enable-gcc-checking="$gcc_checking" \
-		  --without-system-zlib --without-zstd \
-		  --enable-multilib \
-		  --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
+     $srcdir/configure --srcdir=$srcdir \
+		       --prefix="$(pwd)/sfpi" "${ident_options[@]}" \
+		       --with-mfc=tt \
+		       --enable-gcc-checking="$gcc_checking" \
+		       --without-system-zlib --without-zstd \
+		       --enable-multilib \
+		       --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
     if [[ -n $sfpi_base ]]; then
 	(set -x; make -C $BUILD stamps/check-write-permission)
 	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
@@ -252,7 +254,7 @@ fi
 if $test_gcc; then
     testing=true
     test_tt=false
-    (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
+    (set -x; SFPI=$(realpath $BUILD)/sfpi nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc)
     mkdir -p $tests
     for sum in $(find $BUILD/build-gcc-newlib-stage2 -name '*.sum')
     do
@@ -267,7 +269,7 @@ fi
 
 if $test_tt; then
     testing=true
-    (set -x; SFPI=$(pwd) nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
+    (set -x; SFPI=$(realpath $BUILD)/sfpi nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-gcc-tt)
     mkdir -p $tests
     for cc in gcc g++
     do
