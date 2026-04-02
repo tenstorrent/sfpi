@@ -39,5 +39,3 @@ replay_insn(unsigned start, unsigned length) {
 }
 
 } // namespace 
-
-#endif
