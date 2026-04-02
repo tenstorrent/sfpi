@@ -27,3 +27,4 @@ FAIL: LTO 5
 FAIL: LTO 10
 FAIL: PR ld/19317 (3)
 FAIL: Build pr22983
+FAIL: ld-elf/compressed1d
