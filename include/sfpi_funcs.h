@@ -199,7 +199,7 @@ auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
 #if __riscv_xtttensixwh
   vFloat neg1 = vConstNeg1;
   *this = __builtin_rvtt_sfpmad (neg1.get (), a.get(), get (), SFPMAD_MOD1_OFFSET_NONE);
-#else // __riscv_xtttensixbh
+#else // __riscv_xtttensixbh || __riscv_xtttensixqsr
   *this = *this + -a;
 #endif
   return *this;
@@ -262,7 +262,7 @@ auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
 auto sfpi::vInt::operator<<= (unsigned a)-> vInt & { return *this = *this << a; }
 auto sfpi::vInt::operator<<= (vInt a)-> vInt & { return *this = *this << a; }
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 auto sfpi::vInt::operator>>= (unsigned a)-> vInt & { return *this = *this >> a; }
 auto sfpi::vInt::operator>>= (vInt a)-> vInt & { return *this = *this >> a; }
 #endif
@@ -283,7 +283,7 @@ auto sfpi::operator- (vInt a, vInt b)-> vInt { return a.int_sub (b, true); }
 auto sfpi::operator- (vInt a, int32_t b)-> vInt { return a.int_sub (b, true); }
 auto sfpi::operator<< (vInt vec, unsigned amt)-> vInt { return vec.int_shift (amt, true); }
 auto sfpi::operator<< (vInt vec, vUInt amt)-> vInt { return vec.int_shift (amt, true); }
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 auto sfpi::operator>> (vInt vec, unsigned amt)-> vInt { return vec.int_shift (-amt, true); }
 auto sfpi::operator>> (vInt vec, vUInt amt)-> vInt { return vec.int_shift (-amt, true); }
 #endif

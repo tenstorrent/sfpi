@@ -189,7 +189,7 @@ public:
   sfpi_inline vInt &operator-= (vInt);
   sfpi_inline vInt &operator<<= (unsigned);
   sfpi_inline vInt &operator<<= (vInt);
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
   sfpi_inline vInt &operator>>= (unsigned);
   sfpi_inline vInt &operator>>= (vInt);
 #endif
@@ -211,7 +211,7 @@ sfpi_inline vInt operator+ (vInt, vInt);
 sfpi_inline vInt operator- (vInt, vInt);
 
 sfpi_inline vInt operator<< (vInt, vUInt);
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 // arithmetic shifts added in blackhole
 sfpi_inline vInt operator>> (vInt, vUInt);
 #endif
@@ -220,7 +220,7 @@ sfpi_inline vInt operator| (vInt, vInt);
 sfpi_inline vInt operator^ (vInt, vInt);
 
 sfpi_inline vInt operator<< (vInt, unsigned);
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 // arithmetic shifts added in blackhole
 sfpi_inline vInt operator>> (vInt, unsigned);
 #endif

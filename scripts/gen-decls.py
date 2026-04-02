@@ -6,9 +6,11 @@ import argparse
 import os
 import subprocess
 
-targets={"":["wh", "bh"],
+targets={"":["wh", "bh", "qsr"],
          "wh":["wh"],
-         "bh":["bh"]}
+         "bh":["bh"],
+         "qsr":["qsr"],
+         "bh_qsr":["bh", "qsr"]}
 num_archs = len (targets[""])
 
 types={"USI":"unsigned",

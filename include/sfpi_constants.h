@@ -26,7 +26,7 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_SM32 = 12;
 __attribute__((__deprecated__("use SFPLOAD_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = SFPLOAD_MOD0_FMT_SM32;
 constexpr unsigned int SFPLOAD_ADDR_MODE_NOINC = 3;
-#elif __riscv_xtttensixbh
+#elif __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPLOAD_MOD0_FMT_BOB32 = 12; // Bag Of Bits
 constexpr unsigned int SFPLOAD_ADDR_MODE_NOINC = 7;
 #endif
@@ -42,18 +42,18 @@ constexpr unsigned int SFPSTORE_MOD0_FMT_SM32 = 12;
 __attribute__((__deprecated__("use SFPSTORE_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = SFPSTORE_MOD0_FMT_SM32;
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 3;
-#elif __riscv_xtttensixbh
+#elif __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPSTORE_MOD0_FMT_BOB32 = 4; // Bag Of Bits
 constexpr unsigned int SFPSTORE_ADDR_MODE_NOINC = 7;
 #endif
 
 constexpr unsigned int SFPMOV_MOD1_COMPSIGN = 1;
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPMOV_MOD1_CONFIG = 8;
 #endif
 
 constexpr unsigned int SFPMAD_MOD1_OFFSET_NONE = 0;
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPMAD_MOD1_SRCA_LREG7 = 4;
 constexpr unsigned int SFPMAD_MOD1_DST_LREG7 = 8;
 
@@ -85,13 +85,13 @@ constexpr unsigned int SFPSETEXP_MOD1_CPY = 2;
 constexpr unsigned int SFPABS_MOD1_INT = 0;
 constexpr unsigned int SFPABS_MOD1_FLOAT = 1;
 
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPARECIP_MOD1_RECIP = 0;
 constexpr unsigned int SFPARECIP_MOD1_COND_RECIP = 1;
 constexpr unsigned int SFPARECIP_MOD1_EXP = 2;
 #endif
 
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPMUL24_MOD1_NONE = 0;
 constexpr unsigned int SFPMUL24_MOD1_LOWER = 0;
 constexpr unsigned int SFPMUL24_MOD1_UPPER = 1;
@@ -177,7 +177,7 @@ constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = 0; // Round Nearest Evne
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = 1; // Round Nearest Stochastic
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 // This conversion has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 2; // Sign-Mag to 2's compl
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
@@ -205,7 +205,7 @@ constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 constexpr unsigned int SFPSHFT_MOD1_LOGICAL = 0;
 constexpr unsigned int SFPSHFT_MOD1_SHIFT_IMM = 0;
 constexpr unsigned int SFPSHFT_MOD1_SHIFT_LREGC = 1;
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPSHFT_MOD1_ARITHMETIC = 2;
 constexpr unsigned int SFPSHFT_MOD1_SRC_LREGC = 4;
 #endif
@@ -237,7 +237,7 @@ constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ1 = 5;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ2 = 6;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_SEQ3 = 7;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_CTRL = 8;
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 constexpr unsigned int SFPCONFIG_SRC_RAND = 9;
 #endif
 constexpr unsigned int SFPCONFIG_DEST_LREG11 = 11;
