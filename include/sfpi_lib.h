@@ -186,7 +186,7 @@ sfpi_inline vUInt shft(const vUInt v, int amt)
     return __builtin_rvtt_sfpshft_i(v.get(), amt, SFPSHFT_MOD1_LOGICAL);
 }
 
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 sfpi_inline vInt shft(const vInt v, const vInt amt)
 {
     return __builtin_rvtt_sfpshft_v(v.get(), amt.get(), SFPSHFT_MOD1_ARITHMETIC);
@@ -214,7 +214,7 @@ namespace RoundMode {
 enum RoundMode {
   NearestEven,
   Stochastic,
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
   Zero,
 #endif
   Even = NearestEven,
@@ -226,7 +226,7 @@ namespace impl_ {
 sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (int mode) {
   return mode == RoundMode::NearestEven ? SFPSTOCHRND_RND_EVEN
       : mode == RoundMode::Stochastic ? SFPSTOCHRND_RND_STOCH
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
       : mode == RoundMode::Zero ? SFPSTOCHRND_RND_ZERO
 #endif
       : 0;
@@ -355,7 +355,7 @@ sfpi_inline void vec_min_max (vInt &a, vInt &b) {
   b = __builtin_rvtt_sfpselect2 (r, 1);
 }
 
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 sfpi_inline vInt rand() {
   return vInt(__builtin_rvtt_sfpreadconfig(SFPCONFIG_SRC_RAND));
 }
