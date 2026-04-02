@@ -120,14 +120,14 @@ public:
   }
   sfpi_inline sfpu_t int_shift (vVal b, bool is_signed __attribute__ ((unused))) const {
     return __builtin_rvtt_sfpshft_v (get (), b.get (),
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
                                      is_signed ? SFPSHFT_MOD1_ARITHMETIC :
 #endif
                                      SFPSHFT_MOD1_LOGICAL);
   }
   sfpi_inline sfpu_t int_shift (int b, bool is_signed __attribute__ ((unused))) const {
     return __builtin_rvtt_sfpshft_i (get (), b,
-#if __riscv_xtttensixbh
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
                                      is_signed ? SFPSHFT_MOD1_ARITHMETIC :
 #endif
                                      SFPSHFT_MOD1_LOGICAL);
