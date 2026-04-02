@@ -88,6 +88,8 @@ exec (process.communicate()[0])
 print(f"// {args.version} \t-*- C++ -*-")
 print("// Machine generated, do not edit")
 print()
+print("#pragma once")
+print()
 print("extern \"C\" {")
 
 ifdef = None

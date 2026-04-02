@@ -8,7 +8,7 @@
 
 #pragma once
 
-#if __riscv_xtttensixwh || __riscv_xtttensixbh
+#include "tensix_builtins.h"
 
 #include <cstdint>
 

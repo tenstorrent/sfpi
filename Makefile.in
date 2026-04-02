@@ -88,16 +88,17 @@ endif
 endif
 
 .PHONY: headers
-headers: $(SFPI_INSTALL_DIR)/include/sfpi_builtins.def
+headers: $(SFPI_INSTALL_DIR)/include/tensix_builtins.def
 	@mkdir -p $(SFPI_INSTALL_DIR)/include ; \
 	for file in $(srcdir)/include/*; \
 	do \
-	if test $$file -nt $(SFPI_INSTALL_DIR)/include/$$(basename $$file); then \
+	if ! test -r $(SFPI_INSTALL_DIR)/include/$$(basename $$file) || \
+	    test $$file -nt $(SFPI_INSTALL_DIR)/include/$$(basename $$file); then \
 	  (set -x; cp $$file $(SFPI_INSTALL_DIR)/include) ; \
 	fi ; \
 	done
 
-$(SFPI_INSTALL_DIR)/include/sfpi_builtins.def: \
+$(SFPI_INSTALL_DIR)/include/tensix_builtins.def: \
 	  $(GCC_SRCDIR)/gcc/config/riscv/tt/rvtt-insn.def \
 	  $(srcdir)/scripts/gen-decls.py
 	@mkdir -p $(SFPI_INSTALL_DIR)/include
