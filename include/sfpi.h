@@ -4,41 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-      /****************************************
-       ***    WARNING: Construction Zone    ***
-       *** Refactoring for code cleanliness ***
-       *** and type rigorousness.           ***
-       ****************************************/
-
 ///////////////////////////////////////////////////////////////////////////////
 // sfpi.h: SFPu Interface
-//   This file provides a C++ wrapper around GCC style __builtin functions
-//   which map to SFPU instructions.
 //
-// Note: Op refers to "Operation" while vOperand is spelled out.  Usually.
+// This file provides a C++ wrapper around __builtin functions that map to SFPU
+// instructions.  If you find yourself needing to use the builtins directly,
+// (because the sfpi API is inadequate), file an issue explaining the problem.
 //
-// Local Register (LREG) Operations:
-//   class vUInt
-//   class vInt
-//   class vFloat
+// Vector types:
+//   class vUInt - 32bit unsigned elements
+//   class vInt  - 32bit signed (2's complement) elements
+//   class vFloat- 32bit IEEE 754 floating point elements
 //
-//   These classes are the workhorse classes of sfpi.  Operators are
-//   overloaded to provide functionality such as:
+//  These are held in the lregs and may be transfered to/from the dst regs (and
+//  quasar srcs regs).  Overloaded operators are defined to permit such things as:
 //     vFloat a, b, c, d;
 //     vFloat d = a * b + c;
 //
-//   The classes also support conditional operators for use in conjunction
-//   with the vCCCtrl class to enable predicated execution, for example:
-//     vFloat a;
-//     v_if (a < 5.0F)
-//   will load an immediate value of 5.0F into an LReg, perform the subtract
-//   and test the result to set the CC.
-//
-//   Additional operations such as load immediate, extract/set exp, etc are
-//   supported through class methods.
-//
 // Destination Register:
-//   class impl_::vDReg
 //   constexpr impl_::vDReg::DRegFile dst_reg;
 //
 //   The Destination Register is modeled by a global variable which is
@@ -50,47 +33,29 @@
 //   (eg, there is no load immediate) accessed through LRegs.
 //
 // Constant Local Registers:
-//   template<typename T> class __vConst<T>
-//   constexpr __vConst<VFloat> vConst0p6928(5);
+//   template<typename T> class impl_::vConst<T>
+//   constexpr impl_::vConst<vFloat> vConst0p6928(5);
 //
 //   The constant value local registers are used in expressions by referencing
 //   one of the names above and using them in mathematical operations such as:
 //       a = b * c + vConst0p6928;
 //
 // Predicated Execution:
-//   class __vCCCtrl
 //   macros v_if(), v_elseif(), v_else, v_endif
 //
 //   The class __vCCCtrl is used in conjunction with the LReg based classes to
 //   enable predicated execution.  By convention the test infastructure indents
 //   the code as if executing if/then/else in C++, for example:
-//     __vCCCtrl cc;
-//     vFloat v = dst_reg[0];
-//     cc.cc_v_if().cc_cond(v < 5.0F); {
-//         // if side
-//     } cc.cc_else(); {
-//         // else side
-//     }
-//     cc.cc_endif();
-//   The above chatter is reduced w/ use of macros listed above.  The macros
-//   also balance {} to auto-destruct the __vCCCtrl when appropriate.
-//
-//  Boolean Operators:
-//   && and || are handled by building a tree of operations and traversing
-//   this at compile time, all with 0 run time overhead.  This requires some
-//   compromises.  Ideally, this would be handled by an inline recursive
-//   function, which gcc can do, but not with "always_inline".  Instead, the
-//   emit() function uses a macro to expand out to 3 levels of recursiion.
-//   This is ripe for moving into the compiler.
-//
-//  Internals:
-//   The idea behind this wrapper is that it all collapses down to
-//   typically one and sometimes more SFPU instructions at compile time
-//   without any runtime overhead.  Many of the classes below are used to
-//   track operations/operands as the compiler parses the code and then at a
-//   trigger operation (eg, assignment) the operation gets expanded into an
-//   instruction.  All of this working relies on compiling w/ optimization
-//   enabled (-O) and that the vectors never get written to the stack.
+//     v_if (CONDITION)
+//       True lanes affected here
+//     v_elseif (CONDITION)
+//       Now-true lanes affected
+//     v_else
+//       Never-true lanes affected
+//     v_endif
+//   Remember, because different vector lanes may be differently enabled,
+//   control flow goes through each block of the conditional. Changing control
+//   flow into or out of the conditional blocks is not permitted.
 //
 //  Liveness:
 //    A major complication of the SFPU for the compiler is that assigning a
@@ -106,19 +71,13 @@
 //    take the destination as an input (otherwise an unnecessary move may be
 //    generated).
 //
-//  Ugliness:
-//    The wrapper should get smaller over time as functionality is moved into
-//    the compiler back end (optimizer) and front end (parser, eg, v_endif).
-//    Currently the biggest uglinesses are:
-//      v_endif
-//      assignments return void so cannot be used in, eg conditionals
-//        since the compiler doesn't understand predication, using assignments
-//        in condtionals can result in evaluation of the assignments out of
-//        order w/ regard to the predication CC bits
-//      related to the above, add_cc, exexp_cc and lz_cc are exposed to handle
-//        instructions within conditionals
-//      && and || can only go 3 deep in one conditional
-//      conditionals are complex
+//  Undesired features
+
+//    There are some undesired features that have made their way into the
+//    implementation.  These are subject to deprecation and removal. The
+//    primary issue is the mixing of signed and unsigned vector types. The end
+//    goal is to have no mixed-signedness overloads and no implicit conversions
+//    between the vector types
 //
 ///////////////////////////////////////////////////////////////////////////////
 #pragma once
@@ -148,7 +107,9 @@ static_assert (std::is_same_v<int32_t, long>, "int32_t is not expected type of l
 
 namespace sfpi {
 
-// Scalar float types, these are just containers.
+// Scalar float types, these are just containers. Used for initializing a
+// vector. Initializing with an integral type is a bitcopy. Initializing with a
+// float type is a rounding towards zero (which happens to also be a bit-copy).
 class sFloat16a {
   uint16_t val;
 
@@ -158,6 +119,7 @@ public:
   sfpi_inline explicit sFloat16a (int32_t v) : val (v) {}
   sfpi_inline explicit sFloat16a (unsigned v) : sFloat16a (uint32_t (v)) {}
   sfpi_inline explicit sFloat16a (signed v) : sFloat16a (int32_t (v)) {}
+
   sfpi_inline uint32_t get () const { return val; }
 };
 
@@ -178,16 +140,19 @@ public:
   sfpi_inline uint32_t get () const { return val; }
 };
 
-// These will be deprecated and removed
+// These old names will be deprecated and removed
 using s2vFloat16a = sFloat16a;
 using s2vFloat16b = sFloat16b;
 
 //////////////////////////////////////////////////////////////////////////////
 
-// User-accessible vector float type
 class vFloat : public impl_::vVal {
 public:
-  vFloat () = default;
+  sfpi_inline vFloat () = default;
+  sfpi_inline vFloat (vFloat const &) = default;
+  sfpi_inline vFloat &operator= (vFloat const &);
+
+public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
@@ -195,7 +160,6 @@ public:
   sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
   
-  sfpi_inline vFloat &operator= (vFloat);
   sfpi_inline vFloat &operator= (impl_::vLReg);
   
   sfpi_inline vFloat &operator+= (vFloat);
@@ -223,7 +187,11 @@ sfpi_inline vFloat operator* (float, vFloat);
 //////////////////////////////////////////////////////////////////////////////
 class vInt : public impl_::vVal {
 public:
-  vInt () = default;
+  sfpi_inline vInt () = default;
+  sfpi_inline vInt (vInt const &) = default;
+  sfpi_inline vInt &operator= (vInt const &);
+
+public:
   sfpi_inline vInt (impl_::sfpu_t);
   sfpi_inline vInt (impl_::vLReg);
   sfpi_inline vInt (impl_::vDReg);
@@ -232,11 +200,10 @@ public:
   sfpi_inline vInt (uint16_t);
   sfpi_inline vInt (int32_t);
   sfpi_inline vInt (uint32_t);
-  sfpi_inline vInt (int);
-  sfpi_inline vInt (unsigned);
+  sfpi_inline vInt (int val) : vInt (int32_t (val)) {};
+  sfpi_inline vInt (unsigned val) : vInt (uint32_t (val)) {}
   sfpi_inline vInt (impl_::vCond);
 
-  sfpi_inline vInt &operator= (vInt);
   sfpi_inline vInt &operator= (impl_::vLReg);
 
   sfpi_inline vInt &operator+= (vInt);
@@ -302,22 +269,24 @@ sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
 //////////////////////////////////////////////////////////////////////////////
 class vUInt : public impl_::vVal {
 public:
-  vUInt () = default;
-  sfpi_inline vUInt (impl_::sfpu_t vec);
-  sfpi_inline vUInt (impl_::vLReg lr);
-  sfpi_inline vUInt (impl_::vDReg dreg);
-  sfpi_inline vUInt (vInt val);
-  sfpi_inline vUInt (int16_t val);
-  sfpi_inline vUInt (uint16_t val);
-  sfpi_inline vUInt (int32_t val);
-  sfpi_inline vUInt (uint32_t val);
-  sfpi_inline vUInt (int val);
-  sfpi_inline vUInt (unsigned val);
+  sfpi_inline vUInt () = default;
+  sfpi_inline vUInt (vUInt const &) = default;
+  sfpi_inline vUInt &operator= (vUInt const &);
 
-  sfpi_inline vUInt (impl_::vCond vc);
+public:
+  sfpi_inline vUInt (impl_::sfpu_t);
+  sfpi_inline vUInt (impl_::vLReg);
+  sfpi_inline vUInt (impl_::vDReg);
+  sfpi_inline vUInt (vInt);
+  sfpi_inline vUInt (int16_t);
+  sfpi_inline vUInt (uint16_t);
+  sfpi_inline vUInt (int32_t);
+  sfpi_inline vUInt (uint32_t);
+  sfpi_inline vUInt (int val) : vUInt (int32_t (val)) {}
+  sfpi_inline vUInt (unsigned val) : vUInt (uint32_t (val)) {}
+  sfpi_inline vUInt (impl_::vCond);
 
   // Assignment
-  sfpi_inline vUInt &operator= (vUInt); 
   sfpi_inline vUInt &operator= (impl_::vLReg);
 
   // Operations
