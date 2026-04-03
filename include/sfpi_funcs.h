@@ -128,12 +128,13 @@ auto sfpi::impl_::vDReg::operator=(const impl_::vDReg dreg) const-> void {
   __builtin_rvtt_sfpstore (tmp.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
 }
 
+#if 0
 auto sfpi::impl_::vDReg::operator= (s2vFloat16 f) const-> vFloat {
   vFloat v (f);
   *this = v;
   return v;
 }
-
+#endif
 auto sfpi::impl_::vDReg::operator= (const float f) const-> vFloat {
   vFloat v (f);
   *this = v;
@@ -167,12 +168,14 @@ auto sfpi::impl_::vDReg::operator> (const float x) const-> vCond { return vCond 
 auto sfpi::impl_::vDReg::operator<= (const float x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator>= (const float x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
 
+#if 0
 auto sfpi::impl_::vDReg::operator== (const s2vFloat16 x) const-> vCond {return vCond (vCond::EQ, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator!= (const s2vFloat16 x) const-> vCond { return vCond (vCond::NE, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator< (const s2vFloat16 x) const-> vCond { return vCond (vCond::LT, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator> (const s2vFloat16 x) const-> vCond { return vCond (vCond::GT, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator<= (const s2vFloat16 x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator>= (const s2vFloat16 x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
+#endif
 auto sfpi::impl_::vDReg::operator== (const vFloat x) const-> vCond {return vCond (vCond::EQ, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator!= (const vFloat x) const-> vCond { return vCond (vCond::NE, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator< (const vFloat x) const-> vCond { return vCond (vCond::LT, vFloat (*this), x); }
