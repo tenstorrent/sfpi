@@ -127,7 +127,60 @@
 #include <type_traits>
 #include "sfpi_classes.h"
 
+static_assert (std::is_same_v<int32_t, long>, "int32_t is not expected type of long");
+// Why am I checking int32_t here? Good question. The answer is analysis tools
+// sometimes are misconfigured and pick 'int' as the type of int32_t.  But this
+// is built for int32_t is long. It's not possible (without majorly invasive
+// pretty-much untestable template jiggery pokery) to make this agnostic,
+// because we need to deal with both integer literals and int32_t[*].
+//
+// The history here goes way back to when embedded systems were commonly 16-bit
+// machines, and int was 16 bits. So long would be the natural type for
+// int32_t.  Then some embedded machines became 32-bits. But libraries remained
+// using long for int32_t, as that avoids changing the type of int32_t. Of
+// course later C mandated int needed to be at least 32 bits, and all the
+// 16-bit machines died, or when to the upstate pet farm. But anyway, riscv
+// embedded ABIs have int32_t as long, not int, and we have to deal with it.
+//
+// [*] It might be possible once we've removed the library's promiscuity in
+// mixing vInt/vUInt types, so that there's only one valid promotion for an int
+// type in the overload set. But we're not there yet.
+
 namespace sfpi {
+
+// Scalar float types, these are just containers.
+class sFloat16a {
+  uint16_t val;
+
+// User-accessible vector float type
+public:
+  sfpi_inline explicit sFloat16a (uint32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16a (int32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16a (unsigned v) : sFloat16a (uint32_t (v)) {}
+  sfpi_inline explicit sFloat16a (signed v) : sFloat16a (int32_t (v)) {}
+  sfpi_inline uint32_t get () const { return val; }
+};
+
+class sFloat16b {
+  uint16_t val;
+
+public:
+  sfpi_inline explicit sFloat16b (float f);
+  sfpi_inline explicit sFloat16b (int32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16b (uint32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16b (unsigned v) : sFloat16b (uint32_t (v)) {}
+  sfpi_inline explicit sFloat16b (signed v) : sFloat16b (int32_t (v)) {}
+
+  // This will be deprecated and removed
+  sfpi_inline explicit sFloat16b (double f) : sFloat16b (float (f)) {}
+
+public:
+  sfpi_inline uint32_t get () const { return val; }
+};
+
+// These will be deprecated and removed
+using s2vFloat16a = sFloat16a;
+using s2vFloat16b = sFloat16b;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +191,8 @@ public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
-  sfpi_inline vFloat (s2vFloat16);
+  sfpi_inline vFloat (sFloat16a);
+  sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
   
   sfpi_inline vFloat &operator= (vFloat);
@@ -354,13 +408,6 @@ sfpi_inline impl_::vCond operator< (float a, vFloat b) { return b > a; }
 sfpi_inline impl_::vCond operator> (float a, vFloat b) { return b < a; }
 sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
 sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
-
-sfpi_inline impl_::vCond operator== (s2vFloat16 a, vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!= (s2vFloat16 a, vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator< (s2vFloat16 a, vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator> (s2vFloat16 a, vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator<= (s2vFloat16 a, vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>= (s2vFloat16 a, vFloat b) { return b <= a; }
 
 //////////////////////////////////////////////////////////////////////////////
 
