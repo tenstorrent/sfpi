@@ -138,7 +138,8 @@ public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
-  sfpi_inline vFloat (s2vFloat16);
+  sfpi_inline vFloat (s2vFloat16a);
+  sfpi_inline vFloat (s2vFloat16b);
   sfpi_inline vFloat (float);
   
   sfpi_inline vFloat &operator= (vFloat);

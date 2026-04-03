@@ -30,11 +30,13 @@ sfpi::impl_::vCond::vCond (BoolOp t, vCond a, vCond b) {
 sfpi::impl_::vCond::vCond (CondOp t, vFloat a, float b) {
   result = __builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (b), t | SFPXSCMP_MOD1_FMT_FLOAT);
 }
+#if 0
 sfpi::impl_::vCond::vCond (CondOp t, vFloat a, s2vFloat16 b) {
   result = __builtin_rvtt_sfpxfcmps (a.get (), b.get (),
                                      t | (b.get_format () == SFPLOADI_MOD0_FLOATA
                                           ? SFPXSCMP_MOD1_FMT_A : SFPXSCMP_MOD1_FMT_B));
 }
+#endif
 sfpi::impl_::vCond::vCond (CondOp t, vFloat a, vFloat b) {
   result = __builtin_rvtt_sfpxfcmpv (a.get (), b.get (), t);
 }
@@ -189,7 +191,9 @@ sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vFloat::vFloat (impl_::vLReg lr) : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vFloat::vFloat (impl_::vDReg dreg)
     : vVal (__builtin_rvtt_sfpload (dreg.get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC)) {}
-sfpi::vFloat::vFloat (s2vFloat16 val)
+sfpi::vFloat::vFloat (s2vFloat16a val)
+    : vVal (__builtin_rvtt_sfpxloadi (val.get (), val.get_format ())) {}
+sfpi::vFloat::vFloat (s2vFloat16b val)
     : vVal (__builtin_rvtt_sfpxloadi (val.get (), val.get_format ())) {}
 sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), SFPXLOADI_MOD0_FLOAT)) {}
