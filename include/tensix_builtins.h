@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: © 2023-2026 Tenstorrent Inc.
+ * SPDX-FileCopyrightText: © 2026 Tenstorrent Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -8,6 +8,15 @@
 // Tensix builtins
 //////////////////////////////////////////////////////////////////////////////
 #pragma once
+
+// The builtins decared here are not intended for the end-user, they are
+// provided so that code analysis tools will not just give up in the face of an
+// unknown function call.
+
+// If you use these directly in your code, rather than the sfpi interface, you
+// are walking on unstable ground. If you find you just must use these, because
+// the sfpi interface is inadequate, file a defect describing what is
+// inadequate.
 
 #if __riscv_xtttensixwh + __riscv_xtttensixbh + __riscv_xtttensixqsr
 #if !__has_builtin(__builtin_rvtt_synth_opcode)

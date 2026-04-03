@@ -187,7 +187,11 @@ using s2vFloat16b = sFloat16b;
 // User-accessible vector float type
 class vFloat : public impl_::vVal {
 public:
-  vFloat () = default;
+  sfpi_inline vFloat () = default;
+  sfpi_inline vFloat (vFloat const &) = default;
+  sfpi_inline vFloat &operator= (vFloat const &);
+
+public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
@@ -195,7 +199,6 @@ public:
   sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
   
-  sfpi_inline vFloat &operator= (vFloat);
   sfpi_inline vFloat &operator= (impl_::vLReg);
   
   sfpi_inline vFloat &operator+= (vFloat);
@@ -223,7 +226,11 @@ sfpi_inline vFloat operator* (float, vFloat);
 //////////////////////////////////////////////////////////////////////////////
 class vInt : public impl_::vVal {
 public:
-  vInt () = default;
+  sfpi_inline vInt () = default;
+  sfpi_inline vInt (vInt const &) = default;
+  sfpi_inline vInt &operator= (vInt const &);
+
+public:
   sfpi_inline vInt (impl_::sfpu_t);
   sfpi_inline vInt (impl_::vLReg);
   sfpi_inline vInt (impl_::vDReg);
@@ -232,11 +239,10 @@ public:
   sfpi_inline vInt (uint16_t);
   sfpi_inline vInt (int32_t);
   sfpi_inline vInt (uint32_t);
-  sfpi_inline vInt (int);
-  sfpi_inline vInt (unsigned);
+  sfpi_inline vInt (int val) : vInt (int32_t (val)) {};
+  sfpi_inline vInt (unsigned val) : vInt (uint32_t (val)) {}
   sfpi_inline vInt (impl_::vCond);
 
-  sfpi_inline vInt &operator= (vInt);
   sfpi_inline vInt &operator= (impl_::vLReg);
 
   sfpi_inline vInt &operator+= (vInt);
@@ -302,22 +308,24 @@ sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
 //////////////////////////////////////////////////////////////////////////////
 class vUInt : public impl_::vVal {
 public:
-  vUInt () = default;
-  sfpi_inline vUInt (impl_::sfpu_t vec);
-  sfpi_inline vUInt (impl_::vLReg lr);
-  sfpi_inline vUInt (impl_::vDReg dreg);
-  sfpi_inline vUInt (vInt val);
-  sfpi_inline vUInt (int16_t val);
-  sfpi_inline vUInt (uint16_t val);
-  sfpi_inline vUInt (int32_t val);
-  sfpi_inline vUInt (uint32_t val);
-  sfpi_inline vUInt (int val);
-  sfpi_inline vUInt (unsigned val);
+  sfpi_inline vUInt () = default;
+  sfpi_inline vUInt (vUInt const &) = default;
+  sfpi_inline vUInt &operator= (vUInt const &);
 
-  sfpi_inline vUInt (impl_::vCond vc);
+public:
+  sfpi_inline vUInt (impl_::sfpu_t);
+  sfpi_inline vUInt (impl_::vLReg);
+  sfpi_inline vUInt (impl_::vDReg);
+  sfpi_inline vUInt (vInt);
+  sfpi_inline vUInt (int16_t);
+  sfpi_inline vUInt (uint16_t);
+  sfpi_inline vUInt (int32_t);
+  sfpi_inline vUInt (uint32_t);
+  sfpi_inline vUInt (int val) : vUInt (int32_t (val)) {}
+  sfpi_inline vUInt (unsigned val) : vUInt (uint32_t (val)) {}
+  sfpi_inline vUInt (impl_::vCond);
 
   // Assignment
-  sfpi_inline vUInt &operator= (vUInt); 
   sfpi_inline vUInt &operator= (impl_::vLReg);
 
   // Operations
