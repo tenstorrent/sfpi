@@ -99,6 +99,9 @@ jobs:
           if [[ -n $sfpi_base ]]; then
               config+=" ($sfpi_base)"
           fi
+          if ${{inputs.txz}}; then
+              sfpi_pkg+=", txz"
+          fi
           config+=" $sfpi_arch $sfpi_dist ($sfpi_pkg)"
           if [[ -z "${{inputs.key}}" ]]; then
             echo "### $config" >>$GITHUB_STEP_SUMMARY
