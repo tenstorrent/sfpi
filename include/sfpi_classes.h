@@ -56,7 +56,7 @@ sfpi_inline uint32_t float_as_uint (float val);
 
 //////////////////////////////////////////////////////////////////////////////
 class vReg { // A register.  Holds the register number
-protected:
+private:
   int reg;
 
 public:
@@ -65,18 +65,20 @@ public:
 };
 
 class vVal { // A value, holds value and intialized flag
-protected:
+private:
   // FIXME: we want to remove this, with better LV optimization/handling
   bool initialized = false;
   sfpu_t v;
 
-  sfpi_inline void assign (sfpu_t val) {
-    v = initialized ? __builtin_rvtt_sfpassign_lv (v, val) : val;
-    initialized = true;
-  }
-
 public:
   sfpi_inline vVal () {}
+  sfpi_inline vVal (vVal const &) = default;
+  sfpi_inline vVal &operator= (vVal const &val) {
+    v = initialized ? __builtin_rvtt_sfpassign_lv (v, val.get ()) : val.get ();
+    initialized = true;
+    return *this;
+  }
+
   sfpi_inline vVal (sfpu_t v_)
       :initialized (true), v (v_) {
   }
@@ -145,11 +147,14 @@ public:
 template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
 class vConst : public vReg {
 public:
-  constexpr explicit vConst (int r) : impl_::vReg(r) {}
+  sfpi_inline constexpr explicit vConst (int r) : impl_::vReg(r) {}
+  sfpi_inline vConst (vConst const &) = default;
 
   sfpi_inline operator Type () const {
     return __builtin_rvtt_sfpreadlreg (get ());
   }
+
+  sfpi_inline void operator= (vConst &) = delete;
 
   sfpi_inline void operator= (Type t) const {
     __builtin_rvtt_sfpwriteconfig_v (t.get (), get ());
@@ -164,16 +169,27 @@ public:
 
 class vLReg : public vReg {
 private:
-  constexpr explicit vLReg (unsigned ix) : vReg (ix) {}
+  sfpi_inline constexpr explicit vLReg (unsigned ix) : vReg (ix) {}
 
 public:
-  sfpi_inline sfpu_t operator= (const vVal& v) const {
-    __builtin_rvtt_sfpwritelreg (v.get (), reg);
+  sfpi_inline vLReg (vLReg const &) = default;
+  sfpi_inline vLReg &operator= (vLReg const &) = delete;
+
+public:
+  sfpi_inline sfpu_t operator= (vVal v) const {
+    __builtin_rvtt_sfpwritelreg (v.get (), get ());
     return v.get ();
   }
 
 public:
   class LRegFile {
+  public:
+    constexpr LRegFile () = default;
+    LRegFile (LRegFile const &) = delete;
+    LRegFile (LRegFile &&) = delete;
+    LRegFile &operator= (LRegFile const &) = delete;
+    LRegFile &operator= (LRegFile &&) = delete;
+
   public:
     sfpi_inline vLReg operator[] (LRegs lr) const { return vLReg (unsigned (lr)); }
   };
@@ -207,7 +223,11 @@ public:
 private:
   int result;
 
-public:  
+public:
+  sfpi_inline vCond (vCond const &) = default;
+  sfpi_inline vCond &operator= (vCond const &) = default;
+
+public:
   sfpi_inline vCond (BoolOp, vCond, vCond);
   sfpi_inline vCond (CondOp, vFloat, float);
   sfpi_inline vCond (CondOp, vFloat, vFloat);
@@ -257,6 +277,10 @@ private:
     constexpr explicit vDReg (unsigned i) : vReg (i) {}
 
 public:
+  sfpi_inline vDReg (vDReg const &) = default;
+  sfpi_inline vDReg &operator= (vDReg const &) = delete;
+
+public:
     // Assign register to register
     template <typename vecType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vecType>::value>* = nullptr>
     sfpi_inline vecType operator=(vecType vec) const;
@@ -290,6 +314,13 @@ public:
 
 public:
   class DestRegFile {
+  public:
+    constexpr DestRegFile () = default;
+    DestRegFile (DestRegFile const &) = delete;
+    DestRegFile (DestRegFile &&) = delete;
+    DestRegFile &operator= (DestRegFile const &) = delete;
+    DestRegFile &operator= (DestRegFile &&) = delete;
+
   public:
     sfpi_inline const vDReg operator[](int ix) const {
       return vDReg(ix * SFP_DESTREG_STRIDE);

@@ -98,8 +98,8 @@ auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a);
 
 //////////////////////////////////////////////////////////////////////////////
 // impl_::vDReg definitions
-auto sfpi::impl_::vDReg::operator=(vFloat vec) const-> vFloat {
-  __builtin_rvtt_sfpstore(vec.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
+auto sfpi::impl_::vDReg::operator= (vFloat vec) const-> vFloat {
+  __builtin_rvtt_sfpstore(vec.get (), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
   return vec;
 }
 
@@ -117,13 +117,13 @@ auto sfpi::impl_::vDReg::operator= (vecType vec) const-> vecType {
   if constexpr (std::is_base_of<vInt, vecType>::value)
                    mod = SFPSTORE_MOD0_FMT_SM32;
 #endif
-  __builtin_rvtt_sfpstore (vec.get (), reg, mod, SFPSTORE_ADDR_MODE_NOINC);
+  __builtin_rvtt_sfpstore (vec.get (), get (), mod, SFPSTORE_ADDR_MODE_NOINC);
   return vec;
 }
 
 auto sfpi::impl_::vDReg::operator=(const impl_::vDReg dreg) const-> void {
   vFloat tmp = dreg;
-  __builtin_rvtt_sfpstore (tmp.get(), reg, SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
+  __builtin_rvtt_sfpstore (tmp.get(), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
 }
 
 auto sfpi::impl_::vDReg::operator= (const float f) const-> vFloat {
@@ -179,7 +179,7 @@ sfpi::vFloat::vFloat (sFloat16b val)
 sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), SFPXLOADI_MOD0_FLOAT)) {}
 
-auto sfpi::vFloat::operator= (vFloat in)-> vFloat & { assign (in.get ()); return *this; }
+auto sfpi::vFloat::operator= (vFloat const &val)-> vFloat & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
@@ -238,12 +238,10 @@ sfpi::vInt::vInt (int32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_INT32)) {}
 sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {}
-sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {}
-sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
-auto sfpi::vInt::operator= (vInt in)-> vInt & { assign(in.v); return *this; }
+auto sfpi::vInt::operator= (vInt const &val)-> vInt & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vInt::operator= (impl_::vLReg lr)-> vInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
@@ -308,12 +306,10 @@ sfpi::vUInt::vUInt (int32_t val)
 sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {}
 
-sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
-sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
-auto sfpi::vUInt::operator= (vUInt in)-> vUInt & { assign (in.get ()); return *this; }
+auto sfpi::vUInt::operator= (vUInt const &val)-> vUInt & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vUInt::operator= (impl_::vLReg lr)-> vUInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
