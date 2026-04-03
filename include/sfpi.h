@@ -138,7 +138,8 @@ public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
-  sfpi_inline vFloat (s2vFloat16);
+  sfpi_inline vFloat (s2vFloat16a);
+  sfpi_inline vFloat (s2vFloat16b);
   sfpi_inline vFloat (float);
   
   sfpi_inline vFloat &operator= (vFloat);
@@ -355,13 +356,14 @@ sfpi_inline impl_::vCond operator> (float a, vFloat b) { return b < a; }
 sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
 sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
 
+#if 0
 sfpi_inline impl_::vCond operator== (s2vFloat16 a, vFloat b) { return b == a; }
 sfpi_inline impl_::vCond operator!= (s2vFloat16 a, vFloat b) { return b != a; }
 sfpi_inline impl_::vCond operator< (s2vFloat16 a, vFloat b) { return b > a; }
 sfpi_inline impl_::vCond operator> (s2vFloat16 a, vFloat b) { return b < a; }
 sfpi_inline impl_::vCond operator<= (s2vFloat16 a, vFloat b) { return b >= a; }
 sfpi_inline impl_::vCond operator>= (s2vFloat16 a, vFloat b) { return b <= a; }
-
+#endif
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline  impl_::vCond operator== (vInt a, vInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, SFPXIADD_MOD1_SIGNED); }
