@@ -129,6 +129,40 @@
 
 namespace sfpi {
 
+// Scalar float types, these are just containers.
+class sFloat16a {
+  uint16_t val;
+
+// User-accessible vector float type
+public:
+  sfpi_inline explicit sFloat16a (uint32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16a (int32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16a (unsigned v) : sFloat16a (uint32_t (v)) {}
+  sfpi_inline explicit sFloat16a (signed v) : sFloat16a (int32_t (v)) {}
+  sfpi_inline uint32_t get () const { return val; }
+};
+
+class sFloat16b {
+  uint16_t val;
+
+public:
+  sfpi_inline explicit sFloat16b (float f);
+  sfpi_inline explicit sFloat16b (int32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16b (uint32_t v) : val (v) {}
+  sfpi_inline explicit sFloat16b (unsigned v) : sFloat16b (uint32_t (v)) {}
+  sfpi_inline explicit sFloat16b (signed v) : sFloat16b (int32_t (v)) {}
+
+  // This will be deprecated and removed
+  sfpi_inline explicit sFloat16b (double f) : sFloat16b (float (f)) {}
+
+public:
+  sfpi_inline uint32_t get () const { return val; }
+};
+
+// These will be deprecated and removed
+using s2vFloat16a = sFloat16a;
+using s2vFloat16b = sFloat16b;
+
 //////////////////////////////////////////////////////////////////////////////
 
 // User-accessible vector float type
@@ -138,8 +172,8 @@ public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (impl_::vDReg);
-  sfpi_inline vFloat (s2vFloat16a);
-  sfpi_inline vFloat (s2vFloat16b);
+  sfpi_inline vFloat (sFloat16a);
+  sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
   
   sfpi_inline vFloat &operator= (vFloat);
@@ -357,12 +391,12 @@ sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
 sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
 
 #if 0
-sfpi_inline impl_::vCond operator== (s2vFloat16 a, vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!= (s2vFloat16 a, vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator< (s2vFloat16 a, vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator> (s2vFloat16 a, vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator<= (s2vFloat16 a, vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>= (s2vFloat16 a, vFloat b) { return b <= a; }
+sfpi_inline impl_::vCond operator== (sFloat16 a, vFloat b) { return b == a; }
+sfpi_inline impl_::vCond operator!= (sFloat16 a, vFloat b) { return b != a; }
+sfpi_inline impl_::vCond operator< (sFloat16 a, vFloat b) { return b > a; }
+sfpi_inline impl_::vCond operator> (sFloat16 a, vFloat b) { return b < a; }
+sfpi_inline impl_::vCond operator<= (sFloat16 a, vFloat b) { return b >= a; }
+sfpi_inline impl_::vCond operator>= (sFloat16 a, vFloat b) { return b <= a; }
 #endif
 //////////////////////////////////////////////////////////////////////////////
 

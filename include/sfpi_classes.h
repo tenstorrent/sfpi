@@ -36,8 +36,6 @@
 #endif
 #define __SFPI_MIXED_SIGNEDNESS __SFPI_DEPRECATED("This function mizes signed and unsigned types, be explicit about signedness")
 
-#include "sfpi_fp16.h"
-
 namespace sfpi {
 
 class vFloat;
@@ -212,7 +210,7 @@ private:
 public:  
   sfpi_inline vCond (BoolOp, vCond, vCond);
   sfpi_inline vCond (CondOp, vFloat, float);
-  //  sfpi_inline vCond (CondOp, vFloat, s2vFloat16);
+  //  sfpi_inline vCond (CondOp, vFloat, sFloat16);
   sfpi_inline vCond (CondOp, vFloat, vFloat);
   sfpi_inline vCond (CondOp, vInt, int32_t, unsigned);
   sfpi_inline vCond (CondOp, vInt, vInt, unsigned);
@@ -264,7 +262,7 @@ public:
     template <typename vecType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vecType>::value>* = nullptr>
     sfpi_inline vecType operator=(vecType vec) const;
     sfpi_inline void operator=(const vDReg dreg) const;
-  //    sfpi_inline vFloat operator=(const s2vFloat16 f) const;
+  //    sfpi_inline vFloat operator=(const sFloat16 f) const;
     sfpi_inline vInt operator=(const int i) const;
     sfpi_inline vUInt operator=(const unsigned int i) const;
     sfpi_inline vFloat operator=(const float f) const;
@@ -286,12 +284,12 @@ public:
     sfpi_inline vCond operator>=(const float x) const;
 
 #if 0
-    sfpi_inline vCond operator==(const s2vFloat16 x) const;
-    sfpi_inline vCond operator!=(const s2vFloat16 x) const;
-    sfpi_inline vCond operator<(const s2vFloat16 x) const;
-    sfpi_inline vCond operator<=(const s2vFloat16 x) const;
-    sfpi_inline vCond operator>(const s2vFloat16 x) const;
-    sfpi_inline vCond operator>=(const s2vFloat16 x) const;
+    sfpi_inline vCond operator==(const sFloat16 x) const;
+    sfpi_inline vCond operator!=(const sFloat16 x) const;
+    sfpi_inline vCond operator<(const sFloat16 x) const;
+    sfpi_inline vCond operator<=(const sFloat16 x) const;
+    sfpi_inline vCond operator>(const sFloat16 x) const;
+    sfpi_inline vCond operator>=(const sFloat16 x) const;
 #endif
     sfpi_inline vCond operator==(const vFloat x) const;
     sfpi_inline vCond operator!=(const vFloat x) const;
