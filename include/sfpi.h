@@ -127,6 +127,17 @@
 #include <type_traits>
 #include "sfpi_classes.h"
 
+static_assert (std::same_type_v<int32_t, long>, "int32_t is not nexpected type");
+// Why am I checking int32_t here? Good question. The answer is analysis tools
+// sometimes are misconfigured and pick 'int' as the type if int32_t.  But this
+// is built for int32_t is long.  The history here goes way back to when
+// embedded systems were commonly 16 bit machines, and int was 16bits. So long
+// would be the natural type for int32_t.  Them some embedded machines were
+// 32bits. But libraries remained using long for int32_t, as that avouds
+// changing the type of int32_t. Of course later C mandated int needed to be at
+// least 32 bits, and all the 16 bit machines died. But anyway, riscv embedded
+// ABIs have int32_t as long, not int, and we have to deal with it.
+
 namespace sfpi {
 
 // Scalar float types, these are just containers.
@@ -390,14 +401,6 @@ sfpi_inline impl_::vCond operator> (float a, vFloat b) { return b < a; }
 sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
 sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
 
-#if 0
-sfpi_inline impl_::vCond operator== (sFloat16 a, vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!= (sFloat16 a, vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator< (sFloat16 a, vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator> (sFloat16 a, vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator<= (sFloat16 a, vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>= (sFloat16 a, vFloat b) { return b <= a; }
-#endif
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline  impl_::vCond operator== (vInt a, vInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, SFPXIADD_MOD1_SIGNED); }
