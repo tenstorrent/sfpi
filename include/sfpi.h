@@ -127,7 +127,7 @@
 #include <type_traits>
 #include "sfpi_classes.h"
 
-static_assert (std::same_type_v<int32_t, long>, "int32_t is not nexpected type");
+static_assert (std::is_same_v<int32_t, long>, "int32_t is not nexpected type");
 // Why am I checking int32_t here? Good question. The answer is analysis tools
 // sometimes are misconfigured and pick 'int' as the type if int32_t.  But this
 // is built for int32_t is long.  The history here goes way back to when
