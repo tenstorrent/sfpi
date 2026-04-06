@@ -173,11 +173,11 @@ sfpi::vFloat::vFloat (impl_::vLReg lr) : vVal (__builtin_rvtt_sfpreadlreg (lr.ge
 sfpi::vFloat::vFloat (impl_::vDReg dreg)
     : vVal (__builtin_rvtt_sfpload (dreg.get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC)) {}
 sfpi::vFloat::vFloat (sFloat16a val)
-    : vVal (__builtin_rvtt_sfpxloadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
+    : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
 sfpi::vFloat::vFloat (sFloat16b val)
-    : vVal (__builtin_rvtt_sfpxloadi (val.get (), SFPLOADI_MOD0_FLOATB)) {}
+    : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATB)) {}
 sfpi::vFloat::vFloat (float f)
-    : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), SFPXLOADI_MOD0_FLOAT)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
 
 auto sfpi::vFloat::operator= (vFloat const &val)-> vFloat & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
@@ -231,13 +231,13 @@ sfpi::vInt::vInt (impl_::vDReg dreg)
 }
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (int16_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPLOADI_MOD0_SHORT)) {}
+    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
 sfpi::vInt::vInt (uint16_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPLOADI_MOD0_USHORT)) {}
+    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vInt::vInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_INT32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vInt::vInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
@@ -298,13 +298,13 @@ sfpi::vUInt::vUInt (impl_::vDReg dreg)
                                     SFPLOAD_ADDR_MODE_NOINC)) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPLOADI_MOD0_SHORT)) {}
+    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
 sfpi::vUInt::vUInt (uint16_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPLOADI_MOD0_USHORT)) {}
+    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vUInt::vUInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_INT32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vUInt::vUInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, SFPXLOADI_MOD0_UINT32)) {}
+    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
