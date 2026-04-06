@@ -70,10 +70,6 @@ constexpr unsigned int SFPLOADI_MOD0_USHORT = 2;
 constexpr unsigned int SFPLOADI_MOD0_SHORT = 4;
 constexpr unsigned int SFPLOADI_MOD0_UPPER = 8;
 constexpr unsigned int SFPLOADI_MOD0_LOWER = 10;
-constexpr unsigned int SFPXLOADI_MOD0_32BIT_MASK = 16;
-constexpr unsigned int SFPXLOADI_MOD0_INT32 = 16;
-constexpr unsigned int SFPXLOADI_MOD0_UINT32 = 17;
-constexpr unsigned int SFPXLOADI_MOD0_FLOAT = 18;
 
 constexpr unsigned int SFPEXMAN_MOD1_PAD8 = 0;
 constexpr unsigned int SFPEXMAN_MOD1_PAD9 = 1;
