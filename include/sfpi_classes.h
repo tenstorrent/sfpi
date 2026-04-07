@@ -148,7 +148,7 @@ template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, T
 class vConst : public vReg {
 public:
   sfpi_inline constexpr explicit vConst (int r) : impl_::vReg(r) {}
-  sfpi_inline vConst (vConst const &) = delete;
+  sfpi_inline vConst (vConst const &) = default;
 
   sfpi_inline operator Type () const {
     return __builtin_rvtt_sfpreadlreg (get ());
