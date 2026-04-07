@@ -143,6 +143,8 @@ EOF
 	eval $($BIN/sfpi-info.sh BASE <$BUILD/version)
 	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
 	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
+	    # Make sure we renew the sfpi headers
+	    rm -rf $BUILD/sfpi/include
 	else
 	    # No such base available
 	    sfpi_base=
