@@ -179,7 +179,6 @@ sfpi::vFloat::vFloat (sFloat16b val)
 sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
 
-auto sfpi::vFloat::operator= (vFloat const &val)-> vFloat & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
@@ -241,7 +240,6 @@ sfpi::vInt::vInt (uint32_t val)
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
-auto sfpi::vInt::operator= (vInt const &val)-> vInt & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vInt::operator= (impl_::vLReg lr)-> vInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
@@ -309,7 +307,6 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
-auto sfpi::vUInt::operator= (vUInt const &val)-> vUInt & { impl_::vVal::operator= (val); return *this; }
 auto sfpi::vUInt::operator= (impl_::vLReg lr)-> vUInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }

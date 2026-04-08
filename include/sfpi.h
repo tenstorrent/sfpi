@@ -150,7 +150,7 @@ class vFloat : public impl_::vVal {
 public:
   sfpi_inline vFloat () = default;
   sfpi_inline vFloat (vFloat const &) = default;
-  sfpi_inline vFloat &operator= (vFloat const &);
+  sfpi_inline vFloat &operator= (vFloat const &) = default;
 
 public:
   sfpi_inline vFloat (impl_::sfpu_t);
@@ -189,7 +189,7 @@ class vInt : public impl_::vVal {
 public:
   sfpi_inline vInt () = default;
   sfpi_inline vInt (vInt const &) = default;
-  sfpi_inline vInt &operator= (vInt const &);
+  sfpi_inline vInt &operator= (vInt const &) = default;
 
 public:
   sfpi_inline vInt (impl_::sfpu_t);
@@ -271,7 +271,7 @@ class vUInt : public impl_::vVal {
 public:
   sfpi_inline vUInt () = default;
   sfpi_inline vUInt (vUInt const &) = default;
-  sfpi_inline vUInt &operator= (vUInt const &);
+  sfpi_inline vUInt &operator= (vUInt const &) = default;
 
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
