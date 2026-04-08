@@ -30,7 +30,8 @@
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
-#if SFPI_MARK_DEPRECATED
+// Turn on deprecations byy default
+#if defined (SFPI_MARK_DEPRECATED) ? SFPI_MARK_DEPRECATED : 1
 #define __SFPI_DEPRECATED(X) [[deprecated (X)]]
 #else
 #define __SFPI_DEPRECATED(X)
