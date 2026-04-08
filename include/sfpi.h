@@ -113,8 +113,16 @@ namespace sfpi {
 class sFloat16a {
   uint16_t val;
 
-// User-accessible vector float type
 public:
+  // There is no float ctor, because that's a complex bit operation. We don't
+  // want to accidentally do that at runtime (consteval fns not yet available
+  // to us). Besides why would you want it?  (The compiler is quite capable of
+  // spotting bit patterns that are suitable for loading as an float16a, rather
+  // than lo/hi pair).
+
+  // Reinterpret the bit pattern. Generally because you've computed something
+  // dynamically. If you;re using these with literals, you're just obfuscating
+  // your code.  
   sfpi_inline explicit sFloat16a (uint32_t v) : val (v) {}
   sfpi_inline explicit sFloat16a (int32_t v) : val (v) {}
   sfpi_inline explicit sFloat16a (unsigned v) : sFloat16a (uint32_t (v)) {}
@@ -127,22 +135,38 @@ class sFloat16b {
   uint16_t val;
 
 public:
+  // This rounds to zero (by truncating the mantissa).  The only reason you'd
+  // want to use this on a literal is to force it to be representable as a
+  // float16b and therefore use a single load.  The compiler is quite capable
+  // of spotting constant loads that can do that.
   sfpi_inline explicit sFloat16b (float f);
+
+  // Reinterpret the bit pattern. Generally because you've computed something
+  // dynamically. If you;re using these with literals, you're just obfuscating
+  // your code.
   sfpi_inline explicit sFloat16b (int32_t v) : val (v) {}
   sfpi_inline explicit sFloat16b (uint32_t v) : val (v) {}
   sfpi_inline explicit sFloat16b (unsigned v) : sFloat16b (uint32_t (v)) {}
   sfpi_inline explicit sFloat16b (signed v) : sFloat16b (int32_t (v)) {}
 
-  // This will be deprecated and removed
+  __SFPI_DEPRECATED ("convert to float first")   // This will removed
   sfpi_inline explicit sFloat16b (double f) : sFloat16b (float (f)) {}
 
 public:
   sfpi_inline uint32_t get () const { return val; }
 };
 
-// These old names will be deprecated and removed
-using s2vFloat16a = sFloat16a;
-using s2vFloat16b = sFloat16b;
+// Sadly typedefs deprecations are silent, so use a wrapper class
+class __SFPI_DEPRECATED ("use sfpi::sFloat16a")   // This will removed
+  s2vFloat16a  : public sFloat16a {
+ public:
+  using sFloat16a::sFloat16a;
+};
+class __SFPI_DEPRECATED ("use sfpi::sFloat16a")   // This will removed
+  s2vFloat16b : public sFloat16b {
+public:
+  using sFloat16b::sFloat16b;
+};
 
 //////////////////////////////////////////////////////////////////////////////
 
