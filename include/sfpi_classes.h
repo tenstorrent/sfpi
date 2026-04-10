@@ -283,36 +283,20 @@ public:
   sfpi_inline vDReg &operator= (vDReg const &) = delete;
 
 public:
-    // Assign register to register
-    template <typename vecType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vecType>::value>* = nullptr>
-    sfpi_inline vecType operator=(vecType vec) const;
-    sfpi_inline void operator=(const vDReg dreg) const;
-    sfpi_inline vInt operator=(const int i) const;
-    sfpi_inline vUInt operator=(const unsigned int i) const;
-    sfpi_inline vFloat operator=(const float f) const;
-    sfpi_inline vFloat operator=(const double d) const;
-    sfpi_inline vFloat operator=(vFloat d) const;
+  __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
+  sfpi_inline void operator=(const vDReg dreg) const;
 
-    // Construct operator classes from operations
-    sfpi_inline vFloat operator+(const vFloat b) const;
-    sfpi_inline vFloat operator-(const vFloat b) const;
-    sfpi_inline vFloat operator-() const;
-    sfpi_inline vFloat operator*(const vFloat b) const;
+  sfpi_inline vFloat operator= (vFloat) const;
+  sfpi_inline vInt operator= (vInt) const;
+  sfpi_inline vUInt operator= (vUInt) const;
+  sfpi_inline vFloat operator= (float) const;
 
-    // Conditionals
-    sfpi_inline vCond operator==(const float x) const;
-    sfpi_inline vCond operator!=(const float x) const;
-    sfpi_inline vCond operator<(const float x) const;
-    sfpi_inline vCond operator<=(const float x) const;
-    sfpi_inline vCond operator>(const float x) const;
-    sfpi_inline vCond operator>=(const float x) const;
+  sfpi_inline operator vFloat () const;
+  sfpi_inline operator vInt () const;
+  sfpi_inline operator vUInt () const;
 
-    sfpi_inline vCond operator==(const vFloat x) const;
-    sfpi_inline vCond operator!=(const vFloat x) const;
-    sfpi_inline vCond operator<(const vFloat x) const;
-    sfpi_inline vCond operator<=(const vFloat x) const;
-    sfpi_inline vCond operator>(const vFloat x) const;
-    sfpi_inline vCond operator>=(const vFloat x) const;
+  __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
+  sfpi_inline vFloat operator-() const;
 
 public:
   class DestRegFile {
