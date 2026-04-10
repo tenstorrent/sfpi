@@ -97,7 +97,50 @@ auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::O
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
-// impl_::vDReg definitions
+auto sfpi::impl_::vDReg::operator= (vFloat f) const-> vFloat {
+  __builtin_rvtt_sfpstore (f.get (), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
+  return f;
+}
+auto sfpi::impl_::vDReg::operator= (vInt i) const-> vInt {
+  // FIXME: We should be doing 2c->sm conversion here in all cases
+  __builtin_rvtt_sfpstore (i.get (), get (),
+#if __riscv_xtttensixwh
+                           SFPSTORE_MOD0_FMT_SM32,
+#else
+                           SFPSTORE_MOD0_FMT_BOB32,
+#endif
+                           SFPSTORE_ADDR_MODE_NOINC);
+  return i;
+}
+auto sfpi::impl_::vDReg::operator= (vUInt u) const-> vUInt {
+  auto mod = SFPSTORE_MOD0_FMT_BOB32;
+  __builtin_rvtt_sfpstore (u.get (), get (), mod, SFPSTORE_ADDR_MODE_NOINC);
+  return u;
+}
+
+#if 0
+sfpi::impl_::vDReg::operator vFloat () const {
+  return __builtin_rvtt_sfpload (get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC);
+}
+sfpi::impl_::vDReg::operator vInt () const {
+sfpi::vInt::vInt (impl_::vDReg dreg)
+  // FIXME: This should really convert from FPU's sign-magnitude integer
+  // representation in all cases.
+  return __builtin_rvtt_sfpload (get (),
+#if __riscv_xtttensixwh
+                                 SFPLOAD_MOD0_FMT_SM32,
+#else
+                                 SFPLOAD_MOD0_FMT_BOB32,
+#endif
+                                 SFPLOAD_ADDR_MODE_NOINC);
+}
+sfpi::impl_::vDReg::operator vUInt () const {
+  return __builtin_rvtt_sfpload (get (), SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC);
+}
+#endif
+
+// impl_::vDReg definitions//
+#if 0
 auto sfpi::impl_::vDReg::operator= (vFloat vec) const-> vFloat {
   __builtin_rvtt_sfpstore(vec.get (), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
   return vec;
@@ -142,7 +185,9 @@ auto sfpi::impl_::vDReg::operator= (const unsigned int i) const-> vUInt {
   *this = v;
   return v;
 }
+#endif
 
+#if 0
 auto sfpi::impl_::vDReg::operator- () const-> vFloat {
   vFloat tmp = *this;
   return __builtin_rvtt_sfpmov (tmp.get (), SFPMOV_MOD1_COMPSIGN);
@@ -165,6 +210,7 @@ auto sfpi::impl_::vDReg::operator< (const vFloat x) const-> vCond { return vCond
 auto sfpi::impl_::vDReg::operator> (const vFloat x) const-> vCond { return vCond (vCond::GT, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator<= (const vFloat x) const-> vCond { return vCond (vCond::LTE, vFloat (*this), x); }
 auto sfpi::impl_::vDReg::operator>= (const vFloat x) const-> vCond { return vCond (vCond::GTE, vFloat (*this), x); }
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
