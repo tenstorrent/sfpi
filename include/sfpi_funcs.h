@@ -121,12 +121,11 @@ auto sfpi::impl_::vDReg::operator= (vUInt u) const-> vUInt {
   return u;
 }
 
-#if 0
+#if 1
 sfpi::impl_::vDReg::operator vFloat () const {
   return __builtin_rvtt_sfpload (get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC);
 }
 sfpi::impl_::vDReg::operator vInt () const {
-sfpi::vInt::vInt (impl_::vDReg dreg)
   // FIXME: This should really convert from FPU's sign-magnitude integer
   // representation in all cases.
   return __builtin_rvtt_sfpload (get (),
@@ -217,8 +216,10 @@ auto sfpi::impl_::vDReg::operator>= (const vFloat x) const-> vCond { return vCon
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vFloat::vFloat (impl_::vLReg lr) : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
+#if 0
 sfpi::vFloat::vFloat (impl_::vDReg dreg)
     : vVal (__builtin_rvtt_sfpload (dreg.get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC)) {}
+#endif
 sfpi::vFloat::vFloat (sFloat16a val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
 sfpi::vFloat::vFloat (sFloat16b val)
@@ -265,6 +266,7 @@ auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vInt::vInt (impl_::vLReg lr)
     : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
+#if 0
 sfpi::vInt::vInt (impl_::vDReg dreg)
     : vVal (__builtin_rvtt_sfpload (dreg.get(),
 #if __riscv_xtttensixwh
@@ -275,6 +277,7 @@ sfpi::vInt::vInt (impl_::vDReg dreg)
                                     SFPLOAD_ADDR_MODE_NOINC)) {
   // FIXME: This should really convert from FPU's sign-magnitude integer representation
 }
+#endif
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -337,10 +340,12 @@ auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vUInt::vUInt (impl_::vLReg lr)
     : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
+#if 0
 sfpi::vUInt::vUInt (impl_::vDReg dreg)
     : vVal (__builtin_rvtt_sfpload (dreg.get(),
                                     SFPLOAD_MOD0_FMT_BOB32,
                                     SFPLOAD_ADDR_MODE_NOINC)) {}
+#endif
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}

@@ -295,19 +295,20 @@ public:
   sfpi_inline vInt operator= (vInt) const;
   sfpi_inline vUInt operator= (vUInt) const;
 
-#if 0
+#if 1
   sfpi_inline operator vFloat () const;
   sfpi_inline operator vInt () const;
   sfpi_inline operator vUInt () const;
 #endif
 
     // Construct operator classes from operations
-    sfpi_inline vFloat operator+(const vFloat b) const = delete;
-    sfpi_inline vFloat operator-(const vFloat b) const = delete;
+    //sfpi_inline vFloat operator+(const vFloat b) const = delete;
+  //    sfpi_inline vFloat operator-(const vFloat b) const = delete;
     __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
     sfpi_inline vFloat operator-() const;
-    sfpi_inline vFloat operator*(const vFloat b) const = delete;
+  //sfpi_inline vFloat operator*(const vFloat b) const = delete;
 
+#if 0
     // Conditionals
     sfpi_inline vCond operator==(const float x) const = delete;
     sfpi_inline vCond operator!=(const float x) const = delete;
@@ -322,7 +323,7 @@ public:
     sfpi_inline vCond operator<=(const vFloat x) const = delete;
     sfpi_inline vCond operator>(const vFloat x) const = delete;
     sfpi_inline vCond operator>=(const vFloat x) const = delete;
-
+#endif
 public:
   class DestRegFile {
   public:

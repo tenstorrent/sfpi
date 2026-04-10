@@ -179,7 +179,7 @@ public:
 public:
   sfpi_inline vFloat (impl_::sfpu_t);
   sfpi_inline vFloat (impl_::vLReg);
-  sfpi_inline vFloat (impl_::vDReg);
+  //  sfpi_inline vFloat (impl_::vDReg);
   sfpi_inline vFloat (sFloat16a);
   sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
@@ -218,7 +218,7 @@ public:
 public:
   sfpi_inline vInt (impl_::sfpu_t);
   sfpi_inline vInt (impl_::vLReg);
-  sfpi_inline vInt (impl_::vDReg);
+  //  sfpi_inline vInt (impl_::vDReg);
   sfpi_inline vInt (vUInt);
   sfpi_inline vInt (int16_t);
   sfpi_inline vInt (uint16_t);
@@ -300,7 +300,7 @@ public:
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
   sfpi_inline vUInt (impl_::vLReg);
-  sfpi_inline vUInt (impl_::vDReg);
+  //  sfpi_inline vUInt (impl_::vDReg);
   sfpi_inline vUInt (vInt);
   sfpi_inline vUInt (int16_t);
   sfpi_inline vUInt (uint16_t);
