@@ -289,7 +289,7 @@ public:
   //    sfpi_inline void operator=(const vDReg dreg) const;
   //    sfpi_inline vInt operator=(const int i) const;
   //sfpi_inline vUInt operator=(const unsigned int i) const;
-  // sfpi_inline vFloat operator= (const float f) const;
+  sfpi_inline vFloat operator= (const float f) const;
   //sfpi_inline vFloat operator=(const double d) const;
   sfpi_inline vFloat operator= (vFloat) const;
   sfpi_inline vInt operator= (vInt) const;
@@ -304,7 +304,8 @@ public:
     // Construct operator classes from operations
     sfpi_inline vFloat operator+(const vFloat b) const = delete;
     sfpi_inline vFloat operator-(const vFloat b) const = delete;
-    sfpi_inline vFloat operator-() const = delete;
+    __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
+    sfpi_inline vFloat operator-() const;
     sfpi_inline vFloat operator*(const vFloat b) const = delete;
 
     // Conditionals

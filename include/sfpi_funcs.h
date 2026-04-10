@@ -97,6 +97,9 @@ auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::O
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
+auto sfpi::impl_::vDReg::operator= (float f) const-> vFloat {
+  return *this = vFloat (f);
+}
 auto sfpi::impl_::vDReg::operator= (vFloat f) const-> vFloat {
   __builtin_rvtt_sfpstore (f.get (), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
   return f;
@@ -187,12 +190,10 @@ auto sfpi::impl_::vDReg::operator= (const unsigned int i) const-> vUInt {
 }
 #endif
 
-#if 0
 auto sfpi::impl_::vDReg::operator- () const-> vFloat {
-  vFloat tmp = *this;
-  return __builtin_rvtt_sfpmov (tmp.get (), SFPMOV_MOD1_COMPSIGN);
+  return -vFloat (*this);
 }
-
+#if 0
 auto sfpi::impl_::vDReg::operator+ (const vFloat b) const-> vFloat { return vFloat (*this) + b; }
 auto sfpi::impl_::vDReg::operator- (const vFloat b) const-> vFloat { return vFloat (*this) - b; }
 auto sfpi::impl_::vDReg::operator* (const vFloat b) const-> vFloat  { return vFloat (*this) * b; }
