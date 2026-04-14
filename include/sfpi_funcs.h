@@ -97,64 +97,178 @@ auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::O
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
-auto sfpi::impl_::vDReg::operator= (vFloat f) const-> vFloat {
-  __builtin_rvtt_sfpstore (f.get (), get (), SFPSTORE_MOD0_FMT_SRCB, SFPSTORE_ADDR_MODE_NOINC);
-  return f;
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::operator= (vFloat val) const-> vFloat {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPSTORE_MOD0_FMT_SRCB
+                       || Mod == SFPSTORE_MOD0_FMT_FP16A
+                       || Mod == SFPSTORE_MOD0_FMT_FP16B
+                       || Mod == SFPSTORE_MOD0_FMT_FP32
+                       ), "Mod value not compatible with storing vFloat");
+  else
+    mod = SFPSTORE_MOD0_FMT_SRCB;
+
+  write_ (val.get (), mod);
+
+  return val;
 }
-auto sfpi::impl_::vDReg::operator= (vInt i) const-> vInt {
-  // FIXME: We should be doing 2c->sm conversion here in all cases
-  __builtin_rvtt_sfpstore (i.get (), get (),
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg<Derived, Mod>::operator vFloat () const {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPLOAD_MOD0_FMT_SRCB
+                       || Mod == SFPLOAD_MOD0_FMT_FP16A
+                       || Mod == SFPLOAD_MOD0_FMT_FP16B
+                       || Mod == SFPLOAD_MOD0_FMT_FP32
+                       ), "Mod value not compatible with loading vFloat");
+  else
+    mod = SFPLOAD_MOD0_FMT_SRCB;
+
+  return read_ (mod);
+}
+
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::operator= (vInt val) const-> vInt {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPSTORE_MOD0_FMT_INT32
 #if __riscv_xtttensixwh
-                           SFPSTORE_MOD0_FMT_SM32,
-#else
-                           SFPSTORE_MOD0_FMT_BOB32,
+                       || Mod == SFPSTORE_MOD0_FMT_SM32
 #endif
-                           SFPSTORE_ADDR_MODE_NOINC);
-  return i;
+                       ), "Mod value not compatible with storing vInt");
+  else {
+  
+    // FIXME: We should probably be doing 2c->sm conversion here
+#if __riscv_xtttensixwh
+    mod = SFPSTORE_MOD0_FMT_SM32;
+#else
+    mod = SFPSTORE_MOD0_FMT_INT32;
+#endif
+  }
+
+  write_ (val.get (), mod);
+
+  return val;
 }
-auto sfpi::impl_::vDReg::operator= (vUInt u) const-> vUInt {
-  auto mod = SFPSTORE_MOD0_FMT_BOB32;
-  __builtin_rvtt_sfpstore (u.get (), get (), mod, SFPSTORE_ADDR_MODE_NOINC);
-  return u;
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg<Derived, Mod>::operator vInt () const {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPLOAD_MOD0_FMT_INT32
+#if __riscv_xtttensixwh
+                       || Mod == SFPLOAD_MOD0_FMT_SM32
+#endif
+                       ), "Mod value not compatible with storing vInt");
+  else {
+    // FIXME: This should really convert from FPU's sign-magnitude integer
+#if __riscv_xtttensixwh
+    mod = SFPLOAD_MOD0_FMT_SM32;
+#else
+    mod = SFPLOAD_MOD0_FMT_INT32;
+#endif
+  }
+
+  return read_ (mod);
 }
-auto sfpi::impl_::vDReg::operator= (float f) const-> vFloat {
+
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::operator= (vUInt val) const-> vUInt {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPSTORE_MOD0_FMT_INT32
+                       || Mod == SFPSTORE_MOD0_FMT_UINT16
+                       || Mod == SFPSTORE_MOD0_FMT_LO16_ONLY
+                       || Mod == SFPSTORE_MOD0_FMT_HI16_ONLY
+                       || Mod == SFPSTORE_MOD0_FMT_LO16
+                       || Mod == SFPSTORE_MOD0_FMT_HI16
+                       ), "Mod value not compatible with storing vUInt");
+  else
+    mod = SFPSTORE_MOD0_FMT_INT32;
+
+  write_ (val.get (), mod);
+
+  return val;
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg<Derived, Mod>::operator vUInt () const {
+  int mod = Mod;
+  if constexpr (Mod >= 0)
+    static_assert (Mod < 16
+                   && (0
+                       || Mod == SFPLOAD_MOD0_FMT_INT32
+                       || Mod == SFPLOAD_MOD0_FMT_UINT16
+                       || Mod == SFPLOAD_MOD0_FMT_LO16
+                       || Mod == SFPLOAD_MOD0_FMT_HI16
+                       ), "Mod value not compatible with loading vUInt");
+  else
+    mod = SFPLOAD_MOD0_FMT_INT32;
+
+  return read_ (mod);
+}
+
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::operator= (float f) const-> vFloat {
   return *this = vFloat (f);
 }
 
-sfpi::impl_::vDReg::operator vFloat () const {
-  return __builtin_rvtt_sfpload (get (), SFPLOAD_MOD0_FMT_SRCB, SFPLOAD_ADDR_MODE_NOINC);
-}
-sfpi::impl_::vDReg::operator vInt () const {
-  // FIXME: This should really convert from FPU's sign-magnitude integer
-  // representation in all cases.
-  return __builtin_rvtt_sfpload (get (),
-#if __riscv_xtttensixwh
-                                 SFPLOAD_MOD0_FMT_SM32,
-#else
-                                 SFPLOAD_MOD0_FMT_BOB32,
-#endif
-                                 SFPLOAD_ADDR_MODE_NOINC);
-}
-sfpi::impl_::vDReg::operator vUInt () const {
-  return __builtin_rvtt_sfpload (get (), SFPLOAD_MOD0_FMT_BOB32, SFPLOAD_ADDR_MODE_NOINC);
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::write_ (sfpu_t val, unsigned mod) const-> void {
+  int mode = addr_mode;
+  if (mode < 0)
+    mode = SFPSTORE_ADDR_MODE_NOINC;
+
+  return static_cast<Derived<Mod> const *> (this)->write_ (val, mod, mode);
 }
 
-auto sfpi::impl_::vDReg::operator- () const-> vFloat {
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg<Derived, Mod>::read_ (unsigned mod) const-> sfpu_t {
+  int mode = addr_mode;
+  if (mode < 0)
+    mode = SFPLOAD_ADDR_MODE_NOINC;
+
+  return static_cast<Derived<Mod> const *> (this)->read_ (mod, mode);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+template<int Mod>
+auto sfpi::impl_::vDReg<Mod>::write_ (sfpu_t v, unsigned mod, unsigned mode) const-> void {
+  __builtin_rvtt_sfpstore (v, this->get (), mod, mode);
+}
+
+template<int Mod>
+auto sfpi::impl_::vDReg<Mod>::read_ (unsigned mod, unsigned mode) const-> sfpu_t {
+  return __builtin_rvtt_sfpload (this->get (), mod, mode);
+}
+
+template<int Mod>
+auto sfpi::impl_::vDReg<Mod>::operator- () const-> vFloat {
   return -vFloat (*this);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vFloat::vFloat (impl_::vLReg lr) : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vFloat::vFloat (sFloat16a val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
 sfpi::vFloat::vFloat (sFloat16b val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATB)) {}
 sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
-
-auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
 auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
@@ -191,8 +305,6 @@ auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vInt::vInt (impl_::vLReg lr)
-    : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -204,8 +316,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
-
-auto sfpi::vInt::operator= (impl_::vLReg lr)-> vInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -253,8 +363,6 @@ auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vUInt::vUInt (impl_::vLReg lr)
-    : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -267,8 +375,6 @@ sfpi::vUInt::vUInt (uint32_t val)
 
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
-
-auto sfpi::vUInt::operator= (impl_::vLReg lr)-> vUInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }

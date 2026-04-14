@@ -178,12 +178,9 @@ public:
 
 public:
   sfpi_inline vFloat (impl_::sfpu_t);
-  sfpi_inline vFloat (impl_::vLReg);
   sfpi_inline vFloat (sFloat16a);
   sfpi_inline vFloat (sFloat16b);
   sfpi_inline vFloat (float);
-  
-  sfpi_inline vFloat &operator= (impl_::vLReg);
   
   sfpi_inline vFloat &operator+= (vFloat);
   sfpi_inline vFloat &operator-= (vFloat);
@@ -216,7 +213,6 @@ public:
 
 public:
   sfpi_inline vInt (impl_::sfpu_t);
-  sfpi_inline vInt (impl_::vLReg);
   sfpi_inline vInt (vUInt);
   sfpi_inline vInt (int16_t);
   sfpi_inline vInt (uint16_t);
@@ -225,8 +221,6 @@ public:
   sfpi_inline vInt (int val) : vInt (int32_t (val)) {};
   sfpi_inline vInt (unsigned val) : vInt (uint32_t (val)) {}
   sfpi_inline vInt (impl_::vCond);
-
-  sfpi_inline vInt &operator= (impl_::vLReg);
 
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
@@ -297,7 +291,6 @@ public:
 
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
-  sfpi_inline vUInt (impl_::vLReg);
   sfpi_inline vUInt (vInt);
   sfpi_inline vUInt (int16_t);
   sfpi_inline vUInt (uint16_t);
@@ -306,9 +299,6 @@ public:
   sfpi_inline vUInt (int val) : vUInt (int32_t (val)) {}
   sfpi_inline vUInt (unsigned val) : vUInt (uint32_t (val)) {}
   sfpi_inline vUInt (impl_::vCond);
-
-  // Assignment
-  sfpi_inline vUInt &operator= (impl_::vLReg);
 
   // Operations
   sfpi_inline vUInt operator++ ();
@@ -515,8 +505,8 @@ enum class LRegs : uint8_t {
   LRegCount = SFP_LREG_COUNT,
 };
 
-constexpr impl_::vDReg::DestRegFile dst_reg;
-constexpr impl_::vLReg::LRegFile l_reg;
+constexpr impl_::vDReg<>::RegFile dst_reg;
+constexpr impl_::vLReg::RegFile l_reg;
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
