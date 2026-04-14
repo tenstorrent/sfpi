@@ -146,15 +146,12 @@ auto sfpi::impl_::vDReg::operator- () const-> vFloat {
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vFloat::vFloat (impl_::vLReg lr) : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vFloat::vFloat (sFloat16a val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
 sfpi::vFloat::vFloat (sFloat16b val)
     : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATB)) {}
 sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
-
-auto sfpi::vFloat::operator= (impl_::vLReg lr)-> vFloat &  { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
 auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
@@ -191,8 +188,6 @@ auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vInt::vInt (impl_::vLReg lr)
-    : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -204,8 +199,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
-
-auto sfpi::vInt::operator= (impl_::vLReg lr)-> vInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -253,8 +246,6 @@ auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vUInt::vUInt (impl_::vLReg lr)
-    : vVal (__builtin_rvtt_sfpreadlreg (lr.get ())) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -267,8 +258,6 @@ sfpi::vUInt::vUInt (uint32_t val)
 
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
-
-auto sfpi::vUInt::operator= (impl_::vLReg lr)-> vUInt & { impl_::vVal::operator= (lr); return *this; }
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }

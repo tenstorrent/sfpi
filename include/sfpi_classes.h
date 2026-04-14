@@ -87,9 +87,6 @@ public:
 
   sfpi_inline sfpu_t get () const { return v; }
 
-  // Associate variable w/ a value pre-loaded into a particular lreg
-  sfpi_inline void operator= (vLReg lr);
-
 public:
   sfpi_inline sfpu_t int_and (vVal b) const {
     return __builtin_rvtt_sfpand (get (), b.get ());
@@ -145,62 +142,73 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////
 
-// A constant register
-template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-class vConst : public vReg {
-public:
-  sfpi_inline constexpr explicit vConst (int r) : impl_::vReg(r) {}
-  sfpi_inline vConst (vConst const &) = default;
-
-  sfpi_inline operator Type () const {
-    return __builtin_rvtt_sfpreadlreg (get ());
-  }
-
-  sfpi_inline void operator= (vConst &) = delete;
-
-  sfpi_inline void operator= (Type t) const {
-    __builtin_rvtt_sfpwriteconfig_v (t.get (), get ());
-  }
-
-  template<typename U,
-           std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
-  sfpi_inline void operator= (U u) const {
-    operator= (Type (u));
-  }
-};
-
-class vLReg : public vReg {
+class vLReg {
 private:
-  sfpi_inline constexpr explicit vLReg (unsigned ix) : vReg (ix) {}
+  unsigned reg;
 
 public:
   sfpi_inline vLReg (vLReg const &) = default;
   sfpi_inline vLReg &operator= (vLReg const &) = delete;
 
 public:
+  sfpi_inline constexpr explicit vLReg (int r) : reg (r) {}
+  sfpi_inline constexpr int get () const { return reg; }
+
+public:
   sfpi_inline sfpu_t operator= (vVal v) const {
     __builtin_rvtt_sfpwritelreg (v.get (), get ());
     return v.get ();
   }
+  sfpi_inline operator sfpu_t () const {
+    return __builtin_rvtt_sfpreadlreg (get ());
+  }
+  template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+  sfpi_inline operator Type () const {
+    return sfpu_t (*this);
+  }
 
 public:
-  class LRegFile {
+  class RegFile {
   public:
-    constexpr LRegFile () = default;
-    LRegFile (LRegFile const &) = delete;
-    LRegFile (LRegFile &&) = delete;
-    LRegFile &operator= (LRegFile const &) = delete;
-    LRegFile &operator= (LRegFile &&) = delete;
+    constexpr RegFile () = default;
+    RegFile (RegFile const &) = delete;
+    RegFile (RegFile &&) = delete;
+    RegFile &operator= (RegFile const &) = delete;
+    RegFile &operator= (RegFile &&) = delete;
 
   public:
     sfpi_inline vLReg operator[] (LRegs lr) const { return vLReg (unsigned (lr)); }
   };
 };
-sfpi_inline void impl_::vVal::operator= (impl_::vLReg lr) {
-  // FIXME: shouldn't this pay attention to initialized?
-  v = __builtin_rvtt_sfpreadlreg (lr.get ());
-  initialized = true;
-}
+
+// A constant register
+template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+class vConst {
+private:
+  vLReg lreg;
+
+public:
+  sfpi_inline vConst (vConst const &) = default;
+  sfpi_inline void operator= (vConst &) = delete;
+
+public:
+  sfpi_inline operator Type () const {
+    return lreg;
+  }
+
+public:
+  sfpi_inline constexpr explicit vConst (int r) : lreg (r) {}
+  sfpi_inline void operator= (Type t) const {
+    __builtin_rvtt_sfpwriteconfig_v (t.get (), lreg.get ());
+  }
+
+  // Assign from constructable scalar
+  template<typename U,
+           std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
+  sfpi_inline void operator= (U u) const {
+    operator= (Type (u));
+  }
+};
 
 class vCond {
   friend class sfpi::vInt; // conversion op from here?
