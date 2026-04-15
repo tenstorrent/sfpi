@@ -95,12 +95,12 @@ sfpi_inline vInt exman9(const vFloat v)
     return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
 }
 
-sfpi_inline vFloat setexp(const vFloat v, const uint32_t exp)
+sfpi_inline vFloat setexp(const vFloat v, int exp)
 {
     return __builtin_rvtt_sfpsetexp_i(v.get(), exp, 0);
 }
 
-sfpi_inline vFloat setexp(vFloat v, vUInt exp) {
+sfpi_inline vFloat setexp(vFloat v, vInt exp) {
     return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), 0);
 }
 
@@ -108,15 +108,15 @@ sfpi_inline vFloat copyexp (vFloat v, vFloat exp) {
     return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), SFPSETEXP_MOD1_CPY);
 }
 
-sfpi_inline vFloat setman (vFloat v, unsigned man) {
+sfpi_inline vFloat setman (vFloat v, int man) {
     return __builtin_rvtt_sfpsetman_i(v.get(), man, 0);
 }
 
-sfpi_inline vFloat setman (vFloat v, vUInt man) {
+sfpi_inline vFloat setman (vFloat v, vInt man) {
     return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
-sfpi_inline vFloat addexp (vFloat in, unsigned exp) {
+sfpi_inline vFloat addexp (vFloat in, int exp) {
     return __builtin_rvtt_sfpdivp2 (in.get (), exp, SFPSDIVP2_MOD1_ADD);
 }
 
