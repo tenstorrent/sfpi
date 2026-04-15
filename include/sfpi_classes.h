@@ -264,7 +264,10 @@ public:
   sfpi_inline vCond (CondOp, vFloat, vFloat);
   sfpi_inline vCond (CondOp, vInt, int32_t, unsigned);
   sfpi_inline vCond (CondOp, vInt, vInt, unsigned);
+  sfpi_inline vCond (CondOp, vUInt, int32_t, unsigned);
+  sfpi_inline vCond (CondOp, vUInt, vUInt, unsigned);
   sfpi_inline vCond (vInt);
+  sfpi_inline vCond (vUInt);
 
 private:
   sfpi_inline int get () const { return result; }
