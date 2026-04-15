@@ -42,7 +42,16 @@ sfpi::impl_::vCond::vCond (CondOp t, vInt a, int32_t b, unsigned mod) {
 sfpi::impl_::vCond::vCond (CondOp t, vInt a, vInt b, unsigned mod) {
   result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), mod | t);
 }
+sfpi::impl_::vCond::vCond (CondOp t, vUInt a, vUInt b, unsigned mod) {
+  result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), mod | t);
+}
+sfpi::impl_::vCond::vCond (CondOp t, vUInt a, int32_t b, unsigned mod) {
+  result = __builtin_rvtt_sfpxicmps (a.get (), b, mod | t);
+}
 sfpi::impl_::vCond::vCond (vInt a) {
+  result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
+}
+sfpi::impl_::vCond::vCond (vUInt a) {
   result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
 }
 
@@ -320,10 +329,10 @@ sfpi::vInt::vInt(const impl_::vCond vc)
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
 auto sfpi::vInt::operator<<= (unsigned a)-> vInt & { return *this = *this << a; }
-auto sfpi::vInt::operator<<= (vInt a)-> vInt & { return *this = *this << a; }
+auto sfpi::vInt::operator<<= (vUInt a)-> vInt & { return *this = *this << a; }
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
 auto sfpi::vInt::operator>>= (unsigned a)-> vInt & { return *this = *this >> a; }
-auto sfpi::vInt::operator>>= (vInt a)-> vInt & { return *this = *this >> a; }
+auto sfpi::vInt::operator>>= (vUInt a)-> vInt & { return *this = *this >> a; }
 #endif
 auto sfpi::vInt::operator&= (vInt a)-> vInt & { return *this = *this & a; }
 auto sfpi::vInt::operator|= (vInt a)-> vInt & { return *this = *this | a; }
