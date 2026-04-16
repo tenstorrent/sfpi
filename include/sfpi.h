@@ -22,15 +22,28 @@
 //     vFloat d = a * b + c;
 //
 // Destination Register:
-//   constexpr impl_::vDReg::DRegFile dst_reg;
+//   constexpr impl_::DstRegFile dst_reg;
 //
 //   The Destination Register is modeled by a global variable which is
 //   essentially an array of class vDReg.  vDRegs provide much the same
 //   functionality as LRegs, eg, the following is legal:
-//       dst_reg[0] = dst_reg[1] * dst_reg[2] + dst_reg[3];
+//       dst_reg[0] = vFloat(dst_reg[1]) * dst_reg[2] + dst_reg[3];
 //   The above is expanded out to load local registers, perform the operation
 //   and store back into the destination register.  Any missing functionality
 //   (eg, there is no load immediate) accessed through LRegs.
+//
+//   You can modify the load/store mod and addr_mode operands:
+//       dst_reg[0].mode<MOD_OP>(ADDR_MODE) ...
+//   Both MOD_OP and ADDR_MODE are optional here.
+//
+// Quasar SrcS Register:
+//   Unlike dst_reg, you need a local variable, because it contains some state:
+//   UnpackSrcS src_reg; // or PackSrcS or ComputeSrcS
+//   src_reg[0] = vFloat(dst_reg[0]);
+//
+//   The same `mode` call can be used to modify mod and addr_mode operand.  You
+//   can also use a `done` call to set the done flag:
+//     src_reg[0].done() = vFloat(src_reg[0].mode<SFPLOAD_MOD0_FMR_FP16B>());
 //
 // Constant Local Registers:
 //   template<typename T> class impl_::vConst<T>
@@ -505,24 +518,29 @@ enum class LRegs : uint8_t {
   LRegCount = SFP_LREG_COUNT,
 };
 
-constexpr impl_::vDReg<>::RegFile dst_reg;
-constexpr impl_::vLReg::RegFile l_reg;
+constexpr impl_::LRegFile l_reg;
+constexpr impl_::DstRegFile dst_reg;
+#if __riscv_xtttensixqsr
+using UnpackSrcS = impl_::SrcSRegFile<0>;
+using ComputeSrcS = impl_::SrcSRegFile<1>;
+using PackSrcS = impl_::SrcSRegFile<2>;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
-constexpr impl_::vConst<vFloat> vConst0(CREG_IDX_0);
-constexpr impl_::vConst<vFloat> vConst1(CREG_IDX_1);
-constexpr impl_::vConst<vFloat> vConstNeg1(CREG_IDX_NEG_1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 
-constexpr impl_::vConst<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 
-constexpr impl_::vConst<vInt> vConstTileId (CREG_IDX_TILEID);
-constexpr impl_::vConst<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::vConst<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::vConst<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
 
 //////////////////////////////////////////////////////////////////////////////
 
