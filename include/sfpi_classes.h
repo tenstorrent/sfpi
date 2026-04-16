@@ -18,7 +18,12 @@
 
 #define __builtin_rvtt_sfploadi(imm, mod0) __builtin_rvtt_sfploadi(ckernel::instrn_buffer, imm, 0, 0, mod0)
 #define __builtin_rvtt_sfpload(addr, mod0, mode) __builtin_rvtt_sfpload(ckernel::instrn_buffer, addr, 0, 0, mod0, mode)
-#define __builtin_rvtt_sfpstore(src, addr, mod0, mode) __builtin_rvtt_sfpstore(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
+#define __builtin_rvtt_sfpstore(src, addr, mod0, mode) \
+  __builtin_rvtt_sfpstore(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
+#define __builtin_rvtt_sfploadsrcs(addr, mod0, mode, done)          \
+  __builtin_rvtt_sfploadsrcs(ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
+#define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
+  __builtin_rvtt_sfpstoresrcs(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
 
 #define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpsetman_i(src, imm, mod1) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
@@ -26,7 +31,8 @@
 
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
+#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) \
+  __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
@@ -128,72 +134,72 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////
 
-class vLReg {
-private:
-  unsigned reg;
-
+class LRegFile {
 public:
-  sfpi_inline vLReg (vLReg const &) = default;
-  sfpi_inline vLReg &operator= (vLReg const &) = delete;
-
-public:
-  sfpi_inline constexpr explicit vLReg (int r) : reg (r) {}
-  sfpi_inline constexpr int get () const { return reg; }
-
-public:
-  sfpi_inline sfpu_t operator= (vVal v) const {
-    __builtin_rvtt_sfpwritelreg (v.get (), get ());
-    return v.get ();
-  }
-  sfpi_inline operator sfpu_t () const {
-    return __builtin_rvtt_sfpreadlreg (get ());
-  }
-  template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-  sfpi_inline operator Type () const {
-    return sfpu_t (*this);
-  }
-
-public:
-  class RegFile {
-  public:
-    constexpr RegFile () = default;
-    RegFile (RegFile const &) = delete;
-    RegFile (RegFile &&) = delete;
-    RegFile &operator= (RegFile const &) = delete;
-    RegFile &operator= (RegFile &&) = delete;
+  class vReg {
+  private:
+    unsigned reg;
 
   public:
-    sfpi_inline vLReg operator[] (LRegs lr) const { return vLReg (unsigned (lr)); }
+    sfpi_inline vReg (vReg const &) = default;
+    sfpi_inline vReg &operator= (vReg const &) = delete;
+
+  public:
+    sfpi_inline constexpr explicit vReg (int r) : reg (r) {}
+    sfpi_inline constexpr int get () const { return reg; }
+
+  public:
+    sfpi_inline sfpu_t operator= (vVal v) const {
+      __builtin_rvtt_sfpwritelreg (v.get (), get ());
+      return v.get ();
+    }
+    sfpi_inline operator sfpu_t () const {
+      return __builtin_rvtt_sfpreadlreg (get ());
+    }
+    template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+    sfpi_inline operator Type () const {
+      return sfpu_t (*this);
+    }
   };
-};
-
-// A constant register
-template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-class vConst {
-private:
-  vLReg lreg;
 
 public:
-  sfpi_inline vConst (vConst const &) = default;
-  sfpi_inline void operator= (vConst &) = delete;
+  template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+  class vCReg {
+  private:
+    vReg lreg;
+
+  public:
+    sfpi_inline vCReg (vCReg const &) = default;
+    sfpi_inline void operator= (vCReg &) = delete;
+
+  public:
+    sfpi_inline operator Type () const {
+      return lreg;
+    }
+
+  public:
+    sfpi_inline constexpr explicit vCReg (int r) : lreg (r) {}
+    sfpi_inline void operator= (Type t) const {
+      __builtin_rvtt_sfpwriteconfig_v (t.get (), lreg.get ());
+    }
+
+    // Assign from constructable scalar
+    template<typename U,
+             std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
+    sfpi_inline void operator= (U u) const {
+      operator= (Type (u));
+    }
+  };
 
 public:
-  sfpi_inline operator Type () const {
-    return lreg;
-  }
+  constexpr LRegFile () = default;
+  LRegFile (LRegFile const &) = delete;
+  LRegFile (LRegFile &&) = delete;
+  LRegFile &operator= (LRegFile const &) = delete;
+  LRegFile &operator= (LRegFile &&) = delete;
 
 public:
-  sfpi_inline constexpr explicit vConst (int r) : lreg (r) {}
-  sfpi_inline void operator= (Type t) const {
-    __builtin_rvtt_sfpwriteconfig_v (t.get (), lreg.get ());
-  }
-
-  // Assign from constructable scalar
-  template<typename U,
-           std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
-  sfpi_inline void operator= (U u) const {
-    operator= (Type (u));
-  }
+  sfpi_inline vReg operator[] (LRegs lr) const { return vReg (unsigned (lr)); }
 };
 
 class vCond {
@@ -268,20 +274,20 @@ sfpi_inline vCond operator! (vCond);
 
 //////////////////////////////////////////////////////////////////////////////
 template<template<int> typename Derived, int Mod = -1>
-class vReg { // A register.  Holds the register number
+class vReg_ {
 private:
   int reg;
   short addr_mode = -1;
 
 public:
-  sfpi_inline vReg (vReg const &) = default;
-  sfpi_inline vReg &operator= (vReg const &) = delete;
+  sfpi_inline constexpr vReg_ (vReg_ const &) = default;
+  sfpi_inline vReg_ &operator= (vReg_ const &) = delete;
 
 protected:
-  sfpi_inline constexpr explicit vReg (int r) : reg (r) {}
+  sfpi_inline constexpr explicit vReg_ (int r) : reg (r) {}
 
   template<int OldMod>
-  sfpi_inline constexpr explicit vReg (vReg<Derived, OldMod> const &src, int addr_mode = -1)
+  sfpi_inline constexpr explicit vReg_ (vReg_<Derived, OldMod> const &src, int addr_mode = -1)
       : reg (src.get ()), addr_mode (addr_mode) {}
 
 public:
@@ -289,10 +295,11 @@ public:
 
 public:
   template <int NewMod = -1>
-  sfpi_inline constexpr Derived<NewMod> mode (int mode = -1) {
-    return Derived<NewMod >= 0 ? NewMod : Mod> (static_cast<Derived<Mod> &> (*this), mode >= 0 ? mode : addr_mode);
+  sfpi_inline constexpr Derived<NewMod> mode (int mode = -1) const {
+    return Derived<NewMod >= 0 ? NewMod : Mod>
+        (static_cast<Derived<Mod> const &> (*this), mode >= 0 ? mode : addr_mode);
   }
-
+    
 public:
   // These are not templates to allow type conversion of the operand
   sfpi_inline vFloat operator= (vFloat f) const;
@@ -306,57 +313,126 @@ public:
   sfpi_inline vFloat operator= (float) const;
 
 private:
-  void write_ (sfpu_t, unsigned) const;
-  sfpu_t read_ (unsigned) const;
+  void write (sfpu_t val, unsigned mod) const {
+    int mode = addr_mode < 0 ? SFPSTORE_ADDR_MODE_NOINC : addr_mode;
+    static_cast<Derived<Mod> const *> (this)->write (val, mod, mode);
+  }
+  
+  sfpu_t read (unsigned mod) const {
+    int mode = addr_mode < 0 ? SFPLOAD_ADDR_MODE_NOINC : addr_mode;
+    return static_cast<Derived<Mod> const *> (this)->read (get (), mod, mode);
+  }
 };
 
 // Dst regs
-template<int Mod = -1>
-class vDReg : public vReg<vDReg, Mod> {
-private:
-  constexpr explicit vDReg (unsigned r) : vReg<vDReg, Mod> (r) {}
-
+class DstRegFile {
 public:
-  template<int OldMod>
-  constexpr explicit vDReg (vDReg<OldMod> const &src, int addr_mode) : vReg<vDReg, Mod> (src, addr_mode) {}
-
-public:
-  sfpi_inline vDReg (vDReg const &) = default;
-
-public:
-  __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
-  sfpi_inline void operator=(const vDReg dreg) const;
-
-  using vReg<vDReg, Mod>::operator=;
-
-  __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
-  sfpi_inline vFloat operator-() const;
-
-public:
-  sfpi_inline void write_ (sfpu_t, unsigned mod, unsigned addr_mode) const;
-  sfpi_inline sfpu_t read_ (unsigned mod, unsigned addr_mode) const;
-
-public:
-  class RegFile {
+  template<int Mod = -1>
+  class vReg : public vReg_<vReg, Mod> {
   public:
-    constexpr RegFile () = default;
-    RegFile (RegFile const &) = delete;
-    RegFile (RegFile &&) = delete;
-    RegFile &operator= (RegFile const &) = delete;
-    RegFile &operator= (RegFile &&) = delete;
+    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Mod> (r) {}
+    template<int OldMod>
+    sfpi_inline constexpr explicit vReg (vReg<OldMod> const &src, int addr_mode)
+        : vReg_<vReg, Mod> (src, addr_mode) {}
+    sfpi_inline constexpr explicit vReg (vReg const &) = default;
+    using vReg_<vReg, Mod>::operator=;
 
   public:
-    sfpi_inline vDReg operator[](int ix) const {
-      return vDReg (ix * SFP_DESTREG_STRIDE);
+    // Deprecated 2026-04-14
+    __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
+    sfpi_inline void operator= (vReg const &dreg) const;
+    __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
+    sfpi_inline vFloat operator- () const;
+
+  public:
+    sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
+      __builtin_rvtt_sfpstore (val, this->get (), mod, addr_mode);
     }
-
-    // Make these void - ugly as these aren't really inc/dec
-    sfpi_inline void operator++ () const { *this += 1; }
-    sfpi_inline void operator++ (int) const { *this += 1; }
-    sfpi_inline void operator+= (int i) const {
-      __builtin_rvtt_ttincrwc (0, SFP_DESTREG_STRIDE * i, 0, 0);
+    
+    sfpi_inline sfpu_t read (int reg, unsigned mod, unsigned addr_mode) const {
+      return __builtin_rvtt_sfpload (this->get (), mod, addr_mode);
     }
   };
+
+public:
+  constexpr DstRegFile () = default;
+  DstRegFile (DstRegFile const &) = delete;
+  DstRegFile (DstRegFile &&) = delete;
+  DstRegFile &operator= (DstRegFile const &) = delete;
+  DstRegFile &operator= (DstRegFile &&) = delete;
+
+public:
+  sfpi_inline constexpr vReg<> operator[] (int ix) const {
+    return vReg<> (ix * SFP_DESTREG_STRIDE);
+  }
+
+  // Make these void - ugly as these aren't really inc/dec
+  sfpi_inline constexpr void operator++ () const { *this += 1; }
+  sfpi_inline constexpr void operator++ (int) const { *this += 1; }
+  sfpi_inline constexpr void operator+= (int ix) const {
+    __builtin_rvtt_ttincrwc (0, SFP_DESTREG_STRIDE * ix, 0, 0);
+  }
 };
+
+#if __riscv_xtttensixqsr
+// SrcS regs
+template<unsigned Slice>
+class SrcSRegFile {
+public:
+  template<int Mod = -1>
+  class vReg : public vReg_<vReg, Mod> {
+    template<int> friend class vReg;
+
+  private:
+    bool is_done = false;
+
+  public:
+    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Mod> (r) {}
+    template<int OldMod>
+    sfpi_inline constexpr explicit vReg (vReg<OldMod> const &src, int addr_mode)
+        : vReg_<vReg, Mod> (src, addr_mode), is_done (src.is_done) {}
+    sfpi_inline constexpr explicit vReg (vReg const &) = default;
+    using vReg_<vReg, Mod>::operator=;
+
+  public:
+    sfpi_inline constexpr vReg &done (bool done = true) {
+      is_done = done;
+      return *this;
+    }
+
+  public:
+    sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
+      __builtin_rvtt_sfpstoresrcs (val, this->get (), mod, addr_mode, is_done);
+    }
+    
+    sfpi_inline sfpu_t read (int reg, unsigned mod, unsigned addr_mode) const {
+      return __builtin_rvtt_sfploadsrcs (this->get (), mod, addr_mode, is_done);
+    }
+  };
+
+private:
+  unsigned offset = SFP_SRCSREG_BASE + Slice * (SFP_SRCSREG_STRIDE * SFP_SRCSREG_COUNT);
+
+public:
+  constexpr SrcSRegFile () = default;
+  SrcSRegFile (SrcSRegFile const &) = delete;
+  SrcSRegFile (SrcSRegFile &&) = delete;
+  SrcSRegFile &operator= (SrcSRegFile const &) = delete;
+  SrcSRegFile &operator= (SrcSRegFile &&) = delete;
+
+public:
+  sfpi_inline constexpr vReg<> operator[] (int ix) const {
+    return vReg<> (ix * SFP_SRCSREG_STRIDE + offset);
+  }
+
+  // Make these void - ugly as these aren't really inc/dec
+  sfpi_inline void operator++ () { *this += 1; }
+  sfpi_inline void operator++ (int) { *this += 1; }
+  sfpi_inline void operator+= (int ix) {
+    offset += ix * SFP_SRCSREG_STRIDE;
+  }
+};
+
+#endif
 }
 }
