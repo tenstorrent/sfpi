@@ -97,8 +97,8 @@ auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::O
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::operator= (vFloat val) const-> vFloat {
+template<typename RegBase, int Mod>
+auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vFloat val) const-> vFloat {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -111,13 +111,13 @@ auto sfpi::impl_::vReg<Derived, Mod>::operator= (vFloat val) const-> vFloat {
   else
     mod = SFPSTORE_MOD0_FMT_SRCB;
 
-  write_ (val.get (), mod);
+  write (val.get (), mod);
 
   return val;
 }
 
-template<template<int> typename Derived, int Mod>
-sfpi::impl_::vReg<Derived, Mod>::operator vFloat () const {
+template<typename RegBase, int Mod>
+sfpi::impl_::vReg<RegBase, Mod>::operator vFloat () const {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -130,11 +130,11 @@ sfpi::impl_::vReg<Derived, Mod>::operator vFloat () const {
   else
     mod = SFPLOAD_MOD0_FMT_SRCB;
 
-  return read_ (mod);
+  return read (mod);
 }
 
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::operator= (vInt val) const-> vInt {
+template<typename RegBase, int Mod>
+auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vInt val) const-> vInt {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -154,13 +154,13 @@ auto sfpi::impl_::vReg<Derived, Mod>::operator= (vInt val) const-> vInt {
 #endif
   }
 
-  write_ (val.get (), mod);
+  write (val.get (), mod);
 
   return val;
 }
 
-template<template<int> typename Derived, int Mod>
-sfpi::impl_::vReg<Derived, Mod>::operator vInt () const {
+template<typename RegBase, int Mod>
+sfpi::impl_::vReg<RegBase, Mod>::operator vInt () const {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -179,11 +179,11 @@ sfpi::impl_::vReg<Derived, Mod>::operator vInt () const {
 #endif
   }
 
-  return read_ (mod);
+  return read (mod);
 }
 
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::operator= (vUInt val) const-> vUInt {
+template<typename RegBase, int Mod>
+auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vUInt val) const-> vUInt {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -198,13 +198,13 @@ auto sfpi::impl_::vReg<Derived, Mod>::operator= (vUInt val) const-> vUInt {
   else
     mod = SFPSTORE_MOD0_FMT_INT32;
 
-  write_ (val.get (), mod);
+  write (val.get (), mod);
 
   return val;
 }
 
-template<template<int> typename Derived, int Mod>
-sfpi::impl_::vReg<Derived, Mod>::operator vUInt () const {
+template<typename RegBase, int Mod>
+sfpi::impl_::vReg<RegBase, Mod>::operator vUInt () const {
   int mod = Mod;
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
@@ -217,47 +217,7 @@ sfpi::impl_::vReg<Derived, Mod>::operator vUInt () const {
   else
     mod = SFPLOAD_MOD0_FMT_INT32;
 
-  return read_ (mod);
-}
-
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::operator= (float f) const-> vFloat {
-  return *this = vFloat (f);
-}
-
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::write_ (sfpu_t val, unsigned mod) const-> void {
-  int mode = addr_mode;
-  if (mode < 0)
-    mode = SFPSTORE_ADDR_MODE_NOINC;
-
-  return static_cast<Derived<Mod> const *> (this)->write_ (val, mod, mode);
-}
-
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg<Derived, Mod>::read_ (unsigned mod) const-> sfpu_t {
-  int mode = addr_mode;
-  if (mode < 0)
-    mode = SFPLOAD_ADDR_MODE_NOINC;
-
-  return static_cast<Derived<Mod> const *> (this)->read_ (mod, mode);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-template<int Mod>
-auto sfpi::impl_::vDReg<Mod>::write_ (sfpu_t v, unsigned mod, unsigned mode) const-> void {
-  __builtin_rvtt_sfpstore (v, this->get (), mod, mode);
-}
-
-template<int Mod>
-auto sfpi::impl_::vDReg<Mod>::read_ (unsigned mod, unsigned mode) const-> sfpu_t {
-  return __builtin_rvtt_sfpload (this->get (), mod, mode);
-}
-
-template<int Mod>
-auto sfpi::impl_::vDReg<Mod>::operator- () const-> vFloat {
-  return -vFloat (*this);
+  return read (mod);
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -505,24 +505,29 @@ enum class LRegs : uint8_t {
   LRegCount = SFP_LREG_COUNT,
 };
 
-constexpr impl_::vDReg<>::RegFile dst_reg;
-constexpr impl_::vLReg::RegFile l_reg;
+constexpr impl_::LRegFile l_reg;
+constexpr impl_::DstRegFile dst_reg;
+#if __riscv_xtttensixqsr
+using UnpackSrcS = impl_::SrcSRegFile<0>;
+using ComputeSrcS = impl_::SrcSRegFile<1>;
+using PackSrcS = impl_::SrcSRegFile<2>;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
-constexpr impl_::vConst<vFloat> vConst0(CREG_IDX_0);
-constexpr impl_::vConst<vFloat> vConst1(CREG_IDX_1);
-constexpr impl_::vConst<vFloat> vConstNeg1(CREG_IDX_NEG_1);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConst0(CREG_IDX_0);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConst1(CREG_IDX_1);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 
-constexpr impl_::vConst<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::vConst<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 
-constexpr impl_::vConst<vInt> vConstTileId (CREG_IDX_TILEID);
-constexpr impl_::vConst<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::vConst<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::vConst<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCLReg<vInt> vConstTileId (CREG_IDX_TILEID);
+constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
 
 //////////////////////////////////////////////////////////////////////////////
 
