@@ -505,8 +505,13 @@ enum class LRegs : uint8_t {
   LRegCount = SFP_LREG_COUNT,
 };
 
-constexpr impl_::vDReg<>::RegFile dst_reg;
 constexpr impl_::vLReg::RegFile l_reg;
+constexpr impl_::vDReg<>::RegFile dst_reg;
+#if __riscv_xtttensixqsr
+using UnpackSrcS = impl_::vSReg<>::RegFile<0>;
+using ComputeSrcS = impl_::vSReg<>::RegFile<0>;
+using PackSrcS = impl_::vSReg<>::RegFile<0>;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants

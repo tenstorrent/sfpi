@@ -18,7 +18,12 @@
 
 #define __builtin_rvtt_sfploadi(imm, mod0) __builtin_rvtt_sfploadi(ckernel::instrn_buffer, imm, 0, 0, mod0)
 #define __builtin_rvtt_sfpload(addr, mod0, mode) __builtin_rvtt_sfpload(ckernel::instrn_buffer, addr, 0, 0, mod0, mode)
-#define __builtin_rvtt_sfpstore(src, addr, mod0, mode) __builtin_rvtt_sfpstore(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
+#define __builtin_rvtt_sfpstore(src, addr, mod0, mode) \
+  __builtin_rvtt_sfpstore(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
+#define __builtin_rvtt_sfploadsrcs(addr, mod0, mode, done)          \
+  __builtin_rvtt_sfploadsrcs(ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
+#define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
+  __builtin_rvtt_sfpstoresrcs(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
 
 #define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpsetman_i(src, imm, mod1) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
@@ -26,7 +31,8 @@
 
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
+#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) \
+  __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
@@ -289,8 +295,9 @@ public:
 
 public:
   template <int NewMod = -1>
-  sfpi_inline constexpr Derived<NewMod> mode (int mode = -1) {
-    return Derived<NewMod >= 0 ? NewMod : Mod> (static_cast<Derived<Mod> &> (*this), mode >= 0 ? mode : addr_mode);
+  sfpi_inline constexpr Derived<NewMod> mode (int mode = -1) const {
+    return Derived<NewMod >= 0 ? NewMod : Mod>
+        (static_cast<Derived<Mod> const &> (*this), mode >= 0 ? mode : addr_mode);
   }
 
 public:
@@ -314,20 +321,22 @@ private:
 template<int Mod = -1>
 class vDReg : public vReg<vDReg, Mod> {
 private:
-  constexpr explicit vDReg (unsigned r) : vReg<vDReg, Mod> (r) {}
+  sfpi_inline constexpr explicit vDReg (unsigned r) : vReg<vDReg, Mod> (r) {}
 
 public:
   template<int OldMod>
-  constexpr explicit vDReg (vDReg<OldMod> const &src, int addr_mode) : vReg<vDReg, Mod> (src, addr_mode) {}
+  sfpi_inline constexpr explicit vDReg (vDReg<OldMod> const &src, int addr_mode)
+      : vReg<vDReg, Mod> (src, addr_mode) {}
 
 public:
   sfpi_inline vDReg (vDReg const &) = default;
+  using vReg<vDReg, Mod>::operator=;
 
 public:
+  // Deprecated 2026-04-14
   __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
   sfpi_inline void operator=(const vDReg dreg) const;
 
-  using vReg<vDReg, Mod>::operator=;
 
   __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
   sfpi_inline vFloat operator-() const;
@@ -346,17 +355,75 @@ public:
     RegFile &operator= (RegFile &&) = delete;
 
   public:
-    sfpi_inline vDReg operator[](int ix) const {
+    sfpi_inline constexpr vDReg operator[] (int ix) const {
       return vDReg (ix * SFP_DESTREG_STRIDE);
     }
 
     // Make these void - ugly as these aren't really inc/dec
-    sfpi_inline void operator++ () const { *this += 1; }
-    sfpi_inline void operator++ (int) const { *this += 1; }
-    sfpi_inline void operator+= (int i) const {
-      __builtin_rvtt_ttincrwc (0, SFP_DESTREG_STRIDE * i, 0, 0);
+    sfpi_inline constexpr void operator++ () const { *this += 1; }
+    sfpi_inline constexpr void operator++ (int) const { *this += 1; }
+    sfpi_inline constexpr void operator+= (int ix) const {
+      __builtin_rvtt_ttincrwc (0, SFP_DESTREG_STRIDE * ix, 0, 0);
     }
   };
 };
+
+#if __riscv_xtttensixqsr
+// SrcS regs
+template<int Mod = -1>
+class vSReg : public vReg<vSReg, Mod> {
+  template<int OtherMod> friend class vSReg;
+
+private:
+  bool is_done = false;
+
+private:
+  sfpi_inline constexpr explicit vSReg (unsigned r) : vReg<vSReg, Mod> (r) {}
+
+public:
+  template<int OldMod>
+  sfpi_inline constexpr explicit vSReg (vSReg<OldMod> const &src, int addr_mode)
+      : vReg<vSReg, Mod> (src, addr_mode), is_done (src.is_done) {}
+
+public:
+  sfpi_inline constexpr vSReg (vSReg const &src, bool done = false)
+      : vReg<vSReg, Mod> (src), is_done (done) {}
+  using vReg<vSReg, Mod>::operator=;
+
+public:
+  sfpi_inline constexpr vSReg<Mod> done (bool done = true) const {
+    return vSReg<Mod> (*this, done);
+  }
+
+public:
+  sfpi_inline void write_ (sfpu_t, unsigned mod, unsigned addr_mode) const;
+  sfpi_inline sfpu_t read_ (unsigned mod, unsigned addr_mode) const;
+
+public:
+  template<unsigned Slice>
+  class RegFile {
+    unsigned offset = SFP_SRCSREG_BASE + Slice * (SFP_SRCSREG_STRIDE * SFP_SRCSREG_COUNT);
+
+  public:
+    constexpr RegFile () = default;
+    RegFile (RegFile const &) = delete;
+    RegFile (RegFile &&) = delete;
+    RegFile &operator= (RegFile const &) = delete;
+    RegFile &operator= (RegFile &&) = delete;
+
+  public:
+    sfpi_inline constexpr vSReg operator[] (int ix) const {
+      return vSReg (ix * SFP_SRCSREG_STRIDE + offset);
+    }
+
+    // Make these void - ugly as these aren't really inc/dec
+    sfpi_inline void operator++ () { *this += 1; }
+    sfpi_inline void operator++ (int) { *this += 1; }
+    sfpi_inline void operator+= (int ix) {
+      offset += ix * SFP_SRCSREG_STRIDE;
+    }
+  };
+};
+#endif
 }
 }

@@ -260,6 +260,18 @@ auto sfpi::impl_::vDReg<Mod>::operator- () const-> vFloat {
   return -vFloat (*this);
 }
 
+#if __riscv_xtttensixqsr
+template<int Mod>
+auto sfpi::impl_::vSReg<Mod>::write_ (sfpu_t v, unsigned mod, unsigned mode) const-> void {
+  __builtin_rvtt_sfpstoresrcs (v, this->get (), mod, mode, this->is_done);
+}
+
+template<int Mod>
+auto sfpi::impl_::vSReg<Mod>::read_ (unsigned mod, unsigned mode) const-> sfpu_t {
+  return __builtin_rvtt_sfploadsrcs (this->get (), mod, mode, this->is_done);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
