@@ -204,7 +204,9 @@ sfpi_inline vType reinterpret(const impl_::vVal v)
     return vType(v.get());
 }
 
-enum class RoundMode {
+// Using a namespace so we can replace with a scoped enum at a later date.
+namespace RoundMode {
+enum RoundMode {
   NearestEven,
   Stochastic,
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
@@ -213,6 +215,7 @@ enum class RoundMode {
   Even = NearestEven,
   Nearest = NearestEven,
 };
+}
 
 namespace impl_ {
 sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (RoundMode mode) {
