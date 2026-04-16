@@ -234,13 +234,13 @@ sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (int mode) {
 }
 
 // For compatibility the rounding mode is an int arg.  We should fix that.
-sfpi_inline vUInt float_to_fp16a (vFloat in, int rounding = RoundMode::Stochastic) {
+sfpi_inline vFloat float_to_fp16a (vFloat in, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_FP16A, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt float_to_fp16b (vFloat in, int rounding = RoundMode::Stochastic) {
+sfpi_inline vFloat float_to_fp16b (vFloat in, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::rounding_to_stochrnd_rnd (rounding));
@@ -252,7 +252,7 @@ sfpi_inline vUInt float_to_uint8 (vFloat in, int rounding = RoundMode::Stochasti
        SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt float_to_int8 (vFloat in, int rounding = RoundMode::Stochastic) {
+sfpi_inline vInt float_to_int8 (vFloat in, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
@@ -264,19 +264,19 @@ sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, int rounding = RoundMo
        SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt int32_to_uint8 (vInt in, unsigned int descale, int rounding = RoundMode::Stochastic) {
+sfpi_inline vUInt int32_to_uint8 (vInt in, unsigned descale, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), descale,
        SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt int32_to_int8 (vInt in, vUInt descale, int rounding = RoundMode::Stochastic) {
+sfpi_inline vInt int32_to_int8 (vInt in, vUInt descale, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_v
       (in.get(), descale.get(),
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt int32_to_int8 (vInt in, unsigned int descale, int rounding = RoundMode::Stochastic) {
+sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), descale,
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
@@ -289,7 +289,7 @@ sfpi_inline vUInt float_to_uint16 (vFloat in, int rounding = RoundMode::Stochast
        SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::rounding_to_stochrnd_rnd (rounding));
 }
 
-sfpi_inline vUInt float_to_int16 (vFloat in, int rounding = RoundMode::Stochastic) {
+sfpi_inline vInt float_to_int16 (vFloat in, int rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::rounding_to_stochrnd_rnd (rounding));
