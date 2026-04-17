@@ -515,19 +515,19 @@ using PackSrcS = impl_::SrcSRegFile<2>;
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
-constexpr impl_::LRegFile::vCLReg<vFloat> vConst0(CREG_IDX_0);
-constexpr impl_::LRegFile::vCLReg<vFloat> vConst1(CREG_IDX_1);
-constexpr impl_::LRegFile::vCLReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 
-constexpr impl_::LRegFile::vCLReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
-constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::LRegFile::vCLReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 
-constexpr impl_::LRegFile::vCLReg<vInt> vConstTileId (CREG_IDX_TILEID);
-constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::LRegFile::vCLReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
 
 //////////////////////////////////////////////////////////////////////////////
 

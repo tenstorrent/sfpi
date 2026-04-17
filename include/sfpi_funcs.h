@@ -97,9 +97,8 @@ auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::O
 auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
-template<typename RegBase, int Mod>
-auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vFloat val) const-> vFloat {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat val) const-> vFloat {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -108,17 +107,12 @@ auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vFloat val) const-> vFloat {
                        || Mod == SFPSTORE_MOD0_FMT_FP16B
                        || Mod == SFPSTORE_MOD0_FMT_FP32
                        ), "Mod value not compatible with storing vFloat");
-  else
-    mod = SFPSTORE_MOD0_FMT_SRCB;
-
-  write (val.get (), mod);
-
+  write (val.get (), Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB);
   return val;
 }
 
-template<typename RegBase, int Mod>
-sfpi::impl_::vReg<RegBase, Mod>::operator vFloat () const {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vFloat () const {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -127,15 +121,11 @@ sfpi::impl_::vReg<RegBase, Mod>::operator vFloat () const {
                        || Mod == SFPLOAD_MOD0_FMT_FP16B
                        || Mod == SFPLOAD_MOD0_FMT_FP32
                        ), "Mod value not compatible with loading vFloat");
-  else
-    mod = SFPLOAD_MOD0_FMT_SRCB;
-
-  return read (mod);
+  return read (Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB);
 }
 
-template<typename RegBase, int Mod>
-auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vInt val) const-> vInt {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vInt val) const-> vInt {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -144,24 +134,18 @@ auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vInt val) const-> vInt {
                        || Mod == SFPSTORE_MOD0_FMT_SM32
 #endif
                        ), "Mod value not compatible with storing vInt");
-  else {
-  
-    // FIXME: We should probably be doing 2c->sm conversion here
+  write (val.get (), Mod >= 0 ? Mod :
 #if __riscv_xtttensixwh
-    mod = SFPSTORE_MOD0_FMT_SM32;
+         SFPSTORE_MOD0_FMT_SM32
 #else
-    mod = SFPSTORE_MOD0_FMT_INT32;
+         SFPSTORE_MOD0_FMT_INT32
 #endif
-  }
-
-  write (val.get (), mod);
-
+         );
   return val;
 }
 
-template<typename RegBase, int Mod>
-sfpi::impl_::vReg<RegBase, Mod>::operator vInt () const {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vInt () const {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -170,21 +154,19 @@ sfpi::impl_::vReg<RegBase, Mod>::operator vInt () const {
                        || Mod == SFPLOAD_MOD0_FMT_SM32
 #endif
                        ), "Mod value not compatible with storing vInt");
-  else {
-    // FIXME: This should really convert from FPU's sign-magnitude integer
-#if __riscv_xtttensixwh
-    mod = SFPLOAD_MOD0_FMT_SM32;
-#else
-    mod = SFPLOAD_MOD0_FMT_INT32;
-#endif
-  }
 
-  return read (mod);
+  return read (Mod >= 0 ? Mod :
+#if __riscv_xtttensixwh
+               SFPSTORE_MOD0_FMT_SM32
+#else
+               // FIXME: This should really convert from FPU's sign-magnitude integer
+               SFPSTORE_MOD0_FMT_INT32
+#endif
+               );
 }
 
-template<typename RegBase, int Mod>
-auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vUInt val) const-> vUInt {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt val) const-> vUInt {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -195,17 +177,12 @@ auto sfpi::impl_::vReg<RegBase, Mod>::operator= (vUInt val) const-> vUInt {
                        || Mod == SFPSTORE_MOD0_FMT_LO16
                        || Mod == SFPSTORE_MOD0_FMT_HI16
                        ), "Mod value not compatible with storing vUInt");
-  else
-    mod = SFPSTORE_MOD0_FMT_INT32;
-
-  write (val.get (), mod);
-
+  write (val.get (), Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32);
   return val;
 }
 
-template<typename RegBase, int Mod>
-sfpi::impl_::vReg<RegBase, Mod>::operator vUInt () const {
-  int mod = Mod;
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vUInt () const {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
                    && (0
@@ -214,10 +191,7 @@ sfpi::impl_::vReg<RegBase, Mod>::operator vUInt () const {
                        || Mod == SFPLOAD_MOD0_FMT_LO16
                        || Mod == SFPLOAD_MOD0_FMT_HI16
                        ), "Mod value not compatible with loading vUInt");
-  else
-    mod = SFPLOAD_MOD0_FMT_INT32;
-
-  return read (mod);
+  return read (Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32);
 }
 
 //////////////////////////////////////////////////////////////////////////////
