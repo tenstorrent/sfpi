@@ -112,6 +112,11 @@ auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat val) const-> vFloat {
 }
 
 template<template<int> typename Derived, int Mod>
+auto sfpi::impl_::vReg_<Derived, Mod>::operator= (float val) const-> vFloat {
+  return operator= (vFloat (val));
+}
+
+template<template<int> typename Derived, int Mod>
 sfpi::impl_::vReg_<Derived, Mod>::operator vFloat () const {
   if constexpr (Mod >= 0)
     static_assert (Mod < 16
