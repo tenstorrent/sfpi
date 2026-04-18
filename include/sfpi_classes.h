@@ -340,9 +340,9 @@ public:
   public:
     // Deprecated 2026-04-14
     __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
-    sfpi_inline void operator=(const vReg dreg) const;
+    sfpi_inline void operator= (vReg const &dreg) const;
     __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
-    sfpi_inline vFloat operator-() const;
+    sfpi_inline vFloat operator- () const;
 
   public:
     sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {

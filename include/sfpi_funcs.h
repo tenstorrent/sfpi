@@ -199,6 +199,15 @@ sfpi::impl_::vReg_<Derived, Mod>::operator vUInt () const {
   return read (Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32);
 }
 
+template<int Mod>
+auto sfpi::impl_::DstRegFile::vReg<Mod>::operator= (vReg<Mod> const &reg) const-> void {
+  *this = vFloat (*reg);
+}
+template<int Mod>
+auto sfpi::impl_::DstRegFile::vReg<Mod>::operator- () const-> vFloat {
+  return -vFloat (*this);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
