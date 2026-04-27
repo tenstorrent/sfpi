@@ -320,7 +320,7 @@ private:
   
   sfpu_t read (unsigned mod) const {
     int mode = addr_mode < 0 ? SFPLOAD_ADDR_MODE_NOINC : addr_mode;
-    return static_cast<Derived<Mod> const *> (this)->read (get (), mod, mode);
+    return static_cast<Derived<Mod> const *> (this)->read (mod, mode);
   }
 };
 
@@ -349,7 +349,7 @@ public:
       __builtin_rvtt_sfpstore (val, this->get (), mod, addr_mode);
     }
     
-    sfpi_inline sfpu_t read (int reg, unsigned mod, unsigned addr_mode) const {
+    sfpi_inline sfpu_t read (unsigned mod, unsigned addr_mode) const {
       return __builtin_rvtt_sfpload (this->get (), mod, addr_mode);
     }
   };
@@ -405,7 +405,7 @@ public:
       __builtin_rvtt_sfpstoresrcs (val, this->get (), mod, addr_mode, is_done);
     }
     
-    sfpi_inline sfpu_t read (int reg, unsigned mod, unsigned addr_mode) const {
+    sfpi_inline sfpu_t read (unsigned mod, unsigned addr_mode) const {
       return __builtin_rvtt_sfploadsrcs (this->get (), mod, addr_mode, is_done);
     }
   };
