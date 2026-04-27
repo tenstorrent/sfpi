@@ -360,6 +360,11 @@ sfpi_inline void vec_min_max (vInt &a, vInt &b) {
   a = __builtin_rvtt_sfpselect2 (r, 0);
   b = __builtin_rvtt_sfpselect2 (r, 1);
 }
+sfpi_inline void vec_max_min (vFloat &a, vFloat &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MAX_MIN);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
+}
 
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
 sfpi_inline vInt rand() {

@@ -142,7 +142,10 @@ public:
 
   public:
     sfpi_inline vReg (vReg const &) = default;
-    sfpi_inline vReg &operator= (vReg const &) = delete;
+    sfpi_inline vReg &operator= (vReg const &src) {
+      *this = vVal (src);
+      return *this;
+    }
 
   public:
     sfpi_inline constexpr explicit vReg (int r) : reg (r) {}
