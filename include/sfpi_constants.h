@@ -243,6 +243,7 @@ constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 = 5;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
+constexpr unsigned int SFPSWAP_MOD1_VEC_MAX_MIN = 9;
 
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST0 = 0;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST1 = 1;
