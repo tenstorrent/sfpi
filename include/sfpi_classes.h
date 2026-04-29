@@ -142,7 +142,7 @@ public:
 
   public:
     sfpi_inline vReg (vReg const &) = default;
-    sfpi_inline vReg &operator= (vReg const &src) {
+    sfpi_inline vReg const &operator= (vReg const &src) const {
       *this = vVal (src);
       return *this;
     }
@@ -163,6 +163,11 @@ public:
     sfpi_inline operator Type () const {
       return sfpu_t (*this);
     }
+
+  public:
+    void in_use () const {
+      *this = *this;
+    }  
   };
 
 public:
