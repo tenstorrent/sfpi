@@ -231,7 +231,7 @@ sfpi_inline constexpr unsigned rounding_to_cast_rnd (int mode) {
       : mode == RoundMode::Stochastic ? SFPCAST_MOD1_INT32_TO_FP32_RNS
       : 0x16; // Bad value, compilation error
 }
-using RoundMode = int;
+using RoundMode = RoundMode::RoundMode;
 }
 
 sfpi_inline vFloat int32_to_float (vInt in, impl_::RoundMode rounding = RoundMode::Stochastic) {
