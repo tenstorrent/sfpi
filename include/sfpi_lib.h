@@ -83,7 +83,7 @@ enum class ExponentMode {
 sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Debias) {
   return __builtin_rvtt_sfpexexp (v.get (), mode == ExponentMode::Debias ? SFPEXEXP_MOD1_DEBIAS
                                   : mode == ExponentMode::NoDebias ? SFPEXEXP_MOD1_NODEBIAS
-                                  : 16 /*bad value, compile error */);
+                                  : ~0 /*bad value, compile error */);
 }
 
 // Deprecate
@@ -102,21 +102,21 @@ enum class MantissaMode {
   FractionOnly = NoImplicitOne,
 };
 
-sfpi_inline vUInt exman (const vFloat v, MantissaMode mode = MantissaMode::ImplicitOne) {
+sfpi_inline vInt exman(const vFloat v, MantissaMode mode = MantissaMode::ImplicitOne) {
     return __builtin_rvtt_sfpexman (v.get (),
                                     mode == MantissaMode::ImplicitOne ? SFPEXMAN_MOD1_PAD8
                                     : mode == MantissaMode::NoImplicitOne ? SFPEXMAN_MOD1_PAD9
-                                    : 16 /*bad value, compile error */);
+                                    : ~0 /*bad value, compile error */);
 }
 
 // Deprecate -> Implicit
-sfpi_inline vUInt exman8(const vFloat v)
+sfpi_inline vInt exman8(const vFloat v)
 {
     return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
 }
 
 // Deprecate -> NoImplicit
-sfpi_inline vUInt exman9(const vFloat v)
+sfpi_inline vInt exman9(const vFloat v)
 {
     return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
 }
@@ -133,11 +133,11 @@ sfpi_inline vFloat copyexp (vFloat v, vFloat exp) {
   return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), SFPSETEXP_MOD1_CPY);
 }
 
-sfpi_inline vFloat setman (vFloat v, unsigned man) {
+sfpi_inline vFloat setman (vFloat v, int man) {
   return __builtin_rvtt_sfpsetman_i (v.get(), man, 0);
 }
 
-sfpi_inline vFloat setman (vFloat v, vUInt man) {
+sfpi_inline vFloat setman (vFloat v, vInt man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
@@ -249,12 +249,12 @@ sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (int mode) {
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
       : mode == RoundMode::Zero ? SFPSTOCHRND_RND_ZERO
 #endif
-      : 0x16; // Bad value, compilation error
+      : ~0; // Bad value, compilation error
 }
 sfpi_inline constexpr unsigned rounding_to_cast_rnd (int mode) {
   return mode == RoundMode::NearestEven ? SFPCAST_MOD1_INT32_TO_FP32_RNE
       : mode == RoundMode::Stochastic ? SFPCAST_MOD1_INT32_TO_FP32_RNS
-      : 0x16; // Bad value, compilation error
+      : ~0; // Bad value, compilation error
 }
 using RoundMode = int;
 }
