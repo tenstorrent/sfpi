@@ -404,19 +404,38 @@ sfpi_inline void vec_max_min (vFloat &a, vFloat &b) {
 }
 
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
-sfpi_inline vInt rand() {
-  return vInt(__builtin_rvtt_sfpreadconfig(SFPCONFIG_SRC_RAND));
+sfpi_inline vInt rand () {
+  return __builtin_rvtt_sfpreadconfig (SFPCONFIG_SRC_RAND);
 }
 
 template<bool uncond = true>
-sfpi_inline vFloat approx_recip(const vFloat &src)
-{
-  return vFloat(__builtin_rvtt_sfparecip(src.get(), uncond ? SFPARECIP_MOD1_RECIP : SFPARECIP_MOD1_COND_RECIP));
+sfpi_inline vFloat approx_recip (vFloat src) {
+#if __riscv_xtttensixbh
+  return __builtin_rvtt_sfparecip (src.get (), uncond ? SFPARECIP_MOD1_RECIP : SFPARECIP_MOD1_COND_RECIP);
+#elif __riscv_xtttensixqsr
+  return __builtin_rvtt_sfpnonlinear (src.get (), uncond ? SFPNONLINEAR_MOD1_RECIP : SFPNONLINEAR_MOD1_COND_RECIP);
+#endif
 }
 
-sfpi_inline vFloat approx_exp(const vFloat &src)
-{
-  return vFloat(__builtin_rvtt_sfparecip(src.get(), SFPARECIP_MOD1_EXP));
+sfpi_inline vFloat approx_exp (vFloat src) {
+#if __riscv_xtttensixbh
+  return __builtin_rvtt_sfparecip (src.get(), SFPARECIP_MOD1_EXP);
+#elif __riscv_xtttensixqsr
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_EXP);
+#endif
+}
+#endif
+
+#if __riscv_xtttensixqsr
+// ReLU(x) = max (x,0).  This is just sfpswap (x, CST0, MAX)
+sfpi_inline vFloat rectified_linear_unit (vFloat src) {
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_RELU);
+}
+sfpi_inline vFloat approx_sqrt (vFloat src) {
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_SQRT);
+}
+sfpi_inline vFloat approx_tanh (vFloat src) {
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_TANH);
 }
 #endif
 

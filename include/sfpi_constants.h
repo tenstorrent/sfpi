@@ -101,10 +101,18 @@ constexpr unsigned int SFPSETEXP_MOD1_CPY = 2;
 constexpr unsigned int SFPABS_MOD1_INT = 0;
 constexpr unsigned int SFPABS_MOD1_FLOAT = 1;
 
-#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+#if __riscv_xtttensixbh
 constexpr unsigned int SFPARECIP_MOD1_RECIP = 0;
 constexpr unsigned int SFPARECIP_MOD1_COND_RECIP = 1;
 constexpr unsigned int SFPARECIP_MOD1_EXP = 2;
+#endif
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPNONLINEAR_MOD1_RECIP = 0;
+constexpr unsigned int SFPNONLINEAR_MOD1_COND_RECIP = 1;
+constexpr unsigned int SFPNONLINEAR_MOD1_RELU = 2;
+constexpr unsigned int SFPNONLINEAR_MOD1_SQRT = 3;
+constexpr unsigned int SFPNONLINEAR_MOD1_EXP = 4;
+constexpr unsigned int SFPNONLINEAR_MOD1_TANH = 5;
 #endif
 
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
