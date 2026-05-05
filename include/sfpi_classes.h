@@ -49,6 +49,9 @@ namespace sfpi {
 class vFloat;
 class vInt;
 class vUInt;
+class vSMag;
+class sFloat16a;
+class sFloat16b;
 enum class LRegs : uint8_t;
 
 namespace impl_ {
@@ -131,6 +134,25 @@ public:
     return __builtin_rvtt_sfpmul (get (), b.get (), 0);
   }
 };
+
+template<typename Vector, typename Scalar, unsigned ID = 0>
+class vConstrained : public Vector {
+public:
+  sfpi_inline vConstrained () = default;
+  sfpi_inline vConstrained (vConstrained const &) = default;
+  sfpi_inline vConstrained &operator= (vConstrained const &) = default;
+
+public:
+  sfpi_inline explicit vConstrained (impl_::sfpu_t val) : Vector (val) {}
+  // Disable elemental ctor if the type is void
+  template<typename Type, typename std::enable_if<std::is_same<Scalar, Type>::value> * = nullptr>
+  sfpi_inline explicit vConstrained (Type val) : Vector (val) {};
+};
+using vFloat16a = vConstrained<vFloat, sFloat16a>;
+using vFloat16b = vConstrained<vFloat, sFloat16b>;
+using vUInt16 = vConstrained<vUInt, uint16_t>;
+using vMag = vConstrained<vSMag, void, 0>;
+using vSMag16 = vConstrained<vSMag, void, 1>;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -310,15 +332,28 @@ public:
     
 public:
   // These are not templates to allow type conversion of the operand
-  sfpi_inline vFloat operator= (vFloat f) const;
+  sfpi_inline void operator= (vFloat) const;
   sfpi_inline operator vFloat () const;
-  sfpi_inline vInt operator= (vInt i) const;
+  sfpi_inline void operator= (vFloat16a) const;
+  sfpi_inline operator vFloat16a () const;
+  sfpi_inline void operator= (vFloat16b) const;
+  sfpi_inline operator vFloat16b () const;
+
+  sfpi_inline void operator= (vInt) const;
   sfpi_inline operator vInt () const;
-  sfpi_inline vUInt operator= (vUInt u) const;
+
+  sfpi_inline void operator= (vUInt) const;
   sfpi_inline operator vUInt () const;
+  sfpi_inline void operator= (vUInt16) const;
+  sfpi_inline operator vUInt16 () const;
+
+  sfpi_inline void operator= (vSMag) const;
+  sfpi_inline operator vSMag () const;
+  sfpi_inline void operator= (vSMag16) const;
+  sfpi_inline operator vSMag16 () const;
 
   // Convenience
-  sfpi_inline vFloat operator= (float) const;
+  sfpi_inline void operator= (float) const;
 
 private:
   void write (sfpu_t val, unsigned mod) const {

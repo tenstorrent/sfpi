@@ -235,10 +235,9 @@ sfpi_inline vInt shft(const vInt v, int amt)
 }
 #endif
 
-template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
-sfpi_inline vType reinterpret(const impl_::vVal v)
-{
-    return vType(v.get());
+template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+sfpi_inline Type reinterpret (impl_::vVal v) {
+    return Type (v.get ());
 }
 
 enum class RoundMode {
@@ -252,7 +251,7 @@ enum class RoundMode {
 };
 
 namespace impl_ {
-sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (RoundMode mode) {
+sfpi_inline constexpr unsigned stochrnd_rnd (RoundMode mode) {
   return mode == RoundMode::NearestEven ? SFPSTOCHRND_RND_EVEN :
       mode == RoundMode::Stochastic ? SFPSTOCHRND_RND_STOCH :
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
@@ -260,78 +259,213 @@ sfpi_inline constexpr unsigned rounding_to_stochrnd_rnd (RoundMode mode) {
 #endif
       ~0; // Bad value, compilation error
 }
-sfpi_inline constexpr unsigned rounding_to_cast_rnd (RoundMode mode) {
+
+sfpi_inline constexpr unsigned cast_rnd (RoundMode mode) {
   return mode == RoundMode::NearestEven ? SFPCAST_MOD1_INT32_TO_FP32_RNE :
       mode == RoundMode::Stochastic ? SFPCAST_MOD1_INT32_TO_FP32_RNS :
       ~0; // Bad value, compilation error
 }
+
+template<typename ToType, typename FromType>
+sfpi_inline constexpr unsigned stochrnd_mod () {
+  if constexpr (std::is_same_v<vFloat, FromType>) {
+    if constexpr (std::is_same_v<vFloat16a, ToType>)
+      return SFPSTOCHRND_MOD1_FP32_TO_FP16A;
+    else if constexpr (std::is_same_v<vFloat16b, ToType>)
+      return SFPSTOCHRND_MOD1_FP32_TO_FP16B;
+    else if constexpr (std::is_same_v<vSMag16, ToType>)
+      return SFPSTOCHRND_MOD1_FP32_TO_INT16;
+    else if constexpr (std::is_same_v<vUInt16, ToType>)
+      return SFPSTOCHRND_MOD1_FP32_TO_UINT16; 
+    else
+      static_assert (false, "Cannot convert vFloat to target type");
+  }
+  else
+    static_assert (false, "Cannot convert to target type");
+}
+}
+
+template<typename ToType, typename FromType,
+         typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, ToType>::value>* = nullptr,
+         typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, RoundMode round = RoundMode::Stochastic) {
+  if constexpr (std::is_same_v<FromType, ToType>)
+    return val;
+
+  else if constexpr (std::is_same_v<vInt, FromType>) {
+    if constexpr (std::is_same_v<vSMag, ToType>) {
+      // 2C32 -> SM32
+      vInt tmp = val;
+#if __riscv_xtttensixwh
+      v_if (tmp < 0) {
+        vInt mag_ones (~uint32_t (0) >> 1);
+        tmp ^= mag_ones;
+        tmp -= mag_ones;
+        v_if (!tmp) {
+          tmp = mag_ones;
+        } v_endif;
+      } v_endif;
+#else
+      tmp = vInt (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32));
+#if __riscv_xtttensixbh
+      // BH erratum, 2C(MOSTNEG) -> SM(1:0), clamp to SM(MOSTNEG)
+      v_if (vInt (tmp) == int32_t (0x8000000)) {
+        tmp = ~int32_t (0);
+      } v_endif;
+#endif
+#endif
+      return reinterpret<vSMag> (tmp);
+    }
+    else
+      return convert<ToType> (val, 0, round);
+  }
+
+  else if constexpr (std::is_same_v<vSMag, FromType>) {
+    if constexpr (std::is_base_of_v<vFloat, ToType>)
+      return convert<ToType> (vFloat (__builtin_rvtt_sfpcast (val.get (), impl_::cast_rnd (round))), round);
+    else if constexpr (std::is_same_v<vInt, ToType>) {
+      // SM32 -> 2C32
+      vInt tmp;
+#if __riscv_xtttensixwh
+      tmp = reinterpret<vInt> (val);
+      v_if (tmp < 0) {
+        vInt mag_ones (~uint32_t (0) >> 1);
+        tmp ^= mag_ones;
+        tmp -= mag_ones;
+      } v_endif;
+#else
+      tmp = vInt (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32));
+#if __riscv_xtttensixbh
+      // BH erratum, SM(1:0) -> 2C(MOSTNEG) -> , clamp to zero
+      v_if (tmp == int32_t (~(~uint32_t (0) >> 1))) {
+        tmp = 0;
+      } v_endif;
+#endif
+#endif
+      return tmp;
+    } 
+    else
+      return convert<ToType> (val, 0, round);
+  }
+
+  else
+    return convert<ToType> (val, 0, round);
+}
+
+template<typename ToType, typename FromType,
+         typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+    typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, unsigned descale, RoundMode round = RoundMode::Stochastic) {
+  if constexpr (std::is_same_v<vFloat, FromType>)
+    return ToType (__builtin_rvtt_sfpstochrnd_i
+                   (val.get(), descale, (impl_::stochrnd_mod<ToType, FromType> ()),
+                    impl_::stochrnd_rnd (round)));
+  else {
+    static_assert (false, "This conversion is not supported");
+    return ToType ();
+  }
+}
+
+template<typename ToType, typename FromType,
+         typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+         typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, vUInt descale, RoundMode round = RoundMode::Stochastic) {
+  if constexpr (std::is_same_v<vFloat, FromType>)
+    return ToType (__builtin_rvtt_sfpstochrnd_v
+                   (val.get(), descale, (impl_::stochrnd_mod<ToType, FromType> ()),
+                    impl_::stochrnd_rnd (round)));
+  else {
+    static_assert (false, "This conversion is not supported");
+    return ToType ();
+  }
+}
+
+template<typename ToType, typename Vector, typename Elt, unsigned ID,
+         typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
+sfpi_inline ToType convert (impl_::vConstrained<Vector, Elt, ID> val, RoundMode round = RoundMode::Stochastic) {
+  if constexpr (std::is_same_v<impl_::vConstrained<Vector, Elt, ID>, ToType>)
+    return val;
+
+  return convert<ToType> (Vector (val), round);
+}
+
+template<typename ToType, typename Vector, typename Elt, unsigned ID,
+         typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
+sfpi_inline ToType convert (impl_::vConstrained<Vector, Elt, ID> val, unsigned descale, RoundMode round = RoundMode::Stochastic) {
+  return convert<ToType> (Vector (val), descale, round);
+}
+
+template<typename ToType, typename Vector, typename Elt, unsigned ID,
+         typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
+sfpi_inline ToType convert (impl_::vConstrained<Vector, Elt, ID> val, vUInt descale, RoundMode round = RoundMode::Stochastic) {
+  return convert<ToType> (Vector (val), descale, round);
 }
 
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpcast (in.get (), impl_::rounding_to_cast_rnd (rounding));
+  return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 
 // FIXME. we should add vFloat16[ab] types to indicate these are in that form.
 // And perhaps v{,U}Int16 too?
-sfpi_inline vFloat float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_FP16A, impl_::rounding_to_stochrnd_rnd (rounding));
+sfpi_inline vFloat16a float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
+  return vFloat16a (__builtin_rvtt_sfpstochrnd_i
+                    (in.get(), 0,
+                     SFPSTOCHRND_MOD1_FP32_TO_FP16A, impl_::stochrnd_rnd (rounding)));
 }
 
-sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::rounding_to_stochrnd_rnd (rounding));
+sfpi_inline vFloat16b float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
+  return vFloat16b (__builtin_rvtt_sfpstochrnd_i
+                    (in.get(), 0,
+                     SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::stochrnd_rnd (rounding)));
 }
 
-sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) 
+sfpi_inline vUInt16 float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) 
 {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::rounding_to_stochrnd_rnd (rounding));
+  return vUInt16 (__builtin_rvtt_sfpstochrnd_i
+                  (in.get(), 0,
+                   SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::stochrnd_rnd (rounding)));
 }
 
 sfpi_inline vInt float_to_int16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::rounding_to_stochrnd_rnd (rounding));
+  return vInt (__builtin_rvtt_sfpstochrnd_i
+                 (in.get(), 0,
+                  SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::stochrnd_rnd (rounding)));
 }
 
-sfpi_inline vUInt float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
+sfpi_inline vUInt16 float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
+  return vUInt16 (__builtin_rvtt_sfpstochrnd_i
+                  (in.get(), 0,
+                   SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::stochrnd_rnd (rounding)));
 }
 
 sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
+  return vInt (__builtin_rvtt_sfpstochrnd_i
+                 (in.get(), 0,
+                  SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::stochrnd_rnd (rounding)));
 }
 
-sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_v
-      (in.get(), descale.get(),
-       SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
+sfpi_inline vUInt16 int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::Stochastic) {
+  return vUInt16 (__builtin_rvtt_sfpstochrnd_v
+                  (in.get(), descale.get(),
+                   SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::stochrnd_rnd (rounding)));
 }
 
-sfpi_inline vUInt int32_to_uint8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), descale,
-       SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::rounding_to_stochrnd_rnd (rounding));
+sfpi_inline vUInt16 int32_to_uint8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::Stochastic) {
+  return vUInt16 (__builtin_rvtt_sfpstochrnd_i
+                  (in.get(), descale,
+                   SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::stochrnd_rnd (rounding)));
 }
 
 sfpi_inline vInt int32_to_int8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_v
-      (in.get(), descale.get(),
-       SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
+  return vInt (__builtin_rvtt_sfpstochrnd_v
+                 (in.get(), descale.get(),
+                  SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding)));
 }
 
 sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::Stochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), descale,
-       SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::rounding_to_stochrnd_rnd (rounding));
+  return vInt (__builtin_rvtt_sfpstochrnd_i
+                 (in.get(), descale,
+                  SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding)));
 }
 
 sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
