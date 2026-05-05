@@ -27,11 +27,14 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPLOAD_MOD0_FMT_FP32 = 3;
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT32 = 4;
+constexpr unsigned int SFPLOAD_MOD0_FMT_INT8 = 5;
 constexpr unsigned int SFPLOAD_MOD0_FMT_UINT16 = 6;
 constexpr unsigned int SFPLOAD_MOD0_FMT_HI16 = 7;
+constexpr unsigned int SFPLOAD_MOD0_FMT_INT16 = 8;
 constexpr unsigned int SFPLOAD_MOD0_FMT_LO16 = 9;
-#if __riscv_xtttensixwh
+// Only in HW on WH, but useful for BH & QSR semantics
 constexpr unsigned int SFPLOAD_MOD0_FMT_SM32 = 12;
+#if __riscv_xtttensixwh
 __attribute__((__deprecated__("use SFPLOAD_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = SFPLOAD_MOD0_FMT_SM32;
 #endif
@@ -46,14 +49,16 @@ constexpr unsigned int SFPSTORE_MOD0_FMT_FP16A = 1;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP16B = 2;
 constexpr unsigned int SFPSTORE_MOD0_FMT_FP32 = 3;
 constexpr unsigned int SFPSTORE_MOD0_FMT_INT32 = 4;
+constexpr unsigned int SFPSTORE_MOD0_FMT_INT8 = 5;
 constexpr unsigned int SFPSTORE_MOD0_FMT_UINT16 = 6;
 constexpr unsigned int SFPSTORE_MOD0_FMT_HI16 = 7;
+constexpr unsigned int SFPSTORE_MOD0_FMT_INT16 = 8;
 constexpr unsigned int SFPSTORE_MOD0_FMT_LO16 = 9;
 constexpr unsigned int SFPSTORE_MOD0_FMT_LO16_ONLY = 14;
 constexpr unsigned int SFPSTORE_MOD0_FMT_HI16_ONLY= 15;
-#if __riscv_xtttensixwh
+// Only in HW on WH, but useful for BH & QSR semantics
 constexpr unsigned int SFPSTORE_MOD0_FMT_SM32 = 12;
-
+#if __riscv_xtttensixwh
 __attribute__((__deprecated__("use SFPSTORE_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = SFPSTORE_MOD0_FMT_SM32;
 #endif

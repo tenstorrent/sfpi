@@ -98,105 +98,226 @@ auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a);
 
 //////////////////////////////////////////////////////////////////////////////
 template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat val) const-> vFloat {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPSTORE_MOD0_FMT_SRCB
-                       || Mod == SFPSTORE_MOD0_FMT_FP16A
-                       || Mod == SFPSTORE_MOD0_FMT_FP16B
-                       || Mod == SFPSTORE_MOD0_FMT_FP32
-                       ), "Mod value not compatible with storing vFloat");
-  write (val.get (), Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB);
-  return val;
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_SRCB
+                 || mod == SFPSTORE_MOD0_FMT_FP32
+                 || mod == SFPSTORE_MOD0_FMT_FP16A
+                 || mod == SFPSTORE_MOD0_FMT_FP16B
+                 , "Mod value not compatible with storing vFloat");
+  write (val.get (), mod);
 }
 
 template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg_<Derived, Mod>::operator= (float val) const-> vFloat {
-  return operator= (vFloat (val));
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat16a val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_SRCB
+                 || mod == SFPSTORE_MOD0_FMT_FP32
+                 || mod == SFPSTORE_MOD0_FMT_FP16A
+                 , "Mod value not compatible with storing vFloat");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat16b val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_SRCB
+                 || mod == SFPSTORE_MOD0_FMT_FP32
+                 || mod == SFPSTORE_MOD0_FMT_FP16B
+                 , "Mod value not compatible with storing vFloat");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (float val) const {
+  operator= (vFloat (val));
 }
 
 template<template<int> typename Derived, int Mod>
 sfpi::impl_::vReg_<Derived, Mod>::operator vFloat () const {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPLOAD_MOD0_FMT_SRCB
-                       || Mod == SFPLOAD_MOD0_FMT_FP16A
-                       || Mod == SFPLOAD_MOD0_FMT_FP16B
-                       || Mod == SFPLOAD_MOD0_FMT_FP32
-                       ), "Mod value not compatible with loading vFloat");
-  return read (Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB);
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_SRCB;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_SRCB
+                 || mod == SFPLOAD_MOD0_FMT_FP32
+                 || mod == SFPLOAD_MOD0_FMT_FP16A
+                 || mod == SFPLOAD_MOD0_FMT_FP16B
+                 , "Mod value not compatible with loading vFloat");
+  return read (mod);
 }
 
 template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vInt val) const-> vInt {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPSTORE_MOD0_FMT_INT32
-#if __riscv_xtttensixwh
-                       || Mod == SFPSTORE_MOD0_FMT_SM32
+sfpi::impl_::vReg_<Derived, Mod>::operator vFloat16a () const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_FP16A;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_FP16A
+                 , "Mod value not compatible with loading vFloat");
+  return vFloat16a (read (mod));
+  
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vFloat16b () const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_FP16B;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_FP16B
+                 , "Mod value not compatible with loading vFloat");
+  return vFloat16b (read (mod));
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vInt val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SM32
+#if !__riscv_xtttensixwh  // FIXME, endian convert
+                      * 0 + SFPSTORE_MOD0_FMT_INT32
 #endif
-                       ), "Mod value not compatible with storing vInt");
-  write (val.get (), Mod >= 0 ? Mod :
-#if __riscv_xtttensixwh
-         SFPSTORE_MOD0_FMT_SM32
-#else
-         SFPSTORE_MOD0_FMT_INT32
+                      ;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_INT32
+                 || mod == SFPSTORE_MOD0_FMT_SM32
+                 , "Mod value not compatible with storing vInt");
+  auto tmp = val.get ();
+#if !__riscv_xtttensixwh
+  if constexpr (mod == SFPSTORE_MOD0_FMT_SM32) {
+#if 0 // FIXME address this later
+    tmp = __builtin_rvtt_sfpcast (tmp, SFPCAST_MOD1_INT32_TO_SM32);
+#if __riscv_xtttensixbh
+    // BH erratum, 2C(MOSTNEG) -> SM(1:0), clamp to SM(MOSTNEG)
+    v_if (vInt (tmp) == int32_t (0x8000000)) {
+      tmp = vInt (-1).get ();
+    } v_endif;
+#endif
+#endif
+  }
+#endif
+
+  write (tmp, mod
+#if !__riscv_xtttensixwh
+         * 0 + SFPSTORE_MOD0_FMT_INT32
 #endif
          );
-  return val;
 }
 
 template<template<int> typename Derived, int Mod>
 sfpi::impl_::vReg_<Derived, Mod>::operator vInt () const {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPLOAD_MOD0_FMT_INT32
-#if __riscv_xtttensixwh
-                       || Mod == SFPLOAD_MOD0_FMT_SM32
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_SM32
+#if !__riscv_xtttensixwh // FIXME endian convert
+                      * 0 + SFPLOAD_MOD0_FMT_INT32
 #endif
-                       ), "Mod value not compatible with storing vInt");
-
-  return read (Mod >= 0 ? Mod :
-#if __riscv_xtttensixwh
-               SFPSTORE_MOD0_FMT_SM32
-#else
-               // FIXME: This should really convert from FPU's sign-magnitude integer
-               SFPSTORE_MOD0_FMT_INT32
+                      ;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_INT32
+                 || mod == SFPLOAD_MOD0_FMT_SM32
+                 , "Mod value not compatible with storing vInt");
+  auto val = read (mod
+#if !__riscv_xtttensixwh
+                   * 0 + SFPLOAD_MOD0_FMT_INT32
 #endif
-               );
-}
-
-template<template<int> typename Derived, int Mod>
-auto sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt val) const-> vUInt {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPSTORE_MOD0_FMT_INT32
-                       || Mod == SFPSTORE_MOD0_FMT_UINT16
-                       || Mod == SFPSTORE_MOD0_FMT_LO16_ONLY
-                       || Mod == SFPSTORE_MOD0_FMT_HI16_ONLY
-                       || Mod == SFPSTORE_MOD0_FMT_LO16
-                       || Mod == SFPSTORE_MOD0_FMT_HI16
-                       ), "Mod value not compatible with storing vUInt");
-  write (val.get (), Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32);
+                   );
+#if !__riscv_xtttensixwh
+#if 0 // FIXME: Address later
+  if constexpr (mod == SFPLOAD_MOD0_FMT_SM32) {
+    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32);
+#if __riscv_xtttensixbh
+    // BH erratum, SM(1:0) -> 2C(MOSTNEG), not zero
+    v_if (vInt (val) == int32_t (0x8000000)) {
+      val = vInt (0).get ();
+    } v_endif;
+#endif
+  }
+#endif
+#endif
   return val;
 }
 
 template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_INT32
+                 || mod == SFPSTORE_MOD0_FMT_UINT16
+                 || mod == SFPSTORE_MOD0_FMT_LO16_ONLY
+                 || mod == SFPSTORE_MOD0_FMT_HI16_ONLY
+                 || mod == SFPSTORE_MOD0_FMT_LO16
+                 || mod == SFPSTORE_MOD0_FMT_HI16
+                 , "Mod value not compatible with storing vUInt");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt16 val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_UINT16;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_INT32
+                 || mod == SFPSTORE_MOD0_FMT_UINT16
+                 || mod == SFPSTORE_MOD0_FMT_LO16_ONLY
+                 || mod == SFPSTORE_MOD0_FMT_HI16_ONLY
+                 || mod == SFPSTORE_MOD0_FMT_LO16
+                 || mod == SFPSTORE_MOD0_FMT_HI16
+                 , "Mod value not compatible with storing vUInt");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
 sfpi::impl_::vReg_<Derived, Mod>::operator vUInt () const {
-  if constexpr (Mod >= 0)
-    static_assert (Mod < 16
-                   && (0
-                       || Mod == SFPLOAD_MOD0_FMT_INT32
-                       || Mod == SFPLOAD_MOD0_FMT_UINT16
-                       || Mod == SFPLOAD_MOD0_FMT_LO16
-                       || Mod == SFPLOAD_MOD0_FMT_HI16
-                       ), "Mod value not compatible with loading vUInt");
-  return read (Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32);
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_INT32;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_INT32
+                 || mod == SFPLOAD_MOD0_FMT_UINT16
+                 || mod == SFPLOAD_MOD0_FMT_LO16
+                 || mod == SFPLOAD_MOD0_FMT_HI16
+                 , "Mod value not compatible with loading vUInt");
+  return read (mod);
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vUInt16 () const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_UINT16;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_UINT16
+                 || mod == SFPLOAD_MOD0_FMT_LO16
+                 , "Mod value not compatible with loading vUInt");
+  return vUInt16 (read (mod));
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vSMag val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT32;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_INT32
+                 || mod == SFPSTORE_MOD0_FMT_INT16
+                 , "Mod value not compatible with storing vUInt");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vSMag16 val) const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT16;
+  static_assert (false
+                 || mod == SFPSTORE_MOD0_FMT_INT16
+                 , "Mod value not compatible with storing vUInt");
+  write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vSMag () const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_INT32;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_INT32
+                 || mod == SFPLOAD_MOD0_FMT_INT16
+                 , "Mod value not compatible with loading vUInt");
+  return vSMag (read (mod));
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vSMag16 () const {
+  constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_INT16;
+  static_assert (false
+                 || mod == SFPLOAD_MOD0_FMT_INT16
+                 , "Mod value not compatible with loading vUInt");
+  return vSMag16 (read (mod));
 }
 
 template<int Mod>
@@ -254,6 +375,7 @@ auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 // vInt definitions
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
+sfpi::vInt::vInt (vUInt16 val) : vInt (vUInt (val)) {}
 sfpi::vInt::vInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
 sfpi::vInt::vInt (uint16_t val)
@@ -262,6 +384,8 @@ sfpi::vInt::vInt (int32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
+sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
+sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 sfpi::vInt::vInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
@@ -320,6 +444,8 @@ sfpi::vUInt::vUInt (int32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
 sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
+sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
+sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
 sfpi::vUInt::vUInt(const impl_::vCond vc)
     : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
@@ -369,3 +495,7 @@ auto sfpi::operator^ (vInt a, vUInt b)-> vUInt { return vUInt (a) ^ b; }
 auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
+
+//////////////////////////////////////////////////////////////////////////////
+// vSMag definitions
+sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
