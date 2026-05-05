@@ -49,6 +49,8 @@ namespace sfpi {
 class vFloat;
 class vInt;
 class vUInt;
+class sFloat16a;
+class sFloat16b;
 enum class LRegs : uint8_t;
 
 namespace impl_ {
@@ -130,6 +132,18 @@ public:
   sfpi_inline sfpu_t flt_mul (vVal b) const {
     return __builtin_rvtt_sfpmul (get (), b.get (), 0);
   }
+};
+
+template<typename Base, typename Element>
+class vConstrained : public Base {
+public:
+  sfpi_inline vConstrained () = default;
+  sfpi_inline vConstrained (vConstrained const &) = default;
+  sfpi_inline vConstrained &operator= (vConstrained const &) = default;
+
+public:
+  sfpi_inline explicit vConstrained (impl_::sfpu_t val) : Base (val) {}
+  sfpi_inline explicit vConstrained (Element val) : Base (val) {};
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -310,12 +324,20 @@ public:
     
 public:
   // These are not templates to allow type conversion of the operand
-  sfpi_inline vFloat operator= (vFloat f) const;
+  sfpi_inline vFloat operator= (vFloat) const;
   sfpi_inline operator vFloat () const;
-  sfpi_inline vInt operator= (vInt i) const;
+  sfpi_inline vConstrained<vFloat,sFloat16a> operator= (vConstrained<vFloat,sFloat16a>) const;
+  sfpi_inline operator vConstrained<vFloat,sFloat16a> () const;
+  sfpi_inline vConstrained<vFloat,sFloat16b> operator= (vConstrained<vFloat,sFloat16b>) const;
+  sfpi_inline operator vConstrained<vFloat,sFloat16b> () const;
+  sfpi_inline vInt operator= (vInt) const;
   sfpi_inline operator vInt () const;
-  sfpi_inline vUInt operator= (vUInt u) const;
+  sfpi_inline vConstrained<vInt,int16_t> operator= (vConstrained<vInt,int16_t>) const;
+  sfpi_inline operator vConstrained<vInt,int16_t> () const;
+  sfpi_inline vUInt operator= (vUInt) const;
   sfpi_inline operator vUInt () const;
+  sfpi_inline vConstrained<vUInt,uint16_t> operator= (vConstrained<vUInt,uint16_t>) const;
+  sfpi_inline operator vConstrained<vUInt,uint16_t> () const;
 
   // Convenience
   sfpi_inline vFloat operator= (float) const;

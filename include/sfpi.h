@@ -217,6 +217,9 @@ sfpi_inline vFloat operator- (vFloat, float);
 sfpi_inline vFloat operator- (float, vFloat);
 sfpi_inline vFloat operator* (float, vFloat);
 
+using vFloat16a = impl_::vConstrained<vFloat, sFloat16a>;
+using vFloat16b = impl_::vConstrained<vFloat, sFloat16b>;
+
 //////////////////////////////////////////////////////////////////////////////
 class vInt : public impl_::vVal {
 public:
@@ -227,12 +230,13 @@ public:
 public:
   sfpi_inline vInt (impl_::sfpu_t);
   sfpi_inline vInt (vUInt);
+  sfpi_inline vInt (impl_::vConstrained<vUInt, uint16_t>);
   sfpi_inline vInt (int16_t);
   sfpi_inline vInt (uint16_t);
   sfpi_inline vInt (int32_t);
   sfpi_inline vInt (uint32_t);
-  sfpi_inline vInt (int val) : vInt (int32_t (val)) {};
-  sfpi_inline vInt (unsigned val) : vInt (uint32_t (val)) {}
+  sfpi_inline vInt (int val);
+  sfpi_inline vInt (unsigned val);
   sfpi_inline vInt (impl_::vCond);
 
   sfpi_inline vInt &operator+= (vInt);
@@ -252,6 +256,7 @@ public:
   sfpi_inline vInt operator-- ();
   sfpi_inline vInt operator-- (int);
 };
+using vInt16 = impl_::vConstrained<vInt, int16_t>;
 
 sfpi_inline vInt operator+ (vInt);
 sfpi_inline vInt operator- (vInt);
@@ -289,12 +294,6 @@ sfpi_inline vInt operator& (vInt, unsigned);
 sfpi_inline vInt operator| (vInt, unsigned);
 sfpi_inline vInt operator^ (vInt, unsigned);
 
-sfpi_inline vInt operator+ (int32_t a, vInt b) { return b + a; }
-sfpi_inline vInt operator- (int32_t a, vInt b) { return vInt (a) - b; }
-sfpi_inline vInt operator& (int32_t a, vInt b) { return b & a; }
-sfpi_inline vInt operator| (int32_t a, vInt b) { return b | a; }
-sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
-
 //////////////////////////////////////////////////////////////////////////////
 class vUInt : public impl_::vVal {
 public:
@@ -331,6 +330,7 @@ public:
   sfpi_inline vUInt &operator<<= (unsigned);
   sfpi_inline vUInt &operator>>= (unsigned);
 };
+using vUInt16 = impl_::vConstrained<vUInt, uint16_t>;
 
 sfpi_inline vUInt operator+ (vUInt);
 sfpi_inline vUInt operator- (vUInt);
@@ -370,6 +370,12 @@ sfpi_inline vUInt operator^ (vUInt, unsigned);
 sfpi_inline vUInt operator& (vUInt, int);
 sfpi_inline vUInt operator| (vUInt, int);
 sfpi_inline vUInt operator^ (vUInt, int);
+
+sfpi_inline vInt operator+ (int32_t a, vInt b) { return b + a; }
+sfpi_inline vInt operator- (int32_t a, vInt b) { return vInt (a) - b; }
+sfpi_inline vInt operator& (int32_t a, vInt b) { return b & a; }
+sfpi_inline vInt operator| (int32_t a, vInt b) { return b | a; }
+sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
 
 sfpi_inline vUInt operator+ (int32_t a, vUInt b) { return b + a; }
 sfpi_inline vUInt operator- (int32_t a, vUInt b) { return vUInt (a) - b; }
