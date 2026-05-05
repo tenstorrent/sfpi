@@ -502,7 +502,7 @@ stamps/build-dejagnu: $(srcdir)/riscv-dejagnu $(srcdir)/riscv-dejagnu/.git
 .PHONY: check-gcc-tt
 check-gcc-tt: stamps/build-gcc-newlib-stage2
 	$(MAKE) -C build-gcc-newlib-stage2 check-gcc \
-	  "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)' tt.exp sfpi.exp"
+	  "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)' rvtt.exp "
 
 stamps/check-gcc-newlib: stamps/build-gcc-newlib-stage2 $(SIM_STAMP)
 	$(SIM_PREPARE) $(MAKE) -C build-gcc-newlib-stage2 check-gcc "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)'"
