@@ -60,22 +60,17 @@ sfpi_inline uint32_t float_as_uint (float val);
 //////////////////////////////////////////////////////////////////////////////
 class vVal { // A value, holds value and intialized flag
 private:
-  // FIXME: we want to remove this, with better LV optimization/handling
-  bool initialized = false;
   sfpu_t v;
 
 public:
-  sfpi_inline vVal () {}
   sfpi_inline vVal (vVal const &) = default;
   sfpi_inline vVal &operator= (vVal const &val) {
-    v = initialized ? __builtin_rvtt_sfpassign_lv (v, val.get ()) : val.get ();
-    initialized = true;
+    v = __builtin_rvtt_sfpassign_lv (v, val.get ());
     return *this;
   }
 
-  sfpi_inline vVal (sfpu_t v_)
-      :initialized (true), v (v_) {
-  }
+  sfpi_inline vVal (sfpu_t v_ = __builtin_rvtt_sfpnovalue ())
+      :v (v_) {}
 
   sfpi_inline sfpu_t get () const { return v; }
 
