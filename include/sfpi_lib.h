@@ -87,7 +87,7 @@ sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Debias
                                   ~0 /* bad value, compile error */);
 }
 
-// Deprecate
+__SFPI_DEPRECATED("Use sfpi:exexp (X, sfpi::ExponentMode::NoDebias)")
 sfpi_inline vInt exexp_nodebias(const vFloat v)
 {
     return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_NODEBIAS);
@@ -107,13 +107,13 @@ sfpi_inline vInt exman(const vFloat v, MantissaMode mode = MantissaMode::Fractio
                                     ~0 /* bad value, compile error */);
 }
 
-// Deprecate -> Implicit
+__SFPI_DEPRECATED("Use sfpi:exman (X, sfpi::MantissaMode::WithUnitBit)")
 sfpi_inline vInt exman8(const vFloat v)
 {
     return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
 }
 
-// Deprecate -> NoImplicit
+__SFPI_DEPRECATED("Use sfpi:exman (X[, sfpi::MantissaMode::FractionOnly])")
 sfpi_inline vInt exman9(const vFloat v)
 {
     return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
