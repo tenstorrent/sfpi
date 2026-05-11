@@ -111,7 +111,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat val) const {
 
 template<template<int> typename Derived, int Mod>
 void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat16a val) const {
-  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_FP16A;
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB;
   static_assert (false
                  || mod == SFPSTORE_MOD0_FMT_SRCB
                  || mod == SFPSTORE_MOD0_FMT_FP32
@@ -122,7 +122,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat16a val) const {
 
 template<template<int> typename Derived, int Mod>
 void sfpi::impl_::vReg_<Derived, Mod>::operator= (vFloat16b val) const {
-  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_FP16B;
+  constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_SRCB;
   static_assert (false
                  || mod == SFPSTORE_MOD0_FMT_SRCB
                  || mod == SFPSTORE_MOD0_FMT_FP32
