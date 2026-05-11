@@ -29,6 +29,7 @@
 #define __builtin_rvtt_sfpsetman_i(src, imm, mod1) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 
+#define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) \
@@ -92,20 +93,21 @@ public:
   }
 
 public:
-  sfpi_inline sfpu_t int_add (vVal b, bool is_signed) const {
-    return __builtin_rvtt_sfpxiadd_v (get (), b.get (), is_signed ? SFPXIADD_MOD1_SIGNED : 0);
+  sfpi_inline sfpu_t int_add (vVal b, bool) const {
+    return __builtin_rvtt_sfpiadd_v (get (), b.get (), SFPIADD_MOD1_CC_NONE);
   }
-  sfpi_inline sfpu_t int_add (int32_t b, bool is_signed) const {
-    return __builtin_rvtt_sfpxiadd_i (get (), b, is_signed ? SFPXIADD_MOD1_SIGNED : 0);
+  sfpi_inline sfpu_t int_add (int32_t b, bool) const {
+    return __builtin_rvtt_sfpiadd_i (get (), b, SFPIADD_MOD1_CC_NONE);
   }
-  sfpi_inline sfpu_t int_sub (vVal b, bool is_signed) const {
+  sfpi_inline sfpu_t int_sub (vVal b, bool) const {
     // subtracts the first op from the second op, because, why not :)
-    return __builtin_rvtt_sfpxiadd_v (b.get (), get (), (is_signed ? SFPXIADD_MOD1_SIGNED : 0) | SFPXIADD_MOD1_IS_SUB);
+    return __builtin_rvtt_sfpiadd_v (b.get (), get (), SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_2SCOMP_LREG_DST);
   }
-  sfpi_inline sfpu_t int_sub (int32_t b, bool is_signed) const {
-    // subtracts the first op from the second op, because, why not :)
-    return __builtin_rvtt_sfpxiadd_i (get (), b, (is_signed ? SFPXIADD_MOD1_SIGNED : 0) | SFPXIADD_MOD1_IS_SUB);
+  sfpi_inline sfpu_t int_sub (int32_t b, bool) const {
+    return __builtin_rvtt_sfpiadd_i (get (), -b, SFPIADD_MOD1_CC_NONE);
   }
+
+public:
   sfpi_inline sfpu_t int_shift (vVal b, bool is_signed __attribute__ ((unused))) const {
     return __builtin_rvtt_sfpshft_v (get (), b.get (),
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
