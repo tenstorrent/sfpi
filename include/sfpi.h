@@ -229,6 +229,7 @@ public:
 
 public:
   sfpi_inline vInt (impl_::sfpu_t);
+  sfpi_inline vInt (impl_::vMag);
   sfpi_inline vInt (vUInt);
   sfpi_inline vInt (impl_::vUInt16);
   sfpi_inline vInt (int16_t);
@@ -302,6 +303,7 @@ public:
 
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
+  sfpi_inline vUInt (impl_::vMag);
   sfpi_inline vUInt (vInt);
   sfpi_inline vUInt (int16_t);
   sfpi_inline vUInt (uint16_t);
@@ -330,6 +332,7 @@ public:
   sfpi_inline vUInt &operator>>= (unsigned);
 };
 using vUInt16 = impl_::vUInt16;
+using vMag = impl_::vMag;
 
 sfpi_inline vUInt operator+ (vUInt);
 sfpi_inline vUInt operator- (vUInt);
