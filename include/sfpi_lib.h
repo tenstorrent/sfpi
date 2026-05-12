@@ -181,12 +181,14 @@ sfpi_inline vType copysgn(const vType v, const vInt sgn) {
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn) {
   return copysgn (v, sgn);
 }
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vType setsgn (const vType v, const vInt sgn) {
   return copysgn (v, sgn);
 }
