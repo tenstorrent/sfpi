@@ -168,14 +168,19 @@ sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = Fractiona
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline Type setsgn(const Type v, const int32_t sgn) {
+sfpi_inline Type setsgn (Type v, int sgn) {
   return Type (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 // accept unsigned, returns smag
 template <typename Type,
           typename std::enable_if_t<std::is_same<vUInt, Type>::value>* = nullptr>
-sfpi_inline vSMag setsgn(const Type v, const int32_t sgn) {
+sfpi_inline vSMag setsgn (Type v, int sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
+}
+
+// Deprecate this one, it is broken
+sfpi_inline vInt setsgn (vInt v, int sgn) {
+  return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 
 template <typename TypeA, typename TypeB,
@@ -201,13 +206,13 @@ sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
-sfpi_inline vTypeA setsgn(const vTypeA v, const vTypeB sgn) {
+sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
   return copysgn (v, sgn);
 }
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
-sfpi_inline vType setsgn (const vType v, const vInt sgn) {
+sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
 
