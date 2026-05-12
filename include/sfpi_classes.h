@@ -147,6 +147,7 @@ using vFloat16a = vNarrow<vFloat, sFloat16a>;
 using vFloat16b = vNarrow<vFloat, sFloat16b>;
 using vUInt16 = vNarrow<vUInt, uint16_t>;
 using vSMag16 = vNarrow<vSMag, void>;
+using vMag = vNarrow<vUInt, void>;
 
 //////////////////////////////////////////////////////////////////////////////
 

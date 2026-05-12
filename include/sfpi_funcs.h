@@ -374,6 +374,7 @@ auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
+sfpi::vInt::vInt (vMag val) : vInt (val.get ()) {}
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (vUInt16 val) : vInt (vUInt (val)) {}
 sfpi::vInt::vInt (int16_t val)
@@ -435,6 +436,7 @@ auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
+sfpi::vUInt::vUInt (vMag val) : vUInt (val.get ()) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
