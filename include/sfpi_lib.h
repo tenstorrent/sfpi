@@ -177,6 +177,7 @@ sfpi_inline vType copysgn(const vType v, const vInt sgn) {
   return __builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0);
 }
 
+#if 0
 // Old names for compatibility
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
@@ -192,6 +193,7 @@ __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vType setsgn (const vType v, const vInt sgn) {
   return copysgn (v, sgn);
 }
+#endif
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vInt lz(const vType v)
