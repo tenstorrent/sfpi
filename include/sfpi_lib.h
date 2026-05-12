@@ -153,7 +153,7 @@ enum class FractionalHalf {
 
 // accept float, unsigned or sign-mag
 template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vUInt, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = FractionalHalf::Low) {
@@ -166,7 +166,7 @@ sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = Fractiona
 
 // accept float, unsigned or sign-mag
 template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type setsgn (Type v, int sgn) {
   return Type (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
@@ -184,9 +184,9 @@ sfpi_inline vInt setsgn (vInt v, int sgn) {
 }
 
 template <typename TypeA, typename TypeB,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, TypeA>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
                                                      std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, TypeB>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
 sfpi_inline TypeA copysgn (const TypeA v, TypeB sgn) {
@@ -195,7 +195,17 @@ sfpi_inline TypeA copysgn (const TypeA v, TypeB sgn) {
 
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::is_base_of<vUInt, TypeA>::value>* = nullptr,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, TypeB>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
+                                                     std::is_base_of<vInt, TypeB>,
+                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
+sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
+  return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
+}
+
+// Deprecate??
+template <typename TypeA, typename TypeB,
+          typename std::enable_if_t<std::is_base_of<vInt, TypeA>::value>* = nullptr,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
 sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
