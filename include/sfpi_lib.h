@@ -162,6 +162,11 @@ sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = Fractiona
                                         : half == FractionalHalf::High ? SFPMUL24_MOD1_UPPER
                                         : ~0));
 }
+
+// FIXME: deprecate
+sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
+  return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
+}
 #endif
 
 // accept float, unsigned or sign-mag
@@ -178,7 +183,7 @@ sfpi_inline vSMag setsgn (Type v, int sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 
-// Deprecate this one, it is broken
+// FIXME:Deprecate
 sfpi_inline vInt setsgn (vInt v, int sgn) {
   return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
@@ -202,7 +207,7 @@ sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
 
-// Deprecate??
+// FIXME:Deprecate
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::is_base_of<vInt, TypeA>::value>* = nullptr,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
@@ -243,7 +248,7 @@ sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
                                       ~0) | SFPLZ_MOD1_CC_NONE));
 }
 
-// Deprecate
+// FIXME:Deprecate
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vInt lz_nosgn (const vType v) {
   return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
@@ -451,7 +456,7 @@ sfpi_inline ToType convert (impl_::vNarrow<Vector, Elt> val, vUInt descale, Roun
   return convert<ToType> (Vector (val), descale, round);
 }
 
-// deprecate
+// FIXME:deprecate
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
