@@ -12,6 +12,16 @@
 
 namespace sfpi {
 
+template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+sfpi_inline Type reinterpret (impl_::vVal v) {
+    return Type (v.get ());
+}
+
+template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+sfpi_inline Type as (impl_::vVal v) {
+    return Type (v.get ());
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
@@ -284,16 +294,6 @@ sfpi_inline vInt shft(vInt v, int amt) {
   return __builtin_rvtt_sfpshft_i (v.get (), amt, SFPSHFT_MOD1_ARITHMETIC);
 }
 #endif
-
-template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-sfpi_inline Type reinterpret (impl_::vVal v) {
-    return Type (v.get ());
-}
-
-template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-sfpi_inline Type as (impl_::vVal v) {
-    return Type (v.get ());
-}
 
 enum class RoundMode {
   NearestEven,
