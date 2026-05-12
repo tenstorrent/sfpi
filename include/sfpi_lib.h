@@ -451,7 +451,12 @@ sfpi_inline ToType convert (impl_::vNarrow<Vector, Elt> val, vUInt descale, Roun
   return convert<ToType> (Vector (val), descale, round);
 }
 
+// deprecate
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::Stochastic) {
+  return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
+}
+// shim
+sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 
