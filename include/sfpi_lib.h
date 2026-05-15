@@ -270,8 +270,8 @@ sfpi_inline vFloat abs (vFloat v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
 }
 
-// Because mostneg returns unchanged bit pattern, this returns uint, not mag
-sfpi_inline vUInt abs (vInt v) {
+// Even though mostneg returns unchanged bit pattern, this returns vMag, not vUInt
+sfpi_inline vMag abs (vInt v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_INT);
 }
 
@@ -469,12 +469,14 @@ sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::Sto
 
 // FIXME. we should add vFloat16[ab] types to indicate these are in that form.
 // And perhaps v{,U}Int16 too?
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat16a> (X, rounding)")
 sfpi_inline vFloat float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_FP16A, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat16b> (X, rounding)")
 sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
