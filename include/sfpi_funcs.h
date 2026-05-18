@@ -351,10 +351,10 @@ auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
 }
 auto sfpi::vFloat::operator*= (vFloat m)-> vFloat & { return *this = *this * m; }
 
-auto sfpi::vFloat::operator++ (int)-> vFloat { *this += 1; return *this; }
-auto sfpi::vFloat::operator++ ()-> vFloat { vFloat tmp = *this; *this += 1; return tmp; }
-auto sfpi::vFloat::operator-- (int)-> vFloat { *this -= 1; return *this; }
-auto sfpi::vFloat::operator-- ()-> vFloat { vFloat tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vFloat::operator++ (int)-> vFloat { vFloat tmp = *this; *this += 1; return tmp; }
+auto sfpi::vFloat::operator++ ()-> vFloat { *this += 1; return *this; }
+auto sfpi::vFloat::operator-- (int)-> vFloat { vFloat tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vFloat::operator-- ()-> vFloat { *this -= 1; return *this; }
 
 auto sfpi::operator+ (vFloat a)-> vFloat { return a; }
 auto sfpi::operator+ (vFloat a, vFloat b)-> vFloat { return a.flt_add (b); }
@@ -402,10 +402,10 @@ auto sfpi::vInt::operator&= (vInt a)-> vInt & { return *this = *this & a; }
 auto sfpi::vInt::operator|= (vInt a)-> vInt & { return *this = *this | a; }
 auto sfpi::vInt::operator^= (vInt a)-> vInt & { return *this = *this ^ a; }
 
-auto sfpi::vInt::operator++ (int)-> vInt { *this += 1; return *this; }
-auto sfpi::vInt::operator++ ()-> vInt { vInt tmp = *this; *this += 1; return tmp; }
-auto sfpi::vInt::operator-- (int)-> vInt { *this -= 1; return *this; }
-auto sfpi::vInt::operator-- ()-> vInt { vInt tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vInt::operator++ (int)-> vInt { vInt tmp = *this; *this += 1; return tmp; }
+auto sfpi::vInt::operator++ ()-> vInt { *this += 1; return *this; }
+auto sfpi::vInt::operator-- (int)-> vInt { vInt tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vInt::operator-- ()-> vInt { *this -= 1; return *this; }
 
 auto sfpi::operator+ (vInt a)-> vInt { return a; }
 auto sfpi::operator+ (vInt a, vInt b)-> vInt { return a.int_add (b, true); }
@@ -462,10 +462,10 @@ auto sfpi::vUInt::operator&= (vUInt a)-> vUInt & { return *this = *this & a; }
 auto sfpi::vUInt::operator|= (vUInt a)-> vUInt & { return *this = *this | a; }
 auto sfpi::vUInt::operator^= (vUInt a)-> vUInt & { return *this = *this ^ a; }
 
-auto sfpi::vUInt::operator++ (int)-> vUInt { *this += 1; return *this; }
-auto sfpi::vUInt::operator++ ()-> vUInt { vUInt tmp = *this; *this += 1; return tmp; }
-auto sfpi::vUInt::operator-- (int)-> vUInt { *this -= 1; return *this; }
-auto sfpi::vUInt::operator-- ()-> vUInt { vUInt tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vUInt::operator++ (int)-> vUInt { vUInt tmp = *this; *this += 1; return tmp; }
+auto sfpi::vUInt::operator++ ()-> vUInt { *this += 1; return *this; }
+auto sfpi::vUInt::operator-- (int)-> vUInt { vUInt tmp = *this; *this -= 1; return tmp; }
+auto sfpi::vUInt::operator-- ()-> vUInt { *this -= 1; return *this; }
 
 auto sfpi::operator+ (vUInt a)-> vUInt { return a; }
 auto sfpi::operator+ (vUInt a, vUInt b)-> vUInt { return a.int_add (b, false); }
