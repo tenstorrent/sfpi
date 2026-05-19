@@ -387,8 +387,8 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
-sfpi::vInt::vInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
+//sfpi::vInt::vInt(const impl_::vCond vc)
+//    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -449,8 +449,8 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
-sfpi::vUInt::vUInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
+//sfpi::vUInt::vUInt(const impl_::vCond vc)
+//    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }

@@ -238,7 +238,7 @@ public:
   sfpi_inline vInt (uint32_t);
   sfpi_inline vInt (int val);
   sfpi_inline vInt (unsigned val);
-  sfpi_inline vInt (impl_::vCond);
+  sfpi_inline vInt (impl_::vCond) = delete;
 
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
@@ -311,7 +311,7 @@ public:
   sfpi_inline vUInt (uint32_t);
   sfpi_inline vUInt (int);
   sfpi_inline vUInt (unsigned);
-  sfpi_inline vUInt (impl_::vCond);
+  sfpi_inline vUInt (impl_::vCond) = delete;
 
   // Operations
   sfpi_inline vUInt operator++ ();
