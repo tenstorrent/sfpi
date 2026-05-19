@@ -175,11 +175,14 @@ enum class FractionalHalf {
 };
 
 // accept float, unsigned or sign-mag
-template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vUInt, Type>,
-                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = FractionalHalf::Low) {
+template <typename TypeA, typename TypeB,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
+                                                     std::is_base_of<vUInt, TypeA>,
+                                                     std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
+                                                     std::is_base_of<vUInt, TypeB>,
+                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
+sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = FractionalHalf::Low) {
   return vMag (__builtin_rvtt_sfpmul24 (a.get (), b.get (),
                                         half == FractionalHalf::Low ? SFPMUL24_MOD1_LOWER
                                         : half == FractionalHalf::High ? SFPMUL24_MOD1_UPPER
