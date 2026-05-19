@@ -230,7 +230,7 @@ public:
 public:
   sfpi_inline vInt (impl_::sfpu_t);
   sfpi_inline vInt (impl_::vMag);
-  sfpi_inline vInt (vUInt);
+  sfpi_inline explicit vInt (vUInt);
   sfpi_inline vInt (impl_::vUInt16);
   sfpi_inline vInt (int16_t);
   sfpi_inline vInt (uint16_t);
@@ -242,10 +242,10 @@ public:
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
   sfpi_inline vInt &operator<<= (unsigned);
-  sfpi_inline vInt &operator<<= (vInt);
+  sfpi_inline vInt &operator<<= (vUInt);
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
   sfpi_inline vInt &operator>>= (unsigned);
-  sfpi_inline vInt &operator>>= (vInt);
+  sfpi_inline vInt &operator>>= (vUInt);
 #endif
   sfpi_inline vInt &operator&= (vInt);
   sfpi_inline vInt &operator|= (vInt);
@@ -302,7 +302,7 @@ public:
 
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
-  sfpi_inline vUInt (vInt);
+  sfpi_inline explicit vUInt (vInt);
   sfpi_inline vUInt (int16_t);
   sfpi_inline vUInt (uint16_t);
   sfpi_inline vUInt (int32_t);
@@ -433,7 +433,13 @@ public:
   sfpi_inline vBool (CondOp, vFloat, vFloat);
   sfpi_inline vBool (CondOp, vInt, int32_t, unsigned);
   sfpi_inline vBool (CondOp, vInt, vInt, unsigned);
+  sfpi_inline vBool (CondOp, vUInt, uint32_t, unsigned);
+  sfpi_inline vBool (CondOp, vUInt, vUInt, unsigned);
+  sfpi_inline vBool (CondOp, vSMag, int, unsigned);
+  sfpi_inline vBool (CondOp, vSMag, vSMag, unsigned);
   sfpi_inline vBool (vInt);
+  sfpi_inline vBool (vUInt);
+  sfpi_inline vBool (vSMag);
 
 public:
   sfpi_inline operator vInt () const;
