@@ -238,7 +238,6 @@ public:
   sfpi_inline vInt (uint32_t);
   sfpi_inline vInt (int val);
   sfpi_inline vInt (unsigned val);
-  sfpi_inline vInt (impl_::vCond);
 
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
@@ -311,7 +310,6 @@ public:
   sfpi_inline vUInt (uint32_t);
   sfpi_inline vUInt (int);
   sfpi_inline vUInt (unsigned);
-  sfpi_inline vUInt (impl_::vCond);
 
   // Operations
   sfpi_inline vUInt operator++ ();
@@ -401,118 +399,150 @@ sfpi_inline vUInt operator& (int32_t a, vUInt b) { return b & uint32_t (a); }
 sfpi_inline vUInt operator| (int32_t a, vUInt b) { return b | uint32_t (a); }
 sfpi_inline vUInt operator^ (int32_t a, vUInt b) { return b ^ uint32_t (a); }
 
-
-
 //////////////////////////////////////////////////////////////////////////////
+
+class vBool {
+  friend class impl_::CC;
+
+public:
+  enum BoolOp : unsigned char;
+  enum CondOp : unsigned char;
+
+private:
+  int result;
+
+public:
+  sfpi_inline vBool (vBool const &) = default;
+  sfpi_inline vBool &operator= (vBool const &) = default;
+
+public:
+  sfpi_inline vBool (BoolOp, vBool, vBool);
+  sfpi_inline vBool (CondOp, vFloat, float);
+  sfpi_inline vBool (CondOp, vFloat, vFloat);
+  sfpi_inline vBool (CondOp, vInt, int32_t, unsigned);
+  sfpi_inline vBool (CondOp, vInt, vInt, unsigned);
+  sfpi_inline vBool (vInt);
+
+public:
+  sfpi_inline operator vInt () const;
+
+private:
+  sfpi_inline int get () const { return result; }
+};
+
+sfpi_inline vBool operator&& (vBool, vBool);
+sfpi_inline vBool operator|| (vBool, vBool);
+sfpi_inline vBool operator! (vBool);
+
 // Comparisons
-sfpi_inline impl_::vCond operator== (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::EQ, a, b); }
-sfpi_inline impl_::vCond operator!= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::NE, a, b); }
-sfpi_inline impl_::vCond operator< (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::LT, a, b); }
-sfpi_inline impl_::vCond operator> (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::GT, a, b); }
-sfpi_inline impl_::vCond operator<= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::LTE, a, b); }
-sfpi_inline impl_::vCond operator>= (vFloat a, vFloat b) { return impl_::vCond (impl_::vCond::GTE, a, b); }
+sfpi_inline vBool operator== (vFloat, vFloat);
+sfpi_inline vBool operator!= (vFloat, vFloat);
+sfpi_inline vBool operator< (vFloat, vFloat);
+sfpi_inline vBool operator> (vFloat, vFloat);
+sfpi_inline vBool operator<= (vFloat, vFloat);
+sfpi_inline vBool operator>= (vFloat, vFloat);
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline impl_::vCond operator== (vFloat a, float b) { return impl_::vCond (impl_::vCond::EQ, a, b); }
-sfpi_inline impl_::vCond operator!= (vFloat a, float b) { return impl_::vCond (impl_::vCond::NE, a, b); }
-sfpi_inline impl_::vCond operator< (vFloat a, float b) { return impl_::vCond (impl_::vCond::LT, a, b); }
-sfpi_inline impl_::vCond operator> (vFloat a, float b) { return impl_::vCond (impl_::vCond::GT, a, b); }
-sfpi_inline impl_::vCond operator<= (vFloat a, float b) { return impl_::vCond (impl_::vCond::LTE, a, b); }
-sfpi_inline impl_::vCond operator>= (vFloat a, float b) { return impl_::vCond (impl_::vCond::GTE, a, b); }
+sfpi_inline vBool operator== (vFloat, float);
+sfpi_inline vBool operator!= (vFloat, float);
+sfpi_inline vBool operator< (vFloat, float);
+sfpi_inline vBool operator> (vFloat, float);
+sfpi_inline vBool operator<= (vFloat, float);
+sfpi_inline vBool operator>= (vFloat, float);
 
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline impl_::vCond operator== (float a, vFloat b) { return b == a; }
-sfpi_inline impl_::vCond operator!= (float a, vFloat b) { return b != a; }
-sfpi_inline impl_::vCond operator< (float a, vFloat b) { return b > a; }
-sfpi_inline impl_::vCond operator> (float a, vFloat b) { return b < a; }
-sfpi_inline impl_::vCond operator<= (float a, vFloat b) { return b >= a; }
-sfpi_inline impl_::vCond operator>= (float a, vFloat b) { return b <= a; }
+sfpi_inline vBool operator== (float a, vFloat b) { return b == a; }
+sfpi_inline vBool operator!= (float a, vFloat b) { return b != a; }
+sfpi_inline vBool operator< (float a, vFloat b) { return b > a; }
+sfpi_inline vBool operator> (float a, vFloat b) { return b < a; }
+sfpi_inline vBool operator<= (float a, vFloat b) { return b >= a; }
+sfpi_inline vBool operator>= (float a, vFloat b) { return b <= a; }
 
 //////////////////////////////////////////////////////////////////////////////
 
-sfpi_inline  impl_::vCond operator== (vInt a, vInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator!= (vInt a, vInt b) { return impl_::vCond (impl_::vCond::NE, b, a, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator< (vInt a, vInt b) { return impl_::vCond (impl_::vCond::LT, b, a, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator> (vInt a, vInt b) { return impl_::vCond (impl_::vCond::GT, b, a, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator<= (vInt a, vInt b) { return impl_::vCond (impl_::vCond::LTE, b, a, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator>= (vInt a, vInt b) { return impl_::vCond (impl_::vCond::GTE, b, a, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  vBool operator== (vInt, vInt);
+sfpi_inline  vBool operator!= (vInt, vInt);
+sfpi_inline  vBool operator< (vInt,vInt) ;
+sfpi_inline  vBool operator> (vInt, vInt);
+sfpi_inline  vBool operator<= (vInt, vInt);
+sfpi_inline  vBool operator>= (vInt, vInt);
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline  impl_::vCond operator== (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::EQ, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator!= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::NE, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator< (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::LT, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator> (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::GT, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator<= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::LTE, a, b, SFPXIADD_MOD1_SIGNED); }
-sfpi_inline  impl_::vCond operator>= (vInt a, int32_t b) { return impl_::vCond (impl_::vCond::GTE, a, b, SFPXIADD_MOD1_SIGNED); }
+sfpi_inline  vBool operator== (vInt, int32_t);
+sfpi_inline  vBool operator!= (vInt, int32_t);
+sfpi_inline  vBool operator< (vInt, int32_t);
+sfpi_inline  vBool operator> (vInt, int32_t);
+sfpi_inline  vBool operator<= (vInt, int32_t);
+sfpi_inline  vBool operator>= (vInt, int32_t);
 
-sfpi_inline  impl_::vCond operator== (vInt a, int b) { return a == int32_t (b); }
-sfpi_inline  impl_::vCond operator!= (vInt a, int b) { return a != int32_t (b); }
-sfpi_inline  impl_::vCond operator< (vInt a, int b) { return a < int32_t (b); }
-sfpi_inline  impl_::vCond operator> (vInt a, int b) { return a > int32_t (b); }
-sfpi_inline  impl_::vCond operator<= (vInt a, int b) { return a <= int32_t (b); }
-sfpi_inline  impl_::vCond operator>= (vInt a, int b) { return a >= int32_t (b); }
+sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
+sfpi_inline  vBool operator!= (vInt a, int b) { return a != int32_t (b); }
+sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
+sfpi_inline  vBool operator> (vInt a, int b) { return a > int32_t (b); }
+sfpi_inline  vBool operator<= (vInt a, int b) { return a <= int32_t (b); }
+sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
 
 // FIXME: These should be deprecated and removed -- mixing signed and unsigned
 // in compares is not sensible. Sadly user code does this because the old
 // iplementatiion permitted it :(
-sfpi_inline  impl_::vCond operator== (vInt a, vUInt b) { return a == vInt (b); }
-sfpi_inline  impl_::vCond operator!= (vInt a, vUInt b) { return a != vInt (b); }
-sfpi_inline  impl_::vCond operator< (vInt a, vUInt b) { return a < vInt (b); }
-sfpi_inline  impl_::vCond operator> (vInt a, vUInt b) { return a > vInt (b); }
-sfpi_inline  impl_::vCond operator<= (vInt a, vUInt b) { return a <= vInt (b); }
-sfpi_inline  impl_::vCond operator>= (vInt a, vUInt b) { return a >= vInt (b); }
+sfpi_inline  vBool operator== (vInt a, vUInt b) { return a == vInt (b); }
+sfpi_inline  vBool operator!= (vInt a, vUInt b) { return a != vInt (b); }
+sfpi_inline  vBool operator< (vInt a, vUInt b) { return a < vInt (b); }
+sfpi_inline  vBool operator> (vInt a, vUInt b) { return a > vInt (b); }
+sfpi_inline  vBool operator<= (vInt a, vUInt b) { return a <= vInt (b); }
+sfpi_inline  vBool operator>= (vInt a, vUInt b) { return a >= vInt (b); }
 
-sfpi_inline  impl_::vCond operator== (vInt a, uint32_t b) { return a == int32_t (b); }
-sfpi_inline  impl_::vCond operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
-sfpi_inline  impl_::vCond operator< (vInt a, uint32_t b) { return a < int32_t (b); }
-sfpi_inline  impl_::vCond operator> (vInt a, uint32_t b) { return a > int32_t (b); }
-sfpi_inline  impl_::vCond operator<= (vInt a, uint32_t b) { return a <= int32_t (b); }
-sfpi_inline  impl_::vCond operator>= (vInt a, uint32_t b) { return a >= int32_t (b); }
+sfpi_inline  vBool operator== (vInt a, uint32_t b) { return a == int32_t (b); }
+sfpi_inline  vBool operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
+sfpi_inline  vBool operator< (vInt a, uint32_t b) { return a < int32_t (b); }
+sfpi_inline  vBool operator> (vInt a, uint32_t b) { return a > int32_t (b); }
+sfpi_inline  vBool operator<= (vInt a, uint32_t b) { return a <= int32_t (b); }
+sfpi_inline  vBool operator>= (vInt a, uint32_t b) { return a >= int32_t (b); }
 
-sfpi_inline  impl_::vCond operator== (vInt a, unsigned b) { return a == uint32_t (b); }
-sfpi_inline  impl_::vCond operator!= (vInt a, unsigned b) { return a != uint32_t (b); }
-sfpi_inline  impl_::vCond operator< (vInt a, unsigned b) { return a < uint32_t (b); }
-sfpi_inline  impl_::vCond operator> (vInt a, unsigned b) { return a > uint32_t (b); }
-sfpi_inline  impl_::vCond operator<= (vInt a, unsigned b) { return a <= uint32_t (b); }
-sfpi_inline  impl_::vCond operator>= (vInt a, unsigned b) { return a >= uint32_t (b); }
+sfpi_inline  vBool operator== (vInt a, unsigned b) { return a == uint32_t (b); }
+sfpi_inline  vBool operator!= (vInt a, unsigned b) { return a != uint32_t (b); }
+sfpi_inline  vBool operator< (vInt a, unsigned b) { return a < uint32_t (b); }
+sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > uint32_t (b); }
+sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= uint32_t (b); }
+sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= uint32_t (b); }
 
 //////////////////////////////////////////////////////////////////////////////
 
-sfpi_inline  impl_::vCond operator== (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::EQ, b, a, 0); }
-sfpi_inline  impl_::vCond operator!= (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::NE, b, a, 0); }
-sfpi_inline  impl_::vCond operator< (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::LT, b, a, 0); }
-sfpi_inline  impl_::vCond operator> (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::GT, b, a, 0); }
-sfpi_inline  impl_::vCond operator<= (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::LTE, b, a, 0); }
-sfpi_inline  impl_::vCond operator>= (vUInt a, vUInt b) { return impl_::vCond (impl_::vCond::GTE, b, a, 0); }
+sfpi_inline  vBool operator== (vUInt, vUInt);
+sfpi_inline  vBool operator!= (vUInt, vUInt);
+sfpi_inline  vBool operator< (vUInt, vUInt);
+sfpi_inline  vBool operator> (vUInt, vUInt);
+sfpi_inline  vBool operator<= (vUInt, vUInt);
+sfpi_inline  vBool operator>= (vUInt, vUInt);
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
-sfpi_inline  impl_::vCond operator== (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::EQ, a, b, 0); }
-sfpi_inline  impl_::vCond operator!= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::NE, a, b, 0); }
-sfpi_inline  impl_::vCond operator< (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::LT, a, b, 0); }
-sfpi_inline  impl_::vCond operator> (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::GT, a, b, 0); }
-sfpi_inline  impl_::vCond operator<= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::LTE, a, b, 0); }
-sfpi_inline  impl_::vCond operator>= (vUInt a, uint32_t b) { return impl_::vCond (impl_::vCond::GTE, a, b, 0); }
+sfpi_inline  vBool operator== (vUInt, uint32_t);
+sfpi_inline  vBool operator!= (vUInt, uint32_t);
+sfpi_inline  vBool operator< (vUInt, uint32_t);
+sfpi_inline  vBool operator> (vUInt, uint32_t);
+sfpi_inline  vBool operator<= (vUInt, uint32_t);
+sfpi_inline  vBool operator>= (vUInt, uint32_t);
 
-sfpi_inline  impl_::vCond operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
-sfpi_inline  impl_::vCond operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
-sfpi_inline  impl_::vCond operator< (vUInt a, unsigned b) { return a < uint32_t (b); }
-sfpi_inline  impl_::vCond operator> (vUInt a, unsigned b) { return a > uint32_t (b); }
-sfpi_inline  impl_::vCond operator<= (vUInt a, unsigned b) { return a <= uint32_t (b); }
-sfpi_inline  impl_::vCond operator>= (vUInt a, unsigned b) { return a >= uint32_t (b); }
+sfpi_inline  vBool operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
+sfpi_inline  vBool operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
+sfpi_inline  vBool operator< (vUInt a, unsigned b) { return a < uint32_t (b); }
+sfpi_inline  vBool operator> (vUInt a, unsigned b) { return a > uint32_t (b); }
+sfpi_inline  vBool operator<= (vUInt a, unsigned b) { return a <= uint32_t (b); }
+sfpi_inline  vBool operator>= (vUInt a, unsigned b) { return a >= uint32_t (b); }
 
-sfpi_inline  impl_::vCond operator== (vUInt a, int b) { return a == uint32_t (b); }
-sfpi_inline  impl_::vCond operator!= (vUInt a, int b) { return a != uint32_t (b); }
-sfpi_inline  impl_::vCond operator< (vUInt a, int b) { return a < uint32_t (b); }
-sfpi_inline  impl_::vCond operator> (vUInt a, int b) { return a > uint32_t (b); }
-sfpi_inline  impl_::vCond operator<= (vUInt a, int b) { return a <= uint32_t (b); }
-sfpi_inline  impl_::vCond operator>= (vUInt a, int b) { return a >= uint32_t (b); }
+sfpi_inline  vBool operator== (vUInt a, int b) { return a == uint32_t (b); }
+sfpi_inline  vBool operator!= (vUInt a, int b) { return a != uint32_t (b); }
+sfpi_inline  vBool operator< (vUInt a, int b) { return a < uint32_t (b); }
+sfpi_inline  vBool operator> (vUInt a, int b) { return a > uint32_t (b); }
+sfpi_inline  vBool operator<= (vUInt a, int b) { return a <= uint32_t (b); }
+sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
 
 //////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function
 // is sequenced before every argument expression and every default argument. [expr.pre]
 
 #define v_if(x)                                 \
-  { sfpi::impl_::vCond::CC __cc;                \
+  { sfpi::impl_::CC __cc;                \
   __cc.push ().if_().cond (x);                  \
   {
 
@@ -527,7 +557,7 @@ sfpi_inline  impl_::vCond operator>= (vUInt a, int b) { return a >= uint32_t (b)
   }
 
 #define v_block                                 \
-  { sfpi::impl_::vCond::CC __cc;                \
+  { sfpi::impl_::CC __cc;                \
   __cc.push ();
 
 #define v_and(x)                                \
