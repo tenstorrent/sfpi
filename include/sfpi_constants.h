@@ -204,18 +204,23 @@ constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
-constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = 0; // Round Nearest Evne
-constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = 1; // Round Nearest Stochastic
-#if __riscv_xtttensixbh || __riscv_xtttensixqsr
-// This conversion has a bug, sign-mag -0 converts to mostneg int32, not zero
+constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Evne
+constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNS = 1; // Round Nearest Stochastic
+//__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNE instead")))
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = SFPCAST_MOD1_SM32_TO_FP32_RNE;
+//__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNS instead")))
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = SFPCAST_MOD1_SM32_TO_FP32_RNS;
+#if __riscv_xtttensixbh
+// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
+constexpr unsigned int SFPCAST_MOD1_INT32_ABS = 2; // 2's complement ABS
+constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
+#elif __riscv_xtttensixqsr
+// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 2; // Sign-Mag to 2's compl
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
+constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNE = 4; // Float to Sign-Mag
+constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNS = 5; // Float to Sign-Mag
 #endif
-// Deprecate these two names (renamed due to features added in Blackhole)
-__attribute__((__deprecated__("use SFPCAST_MOD1_INT32_TO_FP32_RNE instead")))
-constexpr unsigned int SFPCAST_MOD1_RND_EVEN = SFPCAST_MOD1_INT32_TO_FP32_RNE;
-__attribute__((__deprecated__("use SFPCAST_MOD1_INT32_TO_FP32_RNS instead")))
-constexpr unsigned int SFPCAST_MOD1_RND_STOCH = SFPCAST_MOD1_INT32_TO_FP32_RNS;
 
 constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
 constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;

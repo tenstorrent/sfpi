@@ -97,7 +97,7 @@ sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Debias
                                   ~0 /* bad value, compile error */);
 }
 
-__SFPI_DEPRECATED("Use sfpi:exexp (X, sfpi::ExponentMode::NoDebias)")
+__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
 sfpi_inline vInt exexp_nodebias(const vFloat v) {
   return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_NODEBIAS);
 }
@@ -116,12 +116,20 @@ sfpi_inline vMag exman(const vFloat v, MantissaMode mode = MantissaMode::Fractio
                                         ~0 /* bad value, compile error */));
 }
 
-__SFPI_DEPRECATED("Use sfpi:exman (X, sfpi::MantissaMode::WithUnitBit)")
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
+                                                     std::is_base_of<vInt, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline vUInt exsgn (Type v) {
+  return as<vUInt> (v) >> 31;
+}
+
+__SFPI_DEPRECATED("Use sfpi::exman (X, sfpi::MantissaMode::WithUnitBit)")
 sfpi_inline vInt exman8(const vFloat v) {
   return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
 }
 
-__SFPI_DEPRECATED("Use sfpi:exman (X[, sfpi::MantissaMode::FractionOnly])")
+__SFPI_DEPRECATED("Use sfpi::exman (X[, sfpi::MantissaMode::FractionOnly])")
 sfpi_inline vInt exman9(const vFloat v) {
   return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
 }
@@ -143,11 +151,16 @@ sfpi_inline vFloat setman (vFloat v, unsigned man) {
 }
 
 // accept float, unsigned or sign-mag
+// FIXME: Deprecate the from float version
 template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vUInt, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline vFloat setman (vFloat v, Type man) {
+  return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
+}
+
+sfpi_inline vFloat copyman (vFloat v, vFloat man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
@@ -217,6 +230,16 @@ sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
 
+template <typename TypeA, typename TypeB,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
+                                                     std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vInt, TypeB>,
+                                                     std::is_base_of<vUInt, TypeB>,
+                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
+sfpi_inline TypeA setsgn (const TypeA v, TypeB sgn) {
+  return copysgn (v, as<vSMag>(as<vUInt>(sgn) << 31));
+}
+
 // FIXME:Deprecate
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::is_base_of<vInt, TypeA>::value>* = nullptr,
@@ -225,22 +248,6 @@ template <typename TypeA, typename TypeB,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
 sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
-}
-
-// Deprecate old names
-template <typename vTypeA, typename vTypeB,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
-__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
-  return copysgn (v, sgn);
-}
-
-template <typename vType,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
-__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vType setsgn (vType v, vInt sgn) {
-  return copysgn (v, sgn);
 }
 
 enum class LZMode {
@@ -260,8 +267,8 @@ sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
                                       ~0) | SFPLZ_MOD1_CC_NONE));
 }
 
-// FIXME:Deprecate
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+__SFPI_DEPRECATED("Use sfpi::lz (X, sfpi::LXMode::IgnoreSign)")
 sfpi_inline vInt lz_nosgn (const vType v) {
   return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
 }
@@ -318,8 +325,8 @@ sfpi_inline constexpr unsigned stochrnd_rnd (RoundMode mode) {
 }
 
 sfpi_inline constexpr unsigned cast_rnd (RoundMode mode) {
-  return mode == RoundMode::NearestEven ? SFPCAST_MOD1_INT32_TO_FP32_RNE :
-      mode == RoundMode::Stochastic ? SFPCAST_MOD1_INT32_TO_FP32_RNS :
+  return mode == RoundMode::NearestEven ? SFPCAST_MOD1_SM32_TO_FP32_RNE :
+      mode == RoundMode::Stochastic ? SFPCAST_MOD1_SM32_TO_FP32_RNS :
       ~0; // Bad value, compilation error
 }
 
@@ -342,120 +349,120 @@ sfpi_inline constexpr unsigned stochrnd_mod () {
 }
 }
 
+// conversions
+
+// float/float16a/float16b -> float/float16a/float16b/smag32/smag16/uint16
 template <typename ToType, typename FromType,
-          typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, ToType>::value>* = nullptr,
-          typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
-sfpi_inline ToType convert (FromType val, RoundMode round = RoundMode::Stochastic) {
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+          typename std::enable_if_t<std::is_base_of<vFloat, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = RoundMode::Stochastic)
+{
   if constexpr (std::is_same_v<FromType, ToType>)
     return val;
 
-  else if constexpr (std::is_same_v<vInt, FromType>) {
-    if constexpr (std::is_same_v<vSMag, ToType>) {
-      // 2C32 -> SM32
-      vInt tmp = val;
-#if __riscv_xtttensixwh
-      v_if (tmp < 0) {
-        vInt mag_ones (~uint32_t (0) >> 1);
-        tmp ^= mag_ones;
-        tmp -= mag_ones;
-        v_if (!tmp) {
-          tmp = mag_ones;
-        } v_endif;
-      } v_endif;
-#else
-      tmp = vInt (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32));
-#if __riscv_xtttensixbh
-      // BH erratum, 2C(MOSTNEG) -> SM(1:0), clamp to SM(MOSTNEG)
-      v_if (vInt (tmp) == int32_t (0x8000000)) {
-        tmp = ~int32_t (0);
-      } v_endif;
-#endif
-#endif
-      return reinterpret<vSMag> (tmp);
-    }
-    else
-      return convert<ToType> (val, 0, round);
-  }
+#if __riscv_xtttensixqsr
+  else if constexpr (std::is_same_v<vSMag, ToType>)
+    {
+      // To smag
+      unsigned mod1 =
+          round == RoundMode::NearestEven ? SFPCAST_MOD1_FP32_TO_SM32_RNE :
+          round == RoundMode::Stochastic ? SFPCAST_MOD1_FP32_TO_SM32_RNS :
+          ~0u;
 
-  else if constexpr (std::is_same_v<vSMag, FromType>) {
-    if constexpr (std::is_base_of_v<vFloat, ToType>)
-      return convert<ToType> (vFloat (__builtin_rvtt_sfpcast (val.get (), impl_::cast_rnd (round))), round);
-    else if constexpr (std::is_same_v<vInt, ToType>) {
-      // SM32 -> 2C32
-      vInt tmp;
-#if __riscv_xtttensixwh
-      tmp = reinterpret<vInt> (val);
-      v_if (tmp < 0) {
-        vInt mag_ones (~uint32_t (0) >> 1);
-        tmp ^= mag_ones;
-        tmp -= mag_ones;
-      } v_endif;
-#else
-      tmp = vInt (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32));
-#if __riscv_xtttensixbh
-      // BH erratum, SM(1:0) -> 2C(MOSTNEG) -> , clamp to zero
-      v_if (tmp == int32_t (~(~uint32_t (0) >> 1))) {
-        tmp = 0;
-      } v_endif;
+      return ToType (__builtin_rvtt_sfpcast (val.get (), mod1));
+    }
 #endif
-#endif
-      return tmp;
-    } 
-    else
-      return convert<ToType> (val, 0, round);
-  }
 
   else
-    return convert<ToType> (val, 0, round);
+    {
+      // to 16a,16b,int16,uint16
+      unsigned mod1 = ~0;
+      if constexpr (std::is_same_v<vFloat16a, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_FP16A;
+      else if constexpr (std::is_same_v<vFloat16b, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_FP16B;
+      else if constexpr (std::is_same_v<vSMag16, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_INT16;
+      else if constexpr (std::is_same_v<vUInt16, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_UINT16; 
+      else
+        static_assert (false, "Cannot convert vFloat{,16[ab]} to target type");
+
+      return ToType (__builtin_rvtt_sfpstochrnd_i
+                     (val.get(), 0, mod1, impl_::stochrnd_rnd (round)));
+    }
 }
 
+// smag/smag16 -> float/float16a/float16b/int32
 template <typename ToType, typename FromType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
-    typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
-sfpi_inline ToType convert (FromType val, unsigned descale, RoundMode round = RoundMode::Stochastic) {
-  if constexpr (std::is_same_v<vFloat, FromType>)
-    return ToType (__builtin_rvtt_sfpstochrnd_i
-                   (val.get(), descale, (impl_::stochrnd_mod<ToType, FromType> ()),
-                    impl_::stochrnd_rnd (round)));
-  else {
-    static_assert (false, "This conversion is not supported");
-    return ToType ();
-  }
-}
-
-template <typename ToType, typename FromType,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
-          typename std::enable_if_t<std::is_base_of<sfpi::impl_::vVal, FromType>::value>* = nullptr>
-sfpi_inline ToType convert (FromType val, vUInt descale, RoundMode round = RoundMode::Stochastic) {
-  if constexpr (std::is_same_v<vFloat, FromType>)
-    return ToType (__builtin_rvtt_sfpstochrnd_v
-                   (val.get(), descale, (impl_::stochrnd_mod<ToType, FromType> ()),
-                    impl_::stochrnd_rnd (round)));
-  else {
-    static_assert (false, "This conversion is not supported");
-    return ToType ();
-  }
-}
-
-template <typename ToType, typename Vector, typename Elt,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
-sfpi_inline ToType convert (impl_::vNarrow<Vector, Elt> val, RoundMode round = RoundMode::Stochastic) {
-  if constexpr (std::is_same_v<impl_::vNarrow<Vector, Elt>, ToType>)
+          typename std::enable_if_t<std::is_base_of<vSMag, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = RoundMode::Stochastic)
+{
+  if constexpr (std::is_same_v<FromType, ToType>)
     return val;
 
-  return convert<ToType> (Vector (val), round);
+  else if constexpr (std::is_base_of_v<vFloat, ToType>)
+    {
+      // to float, fp16a, fp16b
+      unsigned mod1 =
+          round == RoundMode::NearestEven ? SFPCAST_MOD1_SM32_TO_FP32_RNE :
+          round == RoundMode::Stochastic ? SFPCAST_MOD1_SM32_TO_FP32_RNS :
+          ~0u;
+
+      return convert<ToType> (vFloat (__builtin_rvtt_sfpcast (val.get (), mod1)), round);
+    }
+
+  else if constexpr (std::is_same_v<vInt, ToType>)
+    return smag_to_int (val);
+
+  else
+    static_assert (false, "Cannot convert vSMag to target type");
 }
 
-template <typename ToType, typename Vector, typename Elt,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
-sfpi_inline ToType convert (impl_::vNarrow<Vector, Elt> val, unsigned descale, RoundMode round = RoundMode::Stochastic) {
-  return convert<ToType> (Vector (val), descale, round);
+// int -> smag
+template <typename ToType, typename FromType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+          typename std::enable_if_t<std::is_base_of<vInt, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val)
+{
+  if constexpr (std::is_same_v<FromType, ToType>)
+    return val;
+
+  else if constexpr (std::is_same_v<vSMag, ToType>)
+    return int_to_smag (val);
+
+  else
+    static_assert (false, "Cannot convert vInt to target type");
 }
 
-template <typename ToType, typename Vector, typename Elt,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr>
-sfpi_inline ToType convert (impl_::vNarrow<Vector, Elt> val, vUInt descale, RoundMode round = RoundMode::Stochastic) {
-  return convert<ToType> (Vector (val), descale, round);
+// mag
+template <typename ToType, typename FromType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+          typename std::enable_if_t<std::is_same<vMag, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = RoundMode::Stochastic)
+{
+  if constexpr (std::is_same_v<FromType, ToType>)
+    return val;
+
+  else if constexpr (std::is_same_v<vInt, ToType>)
+    return as<vInt> (val);
+
+  else
+    return convert<ToType> (as<vSMag> (val), round);
+}
+
+// uint16
+template <typename ToType, typename FromType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
+          typename std::enable_if_t<std::is_same<vUInt16, FromType>::value>* = nullptr>
+sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = RoundMode::Stochastic)
+{
+  if constexpr (std::is_same_v<FromType, ToType>)
+    return val;
+
+  else
+    return convert<ToType> (as<vSMag> (val), round);
 }
 
 // FIXME:deprecate
@@ -632,5 +639,42 @@ sfpi_inline vFloat approx_tanh (vFloat src) {
   return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_TANH);
 }
 #endif
+
+vSMag impl_::int_to_smag (vInt val, bool clamp_most_neg [[gnu::unused]]) {
+#if __riscv_xtttensixqsr
+    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32);
+#else
+#if __riscv_xtttensixbh
+  if (!clamp_most_neg)
+    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32);
+  else
+#endif
+    {
+      v_if (val < 0) {
+        val = setsgn (val, 0);
+        val = 0 - val;
+        if (clamp_most_neg) {
+          v_if (!val) {
+            val = ~int32_t (0);
+          } v_endif;
+        }
+      } v_endif;
+    }
+#endif
+  return as<vSMag> (val);
+}
+
+vInt impl_::smag_to_int (vSMag val) {
+  vInt res = as<vInt> (val);
+#if __riscv_xtttensixqsr
+  res = __builtin_rvtt_sfpcast (res.get (), SFPCAST_MOD1_SM32_TO_INT32);
+#else
+  v_if (res < 0) {
+    res = setsgn (res, 0);
+    res = 0 - res;
+  } v_endif;
+#endif
+  return res;
+}
 
 } // namespace sfpi
