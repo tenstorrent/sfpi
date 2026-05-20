@@ -51,6 +51,7 @@ class vFloat;
 class vInt;
 class vUInt;
 class vSMag;
+class vBool;
 class sFloat16a;
 class sFloat16b;
 enum class LRegs : uint8_t;
@@ -229,75 +230,29 @@ public:
   sfpi_inline vReg operator[] (LRegs lr) const { return vReg (unsigned (lr)); }
 };
 
-class vCond {
-  friend class sfpi::vInt; // conversion op from here?
-  friend class sfpi::vUInt;
-
-public:
-  enum BoolOp {
-    Or = SFPXBOOL_MOD1_OR,
-    And = SFPXBOOL_MOD1_AND,
-    Not = SFPXBOOL_MOD1_NOT,
-  };
-
-  enum CondOp {
-    LT = SFPXCMP_MOD1_CC_LT,
-    NE = SFPXCMP_MOD1_CC_NE,
-    GTE = SFPXCMP_MOD1_CC_GTE,
-    EQ = SFPXCMP_MOD1_CC_EQ,
-    LTE = SFPXCMP_MOD1_CC_LTE,
-    GT = SFPXCMP_MOD1_CC_GT,
-  };
-
+class CC {
 private:
-  int result;
+  unsigned dep = 0;
+  unsigned depth = 0;
 
 public:
-  sfpi_inline vCond (vCond const &) = default;
-  sfpi_inline vCond &operator= (vCond const &) = default;
+  sfpi_inline CC () = default;
+  sfpi_inline ~CC ();
 
-public:
-  sfpi_inline vCond (BoolOp, vCond, vCond);
-  sfpi_inline vCond (CondOp, vFloat, float);
-  sfpi_inline vCond (CondOp, vFloat, vFloat);
-  sfpi_inline vCond (CondOp, vInt, int32_t, unsigned);
-  sfpi_inline vCond (CondOp, vInt, vInt, unsigned);
-  sfpi_inline vCond (vInt);
+  // Moveable, not copyable
+  sfpi_inline CC (CC &&);
+  sfpi_inline CC &operator= (CC &&);
 
-private:
-  sfpi_inline int get () const { return result; }
+  sfpi_inline CC &if_();
+  sfpi_inline CC &else_();
 
-public:
-  class CC {
-  private:
-    unsigned dep = 0;
-    unsigned depth = 0;
+  sfpi_inline void cond (vBool);
+  sfpi_inline void cond (vInt);
+  sfpi_inline void cond (vUInt);
 
-  public:
-    sfpi_inline CC () = default;
-    sfpi_inline ~CC ();
-
-    // Moveable, not copyable
-    sfpi_inline CC (CC &&);
-    sfpi_inline CC &operator= (CC &&);
-
-    sfpi_inline CC &if_();
-    sfpi_inline CC &else_();
-
-    sfpi_inline void cond (vCond);
-    sfpi_inline void cond (vInt);
-    sfpi_inline void cond (vUInt);
-
-    sfpi_inline CC &push ();
-    sfpi_inline CC &pop ();
-  };
+  sfpi_inline CC &push ();
+  sfpi_inline CC &pop ();
 };
-
-sfpi_inline vCond operator&& (vCond, vCond);
-sfpi_inline vCond operator|| (vCond, vCond);
-sfpi_inline vCond operator! (vCond);
-
-//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 template<template<int> typename Derived, int Mod = -1>

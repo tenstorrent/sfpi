@@ -26,75 +26,95 @@ sfpi_inline sfpi::sFloat16b::sFloat16b (float v)
     : val (uint16_t (impl_::float_as_uint (v) >> 16)) {}
 
 //////////////////////////////////////////////////////////////////////////////
-// impl_::vCond definitions
-sfpi::impl_::vCond::vCond (BoolOp t, vCond a, vCond b) {
+// vBool definitions
+
+enum sfpi::vBool::BoolOp : unsigned char {
+      Or = SFPXBOOL_MOD1_OR,
+     And = SFPXBOOL_MOD1_AND,
+     Not = SFPXBOOL_MOD1_NOT,
+};
+
+enum sfpi::vBool::CondOp : unsigned char {
+      LT = SFPXCMP_MOD1_CC_LT,
+      NE = SFPXCMP_MOD1_CC_NE,
+     GTE = SFPXCMP_MOD1_CC_GTE,
+      EQ = SFPXCMP_MOD1_CC_EQ,
+     LTE = SFPXCMP_MOD1_CC_LTE,
+      GT = SFPXCMP_MOD1_CC_GT,
+};
+
+sfpi::vBool::vBool (BoolOp t, vBool a, vBool b) {
   result = __builtin_rvtt_sfpxbool (t, a.get (), b.get ());
 }
-sfpi::impl_::vCond::vCond (CondOp t, vFloat a, float b) {
+sfpi::vBool::vBool (CondOp t, vFloat a, float b) {
   result = __builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (b), t | SFPXSCMP_MOD1_FMT_FLOAT);
 }
-sfpi::impl_::vCond::vCond (CondOp t, vFloat a, vFloat b) {
+sfpi::vBool::vBool (CondOp t, vFloat a, vFloat b) {
   result = __builtin_rvtt_sfpxfcmpv (a.get (), b.get (), t);
 }
-sfpi::impl_::vCond::vCond (CondOp t, vInt a, int32_t b, unsigned mod) {
+sfpi::vBool::vBool (CondOp t, vInt a, int32_t b, unsigned mod) {
   result = __builtin_rvtt_sfpxicmps (a.get (), b, mod | t);
 }
-sfpi::impl_::vCond::vCond (CondOp t, vInt a, vInt b, unsigned mod) {
+sfpi::vBool::vBool (CondOp t, vInt a, vInt b, unsigned mod) {
   result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), mod | t);
 }
-sfpi::impl_::vCond::vCond (vInt a) {
+sfpi::vBool::vBool (vInt a) {
   result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
 }
 
-sfpi::impl_::vCond::CC::CC (CC &&src)
+sfpi::vBool::operator vInt () const {
+  return vInt (__builtin_rvtt_sfpxcondi (get ()));
+}
+
+sfpi::impl_::CC::CC (CC &&src)
     : dep (src.dep), depth (src.depth) {
   src.dep = 0;
   src.depth = 0;
 }
 
-sfpi::impl_::vCond::CC::~CC () { pop (); }
+sfpi::impl_::CC::~CC () { pop (); }
 
-auto sfpi::impl_::vCond::CC::operator= (CC &&src)-> CC & {
+auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
   pop ();
   dep = src.dep, depth = src.depth;
   src.dep = 0, src.depth = 0;
   return *this;
 }
 
-auto sfpi::impl_::vCond::CC::if_()-> CC & {
+auto sfpi::impl_::CC::if_()-> CC & {
   dep = __builtin_rvtt_sfpxvif ();
   return *this;
 }
-auto sfpi::impl_::vCond::CC::else_()-> CC & {
+auto sfpi::impl_::CC::else_()-> CC & {
   __builtin_rvtt_sfpcompc ();
   return *this;    
 }
 
-auto sfpi::impl_::vCond::CC::cond (vCond op)-> void {
+auto sfpi::impl_::CC::cond (vBool op)-> void {
   __builtin_rvtt_sfpxcondb (op.get (), dep);
 }
-auto sfpi::impl_::vCond::CC::cond (vInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vCond (vCond::NE, v, 0, 0).get (), dep);
+auto sfpi::impl_::CC::cond (vInt v)-> void {
+  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0, 0).get (), dep);
 }
-auto sfpi::impl_::vCond::CC::cond (vUInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vCond (vCond::NE, v, 0, 0).get (), dep);
+auto sfpi::impl_::CC::cond (vUInt v)-> void {
+  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0, 0).get (), dep);
 }
 
-auto sfpi::impl_::vCond::CC::push ()-> CC & {
+auto sfpi::impl_::CC::push ()-> CC & {
   depth++;
   __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
   return *this;
 }
 
-auto sfpi::impl_::vCond::CC::pop ()-> CC & {
+auto sfpi::impl_::CC::pop ()-> CC & {
   for (unsigned ix = depth; ix--;)
     __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
   return *this;
 }
 
-auto sfpi::impl_::operator&& (vCond a, vCond b)-> vCond { return vCond (vCond::And, a, b); }
-auto sfpi::impl_::operator|| (vCond a, vCond b)-> vCond { return vCond (vCond::Or, a, b); }
-auto sfpi::impl_::operator! (vCond a)-> vCond { return vCond (vCond::Not, a, a); }
+auto sfpi::operator&& (vBool a, vBool b)-> vBool { return vBool (vBool::And, a, b); }
+auto sfpi::operator|| (vBool a, vBool b)-> vBool { return vBool (vBool::Or, a, b); }
+auto sfpi::operator! (vBool a)-> vBool { return vBool (vBool::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
 template<template<int> typename Derived, int Mod>
@@ -371,6 +391,22 @@ auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) - b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
+// Comparisons
+auto sfpi::operator== (vFloat a, vFloat b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vFloat a, vFloat b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vFloat a, vFloat b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LTE, a, b); }
+auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GTE, a, b); }
+
+// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+auto sfpi::operator== (vFloat a, float b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vFloat a, float b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vFloat a, float b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vFloat a, float b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vFloat a, float b)-> vBool { return vBool (vBool::LTE, a, b); }
+auto sfpi::operator>= (vFloat a, float b)-> vBool { return vBool (vBool::GTE, a, b); }
+
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
 sfpi::vInt::vInt (impl_::sfpu_t vec) : vVal (vec) {}
@@ -387,8 +423,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
-sfpi::vInt::vInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -433,6 +467,21 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
+auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, b, a, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, b, a, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, b, a, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, b, a, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LTE, b, a, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GTE, b, a, SFPXIADD_MOD1_SIGNED); }
+
+// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+auto sfpi::operator== (vInt a, int32_t b)-> vBool { return vBool (vBool::EQ, a, b, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return vBool (vBool::NE, a, b, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator< (vInt a, int32_t b)-> vBool { return vBool (vBool::LT, a, b, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator> (vInt a, int32_t b)-> vBool { return vBool (vBool::GT, a, b, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator<= (vInt a, int32_t b)-> vBool { return vBool (vBool::LTE, a, b, SFPXIADD_MOD1_SIGNED); }
+auto sfpi::operator>= (vInt a, int32_t b)-> vBool { return vBool (vBool::GTE, a, b, SFPXIADD_MOD1_SIGNED); }
+
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
@@ -449,8 +498,8 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
-sfpi::vUInt::vUInt(const impl_::vCond vc)
-    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
+//sfpi::vUInt::vUInt(const vBool vc)
+//    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }
@@ -497,6 +546,22 @@ auto sfpi::operator^ (vInt a, vUInt b)-> vUInt { return vUInt (a) ^ b; }
 auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
+
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, b, a, 0); }
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, b, a, 0); }
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, b, a, 0); }
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, b, a, 0); }
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LTE, b, a, 0); }
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GTE, b, a, 0); }
+
+// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return vBool (vBool::EQ, a, b, 0); }
+auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::NE, a, b, 0); }
+auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LT, a, b, 0); }
+auto sfpi::operator> (vUInt a, uint32_t b)-> vBool { return vBool (vBool::GT, a, b, 0); }
+auto sfpi::operator<= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LTE, a, b, 0); }
+auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::GTE, a, b, 0); }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // vSMag definitions
