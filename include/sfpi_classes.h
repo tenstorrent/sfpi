@@ -228,8 +228,8 @@ public:
 };
 
 class vCond {
-  friend class sfpi::vInt; // conversion op from here?
-  friend class sfpi::vUInt;
+  //  friend class sfpi::vInt; // conversion op from here?
+  //  friend class sfpi::vUInt;
 
 public:
   enum BoolOp {
@@ -261,6 +261,9 @@ public:
   sfpi_inline vCond (CondOp, vInt, int32_t, unsigned);
   sfpi_inline vCond (CondOp, vInt, vInt, unsigned);
   sfpi_inline vCond (vInt);
+
+public:
+  sfpi_inline operator vInt () const;
 
 private:
   sfpi_inline int get () const { return result; }

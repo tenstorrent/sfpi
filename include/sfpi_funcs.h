@@ -46,6 +46,10 @@ sfpi::impl_::vCond::vCond (vInt a) {
   result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
 }
 
+sfpi::impl_::vCond::operator vInt() const {
+  return vInt (__builtin_rvtt_sfpxcondi (get ()));
+}
+
 sfpi::impl_::vCond::CC::CC (CC &&src)
     : dep (src.dep), depth (src.depth) {
   src.dep = 0;
@@ -387,8 +391,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
-//sfpi::vInt::vInt(const impl_::vCond vc)
-//    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }

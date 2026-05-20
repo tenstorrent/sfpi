@@ -220,6 +220,8 @@ sfpi_inline vFloat operator* (float, vFloat);
 using vFloat16a = impl_::vFloat16a;
 using vFloat16b = impl_::vFloat16b;
 
+using vCond = impl_::vCond;
+
 //////////////////////////////////////////////////////////////////////////////
 class vInt : public impl_::vVal {
 public:
@@ -238,7 +240,7 @@ public:
   sfpi_inline vInt (uint32_t);
   sfpi_inline vInt (int val);
   sfpi_inline vInt (unsigned val);
-  sfpi_inline vInt (impl_::vCond) = delete;
+  //  sfpi_inline vInt (impl_::vCond) = delete;
 
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
