@@ -499,5 +499,20 @@ auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
 //////////////////////////////////////////////////////////////////////////////
+// vMag definitions
+auto sfpi::operator>> (vMag a, unsigned b)-> vMag { return vMag (a.int_shift (-b, false)); }
+auto sfpi::operator>> (vMag a, int b)-> vMag { return vMag (a.int_shift (-b, false)); }
+auto sfpi::operator>> (vMag a, vUInt b)-> vMag { return vMag (a.int_shift (-b, false)); }
+
+auto sfpi::operator& (vMag a, unsigned b)-> vMag { return a & vMag (b); }
+auto sfpi::operator& (vMag a, int b)-> vMag { return a & unsigned (b); }
+auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
+auto sfpi::operator| (vMag a, unsigned b)-> vMag { return a | vMag (b); }
+auto sfpi::operator| (vMag a, int b)-> vMag { return a | unsigned (b); }
+auto sfpi::operator| (vMag a, vMag b)-> vMag { return vMag (a.int_or (b)); }
+auto sfpi::operator^ (vMag a, unsigned b)-> vMag { return a ^ vMag (b); }
+auto sfpi::operator^ (vMag a, int b)-> vMag { return a ^ unsigned (b); }
+auto sfpi::operator^ (vMag a, vMag b)-> vMag { return vMag (a.int_xor (b)); }
+
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}

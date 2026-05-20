@@ -97,10 +97,12 @@ sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Debias
                                   ~0 /* bad value, compile error */);
 }
 
+#if 0
 __SFPI_DEPRECATED("Use sfpi:exexp (X, sfpi::ExponentMode::NoDebias)")
 sfpi_inline vInt exexp_nodebias(const vFloat v) {
   return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_NODEBIAS);
 }
+#endif
 
 enum class MantissaMode {
   FractionOnly,
@@ -116,15 +118,27 @@ sfpi_inline vMag exman(const vFloat v, MantissaMode mode = MantissaMode::Fractio
                                         ~0 /* bad value, compile error */));
 }
 
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_same<vFloat, Type>,
+                                                     std::is_base_of<vInt, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline vUInt exsgn (Type v) {
+  return as<vUInt> (v) >> 31;
+}
+
+#if 0
 __SFPI_DEPRECATED("Use sfpi:exman (X, sfpi::MantissaMode::WithUnitBit)")
 sfpi_inline vInt exman8(const vFloat v) {
   return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
 }
+#endif
 
+#if 0
 __SFPI_DEPRECATED("Use sfpi:exman (X[, sfpi::MantissaMode::FractionOnly])")
 sfpi_inline vInt exman9(const vFloat v) {
   return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
 }
+#endif
 
 sfpi_inline vFloat setexp (const vFloat v, int exp) {
   return __builtin_rvtt_sfpsetexp_i (v.get(), exp, 0);
@@ -174,9 +188,11 @@ sfpi_inline vMag fractional_mul (Type a, Type b, FractionalHalf half = Fractiona
 }
 
 // FIXME: deprecate
+#if 0
 sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
   return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
 }
+#endif
 #endif
 
 // accept float, unsigned or sign-mag
@@ -194,9 +210,11 @@ sfpi_inline vSMag setsgn (Type v, int sgn) {
 }
 
 // FIXME:Deprecate
+#if 0
 sfpi_inline vInt setsgn (vInt v, int sgn) {
   return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
+#endif
 
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
@@ -217,7 +235,18 @@ sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
 
+template <typename TypeA, typename TypeB,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
+                                                     std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vInt, TypeB>,
+                                                     std::is_base_of<vUInt, TypeB>,
+                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
+sfpi_inline TypeA setsgn_new (const TypeA v, TypeB sgn) {
+  return copysgn (v, sfpi::as<vSMag>(sfpi::as<vUInt>(sgn) << 31));
+}
+
 // FIXME:Deprecate
+#if 0
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::is_base_of<vInt, TypeA>::value>* = nullptr,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
@@ -226,8 +255,10 @@ template <typename TypeA, typename TypeB,
 sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
+#endif
 
 // Deprecate old names
+#if 0
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
@@ -235,13 +266,16 @@ __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
   return copysgn (v, sgn);
 }
+#endif
 
+#if 0
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
+#endif
 
 enum class LZMode {
   All,
@@ -261,10 +295,12 @@ sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
 }
 
 // FIXME:Deprecate
+#if 0
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 sfpi_inline vInt lz_nosgn (const vType v) {
   return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
 }
+#endif
 
 sfpi_inline vFloat abs (vFloat v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
@@ -405,6 +441,14 @@ sfpi_inline ToType convert (FromType val, RoundMode round = RoundMode::Stochasti
       return convert<ToType> (val, 0, round);
   }
 
+  else if constexpr (std::disjunction_v<std::is_base_of<vMag, FromType>,
+                     std::is_base_of<vUInt16, FromType>>) {
+    if constexpr (std::is_base_of_v<vFloat, ToType>)
+                     return convert<ToType> (vFloat (__builtin_rvtt_sfpcast (val.get (), impl_::cast_rnd (round))), round);
+    else
+      return convert<ToType> (val, 0, round);
+  }
+  
   else
     return convert<ToType> (val, 0, round);
 }
