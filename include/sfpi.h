@@ -367,6 +367,21 @@ sfpi_inline vUInt operator& (vUInt, unsigned);
 sfpi_inline vUInt operator| (vUInt, unsigned);
 sfpi_inline vUInt operator^ (vUInt, unsigned);
 
+sfpi_inline vMag operator>> (vMag, unsigned);
+sfpi_inline vMag operator>> (vMag, int);
+sfpi_inline vMag operator>> (vMag, vUInt);
+
+sfpi_inline vMag operator& (vMag, unsigned);
+sfpi_inline vMag operator& (vMag, int);
+sfpi_inline vMag operator& (vMag, vMag);
+sfpi_inline vMag operator| (vMag, unsigned);
+sfpi_inline vMag operator| (vMag, int);
+sfpi_inline vMag operator| (vMag, vMag);
+sfpi_inline vMag operator^ (vMag, unsigned);
+sfpi_inline vMag operator^ (vMag, int);
+sfpi_inline vMag operator^ (vMag, vMag);
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Sign-Magnitude, a container
 class vSMag : public impl_::vVal {
