@@ -60,7 +60,11 @@ namespace impl_ {
 
 using sfpu_t = ::__xtt_vector;
 
+// Type pun bit pattern
 sfpi_inline uint32_t float_as_uint (float val);
+// Convert value representation
+sfpi_inline vSMag int_to_smag (vInt, bool clamp_mostneg = false);
+sfpi_inline vInt smag_to_int (vSMag);
 
 //////////////////////////////////////////////////////////////////////////////
 class vVal { // A value, holds value and intialized flag
@@ -150,7 +154,7 @@ using vFloat16a = vNarrow<vFloat, sFloat16a>;
 using vFloat16b = vNarrow<vFloat, sFloat16b>;
 using vUInt16 = vNarrow<vUInt, uint16_t>;
 using vSMag16 = vNarrow<vSMag, void>;
-using vMag = vNarrow<vUInt, void>;
+using vMag = vNarrow<vUInt, uint32_t>;
 
 //////////////////////////////////////////////////////////////////////////////
 

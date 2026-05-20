@@ -22,7 +22,7 @@ uint32_t sfpi::impl_::float_as_uint (float val) {
   return U (val);
 }
 
-sfpi_inline sfpi::sFloat16b::sFloat16b (float v)
+sfpi::sFloat16b::sFloat16b (float v)
     : val (uint16_t (impl_::float_as_uint (v) >> 16)) {}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -202,13 +202,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vInt val) const {
 #if !__riscv_xtttensixwh
   if constexpr (mod == SFPSTORE_MOD0_FMT_SM32) {
 #if 0 // FIXME address this later
-    tmp = __builtin_rvtt_sfpcast (tmp, SFPCAST_MOD1_INT32_TO_SM32);
-#if __riscv_xtttensixbh
-    // BH erratum, 2C(MOSTNEG) -> SM(1:0), clamp to SM(MOSTNEG)
-    v_if (vInt (tmp) == int32_t (0x8000000)) {
-      tmp = vInt (-1).get ();
-    } v_endif;
-#endif
+    tmp = int_to_smag (vInt (tmp));
 #endif
   }
 #endif
@@ -238,15 +232,8 @@ sfpi::impl_::vReg_<Derived, Mod>::operator vInt () const {
                    );
 #if !__riscv_xtttensixwh
 #if 0 // FIXME: Address later
-  if constexpr (mod == SFPLOAD_MOD0_FMT_SM32) {
-    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32);
-#if __riscv_xtttensixbh
-    // BH erratum, SM(1:0) -> 2C(MOSTNEG), not zero
-    v_if (vInt (val) == int32_t (0x8000000)) {
-      val = vInt (0).get ();
-    } v_endif;
-#endif
-  }
+  if constexpr (mod == SFPLOAD_MOD0_FMT_SM32)
+    val = smag_to_int (SMag (val));
 #endif
 #endif
   return val;
@@ -564,5 +551,19 @@ auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::GTE, 
 
 
 //////////////////////////////////////////////////////////////////////////////
+// vMag definitions
+auto sfpi::operator>> (vMag a, unsigned b)-> vMag { return vMag (a.int_shift (-b, false)); }
+auto sfpi::operator>> (vMag a, int b)-> vMag { return vMag (a.int_shift (-b, false)); }
+auto sfpi::operator>> (vMag a, vUInt b)-> vMag { return vMag (a.int_shift (-b, false)); }
+
+auto sfpi::operator& (vMag a, unsigned b)-> vMag { return a & vMag (b); }
+auto sfpi::operator& (vMag a, int b)-> vMag { return a & unsigned (b); }
+auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
+
+//////////////////////////////////////////////////////////////////////////////
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
+sfpi::vSMag::vSMag (uint32_t val)
+    : vVal (__builtin_rvtt_sfpxloadi (val, 32)) {}
+
+auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
