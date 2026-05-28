@@ -65,8 +65,8 @@ def readXfails(file, fd):
     if not line:
       break
     line = line.strip()
-    tv = line.split(' ', 1)
-    token=tv[0]
+    tv = line.split(None, 1)
+    token=tv[0] if tv else ''
     if token == '':
       # blank line
       pass
@@ -75,7 +75,7 @@ def readXfails(file, fd):
       pass
     elif token == 'multilibs:':
       # multilib glob pattern
-      multilibs = tv[1].split(' ')
+      multilibs = tv[1].split()
     elif token == 'FAIL:':
       # expected fail
       for lib in multilibs:
