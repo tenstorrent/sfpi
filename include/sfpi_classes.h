@@ -300,6 +300,8 @@ public:
 
   sfpi_inline void operator= (vUInt) const;
   sfpi_inline operator vUInt () const;
+  sfpi_inline void operator= (vMag) const;
+  sfpi_inline operator vMag () const;
   sfpi_inline void operator= (vUInt16) const;
   sfpi_inline operator vUInt16 () const;
 

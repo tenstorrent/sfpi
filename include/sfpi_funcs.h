@@ -254,6 +254,11 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt val) const {
 }
 
 template<template<int> typename Derived, int Mod>
+void sfpi::impl_::vReg_<Derived, Mod>::operator= (vMag val) const {
+  operator= (vUInt (val));
+}
+
+template<template<int> typename Derived, int Mod>
 void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt16 val) const {
   constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_UINT16;
   static_assert (false
@@ -265,6 +270,11 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt16 val) const {
                  || mod == SFPSTORE_MOD0_FMT_HI16
                  , "Mod value not compatible with storing vUInt");
   write (val.get (), mod);
+}
+
+template<template<int> typename Derived, int Mod>
+sfpi::impl_::vReg_<Derived, Mod>::operator vMag () const {
+  return vMag (operator vUInt ().get ());
 }
 
 template<template<int> typename Derived, int Mod>
