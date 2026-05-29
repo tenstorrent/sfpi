@@ -236,7 +236,9 @@ template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vUInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-sfpi_inline TypeA setsgn (const TypeA v, TypeB sgn) {
+// We'll rename this to plain setsgn once the old setsgn has gone though
+// deprecation and removal
+sfpi_inline TypeA setsgn2 (const TypeA v, TypeB sgn) {
   return copysgn (v, as<vSMag>(as<vUInt>(sgn) << 31));
 }
 
@@ -248,6 +250,21 @@ template <typename TypeA, typename TypeB,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
 sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
+}
+
+template <typename vTypeA, typename vTypeB,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
+  return copysgn (v, sgn);
+}
+
+template <typename vType,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+sfpi_inline vType setsgn (vType v, vInt sgn) {
+  return copysgn (v, sgn);
 }
 
 enum class LZMode {
