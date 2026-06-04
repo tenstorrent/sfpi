@@ -399,9 +399,13 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
       else if constexpr (std::is_same_v<vFloat16b, ToType>)
         mod1 = SFPSTOCHRND_MOD1_FP32_TO_FP16B;
       else if constexpr (std::is_same_v<vSMag16, ToType>)
-        mod1 = SFPSTOCHRND_MOD1_FP32_TO_INT16;
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_SMAG16;
       else if constexpr (std::is_same_v<vUInt16, ToType>)
         mod1 = SFPSTOCHRND_MOD1_FP32_TO_UINT16; 
+      else if constexpr (std::is_same_v<vSMag8, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_SMAG8;
+      else if constexpr (std::is_same_v<vUInt8, ToType>)
+        mod1 = SFPSTOCHRND_MOD1_FP32_TO_UINT8; 
       else
         static_assert (false, "Cannot convert vFloat{,16[ab]} to target type");
 

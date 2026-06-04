@@ -477,7 +477,6 @@ auto sfpi::operator>= (vInt a, int32_t b)-> vBool { return vBool (vBool::GTE, a,
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
-sfpi::vUInt::vUInt (vMag val) : vUInt (val.get ()) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
     : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
@@ -489,9 +488,6 @@ sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
-
-//sfpi::vUInt::vUInt(const vBool vc)
-//    : vVal (__builtin_rvtt_sfpxcondi (vc.get ())) {}
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }
