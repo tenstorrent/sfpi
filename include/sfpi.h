@@ -302,7 +302,6 @@ public:
 
 public:
   sfpi_inline vUInt (impl_::sfpu_t);
-  sfpi_inline vUInt (impl_::vMag);
   sfpi_inline vUInt (vInt);
   sfpi_inline vUInt (int16_t);
   sfpi_inline vUInt (uint16_t);
@@ -330,6 +329,7 @@ public:
   sfpi_inline vUInt &operator>>= (unsigned);
 };
 using vUInt16 = impl_::vUInt16;
+using vUInt8 = impl_::vUInt8;
 using vMag = impl_::vMag;
 
 sfpi_inline vUInt operator+ (vUInt);
@@ -389,6 +389,7 @@ public:
   sfpi_inline explicit vSMag (uint32_t);
 };
 using vSMag16 = impl_::vSMag16;
+using vSMag8 = impl_::vSMag8;
 
 sfpi_inline vUInt operator& (vSMag, unsigned);
 

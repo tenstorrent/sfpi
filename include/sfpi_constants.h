@@ -228,11 +228,19 @@ constexpr unsigned int SFPSTOCHRND_RND_ZERO = 2;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16A = 0;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16B = 1;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT8 = 2;
-constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT8 = 3;
-constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_UINT8 = 4;
-constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_INT8 = 5;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_SMAG8 = 3;
+//__attribute__((__deprecated__("use SFPSTOCHRND_MOD1_FP32_TO_SMAG8 instead")))
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT8 = SFPSTOCHRND_MOD1_FP32_TO_SMAG8;
+constexpr unsigned int SFPSTOCHRND_MOD1_SMAG32_TO_UINT8 = 4;
+//__attribute__((__deprecated__("use SFPSTOCHRND_MOD1_SMAG32_TO_UINT8 instead")))
+constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_UINT8 = SFPSTOCHRND_MOD1_SMAG32_TO_UINT8;
+constexpr unsigned int SFPSTOCHRND_MOD1_SMAG32_TO_SMAG8 = 5;
+//__attribute__((__deprecated__("use SFPSTOCHRND_MOD1_SMAG32_TO_SMAG8 instead")))
+constexpr unsigned int SFPSTOCHRND_MOD1_INT32_TO_INT8 = SFPSTOCHRND_MOD1_SMAG32_TO_SMAG8;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_UINT16 = 6;
-constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT16 = 7;
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_SMAG16 = 7;
+//__attribute__((__deprecated__("use SFPSTOCHRND_MOD1_FP32_TO_SMAG16 instead")))
+constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_INT16 = SFPSTOCHRND_MOD1_FP32_TO_SMAG16;
 constexpr unsigned int SFPSTOCHRND_MOD1_CONV_MASK = 7;
 constexpr unsigned int SFPSTOCHRND_MOD1_IMM8 = 8;
 
