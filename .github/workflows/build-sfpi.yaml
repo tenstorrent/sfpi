@@ -73,7 +73,7 @@ jobs:
       - name: Build Test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run Tests
-        run: scripts/build.sh --test-tt
+        run: scripts/build.sh --test-tt ${{inputs.full && '--test-binutils' || null}}
       - name: Package toolchain
         run: scripts/release.sh --ci --tt-built ${{!inputs.txz && '--no-txz' || null}}
       - name: Upload artifacts

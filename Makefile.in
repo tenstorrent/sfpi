@@ -271,7 +271,6 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(@F)
 	$(MAKE) -C $(@F) install
-	$(call SMALL_BUILD, $(@F))
 	mkdir -p $(@D) && touch $@
 
 stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
@@ -554,7 +553,8 @@ stamps/check-dhrystone-linux-%: \
 	$(SIM_PREPARE) $(srcdir)/test/benchmarks/dhrystone/check -march=$($@_ARCH) -mabi=$($@_ABI) -cc=riscv$(XLEN)-unknown-elf-gcc -objdump=riscv$(XLEN)-unknown-elf-objdump -sim=riscv$($@_XLEN)-unknown-elf-run -out=$@ $(filter %.c,$^) || true
 
 stamps/check-binutils-newlib: stamps/build-gcc-newlib-stage2
-	$(MAKE) -C build-binutils-newlib check-binutils check-gas check-ld -k "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)'" || true
+	cd build-binutils-newlib && \
+	($(MAKE) check-binutils check-gas check-ld -k "RUNTESTFLAGS=--target_board='$(NEWLIB_TARGET_BOARDS)'" || true)
 	date > $@
 
 stamps/check-binutils-newlib-nano: stamps/build-gcc-newlib-stage2 $(SIM_STAMP)
