@@ -271,7 +271,6 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(@F)
 	$(MAKE) -C $(@F) install
-	$(call SMALL_BUILD, $(@F))
 	mkdir -p $(@D) && touch $@
 
 stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
