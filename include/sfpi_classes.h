@@ -417,9 +417,11 @@ public:
 
 private:
   unsigned offset = SFP_SRCSREG_BASE + Slice * (SFP_SRCSREG_STRIDE * SFP_SRCSREG_COUNT);
+  unsigned stride = 2;
 
 public:
-  constexpr SrcSRegFile () = default;
+  constexpr SrcSRegFile (std::size_t datum_size = sizeof (float))
+      : stride ((datum_size + sizeof (std::uint16_t) - 1) / sizeof (std::uint16_t)) {}
   SrcSRegFile (SrcSRegFile const &) = delete;
   SrcSRegFile (SrcSRegFile &&) = delete;
   SrcSRegFile &operator= (SrcSRegFile const &) = delete;
@@ -427,14 +429,14 @@ public:
 
 public:
   sfpi_inline constexpr vReg<> operator[] (int ix) const {
-    return vReg<> (ix * SFP_SRCSREG_STRIDE + offset);
+    return vReg<> (ix * stride + offset);
   }
 
   // Make these void - ugly as these aren't really inc/dec
   sfpi_inline void operator++ () { *this += 1; }
   sfpi_inline void operator++ (int) { *this += 1; }
   sfpi_inline void operator+= (int ix) {
-    offset += ix * SFP_SRCSREG_STRIDE;
+    offset += ix * stride;
   }
 };
 

@@ -41,6 +41,13 @@
 //   UnpackSrcS src_reg; // or PackSrcS or ComputeSrcS
 //   src_reg[0] = vFloat(dst_reg[0]);
 //
+//   The SrcS types' constructor has an optional argument, specifying the
+//   stride used in accessing the fpu objects.  Specify the size of the scalar
+//   elements being accessed.  For instance:
+//
+//   PackSrcS src_reg{sizeof(sFloat16b)}; // Accessing vFloat16b
+//   PackSrcS src_reg{sizeof(float)};  // Accessing vFloat (the default)
+//
 //   The same `mode` call can be used to modify mod and addr_mode operand.  You
 //   can also use a `done` call to set the done flag:
 //     src_reg[0].done() = vFloat(src_reg[0].mode<SFPLOAD_MOD0_FMR_FP16B>());
@@ -56,8 +63,8 @@
 // Predicated Execution:
 //   macros v_if(), v_elseif(), v_else, v_endif
 //
-//   The class __vCCCtrl is used in conjunction with the LReg based classes to
-//   enable predicated execution.  By convention the test infastructure indents
+//   The class impl_::CC is used to enable predicated execution.
+//   By convention the test infastructure indents
 //   the code as if executing if/then/else in C++, for example:
 //     v_if (CONDITION)
 //       True lanes affected here
