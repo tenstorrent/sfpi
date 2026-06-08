@@ -268,7 +268,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vUInt16 val) const {
                  || mod == SFPSTORE_MOD0_FMT_HI16_ONLY
                  || mod == SFPSTORE_MOD0_FMT_LO16
                  || mod == SFPSTORE_MOD0_FMT_HI16
-                 , "Mod value not compatible with storing vUInt");
+                 , "Mod value not compatible with storing vUInt16");
   write (val.get (), mod);
 }
 
@@ -290,7 +290,7 @@ sfpi::impl_::vReg_<Derived, Mod>::operator vUInt16 () const {
   static_assert (false
                  || mod == SFPLOAD_MOD0_FMT_UINT16
                  || mod == SFPLOAD_MOD0_FMT_LO16
-                 , "Mod value not compatible with loading vUInt");
+                 , "Mod value not compatible with loading vUInt16");
   return vUInt16 (read (mod));
 }
 
@@ -300,7 +300,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vSMag val) const {
   static_assert (false
                  || mod == SFPSTORE_MOD0_FMT_INT32
                  || mod == SFPSTORE_MOD0_FMT_INT16
-                 , "Mod value not compatible with storing vUInt");
+                 , "Mod value not compatible with storing vSMag");
   write (val.get (), mod);
 }
 
@@ -309,7 +309,7 @@ void sfpi::impl_::vReg_<Derived, Mod>::operator= (vSMag16 val) const {
   constexpr int mod = Mod >= 0 ? Mod : SFPSTORE_MOD0_FMT_INT16;
   static_assert (false
                  || mod == SFPSTORE_MOD0_FMT_INT16
-                 , "Mod value not compatible with storing vUInt");
+                 , "Mod value not compatible with storing vSMag16");
   write (val.get (), mod);
 }
 
@@ -319,7 +319,7 @@ sfpi::impl_::vReg_<Derived, Mod>::operator vSMag () const {
   static_assert (false
                  || mod == SFPLOAD_MOD0_FMT_INT32
                  || mod == SFPLOAD_MOD0_FMT_INT16
-                 , "Mod value not compatible with loading vUInt");
+                 , "Mod value not compatible with loading vSMag");
   return vSMag (read (mod));
 }
 
@@ -328,7 +328,7 @@ sfpi::impl_::vReg_<Derived, Mod>::operator vSMag16 () const {
   constexpr int mod = Mod >= 0 ? Mod : SFPLOAD_MOD0_FMT_INT16;
   static_assert (false
                  || mod == SFPLOAD_MOD0_FMT_INT16
-                 , "Mod value not compatible with loading vUInt");
+                 , "Mod value not compatible with loading vSMag16");
   return vSMag16 (read (mod));
 }
 

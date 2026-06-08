@@ -486,11 +486,14 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     return convert<ToType> (as<vSMag> (val), round);
 }
 
+#if 0
 // FIXME:deprecate
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 // shim
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
 sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
@@ -511,6 +514,7 @@ sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::St
        SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt16> (X, rounding)")
 sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) 
 {
   return __builtin_rvtt_sfpstochrnd_i
@@ -518,18 +522,21 @@ sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::St
        SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt16> (X, rounding)")
 sfpi_inline vInt float_to_int16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt8> (X, rounding)")
 sfpi_inline vUInt float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt8> (X, rounding)")
 sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
@@ -559,6 +566,7 @@ sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = 
       (in.get(), descale,
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
+#endif
 
 sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
   auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
