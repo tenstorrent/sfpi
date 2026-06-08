@@ -151,7 +151,7 @@ sfpi_inline vFloat setman (vFloat v, unsigned man) {
 }
 
 // accept float, unsigned or sign-mag
-// FIXME: Deprecate the from float version
+// FIXME: Deprecate the float version, use copyman
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vUInt, Type>,
@@ -486,17 +486,16 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     return convert<ToType> (as<vSMag> (val), round);
 }
 
-// FIXME:deprecate
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 // shim
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
 sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 
-// FIXME. we should add vFloat16[ab] types to indicate these are in that form.
-// And perhaps v{,U}Int16 too?
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat16a> (X, rounding)")
 sfpi_inline vFloat float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
@@ -511,6 +510,7 @@ sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::St
        SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt16> (X, rounding)")
 sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) 
 {
   return __builtin_rvtt_sfpstochrnd_i
@@ -518,24 +518,29 @@ sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::St
        SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt16> (X, rounding)")
 sfpi_inline vInt float_to_int16 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt8> (X, rounding)")
 sfpi_inline vUInt float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::stochrnd_rnd (rounding));
 }
 
+__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt8> (X, rounding)")
 sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_i
       (in.get(), 0,
        SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 
+// These do not appear used anywhere.  We should get to converting to a new
+// convert-like API
 sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::Stochastic) {
   return __builtin_rvtt_sfpstochrnd_v
       (in.get(), descale.get(),
