@@ -208,7 +208,7 @@ public:
     }
     template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
     sfpi_inline operator Type () const {
-      return sfpu_t (*this);
+      return Type (sfpu_t (*this));
     }
 
   public:
