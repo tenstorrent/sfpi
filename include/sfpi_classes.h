@@ -56,6 +56,25 @@ class sFloat16a;
 class sFloat16b;
 enum class LRegs : uint8_t;
 
+enum class DataLayout {
+  Default = 0,
+
+  FSrcB,
+  F32,
+  F16a,
+  F16b,
+
+  I32,
+
+  U32,
+  U16,
+
+  SM32,
+  SM16,
+
+  M32,
+};
+
 namespace impl_ {
 
 using sfpu_t = ::__xtt_vector;
@@ -63,7 +82,7 @@ using sfpu_t = ::__xtt_vector;
 // Type pun bit pattern
 sfpi_inline uint32_t float_as_uint (float val);
 // Convert value representation
-sfpi_inline vSMag int_to_smag (vInt, bool clamp_mostneg = false);
+sfpi_inline vSMag int_to_smag (vInt);
 sfpi_inline vInt smag_to_int (vSMag);
 
 //////////////////////////////////////////////////////////////////////////////
@@ -263,7 +282,7 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-template<template<int> typename Derived, int Mod = -1>
+template<template<DataLayout> typename Derived, DataLayout Fmt = DataLayout::Default>
 class vReg_ {
 private:
   int reg;
@@ -276,18 +295,18 @@ public:
 protected:
   sfpi_inline constexpr explicit vReg_ (int r) : reg (r) {}
 
-  template<int OldMod>
-  sfpi_inline constexpr explicit vReg_ (vReg_<Derived, OldMod> const &src, int addr_mode = -1)
+  template<DataLayout OldFmt>
+  sfpi_inline constexpr explicit vReg_ (vReg_<Derived, OldFmt> const &src, int addr_mode = -1)
       : reg (src.get ()), addr_mode (addr_mode) {}
 
 public:
   sfpi_inline constexpr int get () const { return reg; }
 
 public:
-  template <int NewMod = -1>
-  sfpi_inline constexpr Derived<NewMod> mode (int mode = -1) const {
-    return Derived<NewMod >= 0 ? NewMod : Mod>
-        (static_cast<Derived<Mod> const &> (*this), mode >= 0 ? mode : addr_mode);
+  template <DataLayout NewFmt = DataLayout::Default>
+  sfpi_inline constexpr Derived<NewFmt> mode (int mode = -1) const {
+    return Derived<NewFmt != DataLayout::Default ? NewFmt : Fmt>
+        (static_cast<Derived<Fmt> const &> (*this), mode >= 0 ? mode : addr_mode);
   }
     
 public:
@@ -305,7 +324,7 @@ public:
   sfpi_inline void operator= (vUInt) const;
   sfpi_inline operator vUInt () const;
   sfpi_inline void operator= (vMag) const;
-  sfpi_inline operator vMag () const = delete;
+  sfpi_inline operator vMag () const;
   sfpi_inline void operator= (vUInt16) const;
   sfpi_inline operator vUInt16 () const;
 
@@ -320,27 +339,27 @@ public:
 private:
   void write (sfpu_t val, unsigned mod) const {
     int mode = addr_mode < 0 ? SFPSTORE_ADDR_MODE_NOINC : addr_mode;
-    static_cast<Derived<Mod> const *> (this)->write (val, mod, mode);
+    static_cast<Derived<Fmt> const *> (this)->write (val, mod, mode);
   }
   
   sfpu_t read (unsigned mod) const {
     int mode = addr_mode < 0 ? SFPLOAD_ADDR_MODE_NOINC : addr_mode;
-    return static_cast<Derived<Mod> const *> (this)->read (mod, mode);
+    return static_cast<Derived<Fmt> const *> (this)->read (mod, mode);
   }
 };
 
 // Dst regs
 class DstRegFile {
 public:
-  template<int Mod = -1>
-  class vReg : public vReg_<vReg, Mod> {
+  template<DataLayout Fmt = DataLayout::Default>
+  class vReg : public vReg_<vReg, Fmt> {
   public:
-    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Mod> (r) {}
-    template<int OldMod>
-    sfpi_inline constexpr explicit vReg (vReg<OldMod> const &src, int addr_mode)
-        : vReg_<vReg, Mod> (src, addr_mode) {}
+    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Fmt> (r) {}
+    template<DataLayout OldFmt>
+    sfpi_inline constexpr explicit vReg (vReg<OldFmt> const &src, int addr_mode)
+        : vReg_<vReg, Fmt> (src, addr_mode) {}
     sfpi_inline constexpr explicit vReg (vReg const &) = default;
-    using vReg_<vReg, Mod>::operator=;
+    using vReg_<vReg, Fmt>::operator=;
 
   public:
     // Deprecated 2026-04-14
@@ -384,20 +403,20 @@ public:
 template<unsigned Slice>
 class SrcSRegFile {
 public:
-  template<int Mod = -1>
-  class vReg : public vReg_<vReg, Mod> {
-    template<int> friend class vReg;
+  template<DataLayout Fmt = DataLayout::Default>
+  class vReg : public vReg_<vReg, Fmt> {
+    template<DataLayout> friend class vReg;
 
   private:
     bool is_done = false;
 
   public:
-    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Mod> (r) {}
-    template<int OldMod>
-    sfpi_inline constexpr explicit vReg (vReg<OldMod> const &src, int addr_mode)
-        : vReg_<vReg, Mod> (src, addr_mode), is_done (src.is_done) {}
+    sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Fmt> (r) {}
+    template<DataLayout OldFmt>
+    sfpi_inline constexpr explicit vReg (vReg<OldFmt> const &src, int addr_mode)
+        : vReg_<vReg, Fmt> (src, addr_mode), is_done (src.is_done) {}
     sfpi_inline constexpr explicit vReg (vReg const &) = default;
-    using vReg_<vReg, Mod>::operator=;
+    using vReg_<vReg, Fmt>::operator=;
 
   public:
     sfpi_inline constexpr vReg &done (bool done = true) {
