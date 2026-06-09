@@ -43,7 +43,7 @@
 //
 //   The same `mode` call can be used to modify mod and addr_mode operand.  You
 //   can also use a `done` call to set the done flag:
-//     src_reg[0].done() = vFloat(src_reg[0].mode<SFPLOAD_MOD0_FMR_FP16B>());
+//     src_reg[0].done() = vFloat(src_reg[0].mode<DataFormat::F16b>());
 //
 // Constant Local Registers:
 //   template<typename T> class impl_::vConst<T>
