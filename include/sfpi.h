@@ -43,7 +43,7 @@
 //
 //   The same `mode` call can be used to modify mod and addr_mode operand.  You
 //   can also use a `done` call to set the done flag:
-//     src_reg[0].done() = vFloat(src_reg[0].mode<SFPLOAD_MOD0_FMR_FP16B>());
+//     src_reg[0].done() = vFloat(src_reg[0].mode<DataLayout::F16b>());
 //
 // Constant Local Registers:
 //   template<typename T> class impl_::vConst<T>
@@ -517,6 +517,13 @@ sfpi_inline  vBool operator< (vInt a, unsigned b) { return a < uint32_t (b); }
 sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > uint32_t (b); }
 sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= uint32_t (b); }
 sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= uint32_t (b); }
+
+sfpi_inline vBool operator== (vSMag, vSMag);
+sfpi_inline vBool operator== (vSMag, unsigned);
+sfpi_inline vBool operator== (vSMag, int);
+sfpi_inline vBool operator!= (vSMag, vSMag);
+sfpi_inline vBool operator!= (vSMag, unsigned);
+sfpi_inline vBool operator!= (vSMag, int);
 
 //////////////////////////////////////////////////////////////////////////////
 

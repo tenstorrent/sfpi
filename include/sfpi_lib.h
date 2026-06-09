@@ -661,26 +661,14 @@ sfpi_inline vFloat approx_tanh (vFloat src) {
 }
 #endif
 
-vSMag impl_::int_to_smag (vInt val, bool clamp_most_neg [[gnu::unused]]) {
-#if __riscv_xtttensixqsr
+vSMag impl_::int_to_smag (vInt val) {
+#if !__riscv_xtttensixwh
     val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32);
 #else
-#if __riscv_xtttensixbh
-  if (!clamp_most_neg)
-    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32);
-  else
-#endif
-    {
-      v_if (val < 0) {
-        val = setsgn (val, 0);
-        val = 0 - val;
-        if (clamp_most_neg) {
-          v_if (!val) {
-            val = ~int32_t (0);
-          } v_endif;
-        }
-      } v_endif;
-    }
+    v_if (val < 0) {
+      val = setsgn (val, 0);
+      val = 0 - val;
+    } v_endif;
 #endif
   return as<vSMag> (val);
 }
