@@ -56,7 +56,7 @@ class sFloat16a;
 class sFloat16b;
 enum class LRegs : uint8_t;
 
-enum class DataFormat {
+enum class DataLayout {
   Default = 0,
 
   FSrcB,
@@ -282,7 +282,7 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-template<template<DataFormat> typename Derived, DataFormat Fmt = DataFormat::Default>
+template<template<DataLayout> typename Derived, DataLayout Fmt = DataLayout::Default>
 class vReg_ {
 private:
   int reg;
@@ -295,7 +295,7 @@ public:
 protected:
   sfpi_inline constexpr explicit vReg_ (int r) : reg (r) {}
 
-  template<DataFormat OldFmt>
+  template<DataLayout OldFmt>
   sfpi_inline constexpr explicit vReg_ (vReg_<Derived, OldFmt> const &src, int addr_mode = -1)
       : reg (src.get ()), addr_mode (addr_mode) {}
 
@@ -303,9 +303,9 @@ public:
   sfpi_inline constexpr int get () const { return reg; }
 
 public:
-  template <DataFormat NewFmt = DataFormat::Default>
+  template <DataLayout NewFmt = DataLayout::Default>
   sfpi_inline constexpr Derived<NewFmt> mode (int mode = -1) const {
-    return Derived<NewFmt != DataFormat::Default ? NewFmt : Fmt>
+    return Derived<NewFmt != DataLayout::Default ? NewFmt : Fmt>
         (static_cast<Derived<Fmt> const &> (*this), mode >= 0 ? mode : addr_mode);
   }
     
@@ -351,11 +351,11 @@ private:
 // Dst regs
 class DstRegFile {
 public:
-  template<DataFormat Fmt = DataFormat::Default>
+  template<DataLayout Fmt = DataLayout::Default>
   class vReg : public vReg_<vReg, Fmt> {
   public:
     sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Fmt> (r) {}
-    template<DataFormat OldFmt>
+    template<DataLayout OldFmt>
     sfpi_inline constexpr explicit vReg (vReg<OldFmt> const &src, int addr_mode)
         : vReg_<vReg, Fmt> (src, addr_mode) {}
     sfpi_inline constexpr explicit vReg (vReg const &) = default;
@@ -403,16 +403,16 @@ public:
 template<unsigned Slice>
 class SrcSRegFile {
 public:
-  template<DataFormat Fmt = DataFormat::Default>
+  template<DataLayout Fmt = DataLayout::Default>
   class vReg : public vReg_<vReg, Fmt> {
-    template<DataFormat> friend class vReg;
+    template<DataLayout> friend class vReg;
 
   private:
     bool is_done = false;
 
   public:
     sfpi_inline constexpr explicit vReg (int r) : vReg_<vReg, Fmt> (r) {}
-    template<DataFormat OldFmt>
+    template<DataLayout OldFmt>
     sfpi_inline constexpr explicit vReg (vReg<OldFmt> const &src, int addr_mode)
         : vReg_<vReg, Fmt> (src, addr_mode), is_done (src.is_done) {}
     sfpi_inline constexpr explicit vReg (vReg const &) = default;

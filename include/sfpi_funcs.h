@@ -117,129 +117,129 @@ auto sfpi::operator|| (vBool a, vBool b)-> vBool { return vBool (vBool::Or, a, b
 auto sfpi::operator! (vBool a)-> vBool { return vBool (vBool::Not, a, a); }
 
 //////////////////////////////////////////////////////////////////////////////
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::FSrcB;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16a
-                 || fmt == DataFormat::F16b
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16a
+                 || fmt == DataLayout::F16b
                  , "Fmt value not compatible with storing vFloat");
   write (val.get (),
-         fmt == DataFormat::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
-         fmt == DataFormat::F32 ? SFPSTORE_MOD0_FMT_FP32 :
-         fmt == DataFormat::F16a ? SFPSTORE_MOD0_FMT_FP16A :
-         fmt == DataFormat::F16b ? SFPSTORE_MOD0_FMT_FP16B :
+         fmt == DataLayout::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
+         fmt == DataLayout::F32 ? SFPSTORE_MOD0_FMT_FP32 :
+         fmt == DataLayout::F16a ? SFPSTORE_MOD0_FMT_FP16A :
+         fmt == DataLayout::F16b ? SFPSTORE_MOD0_FMT_FP16B :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat16a val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::FSrcB; // FIXME F16a;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB; // FIXME F16a;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16a
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16a
                  , "Fmt value not compatible with storing vFloat16a");
   write (val.get (),
-         fmt == DataFormat::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
-         fmt == DataFormat::F32 ? SFPSTORE_MOD0_FMT_FP32 :
-         fmt == DataFormat::F16a ? SFPSTORE_MOD0_FMT_FP16A :
+         fmt == DataLayout::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
+         fmt == DataLayout::F32 ? SFPSTORE_MOD0_FMT_FP32 :
+         fmt == DataLayout::F16a ? SFPSTORE_MOD0_FMT_FP16A :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat16b val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::FSrcB; // FIXME F16b;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB; // FIXME F16b;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16b
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16b
                  , "Fmt value not compatible with storing vFloat16b");
   write (val.get (),
-         fmt == DataFormat::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
-         fmt == DataFormat::F32 ? SFPSTORE_MOD0_FMT_FP32 :
-         fmt == DataFormat::F16b ? SFPSTORE_MOD0_FMT_FP16B :
+         fmt == DataLayout::FSrcB ? SFPSTORE_MOD0_FMT_SRCB :
+         fmt == DataLayout::F32 ? SFPSTORE_MOD0_FMT_FP32 :
+         fmt == DataLayout::F16b ? SFPSTORE_MOD0_FMT_FP16B :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (float val) const {
   operator= (vFloat (val));
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vFloat () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::FSrcB;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16a
-                 || fmt == DataFormat::F16b
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16a
+                 || fmt == DataLayout::F16b
                  , "Fmt value not compatible with loading vFloat");
-  auto tmp = read (fmt == DataFormat::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
-                   fmt == DataFormat::F32 ? SFPLOAD_MOD0_FMT_FP32 :
-                   fmt == DataFormat::F16a ? SFPLOAD_MOD0_FMT_FP16A :
-                   fmt == DataFormat::F16b ? SFPLOAD_MOD0_FMT_FP16B :
+  auto tmp = read (fmt == DataLayout::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
+                   fmt == DataLayout::F32 ? SFPLOAD_MOD0_FMT_FP32 :
+                   fmt == DataLayout::F16a ? SFPLOAD_MOD0_FMT_FP16A :
+                   fmt == DataLayout::F16b ? SFPLOAD_MOD0_FMT_FP16B :
                    ~0);
   return vFloat (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vFloat16a () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::F16a;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::F16a;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16a
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16a
                  , "Fmt value not compatible with loading vFloat16a");
-  auto tmp = read (fmt == DataFormat::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
-                   fmt == DataFormat::F32 ? SFPLOAD_MOD0_FMT_FP32 :
-                   fmt == DataFormat::F16a ? SFPLOAD_MOD0_FMT_FP16A :
+  auto tmp = read (fmt == DataLayout::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
+                   fmt == DataLayout::F32 ? SFPLOAD_MOD0_FMT_FP32 :
+                   fmt == DataLayout::F16a ? SFPLOAD_MOD0_FMT_FP16A :
                    ~0);
   return vFloat16a (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vFloat16b () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::F16b;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::F16b;
   static_assert (false
-                 || fmt == DataFormat::FSrcB
-                 || fmt == DataFormat::F32
-                 || fmt == DataFormat::F16b
+                 || fmt == DataLayout::FSrcB
+                 || fmt == DataLayout::F32
+                 || fmt == DataLayout::F16b
                  , "Fmt value not compatible with loading vFloat16b");
-  auto tmp = read (fmt == DataFormat::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
-                   fmt == DataFormat::F32 ? SFPLOAD_MOD0_FMT_FP32 :
-                   fmt == DataFormat::F16b ? SFPLOAD_MOD0_FMT_FP16B :
+  auto tmp = read (fmt == DataLayout::FSrcB ? SFPLOAD_MOD0_FMT_SRCB :
+                   fmt == DataLayout::F32 ? SFPLOAD_MOD0_FMT_FP32 :
+                   fmt == DataLayout::F16b ? SFPLOAD_MOD0_FMT_FP16B :
                    ~0);
   return vFloat16b (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vInt val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt :
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt :
 #if __riscv_xtttensixwh
-                                 DataFormat::SM32
+                                 DataLayout::SM32
 #else
                                  // FIXME: QSR needs fixing
                                  // FIXME: BH doesn't convert :(
-                                 DataFormat::I32
+                                 DataLayout::I32
 #endif
                                  ;
   static_assert (false
-                 || fmt == DataFormat::I32
-                 || fmt == DataFormat::SM32
+                 || fmt == DataLayout::I32
+                 || fmt == DataLayout::SM32
                  , "Fmt value not compatible with storing vInt");
   auto tmp =
 #if !__riscv_xtttensixwh
-      fmt == DataFormat::SM32 ? int_to_smag (val).get () :
+      fmt == DataLayout::SM32 ? int_to_smag (val).get () :
 #endif
       val.get ();
 
   write (tmp,
-         fmt == DataFormat::I32 ? SFPLOAD_MOD0_FMT_INT32 :
-         fmt == DataFormat::SM32 ?
+         fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+         fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
          SFPLOAD_MOD0_FMT_INT32 :
 #else
@@ -248,23 +248,23 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vInt val) const {
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vInt () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt :
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt :
 #if __riscv_xtttensixwh
-                                 DataFormat::SM32
+                                 DataLayout::SM32
 #else
                                  // FIXME: BH doesn't convert :(
                                  // FIXME: QSR needs fixing
-                                 DataFormat::I32
+                                 DataLayout::I32
 #endif
                                  ;
   static_assert (false
-                 || fmt == DataFormat::I32
-                 || fmt == DataFormat::SM32
+                 || fmt == DataLayout::I32
+                 || fmt == DataLayout::SM32
                  , "Fmt value not compatible with storing vInt");
-  auto tmp = read (fmt == DataFormat::I32 ? SFPLOAD_MOD0_FMT_INT32 :
-                   fmt == DataFormat::SM32 ?
+  auto tmp = read (fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
                    SFPLOAD_MOD0_FMT_INT32 :
 #else
@@ -273,147 +273,147 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vInt () const {
                    ~0);
 
 #if !__riscv_xtttensixwh
-  if (fmt == DataFormat::SM32)
+  if (fmt == DataLayout::SM32)
     tmp = smag_to_int (vSMag (tmp)).get ();
 #endif
   return vInt (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::U32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::U32;
   static_assert (false
-                 || fmt == DataFormat::U32
-                 || fmt == DataFormat::U16
+                 || fmt == DataLayout::U32
+                 || fmt == DataLayout::U16
                  , "Fmt value not compatible with storing vUInt");
   write (val.get (),
-         fmt == DataFormat::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-         fmt == DataFormat::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+         fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vMag val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::M32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::M32;
   static_assert (false
-                 || fmt == DataFormat::M32
+                 || fmt == DataLayout::M32
                  , "Fmt value not compatible with storing vMag");
   write (val.get (),
-         fmt == DataFormat::M32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::M32 ? SFPSTORE_MOD0_FMT_INT32 :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt16 val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::U16;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::U16;
   static_assert (false
-                 || fmt == DataFormat::U32
-                 || fmt == DataFormat::U16
+                 || fmt == DataLayout::U32
+                 || fmt == DataLayout::U16
                  , "Fmt value not compatible with storing vUInt16");
   write (val.get (),
-         fmt == DataFormat::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-         fmt == DataFormat::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+         fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::U32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::U32;
   static_assert (false
-                 || fmt == DataFormat::U32
-                 || fmt == DataFormat::U16
+                 || fmt == DataLayout::U32
+                 || fmt == DataLayout::U16
                  , "Fmt value not compatible with loading vUInt");
-  auto tmp = read (fmt == DataFormat::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-                   fmt == DataFormat::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+  auto tmp = read (fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
+                   fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
                    ~0);
   return vUInt (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vMag () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::M32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::M32;
   static_assert (false
-                 || fmt == DataFormat::M32
+                 || fmt == DataLayout::M32
                  , "Fmt value not compatible with loading vMag");
-  auto tmp =  read (fmt == DataFormat::M32 ? SFPSTORE_MOD0_FMT_INT32 :
+  auto tmp =  read (fmt == DataLayout::M32 ? SFPSTORE_MOD0_FMT_INT32 :
                     ~0);
   return vMag (tmp);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt16 () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::U16;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::U16;
   static_assert (false
-                 || fmt == DataFormat::U32
-                 || fmt == DataFormat::U16
+                 || fmt == DataLayout::U32
+                 || fmt == DataLayout::U16
                  , "Fmt value not compatible with loading vUInt16");
   return vUInt16 (read (
-                      fmt == DataFormat::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-                      fmt == DataFormat::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+                      fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
+                      fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
                       ~0));
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::SM32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM32;
   static_assert (false
-                 || fmt == DataFormat::I32
-                 || fmt == DataFormat::SM32
-                 || fmt == DataFormat::SM16
+                 || fmt == DataLayout::I32
+                 || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
                  , "Fmt value not compatible with storing vSMag");
-  auto tmp = fmt == DataFormat::I32
+  auto tmp = fmt == DataLayout::I32
                ?  impl_::smag_to_int (val).get () : val.get ();
   write (tmp,
-         fmt == DataFormat::I32 ? SFPSTORE_MOD0_FMT_INT32 :
-         fmt == DataFormat::SM32 ? SFPSTORE_MOD0_FMT_INT32 :
-         fmt == DataFormat::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
+         fmt == DataLayout::I32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::SM32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag16 val) const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::SM16;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM16;
   static_assert (false
-                 || fmt == DataFormat::SM16
+                 || fmt == DataLayout::SM16
                  , "Fmt value not compatible with storing vSMag16");
   write (val.get (),
-         fmt == DataFormat::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
+         fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
          ~0);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::SM32;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM32;
   static_assert (false
-                 || fmt == DataFormat::I32
-                 || fmt == DataFormat::SM32
-                 || fmt == DataFormat::SM16
+                 || fmt == DataLayout::I32
+                 || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
                  , "Fmt value not compatible with loading vSMag");
-  auto val = read (fmt == DataFormat::I32 ? SFPLOAD_MOD0_FMT_INT32 :
-                   fmt == DataFormat::SM32 ? SFPLOAD_MOD0_FMT_INT32 :
-                   fmt == DataFormat::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
+  auto val = read (fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::SM32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
                    ~0);
-  if (fmt == DataFormat::I32)
+  if (fmt == DataLayout::I32)
     val = impl_::int_to_smag (vInt (val)).get ();
   return vSMag (val);
 }
 
-template<template<sfpi::DataFormat> typename Derived, sfpi::DataFormat Fmt>
+template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag16 () const {
-  constexpr DataFormat fmt = Fmt != DataFormat::Default ? Fmt : DataFormat::SM16;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM16;
   static_assert (false
-                 || fmt == DataFormat::SM16
+                 || fmt == DataLayout::SM16
                  , "Fmt value not compatible with loading vSMag16");
-  auto val = read (fmt == DataFormat::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
+  auto val = read (fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
                    ~0);
   return vSMag16 (val);
 }
 
-template<sfpi::DataFormat Fmt>
+template<sfpi::DataLayout Fmt>
 auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator= (vReg<Fmt> const &reg) const-> void {
   *this = vFloat (*reg);
 }
-template<sfpi::DataFormat Fmt>
+template<sfpi::DataLayout Fmt>
 auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator- () const-> vFloat {
   return -vFloat (*this);
 }
