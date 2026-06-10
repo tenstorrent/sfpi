@@ -518,6 +518,13 @@ sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > uint32_t (b); }
 sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= uint32_t (b); }
 sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= uint32_t (b); }
 
+sfpi_inline vBool operator== (vSMag, vSMag);
+sfpi_inline vBool operator== (vSMag, unsigned);
+sfpi_inline vBool operator== (vSMag, int);
+sfpi_inline vBool operator!= (vSMag, vSMag);
+sfpi_inline vBool operator!= (vSMag, unsigned);
+sfpi_inline vBool operator!= (vSMag, int);
+
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline  vBool operator== (vUInt, vUInt);

@@ -645,3 +645,15 @@ sfpi::vSMag::vSMag (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, 32)) {}
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
+
+auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vUInt (a.get ()) == vUInt (b.get ()); }
+auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return vUInt (a.get ()) == b; }
+auto sfpi::operator== (vSMag a, int b)-> vBool {
+  return vUInt (a.get ()) == (b < 0 ? 0 - (unsigned (b) << 1 >> 1): unsigned (b));
+}
+
+auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vUInt (a.get ()) != vUInt (b.get ()); }
+auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return vUInt (a.get ()) != b; }
+auto sfpi::operator!= (vSMag a, int b)-> vBool {
+  return vUInt (a.get ()) != (b < 0 ? 0 - (unsigned (b) << 1 >> 1): unsigned (b));
+}
