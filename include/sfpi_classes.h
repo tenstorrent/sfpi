@@ -82,7 +82,7 @@ using sfpu_t = ::__xtt_vector;
 // Type pun bit pattern
 sfpi_inline uint32_t float_as_uint (float val);
 // Convert value representation
-sfpi_inline vSMag int_to_smag (vInt, bool clamp_mostneg = false);
+sfpi_inline vSMag int_to_smag (vInt);
 sfpi_inline vInt smag_to_int (vSMag);
 
 //////////////////////////////////////////////////////////////////////////////

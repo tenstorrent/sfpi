@@ -361,10 +361,18 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag val) const {
                  || fmt == DataLayout::SM32
                  || fmt == DataLayout::SM16
                  , "Fmt value not compatible with storing vSMag");
-  auto tmp = fmt == DataLayout::I32
-               ?  impl_::smag_to_int (val).get () : val.get ();
+  auto tmp = val.get ();
+#if !__riscv_xtttensixwh
+  if (fmt == DataLayout::I32)
+    tmp = impl_::smag_to_int (vSMag (tmp)).get ();
+#endif
   write (tmp,
-         fmt == DataLayout::I32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::I32 ?
+#if !__riscv_xtttensixwh
+         SFPSTORE_MOD0_FMT_INT32 :
+#else
+         SFPSTORE_MOD0_FMT_SM32 :
+#endif
          fmt == DataLayout::SM32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
          ~0);
@@ -389,12 +397,19 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag () const {
                  || fmt == DataLayout::SM32
                  || fmt == DataLayout::SM16
                  , "Fmt value not compatible with loading vSMag");
-  auto val = read (fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+  auto val = read (fmt == DataLayout::I32 ?
+#if !__riscv_xtttensixwh
+                   SFPLOAD_MOD0_FMT_INT32 :
+#else
+                   SFPLOAD_MOD0_FMT_SM32 :
+#endif
                    fmt == DataLayout::SM32 ? SFPLOAD_MOD0_FMT_INT32 :
                    fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
                    ~0);
+#if !__riscv_xtttensixwh
   if (fmt == DataLayout::I32)
     val = impl_::int_to_smag (vInt (val)).get ();
+#endif
   return vSMag (val);
 }
 
