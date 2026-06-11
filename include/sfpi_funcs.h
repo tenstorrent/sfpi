@@ -157,7 +157,7 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat val) const {
 
 template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat16a val) const {
-  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB; // FIXME F16a;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::F16a;
   static_assert (false
                  || fmt == DataLayout::FSrcB
                  || fmt == DataLayout::F32
@@ -172,7 +172,7 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat16a val) const {
 
 template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vFloat16b val) const {
-  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::FSrcB; // FIXME F16b;
+  constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::F16b;
   static_assert (false
                  || fmt == DataLayout::FSrcB
                  || fmt == DataLayout::F32
