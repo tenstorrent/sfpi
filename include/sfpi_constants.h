@@ -204,6 +204,7 @@ constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
+// WH/BH do round-nearest-away
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Evne
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNS = 1; // Round Nearest Stochastic
 //__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNE instead")))
