@@ -236,9 +236,13 @@ public:
   sfpi_inline vInt (uint16_t);
   sfpi_inline vInt (int32_t);
   sfpi_inline vInt (uint32_t);
-  sfpi_inline vInt (int val);
-  sfpi_inline vInt (unsigned val);
+  sfpi_inline vInt (int);
+  sfpi_inline vInt (unsigned);
 
+public:
+  sfpi_inline operator vUInt () const = delete;
+
+public:
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
   sfpi_inline vInt &operator<<= (unsigned);
@@ -310,6 +314,10 @@ public:
   sfpi_inline vUInt (int);
   sfpi_inline vUInt (unsigned);
 
+public:
+  sfpi_inline operator vInt () const = delete;
+
+public:
   // Operations
   sfpi_inline vUInt operator++ ();
   sfpi_inline vUInt operator-- ();

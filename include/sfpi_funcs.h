@@ -529,6 +529,11 @@ sfpi::vInt::vInt (uint32_t val)
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 
+#if 0
+sfpi::vInt::operator sfpi::vUInt () const {
+  return vUInt (*this);
+}
+#endif
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
 auto sfpi::vInt::operator<<= (unsigned a)-> vInt & { return *this = *this << a; }
@@ -605,6 +610,12 @@ sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
+
+#if 0
+sfpi::vUInt::operator sfpi::vInt () const {
+  return vInt (*this);
+}
+#endif
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }
