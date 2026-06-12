@@ -150,15 +150,20 @@ sfpi_inline vFloat setman (vFloat v, unsigned man) {
   return __builtin_rvtt_sfpsetman_i (v.get(), man, 0);
 }
 
-// accept float, unsigned or sign-mag
-// FIXME: Deprecate the float version, use copyman
 template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vUInt, Type>,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vUInt, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline vFloat setman (vFloat v, Type man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
+
+__SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
+sfpi_inline vFloat setman (vFloat v, vFloat man) = delete;
+#if 0
+{
+  return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
+}
+#endif
 
 sfpi_inline vFloat copyman (vFloat v, vFloat man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
@@ -190,29 +195,35 @@ sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = Fractio
 }
 
 // FIXME: deprecate
-sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
+
+__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
+sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) = delete;
+#if 0
+{
   return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
 }
 #endif
+#endif
 
-// accept float, unsigned or sign-mag
+// accept float, sign-mag
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type setsgn (Type v, int sgn) {
   return Type (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
-// accept unsigned, returns smag
-template <typename Type,
-          typename std::enable_if_t<std::is_same<vUInt, Type>::value>* = nullptr>
-sfpi_inline vSMag setsgn (Type v, int sgn) {
+
+sfpi_inline vSMag setsgn (vUInt v, int sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 
-// FIXME:Deprecate
-sfpi_inline vInt setsgn (vInt v, int sgn) {
+__SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
+sfpi_inline vInt setsgn (vInt v, int sgn) = delete;
+#if 0
+{
   return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
+#endif
 
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
@@ -224,12 +235,9 @@ sfpi_inline TypeA copysgn (const TypeA v, TypeB sgn) {
   return TypeA (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
 
-template <typename TypeA, typename TypeB,
-          typename std::enable_if_t<std::is_base_of<vUInt, TypeA>::value>* = nullptr,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
-                                                     std::is_base_of<vInt, TypeB>,
-                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
+template <typename TypeB,
+          typename std::enable_if_t<std::is_base_of<vInt, TypeB>::value>* = nullptr>
+sfpi_inline vSMag copysgn (vUInt v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
 
@@ -239,36 +247,43 @@ template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vUInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-// We'll rename this to plain setsgn once the old setsgn has gone though
+// FIXME:We'll rename this to plain setsgn once the old setsgn has gone though
 // deprecation and removal
 sfpi_inline TypeA setsgn2 (const TypeA v, TypeB sgn) {
   return copysgn (v, as<vSMag>(as<vUInt>(sgn) << 31));
 }
 
-// FIXME:Deprecate
-template <typename TypeA, typename TypeB,
-          typename std::enable_if_t<std::is_base_of<vInt, TypeA>::value>* = nullptr,
+template <typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-sfpi_inline vSMag copysgn (const TypeA v, TypeB sgn) {
+sfpi_inline vSMag copysgn (vInt v, TypeB sgn) = delete;
+#if 0
+{
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
+#endif
 
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
+sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) = delete;
+#if 0
+{
   return copysgn (v, sgn);
 }
+#endif
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vType setsgn (vType v, vInt sgn) {
+sfpi_inline vType setsgn (vType v, vInt sgn) = delete;
+#if 0
+{
   return copysgn (v, sgn);
 }
+#endif
 
 enum class LZMode {
   All,
@@ -696,28 +711,28 @@ sfpi_inline vFloat approx_tanh (vFloat src) {
 #endif
 
 vSMag impl_::int_to_smag (vInt val) {
+  vSMag res = as<vSMag> (val);
 #if !__riscv_xtttensixwh
-    val = __builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_INT32_TO_SM32);
+  res = vSMag (__builtin_rvtt_sfpcast (res.get (), SFPCAST_MOD1_INT32_TO_SM32));
 #else
-    v_if (val < 0) {
-      val = setsgn (val, 0);
-      val = 0 - val;
-    } v_endif;
-#endif
-  return as<vSMag> (val);
-}
-
-vInt impl_::smag_to_int (vSMag val) {
-  vInt res = as<vInt> (val);
-#if __riscv_xtttensixqsr
-  res = __builtin_rvtt_sfpcast (res.get (), SFPCAST_MOD1_SM32_TO_INT32);
-#else
-  v_if (res < 0) {
+  v_if (as<vInt> (res) < 0) {
     res = setsgn (res, 0);
-    res = 0 - res;
+    res = as<vSMag> (0 - as<vInt> (res));
   } v_endif;
 #endif
   return res;
+}
+
+vInt impl_::smag_to_int (vSMag val) {
+#if __riscv_xtttensixqsr
+  val = vSMag (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32));
+#else
+  v_if (as<vInt>(val) < 0) {
+    val = setsgn (val, 0);
+    val = as<vSMag>(0 - as<vInt> (val));
+  } v_endif;
+#endif
+  return as<vInt>(val);
 }
 
 } // namespace sfpi
