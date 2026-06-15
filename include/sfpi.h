@@ -240,7 +240,7 @@ public:
   sfpi_inline vInt (unsigned);
 
 public:
-  sfpi_inline operator vUInt () const = delete;
+  sfpi_inline operator vUInt () const;
 
 public:
   sfpi_inline vInt &operator+= (vInt);
@@ -315,7 +315,7 @@ public:
   sfpi_inline vUInt (unsigned);
 
 public:
-  sfpi_inline operator vInt () const = delete;
+  sfpi_inline operator vInt () const;
 
 public:
   // Operations

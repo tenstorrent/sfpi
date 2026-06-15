@@ -157,13 +157,11 @@ sfpi_inline vFloat setman (vFloat v, Type man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
-__SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
-sfpi_inline vFloat setman (vFloat v, vFloat man) = delete;
-#if 0
+//__SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
+sfpi_inline vFloat setman (vFloat v, vFloat man)
 {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
-#endif
 
 sfpi_inline vFloat copyman (vFloat v, vFloat man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
@@ -194,15 +192,10 @@ sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = Fractio
                                         : ~0));
 }
 
-// FIXME: deprecate
-
-__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
-sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) = delete;
-#if 0
-{
+//__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
+sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
   return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
 }
-#endif
 #endif
 
 // accept float, sign-mag
@@ -217,13 +210,10 @@ sfpi_inline vSMag setsgn (vUInt v, int sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 
-__SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
-sfpi_inline vInt setsgn (vInt v, int sgn) = delete;
-#if 0
-{
+//__SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
+sfpi_inline vInt setsgn (vInt v, int sgn) {
   return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
-#endif
 
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
@@ -257,33 +247,25 @@ template <typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-sfpi_inline vSMag copysgn (vInt v, TypeB sgn) = delete;
-#if 0
-{
+// __SFPI_DEPRECATED("Do not copy sign from int")
+sfpi_inline vSMag copysgn (vInt v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
-#endif
 
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
-__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) = delete;
-#if 0
-{
+//__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
   return copysgn (v, sgn);
 }
-#endif
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
-__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vType setsgn (vType v, vInt sgn) = delete;
-#if 0
-{
+//__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
-#endif
 
 enum class LZMode {
   All,
@@ -321,23 +303,51 @@ sfpi_inline vMag abs (vSMag v) {
   return vMag (setsgn (v, 0).get ());
 }
 
-sfpi_inline vUInt shft (vUInt v, vInt amt) {
-  return __builtin_rvtt_sfpshft_v (v.get (), amt.get (), SFPSHFT_MOD1_LOGICAL);
-}
-
-sfpi_inline vUInt shft (vUInt v, int amt) {
-  return __builtin_rvtt_sfpshft_i (v.get (), amt, SFPSHFT_MOD1_LOGICAL);
-}
-
-#if __riscv_xtttensixbh || __riscv_xtttensixqsr
-sfpi_inline vInt shft(vInt v, vInt amt) {
-  return __builtin_rvtt_sfpshft_v (v.get (), amt.get (), SFPSHFT_MOD1_ARITHMETIC);
-}
-
-sfpi_inline vInt shft(vInt v, int amt) {
-  return __builtin_rvtt_sfpshft_i (v.get (), amt, SFPSHFT_MOD1_ARITHMETIC);
-}
+enum class ShiftMode {
+  Logical,
+#if !__riscv_xtttensixwh
+  Arithmetic,
 #endif
+};
+
+namespace impl_ {
+sfpi_inline constexpr unsigned shft_mode (ShiftMode mode) {
+  return mode == ShiftMode::Logical ? SFPSHFT_MOD1_LOGICAL :
+#if !__riscv_xtttensixwh
+      mode == ShiftMode::Arithmetic ? SFPSHFT_MOD1_ARITHMETIC :
+#endif
+      ~0; // Bad value, compilation error
+}
+};
+
+sfpi_inline vUInt shft (vUInt v, vInt amt, ShiftMode mode = ShiftMode::Logical) {
+  return __builtin_rvtt_sfpshft_v (v.get (), amt.get (), impl_::shft_mode (mode));
+}
+
+sfpi_inline vUInt shft (vUInt v, int amt, ShiftMode mode = ShiftMode::Logical) {
+  return __builtin_rvtt_sfpshft_i (v.get (), amt, impl_::shft_mode (mode));
+}
+
+// WH has no arithmetic shift, force the user to specify logical
+sfpi_inline vInt shft(vInt v, vInt amt, ShiftMode mode =
+#if !__riscv_xtttensixwh
+                      ShiftMode::Arithmetic
+#else
+                      ShiftMode(~0)
+#endif
+                      ) {
+  return __builtin_rvtt_sfpshft_v (v.get (), amt.get (), impl_::shft_mode (mode));
+}
+
+sfpi_inline vInt shft(vInt v, int amt, ShiftMode mode =
+#if !__riscv_xtttensixwh
+                      ShiftMode::Arithmetic
+#else
+                      ShiftMode(~0)
+#endif
+                      ) {
+  return __builtin_rvtt_sfpshft_i (v.get (), amt, impl_::shft_mode (mode));
+}
 
 // Unfortunately one cannot deprecate individual enumerations, so use a
 // class and explicit values for the moment
