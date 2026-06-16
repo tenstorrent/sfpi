@@ -689,13 +689,35 @@ sfpi_inline vInt rand () {
   return __builtin_rvtt_sfpreadconfig (SFPCONFIG_SRC_RAND);
 }
 
-template <bool uncond = true>
-sfpi_inline vFloat approx_recip (vFloat src) {
+enum class RecipMode {
+  All,
+  IfNegative
+};
+
+// FIXME: add default value once deprecated fns below are removed
+sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode) {
 #if __riscv_xtttensixbh
-  return __builtin_rvtt_sfparecip (src.get (), uncond ? SFPARECIP_MOD1_RECIP : SFPARECIP_MOD1_COND_RECIP);
+  return __builtin_rvtt_sfparecip (src.get (),
+                                   mode == RecipMode::All ? SFPARECIP_MOD1_RECIP :
+                                   mode == RecipMode::IfNegative ? SFPARECIP_MOD1_COND_RECIP :
+                                   ~0);
 #elif __riscv_xtttensixqsr
-  return __builtin_rvtt_sfpnonlinear (src.get (), uncond ? SFPNONLINEAR_MOD1_RECIP : SFPNONLINEAR_MOD1_COND_RECIP);
+  return __builtin_rvtt_sfpnonlinear (src.get (),
+                                      mode == RecipMode::All ? SFPNONLINEAR_MOD1_RECIP :
+                                      mode == RecipMode::IfNegative ? SFPNONLINEAR_MOD1_COND_RECIP :
+                                      ~0);
 #endif
+}
+
+_SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
+template <int uncond = -1>
+sfpi_inline vFloat approx_recip (vFloat src) {
+return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
+}
+
+template <>
+sfpi_inline vFloat approx_recip<-1> (vFloat src) {
+  return approx_recip (src, RecipMode::All);
 }
 
 sfpi_inline vFloat approx_exp (vFloat src) {
