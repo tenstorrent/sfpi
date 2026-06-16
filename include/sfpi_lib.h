@@ -157,7 +157,7 @@ sfpi_inline vFloat setman (vFloat v, Type man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
 
-//__SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
+__SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
 sfpi_inline vFloat setman (vFloat v, vFloat man)
 {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
@@ -192,7 +192,7 @@ sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = Fractio
                                         : ~0));
 }
 
-//__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
+__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
 sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
   return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
 }
@@ -210,7 +210,7 @@ sfpi_inline vSMag setsgn (vUInt v, int sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
 
-//__SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
+__SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
 sfpi_inline vInt setsgn (vInt v, int sgn) {
   return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
 }
@@ -247,7 +247,7 @@ template <typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-// __SFPI_DEPRECATED("Do not copy sign from int")
+__SFPI_DEPRECATED("Do not copy sign from int")
 sfpi_inline vSMag copysgn (vInt v, TypeB sgn) {
   return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
 }
@@ -255,14 +255,14 @@ sfpi_inline vSMag copysgn (vInt v, TypeB sgn) {
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
-//__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
   return copysgn (v, sgn);
 }
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
-//__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
+__SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
 sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
@@ -372,10 +372,10 @@ class RoundMode {
 #if 1
  };
 #if __riscv_xtttensixwh || __riscv_xtttensixbh
- // __SFPI_DEPRECATED("Use RoundMode::Nearest or RoundMode::NearestAway")
+ __SFPI_DEPRECATED("Use RoundMode::Nearest or RoundMode::NearestAway")
  static constexpr Values NearestEven = NearestAway;
 #endif
- // __SFPI_DEPRECATED("Use RoundMode::NearestStochastic")
+ __SFPI_DEPRECATED("Use RoundMode::NearestStochastic")
  static constexpr Values Stochastic = NearestStochastic;
 
  private: Values v;
