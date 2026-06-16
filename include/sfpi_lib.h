@@ -694,8 +694,7 @@ enum class RecipMode {
   IfNegative
 };
 
-// FIXME: add default value once deprecated fns below are removed
-sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode) {
+sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode = RecipMode::All) {
 #if __riscv_xtttensixbh
   return __builtin_rvtt_sfparecip (src.get (),
                                    mode == RecipMode::All ? SFPARECIP_MOD1_RECIP :
@@ -709,15 +708,10 @@ sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode) {
 #endif
 }
 
-_SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
-template <int uncond = -1>
+template <bool uncond = true>
+__SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
 sfpi_inline vFloat approx_recip (vFloat src) {
 return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
-}
-
-template <>
-sfpi_inline vFloat approx_recip<-1> (vFloat src) {
-  return approx_recip (src, RecipMode::All);
 }
 
 sfpi_inline vFloat approx_exp (vFloat src) {
