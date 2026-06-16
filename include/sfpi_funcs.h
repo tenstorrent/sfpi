@@ -529,6 +529,7 @@ sfpi::vInt::vInt (uint32_t val)
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 
+__SFPI_DEPRECATED("Implicit vInt->vUInt conversion deprecated, use an explicit cast or restructure")
 sfpi::vInt::operator sfpi::vUInt () const {
   return vUInt (*this);
 }
@@ -610,6 +611,7 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
+__SFPI_DEPRECATED("Implicit vUInt->vInt conversion deprecated, use an explicit cast or restructure")
 sfpi::vUInt::operator sfpi::vInt () const {
   return vInt (*this);
 }
