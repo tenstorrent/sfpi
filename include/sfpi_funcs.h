@@ -241,10 +241,9 @@ template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vInt val) const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt :
 #if __riscv_xtttensixwh
+                                 // WH defaults to SM for int32
                                  DataLayout::SM32
 #else
-                                 // FIXME: QSR needs fixing
-                                 // FIXME: BH doesn't convert :(
                                  DataLayout::I32
 #endif
                                  ;
@@ -273,10 +272,9 @@ template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vInt () const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt :
 #if __riscv_xtttensixwh
+                                 // WH defaults to SM for int32
                                  DataLayout::SM32
 #else
-                                 // FIXME: BH doesn't convert :(
-                                 // FIXME: QSR needs fixing
                                  DataLayout::I32
 #endif
                                  ;
