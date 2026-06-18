@@ -508,6 +508,13 @@ sfpi_inline  vBool operator> (vInt, int32_t);
 sfpi_inline  vBool operator<= (vInt, int32_t);
 sfpi_inline  vBool operator>= (vInt, int32_t);
 
+sfpi_inline  vBool operator== (vInt a, vMag b) { return a == vInt (b); }
+sfpi_inline  vBool operator!= (vInt a, vMag b) { return a != vInt (b); }
+sfpi_inline  vBool operator< (vInt a, vMag b) { return a < vInt (b); }
+sfpi_inline  vBool operator> (vInt a, vMag b) { return a > vInt (b); }
+sfpi_inline  vBool operator<= (vInt a, vMag b) { return a <= vInt (b); }
+sfpi_inline  vBool operator>= (vInt a, vMag b) { return a >= vInt (b); }
+
 sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
 sfpi_inline  vBool operator!= (vInt a, int b) { return a != int32_t (b); }
 sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
