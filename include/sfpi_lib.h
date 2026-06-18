@@ -278,7 +278,7 @@ template <typename Type,
                                       std::is_base_of<vUInt, Type>,
                                       std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
-  return vMag (__builtin_rvtt_sfplz (v.getc (),
+  return vMag (__builtin_rvtt_sfplz (v.get (),
                                      (mode == LZMode::All ? 0 :
                                       mode == LZMode::IgnoreSign ? SFPLZ_MOD1_NOSGN_MASK :
                                       ~0) | SFPLZ_MOD1_CC_NONE));
