@@ -192,7 +192,7 @@ sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = Fractio
                                         : ~0));
 }
 
-__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
+__SFPI_DEPRECATED("Use non-2's complement types")
 sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
   return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
 }
@@ -278,7 +278,7 @@ template <typename Type,
                                       std::is_base_of<vUInt, Type>,
                                       std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
-  return vMag (__builtin_rvtt_sfplz (v.getc (),
+  return vMag (__builtin_rvtt_sfplz (v.get (),
                                      (mode == LZMode::All ? 0 :
                                       mode == LZMode::IgnoreSign ? SFPLZ_MOD1_NOSGN_MASK :
                                       ~0) | SFPLZ_MOD1_CC_NONE));
