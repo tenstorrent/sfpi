@@ -85,21 +85,39 @@ sfpi_inline vFloat lut2_sign(const vFloat v,
                                         v.get(), mod | SFPLUTFP32_MOD0_SGN_UPDATE);
 }
 
-enum class ExponentMode {
-  Debias,
-  NoDebias,
+#if 0
+enum
+#endif
+class ExponentMode {
+#if 1
+ public: enum Values {
+#endif
+  Unbiased,
+  Biased,
+#if 1
+  };
+ // __SFPI_DEPRECATED("Use ExponentMode::Unbiased")
+ static constexpr Values Debias = Unbiased;
+ // __SFPI_DEPRECATED("Use ExponentMode::Biased")
+ static constexpr Values NoDebias = Biased;
+
+ private: Values v;
+
+ public: constexpr ExponentMode (Values v) : v (v) {}
+ public: constexpr operator Values () const { return v; }
+#endif
 };
 
-sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Debias) {
+sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Unbiased) {
   return __builtin_rvtt_sfpexexp (v.get (),
-                                  mode == ExponentMode::Debias ? SFPEXEXP_MOD1_DEBIAS :
-                                  mode == ExponentMode::NoDebias ? SFPEXEXP_MOD1_NODEBIAS :
+                                  mode == ExponentMode::Unbiased ? SFPEXEXP_MOD1_DEBIAS :
+                                  mode == ExponentMode::Biased ? SFPEXEXP_MOD1_NODEBIAS :
                                   ~0 /* bad value, compile error */);
 }
 
-__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::NoDebias)")
+__SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::Biased)")
 sfpi_inline vInt exexp_nodebias(const vFloat v) {
-  return __builtin_rvtt_sfpexexp(v.get(), SFPEXEXP_MOD1_NODEBIAS);
+  return exexp (v, ExponentMode::Biased);
 }
 
 enum class MantissaMode {
