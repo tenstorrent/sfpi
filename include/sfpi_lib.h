@@ -308,6 +308,42 @@ sfpi_inline vInt lz_nosgn (const vType v) {
   return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
 }
 
+sfpi_inline vBool is_nan (vFloat v) {
+  return exexp (v, ExponentMode::Biased) >= 255
+      && exman (v) != 0;
+}
+
+sfpi_inline vBool is_finite (vFloat v) {
+  return exexp (v, ExponentMode::Biased) < 255;
+}
+
+sfpi_inline vBool is_normal (vFloat v) {
+  auto exp = exexp (v, ExponentMode::Biased);
+  return exp < 255 && exp != 0;
+}
+
+sfpi_inline vBool is_subnormal (vFloat v) {
+  return exexp (v, ExponentMode::Biased) == 0
+      && exman (v) != 0;
+}
+
+sfpi_inline vBool is_zero (vFloat v) {
+  return (as<vUInt>(v) << 1) == 0;
+}
+
+sfpi_inline vBool is_inf (vFloat v) {
+  return exexp (v, ExponentMode::Biased) >= 255
+      && exman (v) == 0;
+}
+
+sfpi_inline vBool is_pos (vFloat v) {
+  return lz (as<vUInt> (v)) != 0;
+}
+
+sfpi_inline vBool is_neg (vFloat v) {
+  return lz (as<vUInt> (v)) == 0;
+}
+
 sfpi_inline vFloat abs (vFloat v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
 }
