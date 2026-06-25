@@ -13,6 +13,7 @@
 namespace sfpi {
 
 template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+__SFPI_DEPRECATED("Use as<T>")
 sfpi_inline Type reinterpret (impl_::vVal v) {
     return Type (v.get ());
 }
