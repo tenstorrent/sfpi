@@ -525,26 +525,45 @@ sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
 // FIXME: These should be deprecated and removed -- mixing signed and unsigned
 // in compares is not sensible. Sadly user code does this because the old
 // iplementatiion permitted it :(
+
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator== (vInt a, vUInt b) { return a == vInt (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator!= (vInt a, vUInt b) { return a != vInt (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator< (vInt a, vUInt b) { return a < vInt (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator> (vInt a, vUInt b) { return a > vInt (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator<= (vInt a, vUInt b) { return a <= vInt (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator>= (vInt a, vUInt b) { return a >= vInt (b); }
 
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator== (vInt a, uint32_t b) { return a == int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator< (vInt a, uint32_t b) { return a < int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator> (vInt a, uint32_t b) { return a > int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator<= (vInt a, uint32_t b) { return a <= int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator>= (vInt a, uint32_t b) { return a >= int32_t (b); }
 
-sfpi_inline  vBool operator== (vInt a, unsigned b) { return a == uint32_t (b); }
-sfpi_inline  vBool operator!= (vInt a, unsigned b) { return a != uint32_t (b); }
-sfpi_inline  vBool operator< (vInt a, unsigned b) { return a < uint32_t (b); }
-sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > uint32_t (b); }
-sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= uint32_t (b); }
-sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= uint32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator== (vInt a, unsigned b) { return a == int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator!= (vInt a, unsigned b) { return a != int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator< (vInt a, unsigned b) { return a < int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= int32_t (b); }
+__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
+sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= int32_t (b); }
 
 sfpi_inline vBool operator== (vSMag, vSMag);
 sfpi_inline vBool operator== (vSMag, unsigned);
