@@ -805,6 +805,7 @@ vSMag impl_::int_to_smag (vInt val) {
 }
 
 vInt impl_::smag_to_int (vSMag val) {
+  // Unfortunately BH's sfpcast implementation cannot be used here :(
 #if __riscv_xtttensixqsr
   val = vSMag (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32));
 #else
