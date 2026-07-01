@@ -15,7 +15,7 @@
 namespace sfpi {
 
 template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-__SFPI_DEPRECATED("Use as<T>")
+__SFPI_DEPRECATED("Use sfpi::as<T>")
 sfpi_inline Type reinterpret (impl_::vVal v) {
     return Type (v.get ());
 }
@@ -99,9 +99,9 @@ class ExponentMode {
   Biased,
 #if 1
   };
- // __SFPI_DEPRECATED("Use ExponentMode::Unbiased")
+ __SFPI_DEPRECATED("Use sfpi::ExponentMode::Unbiased")
  static constexpr Values Debias = Unbiased;
- // __SFPI_DEPRECATED("Use ExponentMode::Biased")
+ __SFPI_DEPRECATED("Use sfpi::ExponentMode::Biased")
  static constexpr Values NoDebias = Biased;
 
  private: Values v;
@@ -155,7 +155,7 @@ sfpi_inline vInt exman9(const vFloat v) {
   return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
 }
 
-sfpi_inline vFloat setexp (const vFloat v, int exp) {
+sfpi_inline vFloat setexp (vFloat v, int exp) {
   return __builtin_rvtt_sfpsetexp_i (v.get(), exp, 0);
 }
 
@@ -165,6 +165,10 @@ sfpi_inline vFloat setexp (vFloat v, vInt exp) {
 
 sfpi_inline vFloat copyexp (vFloat v, vFloat exp) {
   return __builtin_rvtt_sfpsetexp_v (v.get (), exp.get (), SFPSETEXP_MOD1_CPY);
+}
+
+sfpi_inline vFloat addexp (vFloat in, int exp) {
+  return __builtin_rvtt_sfpdivp2 (in.get (), exp, SFPSDIVP2_MOD1_ADD);
 }
 
 sfpi_inline vFloat setman (vFloat v, unsigned man) {
@@ -187,37 +191,6 @@ sfpi_inline vFloat setman (vFloat v, vFloat man)
 sfpi_inline vFloat copyman (vFloat v, vFloat man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
 }
-
-sfpi_inline vFloat addexp (vFloat in, int exp) {
-  return __builtin_rvtt_sfpdivp2 (in.get (), exp, SFPSDIVP2_MOD1_ADD);
-}
-
-#if __riscv_xtttensixbh || __riscv_xtttensixqsr
-enum class FractionalHalf {
-  Low,
-  High,
-};
-
-// accept float, unsigned or sign-mag
-template <typename TypeA, typename TypeB,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
-                                                     std::is_base_of<vUInt, TypeA>,
-                                                     std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
-                                                     std::is_base_of<vUInt, TypeB>,
-                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
-sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = FractionalHalf::Low) {
-  return vMag (__builtin_rvtt_sfpmul24 (a.get (), b.get (),
-                                        half == FractionalHalf::Low ? SFPMUL24_MOD1_LOWER
-                                        : half == FractionalHalf::High ? SFPMUL24_MOD1_UPPER
-                                        : ~0));
-}
-
-__SFPI_DEPRECATED("Use non-2's complement types")
-sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
-  return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
-}
-#endif
 
 // accept float, sign-mag
 template <typename Type,
@@ -288,6 +261,19 @@ sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
 
+sfpi_inline vFloat abs (vFloat v) {
+  return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
+}
+
+// Even though mostneg returns unchanged bit pattern, this returns vMag, not vUInt
+sfpi_inline vMag abs (vInt v) {
+  return vMag (__builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_INT));
+}
+
+sfpi_inline vMag abs (vSMag v) {
+  return vMag (setsgn (v, 0).get ());
+}
+
 enum class LZMode {
   All,
   IgnoreSign,
@@ -309,55 +295,6 @@ template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal,
 __SFPI_DEPRECATED("Use sfpi::lz (X, sfpi::LXMode::IgnoreSign)")
 sfpi_inline vInt lz_nosgn (const vType v) {
   return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
-}
-
-sfpi_inline vBool is_nan (vFloat v) {
-  return exexp (v, ExponentMode::Biased) >= 255
-      && exman (v) != 0;
-}
-
-sfpi_inline vBool is_finite (vFloat v) {
-  return exexp (v, ExponentMode::Biased) < 255;
-}
-
-sfpi_inline vBool is_normal (vFloat v) {
-  auto exp = exexp (v, ExponentMode::Biased);
-  return exp < 255 && exp != 0;
-}
-
-sfpi_inline vBool is_subnormal (vFloat v) {
-  return exexp (v, ExponentMode::Biased) == 0
-      && exman (v) != 0;
-}
-
-sfpi_inline vBool is_zero (vFloat v) {
-  return (as<vUInt>(v) << 1) == 0;
-}
-
-sfpi_inline vBool is_inf (vFloat v) {
-  return exexp (v, ExponentMode::Biased) >= 255
-      && exman (v) == 0;
-}
-
-sfpi_inline vBool is_pos (vFloat v) {
-  return lz (as<vUInt> (v)) != 0;
-}
-
-sfpi_inline vBool is_neg (vFloat v) {
-  return lz (as<vUInt> (v)) == 0;
-}
-
-sfpi_inline vFloat abs (vFloat v) {
-  return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
-}
-
-// Even though mostneg returns unchanged bit pattern, this returns vMag, not vUInt
-sfpi_inline vMag abs (vInt v) {
-  return vMag (__builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_INT));
-}
-
-sfpi_inline vMag abs (vSMag v) {
-  return vMag (setsgn (v, 0).get ());
 }
 
 enum class ShiftMode {
@@ -405,6 +342,247 @@ sfpi_inline vInt shft(vInt v, int amt, ShiftMode mode =
                       ) {
   return __builtin_rvtt_sfpshft_i (v.get (), amt, impl_::shft_mode (mode));
 }
+
+sfpi_inline vBool is_nan (vFloat v) {
+  return exexp (v, ExponentMode::Biased) >= 255
+      && exman (v) != 0;
+}
+
+sfpi_inline vBool is_finite (vFloat v) {
+  return exexp (v, ExponentMode::Biased) < 255;
+}
+
+sfpi_inline vBool is_normal (vFloat v) {
+  auto exp = exexp (v, ExponentMode::Biased);
+  return exp < 255 && exp != 0;
+}
+
+sfpi_inline vBool is_subnormal (vFloat v) {
+  return exexp (v, ExponentMode::Biased) == 0
+      && exman (v) != 0;
+}
+
+sfpi_inline vBool is_zero (vFloat v) {
+  return (as<vUInt>(v) << 1) == 0;
+}
+
+sfpi_inline vBool is_inf (vFloat v) {
+  return exexp (v, ExponentMode::Biased) >= 255
+      && exman (v) == 0;
+}
+
+sfpi_inline vBool is_pos (vFloat v) {
+  return lz (as<vUInt> (v)) != 0;
+}
+
+sfpi_inline vBool is_neg (vFloat v) {
+  return lz (as<vUInt> (v)) == 0;
+}
+
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+enum class FractionalHalf {
+  Low,
+  High,
+};
+
+// accept float, unsigned or sign-mag
+template <typename TypeA, typename TypeB,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
+                                                     std::is_base_of<vUInt, TypeA>,
+                                                     std::is_base_of<vSMag, TypeA>>::value>* = nullptr,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeB>,
+                                                     std::is_base_of<vUInt, TypeB>,
+                                                     std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
+sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = FractionalHalf::Low) {
+  return vMag (__builtin_rvtt_sfpmul24 (a.get (), b.get (),
+                                        half == FractionalHalf::Low ? SFPMUL24_MOD1_LOWER
+                                        : half == FractionalHalf::High ? SFPMUL24_MOD1_UPPER
+                                        : ~0));
+}
+
+__SFPI_DEPRECATED("Use non-2's complement types")
+sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
+  return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
+}
+#endif
+
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
+  // mask has 0 for min res and 1 for max res
+  uint32_t swap =
+      // 32-bit mask
+      mask == 0xffffffffu ? 0xffffffff :
+      mask == 0xff0000ffu ? 0xffffffff:
+      mask == 0xff000000u ? 0xffffffff :
+      mask == 0x00ff00ffu ? 0xffffffff :
+      mask == 0x00ff0000u ? 0xffffffff :
+      mask == 0x0000ffffu ? 0xffffffff :
+      mask == 0x0000ff00u ? 0xffffffff :
+      mask == 0x000000ffu ? 0xffffffff :
+      // 4 bit mask
+      mask == 0xfu ? 0xf :
+      mask == 0x9u ? 0xf :
+      mask == 0x8u ? 0xf :
+      mask == 0x5u ? 0xf :
+      mask == 0x4u ? 0xf :
+      mask == 0x3u ? 0xf :
+      mask == 0x2u ? 0xf :
+      mask == 0x1u ? 0xf :
+      0;
+  unsigned mod =
+      (mask ^ swap) == 0x00000000u ? SFPSWAP_MOD1_VEC_MIN_MAX :
+      (mask ^ swap) == 0x00ffff00u ? SFPSWAP_MOD1_SUBVEC_MIN03_MAX12:
+      (mask ^ swap) == 0x00ffffffu ? SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 :
+      (mask ^ swap) == 0xff00ff00u ? SFPSWAP_MOD1_SUBVEC_MIN02_MAX13 :
+      (mask ^ swap) == 0xff00ffffu ? SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 :
+      (mask ^ swap) == 0xffff0000u ? SFPSWAP_MOD1_SUBVEC_MIN01_MAX23 :
+      (mask ^ swap) == 0xffff00ffu ? SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 :
+      (mask ^ swap) == 0xffffff00u ? SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 :
+      (mask ^ swap) == 0x0u ? SFPSWAP_MOD1_VEC_MIN_MAX : // Same as first condition
+      (mask ^ swap) == 0x6u ? SFPSWAP_MOD1_SUBVEC_MIN03_MAX12:
+      (mask ^ swap) == 0x7u ? SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 :
+      (mask ^ swap) == 0xau ? SFPSWAP_MOD1_SUBVEC_MIN02_MAX13 :
+      (mask ^ swap) == 0xbu ? SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 :
+      (mask ^ swap) == 0xcu ? SFPSWAP_MOD1_SUBVEC_MIN01_MAX23 :
+      (mask ^ swap) == 0xdu ? SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 :
+      (mask ^ swap) == 0xeu ? SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 :
+      ~0; // Bad value, compilation error
+  auto res = __builtin_rvtt_sfpswap (swap ? b.get () : a.get (),
+                                     swap ? a.get () : b.get (), mod);
+  auto r0 = Type (__builtin_rvtt_sfpselect2 (res, swap != 0));
+  auto r1 = Type (__builtin_rvtt_sfpselect2 (res, swap == 0));
+  return std::pair (r0, r1);
+}
+
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline Type min (Type a, Type b) {
+  return min_max (a, b).first;
+}
+
+sfpi_inline vFloat min (vFloat a, float b) {
+  return min (a, vFloat (b));
+}
+
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline Type max (Type a, Type b) {
+  return min_max (a, b, 0xf).first;
+}
+
+sfpi_inline vFloat max (vFloat a, float b) {
+  return max (a, vFloat (b));
+}
+
+template <typename Type,
+          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
+sfpi_inline Type clamp (Type val, Type lower, Type upper) {
+  return min (max (val, lower), upper);
+}
+
+sfpi_inline vFloat clamp (vFloat val, float lower, float upper) {
+  return clamp (val, vFloat (lower), vFloat (upper));
+}
+
+sfpi_inline vFloat symmetric_clamp (vFloat val, float bound) {
+  return copysgn (min (abs (val), bound), val);
+}
+
+template <typename Type,
+          typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+sfpi_inline void swap (Type &a, Type &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
+  a = Type (__builtin_rvtt_sfpselect2 (r, 0));
+  b = Type (__builtin_rvtt_sfpselect2 (r, 1));
+}
+
+__SFPI_DEPRECATED("Use sfpi::swap")
+sfpi_inline void vec_swap (vFloat & a, vFloat &b) {
+  swap (a, b);
+}
+__SFPI_DEPRECATED("Use sfpi::swap")
+sfpi_inline void vec_swap (vInt &a, vInt &b) {
+  swap (a, b);
+}
+__SFPI_DEPRECATED("Use sfpi::swap")
+sfpi_inline void vec_swap (vUInt &a, vUInt &b) {
+  swap (a, b);
+}
+
+__SFPI_DEPRECATED("Use sfpi::min_max")
+sfpi_inline void vec_min_max (vFloat &a, vFloat &b) {
+  auto r = min_max (a, b);
+  a = r.first;
+  b = r.second;
+}
+__SFPI_DEPRECATED("Use min_max with vSMag type")
+sfpi_inline void vec_min_max (vInt &a, vInt &b) {
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+  a = __builtin_rvtt_sfpselect2 (r, 0);
+  b = __builtin_rvtt_sfpselect2 (r, 1);
+}
+
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+sfpi_inline vInt rand () {
+  return __builtin_rvtt_sfpreadconfig (SFPCONFIG_SRC_RAND);
+}
+
+// ReLU(x) = max (x,0)
+sfpi_inline vFloat rectified_linear_unit (vFloat src) {
+#if __riscv_xtttensixqsr
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_RELU);
+#else
+  return max (src, 0.0f);
+#endif
+}
+
+enum class RecipMode {
+  All,
+  IfNegative
+};
+
+sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode = RecipMode::All) {
+#if __riscv_xtttensixbh
+  return __builtin_rvtt_sfparecip (src.get (),
+                                   mode == RecipMode::All ? SFPARECIP_MOD1_RECIP :
+                                   mode == RecipMode::IfNegative ? SFPARECIP_MOD1_COND_RECIP :
+                                   ~0);
+#elif __riscv_xtttensixqsr
+  return __builtin_rvtt_sfpnonlinear (src.get (),
+                                      mode == RecipMode::All ? SFPNONLINEAR_MOD1_RECIP :
+                                      mode == RecipMode::IfNegative ? SFPNONLINEAR_MOD1_COND_RECIP :
+                                      ~0);
+#endif
+}
+
+template <bool uncond = true>
+__SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
+sfpi_inline vFloat approx_recip (vFloat src) {
+return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
+}
+
+sfpi_inline vFloat approx_exp (vFloat src) {
+#if __riscv_xtttensixbh
+  return __builtin_rvtt_sfparecip (src.get(), SFPARECIP_MOD1_EXP);
+#elif __riscv_xtttensixqsr
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_EXP);
+#endif
+}
+#endif
+
+#if __riscv_xtttensixqsr
+sfpi_inline vFloat approx_sqrt (vFloat src) {
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_SQRT);
+}
+sfpi_inline vFloat approx_tanh (vFloat src) {
+  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_TANH);
+}
+#endif
 
 // Unfortunately one cannot deprecate individual enumerations, so use a
 // class and explicit values for the moment
@@ -707,180 +885,6 @@ sfpi_inline impl_::sfpu_t subvec_shflshr1(const impl_::vVal& src)
 {
     return __builtin_rvtt_sfpshft2_subvec_shfl1(src.get(), SFPSHFT2_MOD1_SUBVEC_SHFLSHR1);
 }
-
-template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
-  // mask has 0 for min res and 1 for max res
-  uint32_t swap =
-      // 32-bit mask
-      mask == 0xffffffffu ? 0xffffffff :
-      mask == 0xff0000ffu ? 0xffffffff:
-      mask == 0xff000000u ? 0xffffffff :
-      mask == 0x00ff00ffu ? 0xffffffff :
-      mask == 0x00ff0000u ? 0xffffffff :
-      mask == 0x0000ffffu ? 0xffffffff :
-      mask == 0x0000ff00u ? 0xffffffff :
-      mask == 0x000000ffu ? 0xffffffff :
-      // 4 bit mask
-      mask == 0xfu ? 0xf :
-      mask == 0x9u ? 0xf :
-      mask == 0x8u ? 0xf :
-      mask == 0x5u ? 0xf :
-      mask == 0x4u ? 0xf :
-      mask == 0x3u ? 0xf :
-      mask == 0x2u ? 0xf :
-      mask == 0x1u ? 0xf :
-      0;
-  unsigned mod =
-      (mask ^ swap) == 0x00000000u ? SFPSWAP_MOD1_VEC_MIN_MAX :
-      (mask ^ swap) == 0x00ffff00u ? SFPSWAP_MOD1_SUBVEC_MIN03_MAX12:
-      (mask ^ swap) == 0x00ffffffu ? SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 :
-      (mask ^ swap) == 0xff00ff00u ? SFPSWAP_MOD1_SUBVEC_MIN02_MAX13 :
-      (mask ^ swap) == 0xff00ffffu ? SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 :
-      (mask ^ swap) == 0xffff0000u ? SFPSWAP_MOD1_SUBVEC_MIN01_MAX23 :
-      (mask ^ swap) == 0xffff00ffu ? SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 :
-      (mask ^ swap) == 0xffffff00u ? SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 :
-      (mask ^ swap) == 0x0u ? SFPSWAP_MOD1_VEC_MIN_MAX : // Same as first condition
-      (mask ^ swap) == 0x6u ? SFPSWAP_MOD1_SUBVEC_MIN03_MAX12:
-      (mask ^ swap) == 0x7u ? SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 :
-      (mask ^ swap) == 0xau ? SFPSWAP_MOD1_SUBVEC_MIN02_MAX13 :
-      (mask ^ swap) == 0xbu ? SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 :
-      (mask ^ swap) == 0xcu ? SFPSWAP_MOD1_SUBVEC_MIN01_MAX23 :
-      (mask ^ swap) == 0xdu ? SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 :
-      (mask ^ swap) == 0xeu ? SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 :
-      ~0; // Bad value, compilation error
-  auto res = __builtin_rvtt_sfpswap (swap ? b.get () : a.get (),
-                                     swap ? a.get () : b.get (), mod);
-  auto r0 = Type (__builtin_rvtt_sfpselect2 (res, swap != 0));
-  auto r1 = Type (__builtin_rvtt_sfpselect2 (res, swap == 0));
-  return std::pair (r0, r1);
-}
-
-template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline Type min (Type a, Type b) {
-  return min_max (a, b).first;
-}
-
-sfpi_inline vFloat min (vFloat a, float b) {
-  return min (a, vFloat (b));
-}
-
-template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline Type max (Type a, Type b) {
-  return min_max (a, b, 0xf).first;
-}
-
-sfpi_inline vFloat max (vFloat a, float b) {
-  return max (a, vFloat (b));
-}
-
-template <typename Type,
-          typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
-                                                     std::is_base_of<vSMag, Type>>::value>* = nullptr>
-sfpi_inline Type clamp (Type val, Type lower, Type upper) {
-  return min (max (val, lower), upper);
-}
-
-sfpi_inline vFloat clamp (vFloat val, float lower, float upper) {
-  return clamp (val, vFloat (lower), vFloat (upper));
-}
-
-sfpi_inline vFloat symmetric_clamp (vFloat val, float bound) {
-  return copysgn (min (abs (val), bound), val);
-}
-
-template <typename Type,
-          typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
-sfpi_inline void swap (Type &a, Type &b) {
-  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
-  a = Type (__builtin_rvtt_sfpselect2 (r, 0));
-  b = Type (__builtin_rvtt_sfpselect2 (r, 1));
-}
-
-// __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vFloat & a, vFloat &b) {
-  swap (a, b);
-}
-// __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vInt &a, vInt &b) {
-  swap (a, b);
-}
-// __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vUInt &a, vUInt &b) {
-  swap (a, b);
-}
-
-// __SFPI_DEPRECATED("Use sfpi::min_max")
-sfpi_inline void vec_min_max (vFloat &a, vFloat &b) {
-  auto r = min_max (a, b);
-  a = r.first;
-  b = r.second;
-}
-// FIXME: Use vSMag
-// __SFPI_DEPRECATED("Use min_max with vSMag type")
-sfpi_inline void vec_min_max (vInt &a, vInt &b) {
-  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
-  a = __builtin_rvtt_sfpselect2 (r, 0);
-  b = __builtin_rvtt_sfpselect2 (r, 1);
-}
-
-#if __riscv_xtttensixbh || __riscv_xtttensixqsr
-sfpi_inline vInt rand () {
-  return __builtin_rvtt_sfpreadconfig (SFPCONFIG_SRC_RAND);
-}
-
-enum class RecipMode {
-  All,
-  IfNegative
-};
-
-sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode = RecipMode::All) {
-#if __riscv_xtttensixbh
-  return __builtin_rvtt_sfparecip (src.get (),
-                                   mode == RecipMode::All ? SFPARECIP_MOD1_RECIP :
-                                   mode == RecipMode::IfNegative ? SFPARECIP_MOD1_COND_RECIP :
-                                   ~0);
-#elif __riscv_xtttensixqsr
-  return __builtin_rvtt_sfpnonlinear (src.get (),
-                                      mode == RecipMode::All ? SFPNONLINEAR_MOD1_RECIP :
-                                      mode == RecipMode::IfNegative ? SFPNONLINEAR_MOD1_COND_RECIP :
-                                      ~0);
-#endif
-}
-
-template <bool uncond = true>
-__SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
-sfpi_inline vFloat approx_recip (vFloat src) {
-return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
-}
-
-sfpi_inline vFloat approx_exp (vFloat src) {
-#if __riscv_xtttensixbh
-  return __builtin_rvtt_sfparecip (src.get(), SFPARECIP_MOD1_EXP);
-#elif __riscv_xtttensixqsr
-  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_EXP);
-#endif
-}
-#endif
-
-#if __riscv_xtttensixqsr
-// ReLU(x) = max (x,0).  This is just sfpswap (x, CST0, MAX)
-sfpi_inline vFloat rectified_linear_unit (vFloat src) {
-  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_RELU);
-}
-sfpi_inline vFloat approx_sqrt (vFloat src) {
-  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_SQRT);
-}
-sfpi_inline vFloat approx_tanh (vFloat src) {
-  return __builtin_rvtt_sfpnonlinear (src.get (), SFPNONLINEAR_MOD1_TANH);
-}
-#endif
 
 vSMag impl_::int_to_smag (vInt val) {
   vSMag res = as<vSMag> (val);
