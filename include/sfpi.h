@@ -15,6 +15,15 @@
 //   class vUInt - 32bit unsigned elements
 //   class vInt  - 32bit signed (2's complement) elements
 //   class vFloat- 32bit IEEE 754 floating point elements
+//   class vSMag - 32bit signed-magnitude elements
+//   class vMag - 31bit magnitude elements in u32 format
+//   class vFloat16a - fp16a elements held in fp32 format
+//   class vFloat16b - fp16b elements held in fp32 format
+//   class vUInt16 - uint16 elenents held in u32 format
+//   class vUInt8 - uint8 elenents held in u32 format
+//   class vSMag16 - smag16 elenents held in sm32 format
+//   class vSMag8 - smag8 elenents held in sm32 format
+//   class vBool - vector boolean type
 //
 //  These are held in the lregs and may be transfered to/from the dst regs (and
 //  quasar srcs regs).  Overloaded operators are defined to permit such things as:
@@ -85,7 +94,7 @@
 //    generated).
 //
 //  Undesired features
-
+//
 //    There are some undesired features that have made their way into the
 //    implementation.  These are subject to deprecation and removal. The
 //    primary issue is the mixing of signed and unsigned vector types. The end
@@ -111,8 +120,9 @@ static_assert (std::is_same_v<int32_t, long>, "int32_t is not expected type of l
 // int32_t.  Then some embedded machines became 32-bits. But libraries remained
 // using long for int32_t, as that avoids changing the type of int32_t. Of
 // course later C mandated int needed to be at least 32 bits, and all the
-// 16-bit machines died, or when to the upstate pet farm. But anyway, riscv
-// embedded ABIs have int32_t as long, not int, and we have to deal with it.
+// 16-bit machines died, or went to that farm upstate for retured pets. But
+// anyway, riscv embedded ABIs have int32_t as long, not int, and we have to
+// deal with it.
 //
 // [*] It might be possible once we've removed the library's promiscuity in
 // mixing vInt/vUInt types, so that there's only one valid promotion for an int
@@ -128,13 +138,14 @@ class sFloat16a {
 
 public:
   // There is no float ctor, because that's a complex bit operation. We don't
-  // want to accidentally do that at runtime (consteval fns not yet available
-  // to us). Besides why would you want it?  (The compiler is quite capable of
-  // spotting bit patterns that are suitable for loading as an float16a, rather
-  // than lo/hi pair).
+  // want to accidentally do that at runtime (type-punning consteval fns not
+  // available to us in the version of C++ this is for). Besides why would you
+  // want it?  (The compiler is quite capable of spotting bit patterns that are
+  // suitable for loading as an float16a, rather than lo/hi pair).
+  sfpi_inline explicit sFloat16a (float) = delete;  
 
   // Reinterpret the bit pattern. Generally because you've computed something
-  // dynamically. If you;re using these with literals, you're just obfuscating
+  // dynamically. If you're using these with literals, you're just obfuscating
   // your code.  
   sfpi_inline explicit sFloat16a (uint32_t v) : val (v) {}
   sfpi_inline explicit sFloat16a (int32_t v) : val (v) {}
