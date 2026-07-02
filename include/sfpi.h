@@ -54,19 +54,19 @@
 //   can also use a `done` call to set the done flag:
 //     src_reg[0].done() = vFloat(src_reg[0].mode<DataLayout::F16b>());
 //
-// Constant Local Registers:
-//   template<typename T> class impl_::vConst<T>
-//   constexpr impl_::vConst<vFloat> vConst0p6928(5);
+// Constant Registers:
+//   The TILEID is available as vConstTileId.
 //
-//   The constant value local registers are used in expressions by referencing
-//   one of the names above and using them in mathematical operations such as:
-//       a = b * c + vConst0p6928;
+//   Programmable constant regisers are available via
+//   vConst{Float,Int}Prgm[0-2], the int and float variants are NOT different
+//   registers. These may be assigned to, but that is an expensive operation.
+//
 //
 // Predicated Execution:
 //   macros v_if(), v_elseif(), v_else, v_endif
 //
-//   The class __vCCCtrl is used in conjunction with the LReg based classes to
-//   enable predicated execution.  By convention the test infastructure indents
+//   The vBool class is used to evaluate conditions, and the impl_::CC class
+//   manages CCreg state. By convention the test infastructure indents
 //   the code as if executing if/then/else in C++, for example:
 //     v_if (CONDITION)
 //       True lanes affected here
@@ -661,19 +661,25 @@ using PackSrcS = impl_::SrcSRegFile<2>;
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
-constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
-constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
-constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 
+__SFPI_DEPRECATED ("just use 0.0f or sfpi::vFloat(0.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
+__SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
+__SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
+__SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
 constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
+
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 
-constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+
+constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 
 //////////////////////////////////////////////////////////////////////////////
 
