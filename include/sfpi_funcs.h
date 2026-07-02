@@ -465,7 +465,7 @@ sfpi::vFloat::vFloat (float f)
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
 auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
 #if __riscv_xtttensixwh
-  vFloat neg1 = vConstNeg1;
+  vFloat neg1 = -1.0f;
   *this = __builtin_rvtt_sfpmad (neg1.get (), a.get(), get (), SFPMAD_MOD1_OFFSET_NONE);
 #else // __riscv_xtttensixbh || __riscv_xtttensixqsr
   *this = *this + -a;
