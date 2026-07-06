@@ -657,7 +657,7 @@ sfpi_inline constexpr unsigned stochrnd_mod () {
 
 // conversions
 
-// float/float16a/float16b -> float/float16a/float16b/smag32/smag16/uint16
+// float/float16a/float16b -> float/float16a/float16b/int32/smag32/smag16/uint16
 template <typename ToType, typename FromType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<vFloat, FromType>::value>* = nullptr>
@@ -667,7 +667,8 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     return val;
 
 #if __riscv_xtttensixqsr
-  else if constexpr (std::is_same_v<vSMag, ToType>)
+  else if constexpr (std::is_same_v<vSMag, ToType>
+                     || std::is_same_v<vInt, ToType>)
     {
       // To smag
       unsigned mod1 =
@@ -675,7 +676,11 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
           round == RoundMode::NearestStochastic ? SFPCAST_MOD1_FP32_TO_SM32_RNS :
           ~0u;
 
-      return ToType (__builtin_rvtt_sfpcast (val.get (), mod1));
+      auto tmp = vSMag (__builtin_rvtt_sfpcast (val.get (), mod1));
+      if constexpr (std::is_same_v<vInt, ToType>)
+        return impl_::smag_to_int (tmp);
+      else
+        return tmp;
     }
 #endif
 
@@ -724,23 +729,26 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     }
 
   else if constexpr (std::is_same_v<vInt, ToType>)
-    return smag_to_int (val);
+    return impl_::smag_to_int (val);
 
   else
     static_assert (false, "Cannot convert vSMag to target type");
 }
 
-// int -> smag
+// int -> smag/float
 template <typename ToType, typename FromType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, ToType>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<vInt, FromType>::value>* = nullptr>
-sfpi_inline ToType convert (FromType val)
+sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = RoundMode::NearestStochastic)
 {
   if constexpr (std::is_same_v<FromType, ToType>)
     return val;
 
   else if constexpr (std::is_same_v<vSMag, ToType>)
-    return int_to_smag (val);
+    return impl_::int_to_smag (val);
+
+  else if constexpr (std::is_base_of_v<vFloat, ToType>)
+    return convert<ToType> (impl_::int_to_smag (val), round);
 
   else
     static_assert (false, "Cannot convert vInt to target type");
@@ -775,12 +783,12 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     return convert<ToType> (as<vSMag> (val), round);
 }
 
-__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
+__SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name and oargument type. use sfpi:convert<sfpi::vFloat> (X, rounding) which will convert from sign-maginitude and from both 2's complement (via sign-magnitude))")
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::NearestStochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
 // shim
-__SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat> (X, rounding)")
+__SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name, use sfpi:convert<sfpi::vFloat> (X, rounding)")
 sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::NearestStochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
