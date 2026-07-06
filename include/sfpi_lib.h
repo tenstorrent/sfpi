@@ -16,9 +16,7 @@ namespace sfpi {
 
 template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi::as<T>")
-sfpi_inline Type reinterpret (impl_::vVal v) {
-    return Type (v.get ());
-}
+sfpi_inline Type reinterpret (impl_::vVal v) = delete;
 
 template <typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
 sfpi_inline Type as (impl_::vVal v) {
@@ -88,16 +86,16 @@ sfpi_inline vFloat lut2_sign(const vFloat v,
                                         v.get(), mod | SFPLUTFP32_MOD0_SGN_UPDATE);
 }
 
-#if 0
+#if 1
 enum
 #endif
 class ExponentMode {
-#if 1
+#if 0
  public: enum Values {
 #endif
   Unbiased,
   Biased,
-#if 1
+#if 0
   };
  __SFPI_DEPRECATED("Use sfpi::ExponentMode::Unbiased")
  static constexpr Values Debias = Unbiased;
@@ -119,9 +117,7 @@ sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Unbias
 }
 
 __SFPI_DEPRECATED("Use sfpi::exexp (X, sfpi::ExponentMode::Biased)")
-sfpi_inline vInt exexp_nodebias(const vFloat v) {
-  return exexp (v, ExponentMode::Biased);
-}
+sfpi_inline vInt exexp_nodebias(const vFloat v) = delete;
 
 enum class MantissaMode {
   FractionOnly,
@@ -146,14 +142,10 @@ sfpi_inline vUInt exsgn (Type v) {
 }
 
 __SFPI_DEPRECATED("Use sfpi::exman (X, sfpi::MantissaMode::WithUnitBit)")
-sfpi_inline vInt exman8(const vFloat v) {
-  return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD8);
-}
+sfpi_inline vInt exman8(const vFloat v) = delete;
 
 __SFPI_DEPRECATED("Use sfpi::exman (X[, sfpi::MantissaMode::FractionOnly])")
-sfpi_inline vInt exman9(const vFloat v) {
-  return __builtin_rvtt_sfpexman(v.get(), SFPEXMAN_MOD1_PAD9);
-}
+sfpi_inline vInt exman9(const vFloat v) = delete;
 
 sfpi_inline vFloat setexp (vFloat v, int exp) {
   return __builtin_rvtt_sfpsetexp_i (v.get(), exp, 0);
@@ -183,10 +175,7 @@ sfpi_inline vFloat setman (vFloat v, Type man) {
 }
 
 __SFPI_DEPRECATED("Use sfpi:copyman (X, Y)")
-sfpi_inline vFloat setman (vFloat v, vFloat man)
-{
-  return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
-}
+sfpi_inline vFloat setman (vFloat v, vFloat man) = delete;
 
 sfpi_inline vFloat copyman (vFloat v, vFloat man) {
   return __builtin_rvtt_sfpsetman_v (v.get (), man.get (), 0);
@@ -205,9 +194,7 @@ sfpi_inline vSMag setsgn (vUInt v, int sgn) {
 }
 
 __SFPI_DEPRECATED("Use sfpi::setsgn on vInt just sets sign bit, do this differently")
-sfpi_inline vInt setsgn (vInt v, int sgn) {
-  return vInt (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
-}
+sfpi_inline vInt setsgn (vInt v, int sgn) = delete;
 
 template <typename TypeA, typename TypeB,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, TypeA>,
@@ -242,24 +229,18 @@ template <typename TypeB,
                                                      std::is_base_of<vInt, TypeB>,
                                                      std::is_base_of<vSMag, TypeB>>::value>* = nullptr>
 __SFPI_DEPRECATED("Do not copy sign from int")
-sfpi_inline vSMag copysgn (vInt v, TypeB sgn) {
-  return vSMag (__builtin_rvtt_sfpsetsgn_v (v.get (), sgn.get (), 0));
-}
+sfpi_inline vSMag copysgn (vInt v, TypeB sgn) = delete;
 
 template <typename vTypeA, typename vTypeB,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeA>::value>* = nullptr,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vTypeB>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) {
-  return copysgn (v, sgn);
-}
+sfpi_inline vTypeA setsgn(vTypeA v, vTypeB sgn) = delete;
 
 template <typename vType,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi:copysgn (X, Y)")
-sfpi_inline vType setsgn (vType v, vInt sgn) {
-  return copysgn (v, sgn);
-}
+sfpi_inline vType setsgn (vType v, vInt sgn) = delete;
 
 sfpi_inline vFloat abs (vFloat v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
@@ -293,9 +274,7 @@ sfpi_inline vMag lz (Type v, LZMode mode = LZMode::All) {
 
 template <typename vType, typename std::enable_if_t<std::is_base_of<impl_::vVal, vType>::value>* = nullptr>
 __SFPI_DEPRECATED("Use sfpi::lz (X, sfpi::LXMode::IgnoreSign)")
-sfpi_inline vInt lz_nosgn (const vType v) {
-  return vInt(__builtin_rvtt_sfplz( v.get (), SFPLZ_MOD1_NOSGN_CC_NONE));
-}
+sfpi_inline vInt lz_nosgn (const vType v) = delete;
 
 enum class ShiftMode {
   Logical,
@@ -401,9 +380,7 @@ sfpi_inline vMag fractional_mul (TypeA a, TypeB b, FractionalHalf half = Fractio
 }
 
 __SFPI_DEPRECATED("Use non-2's complement types")
-sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) {
-  return fractional_mul (as<vUInt> (a), as<vUInt> (b), half);
-}
+sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = FractionalHalf::Low) = delete;
 #endif
 
 template <typename Type,
@@ -502,30 +479,16 @@ sfpi_inline void swap (Type &a, Type &b) {
 }
 
 __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vFloat & a, vFloat &b) {
-  swap (a, b);
-}
+sfpi_inline void vec_swap (vFloat & a, vFloat &b) = delete;
 __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vInt &a, vInt &b) {
-  swap (a, b);
-}
+sfpi_inline void vec_swap (vInt &a, vInt &b) = delete;
 __SFPI_DEPRECATED("Use sfpi::swap")
-sfpi_inline void vec_swap (vUInt &a, vUInt &b) {
-  swap (a, b);
-}
+sfpi_inline void vec_swap (vUInt &a, vUInt &b) = delete;
 
 __SFPI_DEPRECATED("Use sfpi::min_max")
-sfpi_inline void vec_min_max (vFloat &a, vFloat &b) {
-  auto r = min_max (a, b);
-  a = r.first;
-  b = r.second;
-}
+sfpi_inline void vec_min_max (vFloat &a, vFloat &b) = delete;
 __SFPI_DEPRECATED("Use min_max with vSMag type")
-sfpi_inline void vec_min_max (vInt &a, vInt &b) {
-  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
-  a = __builtin_rvtt_sfpselect2 (r, 0);
-  b = __builtin_rvtt_sfpselect2 (r, 1);
-}
+sfpi_inline void vec_min_max (vInt &a, vInt &b) = delete;
 
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
 sfpi_inline vInt rand () {
@@ -562,9 +525,7 @@ sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode = RecipMode::All) {
 
 template <bool uncond = true>
 __SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
-sfpi_inline vFloat approx_recip (vFloat src) {
-return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
-}
+sfpi_inline vFloat approx_recip (vFloat src) = delete;
 
 sfpi_inline vFloat approx_exp (vFloat src) {
 #if __riscv_xtttensixbh
@@ -586,11 +547,11 @@ sfpi_inline vFloat approx_tanh (vFloat src) {
 
 // Unfortunately one cannot deprecate individual enumerations, so use a
 // class and explicit values for the moment
-#if 0
+#if 1
 enum
 #endif
 class RoundMode {
-#if 1
+#if 0
  public: enum Values {
 #endif
 #if __riscv_xtttensixwh || __riscv_xtttensixbh
@@ -604,7 +565,7 @@ class RoundMode {
 #if !__riscv_xtttensixwh
    Zero,
 #endif
-#if 1
+#if 0
  };
 #if __riscv_xtttensixwh || __riscv_xtttensixbh
  __SFPI_DEPRECATED("Use RoundMode::Nearest or RoundMode::NearestAway")
@@ -784,57 +745,28 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
 }
 
 __SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name and oargument type. use sfpi:convert<sfpi::vFloat> (X, rounding) which will convert from sign-maginitude and from both 2's complement (via sign-magnitude))")
-sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
-}
+sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 // shim
 __SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name, use sfpi:convert<sfpi::vFloat> (X, rounding)")
-sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
-}
+sfpi_inline vFloat int32_to_float (vSMag in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat16a> (X, rounding)")
-sfpi_inline vFloat float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_FP16A, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vFloat float_to_fp16a (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vFloat16b> (X, rounding)")
-sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_FP16B, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vFloat float_to_fp16b (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt16> (X, rounding)")
-sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) 
-{
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_UINT16, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vUInt float_to_uint16 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt16> (X, rounding)")
-sfpi_inline vInt float_to_int16 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_INT16, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vInt float_to_int16 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vUInt8> (X, rounding)")
-sfpi_inline vUInt float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_UINT8, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vUInt float_to_uint8 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 __SFPI_DEPRECATED("Use sfpi:convert<sfpi::vInt8> (X, rounding)")
-sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
-      (in.get(), 0,
-       SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::stochrnd_rnd (rounding));
-}
+sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::NearestStochastic) = delete;
 
 // These do not appear used anywhere.  We should get to converting to a new
 // convert-like API

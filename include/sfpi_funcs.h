@@ -443,15 +443,6 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag16 () const {
   return vSMag16 (val);
 }
 
-template<sfpi::DataLayout Fmt>
-auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator= (vReg<Fmt> const &reg) const-> void {
-  *this = vFloat (*reg);
-}
-template<sfpi::DataLayout Fmt>
-auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator- () const-> vFloat {
-  return -vFloat (*this);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
@@ -526,10 +517,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
-
-sfpi::vInt::operator sfpi::vUInt () const {
-  return vUInt (*this);
-}
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -607,10 +594,6 @@ sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
-
-sfpi::vUInt::operator sfpi::vInt () const {
-  return vInt (*this);
-}
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }

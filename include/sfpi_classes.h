@@ -43,7 +43,6 @@
 #else
 #define __SFPI_DEPRECATED(X)
 #endif
-#define __SFPI_MIXED_SIGNEDNESS __SFPI_DEPRECATED("This function mizes signed and unsigned types, be explicit about signedness")
 
 namespace sfpi {
 
@@ -364,9 +363,9 @@ public:
   public:
     // Deprecated 2026-04-14
     __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
-    sfpi_inline void operator= (vReg const &dreg) const;
+    sfpi_inline void operator= (vReg const &dreg) const = delete;
     __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
-    sfpi_inline vFloat operator- () const;
+    sfpi_inline vFloat operator- () const = delete;
 
   public:
     sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
