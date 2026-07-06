@@ -251,6 +251,7 @@ public:
   sfpi_inline vInt (unsigned);
 
 public:
+  __SFPI_DEPRECATED("Implicit vInt->vUInt conversion deprecated, use an explicit cast or restructure")
   sfpi_inline operator vUInt () const;
 
 public:
@@ -326,6 +327,7 @@ public:
   sfpi_inline vUInt (unsigned);
 
 public:
+  __SFPI_DEPRECATED("Implicit vUInt->vInt conversion deprecated, use an explicit cast or restructure")
   sfpi_inline operator vInt () const;
 
 public:
