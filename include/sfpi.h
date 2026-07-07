@@ -652,6 +652,15 @@ using PackSrcS = impl_::SrcSRegFile<2>;
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
 
+__SFPI_DEPRECATED ("just use 0.0f or sfpi::vFloat(0.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat, true> vConst0(CREG_IDX_0);
+__SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat, true> vConst1(CREG_IDX_1);
+__SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
+constexpr impl_::LRegFile::vCReg<vFloat, true> vConstNeg1(CREG_IDX_NEG_1);
+__SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
+constexpr impl_::LRegFile::vCReg<vFloat, true> vConst0p8373 (CREG_IDX_0P837300003);
+
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);

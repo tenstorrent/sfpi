@@ -217,7 +217,7 @@ public:
   };
 
 public:
-  template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+  template<typename Type, bool Deprecated = false, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
   class vCReg {
   private:
     vReg lreg;
@@ -255,6 +255,28 @@ public:
 public:
   sfpi_inline vReg operator[] (LRegs lr) const { return vReg (unsigned (lr)); }
 };
+
+template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* Enable>
+class LRegFile::vCReg<Type, true, Enable> {
+  private:
+    vReg lreg;
+
+  public:
+    sfpi_inline vCReg (vCReg const &) = default;
+    sfpi_inline void operator= (vCReg &) = delete;
+
+  public:
+    sfpi_inline operator Type () const = delete;
+
+  public:
+    sfpi_inline constexpr explicit vCReg (int r) : lreg (r) {}
+    sfpi_inline void operator= (Type t) const = delete;
+
+    // Assign from constructable scalar
+    template<typename U,
+             std::enable_if_t<std::is_constructible<Type, U const &>::value> * = nullptr>
+    sfpi_inline void operator= (U u) const = delete;
+  };
 
 class CC {
 private:
