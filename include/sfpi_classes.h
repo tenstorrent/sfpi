@@ -73,6 +73,10 @@ enum class DataLayout {
   SM16,
 
   M32,
+
+  // These two do not swizzle bits.  They load 16 bits, but store 32bits
+  LO16,
+  HI16,
 };
 
 namespace impl_ {

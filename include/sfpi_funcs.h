@@ -304,10 +304,14 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt val) const {
   static_assert (false
                  || fmt == DataLayout::U32
                  || fmt == DataLayout::U16
+                 || fmt == DataLayout::LO16
+                 || fmt == DataLayout::HI16
                  , "Fmt value not compatible with storing vUInt");
   write (val.get (),
          fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+         fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
+         fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
          ~0);
 }
 
@@ -316,9 +320,13 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vMag val) const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::M32;
   static_assert (false
                  || fmt == DataLayout::M32
+                 || fmt == DataLayout::LO16
+                 || fmt == DataLayout::HI16
                  , "Fmt value not compatible with storing vMag");
   write (val.get (),
          fmt == DataLayout::M32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
+         fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
          ~0);
 }
 
@@ -328,10 +336,14 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt16 val) const {
   static_assert (false
                  || fmt == DataLayout::U32
                  || fmt == DataLayout::U16
+                 || fmt == DataLayout::LO16
+                 || fmt == DataLayout::HI16
                  , "Fmt value not compatible with storing vUInt16");
   write (val.get (),
          fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+         fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
+         fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
          ~0);
 }
 
@@ -341,9 +353,13 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt () const {
   static_assert (false
                  || fmt == DataLayout::U32
                  || fmt == DataLayout::U16
+                 || fmt == DataLayout::LO16
+                 || fmt == DataLayout::HI16
                  , "Fmt value not compatible with loading vUInt");
-  auto tmp = read (fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-                   fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+  auto tmp = read (fmt == DataLayout::U32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
+                   fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
+                   fmt == DataLayout::HI16 ? SFPLOAD_MOD0_FMT_HI16 :
                    ~0);
   return vUInt (tmp);
 }
@@ -353,9 +369,11 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vMag () const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::M32;
   static_assert (false
                  || fmt == DataLayout::M32
+                 || fmt == DataLayout::LO16
                  , "Fmt value not compatible with loading vMag");
-  auto tmp =  read (fmt == DataLayout::M32 ? SFPSTORE_MOD0_FMT_INT32 :
-                    ~0);
+  auto tmp = read (fmt == DataLayout::M32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
+                   ~0);
   return vMag (tmp);
 }
 
@@ -363,12 +381,12 @@ template<template<sfpi::DataLayout> typename Derived, sfpi::DataLayout Fmt>
 sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt16 () const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::U16;
   static_assert (false
-                 || fmt == DataLayout::U32
                  || fmt == DataLayout::U16
+                 || fmt == DataLayout::LO16
                  , "Fmt value not compatible with loading vUInt16");
   return vUInt16 (read (
-                      fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
-                      fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+                      fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
+                      fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
                       ~0));
 }
 
