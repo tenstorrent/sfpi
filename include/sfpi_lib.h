@@ -836,6 +836,24 @@ sfpi_inline vInt float_to_int8 (vFloat in, RoundMode rounding = RoundMode::Neare
        SFPSTOCHRND_MOD1_FP32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 
+// Polynomial evaluator res = c0 + c1.x^1 + c2.x^2 + ...
+// Coefficients are float or vFloat
+template<typename Coeff0, typename... Coeffs,
+         typename std::enable_if<std::disjunction<std::is_base_of<vFloat, Coeff0>,
+                                                  std::is_same<float, Coeff0>>::value>* = nullptr>
+sfpi_inline vFloat polynomial (vFloat x, Coeff0 c0, Coeffs... cs) {
+  return  vFloat (c0) + x * polynomial (x, cs...);
+}
+template <typename Coeff0,
+          typename std::enable_if<std::disjunction<std::is_base_of<vFloat, Coeff0>,
+                                                   std::is_same<float, Coeff0>>::value>* = nullptr>
+sfpi_inline vFloat polynomial (vFloat, Coeff0 c0) {
+  return vFloat (c0);
+}
+sfpi_inline vFloat polynomial (vFloat) {
+  return 0.0f;
+}
+
 // These do not appear used anywhere.  We should get to converting to a new
 // convert-like API
 sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::NearestStochastic) {
