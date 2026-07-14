@@ -501,6 +501,23 @@ sfpi_inline void swap (Type &a, Type &b) {
   b = Type (__builtin_rvtt_sfpselect2 (r, 1));
 }
 
+namespace impl_ {
+class FloatInt : public std::pair<vFloat, vInt> {
+public:
+  using pair::pair;
+
+public:
+  operator vFloat () const { return first; }
+  operator vInt () const { return second; }
+};
+}
+
+sfpi_inline impl_::FloatInt round (vFloat x) {
+  vFloat magic = 0x1.8p23f, f = x + magic;
+  return {f - magic, as<vInt> (f) - as<vInt> (magic)};
+}
+
+
 __SFPI_DEPRECATED("Use sfpi::swap")
 sfpi_inline void vec_swap (vFloat & a, vFloat &b) {
   swap (a, b);
