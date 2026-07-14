@@ -478,6 +478,28 @@ sfpi_inline vFloat max (vFloat a, float b) {
   return max (a, vFloat (b));
 }
 
+// Due to hardware limitations, ordering compares of unsigned do not work when
+// MSB is one. Sadly the compiler doesn't (yet) compensate
+sfpi_inline vUInt min (vUInt x, unsigned c) {
+  vUInt cv = c;
+  if (reinterpret_cast<int const &> (c) >= 0)
+    return ~as<vUInt> (min (as<vSMag> (~x), as<vSMag> (~cv)));
+
+  return as<vUInt> (max (as<vSMag> (x), as<vSMag> (cv)));  
+}
+
+sfpi_inline vUInt max (vUInt x, unsigned c) {
+  vUInt cv = c;
+  if (reinterpret_cast<int const &> (c) >= 0)
+    return ~as<vUInt> (max (as<vSMag> (~x), as<vSMag> (~cv)));
+
+  return as<vUInt> (min (as<vSMag> (x), as<vSMag> (cv)));  
+}
+
+sfpi_inline vUInt clamp (vUInt x, unsigned lower, unsigned upper) {
+  return min (max (x, lower), upper);
+}
+
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
