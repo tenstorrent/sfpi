@@ -674,6 +674,7 @@ sfpi_inline constexpr unsigned stochrnd_mod () {
   }
   else
     static_assert (false, "Cannot convert to target type");
+  return ~0;
 }
 }
 
@@ -753,8 +754,10 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
   else if constexpr (std::is_same_v<vInt, ToType>)
     return impl_::smag_to_int (val);
 
-  else
+  else {
     static_assert (false, "Cannot convert vSMag to target type");
+    return ToType (0);
+  }
 }
 
 // int -> smag/float
@@ -772,8 +775,10 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
   else if constexpr (std::is_base_of_v<vFloat, ToType>)
     return convert<ToType> (impl_::int_to_smag (val), round);
 
-  else
+  else {
     static_assert (false, "Cannot convert vInt to target type");
+    return ToType (0);
+  }
 }
 
 // mag
