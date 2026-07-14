@@ -261,6 +261,22 @@ sfpi_inline vType setsgn (vType v, vInt sgn) {
   return copysgn (v, sgn);
 }
 
+enum class LdexpMode {
+  Correct,
+  Fast,
+};
+
+sfpi_inline vFloat ldexp (vFloat in, int scale, LdexpMode = LdexpMode::Correct) {
+  return addexp (in, scale);
+}
+
+sfpi_inline vFloat ldexp (vFloat in, vInt scale, LdexpMode mode = LdexpMode::Correct) {
+  if (mode == LdexpMode::Fast)
+    return setexp (in, exexp (in, ExponentMode::Biased) + scale);
+  else
+    return in * setexp (vFloat (0), scale + 127);
+}
+
 sfpi_inline vFloat abs (vFloat v) {
   return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
 }
