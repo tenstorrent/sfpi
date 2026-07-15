@@ -17,7 +17,7 @@ on:
         type: boolean
         default: false
 
-run-name: Release SFPI ${{inputs.tag || github.ref}}
+run-name: ${{inputs.tag && 'Release' || 'Development'}} ${{inputs.tag || github.ref}}
 jobs:
   plan:
     name: Plan
