@@ -126,7 +126,7 @@ jobs:
         shell: bash
         run: |
           if ${{inputs.checking}} ; then
-            echo "***CHECKING BUILD***" >>$GITHUB_STEP_SUMMARY
+            echo "***CHECKING BUILD (SLOW)***" >>$GITHUB_STEP_SUMMARY
           fi
           for file in cfg/config-*; do
             echo "* $(cat $file)" >>$GITHUB_STEP_SUMMARY

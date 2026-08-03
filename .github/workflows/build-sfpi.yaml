@@ -34,7 +34,9 @@ on:
 env:
   SUDO: ${{inputs.box == 'none' && 'sudo' || ''}}
 
-run-name: Build ${{inputs.arch}} SFPI ${{inputs.tag || github.ref}}${{inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
+run-name: >
+  Build ${{inputs.arch}}
+  SFPI ${{inputs.tag || github.ref}}${{inputs.box != 'none' && format(' on {0}', inputs.box) || ''}}
 jobs:
   build:
     name: Build ${{inputs.arch}}${{inputs.box != 'none' && format('-{0}', inputs.box) || ''}}
@@ -77,7 +79,7 @@ jobs:
           scripts/build.sh --gdb --tt-built --small
           ${{inputs.full && '--full' || null}}
           ${{inputs.checking && '--checking' || null}}
-          ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}} 
+          ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
       - name: Build Test harness
         run: scripts/build.sh --dejagnu --small
       - name: Run Tests
