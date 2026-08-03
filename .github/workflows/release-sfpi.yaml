@@ -16,6 +16,10 @@ on:
         description: Complete build
         type: boolean
         default: false
+      checking:
+        description: Enable internal checking (slow)
+        type: boolean
+        default: false
 
 run-name: ${{inputs.tag && 'Release' || 'Development'}} ${{inputs.tag || github.ref}}
 jobs:
@@ -26,6 +30,7 @@ jobs:
       archs: ${{steps.plan.outputs.archs}}
       full: ${{steps.plan.outputs.full}}
       all: ${{steps.plan.outputs.all}}
+      checking: ${{steps.plan.outputs.checking}}
     steps:
       - name: Compute settings
         id: plan
@@ -44,6 +49,7 @@ jobs:
           archs+=']'
           echo "all=$all"
           echo "full=$full"
+          echo "checking=${{inputs.checking}}"
           echo "archs=$archs"
           echo "all=$all" >>$GITHUB_OUTPUT
           echo "full=$full" >>$GITHUB_OUTPUT
@@ -65,6 +71,7 @@ jobs:
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
       full: ${{fromJSON(needs.plan.outputs.full)}}
+      checking: ${{fromJSON(needs.plan.outputs.checking)}}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
@@ -120,6 +127,9 @@ jobs:
       - name: Show configs
         shell: bash
         run: |
+          if ${{inputs.checking}} ; then
+            echo "***CHECKING BUILD***" >>$GITHUB_STEP_SUMMARY
+          fi
           for file in cfg/config-*; do
             echo "* $(cat $file)" >>$GITHUB_STEP_SUMMARY
           done
