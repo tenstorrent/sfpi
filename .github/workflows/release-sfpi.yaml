@@ -30,7 +30,6 @@ jobs:
       archs: ${{steps.plan.outputs.archs}}
       full: ${{steps.plan.outputs.full}}
       all: ${{steps.plan.outputs.all}}
-      checking: ${{steps.plan.outputs.checking}}
     steps:
       - name: Compute settings
         id: plan
@@ -49,7 +48,6 @@ jobs:
           archs+=']'
           echo "all=$all"
           echo "full=$full"
-          echo "checking=${{inputs.checking}}"
           echo "archs=$archs"
           echo "all=$all" >>$GITHUB_OUTPUT
           echo "full=$full" >>$GITHUB_OUTPUT
@@ -71,7 +69,7 @@ jobs:
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
       full: ${{fromJSON(needs.plan.outputs.full)}}
-      checking: ${{fromJSON(needs.plan.outputs.checking)}}
+      checking: ${{inputs.checking}}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
