@@ -83,10 +83,6 @@ sfpi::vBool::vBool (vSMag a) {
   result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
 }
 
-sfpi::vBool::operator vInt () const {
-  return vInt (__builtin_rvtt_sfpxcondi (get ()));
-}
-
 sfpi::impl_::CC::CC (CC &&src)
     : dep (src.dep), depth (src.depth) {
   src.dep = 0;

@@ -471,7 +471,7 @@ public:
   sfpi_inline vBool (vSMag);
 
 public:
-  sfpi_inline operator vInt () const;
+  sfpi_inline operator vInt () const = delete;
 
 private:
   sfpi_inline int get () const { return result; }
