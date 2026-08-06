@@ -69,7 +69,7 @@ jobs:
       arch: ${{matrix.arch}}
       box: ${{matrix.box}}
       full: ${{fromJSON(needs.plan.outputs.full)}}
-      checking: ${{inputs.tag != '' && inputs.checking}}
+      checking: ${{inputs.tag == '' && inputs.checking}}
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
