@@ -124,12 +124,16 @@ jobs:
           merge-multiple: true
       - name: Show full
         shell: bash
-        if: ${{inputs.tag == '' && ! inputs.full}}
+        if: ${{inputs.tag == '' && !inputs.full}}
         run: echo "***INCREMENTAL BUILD***" >>$GITHUB_STEP_SUMMARY
       - name: Show checking
         shell: bash
         if: ${{inputs.tag == '' && inputs.checking}}
         run: echo "***CHECKING BUILD***" >>$GITHUB_STEP_SUMMARY
+      - name: Show release
+        shell: bash
+        if: ${{inputs.tag != '' || inputs.full && inputs.all && !inputs.checking}}
+        run: echo "***RELEASE BUILD***" >>$GITHUB_STEP_SUMMARY
       - name: Show configs
         shell: bash
         run: |
