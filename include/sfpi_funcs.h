@@ -43,11 +43,11 @@ enum sfpi::vBool::CondOp : unsigned char {
      GTE = SFPXCMP_MOD1_CC_GTE,
 };
 
-sfpi::vBool::vBool (BoolOp t, vBool a, vBool b) {
+sfpi::vBool::vBool (Logic t, vBool a, vBool b) {
   result = __builtin_rvtt_sfpxbool (t, a.get (), b.get ());
 }
 sfpi::vBool::vBool (CondOp t, vFloat a, float b) {
-  result = __builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (b), t | SFPXSCMP_MOD1_FMT_FLOAT);
+  result = __builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (b), t);
 }
 sfpi::vBool::vBool (CondOp t, vFloat a, vFloat b) {
   result = __builtin_rvtt_sfpxfcmpv (a.get (), b.get (), t);
