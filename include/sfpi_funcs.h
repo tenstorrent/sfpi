@@ -28,9 +28,9 @@ sfpi::sFloat16b::sFloat16b (float v)
 //////////////////////////////////////////////////////////////////////////////
 // vBool definitions
 
-enum sfpi::vBool::BoolOp : unsigned char {
-      Or = SFPXBOOL_MOD1_OR,
+enum sfpi::vBool::Logic : unsigned char {
      And = SFPXBOOL_MOD1_AND,
+      Or = SFPXBOOL_MOD1_OR,
      Not = SFPXBOOL_MOD1_NOT,
 };
 
