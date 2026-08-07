@@ -28,19 +28,19 @@ sfpi::sFloat16b::sFloat16b (float v)
 //////////////////////////////////////////////////////////////////////////////
 // vBool definitions
 
-enum sfpi::vBool::BoolOp : unsigned char {
-      Or = SFPXBOOL_MOD1_OR,
+enum sfpi::vBool::Logic : unsigned char {
      And = SFPXBOOL_MOD1_AND,
+      Or = SFPXBOOL_MOD1_OR,
      Not = SFPXBOOL_MOD1_NOT,
 };
 
 enum sfpi::vBool::CondOp : unsigned char {
-      LT = SFPXCMP_MOD1_CC_LT,
-      NE = SFPXCMP_MOD1_CC_NE,
-     GTE = SFPXCMP_MOD1_CC_GTE,
       EQ = SFPXCMP_MOD1_CC_EQ,
-     LTE = SFPXCMP_MOD1_CC_LTE,
+      NE = SFPXCMP_MOD1_CC_NE,
       GT = SFPXCMP_MOD1_CC_GT,
+      LT = SFPXCMP_MOD1_CC_LT,
+     LTE = SFPXCMP_MOD1_CC_LTE,
+     GTE = SFPXCMP_MOD1_CC_GTE,
 };
 
 sfpi::vBool::vBool (BoolOp t, vBool a, vBool b) {
