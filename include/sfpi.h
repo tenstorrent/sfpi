@@ -446,7 +446,7 @@ class vBool {
   friend class impl_::CC;
 
 public:
-  enum BoolOp : unsigned char;
+  enum Logic : unsigned char;
   enum CondOp : unsigned char;
 
 private:
@@ -457,7 +457,7 @@ public:
   sfpi_inline vBool &operator= (vBool const &) = default;
 
 public:
-  sfpi_inline vBool (BoolOp, vBool, vBool);
+  sfpi_inline vBool (Logic, vBool, vBool);
   sfpi_inline vBool (CondOp, vFloat, float);
   sfpi_inline vBool (CondOp, vFloat, vFloat);
   sfpi_inline vBool (CondOp, vInt, int32_t, unsigned);

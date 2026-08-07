@@ -154,9 +154,9 @@ constexpr unsigned int SFPXSCMP_MOD1_FMT_B = 16;
 constexpr unsigned int SFPXSCMP_MOD1_FMT_FLOAT = 32;
 constexpr unsigned int SFPXSCMP_MOD1_FMT_MASK = 0x38;
 
+constexpr unsigned int SFPXBOOL_MOD1_AND = 0;
 constexpr unsigned int SFPXBOOL_MOD1_OR = 1;
-constexpr unsigned int SFPXBOOL_MOD1_AND = 2;
-constexpr unsigned int SFPXBOOL_MOD1_NOT = 3;
+constexpr unsigned int SFPXBOOL_MOD1_NOT = 2;
 
 constexpr unsigned int SFPSETCC_MOD1_LREG_LT0 = 0;
 constexpr unsigned int SFPSETCC_MOD1_IMM_BIT0 = 1;
