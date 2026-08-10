@@ -460,6 +460,10 @@ public:
 public:
   sfpi_inline vBool (Logic, vBool, vBool);
 
+private:
+  sfpi_inline vBool (Cond, Type, impl_::vVal, impl_::vVal);
+  sfpi_inline vBool (Cond, Type, impl_::vVal, uint32_t);
+
 public:
   sfpi_inline vBool (Cond, vFloat, vFloat);
   sfpi_inline vBool (Cond, vFloat, float);
