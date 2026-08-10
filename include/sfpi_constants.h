@@ -135,24 +135,12 @@ constexpr unsigned int SFPIADD_MOD1_CC_LT0 = 0;
 constexpr unsigned int SFPIADD_MOD1_CC_NONE = 4;
 constexpr unsigned int SFPIADD_MOD1_CC_GTE0 = 8;
 
-constexpr unsigned int SFPXIADD_MOD1_SIGNED = 8;
-constexpr unsigned int SFPXIADD_MOD1_IS_SUB = 16;
-constexpr unsigned int SFPXIADD_MOD1_12BIT = 32;
-constexpr unsigned int SFPXIADD_MOD1_16BIT = 64;
-
-constexpr unsigned int SFPXCMP_MOD1_CC_NONE = 0;
-constexpr unsigned int SFPXCMP_MOD1_CC_LT = 1;
+constexpr unsigned int SFPXCMP_MOD1_CC_LT = 0;
+constexpr unsigned int SFPXCMP_MOD1_CC_GE = 1;
 constexpr unsigned int SFPXCMP_MOD1_CC_EQ = 2;
-constexpr unsigned int SFPXCMP_MOD1_CC_GTE = 3;
-constexpr unsigned int SFPXCMP_MOD1_CC_NE = 4;
-constexpr unsigned int SFPXCMP_MOD1_CC_LTE = 5;
-constexpr unsigned int SFPXCMP_MOD1_CC_GT = 6;
-constexpr unsigned int SFPXCMP_MOD1_CC_MASK = 7;
-
-constexpr unsigned int SFPXSCMP_MOD1_FMT_A = 8;
-constexpr unsigned int SFPXSCMP_MOD1_FMT_B = 16;
-constexpr unsigned int SFPXSCMP_MOD1_FMT_FLOAT = 32;
-constexpr unsigned int SFPXSCMP_MOD1_FMT_MASK = 0x38;
+constexpr unsigned int SFPXCMP_MOD1_CC_NE = 3;
+constexpr unsigned int SFPXCMP_MOD1_CC_GT = 4;
+constexpr unsigned int SFPXCMP_MOD1_CC_LE = 5;
 
 constexpr unsigned int SFPXBOOL_MOD1_AND = 0;
 constexpr unsigned int SFPXBOOL_MOD1_OR = 1;
