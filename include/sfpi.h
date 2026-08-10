@@ -447,7 +447,8 @@ class vBool {
 
 public:
   enum Logic : unsigned char;
-  enum CondOp : unsigned char;
+  enum Cond : unsigned char;
+  enum Type : unsigned char;
 
 private:
   int result;
@@ -458,14 +459,18 @@ public:
 
 public:
   sfpi_inline vBool (Logic, vBool, vBool);
-  sfpi_inline vBool (CondOp, vFloat, float);
-  sfpi_inline vBool (CondOp, vFloat, vFloat);
-  sfpi_inline vBool (CondOp, vInt, int32_t, unsigned);
-  sfpi_inline vBool (CondOp, vInt, vInt, unsigned);
-  sfpi_inline vBool (CondOp, vUInt, uint32_t, unsigned);
-  sfpi_inline vBool (CondOp, vUInt, vUInt, unsigned);
-  sfpi_inline vBool (CondOp, vSMag, int, unsigned);
-  sfpi_inline vBool (CondOp, vSMag, vSMag, unsigned);
+
+public:
+  sfpi_inline vBool (Cond, vFloat, vFloat);
+  sfpi_inline vBool (Cond, vFloat, float);
+  sfpi_inline vBool (Cond, vInt, vInt);
+  sfpi_inline vBool (Cond, vInt, int32_t);
+  sfpi_inline vBool (Cond, vUInt, vUInt);
+  sfpi_inline vBool (Cond, vUInt, uint32_t);
+  sfpi_inline vBool (Cond, vSMag, vSMag);
+  sfpi_inline vBool (Cond, vSMag, int);
+
+public:
   sfpi_inline vBool (vInt);
   sfpi_inline vBool (vUInt);
   sfpi_inline vBool (vSMag);
