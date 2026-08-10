@@ -142,6 +142,13 @@ constexpr unsigned int SFPXCMP_MOD1_CC_NE = 3;
 constexpr unsigned int SFPXCMP_MOD1_CC_GT = 4;
 constexpr unsigned int SFPXCMP_MOD1_CC_LE = 5;
 
+constexpr unsigned int SFPXCMP_MOD1_TYPE_FLOAT = 0;
+constexpr unsigned int SFPXCMP_MOD1_TYPE_SMAG = 1;
+constexpr unsigned int SFPXCMP_MOD1_TYPE_INT = 2;
+constexpr unsigned int SFPXCMP_MOD1_TYPE_UINT = 3;
+constexpr unsigned int SFPXCMP_MOD1_TYPE_SHIFT = 4;
+constexpr unsigned int SFPXCMP_MOD1_TYPE_MASK = 3;
+
 constexpr unsigned int SFPXBOOL_MOD1_AND = 0;
 constexpr unsigned int SFPXBOOL_MOD1_OR = 1;
 constexpr unsigned int SFPXBOOL_MOD1_NOT = 2;

@@ -43,47 +43,37 @@ enum sfpi::vBool::Cond : unsigned char {
       LE = SFPXCMP_MOD1_CC_LE,
 };
 
-sfpi::vBool::vBool (Logic t, vBool a, vBool b) {
-  result = __builtin_rvtt_sfpxbool (t, a.get (), b.get ());
-}
+enum sfpi::vBool::Type : unsigned char {
+   Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
+    SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
+     Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
+    UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
+};
 
-sfpi::vBool::vBool (Cond t, vFloat a, vFloat b) {
-  result = __builtin_rvtt_sfpxfcmpv (a.get (), b.get (), t);
-}
-sfpi::vBool::vBool (Cond t, vFloat a, float b) {
-  result = __builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (b), t);
-}
-sfpi::vBool::vBool (Cond t, vInt a, vInt b) {
-  result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), t);
-}
-sfpi::vBool::vBool (Cond t, vInt a, int32_t b) {
-  result = __builtin_rvtt_sfpxicmps (a.get (), b, t);
-}
-sfpi::vBool::vBool (Cond t, vUInt a, vUInt b) {
-  result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), t);
-}
-sfpi::vBool::vBool (Cond t, vUInt a, uint32_t b) {
-  result = __builtin_rvtt_sfpxicmps (a.get (), b, t);
-}
-sfpi::vBool::vBool (Cond t, vSMag a, vSMag b) {
-  result = __builtin_rvtt_sfpxicmpv (a.get (), b.get (), t);
-}
-sfpi::vBool::vBool (Cond t, vSMag a, int b) {
-  result = __builtin_rvtt_sfpxicmps
-               (a.get (),
-                b < 0 ? 0 - (unsigned (b) << 1 >> 1): unsigned (b),
-                t);
-}
+sfpi::vBool::vBool (Logic t, vBool a, vBool b)
+    : result (__builtin_rvtt_sfpxbool (t, a.get (), b.get ())) {}
 
-sfpi::vBool::vBool (vInt a) {
-  result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
-}
-sfpi::vBool::vBool (vUInt a) {
-  result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
-}
-sfpi::vBool::vBool (vSMag a) {
-  result = __builtin_rvtt_sfpxicmps (a.get(), 0, NE);
-}
+sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
+    : result (__builtin_rvtt_sfpxicmpv (a.get (), b.get (), c | t)) {}
+
+sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, uint32_t s)
+    : result (__builtin_rvtt_sfpxicmps (a.get (), s, c | t)) {}
+
+sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
+    : result (__builtin_rvtt_sfpxfcmpv (a.get (), b.get (), c | Float)) {}
+sfpi::vBool::vBool (Cond c, vFloat a, float s)
+    : result (__builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (s), c | Float)) {}
+sfpi::vBool::vBool (Cond c, vInt a, vInt b) : vBool (c, Int, a, b) {}
+sfpi::vBool::vBool (Cond c, vInt a, int32_t s) : vBool (c, Int, a, s) {}
+sfpi::vBool::vBool (Cond c, vUInt a, vUInt b) : vBool (c, UInt, a, b) {}
+sfpi::vBool::vBool (Cond c, vUInt a, uint32_t s) : vBool (c, UInt, a, s) {}
+sfpi::vBool::vBool (Cond c, vSMag a, vSMag b) : vBool (c, SMag, a, b) {}
+sfpi::vBool::vBool (Cond c, vSMag a, int s)
+    : vBool (c, SMag, a, s < 0 ? 0 - (unsigned (s) << 1 >> 1) : unsigned (s)) {}
+
+sfpi::vBool::vBool (vInt a) : vBool (NE, a, 0) {}
+sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
+sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
 
 sfpi::vBool::operator vInt () const {
   return vInt (__builtin_rvtt_sfpxcondi (get ()));
