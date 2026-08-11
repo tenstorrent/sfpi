@@ -44,10 +44,10 @@ enum sfpi::vBool::Cond : unsigned char {
 };
 
 enum sfpi::vBool::Type : unsigned char {
-   Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
-    SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
-     Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
     UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
+     Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
+    SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
+   Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
 };
 
 sfpi::vBool::vBool (Logic t, vBool a, vBool b)
