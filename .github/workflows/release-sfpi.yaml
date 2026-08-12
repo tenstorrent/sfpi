@@ -125,8 +125,10 @@ jobs:
           merge-multiple: true
       - name: Show full
         shell: bash
-        run: |
-          [[ ${sfpi_base} ]] && echo "***INCREMENTAL BUILD***" >>$GITHUB_STEP_SUMMARY
+        run: >
+          [[ ${sfpi_base} ]]
+          && echo "***INCREMENTAL BUILD***" >>$GITHUB_STEP_SUMMARY
+          || true
       - name: Show checking
         shell: bash
         if: ${{inputs.tag == '' && inputs.checking}}
