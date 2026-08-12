@@ -104,8 +104,9 @@ jobs:
           scripts/sfpi-info.sh MERGE pkg/sfpi_*.version >pkg/sfpi-version
           source pkg/sfpi-version
           rm pkg/sfpi_*.version
-          echo "### $sfpi_version" >>$GITHUB_STEP_SUMMARY
+          echo "### $sfpi_version [$sfpi_build]" >>$GITHUB_STEP_SUMMARY
           echo version=${sfpi_version//./_} >>$GITHUB_ENV
+          echo sfpi_base=${sfpi_base:-} >>$GITHUB_ENV
       - name: Upload release
         uses: actions/upload-artifact@v6
         with:
@@ -124,8 +125,8 @@ jobs:
           merge-multiple: true
       - name: Show full
         shell: bash
-        if: ${{inputs.tag == '' && !inputs.full}}
-        run: echo "***INCREMENTAL BUILD***" >>$GITHUB_STEP_SUMMARY
+        run: |
+          [[ ${sfpi_base} ]] && echo "***INCREMENTAL BUILD***" >>$GITHUB_STEP_SUMMARY
       - name: Show checking
         shell: bash
         if: ${{inputs.tag == '' && inputs.checking}}
