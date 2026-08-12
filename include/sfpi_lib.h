@@ -616,7 +616,7 @@ sfpi_inline vFloat approx_recip (vFloat src, RecipMode mode = RecipMode::All) {
 }
 
 template <bool uncond = true>
-__SFPI_DEPRECATED("Use sfpi::approx_mode(v, sfpi::RecipMode::{All,IfNegative})")
+__SFPI_DEPRECATED("Use sfpi::approx_recip(v, sfpi::RecipMode::{All,IfNegative})")
 sfpi_inline vFloat approx_recip (vFloat src) {
 return approx_recip (src, uncond ? RecipMode::All : RecipMode::IfNegative);
 }
