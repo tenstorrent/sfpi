@@ -588,12 +588,12 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
-auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, b, a); }
-auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, b, a); }
-auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, b, a); }
-auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, b, a); }
-auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, b, a); }
-auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, b, a); }
+auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, a, b); }
+auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
 auto sfpi::operator== (vInt a, int32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
@@ -672,12 +672,12 @@ auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
-auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, b, a); }
-auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, b, a); }
-auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, b, a); }
-auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, b, a); }
-auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, b, a); }
-auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, b, a); }
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, a, b); }
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
 // FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
 auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
