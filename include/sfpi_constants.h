@@ -319,4 +319,9 @@ constexpr unsigned int CREG_IDX_PRGM3 = 14;
 constexpr unsigned int CREG_IDX_NEG_1 = CREG_IDX_PRGM0;
 constexpr unsigned int CREG_IDX_TILEID = 15;
 
+#if __riscv_xtttensixqsr
+constexpr unsigned int CREG_IDX_LUT_SLOPES = 9;
+constexpr unsigned int CREG_IDX_LUT_INTERCEPTS = 12;
+#endif
+
 } // namespace sfpi
