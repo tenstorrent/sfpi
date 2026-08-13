@@ -28,6 +28,7 @@ sfpi_inline Type as (impl_::vVal v) {
 //////////////////////////////////////////////////////////////////////////////
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
+#if __riscv_xtttensixwh || __riscv_xtttensixwh
 sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
 {
     return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_RETAIN);
@@ -87,6 +88,9 @@ sfpi_inline vFloat lut2_sign(const vFloat v,
                                         b01.get(), b23.get(), b45.get(),
                                         v.get(), mod | SFPLUTFP32_MOD0_SGN_UPDATE);
 }
+#else
+// qsr coming later
+#endif
 
 #if 0
 enum
