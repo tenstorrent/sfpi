@@ -1727,3 +1727,81 @@ existing handwritten LLK as a performance golden and the plain-loop fallback
 as a semantic golden. Quasar/QSR remains disabled until it has an authoritative
 ISA model, focused compiler fixtures, simulator coverage, and hardware
 sign-off.
+
+### Broad-performance mockup screen
+
+On 2026-08-14, three small instruction-stream experiments were used to rank
+the roadmap before spending Blackhole device time. The compiler experiments
+used the checking SFPI 7.69.0/GCC 15.1.0 build in the x86_64 Lima VM. The
+source is `scripts/sfpu-perf-mockups.C`; these results are compile-time issue
+counts, not hardware cycle claims.
+
+| Mockup | Baseline | Optimized | Result | Interpretation |
+|---|---:|---:|---:|---|
+| Wormhole, two serial four-MAD Horner chains | 8 MAD + 7 NOP = 15 slots | 8 MAD + 1 final NOP = 9 slots | 40% fewer issue slots | A latency scheduler can discover broad cross-chain and cross-row wins that the current NOP-only target pass misses |
+| Blackhole, the same two sources | 8 MAD, 0 explicit NOP | 8 MAD, 0 explicit NOP | Static assembly is inconclusive | The scoreboard can turn the serial dependencies into runtime stalls; device counters must compare schedules |
+| Eight-row replay fixture, Wormhole | 88 static Tensix instructions | 19 | 78.4% smaller static stream | Existing replay works and substantially reduces frontend delivery/code size; expanded SFPU work is unchanged |
+| Eight-row replay fixture, Blackhole | 56 static Tensix instructions | 15 | 73.2% smaller static stream | Same conclusion without Wormhole's explicit hazard NOPs |
+| Blackhole integer multiply, eight rows | 32 ordinary load/load/mul/store slots | 8, 16, or 24 macro launch slots | 4.0x, 2.0x, or 1.33x steady-state issue reduction | Existing LLK comments and schedules show that `SFPLOADMACRO` can reduce real backend issue cycles, depending on Dst aliasing |
+| Blackhole `where`, eight rows | 48 ordinary load/load/CC/load/CC/store slots | 24 or 32 macro slots | 2.0x or 1.5x steady-state issue reduction | A second independent load/condition/store shape confirms targeted macro value |
+
+The Wormhole serial-Horner assembly was byte-identical with the current
+pressure pass off, list mode on, and MILP mode on (SHA-256
+`cc8d60417d9faa83860828501ce7e02ce04352afa9021ed4a9507ccd3c8ad0aa`).
+That is expected—the graph is comfortably below the register limit—and
+confirms that a latency/resource objective is a distinct next pass milestone,
+not a capability hidden inside the pressure scheduler.
+
+The replay A/B compiled
+`gcc/gcc/testsuite/g++.target/riscv/tt/tensix/replay-34602-wh.C` with automatic
+replay off and on. The replay-on Wormhole body contains one 11-entry capture
+and seven playbacks; the Blackhole body contains one seven-entry capture and
+seven playbacks. This is a static-code and frontend-push win, not an 88-to-19
+or 56-to-15 backend-cycle win: playback re-expands the recorded instructions.
+
+The broad-performance ranking resulting from this screen is:
+
+1. **Certified physical LREG allocation plus latency-aware scheduling.** It
+   applies to generic vFloat arithmetic, directly addresses fatal spills, and
+   can remove exposed pipeline slots across polynomial, rational, addcmul,
+   log/exp, reciprocal/Newton, fused eltwise, and independent-row kernels.
+   The first mockup demonstrates a 40% Wormhole issue-slot opportunity without
+   changing the algorithm or instruction count.
+2. **Replay-aware formation and hardening of the existing replay pass.** It is
+   already generic, default-enabled, and produced a 73--78% static-stream
+   reduction in the mockup. The incremental work is low risk, but its device
+   win depends on frontend starvation; it does not shorten an SFPU dependency
+   chain.
+3. **Checked `SFPLOADMACRO` formation.** This has the largest targeted backend
+   throughput ceiling: the existing integer-multiply and `where` schedules
+   imply 1.33--4.0x steady-state issue reductions. Its eligible set is much
+   narrower and its state/hazard failure modes are substantially more severe,
+   so it follows exact allocation and cycle validation.
+4. **Narrow rematerialization and bounded row pipelining.** These are important
+   enablers for the first three items and can recover handwritten LLK tricks,
+   but must be driven by a pressure/latency certificate rather than applied as
+   standalone algebraic rewrites.
+5. **Automatic MOP synthesis.** MOP can compress enormous regular frontend
+   schedules, but current TT-LLK already uses `ckernel_template::run` in 19
+   Wormhole and 26 Blackhole headers in this checkout. It preserves the
+   expanded backend work and requires whole-LLK address/context/synchronization
+   semantics. The remaining incremental opportunity is therefore less broad
+   for ordinary SFPI C++ than scheduling or replay, and belongs in a separate
+   declarative LLK planner.
+
+The current `tt-llk` checkout contains 53 explicit Wormhole and 56 explicit
+Blackhole `SFPNOP` occurrences, 19/26 replay-using headers, 19/26 MOP-template
+headers, and only three `SFPLOADMACRO`-mentioning headers per architecture.
+These are not dynamic profile weights, but they reinforce the ordering:
+latency and replay problems are widespread, macro formation is high-value but
+selective, and MOP is already extensively hand-applied.
+
+The first Blackhole hardware trial should therefore measure four pairs with
+the same input residency and tile count: serial versus interleaved Horner,
+replay off versus on for an identical unrolled body, `DISABLE_SFPLOADMACRO`
+off versus on for `mul_int`, and MOP versus the existing no-MOP matmul control.
+Record kernel and math-thread cycles, static instruction bytes, replay
+capture/playback counts, scoreboard-stall counters when available, and output
+parity. This separates backend-cycle wins from frontend/code-size wins and
+prevents a combined handwritten kernel from obscuring which mechanism paid
+off.
