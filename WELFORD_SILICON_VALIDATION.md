@@ -138,7 +138,7 @@ reproducible TT-Metal branch or CI job needs an immutable SFPI package pin:
 4. create a dedicated TT-Metal branch such as
    `nkapre/sfpi`;
 5. update both `tt_metal/sfpi-version` and
-   `tt_metal/tt-llk/tests/sfpi-version` to the private repository, version,
+   `tt_metal/tt-llk/tests/sfpi-version` to the upstream repository, version,
    build identifier, and exact SHA-256 hashes; and
 6. prove `setup_testing_env.sh`, Docker installation, CMake installation, and
    production JIT all resolve the same compiler version.
