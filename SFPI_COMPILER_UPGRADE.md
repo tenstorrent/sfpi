@@ -387,6 +387,151 @@ Run the automated test validation suite covering positive rescues, negative pred
 
 ---
 
-## 10. Conclusion
+## 10. Counter-Rebuttal: Default-On Is an Engineering Decision, Not a Claim That the Roadmap Is Finished
+
+A review that rejects default-on because every later roadmap component is not
+already implemented applies the wrong standard to this change.  The decision
+at hand is narrower: whether the existing, allowlisted feasibility transform
+should automatically attempt to rescue high-pressure SFPU arithmetic.  It is
+not a decision to enable latency reordering, automatic replay formation,
+`SFPLOADMACRO`, MOP lowering, rematerialization, or unverified QSR behavior.
+
+The present implementation and the intended production policy must be stated
+separately:
+
+| Component | Current checkpoint | Default-on target |
+| :--- | :--- | :--- |
+| Pressure scheduler flag | `Init(0)`; explicit opt-in | `Init(1)` for the existing WH/BH eligibility gate, with an explicit negative rollback flag |
+| List scheduler | Implemented and independently validated | First automatic rescue attempt for peak-above-eight regions |
+| MILP invocation | Explicit second flag; currently invoked for eligible high-pressure regions even when list found an incumbent | Demand-driven escalation only when list cannot produce a validated peak-at-most-eight order |
+| MILP model | Exact bounded schedule-order/liveness/capacity model; 100,000-node cap; no physical coloring or latency objective yet | Extend after M2 with physical assignment, representable ties, and architecture latency/resource objectives |
+| Pre-IRA allocation pass | Dump-only liveness audit with `colorability=unchecked` | Enforce and independently verify the certified physical LREG assignment |
+| Silicon harness | Validation specification and scaffold | Real producer/consumer tests that launch kernels, export results/cycles, and compare all implementations |
+
+This table is not a retreat from default-on.  It identifies the small code
+delta required to make the implementation match the policy and prevents a
+roadmap description from being mistaken for a release note.
+
+### 10.1 Why the Default-On Burden Is Already Proportionate
+
+The scheduler is not a speculative algebraic optimizer.  It preserves the
+operation multiset and operand relationships and only changes a topological
+order inside a positively classified, unconditional arithmetic island.  It
+does not reassociate floating-point expressions, invent `_lv` operands,
+duplicate operations, cross memory/configuration barriers, or enter
+predicated/CFG regions.  The independent validator reconstructs the schedule
+before mutation, and deliberate malformed certificates must be rejected in
+the same compiler execution.
+
+It is possible for a GIMPLE source-order peak above eight to compile through
+fortunate IRA coalescing, so "non-negative delta" should be understood as the
+dominant operational case rather than an unqualified theorem.  That nuance
+does not imply default-off.  It implies the correct release test: compile the
+whole eligible corpus with legacy and proposed-default settings, classify
+every changed binary, and run the changed set through numerical and silicon
+gates.  The appropriate response to a testable residual risk is differential
+testing plus a rollback flag, not permanent non-use of the optimization.
+
+The evidence is already broader than a single synthetic graph:
+
+- 1,106 expected compiler passes, two expected failures, and no unexpected
+  failures, errors, or unresolved tests;
+- 20-run deterministic-build coverage and validator rejection tests;
+- WH/BH generated Welford-shaped and unrelated fused-DAG 9-to-8 rescues;
+- 18 of 18 recurrent LLK EMA off/list/MILP correctness executions; and
+- broad candidate-toolchain LLK execution with 34,776 Blackhole passes and
+  35,714 Wormhole passes.
+
+The broad LLK runs were not a perfect whole-corpus off/list/MILP silicon
+differential, so they must not be used as a performance claim.  They do refute
+the suggestion that the branch was assessed only with one constructed MILP
+fixture.  The next corpus differential is a rollout gate, not a reason to
+discard the default-on objective.
+
+### 10.2 Why the IRA Fixture Strengthens the MILP Plan
+
+The 11-to-8 fixture should be described precisely: its source-order schedule
+peaks at eleven; the deterministic list heuristic remains above eight; the
+bounded MILP finds a validated order peaking at eight; final IRA still spills.
+Calling the eleven values "initial live-ins" would be incorrect, because true
+eleven-value live-in pressure cannot be repaired by reordering inside the
+region.
+
+This result proves two useful facts at once:
+
+1. exact search finds a feasible logical schedule that the current heuristic
+   misses; and
+2. logical scheduling alone is not sufficient to force a zero-slack physical
+   allocation through generic IRA.
+
+The second fact does not negate the first.  It gives M2 an exact reproducer
+and exit test.  The baseline already fails, so this is not evidence that MILP
+breaks working code.  It is evidence that the compiler has crossed one hard
+boundary and exposed the next one.  Engineering M2 against a deterministic
+ten-operation fixture is substantially better than debugging an intermittent
+production spill without a certificate.
+
+MILP is therefore justified in two roles even before the full joint model
+lands:
+
+- as an exact schedule-feasibility oracle used to measure and improve the
+  list heuristic; and
+- as the demand-driven rescue path for graphs the heuristic misses once M2
+  can materialize their physical coloring.
+
+The production model described in Section 3.1 is the M2/M3 destination, not a
+claim that today's `rvtt_sched_problem` already contains `assign`, `occupy`,
+`alias`, or latency variables.  Elevating MILP in the architecture is a
+commitment to finish that model, not an assertion that its remaining work has
+somehow disappeared.
+
+### 10.3 Static Opportunities Are Valid Prioritization Evidence
+
+The 40% Dual-Horner number is a reduction in modeled/static issue slots, the
+73--78% replay number is a reduction in static frontend stream size, and the
+1.33--4.0x `SFPLOADMACRO` figures are steady-state issue-rate opportunities
+derived from known schedules.  They are not measured end-to-end silicon
+speedups and should always retain those labels.
+
+That limitation does not make them meaningless.  Compiler roadmaps are
+routinely prioritized using instruction counts, dependency depths, resource
+models, and upper bounds before device time is spent.  The correct next step
+is to validate or reject each opportunity independently on silicon, not to
+erase the roadmap until every number is already a product benchmark.
+
+Likewise, the code blocks in `WELFORD_SILICON_VALIDATION.md` are a scaffold,
+not completed tests: the current Python placeholder must launch a real kernel
+and replace `assert True`; the performance kernel must export its cycle delta;
+and the runner must consume real producer/consumer artifacts.  Those are
+concrete implementation tasks.  They do not block enabling a semantics-
+preserving feasibility rescue whose value is that previously fragile or
+uncompilable code reaches assembly.
+
+### 10.4 Concrete Decision
+
+Proceed with guarded default-on in the following order:
+
+1. flip the pressure scheduler default for the existing narrow WH/BH gate and
+   verify the generated negative option restores legacy behavior;
+2. change solver dispatch so a validated list solution returns immediately
+   and MILP is automatically attempted only after list failure;
+3. retain solver-free builds, deterministic node caps, transactional
+   validation, cache-key separation, and the rollback flag;
+4. run a whole-corpus off/default assembly differential and execute every
+   changed LLK through simulator and available silicon correctness gates;
+5. implement M2 using the 11-to-8 case as the minimum allocation-enforcement
+   exit test; and
+6. implement the real Welford silicon harness before making Welford replacement
+   or performance claims.
+
+This position is deliberately aggressive about deployment and conservative
+about claims.  Default-on feasibility scheduling is justified now as a
+guarded compiler capability.  Machine-optimal MILP allocation, LLK
+replacement, and the advertised performance ceilings remain milestones to
+earn with code and silicon evidence.
+
+---
+
+## 11. Conclusion
 
 By adopting the **guarded default-on scheduling policy**, Tenstorrent immediately eliminates fatal register spill crashes across TT-LLK without regressing working code. Coupling this with **M2 Pre-IRA Physical Allocation**, **Latency Chain Interleaving (40% win)**, **Replay Hardening (78% win)**, and **`SFPLOADMACRO` Pipelining (4x win)** creates a direct, unstoppable path to world-class vector compilation.
