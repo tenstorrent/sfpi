@@ -273,6 +273,13 @@ M3 exits only after exhaustive small-DAG oracle agreement, forced failure-path t
 
 ### M4 — real eltwise Welford comparison
 
+The copy-paste hardware-agent handoff for this milestone is maintained in
+[`WELFORD_SILICON_VALIDATION.md`](WELFORD_SILICON_VALIDATION.md). Keep that
+runbook and the exit criteria below synchronized. It distinguishes the
+validation-worktree `runtime/sfpi` override from the immutable release-package
+pin required on a future `nkapre/sfpi-compiler-upgrade` TT-Metal CI branch;
+changing only this SFPI repository does not make TT-Metal use the compiler.
+
 Add a TT-LLK functional driver modeled on the EMA test:
 
 ```text
