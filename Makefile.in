@@ -60,6 +60,7 @@ endif
 
 # really need a better place to put --without-isl
 GCC_CHECKING_FLAGS := @gcc_checking@ --without-isl
+GCC_LPSOLVE_FLAGS := @lp_solve_option@
 IDENT_OPTIONS := @ident_options@
 NEWLIB_TUPLE ?= riscv-$(MFC)-elf
 
@@ -320,6 +321,7 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(GCC_LPSOLVE_FLAGS) \
 		$(IDENT_OPTIONS) \
 		$(GCC_MULTILIB_FLAGS) \
 		$(WITH_ABI) \
@@ -427,6 +429,7 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		--disable-libstdcxx-pch \
 		--src=$(gccsrcdir) \
 		$(GCC_CHECKING_FLAGS) \
+		$(GCC_LPSOLVE_FLAGS) \
 		$(IDENT_OPTIONS) \
 		$(GCC_MULTILIB_FLAGS) \
 		$(WITH_ABI) \

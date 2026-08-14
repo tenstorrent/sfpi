@@ -1,4 +1,18 @@
-# Welford vFloat Register Pressure and LP Scheduling Plan
+# Generic SFPU Pressure Scheduling: Welford Case Study and LP Plan
+
+Welford is the motivating zero-slack fixture, not a pattern recognized or
+hard-coded by the compiler.  The implementation extracts any eligible SFPU
+SSA dataflow graph, runs the same list or MILP machinery, and validates the
+result without knowing which source-level algorithm produced it.
+
+“Pressure scheduler” is the umbrella term: the list heuristic and optional
+MILP are two engines for choosing a dependency-respecting issue order whose
+maximum live SFPU value count fits the eight LREGs.  GCC already has generic
+RTL scheduling and IRA/LRA allocation, but ordinary GCC assumes spilling is a
+valid escape hatch.  Before this work, SFPI had no target pass that extracted
+the vFloat SSA graph and scheduled it against a non-spillable eight-register
+capacity; its target-specific postreload pass could only insert hazard NOPs
+after allocation had already succeeded or failed.
 
 The underlying risk is a zero-slack register-allocation problem. Vanilla Welford can fit in eight LREGs, but only if several destructive coalesces succeed perfectly. SFPU values cannot spill, and the existing “scheduler” runs after allocation and only inserts NOPs. A current SFPI 7.69 compiler does successfully coalesce the minimal four-row recurrence, so the historical failure still needs to be pinned to its exact compiler revision or surrounding eltwise state before it can be called reproduced.
 
@@ -45,14 +59,297 @@ These are compiler feasibility and code-generation results, not a hardware laten
 The overnight prototype completed its Linux compiler and focused simulator gates on both requested architectures.
 
 - A checking-enabled GCC 15.1.0/SFPI 7.69.0 toolchain built and installed successfully in the x86_64 Lima VM. The roughly six-hour build produced the base toolchain plus Wormhole ILP32, Blackhole ILP32, QSR32 ILP32 and QSR64 LP64 runtime variants. GCC's build-time C and C++ selftests reported 8,449,969 and 8,449,993 checks respectively.
-- `-mtt-tensix-optimize-lp-schedule` is reported as `[disabled]` by the installed compiler unless explicitly enabled. This preserves the existing compiler by default.
+- The prototype's compatibility spelling `-mtt-tensix-optimize-lp-schedule` is reported as `[disabled]` by the installed compiler unless explicitly enabled. The canonical spelling is now `-mtt-tensix-optimize-pressure-schedule`; both remain off by default.
 - The focused validator produced 24 assembly files. On Wormhole and Blackhole, the late-fold fixture fails with the expected SFPU spill when the pass is off, while pass-on certifies `old-peak=9 new-peak=8 applied=yes` and emits exactly the same assembly as the manual early-fold control.
 - The minimal, predicated and CFG rejection fixtures remain byte-identical pass-off/on. The live-across fixtures report `ops=2 live-in=4 peak=4`. Three repeated rescue compilations per architecture are deterministic: Wormhole SHA-256 `3cee70a65b29062489d790bcc30b23cc43ffe0741cc634e5106be8b0b14d8344`; Blackhole SHA-256 `502bff4f216e3ed5d90ba891cb6a0c6a636e765af6ad53ab1c94d04f0b0f3ed1`.
 - The real TT-target DejaGNU run reports 1,070 expected passes, zero unexpected `FAIL`, zero `UNRESOLVED`, and zero `ERROR`. Two pre-existing expected failures remain expected. An initial invocation had falsely printed success because `runtest` was absent; installing `dejagnu` and rerunning the real suite exposed and eliminated that infrastructure false-green.
 - The recurrent-SFPU EMA craq-sim smoke passes all three cases with the scheduler off and on: Wormhole `3 passed in 32.63s` off and `3 passed in 31.14s` on; Blackhole `3 passed in 31.74s` off and `3 passed in 30.55s` on. These are correctness smoke timings, not device-cycle measurements, and the test is handwritten EMA rather than a transformed eltwise Welford kernel.
 - The pinned Blackhole simulator needed a VM-local compatibility patch before the LLK harness could run. It reads back retained TRISC/NCRISC reset-PC state for harness introspection and retains valid generated `THREAD_CFG23`/`THREAD_CFG25` `SETC16` writes. Hardware documents the reset-PC registers as write-only; this is a simulator accommodation, stored as `scripts/craq-sim-bh-llk-smoke.patch`, not an SFPI compiler semantic change.
 
-The result is a strong compiler-feasibility checkpoint, not a performance sign-off. The pass currently contains an exact pressure oracle and deterministic list scheduler; it does **not** yet link or invoke `lp_solve`. Full `--test-gcc`, a transformed eltwise Welford numerical test, device execution, hardware cycle comparison against handwritten LLK, and the wider TT-Metal kernel corpus remain required before enabling it by default or claiming a latency win.
+That overnight result was a strong compiler-feasibility checkpoint, not a performance sign-off. At that checkpoint the pass contained an exact pressure oracle and deterministic list scheduler but did **not** yet link or invoke `lp_solve`. Full `--test-gcc`, a transformed eltwise Welford numerical test, device execution, hardware cycle comparison against handwritten LLK, and the wider TT-Metal kernel corpus remain required before enabling it by default or claiming a latency win.
+
+## Autonomous M0 hardening and optional MILP implementation
+
+The next branch iteration closes the prototype's immediate legality gaps and adds a deliberately narrow `lp_solve` research path. This does not change the production/default-on decision: both transforms remain off unless explicitly requested, and physical allocation is still not enforced.
+
+- `schedule_solution` and an independent `validate_schedule` now run before any GIMPLE move. The checker reconstructs the exact operation permutation, vector and scalar source availability, every SSA def-before-use edge, duplicate operands, live-in/live-out/live-through values, old and new peaks, the eight-register limit and strict profitability. A failed certificate never mutates GIMPLE.
+- Every accepted dependent schedule is immediately cloned into deliberately
+  invalid duplicate-operation, use-before-definition and false-peak
+  certificates.  The validator must reject all three before the real schedule
+  is applied, and the focused DejaGNU golden requires
+  `rejection-selftest=passed` in the dump.
+- Constant-LREG reads remain zero-pressure values, but the checker proves that their definitions stay before every moved consumer. Dedicated Wormhole and Blackhole fixtures exercise this ordering. Debug compilation is conservatively gated off, `-O0` is a no-op, QSR32 remains a no-op, and only unconditional one-basic-block XTT32 `sfpadd`/`sfpmul`/`sfpmad` regions are eligible.
+- The canonical user-facing list-scheduler flag is `-mtt-tensix-optimize-pressure-schedule`; the old private LP spelling is only an undocumented compatibility alias. A second flag, `-mtt-tensix-pressure-schedule-use-milp`, is required to invoke the solver. Therefore installing a solver-linked compiler cannot silently replace list scheduling.
+- `--with-lp-solve={no,auto,yes,PATH}` is a host configure option. The default is `no`; explicit requests require `lpsolve/lp_lib.h` plus a linkable host `liblpsolve55` and SuiteSparse dependencies, and an explicit prefix is checked rather than falling through to the target sysroot or an unrelated system installation.
+- The first MILP is schedule-only. It uses stable integer op/value IDs, one binary issue choice per op/slot, exact def-use precedence, exact after-slot liveness, and an eight-register capacity constraint. Same-slot death followed by a result definition models ordinary destructive reuse without inventing `_lv` predication. It handles at most 24 operations and 32 values, uses a deterministic 100,000-node cap, and accepts only `OPTIMAL`. An initial sequential lexicographic objective proved far too expensive on the 17-op fixture. M3a now performs one solve with an exact 0/1 objective that prefers the deterministic list schedule: when the list result already fits, its issue choices are fixed and `lp_solve` independently certifies the full liveness/capacity model; when it does not fit, the MILP may deviate to find the fewest changed issue slots. Liveness linearization columns are bounded continuous variables implied exactly by binary issue choices, substantially reducing the branch-and-bound model. Stable model construction plus repeated serial/parallel hashes are its determinism gate. Capped, unavailable, infeasible, aborted or invalid results fall back to the list scheduler; no incumbent is accepted.
+- A dump-only RTL pass now runs immediately before IRA. It reports actual XTT32 pseudo/hard-register liveness after expansion, sched1 and early rematerialization. Its output deliberately says `colorability=unchecked`: this is a GIMPLE-to-RTL reality audit, not the physical-allocation guarantee required for production.
+- The focused validator now checks manual-control equality, list-versus-MILP equality, solver cap fallback, independent certificates, the final RTL audit, constant-LREG source availability, duplicate uses, O0/debug/QSR gates, and serial/parallel determinism on both Wormhole and Blackhole. The general test wrapper also fails early when `runtest` is absent or when a purported test run reports zero expected passes.
+
+The remaining hard boundary is unchanged: a GIMPLE schedule can shorten interference but cannot force IRA to realize an arbitrary physical coloring. The first production-grade guarantee must solve and independently validate the actual pre-IRA RTL island, atomically substitute certified hard LREGs, re-run recognition/dataflow checks, and enter IRA with no SFPU pseudos in that island. Until that milestone and real transformed-Welford hardware testing land, the MILP flag is a default-off research facility rather than a product optimization.
+
+The first measured solver runs sharpen that boundary. A sequential lexicographic formulation did not finish the 17-op Welford rescue after roughly five minutes and was removed. The bounded one-shot model compiles the same checking-build fixture in 14.75 seconds versus 13.89 seconds for the list scheduler, about 0.86 seconds or 6% overhead in this VM. That is acceptable telemetry for an explicit research opt-in but remains above the proposed 5% p95 budget for broad enablement.
+
+More importantly, exhaustive enumeration produced a ten-op arithmetic DFG where source order peaks at eleven, the deterministic list heuristic remains above eight, and MILP finds an independently validated `11 -> 8` schedule. Final IRA nevertheless emits the fatal SFPU spill. The checked-in `scripts/lp-schedule-milp-beats-list.C` fixture intentionally records this as an expected M2 research boundary rather than a passing DejaGNU test. It proves both that MILP can add value beyond the list heuristic and that GIMPLE feasibility alone is not the production allocation guarantee.
+
+The benefit is not hard-coded to Welford.  A separate fused arithmetic fixture
+loads eight independent inputs and computes add/multiply/MAD chains.  Its
+source order keeps two inputs live while creating a ninth value and fails with
+the ordinary SFPU spill on both WH and BH.  The generic list scheduler and
+MILP both validate `9 -> 8`, compile successfully, and emit identical assembly
+to each other.  Conversely, the existing Horner/polynomial test reports peak
+two and is byte-identical off/list/MILP.  The WH fused-DAG schedule contains
+two more hazard NOPs than a manually latency-aware early fold, which is direct
+evidence that this checkpoint is a feasibility scheduler, not yet a latency
+optimizer; the pass remains opt-in and the unscheduled source emits no code at
+all because allocation fails.
+
+### Final local M0 checkpoint
+
+The final checking compiler was rebuilt after adding the independent
+certificate-rejection self-test and after fixing the DejaGNU driver to include
+the algorithm-agnostic `pressure-schedule-*.C` fixtures. The real TT/SFPI
+driver then completed with **1,106 expected passes, two expected failures, and
+zero unexpected FAIL, ERROR, or UNRESOLVED results**. The sum file is
+`/home/nkapre.guest/sfpi-lp-build/evidence/tt-g++-final.sum` with SHA-256
+`fffeb5ca85218fdf49421b57bbdc8da0b5571e8e0b5564864e31b4679756c272`.
+The final focused harness also passed and recorded 52 assembly artifacts. The
+generated Welford-shaped rescue hashes are `3cee70a65b29062489d790bcc30b23cc43ffe0741cc634e5106be8b0b14d8344`
+on Wormhole and `502bff4f216e3ed5d90ba891cb6a0c6a636e765f6ad53ab1c94d04f0b0f3ed1`
+on Blackhole; the unrelated fused-DAG hashes are
+`5ddaca11f72fe93daa31150c8c56f4dc056a1df0d679bd126fad9b212e74e4ce`
+and `11e952af9e49f1d5bde9f57973a08a33856295af961f97de621c1f9a970c98b6`
+respectively. Every transformed dump reports `old-peak=9 new-peak=8`,
+`validated=yes`, and `rejection-selftest=passed`.
+
+This is the same target-specific test lane used by SFPI's checked-in
+`build-sfpi.yaml` (`scripts/build.sh --test-tt`), executed locally in the
+x86_64 Linux VM with `lp_solve` linked. It is not an authoritative
+Tenstorrent-org CI result: the private `nkapreTT` repositories can reproduce
+the job, but product CI remains pending until these commits run on a
+Tenstorrent-owned branch or pull request.
+
+An attempted broad GCC `check-c/check-c++` diagnostic was stopped after it
+produced hundreds of unrelated RISC-V simulator/newlib execution failures in
+ordinary libc and torture tests. The pressure pass was disabled in those
+tests, and there was no matching prepatch baseline, so that output cannot be
+used either as a regression or as a green gate. A future full-GCC comparison
+must run base and patch from the same environment and compare `.sum` files.
+
+## Remaining execution plan after the prototype
+
+This section is the reconciled result of a second compiler, allocator, regression and TT-Metal validation review. It supersedes any interpretation that the overnight prototype is already an LP scheduler or a production-ready optimization.
+
+### Honest status
+
+| Capability | Status | Current evidence or gap |
+|---|---|---|
+| XTT32 GIMPLE pressure oracle | Implemented for one straight-line basic block | WH/BH minimal Welford reports peak 8; rescue reports 9 |
+| Deterministic pressure-first list schedule | Implemented | WH/BH rescue reaches 8 and matches the manual early-fold assembly |
+| Conservative arithmetic allowlist | Implemented | Non-live `sfpadd`, `sfpmul` and `sfpmad` only |
+| CFG and CC/predication rejection | Implemented | Negative fixtures remain pass-off/on identical |
+| Independent transactional legality checker | Implemented | Rebuilds the op permutation, all SSA def-use/source-availability constraints and exact liveness before mutation |
+| Latency/resource model | **Not implemented** | No makespan or NOP non-regression claim is currently valid |
+| Enforceable physical LREG assignment | **Not implemented** | The list-missed 11-to-8 fixture still spills after a valid MILP/GIMPLE certificate, directly demonstrating the gap |
+| Optional `lp_solve` integration | Implemented, default off | Host-only configure probe/linkage and a capped schedule-only MILP; Welford is certified 9-to-8 and an exhaustive synthetic graph demonstrates a list-missed 11-to-8 schedule |
+| Final pre-IRA RTL pressure audit | Implemented, dump-only | Observes actual XTT32 hard/pseudo liveness after sched1/remat; does not yet prove colorability or assign LREGs |
+| Non-Welford positive fixture | Implemented | A generic fused add/multiply/MAD DAG fails at peak 9 with the pass off and compiles at validated peak 8 with list and MILP schedules on WH/BH |
+| Low-pressure non-Welford no-op | Implemented | The existing Horner/polynomial fixture reports peak 2 and has identical off/list/MILP assembly |
+| Vanilla eltwise Welford functional fixture | **Not implemented** | The late-fold rescue is a focused compiler fixture, not the production kernel |
+| WH/BH craq-sim smoke | Implemented for handwritten EMA | Useful non-crash/numerical smoke; not transformed Welford validation |
+| WH/BH hardware comparison with handwritten Welford | **Not run** | No authoritative latency, NOP-safety or replay-throughput result yet |
+
+The first landing decision, the MILP decision and a future default-on decision are separate. Passing one must not be presented as satisfying the next.
+
+### Critical path
+
+```text
+Research path (implemented, default off):
+M0 harden current list scheduler
+  → M1 canonical model and dump-only final-RTL audit
+  → M3a optional schedule-only lp_solve experiment
+
+Production path (mandatory before support/default-on):
+M1 final-RTL audit
+  → M2 enforce physical allocation on final pre-IRA RTL
+  → M3b prove solver value, packaging and failure containment
+  → M4 transformed Welford functional and hardware sign-off
+  → M5 broader kernels, soak and rollout
+```
+
+The real Welford test harness can be developed in parallel with M0–M2. A solver-produced GIMPLE schedule may be used as a default-off research experiment once the independent checker accepts it, as this branch now does. It must not be described as production-safe, merged as a supported optimization, or enabled by default until the final-RTL allocation-enforcement path exists.
+
+### M0 — harden the current scheduler
+
+This is the smallest technically honest next patch.
+
+1. Replace the current pressure-only recheck with a separate `schedule_solution` and `validate_schedule` path that does not share the scheduler's bookkeeping. Before mutation it must independently verify:
+
+   - the result is an exact permutation of the original operation multiset;
+   - every vector and scalar SSA definition precedes every use, including duplicate operands;
+   - every source is available at the proposed issue point;
+   - region membership, allowlist, CC state, CFG and barrier rules still hold;
+   - live-in, live-out and live-through values produce the claimed old/new peaks;
+   - the new peak is at most eight and strictly lower than the old peak;
+   - the opcode/operand fingerprint is unchanged.
+
+2. Make constant-LREG reads explicit in the legality model. Either treat a constant `sfpreadlreg` as a boundary, retain it as a zero-pressure dependence node, or prove that every scheduled consumer remains after its definition. Add a regression that would fail if a consumer crossed the read.
+3. Define debug and optimization-level policy. Initially make `-O0` a no-op even when the flag is explicit, and either treat debug binds as boundaries or repair/reset them with checking tests under `-g`.
+4. Rebuild and verify real and virtual SSA after an accepted move. Emit stable dump lines such as `validated=yes` or `validated=no reason=...`; validation failure must leave GIMPLE untouched.
+5. Rename the experimental interface before it becomes public baggage. Prefer `rvtt_pressure_schedule` and `-mtt-tensix-optimize-pressure-schedule`, or an enum such as `-mtt-tensix-scheduler={off,list,milp}`. Preserve the old private spelling only if existing automation needs a temporary alias.
+6. Either gate the transform to Wormhole and Blackhole or add full QSR32 positive/negative parity. QSR64 is a runtime build variant, not a Tensix scheduling target.
+
+M0 exits only when the deliberate invalid-solution tests are rejected, the WH/BH rescue still equals the manual assembly, all unsupported fixtures remain byte-identical, 20 serial and 20 parallel builds are deterministic, full `--test-gcc` and `--test-tt` have no new unexpected results, and the test wrappers assert that `runtest` exists and a nonzero expected test count actually ran.
+
+Until M0 exits, this branch is **no-go even for a generally supported default-off merge**. The current private prototype remains useful for research and fixtures.
+
+### M1 — canonical scheduling model and final-RTL reality audit
+
+Extract solver-independent data structures into target scheduling files rather than teaching each heuristic or solver to rediscover semantics:
+
+```text
+gcc/gcc/config/riscv/tt/rvtt-schedule.h
+gcc/gcc/config/riscv/tt/rvtt-schedule.cc
+```
+
+The model should contain stable operation/value IDs, original order, all SSA dependencies, live-in/out boundaries, operation fingerprints, and per-architecture descriptors for movability, resource class, latency, semantic LV operands and legal ordinary destination/source overlap. Reject any opcode without a positive descriptor.
+
+Add a dump-only pre-IRA RTL pass, for example:
+
+```text
+gcc/gcc/config/riscv/tt/rtl-rvtt-lp-alloc.cc
+```
+
+Register it immediately before IRA, after generic scheduling and early rematerialization. It must inspect the actual expanded SFPU pseudos, hard-register reads/writes, existing semantic `_lv` ties, recognizer alternatives, clobbers and fixed registers. Compare final-RTL pressure/colorability with the GIMPLE certificate and report mismatches without changing RTL.
+
+M1 exits only when the WH/BH rescue is demonstrably eight-colorable at this final boundary, minimal Welford is correctly reported as zero-slack, every SFPU operand/constraint is modeled, randomized DAGs up to roughly ten nodes agree with exhaustive enumeration, and architecture metadata predicts the hazards repaired by the existing postreload scheduler. Any unexplained GIMPLE-to-RTL mismatch is a hard stop.
+
+### M2 — enforce the allocation certificate
+
+This is the production correctness boundary. A GIMPLE-selected color is only a feasibility suggestion; IRA is not required to reproduce it.
+
+For a closed straight-line SFPU island immediately before IRA:
+
+1. Build the actual RTL interference and constraint graph after all earlier expansion, scheduling and rematerialization.
+2. Enumerate legal XTT32 placements L0–L7, including fixed/precolored operands, semantic `_lv` matching constraints, clobbers and ordinary overlaps accepted by the machine description.
+3. Express destructive reuse as the result and a dying operand receiving the same hard register. Do not synthesize an `_lv` operand: `_lv` carries inactive-lane predication semantics.
+4. Independently validate the coloring, then atomically substitute the certified island's SFPU pseudos with hard registers using GCC grouped changes.
+5. Re-run recognition and dataflow scans. Commit only if every instruction remains recognized and no SFPU pseudo remains inside the certified island before IRA.
+
+Existing non-LV arithmetic patterns generally accept equal destination/source hard registers, so new tied MD patterns are not automatically required. Add one only when the recognizer rejects a hardware-legal overlap. If safe pre-IRA hard-register substitution is incompatible with GCC invariants, stop and design explicit target IRA integration; do not weaken the claim to “IRA will probably follow the coloring.”
+
+M2 exits when final assembly matches the allocation certificate on WH and BH across supported optimization modes, no certified island can attempt `BADLOAD`, `BADSTORE` or an SFPU spill, fixed-LREG boundary tests pass, and failure before the grouped commit leaves RTL byte-identical.
+
+XTT64/XTT128 remain out of scope. Later support must enumerate legal aligned/contiguous hard-register tuples from target rules rather than counting anonymous two- or four-register units.
+
+### M3 — optional `lp_solve`, initially schedule-only
+
+The external solver earns its complexity only if the list scheduler misses a real feasible graph or loses measurable cycles on at least two kernels. Welford plus a second independent-chain or polynomial graph should provide that entry evidence.
+
+Add a small solver adapter and guarded host-build integration. Expected touch points include GCC/SFPI `configure.ac`, generated configure files, GCC `Makefile.in`, `t-riscv-tt`, and new `rvtt-lpsolve.{h,cc}` files.
+
+Requirements:
+
+- explicit `--with-lp-solve={no,auto,PATH}` behavior;
+- solver-absent builds and bootstraps remain supported;
+- an explicitly requested but missing header/library fails configure clearly;
+- link the host library into `cc1`/`cc1plus`; never search the RISC-V target sysroot;
+- validate x86_64 and aarch64 Linux host packaging and missing-runtime-library behavior;
+- pin the solver version and complete LGPL, SBOM, security and distribution review.
+
+The implemented M3a research model is deliberately smaller than the eventual production model: one unconditional XTT32 basic block, at most 24 operations and 32 values, one issue slot per operation, exact def-to-last-use liveness, precedence and an eight-register capacity constraint. It does not choose physical colors, model architectural latency/resources, or promise a makespan improvement. It performs one solve over a stably constructed model, minimizing the number of issue slots that differ from the deterministic list result; the independent M0 checker remains authoritative before mutation and serial/parallel assembly hashing detects nondeterminism.
+
+The later M3b production model should retain similarly strict region limits while adding fixed assignment, live-and-assigned capacity, architecture resource/latency rules and only machine-representable destructive overlaps on the actual pre-IRA RTL graph.
+
+For M3b, solve lexicographically:
+
+1. find a feasible schedule/coloring with peak at most eight;
+2. minimize architecture-specific makespan;
+3. minimize live area and copies;
+4. apply a canonical source-ID tie-break.
+
+M3a accepts only a proven `OPTIMAL` schedule that passes the independent GIMPLE checker. Solver unavailable, infeasible, non-optimal or capped falls back to the independently checked list schedule; a malformed purported optimum leaves the region untouched. M3b additionally requires M2 allocation materialization. Discard timeout incumbents in both phases. In-process solver crashes or hangs cannot be recovered by semantic fallback, so a supported/default-on build requires a pinned trusted library and an explicit watchdog/release-risk decision.
+
+M3 exits only after exhaustive small-DAG oracle agreement, forced failure-path tests, ASan/UBSan model/checker fuzzing, repeated and parallel deterministic builds, acceptable compile-time telemetry, and a measured incremental win over list scheduling.
+
+### M4 — real eltwise Welford comparison
+
+Add a TT-LLK functional driver modeled on the EMA test:
+
+```text
+tt_metal/tt-llk/tests/python_tests/test_sfpu_welford.py
+tt_metal/tt-llk/tests/sources/sfpu_welford_test.cpp
+tt_metal/tt-llk/tests/python_tests/perf_sfpu_welford.py
+tt_metal/tt-llk/tests/sources/sfpu_welford_perf.cpp
+```
+
+Compile the same non-recurrence machinery with selectable row implementations:
+
+- `HANDWRITTEN_DIRECT`;
+- production `HANDWRITTEN_REPLAY`;
+- exact vanilla `VFLOAT_DIRECT`;
+- `VFLOAT_RESCUE`;
+- `VFLOAT_MANUAL_EARLY_FOLD`;
+- optionally `VFLOAT_REPLAY` once generated row lengths are stable.
+
+Share block loads, reciprocal lookup, state clear, raw mean/M2 stores and variance finalization. Only the row recurrence may differ; otherwise transpose, reciprocal or pack effects would be misattributed to scheduling.
+
+The functional matrix covers logical counts `1, 4, 31, 32, 33, 64, 96`, BF16 and FP32 accumulation, reciprocal-LUT and ordinary reciprocal modes, constant/zero, monotonic, alternating magnitude, fixed-seed random, high-offset near-constant, NaN/Inf/signed-zero, poisoned inactive rows, multi-tile state carry and repeated invocations in one process. Compare raw mean and M2 as well as final variance against:
+
+- the manual implementation differential;
+- sequential FP32 Welford emulation;
+- Float64 mean/population variance.
+
+Record bitwise mismatch count, maximum and percentile ULP distance, absolute/relative error, classification/sign mismatches and unexpected negative/nonfinite M2. PCC alone is insufficient for raw statistics.
+
+Craq-sim can establish compilation, raw numerical equivalence, partial-row handling, state carry, replay interaction and gross architecture correctness. It cannot sign off latency or NOP safety.
+
+On real Wormhole and Blackhole hardware, archive compiler/TT-Metal commits, board stepping, firmware and clock, assembly/ELF hashes, hard-register map, MAD/ADD/MOV/NOP/load/store/replay counts, replay footprint, text size and cycles per row/block/tile. Measure direct primitive and production replay throughput separately, with warmups and paired randomized runs. Report median, p5/p95 and median absolute deviation; never use pytest or simulator wall time as a performance number.
+
+M4 exits when all functional cases pass on both architectures, rescue output and assembly match the manual control, no intermittent hazard failure appears, and static instruction counts explain measured cycle ordering. Replacing handwritten LLK requires generated vFloat to match or beat its median hardware cycles without numerical degradation. If it is slower, retain the scheduler as a compilation-feasibility feature and make no LLK-replacement claim. Architecture disagreement permits architecture-specific implementations.
+
+Then add a benchmark-only implementation selector to real LayerNorm Welford and run the existing LayerNorm/state-leak suites across partial and multi-tile widths before changing any production default.
+
+### M5 — regression firewall, expansion and rollout
+
+Every off/on matrix should cover WH/BH and QSR32 only when QSR scheduling support is explicitly enabled:
+
+- true and anti dependencies, duplicate operands, scalar SSA, constant-LREG use, boundary live-in/out, debug binds and live-out stores;
+- peaks 7/8/9, irreducible pressure, size caps and multiple separated regions;
+- `_lv` and nested CC, memory, LREG/config access, stochastic operations, synth/runtime immediates, explicit NOP/replay, LUT/transpose/swap, asm/calls/EH, CFG/PHI/loop and composite XTT modes;
+- `-O0/-O1/-O2/-O3/-Os`, `-g`, exceptions, LTO where supported, different working directories, serial and parallel builds;
+- solver absent/present/wrong path/missing runtime library, optimal/infeasible/non-optimal/timeout/invalid certificate;
+- full GCC/TT suites, complete TT-Metal kernel compilation, numerical device tests, MAD/MOV/NOP/code-size/replay deltas, and compile-time p50/p95/RSS.
+
+The current `test_sfpi.cpp` skips WH and BH, so resolve those skips or add an enabled scheduler-specific device fixture before treating it as a primary gate.
+
+After Welford, expand one family at a time:
+
+1. dual-Horner rational evaluation for independent-chain latency hiding;
+2. addcmul for cross-row scheduling;
+3. log for a second compact pressure case;
+4. GELU-tanh and erfinv for long-lived input/reload pressure;
+5. remainder and asinh only after separately gated rematerialization;
+6. atanh and binary power last because they deliberately cut graphs through DST or use delicate numerical compensation.
+
+Each family repeats compiler certificate, craq-sim differential, static instruction audit and WH/BH hardware cycles. Welford success does not authorize new opcodes, CFG shapes or predication semantics.
+
+Rematerialization is a later independent phase, not part of the first MILP. It may duplicate only positively whitelisted deterministic, state-free, non-trapping operations and must prove a net register/cycle benefit. Stochastic, CC, config, LUT, memory and architectural-state operations are never rematerialized.
+
+### Landing gates
+
+| Decision | Minimum go criteria |
+|---|---|
+| Merge list scheduler default-off | M0 complete; pre-patch versus patched-flag-off corpus identical; full suites show no new unexpected results; WH/BH tests and QSR gate/parity reviewed |
+| Shadow CI/canary | Whole TT-Metal corpus compiles off/on; zero unsupported-region diffs; compile p50 ≤2%, p95 ≤5%, RSS ≤5%; transformed Welford plus two non-Welford kernels numerically clean |
+| Named product-kernel opt-in | WH/BH hardware correctness; affected cycles no worse than 1% at 95% confidence; code/replay regression below 2% or explicitly signed off; JIT cache key includes scheduler/toolchain state |
+| Global default-on | At least 14 consecutive green nightlies and 10,000 distinct kernel-TU compilations; historical production failure captured; rollback flag propagated through TT-Metal; architecture/compiler/op/release owners sign off |
+| MILP merge/default-off | M0–M3 complete; real incremental value over list scheduling; host-build, legal/security, determinism, fuzzing and failure-injection gates pass |
+
+Keep MILP default-off through its own soak even if list scheduling is later enabled. Expanding eligibility is always a separate review. The existing postreload hazard scheduler remains the final verifier/repair, and any unexpected NOP beyond the modeled schedule is a test failure.
+
+Ownership is explicit: SFPI compiler owners own SSA/RTL legality, allocation enforcement, determinism and rollback; architecture/LLK owners own overlap and latency tables plus handwritten goldens; TT-Metal operation owners own Welford/LayerNorm numerical and device-performance acceptance; toolchain/release owners own host packaging, cache invalidation and reproducibility; legal/security owners approve the solver distribution; CI/simulator owners enforce real test counts and keep the craq-sim compatibility patch separate from hardware sign-off.
+
+Planning estimate, assuming one compiler engineer with architecture and hardware support: M0 takes roughly 2–4 focused days; an end-to-end solver plus enforceable allocation prototype is roughly 2–3 weeks; production sign-off is approximately 4–7 engineer-weeks plus hardware queue time and the 14-night soak. The allocation-enforcement spike is the largest uncertainty.
 
 ## What happens today
 
@@ -335,7 +632,10 @@ Use a deterministic pressure-first heuristic before invoking MILP. Its ready-lis
 
 ### 1. Baseline and diagnostics
 
-- Add the minimal `welford4` testcase to the verified TT DejaGNU harness. Audit found that `check-gcc-tt` selects `rvtt.exp`, whose original glob reached only `tt/*.C` and skipped `tt/sfpi/*.C`. The branch extends that driver with focused globs for only `sfpi/lp-schedule-*.C` and `sfpi/welford-pressure-*.C`; it does not silently enable the entire legacy directory.
+- Add the focused fixtures to the existing `tt/sfpi/rvtt.exp` harness.  That
+  driver already executes the complete legacy `sfpi/*.C` directory; the
+  test-count guard therefore verifies the full directory ran rather than
+  relying on a new, potentially empty test glob.
 - Capture late GIMPLE, IRA/reload dumps, live count and the current spill diagnostic.
 - Add a dump-only DFG extractor and exact pressure oracle before introducing any scheduler.
 
@@ -402,9 +702,9 @@ CXX="$SFPI_ROOT/compiler/bin/riscv-tt-elf-g++"
 
 ### 3. Integrate `lp_solve`
 
-- Add optional configure detection and a default-off target flag such as `-mtt-tensix-optimize-lp-schedule`.
+- Add optional configure detection, the default-off `-mtt-tensix-optimize-pressure-schedule` flag, and the separately gated `-mtt-tensix-pressure-schedule-use-milp` backend selection.
 - Add deterministic node/iteration limits and discard any non-optimal incumbent. A wall timeout is only an emergency abort.
-- Fall back byte-for-byte to the original order on timeout, unsupported regions, infeasibility, validation failure or solver absence.
+- On solver timeout, infeasibility, cap or absence, fall back to the independently checked deterministic list result. An unsupported or invalid region remains untouched, and disabling the pressure scheduler remains byte-identical to the unmodified compiler.
 - Review LGPL and static/dynamic linkage requirements before release packaging.
 
 Concrete integration points:
@@ -578,7 +878,14 @@ git@github.com:nkapreTT/sfpi-gcc.git
 branch: nkapre/welford
 ```
 
-The local `sfpi-gcc` submodule was a three-commit shallow clone. Pushing that ancestry to a new empty repository failed because the shallow parent objects were absent; unshallowing would fetch roughly 2.15 million objects. The private branches are consequently explicit snapshot-root histories, while the normal local `nkapre/welford` branches retain upstream ancestry for later review. The SFPI snapshot's `.gitmodules` points `gcc` at the private GCC copy and its gitlink names the exact private GCC snapshot.
+The local `sfpi-gcc` checkout remains shallow. The normal local
+`nkapre/welford` branches retain their upstream-facing history, while the
+private branches are a linear chain of explicit snapshot commits containing
+the same trees. This avoids fetching millions of unrelated GCC objects merely
+to bank an experimental branch. The SFPI snapshot replaces its GCC gitlink
+with the matching private GCC snapshot. Its relative submodule URL
+`../sfpi-gcc.git` lets an SSH clone under `nkapreTT` resolve that gitlink from
+the sibling private repository.
 
 Populate a clone made while the repositories were still empty with:
 
@@ -593,14 +900,12 @@ git fetch origin
 git switch --track origin/nkapre/welford
 ```
 
-The first verified private tips were:
-
-```text
-nkapreTT/sfpi:     0afab83aadd767e43fb1d1c54a828043e31ef81c
-nkapreTT/sfpi-gcc: 9dd3c45acf55f09b69cc9aabe505ddcd853bfefe
-```
-
-For later checkpoints, first commit normally on each local ancestry-preserving `nkapre/welford` branch. Then create a private snapshot commit whose tree is the normal branch's tree and whose parent is the prior private snapshot. Push GCC first. Rebuild the SFPI snapshot tree with the new private GCC gitlink and private `.gitmodules` URL, then push SFPI. Never stage the pre-existing local modification to `gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C`.
+For later checkpoints, commit normally on each local `nkapre/welford` branch.
+Create a private GCC snapshot whose tree is the normal GCC commit and whose
+parent is the previous private snapshot, then push it first. Create the SFPI
+snapshot from the normal root tree after replacing only the `gcc` gitlink with
+that private GCC snapshot. Never stage the pre-existing local modification to
+`gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C`.
 
 ### 3. Reproduce the current register spill
 
@@ -641,8 +946,15 @@ SRC=/home/nkapre.guest/sfpi-src/gcc/gcc/testsuite/g++.target/riscv/tt/sfpi/welfo
 "$MOD_CXX" -mcpu=tt-wh-tensix -O2 -I"$SFPI_INC" \
   -fno-exceptions -fno-rtti -S "$SRC" -o /tmp/welford-off.S
 "$MOD_CXX" -mcpu=tt-wh-tensix -O2 -I"$SFPI_INC" \
-  -fno-exceptions -fno-rtti -mtt-tensix-optimize-lp-schedule \
+  -fno-exceptions -fno-rtti -mtt-tensix-optimize-pressure-schedule \
   -fdump-tree-rvtt_lp_schedule -S "$SRC" -o /tmp/welford-on.S
+
+# Invoke the optional MILP backend as a separate A/B:
+"$MOD_CXX" -mcpu=tt-wh-tensix -O2 -I"$SFPI_INC" \
+  -fno-exceptions -fno-rtti -mtt-tensix-optimize-pressure-schedule \
+  -mtt-tensix-pressure-schedule-use-milp \
+  -fdump-tree-rvtt_lp_schedule -fdump-rtl-rvtt_lp_alloc \
+  -S "$SRC" -o /tmp/welford-milp.S
 ```
 
 The failing rescue fixture uses the same commands with `welford-pressure-reorder-wh.C`. Acceptance requires:
@@ -653,7 +965,7 @@ grep 'old-peak=9 new-peak=8 applied=yes' /tmp/*.rvtt_lp_schedule
 ! grep -q 'register spill' /tmp/welford-on.log
 ```
 
-The current implementation is deliberately a default-off, positive-allowlist pressure oracle plus deterministic list scheduler. It is not yet an `lp_solve` integration. MILP comes only after the pressure/liveness model and materialization checker pass these tests.
+The overnight checkpoint used only the default-off pressure oracle and deterministic list scheduler. The current branch additionally contains the separately gated, schedule-only `lp_solve` M3a experiment described above. Both paths must pass the independent pressure/liveness certificate; neither is yet the M2 physical-allocation guarantee.
 
 ### 5. Build Linux craq-sim libraries
 
@@ -766,28 +1078,73 @@ Run the same simulator command with the compiler wrapper enabled:
 
 ```sh
 export SFPI_REAL_CXX=/home/nkapre.guest/sfpi-lp-build/sfpi/compiler/bin/riscv-tt-elf-g++
+export SFPI_USE_MILP=0    # list scheduler
+# Repeat with SFPI_USE_MILP=1 for the solver-linked MILP A/B.
 ```
 
 The measured pass-on results are Wormhole `3 passed in 31.14s` and Blackhole `3 passed in 30.55s`, again with zero crashed tests. These elapsed times are not a useful performance comparison: the fixtures are handwritten EMA, simulator startup dominates, and the runs were intended only as numerical/non-crash regression gates.
 
 ### 9. Compiler and regression gates
 
-Run the checked-in focused validator first. It exercises pass-off, minimal no-op, genuine 9-to-8 rescue, manual scheduling control, predication rejection, and three-run deterministic assembly on both architectures:
+Run the checked-in focused validator first. It exercises ordinary vFloat C++
+for pass-off, minimal no-op, genuine 9-to-8 Welford-shaped rescue, a separate
+generic fused-DAG rescue, manual scheduling control, predication rejection,
+and deterministic assembly on both architectures:
 
 ```sh
 cd /home/nkapre.guest/sfpi-src
-./scripts/validate-welford-scheduler.sh \
+./scripts/validate-sfpu-pressure-scheduler.sh \
   /home/nkapre.guest/sfpi-lp-build/sfpi \
-  /home/nkapre.guest/welford-validation
+  /home/nkapre.guest/sfpu-pressure-validation
+
+SCHEDULER_REQUIRE_MILP=1 SCHEDULER_DETERMINISM_RUNS=20 \
+  ./scripts/validate-sfpu-pressure-scheduler.sh \
+  /home/nkapre.guest/sfpi-lp-build/sfpi \
+  /home/nkapre.guest/sfpu-pressure-milp-validation
 ```
 
 After the focused fixtures pass:
 
 ```sh
 cd /home/nkapre.guest/sfpi-src
-./scripts/build.sh --dir=/home/nkapre.guest/sfpi-lp-build --test-gcc
-./scripts/build.sh --dir=/home/nkapre.guest/sfpi-lp-build --test-tt
+SFPI_WITH_LP_SOLVE=yes \
+  ./scripts/build.sh --dir=/home/nkapre.guest/sfpi-lp-build --test-tt
 ```
+
+That is the checked-in SFPI CI test lane. A broad `--test-gcc` invocation is a
+separate base-versus-patch differential: run both revisions in identical
+containers and compare their `.sum` files rather than requiring an absolute
+zero-failure simulator result.
+
+For a clean Ubuntu 22.04 Runpod, clone with SSH so the relative private GCC
+submodule resolves correctly, then build and run both gates:
+
+```sh
+SUDO=
+if [[ $(id -u) -ne 0 ]]; then SUDO=sudo; fi
+$SUDO apt-get update
+$SUDO apt-get install -y \
+  autoconf automake bison dejagnu expect flex gawk python3 texinfo \
+  patchutils ruby wget libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev \
+  gcc g++ liblpsolve55-dev libsuitesparse-dev
+
+git clone --branch nkapre/welford --recurse-submodules \
+  git@github.com:nkapreTT/sfpi.git
+cd sfpi
+
+SFPI_WITH_LP_SOLVE=yes scripts/build.sh --tt-built --checking --small
+SFPI_WITH_LP_SOLVE=yes scripts/build.sh --dejagnu --small
+SFPI_WITH_LP_SOLVE=yes scripts/build.sh --test-tt
+
+SCHEDULER_REQUIRE_MILP=1 SCHEDULER_DETERMINISM_RUNS=20 \
+  scripts/validate-sfpu-pressure-scheduler.sh \
+  build build/sfpu-pressure-validation
+```
+
+Archive `build/tests`, `build/sfpu-pressure-validation`, the final assembly,
+and both scheduler dumps. This Runpod result is reproducibility evidence; the
+authoritative CI label still requires a Tenstorrent-org branch or pull
+request.
 
 Then run at least the following focused LLK files with pass off and on, on both Wormhole and Blackhole:
 

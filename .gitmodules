@@ -3,7 +3,7 @@
 	url = https://github.com/tenstorrent/sfpi-binutils.git
 [submodule "gcc"]
 	path = gcc
-	url = https://github.com/tenstorrent/sfpi-gcc.git
+	url = ../sfpi-gcc.git
 [submodule "newlib"]
 	path = newlib
 	url = https://github.com/tenstorrent-forks/newlib-cygwin-mirror

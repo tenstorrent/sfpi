@@ -1,0 +1,80 @@
+name: "SFPU pressure scheduler"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/sfpu-pressure-scheduler.yaml"
+      - ".gitmodules"
+      - "Makefile.in"
+      - "README.md"
+      - "configure"
+      - "configure.ac"
+      - "gcc/**"
+      - "scripts/build.sh"
+      - "scripts/validate-sfpu-pressure-scheduler.sh"
+      - "scripts/validate-welford-scheduler.sh"
+      - "scripts/lp-schedule-milp-beats-list.C"
+
+jobs:
+  linux-lpsolve:
+    name: Linux lp_solve WH/BH gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 480
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 64
+          fetch-tags: true
+          submodules: false
+      - name: Checkout toolchain submodules
+        env:
+          SFPI_GCC_DEPLOY_KEY: ${{ secrets.SFPI_GCC_DEPLOY_KEY }}
+        run: |
+          git submodule update --init binutils newlib
+          if [[ -n "$SFPI_GCC_DEPLOY_KEY" ]]; then
+            key_file=$(mktemp)
+            printf '%s\n' "$SFPI_GCC_DEPLOY_KEY" >"$key_file"
+            chmod 600 "$key_file"
+            git config submodule.gcc.url \
+              "git@github.com:${{ github.repository_owner }}/sfpi-gcc.git"
+            GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+              git submodule update --init gcc
+            rm -f "$key_file"
+          else
+            git submodule update --init gcc
+          fi
+      - name: Install build and solver dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            autoconf automake bison dejagnu expect flex gawk python3 texinfo \
+            patchutils ruby wget libexpat1-dev libgmp-dev libmpc-dev \
+            libmpfr-dev gcc g++ liblpsolve55-dev libsuitesparse-dev
+      - name: Build checking toolchain with lp_solve
+        env:
+          SFPI_WITH_LP_SOLVE: "yes"
+        run: scripts/build.sh --tt-built --checking --small
+      - name: Build DejaGNU harness
+        env:
+          SFPI_WITH_LP_SOLVE: "yes"
+        run: scripts/build.sh --dejagnu --small
+      - name: Run TT compiler suite
+        env:
+          SFPI_WITH_LP_SOLVE: "yes"
+        run: scripts/build.sh --test-tt
+      - name: Run focused WH/BH MILP validation
+        env:
+          SCHEDULER_REQUIRE_MILP: "1"
+          SCHEDULER_DETERMINISM_RUNS: "3"
+        run: scripts/validate-sfpu-pressure-scheduler.sh build build/sfpu-pressure-validation
+      - name: Upload scheduler artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: sfpu-pressure-scheduler-linux
+          path: |
+            build/tests/*
+            build/sfpu-pressure-validation
+          if-no-files-found: warn
