@@ -638,3 +638,101 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Engineering Rebuttal: Conditions for Approval
+
+The reconciled roadmap is directionally sound, and guarded default-on scheduling remains the correct P0 objective. However, the current document mixes implemented behavior, proposed behavior, and illustrative pseudocode. The following issues are release blockers, not arguments for keeping a proven rescue permanently disabled.
+
+### 12.1 Replace the Non-Negative Delta Claim with a Testable Rescue Contract
+
+A source-order GIMPLE peak above eight does not prove that baseline GCC will spill or abort. Expansion, RTL transformations, rematerialization, coalescing, and IRA can change the effective pressure. Therefore the scheduler cannot claim that every mutation of a `peak > 8` region is intrinsically non-regressive.
+
+The defensible default-on contract is narrower and stronger:
+
+1. Regions outside the validated allowlist are untouched.
+2. Regions at or below the trigger threshold are untouched.
+3. A proposed schedule is committed only after the independent legality and pressure validator accepts it.
+4. Whole-corpus A/B testing compares compilation success, diagnostics, generated assembly, and deterministic output with the pass on and off.
+5. The rollback option remains supported and tested.
+
+This evidence-based contract supports default-on deployment without relying on a theorem the current pipeline does not establish.
+
+### 12.2 Distinguish Checked-In State from the P0 Target
+
+The checked-in options currently initialize both pressure scheduling and MILP use to off. The implementation also invokes MILP whenever it is requested and available for a high-pressure region, even when the list scheduler has already found a valid rescue. Consequently, `Init(1)` and demand-driven MILP-on-list-miss describe required P0 changes, not current behavior.
+
+P0 is complete only when the implementation and tests demonstrate this sequence:
+
+```text
+eligible high-pressure region
+  -> deterministic list scheduler
+  -> return immediately on independently validated peak <= 8
+  -> otherwise invoke bounded MILP when compiled and available
+  -> validate the MILP result independently
+  -> otherwise preserve the original GIMPLE order
+```
+
+Solver absence, timeout, infeasibility, validator rejection, and the explicit rollback flag must all leave the original region unchanged.
+
+### 12.3 Complete the Joint MILP Before Calling It a Specification
+
+The formulation declares assignment, occupancy, and destructive-alias variables but does not constrain them sufficiently. An executable M2/M3 model must additionally define:
+
+- exactly one allowed physical register for every allocated value;
+- the full linearization of `occupy[v,r,t] = live[v,t] AND assign[v,r]`;
+- at most one simultaneously live value in each physical register at each position;
+- fixed/precolored registers, hard-register clobbers, modes, and allowed-color masks;
+- alias equality between result and selected dying operand;
+- exactly the machine alternatives for which destructive reuse is legal;
+- live-in, live-out, unused-result, and issue-boundary conventions; and
+- a finite scheduling horizon plus deterministic tie-breaking.
+
+The aggregate constraint `sum(live[v,t]) <= 8` proves only a capacity bound. It does not prove that the values admit a legal assignment to L0-L7 under target constraints.
+
+### 12.4 The DSATUR Listing Is Architectural Pseudocode, Not Safe GCC Code
+
+The sample coloring engine initializes every contracted class with all eight colors and no fixed color. It never derives allowed colors from operand alternatives, modes, hard-register clobbers, or precolored operands. Its mandatory-tie test checks only a last-use position; that is insufficient to prove a matching machine alternative, compatible modes, `_lv` predication semantics, early-clobber legality, and death at the exact destructive boundary.
+
+The island collector also appends every SFPU instruction in a basic block while silently skipping intervening non-SFPU instructions. That contradicts the stated closed-island rule and can omit barriers, state changes, clobbers, or uses that make the extracted graph unsound. Discovery must stop at the first unmodeled instruction or explicitly prove it transparent.
+
+Before coloring, P1 must construct and independently check a complete final-RTL model. Equality-class contraction must intersect member color masks, reconcile precolors, reject internal interference, and retain every external interference edge. Search exhaustion must be distinguishable from proven uncolorability in diagnostics and tests.
+
+### 12.5 The Grouped RTL Rewrite Does Not Yet Meet Its Atomicity Claim
+
+The illustrated transaction has several correctness gaps:
+
+- it ignores the return value of `validate_change`;
+- it uses a hard-coded change checkpoint instead of preserving the caller's `num_validated_changes()` value;
+- it calls `recog_memoized` while grouped changes remain pending;
+- it does not demonstrate that every occurrence of each selected pseudo is inside the closed island;
+- it confirms changes before rebuilding DF and asserting that no selected SFPU pseudo remains; and
+- after confirmation, a failed postcondition can no longer be rolled back by `cancel_changes`.
+
+The implementation must save the grouped-change checkpoint, validate every substitution and instruction pattern before confirmation, cancel back to that checkpoint on any failure, and treat the post-confirmation DF/closure checks as compiler-checking assertions over conditions already proven before commit. A negative test should force failure at each stage and verify byte-identical RTL fallback.
+
+### 12.6 Separate Demonstrated Results from Opportunities
+
+The Welford 9-to-8 scheduling rescue and the generic 9-to-8 fused-DAG rescue are demonstrated compiler results. The Dual-Horner issue reduction, Log elimination of `$Dst` cuts, replay compression, macro issue-rate gains, and other LLK effects remain candidate opportunities until the compiler emits the claimed transformation and correctness is checked. Static issue slots are not silicon cycles.
+
+P3 and P4 gates must archive:
+
+- baseline and optimized compiler revisions and exact flags;
+- generated assembly and scheduler/allocation certificates;
+- numerical outputs against the same producer/consumer workload;
+- warmup policy, iteration count, raw device-cycle samples, median and dispersion;
+- WH/BH architecture and device metadata; and
+- an A/B/A or randomized run order sufficient to expose thermal and system drift.
+
+Only those measurements can support a performance-win claim. A correct rescue with no speedup is still valuable, but it must be reported as a compile-coverage improvement rather than a throughput improvement.
+
+### 12.7 Revised Approval Decision
+
+- **Approve P0 implementation:** make the validated, narrowly allowlisted scheduler default-on; short-circuit after list success; invoke bounded MILP on list miss; retain and test rollback; run full-corpus A/B validation.
+- **Approve P1 architecture:** build the authoritative final-RTL extractor and an independent checker before mutation.
+- **Conditionally approve P2:** do not ship physical substitution until the color constraints, closed-island proof, grouped-change transaction, and negative rollback suite are implemented rather than merely sketched.
+- **Treat P3/P4 performance as unproven:** require generated-code evidence and real silicon measurements.
+- **Keep P5 separate:** replay, macro scheduling, and MLIR are valuable longer-horizon projects, but they must not obscure the immediate compiler-correctness gates.
+
+The correct response to one IRA spill is not to disable a validated rescue indefinitely, nor is it to waive allocator correctness. It is to finish the final-RTL model, make fallback genuinely transactional, enable the proven narrow path by default, and expand coverage only as independent evidence permits.
