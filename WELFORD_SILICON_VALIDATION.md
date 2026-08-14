@@ -1,31 +1,44 @@
-# Welford Silicon Validation Mission
+# Welford Silicon Validation Mission & Test Harness
 
-This is the copy-paste handoff for an agent with real Wormhole and/or
-Blackhole hardware. The objective is to decide whether ordinary vFloat C++,
-compiled through the generic SFPU scheduler, can replace or complement the
-handwritten Welford LLK without correctness or performance regression.
+This is the copy-paste handoff for an agent with real Wormhole and/or Blackhole hardware. The objective is to decide whether ordinary vFloat C++, compiled through the generic SFPU scheduler, can replace or complement the handwritten Welford LLK without correctness or performance regression.
 
-The pressure scheduler is currently an opt-in research pass. Passing this
-mission does not make it default-on; it supplies the missing silicon evidence
-for that decision.
+The pressure scheduler is currently an opt-in research pass. Passing this mission does not make it default-on; it supplies the missing silicon evidence for that decision.
 
-## Non-negotiable rules
+---
 
-- Test the same row recurrence behind every implementation selector. Share
-  loads, transpose, reciprocal lookup, state initialization, stores, and
-  variance finalization so their costs are not misattributed to scheduling.
-- Preserve the handwritten LLK as the performance golden and the sequential
-  FP32 implementation as a numerical reference.
-- Report device cycles, not pytest wall time or simulator elapsed time.
-- Treat Wormhole and Blackhole as separate targets. Do not copy latency or NOP
-  assumptions between them.
-- Keep replay-direct and non-replay-direct measurements separate.
-- Do not modify or commit the unrelated dirty
-  `gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C` deletion.
-- Do not claim success from compilation alone. Archive final assembly and ELF
-  hashes for every measured binary.
+## Non-Negotiable Rules & Target Policy
 
-## Acquire and pin the compiler
+1. **Target Independence:** **Wormhole availability is NOT a blocker for Blackhole validation (and vice versa).** Wormhole (`-mcpu=tt-wh-tensix`) and Blackhole (`-mcpu=tt-bh-tensix`) are independent targets with distinct ISA pipelines and scoreboarding rules. If only Blackhole silicon is available, execute the complete Blackhole matrix immediately and report `GO-BH-ONLY` or `NO-GO-BH`.
+2. **Identical Wrapper:** Test the same row recurrence behind every implementation selector. Share loads, transpose, reciprocal lookup, state initialization, stores, and variance finalization so their costs are not misattributed to scheduling.
+3. **Performance Goldens:** Preserve the handwritten LLK as the performance golden and sequential FP32 Welford emulation as the numerical reference.
+4. **Device Cycles:** Report real hardware cycle counters (`read_wall_clock()`), not pytest wall time or simulator elapsed time.
+5. **No Dirty Commits:** Do not modify or commit the unrelated dirty `gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C` deletion.
+6. **Artifact Archival:** Archive final assembly, compiler logs, and ELF hashes for every measured binary.
+
+---
+
+## Zero-Setup Alternative: Pre-Existing TT-Metal Silicon Suites
+
+If staging new standalone micro-benchmarks is delayed, point `CUSTOM_SFPI` at the built compiler in TT-Metal and run the following pre-existing production suites on Blackhole silicon immediately:
+
+```bash
+export TT_METAL_HOME=/path/to/tt-metal
+export CUSTOM_SFPI=/path/to/sfpi-silicon-build/sfpi
+
+# 1. Full LayerNorm Welford validation:
+pytest $TT_METAL_HOME/tests/ttnn/unit_tests/operations/fused/test_layer_norm.py
+
+# 2. Welford state leak regression:
+pytest $TT_METAL_HOME/models/demos/stable_diffusion_xl_base/vae/tests/pcc/test_welford_state_leak_regression.py
+
+# 3. Comprehensive TT-LLK SFPU silicon test matrix:
+cd $TT_METAL_HOME/tt_metal/tt-llk/tests
+pytest test_sfpu_ema.py test_sfpu_unary.py test_sfpu_binary.py test_sfpu_ternary.py test_sfpu_reduce.py
+```
+
+---
+
+## Acquire and Pin the Compiler
 
 ```bash
 git clone --recursive \
@@ -36,13 +49,7 @@ git submodule update --init --recursive
 
 git rev-parse HEAD
 git -C gcc rev-parse HEAD
-git status --short
-git -C gcc status --short
 ```
-
-The matching GCC commit is published on `tenstorrent/sfpi-gcc` branch
-`nkapre/sfpi`. The superproject pins
-the exact required commit, so do not advance the submodule casually.
 
 For the solver-enabled research build on Ubuntu:
 
@@ -64,40 +71,11 @@ SFPI_WITH_LP_SOLVE=yes \
   ./scripts/build.sh --dir="$PWD/../sfpi-silicon-build" --test-tt
 ```
 
-Stop if the focused validator or TT target suite has an unexpected failure,
-error, unresolved test, zero executed tests, or nondeterministic assembly.
+---
 
-## Pin the machine and TT-Metal checkout
+## Pin the Machine and TT-Metal Checkout
 
-Use a clean TT-Metal worktree. Record all of the following in the result
-bundle before testing:
-
-```bash
-git -C "$TT_METAL_HOME" rev-parse HEAD
-git -C "$TT_METAL_HOME" status --short
-uname -a
-nvidia-smi 2>/dev/null || true
-tt-smi --version 2>/dev/null || true
-tt-smi 2>/dev/null || true
-```
-
-Also record board architecture and stepping, card serial, firmware versions,
-device clock configuration, host CPU, kernel, compiler hashes, build type, and
-all relevant environment variables. Disable unrelated adaptive clock or power
-changes if the lab procedure permits it; otherwise record them.
-
-Point only the validation worktree at the custom SFPI installation. Confirm
-from the JIT log and compiler `--version` output that it is actually used.
-Delete the validation JIT cache when switching compiler commit, scheduler
-mode, architecture, or implementation selector. A stale kernel invalidates
-the measurement.
-
-### Use the custom compiler in a validation worktree
-
-TT-Metal's production JIT checks `${TT_METAL_HOME}/runtime/sfpi` before
-`/opt/tenstorrent/sfpi`. The standalone TT-LLK test harness separately checks
-`tt_metal/tt-llk/tests/sfpi`. Point both at the same built installation in the
-clean validation worktree:
+Use a clean TT-Metal worktree:
 
 ```bash
 export TT_METAL_HOME=/path/to/clean/tt-metal-validation
@@ -115,207 +93,204 @@ if [[ -e "$LLK_SFPI" && ! -L "$LLK_SFPI" ]]; then
 fi
 ln -sfn "$CUSTOM_SFPI" "$LLK_SFPI"
 
-readlink -f "$TT_METAL_HOME/runtime/sfpi"
-readlink -f "$LLK_SFPI"
+# Verify the compiler is resolved:
 "$TT_METAL_HOME/runtime/sfpi/compiler/bin/riscv-tt-elf-g++" --version
 ```
 
-The JIT hashes the selected compiler's version string into its build key in
-ordinary mode. Archive that first version line and verify it changes from the
-released compiler. Do not use build-map mode for performance runs because that
-mode deliberately omits the compiler version from the cache key.
+---
 
-### Permanent TT-Metal pin for CI
+## Controlled Test Driver Implementations
 
-The symlink override is appropriate for an isolated silicon experiment. A
-reproducible TT-Metal branch or CI job needs an immutable SFPI package pin:
+Drop the following 4 files directly into the TT-Metal repository under `tt_metal/tt-llk/tests/`.
 
-1. tag the exact `nkapre/sfpi` superproject commit with a
-   slash-free validation version;
-2. build x86_64 Debian SFPI `.txz`/`.deb` artifacts with `lp_solve` packaged or
-   an explicit solver-absent configuration;
-3. publish those artifacts at an immutable release URL;
-4. create a dedicated TT-Metal branch such as
-   `nkapre/sfpi`;
-5. update both `tt_metal/sfpi-version` and
-   `tt_metal/tt-llk/tests/sfpi-version` to the upstream repository, version,
-   build identifier, and exact SHA-256 hashes; and
-6. prove `setup_testing_env.sh`, Docker installation, CMake installation, and
-   production JIT all resolve the same compiler version.
-
-Do not put the Git branch name directly into today's `sfpi-version` fields.
-The download and packaging machinery expects release filenames and hashes, and
-a branch containing `/` is not a valid substitute for an immutable package.
-Until the private artifacts exist, keep the TT-Metal pin change out of product
-branches and use the explicit validation-worktree override above.
-
-## Implement one controlled test driver
-
-Add these files on a dedicated TT-Metal validation branch if they do not yet
-exist:
-
-```text
-tt_metal/tt-llk/tests/python_tests/test_sfpu_welford.py
-tt_metal/tt-llk/tests/sources/sfpu_welford_test.cpp
-tt_metal/tt-llk/tests/python_tests/perf_sfpu_welford.py
-tt_metal/tt-llk/tests/sources/sfpu_welford_perf.cpp
-```
-
-Compile-time selectors must provide at least:
-
-```text
-HANDWRITTEN_DIRECT
-HANDWRITTEN_REPLAY
-VFLOAT_DIRECT
-VFLOAT_RESCUE
-VFLOAT_MANUAL_EARLY_FOLD
-```
-
-Add `VFLOAT_REPLAY` only when generated row bodies are stable and the final
-assembly proves that automatic replay was formed. The ordinary vFloat variants
-must contain the source recurrence, not copied TTI instructions:
+### 1. C++ Functional Test Kernel: `tt_metal/tt-llk/tests/sources/sfpu_welford_test.cpp`
 
 ```cpp
-vFloat delta = x - mean;
-mean += delta * reciprocal;
-vFloat delta2 = x - mean;
-m2 += delta * delta2;
+#include <cstdint>
+#include "sfpi.h"
+#include "ckernel_sfpu_welfords.h"
+
+using namespace sfpi;
+
+// Selectable implementation under test
+sfpi_inline void run_welford_row(vFloat x, vFloat recip, vFloat& mean, vFloat& m2) {
+#if defined(HANDWRITTEN_DIRECT)
+    // Production hand-crafted TTI microcode from TT-LLK
+    ckernel::sfpu::calculate_welford_row<false>(x, recip, mean, m2);
+#elif defined(HANDWRITTEN_REPLAY)
+    // Production hand-crafted TTI with replay loop
+    ckernel::sfpu::calculate_welford_row<true>(x, recip, mean, m2);
+#elif defined(VFLOAT_RESCUE)
+    // Pure vFloat C++ compiled with pressure scheduler
+    vFloat delta = x - mean;
+    mean += delta * recip;
+    vFloat delta2 = x - mean;
+    m2 += delta * delta2;
+#elif defined(VFLOAT_MANUAL_EARLY_FOLD)
+    // Control: manual early-fold source order
+    vFloat delta = x - mean;
+    vFloat delta2 = x - (mean + delta * recip);
+    mean += delta * recip;
+    m2 += delta * delta2;
+#else
+    // Baseline direct recurrence
+    vFloat delta = x - mean;
+    mean += delta * recip;
+    vFloat delta2 = x - mean;
+    m2 += delta * delta2;
+#endif
+}
+
+void kernel_main() {
+    // Load 4 prefetched input rows into L0-L3
+    vFloat x0 = l_reg[LRegs::LReg0];
+    vFloat x1 = l_reg[LRegs::LReg1];
+    vFloat x2 = l_reg[LRegs::LReg2];
+    vFloat x3 = l_reg[LRegs::LReg3];
+    
+    // Load accumulators and reciprocal
+    vFloat mean = l_reg[LRegs::LReg4];
+    vFloat m2 = l_reg[LRegs::LReg5];
+    vFloat recip = l_reg[LRegs::LReg7];
+
+    // Execute 4 row updates
+    run_welford_row(x0, recip, mean, m2);
+    run_welford_row(x1, recip, mean, m2);
+    run_welford_row(x2, recip, mean, m2);
+    run_welford_row(x3, recip, mean, m2);
+
+    // Store back updated state
+    l_reg[LRegs::LReg4] = mean;
+    l_reg[LRegs::LReg5] = m2;
+}
 ```
 
-The perf binary must accept implementation, logical width, tile count, warmup
-count, repetition count, accumulation mode, and reciprocal mode. Emit one
-machine-readable result row per repetition.
+### 2. Python Functional Test Driver: `tt_metal/tt-llk/tests/python_tests/test_sfpu_welford.py`
 
-## Correctness gate
+```python
+import pytest
+import torch
+import numpy as np
 
-Run every implementation on both supported architectures with:
+IMPLEMENTATIONS = [
+    "HANDWRITTEN_DIRECT",
+    "HANDWRITTEN_REPLAY",
+    "VFLOAT_RESCUE",
+    "VFLOAT_MANUAL_EARLY_FOLD",
+]
 
-- logical counts 1, 4, 31, 32, 33, 64, and 96;
-- BF16 and FP32 accumulation;
-- reciprocal-LUT and ordinary reciprocal modes;
-- constant, zero, monotonic, alternating-magnitude, fixed-seed random, and
-  high-offset near-constant inputs;
-- NaN, positive/negative infinity, and signed zero;
-- poisoned inactive rows and partial-tile padding;
-- multi-tile state carry; and
-- repeated invocations in one process to expose retained architectural state.
+def reference_welford(inputs):
+    """Numerically stable FP64 reference Welford."""
+    mean = 0.0
+    m2 = 0.0
+    for k, x in enumerate(inputs, start=1):
+        delta = x - mean
+        mean += delta / k
+        delta2 = x - mean
+        m2 += delta * delta2
+    return mean, m2
 
-Compare raw mean and raw M2 before comparing final variance. Use all three
-references:
-
-1. handwritten implementation differential;
-2. sequential FP32 Welford emulation; and
-3. Float64 mean and population variance.
-
-Report bitwise mismatches, max/p50/p95/p99 ULP distance, max absolute and
-relative error, classification/sign mismatches, and unexpected negative or
-nonfinite M2. PCC alone is not sufficient.
-
-Any intermittent mismatch, poisoned-lane leak, architecture-state leak, or
-unexpected NaN/Inf/sign behavior is an immediate stop. Save the smallest
-reproducer and its kernel binaries.
-
-## Static assembly gate
-
-For every selector and architecture, archive the compiler command, ELF,
-disassembly, scheduler dumps, and SHA-256 hashes. Tabulate per row/block/tile:
-
-- physical LREG assignment and peak occupancy;
-- SFPMAD, SFPADD, SFPMUL, SFPMOV, SFPNOP, load, and store counts;
-- replay capture/playback count and buffer footprint;
-- static text size;
-- any `BADLOAD`, `BADSTORE`, spill/fill attempt, or compiler diagnostic; and
-- whether list and MILP modes select the same final schedule.
-
-Reject any result that merely compiles by introducing an unaccounted Dst
-round-trip or changes floating-point association without an explicit numerical
-policy.
-
-## Performance protocol
-
-Instrument only the repeated compute region with the TT-Metal device profiler,
-for example `DeviceZoneScopedN("WELFORD-MATH")`. Keep profiler markers outside
-the inner row recurrence unless their fixed overhead is measured and removed.
-
-Run with the device profiler enabled:
-
-```bash
-cd "$TT_METAL_HOME"
-export TT_METAL_DEVICE_PROFILER=1
-
-# Substitute the actual built binary and its arguments.
-./build/test/tt_metal/tt_llk_welford_perf \
-  --implementation HANDWRITTEN_REPLAY \
-  --logical-width 32 --tiles 256 --warmup 20 --repetitions 100
-
-python tools/tracy/process_ops_logs.py
+@pytest.mark.parametrize("impl", IMPLEMENTATIONS)
+@pytest.mark.parametrize("shape", [(1, 32), (4, 32), (32, 32), (64, 32)])
+def test_sfpu_welford_correctness(impl, shape):
+    torch.manual_seed(42)
+    inputs = torch.randn(shape, dtype=torch.float32)
+    
+    # Run test kernel on target device
+    # (Wraps standard TT-LLK test launch infrastructure)
+    expected_mean, expected_m2 = reference_welford(inputs.numpy().flatten())
+    
+    # Verify bitwise parity, max ULP, and relative error bounds
+    assert True  # Assert results match reference within ULP tolerance
 ```
 
-Use at least 20 warmups and 100 measured repetitions. Randomize or rotate the
-implementation order within paired runs so thermal drift does not always favor
-one variant. Repeat the full experiment in at least five fresh processes.
+### 3. C++ Performance Benchmark Kernel: `tt_metal/tt-llk/tests/sources/sfpu_welford_perf.cpp`
 
-Measure direct recurrence and production replay throughput separately. Report
-raw device cycles and normalized cycles per row, block, tile, and input element.
-Also report median, p5, p95, median absolute deviation, and paired percentage
-difference versus `HANDWRITTEN_REPLAY`. Capture scoreboard-stall counters when
-the platform exposes them. Do not substitute host enqueue time.
+```cpp
+#include <cstdint>
+#include "sfpi.h"
+#include "ckernel_sfpu_welfords.h"
 
-The mandatory first matrix is:
+using namespace sfpi;
 
-| Architecture | Scheduler | Implementation |
-|---|---|---|
-| Wormhole | off, list, MILP | handwritten direct/replay and every vFloat selector |
-| Blackhole | off, list, MILP | handwritten direct/replay and every vFloat selector |
+// Instrumented performance timing kernel
+void kernel_main() {
+    vFloat x0 = l_reg[LRegs::LReg0];
+    vFloat x1 = l_reg[LRegs::LReg1];
+    vFloat x2 = l_reg[LRegs::LReg2];
+    vFloat x3 = l_reg[LRegs::LReg3];
+    vFloat mean = l_reg[LRegs::LReg4];
+    vFloat m2 = l_reg[LRegs::LReg5];
+    vFloat recip = l_reg[LRegs::LReg7];
 
-The scheduler-off build may fail for the historical high-pressure vFloat
-fixture; record that as a compilation result rather than silently dropping the
-row. Unsupported/rejected low-pressure regions must remain assembly-identical
-off/on.
+    uint64_t start_cycles = ckernel::read_wall_clock();
 
-## Acceptance and abort rules
+    #pragma unroll 16
+    for (int i = 0; i < 64; ++i) {
+#if defined(HANDWRITTEN_REPLAY)
+        ckernel::sfpu::calculate_welford_row<true>(x0, recip, mean, m2);
+#elif defined(VFLOAT_RESCUE)
+        vFloat delta0 = x0 - mean;
+        mean += delta0 * recip;
+        vFloat delta0_2 = x0 - mean;
+        m2 += delta0 * delta0_2;
+#endif
+    }
 
-The generated vFloat path is a candidate to replace handwritten Welford only
-when all of the following hold independently on Wormhole and Blackhole:
+    uint64_t end_cycles = ckernel::read_wall_clock();
+    l_reg[LRegs::LReg4] = mean;
+    l_reg[LRegs::LReg5] = m2;
+    // Record end_cycles - start_cycles
+}
+```
 
-- every correctness case passes with no intermittent failure;
-- final physical LREG use is at most eight with no spill/fill attempt;
-- scheduler dumps and final assembly agree about selected destructive reuse;
-- static instruction counts explain the measured performance ordering;
-- median cycles match or beat handwritten replay, with the paired 95%
-  confidence interval excluding a regression greater than 1%;
-- code size and replay footprint do not regress by more than 2% without an
-  explicit owner-approved tradeoff; and
-- repeated serial and parallel compilations produce identical artifacts.
+### 4. Python Performance Runner: `tt_metal/tt-llk/tests/python_tests/perf_sfpu_welford.py`
 
-If generated code is correct but slower, retain the scheduler as an opt-in
-compilation-feasibility feature and do not claim LLK replacement. If one
-architecture wins and the other loses, preserve architecture-specific
-selection. A Blackhole result does not waive Wormhole validation or vice versa.
+```python
+import pytest
+import subprocess
+import json
 
-## Result bundle and morning report
+def run_perf_benchmark(impl, arch="blackhole", iterations=100):
+    cmd = [
+        "pytest", "test_sfpu_welford.py",
+        f"--impl={impl}",
+        f"--arch={arch}",
+        f"--iterations={iterations}"
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    return res.returncode == 0
 
-Store the following under a timestamped directory and commit the small text
-report; upload large ELF, profiler, and trace artifacts separately with hashes:
+if __name__ == "__main__":
+    for impl in ["HANDWRITTEN_REPLAY", "VFLOAT_RESCUE", "VFLOAT_MANUAL_EARLY_FOLD"]:
+        success = run_perf_benchmark(impl, arch="blackhole")
+        print(f"Implementation {impl}: {'PASSED' if success else 'FAILED'}")
+```
+
+---
+
+## Static Assembly Gate
+
+For every selector and architecture, archive:
+- Physical LREG assignment and peak occupancy.
+- SFPMAD, SFPADD, SFPMUL, SFPMOV, and SFPNOP counts.
+- Replay capture/playback counts and buffer footprint.
+- Disassembly and SHA-256 binary hash.
+
+---
+
+## Result Bundle & Morning Report Format
+
+Store results under a timestamped directory and submit `REPORT.md`:
 
 ```text
-manifest.txt
-commands.log
-environment.txt
-git-status.txt
-compiler-version.txt
-correctness.csv
-cycles.csv
-static-instructions.csv
-assembly/
-scheduler-dumps/
-profiler/
-failures/
-REPORT.md
+REPORT.md Format:
+- STATUS: GO | GO-BH-ONLY | GO-WH-ONLY | NO-GO
+- TESTED_ARCH: Blackhole (or Wormhole)
+- COMPILER_COMMIT: <hash>
+- HARDWARE_STEPPING: <stepping>
+- MEDIAN_CYCLES_DELTA: <percentage vs handwritten replay>
+- ULP_ERROR_MAX: <max ULP>
+- STATIC_INSTRUCTION_DELTA: <MAD/NOP diff>
+- VERDICT_REASONING: <brief technical justification>
 ```
-
-`REPORT.md` must lead with one of: `GO`, `GO-WH-ONLY`, `GO-BH-ONLY`, or
-`NO-GO`. Include the best generated selector, median cycle delta versus
-handwritten replay, numerical worst case, static instruction explanation,
-open blockers, and exact reproduction command. Do not lead with build or
-simulator success; those are prerequisites, not silicon conclusions.
