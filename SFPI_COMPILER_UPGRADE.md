@@ -455,12 +455,12 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 # Build compiler with checking and MILP solver support:
 SFPI_WITH_LP_SOLVE=yes ./scripts/build.sh --dir=build --checking
 
-# Compiler invocation flags:
+# Compiler invocation with pressure scheduling and MILP fallback enabled:
 riscv-tt-elf-g++ -mcpu=tt-wh-tensix -O2 \
-  -mtt-tensix-optimize-pressure-schedule \      # Enable pressure scheduling (Default ON for peak > 8)
-  -mtt-tensix-pressure-schedule-use-milp \      # Enable exact MILP solver fallback
-  -fdump-tree-rvtt_lp_schedule \                # Dump GIMPLE scheduling decisions
-  -fdump-rtl-rvtt_lp_alloc \                    # Dump pre-IRA RTL liveness audit
+  -mtt-tensix-optimize-pressure-schedule \
+  -mtt-tensix-pressure-schedule-use-milp \
+  -fdump-tree-rvtt_lp_schedule \
+  -fdump-rtl-rvtt_lp_alloc \
   -S kernel.C -o kernel.S
 ```
 
@@ -474,7 +474,259 @@ Run the automated test validation suite covering positive rescues, negative pred
 
 ---
 
-## 11. Conclusion & Operational Contract
+## 11. Remaining Engineering Rebuttal: Localized Blockers Before Execution
+
+The unified plan is now coherent: it removes the unsafe Left-Edge allocator,
+uses final RTL as the M2 authority, separates replay placement from plain
+knapsack, treats macro lowering as an event-model problem, and moves MLIR into
+a multi-quarter horizon.  The remaining objections are localized and should
+be resolved without reopening the default-on decision.
+
+### 11.1 Replace the Non-Negative Theorem with a Guarded Rescue Hypothesis
+
+The 11-to-8 fixture is correctly classified as an incomplete rescue rather
+than a regression because it fails both with and without scheduling.  That
+example does not establish that every GIMPLE region whose source-order peak is
+above eight necessarily fails in legacy GCC.  IRA can sometimes realize
+destructive coalesces that make such a region compile.
+
+The release argument should therefore be:
+
+- peak-at-most-eight eligible regions bypass the pressure transform;
+- peak-above-eight regions are rescue candidates, not proven baseline
+  failures;
+- the allowlist and independent validator constrain semantic risk;
+- the entire eligible corpus is compiled legacy-versus-default and every
+  changed binary is classified and tested; and
+- the negative option provides operational rollback.
+
+This is a strong guarded-default argument.  Calling the delta a universal
+non-negative theorem is unnecessary and creates an avoidable counterexample.
+
+### 11.2 Mark P0 Behavior as Target State Until the Source Matches
+
+At the current checkpoint:
+
+```text
+riscv_tt_opt_pressure_schedule       Init(0)
+riscv_tt_pressure_schedule_use_milp  Init(0)
+```
+
+MILP is also invoked for every requested peak-above-eight region, including
+one for which list scheduling already supplied a feasible incumbent.  The
+documented policy—`Init(1)`, list-first return, and demand-driven MILP on a
+list miss—is the P0 target, not current behavior.
+
+P0 must land the following as one reviewable change:
+
+1. change the narrow WH/BH pressure-scheduler default;
+2. prove the generated negative option restores legacy gating;
+3. commit a validated list solution without invoking the solver;
+4. invoke MILP only when list scheduling fails;
+5. retain deterministic solver-free behavior and the 100,000-node cap unless
+   a separately measured deterministic cap replaces it; and
+6. include scheduler/solver state in the compiler and JIT cache identity.
+
+Do not use a wall-clock timeout to decide whether generated code changes.
+Host load would make compilation nondeterministic.  Use a deterministic work
+limit and measure wall-time distributions as telemetry.
+
+### 11.3 Contract Mandatory Ties Before Coloring
+
+The DSATUR pseudocode accepts `mandatory_ties` but never enforces equal colors.
+It checks an interval relation and then colors every vertex independently.  It
+can therefore return success while tied values occupy different LREGs.
+
+Mandatory equality must be represented structurally before search:
+
+```text
+raw value graph
+    -> union-find all independently verified mandatory equality ties
+    -> reject an equality class containing internal interference
+    -> reject incompatible fixed colors
+    -> intersect all member allowed-color masks
+    -> merge external interference edges
+    -> color the contracted graph
+    -> expand the class color back to every member
+```
+
+The tie representation must use stable node indices explicitly; pseudo
+register numbers must not be silently interpreted as vector indices.
+
+Ordinary same-slot reuse is not automatically a mandatory tie.  For each
+recognized instruction alternative, M2 must distinguish:
+
+- a color overlap that is merely permitted because an operand dies;
+- a mandatory two-address equality;
+- a preferred coalescing opportunity; and
+- an `_lv` equality carrying inactive-lane semantics.
+
+Only the second and fourth categories create equality constraints, and `_lv`
+must remain semantically separate from an allocation preference.
+
+### 11.4 Add Allowed Colors, Precolors, and Clobbers to the Solver API
+
+The authoritative M2 pipeline describes fixed hard registers and allowed
+color sets, but the displayed DSATUR function tries every color zero through
+seven for every node.  It cannot enforce a recognized alternative, a
+precolored live-in/out, or a hard-register clobber.
+
+The contracted coloring node needs at least:
+
+```cpp
+struct m2_color_node {
+    unsigned stable_id;
+    uint8_t allowed_color_mask;
+    int fixed_color; // -1 or L0..L7
+    std::vector<unsigned> member_values;
+};
+```
+
+Before trying a color:
+
+```text
+allowed_color_mask contains color
+fixed_color is absent or equals color
+no colored interference neighbor uses color
+no hard-register live range or clobber forbids color at any member position
+```
+
+If equality-class contraction produces an empty allowed-color intersection,
+the island is infeasible and must remain untouched.
+
+### 11.5 Bound Exact Search and Define Its Acceptance Status
+
+The proposed DSATUR recursion has no work limit.  Small regions reduce risk but
+do not bound adversarial backtracking.
+
+The search must report:
+
+```text
+valid-coloring | infeasible-proven | capped | invalid-model
+```
+
+Use a deterministic node/decision cap.  For M2, any complete coloring that
+passes the independent checker is acceptable; the allocator does not need to
+prove that its coloring is uniquely optimal.  If the cap is reached without a
+complete valid coloring, leave RTL unchanged.
+
+Deterministic branching should prioritize:
+
+1. fixed/precolored classes;
+2. smallest allowed-color set;
+3. highest saturation degree;
+4. highest interference degree; and
+5. stable node ID.
+
+The independent checker, not the search status string, remains authoritative.
+
+### 11.6 Define Destructive Lifetime Boundaries Precisely
+
+The model must adopt one explicit interval convention, preferably half-open
+`[start, end)`, and state whether operands are read before results are written
+at an issue position.
+
+A candidate ordinary destructive reuse needs an instruction-level record:
+
+```text
+result value
+operand value and operand index
+defining instruction position
+operand last-use position
+recognized machine alternative
+semantic tie kind: none | permitted | mandatory | lv
+```
+
+Do not infer legality from a loose comparison between two interval endpoints.
+The recognizer alternative and the exact last-use boundary determine whether
+the overlap is representable.
+
+### 11.7 Use Real GCC Grouped-Change APIs and a Narrow No-Pseudo Invariant
+
+`validate_change_start` is not a checked-in GCC interface.  The implementation
+must use the GCC 15 grouped-change APIs present in this tree, following a
+pattern based on `num_validated_changes()`, `validate_change()`,
+`verify_changes()`, `confirm_change_group()`, and `cancel_changes()`.
+
+After commit:
+
+- rescan/rebuild dataflow as required by the pass contract;
+- verify every changed instruction is recognized;
+- re-run the independent physical-color checker on the committed stream;
+- verify hard-register uses and clobbers; and
+- require that no **selected XTT32 SFPU pseudo** remains in the island.
+
+The invariant must not say "zero pseudos" without qualification: ordinary
+scalar RISC-V address/control pseudos remain the responsibility of IRA.
+
+### 11.8 Correct the Executable Workflow
+
+Shell continuation comments in the compiler example are invalid because the
+backslash is not the final character on the line.  The executable form is:
+
+```bash
+riscv-tt-elf-g++ -mcpu=tt-wh-tensix -O2 \
+  -mtt-tensix-optimize-pressure-schedule \
+  -mtt-tensix-pressure-schedule-use-milp \
+  -fdump-tree-rvtt_lp_schedule \
+  -fdump-rtl-rvtt_lp_alloc \
+  -S kernel.C -o kernel.S
+```
+
+Use the already validated build lane unless another invocation is separately
+proven:
+
+```bash
+SFPI_WITH_LP_SOLVE=yes scripts/build.sh --tt-built --checking --small
+SFPI_WITH_LP_SOLVE=yes scripts/build.sh --test-tt
+```
+
+### 11.9 Separate Measured Results from Candidate Opportunities
+
+The corpus table should distinguish demonstrated compiler behavior from
+future performance hypotheses:
+
+- **Welford:** the generated late-fold fixture is rescued from 9 to 8 and
+  emits the manual early-fold assembly.  Production LayerNorm Welford
+  replacement remains a P3 result.
+- **Dual-Horner:** 40% is a static mockup issue-slot reduction, not measured
+  kernel cycles.
+- **Replay:** 73--78% is a static frontend stream-size reduction, not backend
+  work or equivalent runtime reduction.
+- **Log, GELU, and erfinv:** removal of Dst cuts is a candidate opportunity,
+  not a completed transformation.
+- **`SFPLOADMACRO`:** 1.33--4.0x is a theoretical steady-state issue-rate
+  opportunity from known schedules, not measured application throughput.
+
+These labels do not weaken the roadmap.  They make the silicon experiments
+falsifiable and prevent static evidence from being mistaken for a product
+benchmark.
+
+### 11.10 Execution Decision
+
+Proceed with P0 now.  P0 does not depend on M2:
+
+- flip the narrow WH/BH default;
+- implement list-first/MILP-on-miss;
+- preserve rollback and solver-free builds;
+- run whole-corpus assembly differential;
+- execute every changed LLK through correctness gates; and
+- publish compile-time telemetry.
+
+Proceed with P1 immediately in parallel.  Implement the final-RTL extractor
+and independent checker before implementing the color search.
+
+P2 begins only after equality contraction, allowed colors, precolors,
+clobbers, bounded search, and grouped-change semantics exist in the model.
+Then make the 11-to-8 fixture the first positive exit test and add exhaustive
+small-instance and adversarial rejection coverage.
+
+This preserves the aggressive product objective while removing the remaining
+places where attractive pseudocode could be mistaken for a correctness proof.
+
+---
+
+## 12. Conclusion & Operational Contract
 
 Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU pressure rescue automatic for the narrow WH/BH regions supported today while retaining deterministic fallback and an operational rollback. 
 
