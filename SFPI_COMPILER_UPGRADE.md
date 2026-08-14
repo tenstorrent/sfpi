@@ -277,7 +277,7 @@ The copy-paste hardware-agent handoff for this milestone is maintained in
 [`WELFORD_SILICON_VALIDATION.md`](WELFORD_SILICON_VALIDATION.md). Keep that
 runbook and the exit criteria below synchronized. It distinguishes the
 validation-worktree `runtime/sfpi` override from the immutable release-package
-pin required on a future `nkapre/sfpi-compiler-upgrade` TT-Metal CI branch;
+pin required on a future `nkapre/sfpi` TT-Metal CI branch;
 changing only this SFPI repository does not make TT-Metal use the compiler.
 
 Add a TT-LLK functional driver modeled on the EMA test:
@@ -875,9 +875,12 @@ The built toolchain is expected at:
 /home/nkapre.guest/sfpi-lp-build/sfpi/compiler/bin/riscv-tt-elf-g++
 ```
 
-### Private checkpoint copies
+### Historical private checkpoint copies (superseded)
 
-The authenticated GitHub account has read-only access to the Tenstorrent upstream repositories. Private copies were therefore created for overnight checkpoints:
+Before the upstream branch was available, private copies were created for
+overnight checkpoints. They are retained only as historical backups; current
+build and silicon-validation workflows must clone `tenstorrent/sfpi` branch
+`nkapre/sfpi` instead.
 
 ```text
 git@github.com:nkapreTT/sfpi.git
@@ -1123,8 +1126,9 @@ separate base-versus-patch differential: run both revisions in identical
 containers and compare their `.sum` files rather than requiring an absolute
 zero-failure simulator result.
 
-For a clean Ubuntu 22.04 Runpod, clone with SSH so the relative private GCC
-submodule resolves correctly, then build and run both gates:
+For a clean Ubuntu 22.04 Runpod, clone the Tenstorrent branch with SSH so the
+relative GCC submodule resolves to `tenstorrent/sfpi-gcc`, then build and run
+both gates:
 
 ```sh
 SUDO=
@@ -1135,8 +1139,8 @@ $SUDO apt-get install -y \
   patchutils ruby wget libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev \
   gcc g++ liblpsolve55-dev libsuitesparse-dev
 
-git clone --branch nkapre/welford --recurse-submodules \
-  git@github.com:nkapreTT/sfpi.git
+git clone --branch nkapre/sfpi --recurse-submodules \
+  git@github.com:tenstorrent/sfpi.git
 cd sfpi
 
 SFPI_WITH_LP_SOLVE=yes scripts/build.sh --tt-built --checking --small
