@@ -40,7 +40,8 @@ git status --short
 git -C gcc status --short
 ```
 
-The expected GCC submodule branch is `nkapre/welford`. The superproject pins
+The matching GCC commit is published on `tenstorrent/sfpi-gcc` branch
+`nkapre/sfpi`. The superproject pins
 the exact required commit, so do not advance the submodule casually.
 
 For the solver-enabled research build on Ubuntu:
