@@ -550,6 +550,427 @@ The present implementation and the intended production policy:
 
 ---
 
-## 11. Conclusion
+## 11. Critical Engineering Rebuttal and Corrected Execution Contract
 
-By adopting the **guarded default-on scheduling policy**, Tenstorrent immediately eliminates fatal register spill crashes across TT-LLK without regressing working code. Coupling this with **M2 Pre-IRA Physical Allocation**, **Latency Chain Interleaving (40% win)**, **Replay Hardening (78% win)**, and **`SFPLOADMACRO` Pipelining (4x win)** creates a direct, unstoppable path to world-class vector compilation.
+The revised plan has the right strategic center: guarded default-on pressure
+scheduling, exact escalation when heuristics miss, and final-RTL allocation
+enforcement for a machine that cannot spill.  However, naming a classical
+algorithm and presenting C++-shaped pseudocode do not by themselves make the
+allocation design safe.  This section records the objections that must be
+resolved before the roadmap is treated as an implementation specification.
+
+The rebuttal is deliberately pro-execution.  It does **not** recommend
+returning to indefinite default-off development.  It separates the small,
+defensible default-on change from the harder M2, latency, replay, macro, and
+MLIR projects so each can advance behind an honest contract.
+
+### 11.1 Preserve the Default-On Decision, Narrow Its Claim
+
+The immediate product decision is whether the existing WH/BH feasibility
+scheduler should automatically attempt a rescue in the narrow regions it
+already recognizes.  It is not a simultaneous decision to enable latency
+reordering, replay restructuring, macro formation, rematerialization, or QSR.
+
+The default-on implementation should be exactly:
+
+```text
+region fails eligibility
+    -> unchanged
+
+eligible region with source-order peak <= 8
+    -> unchanged
+
+eligible region with source-order peak > 8
+    -> run deterministic list scheduler
+       -> independently valid peak <= 8: commit list order
+       -> otherwise, if a solver-enabled build is available:
+            run bounded MILP
+            -> OPTIMAL plus independent valid peak <= 8: commit MILP order
+            -> anything else: unchanged
+```
+
+This differs from the current checkpoint in three concrete ways:
+
+1. `riscv_tt_opt_pressure_schedule` is currently `Init(0)` and must be changed
+   deliberately, with a test proving the generated negative option restores
+   legacy behavior.
+2. MILP is currently controlled by a second default-off option and is invoked
+   for every eligible high-pressure region when requested, including regions
+   for which list scheduling already supplied a feasible incumbent.  The
+   production dispatch should return after a validated list solution and
+   invoke MILP only on a list miss.
+3. The current solver uses a deterministic 100,000-node cap.  The documented
+   50,000-node and 20 ms limits are proposed values, not implementation facts.
+   A wall-clock cutoff must not decide whether compiler output changes because
+   it makes builds host-load dependent.  Use a deterministic work/node cap and
+   measure its wall-time distribution instead.
+
+The "non-negative delta" remains a useful operational intuition, but it is not
+an unqualified theorem.  A late-GIMPLE source-order peak above eight does not
+prove that legacy IRA would fail; fortunate coalescing can make some such
+programs compile.  Default-on therefore requires a whole-corpus legacy versus
+new-default differential.  This is a bounded and testable rollout obligation,
+not a reason to disable the feature permanently.
+
+The existing evidence is strong enough to justify that rollout:
+
+- 1,106 expected compiler passes, two expected failures, and no unexpected
+  failures, errors, or unresolved tests;
+- deterministic serial/parallel builds and validator rejection self-tests;
+- WH/BH Welford-shaped and unrelated fused-DAG 9-to-8 rescues;
+- 18 of 18 recurrent LLK EMA off/list/MILP correctness executions; and
+- broad candidate-toolchain LLK runs with 34,776 Blackhole passes and 35,714
+  Wormhole passes.
+
+Those broad runs are meaningful compatibility evidence, not a clean
+whole-corpus scheduler A/B and not silicon performance evidence.  The next
+gate is to compile the entire eligible corpus off/default, archive every
+changed assembly hash, and execute the changed set through simulator and
+available silicon correctness suites.
+
+### 11.2 Correct the Goodman-Hsu Citation and Use It as Policy, Not Proof
+
+The relevant prior art is James R. Goodman and Wei-Chung Hsu, *Code Scheduling
+and Register Allocation in Large Basic Blocks*, ICS 1988, pages 442--452,
+DOI [`10.1145/55364.55407`](https://doi.org/10.1145/55364.55407).  Later work
+often calls the technique integrated prepass scheduling (IPS), but "Code
+Scheduling to Reduce Register Pressure (IPS)" is not the paper title.
+
+Its central idea fits SFPU well: use latency-oriented scheduling while
+registers are available, then switch emphasis toward freeing registers as the
+budget becomes scarce.  It supports the proposed dual-mode policy.  It does
+not establish that seven is the correct switch threshold, that the shown
+ready-list priorities are optimal, or that a pressure-safe order is physically
+allocatable on this target.  Those are target-specific hypotheses requiring
+corpus and silicon measurement.
+
+The first implementation should parameterize and dump the switching decision:
+
+```text
+mode=P reason=live-count>=threshold live=7 threshold=7
+mode=L reason=capacity-slack live=5 threshold=7
+```
+
+Run thresholds 6, 7, and 8 over the same WH/BH corpus.  Select the default from
+compile success, final NOPs, code size, and device cycles rather than from the
+historical algorithm's authority.
+
+### 11.3 The Current MILP and the Target Joint Model Must Remain Distinct
+
+Today's `rvtt_sched_problem` contains stable operation IDs, dependencies,
+logical value definitions/uses, live-out markers, a register-capacity scalar,
+and preferred issue slots.  The implemented solver chooses an operation order
+and validates logical liveness.  It does **not** yet contain physical
+`assign[v,r]`, `occupy[v,r,t]`, destructive `alias[i,v]`, target latency,
+resource occupancy, copy cost, or a machine makespan objective.
+
+Therefore Section 3.1 describes the target M2/M3 joint model, not the current
+solver.  That distinction should remain explicit in code review and release
+notes.  "Exact" means exact relative to the bounded model being solved; it
+does not currently mean machine-optimal schedule and allocation.
+
+The proposed weighted objective is also not automatically lexicographic:
+
+```text
+10000 * peak + 100 * makespan + copies
+```
+
+It is lexicographic only if proven upper bounds guarantee that the maximum
+possible sum of all lower-priority terms is less than one unit of the next
+priority.  Prefer sequential solves with the previous optimum fixed, or
+derive and assert safe weights from region bounds.
+
+Makespan must be represented by an explicit variable:
+
+```text
+finish >= issue_time[i] + latency[i]    for every operation i
+minimize finish
+```
+
+A term involving `issue[last,t]` is valid only if a unique distinguished sink
+is guaranteed to complete last, which is not true for a general arithmetic
+DAG.
+
+The 11-to-8 fixture must also be worded precisely.  Its **source-order peak**
+is eleven; it does not have eleven simultaneous region live-ins.  Eleven true
+live-ins cannot be reduced by scheduling inside the region.  The fixture
+proves that exact schedule search can beat the current list heuristic and that
+logical feasibility alone does not force IRA to realize the coloring.  The
+remaining spill is a precise M2 reproducer, not evidence against MILP.
+
+### 11.4 The Proposed Left-Edge Allocator Is Not Correct as Written
+
+Classical left-edge coloring is optimal for ordinary interval graphs.  The
+M2 problem is an interval graph plus fixed colors, forbidden colors,
+instruction alternatives, hard-register clobbers, boundary values, and
+destructive equality constraints.  A naive left-edge extension is not a
+complete allocator for that problem.
+
+The pseudocode has several immediate correctness defects:
+
+1. `assigned_lreg` has no initializer, so testing it against eight reads an
+   indeterminate value.
+2. RTL instruction UIDs are used as time positions.  UIDs are identities, not
+   guaranteed final-layout order after instruction insertion and movement.
+3. `lreg_busy` is cleared by scanning every historical interval.  If an
+   expired interval and a currently active interval reused the same color,
+   processing the expired interval can falsely mark the active color free.
+4. A destructive tie copies the operand's color without proving that the
+   operand dies at that instruction, that the machine alternative allows the
+   overlap, or that another active interval does not own the color.
+5. Every SFPU instruction in a basic block is appended to one island while
+   intervening non-SFPU instructions are skipped.  This can reorder allocation
+   reasoning across scalar dependencies, asm, calls, CC/configuration changes,
+   RWC/Dst state, synchronization, replay, or other barriers.
+6. Only pseudo occurrences inside selected SFPU instructions are replaced.  A
+   pseudo defined before, used after, or referenced by an intervening
+   instruction would be partially converted without a boundary copy or
+   equivalence proof.
+7. Existing hard LREG uses, live-across hard registers, clobbers, subregs,
+   composite modes, and recognized alternative constraints are absent from
+   the color model.
+8. `LREG_0`, `rvtt_sfpu_insn_p`, `extract_rtl_intervals`, and
+   `validate_change_start` are not checked-in GCC/SFPI interfaces.  The actual
+   hard-register base is `SFPU_REG_FIRST`.
+9. Pending grouped changes, recognition caches, dataflow rescans, register
+   notes, and the final no-pseudo condition require a more complete
+   transaction than the shown loop provides.
+
+The active-set bug alone is sufficient to reject the pseudocode as an
+implementation template.  Consider intervals A, B, and C where A uses L0 and
+expires, B later reuses L0 and remains live, and C begins.  Scanning expired A
+clears L0; scanning active B does not restore it; C can then be assigned L0
+while overlapping B.
+
+### 11.5 Correct M2 Architecture: Final-RTL Constraints Plus Exact Local Coloring
+
+M2 should treat final pre-IRA RTL as authoritative.  The GIMPLE certificate is
+a schedule seed and diagnostic correlation point; expansion, sched1, and
+early rematerialization may change the graph.
+
+The authoritative pipeline should be:
+
+```text
+1. Discover one contiguous final-RTL island.
+2. Terminate at every unmodeled instruction or architectural-state boundary.
+3. Assign dense layout positions 0..N-1; never use instruction UID as time.
+4. Extract every XTT32 pseudo def/use, hard-register use/clobber, mode,
+   recognizer alternative, live-in, live-out, and fixed/precolored value.
+5. Prove which ordinary dying-operand overlaps are machine-legal.
+6. Keep `_lv` semantic ties separate from ordinary destructive coalescing.
+7. Build equality classes only for mandatory, independently proven ties.
+8. Reject an equality class whose members overlap or have incompatible
+   precolors.
+9. Build interference, allowed-color, and fixed-color constraints.
+10. Solve the eight-color problem deterministically.
+11. Independently validate every position, color, tie, clobber, and boundary.
+12. Apply all substitutions as one grouped RTL transaction.
+13. Verify every changed instruction remains recognized, rebuild dataflow,
+    require zero island SFPU pseudos, and revalidate the final stream.
+14. On any failure, cancel the complete group and leave RTL unchanged.
+```
+
+Because regions are intentionally small and there are only eight colors, the
+authoritative solver should be exact bounded DSATUR/backtracking or an
+equivalent constraint solver.  Left-edge is useful as a fast incumbent but
+need not be trusted as the completeness boundary.
+
+A deterministic coloring search can prioritize:
+
+1. precolored/equality-contracted classes;
+2. smallest allowed-color set;
+3. highest saturation degree;
+4. highest interference degree;
+5. stable pseudo/position ID.
+
+The checker must be algorithmically independent of the search.  It receives a
+mapping and proves:
+
+- each value has one legal color;
+- all precolors are honored;
+- every interfering pair differs;
+- every mandatory tie agrees;
+- every tied operand dies at the allowed issue boundary;
+- every physical hard-register use/clobber is respected;
+- every rewritten instruction is recognized; and
+- no selected SFPU pseudo remains.
+
+Initially accept only fully closed islands: every colored pseudo is defined
+and used exclusively inside the island, with fixed hard-register boundary
+operands modeled explicitly.  Boundary-copy insertion can be a later feature.
+
+The 11-to-8 fixture is the first positive exit test, but M2 also needs:
+
+- exhaustive agreement with brute force on small random constrained interval
+  graphs;
+- deliberate overlapping-tie, incompatible-precolor, clobber, subreg,
+  noncontiguous-island, and live-across rejection fixtures;
+- transactional failure tests proving pass-off/failure RTL identity;
+- final assembly matching the accepted certificate on WH and BH; and
+- ASan/UBSan checking builds plus serial/parallel determinism.
+
+### 11.6 Replay Selection Is Conflict-Constrained Packing, Not Plain Knapsack
+
+The current replay pass correctly observes that buffer selection has a
+knapsack component.  The proposed `O(M * 32)` 0/1 DP is insufficient because
+candidate sequences are not independent items.
+
+Candidates can overlap in source occurrences, contain one another, compete
+for the same repeated instructions, require one of several contiguous free
+buffer spans after explicit user reservations, and have non-overlapping
+lifetimes that could permit slot reuse.  Profit must also subtract capture and
+playback overhead rather than count only `(occurrences - 1) * length`.
+
+The exact formulation needs:
+
+- a candidate conflict graph over overlapping/incompatible occurrences;
+- available contiguous replay spans after all explicit reservations;
+- a placement choice assigning each selected candidate to a fitting span;
+- capture/playback and code-size cost in the objective;
+- deterministic tie-breaking; and
+- independent validation of the final capture/playback stream.
+
+For the current small 32-slot buffer, bounded branch-and-bound or DP over
+conflict components and span occupancy is practical.  Plain capacity-only
+knapsack can select mutually incompatible candidates and is not a safe
+replacement for the existing greedy logic.  The displayed `parent[64][33]`
+table also lacks complete initialization and reconstruction and should remain
+illustrative rather than implementation pseudocode.
+
+Replay's measured 73--78% reduction is static frontend stream size in the
+mockup, not an equivalent backend-cycle reduction.  Device value depends on
+frontend starvation and must be measured separately.
+
+### 11.7 `SFPLOADMACRO` Requires an Event Model Before a Public Macro API
+
+The proposed begin/execute/end surface is attractive but hides the hard
+semantics: template words, sequence words, cycle-versus-instruction delays,
+sub-unit collisions, outstanding-event drain, L16 lifetime, Dst/RWC effects,
+scoreboarding omissions, and architecture-specific teardown.
+
+The named arm, drain, and disarm builtins do not exist today.  More
+importantly, a generic `drain()` cannot be specified until the exact WH/BH
+pending-event behavior is modeled and validated.
+
+Implement one target-internal `sfpu_macro_region` descriptor first.  It must
+contain explicit configuration ownership, scheduled sub-unit events,
+architectural state inputs/outputs, maximum outstanding latency, collision
+proof, teardown, and a plain-loop fallback.  Lower and validate one kernel
+family on both architectures before exposing a stable source API.
+
+The 1.33--4.0x figures are theoretical steady-state issue-rate opportunities
+from known schedules, not measured application speedups.  Preserve that label
+until silicon counters establish the realized gain.
+
+### 11.8 MLIR/Triton Is a Separate Multi-Quarter Program
+
+A TT vector dialect can eventually make vector semantics, Dst layout,
+predication, RWC state, replay ownership, and macro regions explicit.  That is
+a valuable direction, but it is not a 3,500-line extension that predictably
+becomes a competitive Triton backend in eight weeks.
+
+The high-level dialect should express semantics, not prematurely force a
+physical tie.  A `destructive_tie` attribute must at least define the operand
+index, whether the tie is mandatory or preferred, its inactive-lane behavior,
+legal fallback, and target-specific alternatives.  Prefer semantic Welford
+operations at the high level, liveness/bufferization in a lower vector
+dialect, and physical tie alternatives only in the machine-level dialect.
+
+Claims about outperforming CUDA/PTX or TPU/XLA require defined workloads,
+hardware, numerical policy, compiler baselines, and measurements.  They do
+not belong in the acceptance criteria for the SFPI pressure scheduler.
+
+### 11.9 Revised Execution Plan and Credible Gates
+
+#### P0 — Guarded default-on feasibility scheduling
+
+- Flip the existing narrow WH/BH pressure-scheduler default.
+- Verify and test the negative rollback option.
+- Return immediately after a validated list solution.
+- Invoke MILP automatically only on list failure in solver-enabled builds.
+- Retain solver-free builds and deterministic work caps.
+- Add compiler/JIT cache-key coverage.
+- Run whole-corpus off/default assembly differential and execute every changed
+  LLK through correctness gates.
+
+Expected scope: one to two focused weeks, excluding hardware queue time.
+
+#### P1 — Final-RTL model and independent checker
+
+- Define contiguous island boundaries and dense positions.
+- Extract full pseudo/hard-register constraints and state barriers.
+- Implement the independent final-RTL allocation checker first.
+- Fuzz the checker against exhaustive small instances.
+
+Expected scope: two to four weeks.
+
+#### P2 — Exact local M2 allocation
+
+- Add deterministic exact eight-color search with left-edge/DSATUR incumbent.
+- Apply atomic hard-register substitution only to closed islands.
+- Verify recognition, dataflow, final coloring, and zero pseudos.
+- Make the 11-to-8 fixture compile and add adversarial rejection tests.
+
+Expected scope: three to eight additional weeks depending on GCC invariants.
+
+#### P3 — Real silicon Welford validation
+
+- Replace `assert True` with an actual producer/consumer launch.
+- Export raw mean and M2 and compare numerical classifications and ULPs.
+- Use the correct observation-dependent reciprocal sequence.
+- Export real device cycle deltas.
+- Compare off, list, MILP, manual early-fold, handwritten direct, and
+  handwritten replay using identical surrounding work.
+
+This runs in parallel with P1/P2 and gates Welford replacement/performance
+claims, not compilation-rescue rollout.
+
+#### P4 — Latency scheduling
+
+- Add audited WH/BH latency and resource descriptors.
+- Implement Goodman-Hsu-style mode switching with measured thresholds.
+- Preserve final hazard verification/repair.
+- Validate Dual-Horner and addcmul with static traces and silicon cycles.
+
+Expected scope: four to eight weeks plus hardware validation.
+
+#### P5 — Separate follow-on proposals
+
+Replay selection, `SFPLOADMACRO` formation, and MLIR/Triton lowering require
+separate owners, design documents, risk reviews, and acceptance matrices.
+Bundling their schedules hides rather than reduces their complexity.
+
+### 11.10 Final Position
+
+Proceed aggressively with guarded default-on feasibility scheduling.  Make
+MILP the automatic exact escalation on list misses.  Treat the remaining IRA
+spill as the best available M2 reproducer, not as a reason to retreat.
+
+At the same time, do not implement the shown Left-Edge allocator literally,
+do not describe the target joint MILP as today's solver, and do not convert
+static issue/code-size opportunities into silicon speedup claims.  A correct
+final-RTL constraint model and exact small-region coloring search are the
+shortest credible route from the current 9-to-8 rescues to a general
+allocation guarantee.
+
+This is the engineering-aware compromise: aggressive deployment where the
+existing validator contains risk, exactness where eight non-spillable
+registers leave no margin for heuristic allocation, and measured claims at the
+hardware boundary.
+
+---
+
+## 12. Conclusion
+
+Adopting the **guarded default-on feasibility policy** makes validated SFPU
+pressure rescue automatic for the narrow WH/BH regions supported today while
+retaining deterministic fallback and an operational rollback.  Completing M2
+with an independently certified final-RTL allocation will extend that rescue
+to logically feasible schedules that generic IRA still misses.
+
+Latency scheduling, replay selection, and `SFPLOADMACRO` formation remain
+separate opportunities whose static models justify implementation and silicon
+experiments, not completed performance wins.  Pursued in that order—with exact
+allocation at the zero-spill boundary and hardware measurements at the
+performance boundary—the program provides a credible path from fragile manual
+LREG scheduling toward reliable compiler-generated SFPU code.
