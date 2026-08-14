@@ -25,6 +25,21 @@ The first executable fixture loads L0–L3 as four inputs, L4 as mean, L5 as M2 
 
 This result does not remove the compiler hazard: the allocation has zero slack, spills remain fatal, and extra live eltwise state can still make the graph impossible. It changes the immediate milestone from “make this minimal source compile” to “identify the exact failing context, build a trustworthy pressure oracle, and only transform graphs where final assembly or device measurements prove a win.”
 
+## Overnight prototype result
+
+The checking-enabled x86_64 stage-1 compiler executed the opt-in prototype on the real late-fold fixture on both requested architectures. The measured dump was identical on Wormhole and Blackhole:
+
+```text
+SFPU pressure region: bb=2 ops=17 live-in=8 peak=9
+SFPU pressure schedule: old-peak=9 new-peak=8 applied=yes
+```
+
+With the flag off, both compilers reached reload and failed with the expected `cannot store sfpu register (register spill)` ICE. With the flag on, both emitted assembly successfully. That assembly was byte-for-byte identical to compiling the fixture with `WELFORD_MANUAL_EARLY_FOLD`, so the automated rescue recovered the source-level golden schedule rather than merely finding a different allocation by accident.
+
+The minimal zero-slack recurrence remained unchanged: pass-off and pass-on assembly compared equal on both architectures, and its dump stayed at `ops=16 live-in=7 peak=8`. A predicated fixture was rejected as `cc-epoch` and remained byte-identical pass-off/on on both architectures. The live-across oracle fixture reported `ops=2 live-in=4 peak=4`, confirming that an untouched value spanning a hard region boundary is counted.
+
+These are compiler feasibility and code-generation results, not a hardware latency claim. The final installed stage-2 compiler, focused DejaGNU run, and simulator smoke results are recorded in the morning report below once complete.
+
 ## What happens today
 
 The compiler path is:
@@ -306,7 +321,7 @@ Use a deterministic pressure-first heuristic before invoking MILP. Its ready-lis
 
 ### 1. Baseline and diagnostics
 
-- Add the minimal `welford4` testcase to the verified TT DejaGNU harness. Do not assume a new `gcc/gcc/testsuite/g++.target/riscv/tt/sfpi/` directory runs: confirm its `.exp` recursion first or use the existing downstream TT test location.
+- Add the minimal `welford4` testcase to the verified TT DejaGNU harness. Audit found that `check-gcc-tt` selects `rvtt.exp`, whose original glob reached only `tt/*.C` and skipped `tt/sfpi/*.C`. The branch extends that driver with focused globs for only `sfpi/lp-schedule-*.C` and `sfpi/welford-pressure-*.C`; it does not silently enable the entire legacy directory.
 - Capture late GIMPLE, IRA/reload dumps, live count and the current spill diagnostic.
 - Add a dump-only DFG extractor and exact pressure oracle before introducing any scheduler.
 
@@ -539,6 +554,40 @@ The built toolchain is expected at:
 /home/nkapre.guest/sfpi-lp-build/sfpi/compiler/bin/riscv-tt-elf-g++
 ```
 
+### Private checkpoint copies
+
+The authenticated GitHub account has read-only access to the Tenstorrent upstream repositories. Private copies were therefore created for overnight checkpoints:
+
+```text
+git@github.com:nkapreTT/sfpi.git
+git@github.com:nkapreTT/sfpi-gcc.git
+branch: nkapre/welford
+```
+
+The local `sfpi-gcc` submodule was a three-commit shallow clone. Pushing that ancestry to a new empty repository failed because the shallow parent objects were absent; unshallowing would fetch roughly 2.15 million objects. The private branches are consequently explicit snapshot-root histories, while the normal local `nkapre/welford` branches retain upstream ancestry for later review. The SFPI snapshot's `.gitmodules` points `gcc` at the private GCC copy and its gitlink names the exact private GCC snapshot.
+
+Populate a clone made while the repositories were still empty with:
+
+```sh
+cd ~/sfpi
+git fetch origin
+git switch --track origin/nkapre/welford
+git submodule update --init --recursive
+
+cd ~/sfpi-gcc
+git fetch origin
+git switch --track origin/nkapre/welford
+```
+
+The first verified private tips were:
+
+```text
+nkapreTT/sfpi:     0afab83aadd767e43fb1d1c54a828043e31ef81c
+nkapreTT/sfpi-gcc: 9dd3c45acf55f09b69cc9aabe505ddcd853bfefe
+```
+
+For later checkpoints, first commit normally on each local ancestry-preserving `nkapre/welford` branch. Then create a private snapshot commit whose tree is the normal branch's tree and whose parent is the prior private snapshot. Push GCC first. Rebuild the SFPI snapshot tree with the new private GCC gitlink and private `.gitmodules` URL, then push SFPI. Never stage the pre-existing local modification to `gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C`.
+
 ### 3. Reproduce the current register spill
 
 The minimal four-row recurrence is `welford-pressure-wh.C`; it succeeds on released SFPI 7.69.0. The current failing fixture is `welford-pressure-reorder-wh.C`: it adds one independent `x3 + bias` operation late in source order. That keeps eight boundary values live when the first Welford delta is created, so the released compiler attempts a ninth LREG and aborts.
@@ -684,6 +733,15 @@ Measured Wormhole baseline result: `3 passed in 38.06s`, with zero crashed tests
 For pass-on end-to-end testing, `/home/nkapre.guest/tt-metal-lp/tt_metal/tt-llk/tests/sfpi` is an isolated symlink to `/home/nkapre.guest/sfpi-lp-build/sfpi`; the shared TT-Metal checkout's downloaded SFPI installation is not overwritten.
 
 ### 9. Compiler and regression gates
+
+Run the checked-in focused validator first. It exercises pass-off, minimal no-op, genuine 9-to-8 rescue, manual scheduling control, predication rejection, and three-run deterministic assembly on both architectures:
+
+```sh
+cd /home/nkapre.guest/sfpi-src
+./scripts/validate-welford-scheduler.sh \
+  /home/nkapre.guest/sfpi-lp-build/sfpi \
+  /home/nkapre.guest/welford-validation
+```
 
 After the focused fixtures pass:
 
