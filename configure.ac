@@ -103,6 +103,18 @@ AC_ARG_WITH(mfc,
 	)
 AC_SUBST(with_mfc, $with_mfc)
 
+AC_ARG_WITH(lp-solve,
+	[AS_HELP_STRING([--with-lp-solve@<:@=no|auto|yes|PATH@:>@],
+		[Forward optional host lp_solve support to GCC (default=no)])],
+	[],
+	[with_lp_solve=no]
+	)
+AS_CASE([$with_lp_solve],
+	[no|auto|yes], [],
+	[/*], [],
+	[AC_MSG_ERROR([--with-lp-solve must be no, auto, yes, or an absolute prefix])])
+AC_SUBST(lp_solve_option, --with-lp-solve=$with_lp_solve)
+
 AC_ARG_ENABLE(multilib,
 	[AS_HELP_STRING([--enable-multilib],
 		[Enable multilib])],

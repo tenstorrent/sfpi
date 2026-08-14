@@ -4,4 +4,11 @@ set -euo pipefail
 
 : "${SFPI_REAL_CXX:?set SFPI_REAL_CXX to the installed riscv-tt-elf-g++}"
 
-exec "${SFPI_REAL_CXX}" -mtt-tensix-optimize-lp-schedule "$@"
+extra=(-mtt-tensix-optimize-pressure-schedule)
+case ${SFPI_USE_MILP:-0} in
+    0) ;;
+    1) extra+=(-mtt-tensix-pressure-schedule-use-milp) ;;
+    *) echo "SFPI_USE_MILP must be 0 or 1" >&2; exit 2 ;;
+esac
+
+exec "${SFPI_REAL_CXX}" "${extra[@]}" "$@"

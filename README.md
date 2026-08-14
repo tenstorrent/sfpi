@@ -96,6 +96,43 @@ the submodules, their locations and hashes.
   see gcc's documentation.  The default is `release`. Note this does
   not control how gcc itself is optimized (which is usually `-O2`).
 
+  The experimental Tensix pressure scheduler can optionally link the host
+  `lp_solve` library.  It is disabled by default and is not a target-runtime
+  dependency.  On Ubuntu, install the host development packages and request
+  it explicitly:
+
+```
+  sudo apt-get install liblpsolve55-dev libsuitesparse-dev
+  SFPI_WITH_LP_SOLVE=yes scripts/build.sh
+```
+
+  `SFPI_WITH_LP_SOLVE` accepts `no` (the default), `auto`, `yes`, or an
+  absolute installation prefix.  Use a fresh build directory when changing
+  this setting; the build wrapper rejects an explicitly requested setting
+  that does not match an existing configuration.  The resulting compiler
+  still uses the list scheduler only when
+  `-mtt-tensix-optimize-pressure-schedule` is passed; add
+  `-mtt-tensix-pressure-schedule-use-milp` to invoke the solver backend.
+  A compiler built without `lp_solve` still accepts both options and
+  deterministically falls back to the independently validated list schedule.
+  Solver-linked `cc1`/`cc1plus` binaries may depend on host `libcolamd` and
+  `libsuitesparseconfig`, so release packaging must either provide those
+  dependencies or keep `SFPI_WITH_LP_SOLVE=no`.
+
+  The dedicated Linux gate is
+  `.github/workflows/sfpu-pressure-scheduler.yaml`.  Private SFPI forks whose
+  GCC submodule is also private must define `SFPI_GCC_DEPLOY_KEY` as a
+  read-only deploy key from the sibling `sfpi-gcc` repository; public and
+  upstream runs need no extra credential. A private-fork run is reproducibility
+  evidence only; authoritative product CI must run in the Tenstorrent
+  organization.
+
+  A built compiler can be checked directly with
+  `scripts/validate-sfpu-pressure-scheduler.sh build`.  The validation compiles
+  ordinary vFloat C++ on Wormhole and Blackhole; handwritten Welford is used
+  only as an assembly reference, and a separate fused arithmetic DFG proves
+  that scheduling is not specialized to Welford.
+
   If the build is interrupted, you can of course enter the appropriate
   subdirectory and manually resume after correcting the problem --
   such build would not be suitable for releasing though.

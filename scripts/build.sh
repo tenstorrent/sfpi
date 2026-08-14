@@ -56,6 +56,13 @@ if [[ "$#" -ne 0 ]]; then
     exit 2
 fi
 
+if $test_binutils || $test_gcc || $test_tt; then
+    if ! command -v runtest >/dev/null 2>&1; then
+	echo "ERROR: runtest is required; install DejaGNU before running tests" >&2
+	exit 1
+    fi
+fi
+
 # figure version, now we know tt_built
 if [[ -r $BUILD/version ]]; then
     source $BUILD/version
@@ -175,6 +182,26 @@ for env in $(printenv) ; do
 done
 export LC_ALL=C
 
+lpsolve_option=--with-lp-solve=no
+case ${SFPI_WITH_LP_SOLVE:-no} in
+    no) ;;
+    auto) lpsolve_option=--with-lp-solve=auto ;;
+    yes) lpsolve_option=--with-lp-solve=yes ;;
+    /*) lpsolve_option="--with-lp-solve=$SFPI_WITH_LP_SOLVE" ;;
+    *) echo "ERROR: SFPI_WITH_LP_SOLVE must be no, auto, yes, or an absolute prefix" >&2
+       exit 2 ;;
+esac
+
+# Configuration is intentionally sticky, but an explicit solver request must
+# never be silently ignored by reusing a differently configured build tree.
+if [[ -e $BUILD/Makefile && -n ${SFPI_WITH_LP_SOLVE+x} ]]; then
+    if [[ ! -x $BUILD/config.status ]] ||
+       ! "$BUILD/config.status" --config | grep -Fq -- "$lpsolve_option"; then
+        echo "ERROR: $BUILD was not configured with $lpsolve_option; use a fresh build directory" >&2
+        exit 2
+    fi
+fi
+
 # configure, if this is the first time
 if ! [[ -e $BUILD/Makefile ]]; then
     ident_options=()
@@ -191,6 +218,7 @@ if ! [[ -e $BUILD/Makefile ]]; then
      set -x
      $srcdir/configure --srcdir=$srcdir \
 		       --prefix="$(pwd)/sfpi" "${ident_options[@]}" \
+		       "$lpsolve_option" \
 		       --with-mfc=tt \
 		       --enable-gcc-checking="$gcc_checking" \
 		       --without-system-zlib --without-zstd \
@@ -227,6 +255,7 @@ fi
 fails=0
 unresolveds=0
 errors=0
+expected_tests=0
 testing=false
 TARGET_BOARDS='riscv-sim/'
 export DEJAGNU=$(realpath $BUILD)/dejagnu.exp
@@ -248,6 +277,7 @@ if $test_binutils; then
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
+	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
     done
 fi
 
@@ -264,6 +294,7 @@ if $test_gcc; then
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
+	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
     done
 fi
 
@@ -279,6 +310,7 @@ if $test_tt; then
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
+	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
     done
 fi
 
@@ -292,6 +324,10 @@ fi
 
 if $testing; then
     ok=true
+    if [[ $expected_tests == 0 ]]; then
+	echo "ERROR: test run reported zero expected passes" >&2
+	ok=false
+    fi
     if [[ $errors != 0 ]]; then
 	echo "ERROR: $errors tests are borked" >&2
 	ok=false
