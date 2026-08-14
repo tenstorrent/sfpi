@@ -1,4 +1,4 @@
-# Generic SFPU Pressure Scheduling: Welford Case Study and LP Plan
+# SFPI Compiler Upgrade: Scheduling, Allocation, Replay, and LLK Lowering
 
 Welford is the motivating zero-slack fixture, not a pattern recognized or
 hard-coded by the compiler.  The implementation extracts any eligible SFPU
@@ -1298,3 +1298,432 @@ The new pass/dump should be independently switchable. Add its object to `t-riscv
 - Report compile-time median/p95, candidate count, optimizer time, replay-buffer occupancy, static instructions saved, NOP delta, simulator cycles, and device cycles.
 
 The deliverable is a small reviewable branch with fixtures first, analyzer second, one default-off transformation third, and a Markdown report containing exact commands and measured before/after results. A patch that merely makes more sequences look textually identical without proving scalar generations, hazards, explicit-buffer reservations, and architecture capture semantics is not acceptable.
+
+## SFPU architecture and LLK productization audit
+
+This section records the 2026-08-14 architecture and TT-Metal agent storm. It
+extends the Welford pressure work into a general compiler roadmap. The audit
+used the official `tenstorrent/tt-isa-documentation` repository at commit
+[`860a84abf7cd68098c444656798bd79a261f627e`](https://github.com/tenstorrent/tt-isa-documentation/tree/860a84abf7cd68098c444656798bd79a261f627e)
+and the local TT-Metal checkout at `c65666dcef0`. The ISA repository currently
+documents Wormhole B0 and Blackhole A0 only and explicitly warns that behavior
+must not be transferred between them without validation. It identifies
+`ttsim` as the golden ISA reference. Quasar/QSR therefore remains separately
+gated until an authoritative model and hardware tests exist.
+
+### Architectural model
+
+The SFPU is a 32-lane SIMD engine with only eight ordinary allocatable
+registers, LREG0 through LREG7. LREG8 is a fixed 0.8373 constant, LREG9 is
+zero, LREG10 is one, LREG11 through LREG14 are configuration-written
+constants, and LREG15 contains twice the lane index. SFPI reserves LREG11 for
+negative one. LREG16 is a special transient register that can be written and
+read only by operations launched through `SFPLOADMACRO`. See the official
+[LREG description](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/LReg.md#L3-L16).
+
+LREGs and `Dst` are shared backend state rather than private state for each
+Tensix thread. SFPU loads and stores also consume implicit per-thread RWCs and
+address-modifier state. A correct scheduler therefore needs more than an SSA
+graph of vFloat values: it must model physical LREGs, condition state,
+configuration state, `Dst` aliases, RWCs, address modifiers, replay slots,
+load-macro slots, and cross-thread ownership barriers.
+
+The frontend order is:
+
+```text
+RISC-V Tensix instruction pushes
+        -> MOP expander
+        -> Replay expander
+        -> Wait Gate / synchronization
+        -> parallel Tensix backend units
+        -> SFPU load | simple | MAD | round | store sub-units
+```
+
+Replay and MOP reduce the number of instructions RISC-V must push. Their
+expanders still emit at most one Tensix instruction per cycle, so they mainly
+improve code size and frontend issue availability. `SFPLOADMACRO` is
+fundamentally different: it is the only mechanism that can drive multiple
+SFPU sub-units in one cycle, potentially issuing a load plus one Simple, MAD,
+Round, and Store operation. See the official
+[Vector Unit](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/VectorUnit.md#L97-L99)
+and
+[`SFPLOADMACRO`](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/SFPLOADMACRO.md#L1-L13)
+documentation.
+
+FP add, multiply, MAD, and LUT-family operations have two-cycle result
+latency. On Wormhole, software must put an unrelated instruction or a NOP in
+the producer/consumer gap. Blackhole normally scoreboards these dependencies,
+but the official ISA lists missed and false dependencies for several AND, OR,
+integer-add, shift, config, swap, and shuffle modes. Blackhole automatic
+stalling also does not apply to operations launched by `SFPLOADMACRO`. A
+single shared latency table is therefore not valid across architectures. See
+[Wormhole SFPMAD scheduling](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/SFPMAD.md#L66-L72)
+and
+[Blackhole SFPMAD scheduling](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/BlackholeA0/TensixTile/TensixCoprocessor/SFPMAD.md#L68-L86).
+
+### Corpus evidence beyond Welford
+
+The modern Wormhole, Blackhole, and Quasar SFPU trees contain dozens of
+handwritten instances of the same compiler problems:
+
+- 26 files record replay sequences and 31 files execute replay sequences.
+- 21 files contain 326 references involving `SFPLOADMACRO`.
+- 36 files contain 296 explicit `TTI_SFPNOP` references.
+- 25 files contain 246 `SFPTRANSP` references.
+- 21 files explicitly discuss pressure, spills, reloads, or reload-budget
+  compiler failures.
+- The non-SFPU LLK library contains 61 files using `ckernel_template`, showing
+  that MOP/replay programming is pervasive pack/unpack/math infrastructure,
+  not a Welford special case.
+
+Representative examples include:
+
+- Wormhole reduction interleaves independent `SFPSHFT2` and `SFPSWAP`
+  chains to fill two-cycle latency slots:
+  `tt-metal/tt_metal/hw/ckernels/wormhole_b0/metal/llk_api/llk_sfpu/ckernel_sfpu_reduce.h`.
+- `addcmul` processes two rows together, issuing both multiplies before both
+  MADs to obtain a NOP-free pipeline:
+  `tt-metal/tt_metal/hw/ckernels/wormhole_b0/metal/llk_api/llk_sfpu/ckernel_sfpu_addcmul.h`.
+- Tanh evaluates two datums in lockstep and explicitly notes that one more
+  live vector spills:
+  `tt-metal/tt_metal/hw/ckernels/wormhole_b0/metal/llk_api/llk_sfpu/ckernel_sfpu_tanh.h`.
+- Integer remainder recomputes divisor chunks to reduce pressure; erfinv and
+  integer division reload values from `Dst`; trigonometry deliberately
+  recomputes `abs(x)` and `x*x` to avoid the fatal reload budget.
+- Binary broadcast fills four serial shuffle latency slots with four
+  independent `Dst` loads, then pipelines four independent arithmetic
+  operations before draining through stores:
+  `tt-metal/tt_metal/tt-llk/tt_llk_wormhole_b0/common/inc/sfpu/ckernel_sfpu_binary_bcast.h`.
+- Typecast, signbit, max/min, reciprocal, integer multiply, reduction, GELU,
+  and exp contain handwritten `SFPLOADMACRO` pipelines with plain-loop
+  fallbacks. These fallbacks are a ready-made differential corpus for a future
+  compiler lowering.
+
+These examples prove that the opportunity is broader than Welford. The same
+shared optimizer can help online reductions, log/exp/tanh, Horner chains,
+addcmul, integer division and remainder, typecasts, reductions, and fused
+eltwise graphs.
+
+### Productization matrix
+
+| Priority | Optimization | Compiler layer | Current state | Decision |
+|---:|---|---|---|---|
+| 1 | Physical LREG allocation and destructive coalescing | Final pre-IRA RTL | Audit only | Build now |
+| 1 | Latency-aware scheduling and useful NOP filling | Post-allocation RTL | NOP insertion only | Build now |
+| 2 | Replay verification and exact slot packing | Postreload | Generic pass already default on | Harden now |
+| 2 | Narrow rematerialization and recomputation | Late GIMPLE or pre-IRA RTL | Not target-directed | Build narrowly |
+| 2 | Bounded cross-row software pipelining | Loop GIMPLE plus machine validation | Handwritten only | Build after explicit `Dst`/RWC state |
+| 2 | Config, constant, LUT, and address-modifier state tracking | Shared target model | Fragmented implicit state | Prerequisite |
+| 3 | `SFPLOADMACRO` formation | Post-allocation, before hazard repair | Raw encodings only | Annotated MVP |
+| 3 | Transpose/layout lowering | Layout IR and post-allocation lowering | Handwritten only | Prototype |
+| 4 | MOP synthesis | Separate LLK/kernel schedule IR | Explicit template library | Separate project |
+| -- | Implicit `Dst` spilling | Pre-IRA | No scratch ABI | No-go without an ownership contract |
+
+### Shared machine model
+
+The central product should be one architecture-specific operation and state
+descriptor consumed by allocation, scheduling, replay, and macro formation.
+For each selected Tensix/SFPU operation it should record:
+
+- explicit and implicit input/output LREGs;
+- legal destructive destination/source overlaps;
+- fixed-register and constant-register requirements;
+- result latency and sub-unit occupancy per architecture;
+- Blackhole scoreboard coverage and known scoreboard bugs;
+- condition-code, flag-stack, PRNG, config, LUT, RWC, address-modifier, and
+  `Dst` state effects;
+- whether the operation is movable, duplicable, replayable, or macro-eligible;
+- whether it can execute under predication and how inactive lanes are
+  preserved;
+- the final exact instruction fingerprint used by replay validation.
+
+Unknown operations and unknown state ownership must be hard barriers. Every
+transform should build and validate a complete certificate before mutating
+GIMPLE or RTL.
+
+### Physical LREG allocation
+
+The current pressure scheduler can shorten SSA live ranges, but it cannot
+force IRA to implement a chosen physical coloring. The pre-IRA audit still
+reports `colorability=unchecked`, and the checked-in list-missed MILP fixture
+demonstrates the consequence: a valid eight-live GIMPLE schedule can still
+spill after expansion.
+
+The production allocator must operate on the actual final pre-IRA RTL island:
+
+1. Build the physical interference and recognizer-constraint graph.
+2. Include fixed LREGs, existing semantic `_lv` ties, ordinary legal
+   destructive overlaps, and boundary precoloring.
+3. Solve and independently validate eight-colorability.
+4. Atomically substitute the certified island's pseudos with hard LREGs.
+5. Rescan dataflow and require every resulting instruction to remain
+   recognized.
+6. Enter IRA with no SFPU pseudos remaining in the certified island.
+7. Leave the entire island untouched on any failure.
+
+This is the first point at which the compiler can honestly guarantee that an
+accepted region cannot produce `BADLOAD`/`BADSTORE` or a fatal SFPU spill.
+
+### Latency-aware scheduling and bounded row pipelining
+
+The current `rtl-rvtt-schedule` pass does not reorder work. It scans the final
+stream and conditionally inserts one hazard NOP. A new target scheduler should
+instead fill exposed latency with independent loads, constants, comparisons,
+arithmetic from another chain, or work from an adjacent row. The old pass
+should remain as a final verifier and conservative repair.
+
+The scheduler should optimize lexicographically:
+
+1. remain physically colorable within eight LREGs;
+2. preserve exact semantics and architectural state;
+3. minimize critical path and exposed stall cycles;
+4. minimize moves and live area;
+5. prefer identical physical encodings across unrolled rows for replay;
+6. consider code size and replay-buffer occupancy.
+
+A bounded loop transformation can search row unroll factors 1, 2, 4, and 8,
+using the same physical-register and latency validator. It must not move
+today's volatile `sfpload`/`sfpstore` builtins until `Dst`, RWC, address-mode,
+and alias state are explicit tokens in the IR.
+
+### Replay: extend the existing compiler pass
+
+Replay is already a real, default-enabled generic compiler optimization.
+`rtl-rvtt-replay.cc` runs after register allocation and hazard repair, finds
+identical final Tensix sequences, reserves explicit user spans, greedily packs
+the remaining 32-entry buffer, emits capture/playback, and deletes repeated
+copies. The ordinary unrolled builtin loop in
+`gcc/gcc/testsuite/g++.target/riscv/tt/tensix/replay-34602-wh.C` already proves
+compiler-generated replay.
+
+The hardware replay buffer is per thread and circular. It can record and
+optionally execute a sequence or expand an earlier recording at one
+instruction per cycle with no mode-transition penalty. See the official
+[`REPLAY` model](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/REPLAY.md#L17-L50).
+
+The next replay work is therefore hardening rather than a new pass:
+
+- independently verify the captured and expanded instruction traces;
+- strengthen scalar-generation fingerprints;
+- add exact dynamic programming or MILP for the fixed 32-slot packing problem;
+- reuse buffer slots whose live ranges do not overlap;
+- make physical allocation give isomorphic unrolled regions identical LREG
+  assignments when feasibility and latency are unchanged;
+- add generated-vFloat full-tile Welford, exp, quant, rand, typecast, and
+  reduction tests;
+- measure static code size and RISC-V issue availability separately from SFPU
+  backend cycles.
+
+Replay formation must remain a final-machine-stream transformation. GIMPLE
+does not yet know exact instruction words, final physical LREGs, synthesized
+scalar generations, address-counter effects, or final synchronization pushes.
+
+#### Why `tt-polynomial-fitter` still needs manual replay
+
+The existing pass is useful, but it solves a much narrower problem than the
+manual TTI paths in `tt-polynomial-fitter`. It is an exact post-register-
+allocation repeated-sequence compressor, not a loop recognizer, software
+pipeline, register allocator, or symbolic replay scheduler.
+
+In particular, `rtl-rvtt-replay.cc`:
+
+- sees only the final physical Tensix instruction stream in one basic block;
+- requires at least four identical replayable instructions to occur more than
+  once;
+- compares the allocated LREG operands and the generation of synthesized
+  scalar operands;
+- ends a candidate at a non-Tensix instruction, inline assembly, or another
+  state boundary; and
+- runs after register allocation and hazard-NOP insertion.
+
+Consequently, it works when unrolling has already produced byte-identical
+copies. `replay-34602-wh.C` is the positive proof: a fully unrolled ordinary
+builtin sequence becomes one capture and seven playbacks. It does not turn a
+remaining RISC-V loop backedge into SFPU replay, make partially unrolled
+iterations identical, or canonicalize iterations modulo LREG renaming. An
+address increment, synthesized opcode, scalar loop update, different physical
+register assignment, constant materialization, or predication/setup operation
+can prevent or shorten a match. The compiler option is default-on, and neither
+`tt-polynomial-fitter` nor the inspected `tt-metal` sources explicitly disable
+it; lack of a useful match is therefore generally a stream-shape limitation,
+not an omitted `-mtt-tensix-optimize-replay` flag.
+
+More importantly, automatic replay only compresses the body GCC already
+emitted. If that body reloads constants, contains exposed MAD hazards, walks
+`Dst` using scalar instructions, or uses an unnecessarily expensive register
+layout, replay faithfully repeats all of that overhead. It can produce replay
+instructions without producing the performance of a hand-designed replay
+kernel.
+
+The polynomial fitter's manual lowering is a compound optimization:
+
+1. select a legal algorithm-specific body shape;
+2. choose one- or two-row interleaving from the eight-LREG pressure budget;
+3. assign exact physical LREGs and pin coefficients outside the repeated body;
+4. schedule independent MAD chains to fill result-latency gaps;
+5. use `ADDR_MOD` to advance `Dst` without scalar loop machinery;
+6. fit the result into the 32 replay slots, then explicitly record and play it;
+7. restore shared D-RWC state with `SETRWC SET_D` before the next tile.
+
+The three polynomial shapes make the distinction concrete in
+`deployment/generic_lut_activation/kernels/compute/piecewise_generic.cpp` in
+the fitter repository. Plain Horner uses a two-element interleave so every MAD
+gap is useful work. Signed-absolute polynomials require three live values per
+lane, so two-way interleaving cannot fit in eight LREGs and the one-element
+body uses explicit gaps. The even-parity body reloads coefficients inside the
+capture when a pinned LREG would be overwritten by later iterations. Their
+bodies are checked against the 32-slot capacity before selection.
+
+The shared `tti_replay.h` also encodes obligations that the current replay
+matcher neither invents nor verifies: silicon-derived producer/consumer
+separations, a CC-balanced predicated body, replay-buffer bounds, exact LREG
+ownership, and the mandatory D-RWC repair. Those are reasons to build the
+shared physical allocation, state-token, latency, and final-stream validator
+described here—not reasons to add a second duplicate-sequence matcher.
+
+Some fitter notes say the compiler replay path was "dormant", while an exp
+audit says the compiled stream was already saturated with replay. These are
+compatible observations at different layers: exact repeated streams can and
+do trigger GCC's pass, but GCC does not currently reshape a generic vFloat
+loop into the high-quality, replay-friendly body above. In that exp case the
+remaining gap was constant reloads versus native pinned constants. The
+productization target is therefore to make scheduling, physical allocation,
+constant placement, address-state modeling, and replay selection cooperate so
+generic SFPI produces the same body quality without handwritten TTI.
+
+### Rematerialization and `Dst` cuts
+
+The first safe rematerialization pass should duplicate only positively
+allowlisted deterministic operations such as direct immediate loads, abs,
+simple masks, squares, and cheap address calculations. It should require a
+strict pressure rescue or a verified latency win.
+
+It must never duplicate stochastic rounding, PRNG reads, CC operations,
+configuration access, LUT/stateful operations, memory operations, replay, or
+macro operations. General algebraic reassociation and even/odd Horner
+rewriting also change floating-point rounding and belong behind explicit
+numerics/fast-math policy.
+
+Using `Dst` as an automatic spill store is not equivalent to an ordinary
+stack spill. It may overwrite user output, change RWCs, race another backend
+unit, or expose stale values on architectures with `Dst` visibility hazards.
+Automatic cuts require a caller ABI reserving exact scratch rows, a layout and
+alias proof, architecture-specific store/reload visibility, and proof that no
+packer or user observes the temporary values. Until that contract exists,
+implicit `Dst` spilling is a hard no-go.
+
+### `SFPLOADMACRO`: checked region before automatic inference
+
+The correct mnemonic is `SFPLOADMACRO`. It is not merely a fused load. Four
+instruction templates and four sequence words are programmed through
+`SFPCONFIG`; each macro launch rewrites physical operands and schedules
+operations onto Simple, MAD, Round, and Store sub-units with three-bit delays.
+Delays can count elapsed instructions or elapsed cycles, and outstanding
+operations interact across sub-units. The macro can use transient LREG16.
+
+The dangerous cases are architectural, not stylistic:
+
+- a scheduled macro operation wins a same-cycle sub-unit collision and the
+  ordinary operation is silently discarded;
+- macro-scheduled stores use different address/RWC semantics from ordinary
+  stores;
+- Blackhole automatic RAW stalling does not cover macro-issued operations;
+- template and delay state survives outside the local source expression;
+- Wormhole LLKs explicitly disarm macro state and drain it because leaving the
+  state armed can hang the SFPU.
+
+The first product should therefore be an explicitly owned region:
+
+```text
+sfpu_macro_region begin
+    configure templates and sequences
+    execute a fixed load/compute/round/store pipeline
+    drain all pending sub-unit operations
+    perform architecture-specific teardown
+sfpu_macro_region end
+```
+
+GCC first needs recognized config and `SFPLOADMACRO` builtins/RTL rather than
+raw encoded-word macros. Formation should run after physical allocation but
+before final hazard repair, and should use a cycle-accurate pending-event
+validator. Start with one WH/BH typecast, signbit, max/min, or int32-multiply
+loop whose init, use, cleanup, and plain-loop fallback are all visible. Keep
+Quasar separate.
+
+### MOP: a separate declarative LLK compiler
+
+MOP is a per-thread frontend microprogram expander, not an SFPU arithmetic
+peephole. It supports a masked A/B template and a nested start/loop/end
+template, with special last-inner and last-outer instructions. Wormhole can
+expand one MOP to 32,639 instructions; Blackhole has wider counts. The nine
+configuration words are write-only and must not change during expansion. MOP
+can emit replay instructions because the MOP expander precedes replay in the
+frontend, but replay expansion cannot meaningfully contain MOP. See the
+official
+[MOP Expander model](https://github.com/tenstorrent/tt-isa-documentation/blob/860a84abf7cd68098c444656798bd79a261f627e/WormholeB0/TensixTile/TensixCoprocessor/MOPExpander.md#L1-L137).
+
+MOP programs in TT-Metal combine math, pack, unpack, PACR/UNPACR, address
+counters, context selection, replay fragments, last-iteration substitutions,
+MMIO configuration, and sometimes cross-thread semaphore synchronization.
+Inferring them from arbitrary vFloat GIMPLE would omit most of the semantics.
+
+The product direction should be a declarative LLK schedule IR containing:
+
+- backend engine and instruction template;
+- outer/inner loop geometry and masks;
+- start, loop, last-inner, last-outer, and end operations;
+- replay fragments and buffer ownership;
+- address-counter and context transformations;
+- synchronization and resource declarations;
+- init, kill, restore, and configuration ownership.
+
+That IR can lower to the existing `ckernel_template` and
+`ckernel_unpack_template` machinery. GCC should provide recognized MOP/config
+builtins and validation, but initial template selection should remain in this
+LLK planner or an explicitly annotated whole-kernel region.
+
+### Transpose and layout lowering
+
+`SFPTRANSP` is frequently used to compensate for the four-row physical
+granularity of SFPU load/store rather than as an arbitrary arithmetic
+operation. Welford loads four physical `Dst` rows into LREG0-LREG3, transposes
+them into logical row vectors, computes, then restores layout. Reshuffle and
+reduction kernels use related all-eight-LREG layouts.
+
+A future layout-aware lowering should represent logical row/lane operations
+before physical LREG assignment, then select paired
+load/transpose/compute/transpose/store schedules. The verifier must account
+for every fixed LREG clobber and prove that the final layout and `Dst` contents
+match the abstract operation.
+
+### Recommended implementation sequence
+
+1. Introduce the shared WH/BH operation, latency, resource, and state-effect
+   descriptor.
+2. Finish certified final-RTL physical LREG allocation and destructive
+   coalescing.
+3. Add a post-allocation latency scheduler; retain NOP insertion as the final
+   verifier/repair.
+4. Harden replay and add exact buffer packing plus replay-friendly coloring.
+5. Add narrow rematerialization.
+6. Add bounded row software pipelining after explicit `Dst`/RWC state exists.
+7. Add a checked `SFPLOADMACRO` region and validate one WH/BH kernel family
+   against its handwritten and plain-loop versions.
+8. Add transpose/layout lowering.
+9. Develop MOP as a separate declarative LLK schedule compiler.
+
+### Validation boundary
+
+Every late transformation should have an independent symbolic trace and cycle
+validator. It must reject unknown configuration ownership, indirect LREG
+indices it cannot resolve, unmatched predication state, implicit RWC or `Dst`
+dependencies, unsupported instruction modes, and possible same-cycle macro
+collisions.
+
+For each supported optimization, compile the same ordinary source with the
+feature off and on for Wormhole and Blackhole, compare final expanded traces,
+run ttsim/craq-sim numerical tests, and then run hardware cycle tests. Use the
+existing handwritten LLK as a performance golden and the plain-loop fallback
+as a semantic golden. Quasar/QSR remains disabled until it has an authoritative
+ISA model, focused compiler fixtures, simulator coverage, and hardware
+sign-off.
