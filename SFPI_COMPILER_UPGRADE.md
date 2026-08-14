@@ -875,48 +875,6 @@ The built toolchain is expected at:
 /home/nkapre.guest/sfpi-lp-build/sfpi/compiler/bin/riscv-tt-elf-g++
 ```
 
-### Historical private checkpoint copies (superseded)
-
-Before the upstream branch was available, private copies were created for
-overnight checkpoints. They are retained only as historical backups; current
-build and silicon-validation workflows must clone `tenstorrent/sfpi` branch
-`nkapre/sfpi` instead.
-
-```text
-git@github.com:nkapreTT/sfpi.git
-git@github.com:nkapreTT/sfpi-gcc.git
-branch: nkapre/welford
-```
-
-The local `sfpi-gcc` checkout remains shallow. The normal local
-`nkapre/welford` branches retain their upstream-facing history, while the
-private branches are a linear chain of explicit snapshot commits containing
-the same trees. This avoids fetching millions of unrelated GCC objects merely
-to bank an experimental branch. The SFPI snapshot replaces its GCC gitlink
-with the matching private GCC snapshot. Its relative submodule URL
-`../sfpi-gcc.git` lets an SSH clone under `nkapreTT` resolve that gitlink from
-the sibling private repository.
-
-Populate a clone made while the repositories were still empty with:
-
-```sh
-cd ~/sfpi
-git fetch origin
-git switch --track origin/nkapre/welford
-git submodule update --init --recursive
-
-cd ~/sfpi-gcc
-git fetch origin
-git switch --track origin/nkapre/welford
-```
-
-For later checkpoints, commit normally on each local `nkapre/welford` branch.
-Create a private GCC snapshot whose tree is the normal GCC commit and whose
-parent is the previous private snapshot, then push it first. Create the SFPI
-snapshot from the normal root tree after replacing only the `gcc` gitlink with
-that private GCC snapshot. Never stage the pre-existing local modification to
-`gcc/testsuite/g++.target/riscv/tt/sfpi/dataformat-bh.C`.
-
 ### 3. Reproduce the current register spill
 
 The minimal four-row recurrence is `welford-pressure-wh.C`; it succeeds on released SFPI 7.69.0. The current failing fixture is `welford-pressure-reorder-wh.C`: it adds one independent `x3 + bias` operation late in source order. That keeps eight boundary values live when the first Welford delta is created, so the released compiler attempts a ninth LREG and aborts.
