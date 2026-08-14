@@ -29,8 +29,8 @@ for that decision.
 
 ```bash
 git clone --recursive \
-  --branch nkapre/sfpi-compiler-upgrade \
-  git@github.com:nkapreTT/sfpi.git sfpi-scheduler
+  --branch nkapre/sfpi \
+  git@github.com:tenstorrent/sfpi.git sfpi-scheduler
 cd sfpi-scheduler
 git submodule update --init --recursive
 
@@ -129,13 +129,13 @@ mode deliberately omits the compiler version from the cache key.
 The symlink override is appropriate for an isolated silicon experiment. A
 reproducible TT-Metal branch or CI job needs an immutable SFPI package pin:
 
-1. tag the exact `nkapre/sfpi-compiler-upgrade` superproject commit with a
+1. tag the exact `nkapre/sfpi` superproject commit with a
    slash-free validation version;
 2. build x86_64 Debian SFPI `.txz`/`.deb` artifacts with `lp_solve` packaged or
    an explicit solver-absent configuration;
 3. publish those artifacts at an immutable release URL;
 4. create a dedicated TT-Metal branch such as
-   `nkapre/sfpi-compiler-upgrade`;
+   `nkapre/sfpi`;
 5. update both `tt_metal/sfpi-version` and
    `tt_metal/tt-llk/tests/sfpi-version` to the private repository, version,
    build identifier, and exact SHA-256 hashes; and
