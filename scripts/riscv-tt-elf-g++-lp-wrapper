@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+: "${SFPI_REAL_CXX:?set SFPI_REAL_CXX to the installed riscv-tt-elf-g++}"
+
+exec "${SFPI_REAL_CXX}" -mtt-tensix-optimize-lp-schedule "$@"

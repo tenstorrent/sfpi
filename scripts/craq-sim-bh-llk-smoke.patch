@@ -1,0 +1,58 @@
+diff --git a/src/tile.cpp b/src/tile.cpp
+--- a/src/tile.cpp
++++ b/src/tile.cpp
+@@ -1488,11 +1488,30 @@ static uint32_t riscv_debug_regs_rd32(TensixTile *p_tile, uint32_t offset)
+         case RISCV_DEBUG_REGS_WALL_CLOCK_H: return uint32_t(g_clock >> 32); // XXX add the latching behavior on this reg
+ #endif
+ #if TT_VERSION == 1
++        // The LLK simulator harness inspects the programmed launch addresses
++        // during setup. Hardware documents these as write-only, but the
++        // simulator already retains their values to implement reset. Return
++        // that retained state for debugger/introspection reads.
++        case RISCV_DEBUG_REGS_TRISC0_RESET_PC:
++            if constexpr (tile_type == 'T') return p_tile->trisc0_reset_pc;
++            TTSIM_ERROR(UnsupportedFunctionality, "TRISC0_RESET_PC in eth tile");
++        case RISCV_DEBUG_REGS_TRISC1_RESET_PC:
++            if constexpr (tile_type == 'T') return p_tile->trisc1_reset_pc;
++            TTSIM_ERROR(UnsupportedFunctionality, "TRISC1_RESET_PC in eth tile");
++        case RISCV_DEBUG_REGS_TRISC2_RESET_PC:
++            if constexpr (tile_type == 'T') return p_tile->trisc2_reset_pc;
++            TTSIM_ERROR(UnsupportedFunctionality, "TRISC2_RESET_PC in eth tile");
+         case RISCV_DEBUG_REGS_TRISC_RESET_PC_OVERRIDE:
+             if constexpr (tile_type == 'T') {
+                 return p_tile->trisc_reset_pc_override;
+             }
+             TTSIM_ERROR(UnsupportedFunctionality, "TRISC_RESET_PC_OVERRIDE in eth tile");
++        case RISCV_DEBUG_REGS_NCRISC_RESET_PC:
++            if constexpr (tile_type == 'T') return p_tile->ncrisc_reset_pc;
++            TTSIM_ERROR(UnsupportedFunctionality, "NCRISC_RESET_PC in eth tile");
++        case RISCV_DEBUG_REGS_NCRISC_RESET_PC_OVERRIDE:
++            if constexpr (tile_type == 'T') return p_tile->ncrisc_reset_pc_override;
++            TTSIM_ERROR(UnsupportedFunctionality, "NCRISC_RESET_PC_OVERRIDE in eth tile");
+ #endif
+ #if TT_VERSION == 2
+         case RISCV_DEBUG_REGS_SOFT_RESET_0: return p_tile->soft_reset_0[tensix_id];
+diff --git a/src/sim.h b/src/sim.h
+--- a/src/sim.h
++++ b/src/sim.h
+@@ -245,6 +245,8 @@ struct TensixThreadState {
+     THREAD_CFG17_REG_UNION()
+     THREAD_CFG18_REG_UNION()
+     THREAD_CFG19_REG_UNION()
++    THREAD_CFG23_REG_UNION()
++    THREAD_CFG25_REG_UNION()
+     THREAD_CFG28_REG_UNION()
+     THREAD_CFG29_REG_UNION()
+     THREAD_CFG30_REG_UNION()
+diff --git a/src/tensix.cpp b/src/tensix.cpp
+--- a/src/tensix.cpp
++++ b/src/tensix.cpp
+@@ -11836,6 +11836,8 @@ TENSIX_EXECUTE_SETC16() {
+         THREAD_CFG_REG_WR(17)
+         THREAD_CFG_REG_WR(18)
+         THREAD_CFG_REG_WR(19)
++        THREAD_CFG_REG_WR(23)
++        THREAD_CFG_REG_WR(25)
+         THREAD_CFG_REG_WR(28)
+         THREAD_CFG_REG_WR(29)
+         THREAD_CFG_REG_WR(30)

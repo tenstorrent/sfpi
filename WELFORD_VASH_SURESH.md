@@ -38,7 +38,21 @@ With the flag off, both compilers reached reload and failed with the expected `c
 
 The minimal zero-slack recurrence remained unchanged: pass-off and pass-on assembly compared equal on both architectures, and its dump stayed at `ops=16 live-in=7 peak=8`. A predicated fixture was rejected as `cc-epoch` and remained byte-identical pass-off/on on both architectures. The live-across oracle fixture reported `ops=2 live-in=4 peak=4`, confirming that an untouched value spanning a hard region boundary is counted.
 
-These are compiler feasibility and code-generation results, not a hardware latency claim. The final installed stage-2 compiler, focused DejaGNU run, and simulator smoke results are recorded in the morning report below once complete.
+These are compiler feasibility and code-generation results, not a hardware latency claim. The final installed stage-2 compiler, focused DejaGNU run, and simulator smoke results are recorded in the morning report below.
+
+## Morning report: 2026-08-14
+
+The overnight prototype completed its Linux compiler and focused simulator gates on both requested architectures.
+
+- A checking-enabled GCC 15.1.0/SFPI 7.69.0 toolchain built and installed successfully in the x86_64 Lima VM. The roughly six-hour build produced the base toolchain plus Wormhole ILP32, Blackhole ILP32, QSR32 ILP32 and QSR64 LP64 runtime variants. GCC's build-time C and C++ selftests reported 8,449,969 and 8,449,993 checks respectively.
+- `-mtt-tensix-optimize-lp-schedule` is reported as `[disabled]` by the installed compiler unless explicitly enabled. This preserves the existing compiler by default.
+- The focused validator produced 24 assembly files. On Wormhole and Blackhole, the late-fold fixture fails with the expected SFPU spill when the pass is off, while pass-on certifies `old-peak=9 new-peak=8 applied=yes` and emits exactly the same assembly as the manual early-fold control.
+- The minimal, predicated and CFG rejection fixtures remain byte-identical pass-off/on. The live-across fixtures report `ops=2 live-in=4 peak=4`. Three repeated rescue compilations per architecture are deterministic: Wormhole SHA-256 `3cee70a65b29062489d790bcc30b23cc43ffe0741cc634e5106be8b0b14d8344`; Blackhole SHA-256 `502bff4f216e3ed5d90ba891cb6a0c6a636e765af6ad53ab1c94d04f0b0f3ed1`.
+- The real TT-target DejaGNU run reports 1,070 expected passes, zero unexpected `FAIL`, zero `UNRESOLVED`, and zero `ERROR`. Two pre-existing expected failures remain expected. An initial invocation had falsely printed success because `runtest` was absent; installing `dejagnu` and rerunning the real suite exposed and eliminated that infrastructure false-green.
+- The recurrent-SFPU EMA craq-sim smoke passes all three cases with the scheduler off and on: Wormhole `3 passed in 32.63s` off and `3 passed in 31.14s` on; Blackhole `3 passed in 31.74s` off and `3 passed in 30.55s` on. These are correctness smoke timings, not device-cycle measurements, and the test is handwritten EMA rather than a transformed eltwise Welford kernel.
+- The pinned Blackhole simulator needed a VM-local compatibility patch before the LLK harness could run. It reads back retained TRISC/NCRISC reset-PC state for harness introspection and retains valid generated `THREAD_CFG23`/`THREAD_CFG25` `SETC16` writes. Hardware documents the reset-PC registers as write-only; this is a simulator accommodation, stored as `scripts/craq-sim-bh-llk-smoke.patch`, not an SFPI compiler semantic change.
+
+The result is a strong compiler-feasibility checkpoint, not a performance sign-off. The pass currently contains an exact pressure oracle and deterministic list scheduler; it does **not** yet link or invoke `lp_solve`. Full `--test-gcc`, a transformed eltwise Welford numerical test, device execution, hardware cycle comparison against handwritten LLK, and the wider TT-Metal kernel corpus remain required before enabling it by default or claiming a latency win.
 
 ## What happens today
 
@@ -507,11 +521,11 @@ Do builds in VM-local storage under `/home/nkapre.guest`, not on the shared moun
 limactl shell ttmetal-x86 -- bash -lc '
   sudo apt-get update &&
   sudo apt-get install -y \
-    texinfo bison flex libgmp-dev libmpfr-dev libmpc-dev
+    texinfo bison flex dejagnu libgmp-dev libmpfr-dev libmpc-dev
 '
 ```
 
-`texinfo` is required: without `makeinfo`, the binutils stage fails while generating `doc/bfd.info`.
+`texinfo` is required: without `makeinfo`, the binutils stage fails while generating `doc/bfd.info`. `dejagnu` supplies `runtest`; without it, the TT test wrapper can print a misleading success without executing the intended tests.
 
 ### 2. Stage and build the modified SFPI compiler
 
@@ -656,6 +670,7 @@ limactl shell ttmetal-x86 -- bash -lc '
     /Users/nkapre/workspace/craq-sim/ \
     /home/nkapre.guest/craq-sim-linux/ &&
   cd /home/nkapre.guest/craq-sim-linux &&
+  patch -p1 < /Users/nkapre/workspace/sfpi/scripts/craq-sim-bh-llk-smoke.patch &&
   ./make.py --env TTSIM_LTO=0 \
     src/_out/release_wh/libttsim.so \
     src/_out/release_bh/libttsim.so
@@ -728,9 +743,32 @@ limactl shell ttmetal-x86 -- bash -lc '
 '
 ```
 
-Measured Wormhole baseline result: `3 passed in 38.06s`, with zero crashed tests. Replace `wh`/`wormhole` by `bh`/`blackhole` for the Blackhole lane. At the current craq-sim checkout, however, the Blackhole EMA lane reaches execution and then reports `UnimplementedFunctionality: riscv_debug_regs_rd32: offset=0x228` for all three cases. Treat that as a simulator coverage gap, not a compiler or numerical regression; retain Blackhole compiler/assembly checks and use a supported Blackhole smoke test until that debug-register read is implemented.
+For the pinned craq-sim checkout, apply `scripts/craq-sim-bh-llk-smoke.patch` before building the Blackhole library. The unpatched simulator first stops on debug offset `0x228`, the BH TRISC0 reset-PC register, and then on valid `SETC16` registers 23/25. The patch exposes state already retained by the simulator and adds the generated thread-register union members and write cases. It is only a test-harness compatibility shim; do not infer that hardware permits reset-PC reads.
 
-For pass-on end-to-end testing, `/home/nkapre.guest/tt-metal-lp/tt_metal/tt-llk/tests/sfpi` is an isolated symlink to `/home/nkapre.guest/sfpi-lp-build/sfpi`; the shared TT-Metal checkout's downloaded SFPI installation is not overwritten.
+The measured pass-off results are Wormhole `3 passed in 32.63s` and Blackhole `3 passed in 31.74s`, each with zero crashed tests.
+
+For pass-on end-to-end testing, create a tiny isolated SFPI overlay so the shared TT-Metal checkout and installed compiler remain unchanged:
+
+```sh
+limactl shell ttmetal-x86 -- bash -lc '
+  mkdir -p /home/nkapre.guest/sfpi-lp-on/compiler/bin
+  ln -sfn /home/nkapre.guest/sfpi-lp-build/sfpi/include \
+    /home/nkapre.guest/sfpi-lp-on/include
+  cp /Users/nkapre/workspace/sfpi/scripts/riscv-tt-elf-g++-lp-wrapper \
+    /home/nkapre.guest/sfpi-lp-on/compiler/bin/riscv-tt-elf-g++
+  chmod +x /home/nkapre.guest/sfpi-lp-on/compiler/bin/riscv-tt-elf-g++
+  ln -sfn /home/nkapre.guest/sfpi-lp-on \
+    /home/nkapre.guest/tt-metal-lp/tt_metal/tt-llk/tests/sfpi
+'
+```
+
+Run the same simulator command with the compiler wrapper enabled:
+
+```sh
+export SFPI_REAL_CXX=/home/nkapre.guest/sfpi-lp-build/sfpi/compiler/bin/riscv-tt-elf-g++
+```
+
+The measured pass-on results are Wormhole `3 passed in 31.14s` and Blackhole `3 passed in 30.55s`, again with zero crashed tests. These elapsed times are not a useful performance comparison: the fixtures are handwritten EMA, simulator startup dominates, and the runs were intended only as numerical/non-crash regression gates.
 
 ### 9. Compiler and regression gates
 
