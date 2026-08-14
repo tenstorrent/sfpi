@@ -843,7 +843,7 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
     return convert<ToType> (as<vSMag> (val), round);
 }
 
-__SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name and oargument type. use sfpi:convert<sfpi::vFloat> (X, rounding) which will convert from sign-maginitude and from both 2's complement (via sign-magnitude))")
+__SFPI_DEPRECATED("This converts a sign-magnitude type, despite its name and argument type. Use sfpi:convert<sfpi::vFloat> (X, rounding), which will convert from both from sign-maginitude and from 2's complement (via sign-magnitude))")
 sfpi_inline vFloat int32_to_float (vInt in, RoundMode rounding = RoundMode::NearestStochastic) {
   return __builtin_rvtt_sfpcast (in.get (), impl_::cast_rnd (rounding));
 }
