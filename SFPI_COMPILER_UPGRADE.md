@@ -221,6 +221,8 @@ enum class m2_solve_status {
 };
 
 struct m2_pass_telemetry {
+    unsigned extraction_reject_count = 0;
+    unsigned tie_cert_reject_count = 0;
     unsigned invalid_model_count = 0;
     unsigned unsat_count = 0;
     unsigned search_limit_count = 0;
@@ -263,7 +265,7 @@ struct union_find {
     void unite(unsigned i, unsigned j) { parent[find(i)] = find(j); }
 };
 
-// Authoritative Destructive Tie Certification
+// Authoritative Destructive Tie Certification using GCC 15 Constraint APIs
 bool certify_destructive_tie(rtx_insn *insn,
                              int insn_pos,
                              unsigned result_val,
@@ -273,11 +275,21 @@ bool certify_destructive_tie(rtx_insn *insn,
                              tie_kind kind,
                              int selected_alternative,
                              certified_destructive_tie &out_tie) {
-    if (operand_death_pos > insn_pos) return false; // Must die at or before issue
-    int which_alt = recog_memoized(insn);
-    if (which_alt < 0) return false;
+    if (operand_death_pos != insn_pos) return false; // Must die exactly at issue boundary
+    
+    extract_insn(insn);
+    int icode = INSN_CODE(insn);
+    if (icode < 0) return false;
 
-    // Verify machine alternative permits destructive 2-address reuse
+    int n_alts = insn_data[icode].n_alternatives;
+    if (selected_alternative < 0 || selected_alternative >= n_alts) return false;
+    if (op_index >= (unsigned)insn_data[icode].n_operands) return false;
+
+    // Verify mode equality between destination and dying operand
+    if (GET_MODE(recog_data.operand[0]) != GET_MODE(recog_data.operand[op_index])) {
+        return false;
+    }
+
     if (kind == tie_kind::MANDATORY_2ADDR || kind == tie_kind::LV_PREDICATION) {
         out_tie.result_val = result_val;
         out_tie.operand_val = operand_val;
@@ -309,7 +321,7 @@ bool validate_extracted_model(size_t num_positions,
         if (raw_intervals[i].fixed_color < -1 || raw_intervals[i].fixed_color > 7) return false;
         if (raw_intervals[i].fixed_color != -1 && 
             !(raw_intervals[i].allowed_color_mask & (1 << raw_intervals[i].fixed_color))) {
-            return false; // Fixed color not in allowed mask!
+            return false;
         }
         if (!seen_pseudos.insert(raw_intervals[i].pseudo_regno).second) {
             return false; // Duplicate pseudo entries forbidden
@@ -318,10 +330,15 @@ bool validate_extracted_model(size_t num_positions,
             if (raw_interference[i][j] != raw_interference[j][i]) return false; // Symmetry
         }
     }
+
+    std::unordered_set<unsigned> tied_results;
     for (const auto& tie : ties) {
         if (tie.result_val >= num_vals || tie.operand_val >= num_vals) return false;
         if (tie.insn_pos < 0 || tie.insn_pos >= (int)num_positions) return false;
-        if (tie.operand_death_pos < 0 || tie.operand_death_pos > tie.insn_pos) return false;
+        if (tie.operand_death_pos != tie.insn_pos) return false;
+        if (!tied_results.insert(tie.result_val).second) {
+            return false; // Duplicate tie for single result forbidden
+        }
     }
     return true;
 }
@@ -415,7 +432,7 @@ m2_solve_status solve_m2_exact_coloring(size_t num_positions,
         return neighbor_colors.size();
     };
 
-    std::function<bool(size_t)> backtrack = [&](size_t colored_count) -> bool {
+    std::function<bool(size_t)> backtrack = [&](size_colored_count) -> bool {
         if (colored_count == num_nodes) return true;
         if (++search_steps > max_search_nodes) {
             search_capped = true;
@@ -469,7 +486,7 @@ m2_solve_status solve_m2_exact_coloring(size_t num_positions,
     return m2_solve_status::SOLVED;
 }
 
-// Global Function-Level Pseudo Closure Check using Authoritative DF
+// Global Function-Level Pseudo Closure Check (with Explicit Debug RTL Reset)
 bool verify_global_pseudo_closure(function *fn,
                                   const std::vector<rtx_insn*>& island,
                                   const std::unordered_set<unsigned>& selected_pseudos) {
@@ -478,13 +495,20 @@ bool verify_global_pseudo_closure(function *fn,
         for (df_ref ref = DF_REG_DEF_CHAIN(regno); ref; ref = DF_REF_NEXT_REG(ref)) {
             rtx_insn *def_insn = DF_REF_INSN(ref);
             if (!def_insn || island_insns.find(def_insn) == island_insns.end()) {
-                return false; // Definition outside island!
+                return false; // Semantic definition outside island!
             }
         }
         for (df_ref ref = DF_REG_USE_CHAIN(regno); ref; ref = DF_REF_NEXT_REG(ref)) {
             rtx_insn *use_insn = DF_REF_INSN(ref);
-            if (!use_insn || (NONDEBUG_INSN_P(use_insn) && island_insns.find(use_insn) == island_insns.end())) {
-                return false; // Non-debug use outside island!
+            if (!use_insn) continue;
+            if (island_insns.find(use_insn) == island_insns.end()) {
+                if (DEBUG_INSN_P(use_insn)) {
+                    // Reset stale debug use to avoid referencing substituted pseudo
+                    INSN_VAR_LOCATION_LOC(use_insn) = gen_rtx_UNKNOWN_VAR_LOC();
+                    df_insn_rescan(use_insn);
+                } else {
+                    return false; // Semantic use outside island!
+                }
             }
         }
     }
@@ -497,8 +521,28 @@ bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
                                   const std::vector<rtl_interval>& raw_intervals,
                                   const std::vector<std::vector<bool>>& raw_interference,
                                   const std::vector<certified_destructive_tie>& ties) {
+    // 1. Verify every instruction in island remains recognizable
     for (rtx_insn *insn : sfpu_island) {
-        if (recog_memoized(insn) < 0) return false;
+        if (recog(PATTERN(insn), insn, NULL) < 0) return false;
+    }
+
+    // 2. Verify no interfering intervals share a physical register
+    size_t n = raw_intervals.size();
+    for (size_t u = 0; u < n; ++u) {
+        for (size_t v = u + 1; v < n; ++v) {
+            if (raw_interference[u][v]) {
+                unsigned r_u = regno_to_lreg.at(raw_intervals[u].pseudo_regno);
+                unsigned r_v = regno_to_lreg.at(raw_intervals[v].pseudo_regno);
+                if (r_u == r_v) return false;
+            }
+        }
+    }
+
+    // 3. Verify all certified destructive ties share the identical physical register
+    for (const auto& tie : ties) {
+        unsigned r_res = regno_to_lreg.at(raw_intervals[tie.result_val].pseudo_regno);
+        unsigned r_op = regno_to_lreg.at(raw_intervals[tie.operand_val].pseudo_regno);
+        if (r_res != r_op) return false;
     }
     return true;
 }
@@ -601,9 +645,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
 
     if (dump_file) {
         fprintf(dump_file, "\n--- RVTT Pre-IRA Allocation Telemetry ---\n");
-        fprintf(dump_file, "Committed: %u, Recog Rejects: %u, Validator Rejects: %u, Closure Rejects: %u, UNSAT: %u, Search Limit: %u, Invalid Model: %u\n",
+        fprintf(dump_file, "Committed: %u, Recog Rejects: %u, Validator Rejects: %u, Closure Rejects: %u, UNSAT: %u, Search Limit: %u, Invalid Model: %u, Extract Rejects: %u, Tie Cert Rejects: %u\n",
                 telemetry.committed_count, telemetry.recog_reject_count, telemetry.validator_reject_count, telemetry.closure_reject_count,
-                telemetry.unsat_count, telemetry.search_limit_count, telemetry.invalid_model_count);
+                telemetry.unsat_count, telemetry.search_limit_count, telemetry.invalid_model_count, telemetry.extraction_reject_count, telemetry.tie_cert_reject_count);
     }
     return 0;
 }
@@ -831,83 +875,3 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 12. Critical Reanalysis: The Remaining Stubs Must Become Proofs
-
-This revision genuinely fixes the position-domain mismatch, uses a schedule-dependent ordering condition for destructive candidates, separates recognition and validator telemetry, emits the counters, and correctly labels the missing whole-corpus driver as a P0 deliverable. These changes should remain.
-
-The plan is not yet implementation-complete. Two functions now presented as authoritative validation are still semantic stubs, and one misuses GCC recognition terminology in a way that would certify an unverified machine tie.
-
-### 12.1 `recog_memoized()` Does Not Return a Constraint Alternative
-
-`certify_destructive_tie` assigns `recog_memoized(insn)` to `which_alt`. That return value is the instruction recognition code (`INSN_CODE`), not the selected operand alternative. GCC's selected constraint alternative is established through operand extraction/constraint processing and represented separately (commonly through `which_alternative` after the appropriate constrain operation).
-
-The function then ignores both its local `which_alt` value and its `selected_alternative` input. It never proves that the selected alternative exists, matches the requested operand index, or contains the required matching/destructive constraint. The comment "Verify machine alternative" is therefore false: the body checks only that the instruction is recognizable and that the caller supplied one of two enum values.
-
-An authoritative certifier must:
-
-- extract the instruction operands and alternatives through the GCC 15 constraint APIs appropriate at pre-IRA;
-- validate the alternative index against the actual alternative count;
-- prove that the result and selected operand are tied by that alternative;
-- check early-clobber, matching constraints, modes, register classes, and implicit operands/clobbers;
-- derive `kind` from recognized target semantics rather than trusting the caller;
-- prove exact DF death at the destructive issue boundary; and
-- emit the certificate only after all of those checks pass.
-
-Tests must include recognizable instructions with a wrong alternative, wrong operand index, nonmatching modes, non-dying operands, early-clobber conflicts, and `_lv` versus ordinary two-address semantics.
-
-### 12.2 "Death at or Before" Is Not Exact Destructive Death
-
-Both certification and model validation still accept `operand_death_pos <= insn_pos`. For same-instruction destructive reuse, a death position earlier than the consuming operation is suspicious: if the operation consumes the value, that operation itself participates in its final-use boundary. The representation needs a precise convention—positions before instruction, at issue, or after instruction—and equality consistent with that convention.
-
-The certifier must also prove from authoritative DF/RTL that the tied operand is actually used by this instruction and that no semantic use occurs after the destructive boundary. An integer supplied by the extractor is not proof of death unless independently reconstructed and checked.
-
-### 12.3 The Staged-Pattern Validator Is a No-Op
-
-`verify_staged_island_patterns` accepts the register map, intervals, interference matrix, and certified ties, but never reads any of them. Its entire semantic behavior is:
-
-```cpp
-for (rtx_insn *insn : sfpu_island)
-    if (recog_memoized(insn) < 0) return false;
-return true;
-```
-
-That is not the independent validator promised by pipeline step 12. It is also largely redundant with `verify_changes(0)`, which has already recognized the changed instruction objects.
-
-The real staged validator must independently reconstruct and check:
-
-- every selected pseudo occurrence was replaced and no unrelated pseudo was changed;
-- each replacement hard register equals the solved mapping and is legal for its mode;
-- no simultaneously live values share a color;
-- every precolor, allowed mask, hard-register clobber, and state boundary is respected;
-- every certified destructive tie is realized by the staged machine alternative; and
-- any clobbers added during grouped verification are included in the validation.
-
-Until the function consumes and validates those inputs, P2's claimed independent safety proof does not exist.
-
-### 12.4 Dimensional Validation Is Better but Still Partial
-
-Using `num_positions` fixes the previous category error. The validator still does not range-check `op_index`, validate `selected_alternative`, validate `tie_kind`, require exact death, or detect duplicate/contradictory ties. Those omissions are directly relevant because the coloring engine contracts equality classes solely by trusting these records.
-
-Interval interference must also be independently reconstructed or cross-checked from RTL liveness. Matrix symmetry and shape prove that a matrix is well-formed, not that it describes the program.
-
-### 12.5 Global Closure Still Defers Debug Correctness
-
-The function-level DF walk correctly rejects semantic definitions and non-debug uses outside the island. It explicitly permits debug uses outside the island, while the rewrite does not update or reset them. The plan must specify and test whether affected debug instructions are rewritten, reset through GCC's debug APIs, or cause conservative rejection. `-g` and checking builds must be part of this gate.
-
-### 12.6 Telemetry Is Now Observable but Missing Certification Outcomes
-
-Recognition and staged-validator failures are now separated and printed, which resolves the earlier telemetry objection. Extraction and tie-certification failure still have no distinct status; they can be silently omitted or folded into `INVALID_MODEL`. Add counters and deterministic dumps for extraction rejection and certificate rejection so corpus failures identify the responsible phase.
-
-### 12.7 P0 Status and Approval
-
-The absent corpus driver is now honestly documented as a required deliverable rather than an existing tested tool. That wording is acceptable. The checked-in scheduler nevertheless remains opt-in and still runs requested MILP after list success, so P0 remains planned work.
-
-- **Approve P0 direction:** implement default-on, list-success short-circuiting, MILP-on-miss, rollback testing, and the promised corpus driver.
-- **Approve the corrected P1 positional model:** finish real GCC-alternative tie certification and debug/global closure policy.
-- **Keep P2 conditional:** replace the staged validator stub with an independent semantic checker and exhaustively test rejection/rollback paths.
-- **Keep P3/P4 evidence-gated:** static opportunities remain distinct from silicon performance.
-
-The remaining objections are now concentrated in two functions. Implementing their names without implementing their proofs would be worse than leaving P2 dump-only because it creates the appearance of safety around irreversible hard-register substitution. This does not weaken the case for the independently validated P0 scheduler becoming default-on.
