@@ -1400,6 +1400,54 @@ them.**
 - `validation/welford-bh-20260815/` — the archived silicon run. Note there is **no from-source
   reproduction path yet**, only this archive — building that path is F1's first milestone (§18.7 M-F1.0).
 
+#### 18.0.1 F1 Kickoff Brief (copy-paste to the implementing agent)
+
+> **Mission: implement Track F1 (compiler cost model) from this roadmap.**
+>
+> Read §18.0 (this section) first — your ordered reading list and honest map of real vs. stub. Then
+> §18.7 (Track F1) is your spec. Ignore §3.1, §4.2, §8, Appendices A/B/C.
+>
+> **What you're doing (and not doing).** You are *not* writing a new compiler. You are replacing the
+> near-binary latency rule in the shipped backend with a real cost table fit to the `craq-sim` cycle
+> model. Milestones (§18.7.3):
+> - **F1.0** — `run-corpus-score.sh`: compile → assemble → run under `craq-sim` → read device cycles
+>   from the profile counters; build the *from-source* path that reproduces the archived Welford
+>   **323 vs 326** on Blackhole (today `validation/welford-bh-20260815/` is only an archive of numbers).
+> - **F1.1** — new `rvtt-cost.md`: split the flat `type` attr into the 5 craq-sim issue classes; add a
+>   `define_automaton` + per-class `define_insn_reservation` with latencies from craq-sim's issue gaps.
+> - **F1.2** — make `rtl-rvtt-schedule.cc` table-driven, replacing the `xtt_delay` STATIC/DYNAMIC rule
+>   (incl. the `XTT_DYNAMIC_BUG` path). Same insertion point / same NOP mechanism — swap the cost
+>   *source*, not a new pass.
+> - **F1.3** — extend the existing `rvtt-tune.md` with per-arch (WH/BH/QSR) tensix reservations;
+>   scorer error vs craq-sim ≤ target on the corpus.
+> - **F1.4** — stand up the identical-source, changed-binary, paired off/on **silicon A/B** feeding
+>   the same scorer (net-new; no A/B harness exists to "wire").
+>
+> **Hard constraints:**
+> - Do **NOT** touch or depend on `rtl-rvtt-lp-alloc.cc` (dump-only stub, `colorability=unchecked`).
+>   No MLIR. Leave both scheduler flags at `Init(0)`.
+> - Preserve **byte-identical** output for ineligible / already-≤8-peak regions
+>   (`validate-sfpu-pressure-scheduler.sh`).
+> - F1.2 must reproduce **identical NOP placement on the Welford body** before you trust the new cost
+>   source.
+>
+> **Definition of done:** scorer (F1.0) reproduces 323/326 from source; the cost table (F1.1–1.3)
+> drives NOP insertion with scorer-vs-craq-sim error under target across the LLK corpus; TT DejaGNU
+> gate stays green; Welford stays correct on silicon.
+>
+> **Ground truth / where to build:** compiler code is in the **`sfpi-gcc` submodule**
+> (`gcc/config/riscv/tt/…`), not the superproject. Cost oracle: `/root/craq-sim` — `src/tensix.cpp`
+> (issue gaps/`busy_until`), `src/libttsim.cpp` (cycle loop, 5 issue classes, profile counters); your
+> latency numbers must fit these. Build: `SFPI_WITH_LP_SOLVE=yes scripts/build.sh …`. Test pattern:
+> `testsuite/g++.target/riscv/tt/tensix/raw-lreg-livein*.C`.
+>
+> **Guardrails:** never `git add -A` (untracked `build/` + the gcc submodule live in the tree — stage
+> files explicitly). Commit only the compiler files + the new script + tests. Score every codegen
+> change against craq-sim before claiming an improvement — no static instruction-count claims.
+>
+> **Report back with:** the scorer table (baseline vs candidate cycles per kernel), the DejaGNU
+> result, and confirmation Welford is byte-identical / still 323 on BH.
+
 ### 18.1 What "SOTA" means here (definition + baseline)
 
 SOTA is a claim relative to a baseline, so fix one: **match or beat the hand-tuned TT-LLK
