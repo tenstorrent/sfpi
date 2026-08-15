@@ -1606,17 +1606,22 @@ device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ delta
 | **Welford** body | 326 | 323 | **−0.9%** (−3) | 15/15 | Parity / marginal — §14 will not credit it as a scheduler win (bounded zone, different source bodies) |
 | **Binary broadcast** | 608 | 608 | **0.0%** | 8/8 BH, 6/6 WH compile | **Exact tie** — zero-regression compiler-flow replacement |
 | **Reduce-SDPA** body | 840 (8-slot replay) | 834 | **−0.7%** (−6) | paired full golden | **Generated win** — generic D1 preheader capture hoisting flips the prior +2.0% loss |
+| **Reciprocal, accurate BF16** | 467 | 459 | **−1.7%** (−8) | paired canonical tolerance + PCC, 2/2 BH | **Generated win** — fresh semantic cubic becomes a generic 10-slot replay capture plus seven playbacks |
+| **Binary Min/Max** | 140.93 | 198.76 | **+41.0%** (+57.83) | paired element tolerance + PCC | **Loss** — ordinary load/load/swap/store replay cannot match the handwritten SFPLOADMACRO pipeline |
+| **Addcmul** | 292.92 | 357.03 | **+21.9%** (+64.11) | paired element tolerance + PCC | **Loss** — one-row dependency chain versus handwritten two-row interleave |
+| **Typecast, Float16_b lane** | 265 | 317 | **+19.6%** (+52) | paired element tolerance + PCC, 2/2 BH | **Loss** — typed five-slot replay versus handwritten SFPLOADMACRO pipeline |
 | **TTNN Where** | 159.25 | 312.50 | **+96.2%** (+153.25) | 2/2 BH | **Loss** — correct canonical SFPI; 7 replay slots versus handwritten SFPLOADMACRO's 3 |
-| **TopK** | — | *not measured* | — | compiler model WH/BH/QSR 15/15 | Multi-result typed-IR blocker fixed; generated functional/perf A/B remains open |
+| **TopK** | 5038 | 5310 | **+5.4%** (+272) | exact value/index pairing, 2/2 BH | **Loss** — multi-result typed model is sound; final delivery/schedule remains longer |
+| **SigmoidAppx** | 222.85 | 446.85 | **+100.5%** (+224) | `atol=.13`, `rtol=.05`, PCC > .99, 2/2 BH | **Loss** — fresh cubic rematerializes constants per row and forms no replay |
 
-**Read-out: the first outright flip is now measured.** Generic D1 replay hoisting moves Reduce-SDPA
-from a 2.0% generated loss to a repeatable 0.7% generated win.  Binary broadcast ties exactly and
-Welford remains a marginal generated win.  TTNNWhere is correct but nearly 2× slower because the
-handwritten three-slot body uses SFPLOADMACRO while canonical generated SFPI needs seven replay
-slots.  TopK's architectural multi-result blocker is fixed in the compiler but has not yet reached
-a generated silicon A/B.  The next large win is therefore still gated on safe, general
-`SFPLOADMACRO` formation rather than more local scheduling; the dump-only formation pass records
-the missing proofs without emitting speculative code.
+**Read-out: three generated wins are now measured.** Generic D1 replay hoisting moves Reduce-SDPA
+from a 2.0% generated loss to a repeatable 0.7% generated win; fresh semantic accurate-BF16
+Reciprocal is 1.7% faster because the ordinary compiler replay pass compresses its ten-instruction
+body; Welford remains a marginal generated win. Binary broadcast ties exactly. The loss rows split
+cleanly into missing SFPLOADMACRO formation (Binary Min/Max, Typecast, Where), missing cross-iteration
+latency scheduling (Addcmul), loop-invariant constant/replay formation (SigmoidAppx), and a smaller
+TopK delivery/schedule gap. The dump-only formation pass records the missing macro proofs without
+emitting speculative code.
 
 #### 18.8.0.1 Perf-Loss Root Cause — Why Correct-But-Slower
 
@@ -1632,16 +1637,17 @@ model blind to both. Confirmed structurally in `rvtt-passes.def`:
 - `pass_rvtt_schedule` **only inserts NOPs, never reorders** (header *"schedule tensix insns (insert
   nops)"*; `emit_insn_after(gen_rvtt_sfpnop())`, `rtl-rvtt-schedule.cc:252`).
 
-So **there is no latency-hiding scheduler** (§5 / P4 unbuilt): the compiler emits one NOP per 2-cycle
-SFPU dependency (§5.2) and cannot fill it with independent work. Combined with no `SFPLOADMACRO`
-formation (path B, GREENFIELD/sim-blocked), that is the whole loss story.
+So **there is no latency-hiding scheduler** (§5 / P4 unbuilt): a dependent instruction either pays
+an explicit correctness NOP where the target erratum requires one or an implicit hardware scoreboard
+stall, and the compiler cannot fill that issue slot with independent work. Combined with no
+`SFPLOADMACRO` formation (path B, GREENFIELD/sim-blocked), that is the dominant loss story.
 
 | Kernel | Loss | Hand-tuned uses | Compiler's error (class) |
 | :--- | ---: | :--- | :--- |
 | **Binary Min/Max** | +41.0% | load+compute+store fused across `SFPLOADMACRO`'s 4 sub-units | **No `SFPLOADMACRO`** → serial `SFPLOAD→SFPMAX→SFPSTORE`, load latency exposed (most load-bound → worst) |
-| **Addcmul** | +21.9% | manual `MUL_a,MUL_b,MAD_a,MAD_b` interleave to hide the 2-cycle latency across 2 rows | **No latency scheduler** → emits `MUL,NOP,MAD,NOP`; independent rows never interleaved |
+| **Addcmul** | +21.9% | manual `MUL_a,MUL_b,MAD_a,MAD_b` interleave to hide the 2-cycle latency across 2 rows | **No latency scheduler/unroll-and-jam** → emits a one-row `MUL→MAD` chain; the next independent row is not exposed for interleaving |
 | **Typecast** | +19.6% | `SFPLOADMACRO` load-convert-store pipeline (§7 "memory bound") | **No `SFPLOADMACRO`** → serial convert loop |
-| **TopK** | +5.4% | tuned sort network | Residual **instruction/move bloat** (the four-SET indexed `SFPSWAP`) + a few exposed-latency NOPs; near parity |
+| **TopK** | +5.4% | tuned sort network with statically expanded cases | Typed helper is smaller but retains runtime loop/control flow; dynamic-path attribution is still required |
 
 **The compiler's errors, ranked.**
 1. **No latency-hiding reorder (§5 / P4 unbuilt).** Only a pressure scheduler (fires `>8`) + a
@@ -1652,15 +1658,21 @@ formation (path B, GREENFIELD/sim-blocked), that is the whole loss story.
 3. **Cost model blind to the deciding effects (F1 calibration failure, §18.7).** `rvtt-cost.md` models
    `sfpu=1` not the real 2-cycle result latency, and has zero model of replay/`SFPLOADMACRO` frontend
    throughput — so even the scheduling that exists optimizes the wrong objective. Sits under #1/#2.
-4. **Residual instruction/move bloat** where destructive reuse / coalescing / raw→typed conversion
-   doesn't fully fire. → TopK and the long tail.
+4. **Residual control-flow/schedule overhead.** TopK's four-result `SFPSWAP` is one RTL `PARALLEL`
+   and one emitted instruction, not four moves; the measured typed ELF has zero `SFPMOV`, only one
+   additional scalar `mv` in the helper, and substantially fewer static instructions than the
+   handwritten ELF. Its remaining +5.4% must therefore be attributed from the executed loop/control
+   path before assigning a compiler transform.
 
 **Diagnostic path (CRAQ can't be used — it mis-models these; §18.7).** For each loss, take the silicon
-instruction-class diff (handwritten vs generated: `SFPLOADMACRO / TTREPLAY / SFPNOP / SFPLOAD /
-SFPMOV`), as the Reduce-SDPA and TTNN Where notes already do. **Predictions to confirm:** Addcmul shows
-high `SFPNOP`, near-parity `SFPLOAD` (→ error #1); Min/Max and Typecast show `SFPLOADMACRO=0` with high
-`SFPLOAD` (→ error #2). The fixes are Track-D (§18.8) + the P4 latency scheduler, not more register
-allocation — the allocator is already at parity.
+instruction-class and dependency-distance diff (handwritten vs generated: `SFPLOADMACRO / TTREPLAY /
+SFPNOP / SFPLOAD / SFPMOV` plus producer→consumer slot distance), as the Reduce-SDPA and TTNN Where
+notes already do. **Confirmed:** both measured Addcmul ELFs contain zero literal `SFPNOP`; generated
+captures one seven-slot row with adjacent `SFPMULI→SFPMAD`, while handwritten captures fourteen
+slots with `MUL_a,MUL_b,MAD_a,MAD_b`, exposing the independent chain and avoiding implicit scoreboard
+delay. Min/Max and Typecast show no generated `SFPLOADMACRO`. The fixes are Track-D (§18.8) plus P4
+latency scheduling with cross-iteration exposure, not more register allocation — the allocator is
+already at parity.
 
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) were then closed by generic D1 preheader capture hoisting: the current pinned result is handwritten `840` vs generated `834` — a **−0.7% generated win**, the corpus's first outright flip (§18.8.0). This note is retained for the recovery history (opaque `.ttinsn` → typed API → hoisting). Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
