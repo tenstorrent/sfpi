@@ -1663,6 +1663,12 @@ stall, and the compiler cannot fill that issue slot with independent work. Combi
    additional scalar `mv` in the helper, and substantially fewer static instructions than the
    handwritten ELF. Its remaining +5.4% must therefore be attributed from the executed loop/control
    path before assigning a compiler transform.
+5. **Loop-invariant constant rematerialization (no coefficient pinning / LICM).** SigmoidAppx
+   (**+100.5%**, the worst measured loss) rematerializes the cubic's constants *per row* and forms no
+   replay, instead of pinning the coefficients once (§7 "compiler-managed coefficient pinning"). This
+   is neither a latency nor a `SFPLOADMACRO` problem — it is loop-invariant-code-motion / constant
+   pinning, and its absence also blocks replay formation on the body. → SigmoidAppx and polynomial
+   approximations (log, gelu, erf).
 
 **Diagnostic path (CRAQ can't be used — it mis-models these; §18.7).** For each loss, take the silicon
 instruction-class and dependency-distance diff (handwritten vs generated: `SFPLOADMACRO / TTREPLAY /
