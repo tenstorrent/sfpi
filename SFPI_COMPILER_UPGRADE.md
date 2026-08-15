@@ -865,6 +865,11 @@ Rather than premature public macros, `SFPLOADMACRO` is governed by a compiler-in
 
 The multi-quarter MLIR roadmap separates mathematical semantics at the high level, vector bufferization at the mid level, and physical destructive ties only during machine-level lowering.
 
+> **Status (deferred).** Per the current strategic decision the SOTA path is a **GCC-extension**, not
+> an MLIR rewrite — see **§18**. This MLIR/Triton architecture is retained as an *optional later
+> layer*, to be reconsidered only if GCC hits the tile/dataflow ceiling called out at §18 (Track C /
+> Track E checkpoint). It is not on the near-term critical path.
+
 ---
 
 ## 9. Reconciled Phased Execution Plan (P0 – P5) & Validation Gates
@@ -1331,6 +1336,70 @@ in §15: (1) the **scheduler's own** silicon benefit is still unproven (no ident
 off/on pair), so P0 default-on (`Init(1)`) is not yet earned; (2) Wormhole is compile-only
 (GO-BH-ONLY). One editorial nit: §13.3 leads with 323 < 326 — add an inline pointer to §14.2 so a
 skimmer does not read it as a scheduler- or compiler-superiority headline.
+
+---
+
+## 18. Roadmap to a SOTA Vector Compiler (GCC-Extension Path)
+
+*Added in response to "what is the roadmap to a SOTA vector compiler, and does this doc have enough
+detail?" — the honest prior answer was no: §8 was a one-diagram MLIR vision and §9's P5 collapsed the
+entire future into one cell. This section is the actual roadmap under the chosen strategy: **extend
+the GCC/sfpi backend; defer MLIR (§8) to an optional later layer.***
+
+### 18.1 What "SOTA" means here (definition + baseline)
+
+SOTA is a claim relative to a baseline, so fix one: **match or beat the hand-tuned TT-LLK
+(handwritten replay) across the kernel corpus on silicon, and additionally compile kernels that are
+infeasible to hand-write** (higher register pressure, cross-engine pipelines). "Faster than a diagram"
+is not a metric; a committed corpus A/B on Blackhole/Wormhole is.
+
+### 18.2 Honest scope today
+
+Shipped is **one register file (8 LREGs) of one engine (SFPU) for one op class (add/mul/mad)**:
+pressure scheduling (opt-in) + raw-LREG liveness through IRA + literal coalescing, silicon-validated
+on the Welford body (§13). That is the *easiest* engine. The hard 90% of a Tensix vector compiler —
+the DST/RWC hazard model, the matrix + pack/unpack pipeline, cross-TRISC coordination, replay
+emission, autovectorization — is not yet modeled at all. The roadmap below is mostly greenfield;
+mark it as such.
+
+### 18.3 Foundation (cross-cutting — must precede the tracks)
+
+- **F1. Cost model wired to `craq-sim` + silicon A/B.** A SOTA scheduler needs an accurate perf
+  oracle. Tenstorrent already owns a cycle-accurate model (`craq-sim`); make it the compiler's
+  scheduling/autotuning oracle and the offline scorer. **Gate:** every codegen change is scored
+  against craq-sim and a silicon A/B, not by static instruction counts.
+- **F2. Ship the corpus differential driver** (`run-corpus-differential.sh`, §10.2 — still absent).
+  **Gate:** whole-LLK-corpus baseline-vs-candidate, asm diff + simulator + silicon, is the standing
+  regression before any "SOTA" claim.
+
+### 18.4 Tracks, deliverables, hard gates
+
+| Track | Scope (all GCC-internal) | Status | Hard gate |
+| :--- | :--- | :--- | :--- |
+| **A. Finish the SFPU story** | Full SFPU ISA scheduling/alloc beyond add/mul/mad (LUT/transcendental, int, casts); predication/masking under CC divergence; software pipelining across loops; M2 exact allocator **only if** raw-LREG+IRA proves insufficient on the corpus (still a stub, §4). | Partly shipped | Match/beat handwritten **non-replay** LLK across the SFPU corpus on silicon. |
+| **B. DST tile register + RWC** | Model the DST accumulator (fp16/fp32 layout) and RWC (read/write-clear) hazard tokens between matrix engine, SFPU, and pack. Eliminate the hand-written `Dst` round-trips §7 kernels use (log/GELU/erfinv dump state to `Dst`). | Not started | Kernels that spill to `Dst` by hand keep values resident; correctness + non-inferiority. |
+| **C. Cross-engine scheduling** | Model matrix engine (FPU/matmul) + pack/unpack pipelines; coordinate the three TRISCs (unpack/math/pack) via semaphores/wait-gates; schedule across engine boundaries. **This is where GCC's tile/dataflow abstractions may hit a ceiling — MLIR reconsideration checkpoint (§8).** | Not started | An end-to-end unpack→matmul→SFPU→pack kernel scheduled by the compiler, measured **whole-kernel** on silicon. |
+| **D. Replay / MOP / `SFPLOADMACRO` emission** | Compiler *emits* replay-buffer compression (§6 conflict-graph placement) and `SFPLOADMACRO`, instead of tolerating them. **This is the piece that closes the ~4% Welford gap to handwritten replay (326 vs 323–339).** | Not started | Compiler-emitted replay matches handwritten replay cycle count on the Welford body and across the corpus. |
+| **E. Front-end / autovectorization** | Auto-vectorize scalar SFPU loops within GCC (today `sfpi` is *explicit* `vFloat` intrinsics, not a vectorizing compiler). Higher-level entry (Triton/linalg) stays deferred with MLIR. **Second GCC-ceiling checkpoint.** | Not started | A scalar-source kernel auto-vectorizes to within a set % of hand-written `vFloat`. |
+| **F. Precision & numerics** | bf16/fp32 mixed-precision paths; parity gates against the LLK numeric corpus. | Not started | No precision regression vs handwritten across the corpus. |
+
+### 18.5 Sequencing and the GCC-ceiling checkpoint
+
+Order: **F1–F2 first** (you cannot claim SOTA without the oracle and the corpus harness), then **D**
+(closes the visible replay gap and is high-ROI), then **B** (DST/RWC unblocks the pressure-bound
+kernels), then **C** (the hardest, and the one that tests whether GCC can carry tile/dataflow
+scheduling). **A** proceeds in parallel as incremental SFPU coverage. **E/F** follow.
+
+**Reconsider MLIR (§8) only at a concrete trigger:** if Track C (cross-engine tile scheduling) or
+Track E (autovectorization) cannot be expressed cleanly in GCC's IR without disproportionate
+backend surgery. Make that a documented decision point, not a drift.
+
+### 18.6 Does this doc now have enough detail?
+
+For the shipped slice (P0 + raw-LREG fix): yes, thoroughly. For "SOTA vector compiler": this section
+is the *skeleton* — it names the tracks, gates, and sequencing that were previously a single diagram.
+Each track (B, C, D especially) still needs its own design at the depth §3/§4 gave SFPU scheduling
+before it is executable. Treat §18 as the roadmap; the per-track designs are the next writing task.
 
 ---
 
