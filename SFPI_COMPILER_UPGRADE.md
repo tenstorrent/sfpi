@@ -771,3 +771,80 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Reanalysis: Remaining Executable Gaps
+
+This revision resolves the prior transaction-ownership objection by requiring a standalone zero-pending-change group, adds function-level DF closure, removes the unused rewrite status, strengthens hostile-input checks, and introduces telemetry categories. Those are real improvements. The plan is now close, but several newly added checks and commands do not yet implement what their labels claim.
+
+### 12.1 The MILP Cannot Preselect `last_use(v)`
+
+The new destructive-death equation is directionally correct but assumes `last_use(v)` is already known as one operation. In a scheduling MILP, the final consumer is generally schedule-dependent. A consumer that is last in source order need not be last in the optimized schedule.
+
+For `alias[i,v] = 1`, the model must prove that `i` is a use of `v` and that every other use of `v` issues no later than `i`. This can be expressed directly with conditional ordering constraints for all other uses, or with explicit last-use selector variables whose uniqueness and issue time are constrained. Merely forcing one predesignated `issue[last_use(v),t]` to equal `issue[i,t]` can reject legal reordered schedules and accept an incorrectly designated final consumer.
+
+Exact liveness remains prose as well. Before Section 3.1 becomes normative it still needs equations that force liveness from scheduled definition through the schedule-dependent final use, plus live-in/live-out, unused-result, same-slot reuse, allowed-register, and precolor constraints. The horizon `sum(latency(i))` also needs a defined positive per-operation contribution; zero-latency operations would otherwise provide issue demand without extending the horizon. A safe bound should be derived explicitly, for example from `sum(max(1, latency(i)))` and any boundary latency convention.
+
+### 12.2 Position Validation Uses the Wrong Dimension
+
+`validate_extracted_model` checks `tie.insn_pos >= n`, where `n` is `raw_intervals.size()`—the number of values. An instruction position is indexed in the dense RTL-island layout, not in the value vector. These cardinalities are unrelated. The check can reject a valid tie in an island with more instructions than values or accept an invalid position when values outnumber instructions.
+
+The extracted model needs an explicit `num_positions` or island-size parameter. Validate all interval endpoints, instruction positions, death positions, and operation indices against their correct domains:
+
+- interval positions against dense island positions;
+- `op_index` against modeled operations;
+- `insn_pos` and `operand_death_pos` against island positions;
+- value endpoints against `raw_intervals`; and
+- selected alternatives against the recognized instruction's alternative count.
+
+At present only value endpoints and a dimensionally incorrect instruction bound are checked.
+
+### 12.3 Tie Certification Is Still Declared Rather Than Implemented
+
+The pipeline names `certify_destructive`, and the container is named `certified_destructive_tie`, but the displayed code still calls an undefined extractor that directly produces certified objects. No certification function or independent certificate validation is shown. `selected_alternative`, `op_index`, `kind`, modes, and register classes are not consumed by validation or coloring.
+
+The certificate boundary must be executable and separately tested. It must derive the selected machine alternative from authoritative staged/final RTL, prove exact operand death at the target-defined boundary, validate mode and register-class compatibility, account for early clobbers and implicit operands, and distinguish `_lv` semantics from ordinary two-address reuse. `operand_death_pos <= insn_pos` is not an exact-death proof.
+
+### 12.4 Global DF Closure Still Needs a Debug and Note Policy
+
+Using `DF_REG_DEF_CHAIN` and `DF_REG_USE_CHAIN` across the function is a substantial correction. The current helper intentionally permits debug uses outside the island, while the rewrite traverses only island instruction patterns. That can leave a selected pseudo referenced by debug RTL after its semantic definitions and uses have been converted to hard registers.
+
+The implementation must choose and test one explicit policy: rewrite compatible debug occurrences, reset affected debug instructions, or reject/strip them through the normal GCC debug machinery. It must also account for semantic references not represented as ordinary pattern uses, including call usage and relevant notes. The promised postcommit zero-pseudo assertion should state whether it applies to semantic RTL or every RTL occurrence.
+
+### 12.5 The Independent Staged Validator Is Still Only a Name
+
+`verify_staged_island_patterns(sfpu_island, regno_to_lreg)` is invoked after grouped recognition, but no implementation or contract is provided. With only an island and register map, its signature does not visibly receive the extracted interference graph, certified ties, allowed masks, precolors, clobbers, or state-boundary model promised by pipeline step 12.
+
+The plan should define the validator's inputs and independent reconstruction rules. It must check the fully staged patterns—including clobbers added by `verify_changes()`—against independently rebuilt def/use and target constraints. It must not merely replay assumptions from the extractor or confirm that selected pseudo names disappeared.
+
+The standalone transaction rule is otherwise correct: assert zero pending changes, stage, verify, run all fallible semantic validation, cancel on failure, confirm once, rebuild DF, and leave with zero pending changes. Add checking assertions on both exit paths.
+
+### 12.6 Telemetry Categories Are Not Yet Observable or Accurate
+
+The struct now defines useful counters, but the sample never emits or returns them. `recog_reject_count` is never incremented, and the combined condition collapses `verify_changes()` failure and staged-validator failure into `validator_reject_count`. Corpus output therefore cannot distinguish recognition rejection from semantic rejection.
+
+Evaluate these phases separately, increment the corresponding counter, emit deterministic dump records, and add tests for every status. Include extraction/certification rejection separately from generic invalid-model rejection. Telemetry that exists only as an unreported local variable cannot support the proposed rollout gates.
+
+### 12.7 The Documented Whole-Corpus Command Does Not Exist
+
+Section 10.2 instructs users to run:
+
+```bash
+./scripts/run-corpus-differential.sh --baseline=build-off --candidate=build-default --output=diffs/
+```
+
+No `scripts/run-corpus-differential.sh` exists in this checkout. This makes the newly documented P0 evidence workflow non-executable. Either implement and test that script with a defined manifest, normalization policy, change classification, simulator hooks, and archival format, or label the command as a required P0 deliverable rather than a runnable instruction.
+
+The existing focused validation script remains useful, but it is not a substitute for the whole-corpus A/B and simulator/silicon gates promised by the evidence-based rescue contract.
+
+### 12.8 Checked-In State and Approval Decision
+
+The checked-in RTL pass remains intentionally dump-only, the pressure scheduler remains `Init(0)`, and requested MILP still runs even after list success. The document mostly labels these correctly as target work. Accordingly:
+
+- **P0 direction remains approved:** implement default-on, list-success short-circuiting, MILP-on-miss, rollback, and a real whole-corpus differential workflow.
+- **P1 architecture remains approved:** fix the positional domains, implement authoritative tie certification, and define debug/global closure policy.
+- **P2 remains conditional:** implement the independent staged validator, accurate telemetry, and complete negative transaction tests before hard-register substitution ships.
+- **P3/P4 remain evidence-gated:** candidate static improvements are not silicon performance results.
+
+The remaining defects are concrete implementation tasks, not a reason to retreat from default-on scheduling. The plan is good enough to execute once it stops presenting nonexistent validation tooling and type/function names as completed proofs.
