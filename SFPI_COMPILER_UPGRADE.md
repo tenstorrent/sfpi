@@ -1615,6 +1615,17 @@ serialized silicon results compare against a checked-in baseline keyed by operat
 metric, scope, and selector.  CRAQ `aabbd10` adds spec-correct SFPSTORE LO16 mode-9 execution and
 WH/BH regressions.  Simulator modeled cycles remain distinct from physical device cycles.
 
+**SFPLOADMACRO formation checkpoint (2026-08-15).** SFPI-GCC `a1c5665f0` pins the
+MulInt32 compiler-flow gap and adds a default-off, dump-only post-RA discovery pass before replay
+formation.  The measured typed path remains `562.625` versus handwritten `283.9296875` Blackhole
+math cycles: the handwritten implementation preprograms delayed templates with hidden LREG, CC,
+Dst/RWC, subunit-calendar, write-port, drain, and replay-lockstep effects, so a local opcode
+peephole or naked public builtin would be unsound.  The analyzer emits no RTL, reports stable
+per-candidate rejection reasons, and is byte-identical off/on across WH/BH/QSR, including when D1
+replay hoisting is enabled.  Its 21 analyzer, 11 replay-hoist, six discard, and six MulInt baseline
+checks pass.  Actual formation remains gated on a compiler-owned macro descriptor and a simulator
+event model for arbitrary delayed sequences; no MulInt performance win is claimed yet.
+
 **Re-scoping note vs §18.4.** The master roadmap lists Track D as "Not started"; this design upgrades the REPLAY leg to PARTIAL because it genuinely reuses the shipped `pass_rvtt_replay` (834 lines) and the `ttreplay` builtin — the MOP and `SFPLOADMACRO` legs remain GREENFIELD.
 
 The ~4% Welford gap (323 vs replay-LLK 326 device cycles on Blackhole, `SFPI_COMPILER_UPGRADE.md:823`) is a *frontend-replay* compression gap — path A below — **not** an `SFPLOADMACRO` (path B) gap. There are two independent "macro" datapaths in the Tensix frontend and they must not be conflated.
