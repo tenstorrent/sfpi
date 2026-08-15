@@ -944,11 +944,11 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │       │                                  │           │ if corpus exposes recurring IRA failures.│
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P3**│ **Silicon Flow Scorecard**       │ Partial   │ **GO-BH-ONLY**: 3 generated-vs-handwritten│
-│       │                                  │           │ wins, 1 tie; scheduler A/B + WH remain open.│
+│       │                                  │           │ wins, 2 ties; scheduler A/B + WH remain open.│
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P4**│ **Latency Scheduling**           │ Planned   │ No reorder pass exists. Target: recover  │
-│       │                                  │ Sprint 1  │ Addcmul's measured +21.9% loss via 2-row  │
-│       │                                  │           │ exposure/interleaving.                    │
+│ **P4**│ **Latency Scheduling**           │ Partial   │ Generic proven 2-row Dst fusion/interleave│
+│       │                                  │ landed    │ closes Addcmul +21.9%→+0.02% parity; broad│
+│       │                                  │           │ modulo/cross-BB scheduling remains open.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P5**│ **Coprocessor, LICM & Macros**   │ Mixed     │ Replay loop hoist shipped opt-in; LICM / │
 │       │                                  │ Sprint 2-3│ constant pinning planned; SFPLOADMACRO    │
@@ -982,17 +982,19 @@ remain in the scorecard. They do not replace an identical-source pressure-schedu
 Welford's flag-off/flag-on body bypassed the pressure rewrite; Reduce-SDPA's changed-binary win
 validates replay hoisting; neither proves default-on pressure scheduling.
 
-**P4 is an implementation target, not a landed pass.** The checked-in
-`pass_rvtt_schedule` inserts at most one correctness NOP after examining the next Tensix dependency;
-it never reorders instructions. `pass_rvtt_lp_schedule` reorders only pressure-rescue regions with
-`old_peak > 8`. Consequently there is no post-RA peak-at-most-eight latency list scheduler or
-two-row interleaver in the tree. The recorded Addcmul `+21.9%` is a loss caused by the missing
-interleave, not a win. P4 becomes “Active” only with a compiler commit, discriminating assembly
-test, and paired silicon result.
+**P4 is now landed for one conservative class, not complete.** The legacy `pass_rvtt_schedule`
+still only inserts correctness NOPs, and `pass_rvtt_lp_schedule` remains a pressure-rescue pass for
+`old_peak > 8`. New P4 phase 2/3 instead recognizes same-BB adjacent Dst iterations before IRA,
+proves typed-address range and mod-4 cross-row non-aliasing, fuses the RWC step, and interleaves two
+independent dynamic chains before replay capture. Its compiler tests, byte-identical fallback,
+CRAQ functional gate, and paired Blackhole run close Addcmul from `+21.9%` to `+0.02%` parity. It is
+not a general post-RA list/modulo scheduler and has not produced a silicon win.
 
 **P5 must be tracked per mechanism.** Fixed-encoding replay loop hoisting is real, conservative,
 opt-in, and has a changed-binary Reduce-SDPA silicon win. LICM/constant pinning is still a proposed
-response to SigmoidAppx. `pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`
+response to SigmoidAppx; its current prototype is blocked because hoisting nine constants exceeds
+LREG capacity and reaches a reload ICE, so a conservative pressure budget is a hard prerequisite.
+`pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`
 in the checked-in compiler, but the simulator prerequisite is no longer wholly absent: CRAQ
 `fd8ed6f` provides the audited transactional evaluator for its admitted WH/BH shapes. Compiler
 configuration ownership, fallback identity, unsupported shapes, and silicon validation remain
@@ -1726,7 +1728,7 @@ device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ delta
 | **Reduce-SDPA** body | 840 (8-slot replay) | 834 | **−0.7%** (−6) | paired full golden | **Generated win** — generic D1 preheader capture hoisting flips the prior +2.0% loss |
 | **Reciprocal, accurate BF16** | 467 | 459 | **−1.7%** (−8) | paired canonical tolerance + PCC, 2/2 BH | **Generated win** — fresh semantic cubic becomes a generic 10-slot replay capture plus seven playbacks |
 | **Binary Min/Max** | 140.93 | 198.76 | **+41.0%** (+57.83) | paired element tolerance + PCC | **Loss** — ordinary load/load/swap/store replay cannot match the handwritten SFPLOADMACRO pipeline |
-| **Addcmul** | 292.92 | 357.03 | **+21.9%** (+64.11) | paired element tolerance + PCC | **Loss** — one-row dependency chain versus handwritten two-row interleave |
+| **Addcmul** | 292.93 | 292.99 | **+0.02%** (+0.06) | paired element tolerance + PCC, 2/2 BH | **Parity** — generic pre-IRA Dst-iteration fusion/interleave closes the prior +21.9% loss; not a win |
 | **Typecast, Float16_b lane** | 265 | 317 | **+19.6%** (+52) | paired element tolerance + PCC, 2/2 BH | **Loss** — typed five-slot replay versus handwritten SFPLOADMACRO pipeline |
 | **TTNN Where** | 159.25 | 312.50 | **+96.2%** (+153.25) | 2/2 BH | **Loss** — correct canonical SFPI; 7 replay slots versus handwritten SFPLOADMACRO's 3 |
 | **TopK** | 5038 | 5310 | **+5.4%** (+272) | exact value/index pairing, 2/2 BH | **Loss** — multi-result typed model is sound; final delivery/schedule remains longer |
@@ -1736,40 +1738,49 @@ device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ delta
 from a 2.0% generated loss to a repeatable 0.7% generated win; fresh semantic accurate-BF16
 Reciprocal is 1.7% faster because the ordinary compiler replay pass compresses its ten-instruction
 body; Welford remains a marginal generated win. Binary broadcast ties exactly. The loss rows split
-cleanly into missing SFPLOADMACRO formation (Binary Min/Max, Typecast, Where), missing cross-iteration
-latency scheduling (Addcmul), loop-invariant constant/replay formation (SigmoidAppx), and a smaller
-TopK delivery/schedule gap. The dump-only formation pass records the missing macro proofs without
-emitting speculative code.
+cleanly into missing SFPLOADMACRO formation (Binary Min/Max, Typecast, Where), loop-invariant
+constant/replay formation (SigmoidAppx), and a smaller TopK delivery/schedule gap. Addcmul is now a
+separate parity result: the generic pre-IRA Dst-iteration fusion/interleave pass closes its measured
+21.9% deficit, but does not beat the handwritten schedule. The macro formation work remains opt-in
+and per-shape; it must not be described as corpus-ready until a real typed final ELF passes CRAQ,
+hardware correctness, and repeated silicon A/B.
 
 #### 18.8.0.1 Perf-Loss Root Cause — Why Correct-But-Slower
 
 Reported corpus run (2026-08-15; per-kernel silicon instruction-diff artifacts pending in-repo):
-Binary Min/Max **+41.0%**, Addcmul **+21.9%**, Typecast **+19.6%**, TopK **+5.4%** — all correct.
+Binary Min/Max **+41.0%**, Typecast **+19.6%**, TopK **+5.4%** — all correct. Addcmul's original
+**+21.9%** result is retained below as the fail-before diagnosis; the landed P4 phase-2/phase-3
+compiler flow now measures **292.99 vs 292.93 cycles (+0.02%)**, i.e. parity.
 
-**Unifying diagnosis.** Register allocation and correctness are solid (the shipped, silicon-validated
-layer); **every loss is a pure throughput gap** from two mechanisms that are not built, and a cost
-model blind to both. Confirmed structurally in `rvtt-passes.def`:
+**Unifying diagnosis, updated after the Addcmul fix.** Register allocation and correctness are solid
+for the measured regions. The original losses were throughput gaps from mechanisms that were absent
+at the time, plus a cost model blind to them. The first latency mechanism is now built and validated:
+generic pre-IRA adjacent-Dst fusion exposes two independent rows and a late GIMPLE interleaver orders
+their dynamic chains before replay formation. The remaining macro and invariant-placement gaps are
+still open. Historical baseline structure was:
 
 - The reordering scheduler `pass_rvtt_lp_schedule` **gates entirely on `old_peak > 8`**
   (`gimple-rvtt-lp-schedule.cc:824,829`) — for a peak-≤8 kernel it does nothing.
 - `pass_rvtt_schedule` **only inserts NOPs, never reorders** (header *"schedule tensix insns (insert
   nops)"*; `emit_insn_after(gen_rvtt_sfpnop())`, `rtl-rvtt-schedule.cc:252`).
 
-So **there is no latency-hiding scheduler** (§5 / P4 unbuilt): a dependent instruction either pays
-an explicit correctness NOP where the target erratum requires one or an implicit hardware scoreboard
-stall, and the compiler cannot fill that issue slot with independent work. Combined with no
-checked-in compiler `SFPLOADMACRO` formation (path B), that is the dominant loss story.
+At that baseline there was no latency-hiding scheduler. P4 now fills this gap for a deliberately
+conservative class: same-BB, non-aliasing adjacent Dst iterations whose SSA/effect graph proves two
+independent chains. A dependent instruction outside that admitted class still pays an explicit
+correctness NOP or implicit hardware scoreboard stall. Missing checked-in `SFPLOADMACRO` formation
+(path B) remains the dominant loss story for Min/Max, Typecast, and Where.
 
 | Kernel | Loss | Hand-tuned uses | Compiler's error (class) |
 | :--- | ---: | :--- | :--- |
 | **Binary Min/Max** | +41.0% | load+compute+store fused across `SFPLOADMACRO`'s 4 sub-units | **No `SFPLOADMACRO`** → serial `SFPLOAD→SFPMAX→SFPSTORE`, load latency exposed (most load-bound → worst) |
-| **Addcmul** | +21.9% | manual `MUL_a,MUL_b,MAD_a,MAD_b` interleave to hide the 2-cycle latency across 2 rows | **No latency scheduler/unroll-and-jam** → emits a one-row `MUL→MAD` chain; the next independent row is not exposed for interleaving |
+| **Addcmul** | +21.9% fail-before; +0.02% after P4 | manual `MUL_a,MUL_b,MAD_a,MAD_b` interleave to hide the 2-cycle latency across 2 rows | **Closed to parity:** generic pre-IRA Dst fusion exposes row B, proves mod-4 non-aliasing, and interleaves the two chains before replay capture |
 | **Typecast** | +19.6% | `SFPLOADMACRO` load-convert-store pipeline (§7 "memory bound") | **No `SFPLOADMACRO`** → serial convert loop |
 | **TopK** | +5.4% | tuned sort network with statically expanded cases | Typed helper is smaller but retains runtime loop/control flow; dynamic-path attribution is still required |
 
 **The compiler's errors, ranked.**
-1. **No latency-hiding reorder (§5 / P4 unbuilt).** Only a pressure scheduler (fires `>8`) + a
-   NOP-inserter. → Addcmul, and a latency tax on every body.
+1. **Latency-hiding reorder is partial, not absent.** P4 phase 2/3 is landed for proven adjacent-Dst
+   pairs and closes Addcmul from +21.9% to parity. It is not a general modulo scheduler: unrelated
+   loops, cross-BB groups, and shapes without a proven independent second chain still fall back.
 2. **No checked-in `SFPLOADMACRO` formation (path B).** The original simulator path only
    whitelists known LLK signatures, but CRAQ `fd8ed6f` now provides an audited persistent,
    transactional evaluator for explicitly admitted WH/BH shapes. Compiler config/slot ownership,
@@ -1796,8 +1807,9 @@ notes already do. **Confirmed:** both measured Addcmul ELFs contain zero literal
 captures one seven-slot row with adjacent `SFPMULI→SFPMAD`, while handwritten captures fourteen
 slots with `MUL_a,MUL_b,MAD_a,MAD_b`, exposing the independent chain and avoiding implicit scoreboard
 delay. Min/Max and Typecast show no generated `SFPLOADMACRO`. The fixes are Track-D (§18.8) plus P4
-latency scheduling with cross-iteration exposure, not more register allocation — the allocator is
-already at parity.
+latency scheduling with cross-iteration exposure, not more register allocation. The first P4 slice
+is now validated at parity; broadening must preserve the same alias, SSA, byte-identity, and silicon
+gates rather than treating parity as a corpus-wide scheduler win.
 
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) were then closed by generic D1 preheader capture hoisting: the current pinned result is handwritten `840` vs generated `834` — a **−0.7% generated win**, the corpus's first outright flip (§18.8.0). This note is retained for the recovery history (opaque `.ttinsn` → typed API → hoisting). Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
@@ -2586,6 +2598,7 @@ hand-tuned Tensix assembly in several correctness-gated profiler zones
 │ **Reciprocal BF16**        │ **459 vs 467 cycles (-1.7%)**│ 10-slot compiler replay capture + 7 playbacks   │
 │ **Welford Body**           │ **323 vs 326 cycles (-0.9%)**│ Raw-LREG ownership + literal coalescing         │
 │ **Binary Broadcast**       │ **608 vs 608 cycles (0.0%)** │ Exact cycle parity; 100% functional match       │
+│ **Addcmul**                │ **292.99 vs 292.93 (+0.02%)**│ Generic two-row fusion/interleave; parity, no win│
 └────────────────────────────┴─────────────────────────────┴─────────────────────────────────────────────────┘
 ```
 
@@ -2595,17 +2608,23 @@ most of the 164-row corpus remain unmeasured against hand-tuned implementations 
 
 ### 19.2 M2 Is Not the Measured Blocker; It Is Not Universally Obsolete
 
-The current measured losses do not show allocator spilling as their cause.  The evidence supports
-keeping M2 on standby, with a concrete trigger rather than a rhetorical conclusion:
+The current measured silicon losses do not show allocator spilling as their cause.  The evidence
+supports keeping M2 on standby, with a concrete trigger rather than a rhetorical conclusion. A new
+compile-time adversarial result also sharpens that trigger: hoisting nine invariant SFPU constants
+without a pressure budget extends their simultaneous LREG lifetimes and ICEs in reload, while the
+option-off source compiles. This blocks that LICM prototype; it does not retroactively explain the
+measured kernel losses.
 
 1. **GCC IRA is sufficient for the tested regions.** The `x<N>` constraints, multi-result RTL, and
    raw-LREG sentinels protect the live intervals exercised by the currently measured kernels.
 2. **The sentinel mechanism is real but its provenance must be stated correctly.**
    `rtl-rvtt-lreg-livein.cc` models opaque LREG ownership; `8f943c2f8` is the predicate DEBUG-use
    fix, not the sentinel-pass commit.
-3. **M2 remains a standby audit stub.** Activate it only when a reviewed corpus case proves that IRA
-   spills, reloads, or fails to color a semantically valid region after raw-LREG modeling is correct.
-   The present data do not prove that every future high-pressure or cross-engine kernel is spill-free.
+3. **M2 remains a standby audit stub, but pressure accounting is immediately required.** The
+   invariant-hoist pass must conservatively budget existing loop-live values plus every proposed
+   hoist and refuse before mutation when the eight allocatable LREGs may be exceeded. Activate the
+   exact allocator only if a reviewed, semantically valid corpus region remains profitable after that
+   guard yet IRA cannot color it. The present data do not prove every future region spill-free.
 
 ### 19.3 Correcting the Throughput Diagnoses
 
@@ -2618,17 +2637,17 @@ still needs changed-binary silicon acceptance.
 ┌──────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
 │ Identified Bottleneck        │ Impacted Ops  │ Concrete Architectural Remediation                          │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **1. Lack of Latency-Hiding  │ Addcmul       │ Form and interleave a two-row group before IRA.              │
-│    Reorder Scheduling**      │ (+21.9%)      │ Interleave independent row dependency chains (MUL_a, MUL_b, │
-│                              │               │ MAD_a, MAD_b) to hide the 2-cycle SFPU result latency.      │
+│ **1. Partial Latency-Hiding │ Addcmul       │ Landed: form/interleave a proven two-row group before IRA;  │
+│    Reorder Scheduling**      │ +21.9%→+0.02% │ now silicon parity. Generalize only from measured residuals │
+│                              │               │ and retain alias/SSA/byte-identity fallback proofs.         │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
 │ **2. Missing SFPLOADMACRO    │ Min/Max (+41%)│ Use the audited CRAQ event model, then prove complete config │
 │    Formation**               │ Typecast      │ ownership, hidden effects, and byte-identical fallback in   │
 │                              │ (+19.6%)      │ active multi-op macro region emission.                      │
 │                              │ Where (+96.2%)│                                                             │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist proven invariant constants and let IRA choose their   │
-│    Rematerialization (LICM)**│ (+100.5%)     │ registers; do not hard-code L6/L7.                          │
+│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist proven invariants only under an explicit peak-LREG    │
+│    Rematerialization (LICM)**│ (+100.5%)     │ budget; refuse transactionally before IRA spill/reload ICE. │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
 │ **4. Cost Model Calibration**│ General       │ Model 1/cycle issue throughput separately from 2-cycle     │
 │                              │ Schedule      │ result latency; calibrate with Blackhole silicon A/B.        │
@@ -2681,16 +2700,20 @@ requires disproportionate backend surgery.
 
 ### 19.6 Evidence-Gated Execution Directive
 
-1. **Finish pre-IRA Dst-iteration interleaving.** Require Dst non-aliasing, SSA/cache integrity,
-   exact final-ELF order, byte-identical fallback, CRAQ correctness, and three serialized Blackhole
-   samples. Addcmul's `+21.9%` is a loss to close, not a delivered win.
+1. **Keep the landed pre-IRA Dst-iteration interleaver evidence-bounded.** Addcmul is closed from
+   `+21.9%` to `+0.02%` parity with Dst non-aliasing, SSA/cache integrity, exact final-ELF order,
+   byte-identical fallback, CRAQ correctness, and repeated Blackhole samples. Generalize only when
+   another corpus row presents the same proven shape; do not call parity a win.
 2. **Finish the first sound macro-emission slice.** CRAQ `fd8ed6f` provides the admitted WH/BH
    transactional event model; compiler emission must additionally prove all config words, function-
    scoped scratch/slot ownership, opaque-owner exclusion, hidden effects, and ineligible identity.
    Pin the CRAQ repository commit and runner path in the result manifest so the cited model is
    reproducible outside the author's checkout.
-3. **Build operation-independent invariant placement plus counted-loop replay.** Reject unproven
-   MEM/GPR/config/CC/call/opaque-asm barriers and let IRA allocate coefficients.
+3. **Finish operation-independent invariant placement plus counted-loop replay under pressure.** In
+   addition to MEM/GPR/config/CC/call/opaque-asm barriers, compute a conservative eight-LREG peak
+   budget including existing loop-live values. The nine-invariant adversarial case must refuse with
+   option-off byte identity instead of reaching reload and ICEing. Re-review replay lifetime/slot
+   ownership after this fix because counted replay is stacked on the blocked hoist branch.
 4. **Extend the named durable corpus runner.** TT-Metal `86914798e5`,
    `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
    pytest-node attribution and compiler capability/pin provenance. Add identical-source scheduler
