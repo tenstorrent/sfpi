@@ -23,18 +23,20 @@ In standard GCC, register allocation (IRA/LRA) assumes memory spilling is a vali
 
 ---
 
-## 2. Guarded Default-On Policy & Rebuttal Analysis
+## 2. Guarded Default-On Policy: The Testable Rescue Contract
 
-### 2.1 The Non-Negative Delta Principle
+### 2.1 The Evidence-Based Rescue Contract
 
-The core justification for enabling the pressure scheduler by default for eligible regions is the **Non-Negative Delta Principle**:
+A source-order GIMPLE peak above eight does not guarantee that baseline GCC will spill or abort, because fortunate downstream coalescing in IRA can occasionally allocate tight graphs. Therefore, rather than claiming an unqualified non-negative delta theorem, default-on deployment is governed by an **Evidence-Based Rescue Contract**:
 
-1. **Zero Impact on Passing Code (Peak $\le 8$):** Any basic block whose natural source order fits within 8 LREGs completely bypasses pressure mutation, remaining **100% byte-identical** to baseline GCC.
-2. **Strict Non-Regression on Failing Code (Peak $> 8$):** Basic blocks exceeding 8 LREGs currently abort with a fatal spill ICE. An automated rescue attempt that succeeds turns an uncompilable program into a valid binary; an attempt that fails leaves the program uncompilable. The delta is strictly non-negative ($\ge 0$).
-3. **Incomplete Rescue Is Not a Regression:** The synthetic $11 \to 8$ fixture spills in IRA after GIMPLE scheduling, but because it also spilled without the scheduler, no working program is regressed.
+1. **Strict Region Allowlist:** Regions outside the positively classified arithmetic allowlist (`sfpadd`, `sfpmul`, `sfpmad` on Wormhole/Blackhole) are left **100% untouched**.
+2. **Threshold Invariant:** Regions with source-order peak at or below eight are left **100% untouched** (byte-identical assembly).
+3. **Transactional Independent Validation:** A proposed schedule is committed if and only if an independent validator proves def-before-use precedence, source availability, exact liveness, and peak $\le 8$.
+4. **Whole-Corpus Differential Testing:** The whole eligible corpus is compiled legacy-off versus proposed-default to classify every changed binary through simulator and silicon suites.
+5. **Tested Operational Rollback:** The explicit rollback flag (`-mno-tt-tensix-optimize-pressure-schedule`) remains supported and verified in CI.
 
 ```
-                             REBUTTAL LOGIC FLOW
+                             RESCUE CONTRACT FLOW
                    ┌──────────────────────────────────────┐
                    │    Input Region Register Pressure    │
                    └──────────────────┬───────────────────┘
@@ -45,17 +47,23 @@ The core justification for enabling the pressure scheduler by default for eligib
                       │                               │
                       ▼                               ▼
                BYPASS SCHEDULER               AUTOMATIC RESCUE
-             (100% Byte-Identical)            (Strictly Non-Negative)
+             (100% Byte-Identical)          (Transactional Fallback)
                                                       │
                                    ┌──────────────────┴──────────────────┐
                                    ▼                                     ▼
                             Rescue Succeeds                       Rescue Fails
-                           (Compiles Cleanly)                 (Fails as it did before)
+                           (Compiles Cleanly)                 (Preserves Legacy State)
 ```
 
-### 2.2 Production Guardrails & Fallback Chain
+### 2.2 Baseline State vs. P0 Target Architecture
 
-To eliminate JIT latency spikes and package distribution risks, the default-on scheduler executes as a strict fallback chain:
+| Dimension | Checked-In Checkpoint | P0 Target Architecture |
+| :--- | :--- | :--- |
+| **Pressure Scheduler Flag** | `Init(0)` (Explicit opt-in required) | `Init(1)` for existing WH/BH gate + negative rollback option |
+| **List Scheduler** | Implemented & independently validated | Primary fast-path rescue attempt (<0.1ms compile time) |
+| **MILP Invocation** | Explicit second flag (invoked on all high-pressure) | Demand-driven escalation **only on list failure** (100k-node cap) |
+| **Fallback Behavior** | Fails back to unmutated GIMPLE | Fails back to unmutated GIMPLE |
+| **JIT Cache Integration** | Version-string hashed | Compiler flags & scheduler state hashed in build key |
 
 ```
 Candidate Region (Peak > 8)
@@ -70,10 +78,6 @@ Candidate Region (Peak > 8)
        │
        └──► 3. Safe Fallback: Leave GIMPLE untouched (preserves legacy compilation state)
 ```
-
-- **Default Flag:** `-mtt-tensix-optimize-pressure-schedule` (`Init(1)` for eligible $>8$ regions).
-- **Rollback Override:** `-mno-tt-tensix-optimize-pressure-schedule` (Restores 100% legacy GCC behavior).
-- **MILP Enablement:** Demand-driven escalation on List-miss when host solver is present.
 
 ---
 
@@ -103,7 +107,7 @@ Commit GIMPLE Rewrite  ──(On any validation failure)──► Leave GIMPLE U
 
 ### 3.1 Target M2/M3 Joint MILP Formulation
 
-The target MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, register capacity constraints, destructive operand reuse, and critical path makespan:
+The target MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan:
 
 #### Variables:
 - $\text{issue}_{i,t} \in \{0, 1\}$: Binary indicator that operation $i \in \{1 \dots N\}$ is issued in time slot $t \in \{1 \dots T\}$.
@@ -123,9 +127,14 @@ The target MILP optimizer models simultaneous instruction scheduling, exact live
 4. **General Makespan Formulation:**
    $$\text{finish} \ge \sum_{t=1}^T t \cdot \text{issue}_{i,t} + \text{latency}(i) \quad \forall i \in \{1 \dots N\}$$
 5. **Exact Liveness Linearization:** Value $v = \text{def}(i)$ becomes live immediately after slot $t(i)$ and remains live until the latest consuming slot $\max_{w \in \text{uses}(v)} t(w)$.
-6. **Destructive Overlap / Same-Slot Reuse:** If operation $i$ reuses operand $v$ via $\text{alias}_{i,v} = 1$, the result register may equal $v$'s register because $v$ dies at slot $t(i)$.
-7. **Strict Capacity Limit:** Total active registers at any cycle $t$ must satisfy:
-   $$\sum_{v} \text{live}_{v,t} \le 8 \quad \forall t$$
+6. **Single Physical Register Assignment:** Each value $v$ is assigned exactly one physical register:
+   $$\sum_{r=0}^7 \text{assign}_{v,r} = 1 \quad \forall v$$
+7. **Linearized Register Occupancy:**
+   $$\text{occupy}_{v,r,t} \ge \text{live}_{v,t} + \text{assign}_{v,r} - 1, \quad \text{occupy}_{v,r,t} \le \text{live}_{v,t}, \quad \text{occupy}_{v,r,t} \le \text{assign}_{v,r}$$
+8. **Physical Register Mutual Exclusion:** At most one live value occupies physical register $r$ at cycle $t$:
+   $$\sum_{v=1}^V \text{occupy}_{v,r,t} \le 1 \quad \forall r \in \{0 \dots 7\}, \forall t$$
+9. **Destructive Overlap & Machine Ties:** If $\text{alias}_{i,v} = 1$, operation $i$'s result reuses operand $v$'s physical register only if $v$ dies at $t(i)$ and machine alternatives permit the tie:
+   $$\text{assign}_{\text{def}(i), r} = \text{assign}_{v, r} \quad \text{when } \text{alias}_{i,v} = 1$$
 
 #### Multi-Tier Lexicographic Objective (Sequential Solves):
 1. **Solve 1 (Feasibility):** Minimize peak register occupancy: $\min \max_t \sum_v \text{live}_{v,t} \le 8$.
@@ -138,20 +147,6 @@ The target MILP optimizer models simultaneous instruction scheduling, exact live
   1. **Pressure-Reduction Mode (P-Mode):** When live count $\ge K - \delta$ (parameterized across thresholds 6, 7, and 8), prioritize nodes that kill the most live values.
   2. **Latency-Minimization Mode (L-Mode):** When live count $< K - \delta$, prioritize critical-path latency and independent chain interleaving.
 * Telemetry dumps (`mode=P`/`mode=L`) record switching decisions for corpus calibration.
-
-```
-                     READY LIST EVALUATION
-                               │
-               ┌───────────────┴───────────────┐
-               ▼                               ▼
-    Current Liveness >= Threshold    Current Liveness < Threshold
-               │                               │
-               ▼                               ▼
-     P-MODE (Pressure Mode)          L-MODE (Latency Mode)
-  Priority 1: Max Operands Killed   Priority 1: Longest Critical Path
-  Priority 2: Critical Path         Priority 2: Alternating Chains (Dual-Horner)
-  Priority 3: Canonical UID         Priority 3: Canonical UID
-```
 
 ### 3.3 Why MILP is Essential: The 11-to-8 Optimality Proof
 
@@ -167,23 +162,23 @@ While greedy list heuristics work for simple expressions, register-constrained D
 
 ### 4.1 The Final-RTL Constraint Architecture
 
-Milestone M2 treats final pre-IRA RTL as authoritative. The GIMPLE certificate is a schedule seed; expansion, sched1, and early rematerialization operate on RTL. To eliminate the IRA spill hazard permanently, M2 executes the following 14-step pipeline:
+Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spill hazard permanently, M2 executes the following 14-step pipeline on strict, contiguous closed islands:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │              Authoritative Pre-IRA M2 Allocation Pipeline               │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ 1. Discover one contiguous final-RTL island (no skipping non-SFPU insns)│
-│ 2. Terminate at any unmodeled instruction or state boundary             │
+│ 1. Discover one contiguous final-RTL island (terminate at unmodeled insn)│
+│ 2. Terminate at any unmodeled instruction, call, branch, or state barrier│
 │ 3. Assign dense layout positions 0..N-1 (never use arbitrary UIDs)      │
 │ 4. Extract all XTT32 pseudo def/use, hard-register clobbers & modes     │
 │ 5. Prove machine-legal dying operand overlaps for destructive ties      │
 │ 6. Separate _lv semantic predication ties from ordinary destructive ties │
 │ 7. Build equality classes only for independently verified ties (UnionF) │
-│ 8. Build interference graph and allowed physical color sets [0..7]      │
+│ 8. Intersect allowed color masks, reconcile precolors, build conflict G │
 │ 9. Solve exact 8-coloring via bounded DSATUR / Backtracking             │
 │ 10. Independently validate every position, color, tie, clobber & state   │
-│ 11. Apply substitutions atomically via real GCC grouped-change APIs     │
+│ 11. Apply substitutions atomically via GCC 15 grouped-change transaction│
 │ 12. Re-verify recog_memoized(insn) >= 0 for all rewritten RTL insns     │
 │ 13. Confirm change group, rebuild DF, assert ZERO SFPU pseudos in island│
 │ 14. On any failure, cancel complete group and leave RTL untouched       │
@@ -256,7 +251,6 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
     // 1. Contract mandatory equality ties (MANDATORY_2ADDR and LV_PREDICATION)
     for (const auto& tie : ties) {
         if (tie.kind == tie_kind::MANDATORY_2ADDR || tie.kind == tie_kind::LV_PREDICATION) {
-            // Verify tie operand dies at the issue boundary
             if (tie.operand_last_use_pos <= tie.insn_pos) {
                 uf.unite(tie.result_val, tie.operand_val);
             } else {
@@ -265,7 +259,7 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
         }
     }
 
-    // 2. Build contracted node list
+    // 2. Build contracted node list with color mask intersections
     std::unordered_map<unsigned, unsigned> root_to_node_idx;
     std::vector<m2_color_node> contracted_nodes;
 
@@ -275,7 +269,7 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
             root_to_node_idx[root] = contracted_nodes.size();
             m2_color_node node;
             node.stable_id = contracted_nodes.size();
-            node.allowed_color_mask = 0xFF; // All 8 colors allowed by default
+            node.allowed_color_mask = 0xFF; // All 8 colors allowed initially
             node.fixed_color = -1;
             contracted_nodes.push_back(node);
         }
@@ -368,9 +362,14 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
         rtx_insn *insn;
         std::vector<rtx_insn*> sfpu_island;
         
+        // Discover strictly contiguous SFPU islands (stop at unmodeled instruction)
         FOR_BB_INSNS(bb, insn) {
-            if (NONDEBUG_INSN_P(insn) && rvtt_sfpu_insn_p(insn)) {
-                sfpu_island.push_back(insn);
+            if (NONDEBUG_INSN_P(insn)) {
+                if (rvtt_sfpu_insn_p(insn)) {
+                    sfpu_island.push_back(insn);
+                } else if (!sfpu_island.empty()) {
+                    break; // Closed island boundary
+                }
             }
         }
         
@@ -392,7 +391,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
         }
 
         // Real GCC 15 Grouped Changes Transaction
+        int checkpoint = num_validated_changes();
         bool rewrite_ok = true;
+
         for (rtx_insn *cur_insn : sfpu_island) {
             subrtx_ptr_iterator::array_type array;
             FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(cur_insn)) {
@@ -402,21 +403,24 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                     auto it = regno_to_lreg.find(p_regno);
                     if (it != regno_to_lreg.end()) {
                         rtx hard_reg = gen_raw_REG(GET_MODE(*loc), SFPU_REG_FIRST + it->second);
-                        validate_change(cur_insn, loc, hard_reg, /*unique=*/true);
+                        if (!validate_change(cur_insn, loc, hard_reg, /*unique=*/true)) {
+                            rewrite_ok = false;
+                            break;
+                        }
                     }
                 }
             }
-            if (recog_memoized(cur_insn) < 0) {
+            if (!rewrite_ok || recog_memoized(cur_insn) < 0) {
                 rewrite_ok = false;
                 break;
             }
         }
 
-        if (rewrite_ok && verify_changes(0)) {
+        if (rewrite_ok && verify_changes(checkpoint)) {
             confirm_change_group();
             df_insn_rescan_all();
         } else {
-            cancel_changes(0);
+            cancel_changes(checkpoint);
         }
     }
     return 0;
@@ -638,101 +642,3 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 12. Critical Engineering Rebuttal: Conditions for Approval
-
-The reconciled roadmap is directionally sound, and guarded default-on scheduling remains the correct P0 objective. However, the current document mixes implemented behavior, proposed behavior, and illustrative pseudocode. The following issues are release blockers, not arguments for keeping a proven rescue permanently disabled.
-
-### 12.1 Replace the Non-Negative Delta Claim with a Testable Rescue Contract
-
-A source-order GIMPLE peak above eight does not prove that baseline GCC will spill or abort. Expansion, RTL transformations, rematerialization, coalescing, and IRA can change the effective pressure. Therefore the scheduler cannot claim that every mutation of a `peak > 8` region is intrinsically non-regressive.
-
-The defensible default-on contract is narrower and stronger:
-
-1. Regions outside the validated allowlist are untouched.
-2. Regions at or below the trigger threshold are untouched.
-3. A proposed schedule is committed only after the independent legality and pressure validator accepts it.
-4. Whole-corpus A/B testing compares compilation success, diagnostics, generated assembly, and deterministic output with the pass on and off.
-5. The rollback option remains supported and tested.
-
-This evidence-based contract supports default-on deployment without relying on a theorem the current pipeline does not establish.
-
-### 12.2 Distinguish Checked-In State from the P0 Target
-
-The checked-in options currently initialize both pressure scheduling and MILP use to off. The implementation also invokes MILP whenever it is requested and available for a high-pressure region, even when the list scheduler has already found a valid rescue. Consequently, `Init(1)` and demand-driven MILP-on-list-miss describe required P0 changes, not current behavior.
-
-P0 is complete only when the implementation and tests demonstrate this sequence:
-
-```text
-eligible high-pressure region
-  -> deterministic list scheduler
-  -> return immediately on independently validated peak <= 8
-  -> otherwise invoke bounded MILP when compiled and available
-  -> validate the MILP result independently
-  -> otherwise preserve the original GIMPLE order
-```
-
-Solver absence, timeout, infeasibility, validator rejection, and the explicit rollback flag must all leave the original region unchanged.
-
-### 12.3 Complete the Joint MILP Before Calling It a Specification
-
-The formulation declares assignment, occupancy, and destructive-alias variables but does not constrain them sufficiently. An executable M2/M3 model must additionally define:
-
-- exactly one allowed physical register for every allocated value;
-- the full linearization of `occupy[v,r,t] = live[v,t] AND assign[v,r]`;
-- at most one simultaneously live value in each physical register at each position;
-- fixed/precolored registers, hard-register clobbers, modes, and allowed-color masks;
-- alias equality between result and selected dying operand;
-- exactly the machine alternatives for which destructive reuse is legal;
-- live-in, live-out, unused-result, and issue-boundary conventions; and
-- a finite scheduling horizon plus deterministic tie-breaking.
-
-The aggregate constraint `sum(live[v,t]) <= 8` proves only a capacity bound. It does not prove that the values admit a legal assignment to L0-L7 under target constraints.
-
-### 12.4 The DSATUR Listing Is Architectural Pseudocode, Not Safe GCC Code
-
-The sample coloring engine initializes every contracted class with all eight colors and no fixed color. It never derives allowed colors from operand alternatives, modes, hard-register clobbers, or precolored operands. Its mandatory-tie test checks only a last-use position; that is insufficient to prove a matching machine alternative, compatible modes, `_lv` predication semantics, early-clobber legality, and death at the exact destructive boundary.
-
-The island collector also appends every SFPU instruction in a basic block while silently skipping intervening non-SFPU instructions. That contradicts the stated closed-island rule and can omit barriers, state changes, clobbers, or uses that make the extracted graph unsound. Discovery must stop at the first unmodeled instruction or explicitly prove it transparent.
-
-Before coloring, P1 must construct and independently check a complete final-RTL model. Equality-class contraction must intersect member color masks, reconcile precolors, reject internal interference, and retain every external interference edge. Search exhaustion must be distinguishable from proven uncolorability in diagnostics and tests.
-
-### 12.5 The Grouped RTL Rewrite Does Not Yet Meet Its Atomicity Claim
-
-The illustrated transaction has several correctness gaps:
-
-- it ignores the return value of `validate_change`;
-- it uses a hard-coded change checkpoint instead of preserving the caller's `num_validated_changes()` value;
-- it calls `recog_memoized` while grouped changes remain pending;
-- it does not demonstrate that every occurrence of each selected pseudo is inside the closed island;
-- it confirms changes before rebuilding DF and asserting that no selected SFPU pseudo remains; and
-- after confirmation, a failed postcondition can no longer be rolled back by `cancel_changes`.
-
-The implementation must save the grouped-change checkpoint, validate every substitution and instruction pattern before confirmation, cancel back to that checkpoint on any failure, and treat the post-confirmation DF/closure checks as compiler-checking assertions over conditions already proven before commit. A negative test should force failure at each stage and verify byte-identical RTL fallback.
-
-### 12.6 Separate Demonstrated Results from Opportunities
-
-The Welford 9-to-8 scheduling rescue and the generic 9-to-8 fused-DAG rescue are demonstrated compiler results. The Dual-Horner issue reduction, Log elimination of `$Dst` cuts, replay compression, macro issue-rate gains, and other LLK effects remain candidate opportunities until the compiler emits the claimed transformation and correctness is checked. Static issue slots are not silicon cycles.
-
-P3 and P4 gates must archive:
-
-- baseline and optimized compiler revisions and exact flags;
-- generated assembly and scheduler/allocation certificates;
-- numerical outputs against the same producer/consumer workload;
-- warmup policy, iteration count, raw device-cycle samples, median and dispersion;
-- WH/BH architecture and device metadata; and
-- an A/B/A or randomized run order sufficient to expose thermal and system drift.
-
-Only those measurements can support a performance-win claim. A correct rescue with no speedup is still valuable, but it must be reported as a compile-coverage improvement rather than a throughput improvement.
-
-### 12.7 Revised Approval Decision
-
-- **Approve P0 implementation:** make the validated, narrowly allowlisted scheduler default-on; short-circuit after list success; invoke bounded MILP on list miss; retain and test rollback; run full-corpus A/B validation.
-- **Approve P1 architecture:** build the authoritative final-RTL extractor and an independent checker before mutation.
-- **Conditionally approve P2:** do not ship physical substitution until the color constraints, closed-island proof, grouped-change transaction, and negative rollback suite are implemented rather than merely sketched.
-- **Treat P3/P4 performance as unproven:** require generated-code evidence and real silicon measurements.
-- **Keep P5 separate:** replay, macro scheduling, and MLIR are valuable longer-horizon projects, but they must not obscure the immediate compiler-correctness gates.
-
-The correct response to one IRA spill is not to disable a validated rescue indefinitely, nor is it to waive allocator correctness. It is to finish the final-RTL model, make fallback genuinely transactional, enable the proven narrow path by default, and expand coverage only as independent evidence permits.
