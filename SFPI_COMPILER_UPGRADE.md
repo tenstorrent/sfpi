@@ -105,9 +105,9 @@ Independent Schedule & Pressure Certificate Validator
 Commit GIMPLE Rewrite  ──(On any validation failure)──► Leave GIMPLE Untouched
 ```
 
-### 3.1 Target M2/M3 Joint MILP Model Outline
+### 3.1 Non-Normative Target M2/M3 Joint MILP Model Outline
 
-The target joint MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan:
+The target joint MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan over a finite time horizon $T \in [1 \dots 2N]$:
 
 #### Variables:
 - $\text{issue}_{i,t} \in \{0, 1\}$: Binary indicator that operation $i \in \{1 \dots N\}$ is issued in time slot $t \in \{1 \dots T\}$.
@@ -133,7 +133,9 @@ The target joint MILP optimizer models simultaneous instruction scheduling, exac
    $$\text{occupy}_{v,r,t} \ge \text{live}_{v,t} + \text{assign}_{v,r} - 1, \quad \text{occupy}_{v,r,t} \le \text{live}_{v,t}, \quad \text{occupy}_{v,r,t} \le \text{assign}_{v,r}$$
 8. **Physical Register Mutual Exclusion:** At most one live value occupies physical register $r$ at cycle $t$:
    $$\sum_{v=1}^V \text{occupy}_{v,r,t} \le 1 \quad \forall r \in \{0 \dots 7\}, \forall t$$
-9. **Linearized Destructive Implication:** When operation $i$ is selected to destructively alias dying operand $v$ ($\text{alias}_{i,v} = 1$), their physical register assignments are forced to match:
+9. **Mandatory Destructive Reuse for 2-Address Operations:** For operations $i$ requiring destructive operand reuse under machine constraints:
+   $$\sum_{v \in \text{valid\_ops}(i)} \text{alias}_{i,v} = 1$$
+10. **Linearized Destructive Implications:** If $\text{alias}_{i,v} = 1$, physical registers match and $v$ dies at issue slot $t(i)$:
    $$\text{assign}_{\text{def}(i), r} - \text{assign}_{v, r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
    $$\text{assign}_{v, r} - \text{assign}_{\text{def}(i), r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
 
@@ -173,14 +175,14 @@ Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spi
 │ 2. Terminate at any unmodeled instruction, call, branch, or barrier     │
 │ 3. Assign dense layout positions 0..N-1 (never use arbitrary UIDs)      │
 │ 4. Extract all XTT32 pseudo def/use, hard-register clobbers & modes     │
-│ 5. Prove machine-legal dying operand overlaps for destructive ties      │
-│ 6. Separate _lv semantic predication ties from ordinary destructive ties │
-│ 7. Build equality classes only for independently verified ties (UnionF) │
+│ 5. Validate input model shape, symmetry, mask bounds & normalized colors│
+│ 6. Certify machine-legal dying operand overlaps for destructive ties    │
+│ 7. Build equality classes only for certified ties via Union-Find        │
 │ 8. Intersect allowed color masks, reconcile precolors, build conflict G │
-│ 9. Solve exact 8-coloring via bounded DSATUR with explicit statuses     │
+│ 9. Solve exact 8-coloring via bounded DSATUR with explicit status enums │
 │ 10. Independently validate every position, color, tie, clobber & state   │
-│ 11. Apply substitutions atomically via GCC 15 grouped-change transaction│
-│ 12. Precommit verification: pseudo closure & recog_memoized(insn) >= 0  │
+│ 11. Precommit verification: prove full pseudo closure in island         │
+│ 12. Stage replacements via validate_change() and verify_changes() group │
 │ 13. Confirm change group, rebuild DF, assert ZERO SFPU pseudos in island│
 │ 14. On any precommit failure, cancel group and leave RTL untouched      │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -213,25 +215,30 @@ enum class m2_solve_status {
     SOLVED,
     INVALID_MODEL,
     UNSAT,
-    SEARCH_LIMIT,
-    REWRITE_REJECTED
+    SEARCH_LIMIT
 };
 
-struct destructive_tie {
+enum class m2_rewrite_status {
+    REWRITE_COMMITTED,
+    REWRITE_CANCELLED
+};
+
+struct certified_destructive_tie {
     unsigned result_val;
     unsigned operand_val;
     unsigned op_index;
     int insn_pos;
-    int operand_last_use_pos;
+    int operand_death_pos;
     tie_kind kind;
+    int selected_alternative;
 };
 
 struct rtl_interval {
     unsigned pseudo_regno;
     int start_pos;              // Dense layout index 0..N-1 [start, end)
     int end_pos;                // Dense layout index 0..N-1
-    uint8_t allowed_color_mask; // Bitmask of legal LREGs 0..7
-    int fixed_color;            // -1 or L0..L7 (SFPU_REG_FIRST + r)
+    uint8_t allowed_color_mask; // Bitmask of legal LREGs (must be subset of 0xFF)
+    int fixed_color;            // Normalized integer: -1 or 0..7
     unsigned assigned_lreg;     // 0..7 or 8 (unassigned)
 };
 
@@ -250,23 +257,45 @@ struct union_find {
     void unite(unsigned i, unsigned j) { parent[find(i)] = find(j); }
 };
 
+// Model Validation Before Graph Search
+bool validate_extracted_model(const std::vector<rtl_interval>& raw_intervals,
+                              const std::vector<std::vector<bool>>& raw_interference,
+                              const std::vector<certified_destructive_tie>& ties) {
+    size_t n = raw_intervals.size();
+    if (raw_interference.size() != n) return false;
+    for (size_t i = 0; i < n; ++i) {
+        if (raw_interference[i].size() != n) return false;
+        if (raw_intervals[i].start_pos >= raw_intervals[i].end_pos) return false;
+        if (raw_intervals[i].allowed_color_mask == 0) return false;
+        if (raw_intervals[i].fixed_color < -1 || raw_intervals[i].fixed_color > 7) return false;
+        for (size_t j = 0; j < n; ++j) {
+            if (raw_interference[i][j] != raw_interference[j][i]) return false; // Must be symmetric
+        }
+    }
+    for (const auto& tie : ties) {
+        if (tie.result_val >= n || tie.operand_val >= n) return false;
+        if (tie.operand_death_pos > tie.insn_pos) return false; // Must die at or before issue
+    }
+    return true;
+}
+
 // Exact Bounded DSATUR 8-Coloring with Color-Mask Intersections
 m2_solve_status solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
                                         const std::vector<std::vector<bool>>& raw_interference,
-                                        const std::vector<destructive_tie>& ties,
+                                        const std::vector<certified_destructive_tie>& ties,
                                         std::vector<unsigned>& final_reg_mapping,
                                         unsigned max_search_nodes = 50000) {
+    if (!validate_extracted_model(raw_intervals, raw_interference, ties)) {
+        return m2_solve_status::INVALID_MODEL;
+    }
+
     size_t num_vals = raw_intervals.size();
     union_find uf(num_vals);
 
     // 1. Contract certified mandatory equality ties
     for (const auto& tie : ties) {
         if (tie.kind == tie_kind::MANDATORY_2ADDR || tie.kind == tie_kind::LV_PREDICATION) {
-            if (tie.operand_last_use_pos <= tie.insn_pos) {
-                uf.unite(tie.result_val, tie.operand_val);
-            } else {
-                return m2_solve_status::INVALID_MODEL;
-            }
+            uf.unite(tie.result_val, tie.operand_val);
         }
     }
 
@@ -289,7 +318,7 @@ m2_solve_status solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_int
         c_node.member_values.push_back(i);
         c_node.allowed_color_mask &= raw_intervals[i].allowed_color_mask;
 
-        // Reconcile fixed precolors
+        // Reconcile normalized fixed precolors (0..7)
         if (raw_intervals[i].fixed_color != -1) {
             if (c_node.fixed_color != -1 && c_node.fixed_color != raw_intervals[i].fixed_color) {
                 return m2_solve_status::INVALID_MODEL; // Conflicting precolors!
@@ -300,7 +329,7 @@ m2_solve_status solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_int
 
     for (const auto& c_node : contracted_nodes) {
         if (c_node.allowed_color_mask == 0) {
-            return m2_solve_status::INVALID_MODEL; // Empty allowed color space!
+            return m2_solve_status::INVALID_MODEL;
         }
         if (c_node.fixed_color != -1 && !(c_node.allowed_color_mask & (1 << c_node.fixed_color))) {
             return m2_solve_status::INVALID_MODEL;
@@ -418,7 +447,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
 
             std::vector<rtl_interval> raw_intervals;
             std::vector<std::vector<bool>> raw_interference;
-            std::vector<destructive_tie> ties;
+            std::vector<certified_destructive_tie> ties;
             extract_rtl_constraint_model(sfpu_island, raw_intervals, raw_interference, ties);
 
             std::vector<unsigned> final_reg_mapping;
@@ -431,9 +460,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                 regno_to_lreg[raw_intervals[i].pseudo_regno] = final_reg_mapping[i];
             }
 
-            // Real GCC 15 Grouped Changes Transaction
-            int checkpoint = num_validated_changes();
-            bool rewrite_ok = true;
+            // Real GCC 15 Grouped Changes Transaction with Watermark
+            int watermark = num_validated_changes();
+            bool stage_ok = true;
 
             for (rtx_insn *cur_insn : sfpu_island) {
                 subrtx_ptr_iterator::array_type array;
@@ -445,24 +474,21 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                         if (it != regno_to_lreg.end()) {
                             rtx hard_reg = gen_raw_REG(GET_MODE(*loc), SFPU_REG_FIRST + it->second);
                             if (!validate_change(cur_insn, loc, hard_reg, /*unique=*/true)) {
-                                rewrite_ok = false;
+                                stage_ok = false;
                                 break;
                             }
                         }
                     }
                 }
-                if (!rewrite_ok || recog_memoized(cur_insn) < 0) {
-                    rewrite_ok = false;
-                    break;
-                }
+                if (!stage_ok) break;
             }
 
-            // Precommit verification & atomic commit
-            if (rewrite_ok && verify_changes(checkpoint)) {
+            // Precommit Independent Closure & Pattern Verification
+            if (stage_ok && verify_changes(watermark) && verify_island_closure(sfpu_island, regno_to_lreg)) {
                 confirm_change_group();
                 df_insn_rescan_all();
             } else {
-                cancel_changes(checkpoint);
+                cancel_changes(watermark);
             }
         }
     }
@@ -685,98 +711,3 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 12. Critical Reanalysis: Corrections Accepted, Remaining Blockers
-
-This revision closes several objections substantively rather than cosmetically. Section 3.1 is now correctly labeled a model outline; the destructive-assignment implication is linearized; contracted color masks and precolors are represented; all basic-block islands are iterated; and `SEARCH_LIMIT` is distinguished from `UNSAT`. The Log and Dual-Horner results are also labeled as candidate/static opportunities. These corrections should remain.
-
-They do not yet make the displayed allocator a safe implementation plan. The following narrower issues remain release blockers for P2 and must be resolved in the model, pseudocode, implementation, and negative tests.
-
-### 12.1 Exact Liveness and Alias Selection Are Still Undefined
-
-The assignment implication is now linear, but the variables that drive it remain underconstrained. "Exact Liveness Linearization" is still prose: the model supplies no inequalities connecting `live[v,t]` to the scheduled definition and every scheduled use. A solver can therefore choose convenient liveness values unless the missing formulation is supplied.
-
-The model also does not define:
-
-- the finite horizon `T` and issue-time helper variables;
-- live-in, live-out, unused-result, and issue-boundary conventions;
-- which `alias[i,v]` variables exist according to machine alternatives;
-- when an alias is mandatory, optional, or forbidden;
-- at-most-one or exactly-one alias selection for each result;
-- the requirement that the aliased operand die at the selected issue slot; and
-- allowed-register and fixed-register constraints in the MILP itself.
-
-The two assignment inequalities correctly express equality *if* `alias[i,v]` is one. Nothing currently requires an alias variable to become one, so destructive two-address requirements can still be evaded by the mathematical model. Section 3.1 should remain explicitly non-normative until these constraints are written and unit-tested against small exhaustively enumerable DAGs.
-
-### 12.2 Normalize and Validate Precolor Representation
-
-`rtl_interval::fixed_color` is documented as "L0..L7 (`SFPU_REG_FIRST + r`)," while the coloring engine treats it as the normalized integer `0..7`: it shifts `1 << fixed_color` and compares it directly with candidate colors in that range. Those are different representations. If an architectural hard-register number reaches the solver, the mask check can shift by an invalid amount and the coloring comparison can never match.
-
-The extractor/solver boundary must define one representation unambiguously. Prefer normalized colors `0..7` inside the model, convert hard-register numbers exactly once at extraction, and reject every fixed color outside `[-1,7]` before any shift. Tests must cover L0, L7, conflicting precolors, out-of-range hard-register values, and a precolor excluded by the intersected mask.
-
-### 12.3 Validate the Extracted Model Before Indexing It
-
-The sample indexes solver vectors and the interference matrix without first validating their shape or indices. Before union-find contraction it must reject:
-
-- tie endpoints outside `raw_intervals`;
-- malformed or nonsquare interference matrices;
-- asymmetric interference unless construction explicitly canonicalizes it;
-- self-edges in the raw model where not semantically meaningful;
-- zero allowed-color masks and bits outside the eight-LREG domain;
-- invalid interval endpoints or reversed ranges;
-- duplicate pseudo entries with inconsistent constraints; and
-- fixed colors outside the normalized range.
-
-Without this validation, a faulty extractor produces out-of-bounds access or undefined shifts instead of a transactional `INVALID_MODEL` fallback. The independent checker must consume a separately reconstructed model rather than merely checking the extractor's own objects.
-
-### 12.4 A "Certified Tie" Needs an Enforced Certificate Boundary
-
-The solver comment now calls mandatory ties certified, but it still attempts to validate them with only `operand_last_use_pos <= insn_pos`. Either the extractor has fully certified machine legality or it has not. If it has, the solver should accept a distinct certified-tie type carrying the selected alternative and exact boundary, and assert the normalized invariants. If it has not, the solver must verify all of them.
-
-Certification must cover the selected machine-description alternative, compatible mode/register class, exact death at the destructive boundary, early-clobber behavior, implicit uses/clobbers, and `_lv` predication semantics. The current `<=` check neither represents nor proves that contract and can admit a stale or incorrectly indexed tie.
-
-### 12.5 Island Iteration Is Fixed; Island Closure Is Not
-
-The outer cursor now resumes after each boundary and can discover subsequent islands. That correction is accepted. The code still does not prove that every definition and use of each selected pseudo lies inside the island. Replacing only the occurrences encountered in `PATTERN(cur_insn)` can leave the same pseudo in an unmodeled instruction, a note, a call usage, or a later island.
-
-Before proposing changes, the pass must enumerate all occurrences of every selected pseudo using authoritative DF plus explicit RTL traversal, reject any occurrence outside the closed island, and define the treatment of debug RTL and notes. After staging the changes—but before confirmation—it must traverse the proposed patterns and prove zero selected pseudo occurrences remain. The diagram promises this precommit closure check; the displayed code does not contain it.
-
-### 12.6 The Grouped-Change Transaction Still Uses Stale Recognition
-
-`recog_memoized(cur_insn)` is called while grouped changes are pending. `validate_change` stages replacements and `verify_changes(checkpoint)` is the API that verifies the proposed group. A memoized instruction code is not an independent recognition of the staged pattern and can simply describe the original instruction.
-
-The transaction should:
-
-1. save the change watermark;
-2. stage every replacement while checking `validate_change`;
-3. perform the independent proposed-mapping and pseudo-closure checks;
-4. call `verify_changes(checkpoint)` once for the complete group;
-5. cancel to the watermark on any failure;
-6. confirm once after all fallible checks pass;
-7. rebuild DF; and
-8. assert postcommit invariants in checking builds.
-
-The displayed code still confirms without the promised closure, color, tie, clobber, or state validation. `df_insn_rescan_all()` after confirmation does not replace those checks and cannot restore atomic fallback.
-
-### 12.7 Status Plumbing Is Incomplete
-
-The new status enum is useful, but `REWRITE_REJECTED` is not produced by the coloring solver and the caller discards every non-solved status without telemetry. Solver status and rewrite status belong to different phases and should not be conflated in one unused enum.
-
-Return or record structured outcomes for extraction/model rejection, UNSAT, search limit, grouped-change rejection, and successful commit. Dump output and deterministic tests must prove each path. This is essential for distinguishing an insufficient search bound from an invalid target model or a GCC-recognition failure.
-
-### 12.8 P0 and Performance Gates Still Need an Executable Workflow
-
-The checked-in compiler remains opt-in and still invokes requested MILP even after list-scheduler success. Those are accurately listed as P0 target changes, but the validation section still contains only build commands and the focused compiler harness. It does not implement the rescue contract's whole-corpus A/B, simulator, or silicon classification.
-
-P0 is ready to implement, not ready to declare deployed. Its merge gate must archive legacy-off/default-on compiler results, changed assembly classification, simulator outcomes, expected-failure accounting, deterministic rebuilds, and rollback equivalence. P3/P4 must separately archive numerical tolerances, raw device cycles, warmups, run ordering, dispersion, device/firmware identity, and compiler flags. Static issue-slot reduction remains evidence of opportunity, not silicon speedup.
-
-### 12.9 Updated Decision
-
-- **Approve the corrected default-on P0 direction** and implement list-success short-circuiting, demand-driven bounded MILP, rollback, and full A/B gates.
-- **Approve the P1 architecture and the corrected island-iteration direction**, conditional on authoritative model validation and independently proven closure.
-- **Keep P2 conditional** until exact liveness/alias semantics, normalized precolors, input validation, certified tie boundaries, true precommit closure, and correct grouped-change sequencing are implemented and negatively tested.
-- **Keep P3/P4 evidence-gated** and preserve the corrected candidate/static wording until silicon data exists.
-
-The plan is converging. The remaining defects are no longer an argument against default-on scheduling; they are a precise implementation checklist for preventing the later physical-allocation phase from turning a recoverable IRA spill into silent miscompilation or an unrollbackable RTL mutation.
