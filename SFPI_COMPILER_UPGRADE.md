@@ -63,7 +63,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Exact MILP Engine** | **Real** and intentionally available whenever explicitly requested for an over-pressure region, including when list scheduling succeeds (`rvtt-lpsolve.cc`, 482 lines via `lp_solve`) | First-class bounded exact lane: pressure rescue, optimality oracle, and multi-objective latency/reuse/replay optimization under deterministic node/time caps |
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **Conditional M2:** build exact transactional coloring only when corpus evidence demonstrates recurring baseline-IRA failures after ownership modeling |
-| **Corpus Scorer / Differential Driver** | **Scorer bring-up is real but narrow:** `scripts/run-corpus-score.sh` (245 lines) has one `scripts/corpus/welford-bh.tsv` entry and compares handwritten replay with generated vFloat. The required identical-source scheduler off/on whole-corpus differential is absent. | **P0:** `scripts/run-corpus-differential.sh`, multi-target LLK manifest, changed-binary classification, simulator/correctness legs, and selected silicon A/B |
+| **Corpus Scorer / Differential Driver** | **Two real layers:** this repository's `scripts/run-corpus-score.sh` has one Welford entry; TT-Metal `86914798e5` provides `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` with 164 logical implementations / 332 architecture paths, exact pytest-node attribution, compiler capability/pin provenance, CRAQ and serialized-silicon modes. The required identical-source pressure-scheduler off/on differential is still absent. | **P0:** add flag-off/flag-on changed-binary classification and selected silicon A/B to the durable TT-Metal corpus runner |
 | **Hardware Silicon Baseline** | **GO-BH-ONLY**: 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 6 understood throughput gaps (§18.8.0). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
 ```
@@ -102,10 +102,11 @@ What is implemented and credible today:
 
 What prevents default-on promotion:
 
-1. **The whole-corpus differential driver is absent.** `scripts/run-corpus-score.sh` is a useful
-   artifact/profiling harness, but its current one-entry Welford manifest and handwritten-vs-
-   generated comparison do not implement the required identical-source flag-off/flag-on LLK
-   differential. `scripts/run-corpus-differential.sh` remains a P0 deliverable.
+1. **The identical-source pressure-scheduler differential is absent.** The broad TT-Metal corpus
+   runner exists at `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` (TT-Metal `86914798e5`) and tracks
+   164 logical implementations / 332 architecture paths with per-node outcomes.  This repository's
+   `run-corpus-score.sh` remains a useful Welford bring-up harness.  Neither currently performs the
+   required scheduler flag-off/flag-on changed-binary classification, which remains the P0 delta.
 2. **No changed-binary scheduler silicon A/B exists.** The Welford scheduler-off/on arms tied
    because the measured body bypassed the scheduler. That establishes no regression on that input,
    not a silicon scheduler win. At least one `old_peak > 8` corpus kernel must produce different
@@ -951,7 +952,7 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P5**│ **Coprocessor, LICM & Macros**   │ Mixed     │ Replay loop hoist shipped opt-in; LICM / │
 │       │                                  │ Sprint 2-3│ constant pinning planned; SFPLOADMACRO    │
-│       │                                  │           │ remains emit=no and simulator-blocked.    │
+│       │                                  │           │ emitter unlanded; admitted CRAQ model exists.│
 └───────┴──────────────────────────────────┴───────────┴───────────────────────────────────────────┘
 ```
 
@@ -991,9 +992,11 @@ test, and paired silicon result.
 
 **P5 must be tracked per mechanism.** Fixed-encoding replay loop hoisting is real, conservative,
 opt-in, and has a changed-binary Reduce-SDPA silicon win. LICM/constant pinning is still a proposed
-response to SigmoidAppx. `pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`,
-and novel formation is blocked on a simulator event model plus silicon validation. A single
-“Active” label obscures these materially different maturity levels.
+response to SigmoidAppx. `pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`
+in the checked-in compiler, but the simulator prerequisite is no longer wholly absent: CRAQ
+`fd8ed6f` provides the audited transactional evaluator for its admitted WH/BH shapes. Compiler
+configuration ownership, fallback identity, unsupported shapes, and silicon validation remain
+open. A single “Active” label obscures these materially different maturity levels.
 
 **Execution recommendation:** finish the smallest discriminating evidence loop while expanding the
 exact engine deliberately: (1) preserve bounded MILP execution on request and run it as a corpus
@@ -1708,7 +1711,7 @@ Two-part, and both must hold:
 
 ### 18.8 Track D — Replay / MOP / `SFPLOADMACRO` Emission (closes the ~4% gap)
 
-**Status: frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = GREENFIELD (blocked on sim).**
+**Status: frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = PARTIAL FOUNDATION (CRAQ `fd8ed6f` executes admitted WH/BH transactional shapes; compiler emission is unlanded).**
 
 #### 18.8.0 Silicon Scorecard — Compiler-Generated vs Hand-Tuned LLK
 
@@ -1755,7 +1758,7 @@ model blind to both. Confirmed structurally in `rvtt-passes.def`:
 So **there is no latency-hiding scheduler** (§5 / P4 unbuilt): a dependent instruction either pays
 an explicit correctness NOP where the target erratum requires one or an implicit hardware scoreboard
 stall, and the compiler cannot fill that issue slot with independent work. Combined with no
-`SFPLOADMACRO` formation (path B, GREENFIELD/sim-blocked), that is the dominant loss story.
+checked-in compiler `SFPLOADMACRO` formation (path B), that is the dominant loss story.
 
 | Kernel | Loss | Hand-tuned uses | Compiler's error (class) |
 | :--- | ---: | :--- | :--- |
@@ -1767,9 +1770,10 @@ stall, and the compiler cannot fill that issue slot with independent work. Combi
 **The compiler's errors, ranked.**
 1. **No latency-hiding reorder (§5 / P4 unbuilt).** Only a pressure scheduler (fires `>8`) + a
    NOP-inserter. → Addcmul, and a latency tax on every body.
-2. **No `SFPLOADMACRO` formation (path B, GREENFIELD + sim-blocked).** ttsim only whitelists known LLK
-   macro signatures (`tensix.cpp:9928-9992`), so novel emission can't yet be validated. → Min/Max,
-   Typecast, Where.
+2. **No checked-in `SFPLOADMACRO` formation (path B).** The original simulator path only
+   whitelists known LLK signatures, but CRAQ `fd8ed6f` now provides an audited persistent,
+   transactional evaluator for explicitly admitted WH/BH shapes. Compiler config/slot ownership,
+   unsupported-shape fallback, and silicon performance remain open. → Min/Max, Typecast, Where.
 3. **Cost model blind to the deciding effects (F1 calibration failure, §18.7).** `rvtt-cost.md` models
    `sfpu=1` not the real 2-cycle result latency, and has zero model of replay/`SFPLOADMACRO` frontend
    throughput — so even the scheduling that exists optimizes the wrong objective. Sits under #1/#2.
@@ -1841,7 +1845,7 @@ replay hoisting is enabled.  Its 21 analyzer, 11 replay-hoist, six discard, and 
 checks pass.  Actual formation remains gated on a compiler-owned macro descriptor and a simulator
 event model for arbitrary delayed sequences; no MulInt performance win is claimed yet.
 
-**Re-scoping note vs §18.4.** The master roadmap lists Track D as "Not started"; this design upgrades the REPLAY leg to PARTIAL because it genuinely reuses the shipped `pass_rvtt_replay` (834 lines) and the `ttreplay` builtin — the MOP and `SFPLOADMACRO` legs remain GREENFIELD.
+**Re-scoping note vs §18.4.** The master roadmap lists Track D as "Not started"; this design upgrades the REPLAY leg to PARTIAL because it genuinely reuses the shipped `pass_rvtt_replay` (834 lines) and the `ttreplay` builtin. MOP remains GREENFIELD. `SFPLOADMACRO` has a partial CRAQ execution foundation for admitted shapes, while compiler emission remains unlanded.
 
 The authoritative Welford result is generated vFloat 323 versus replay LLK 326 device cycles on
 Blackhole: generated is already ~0.9% faster on that body. It therefore does not establish a
@@ -1861,7 +1865,7 @@ other corpus kernels and by general frontend compression opportunity; path A rep
 
 Hard bounds the emitter MUST honor: `1<=len<=32` (`tensix.cpp:2444`), `start_idx<32` (`:2446`), and `start_idx+len<=32` — **overflow is `UndefinedBehavior`** (`:2447`). MOP (`tensix.cpp:2559`) is a hardware loop nest that calls `replay_expander` on its 9 template slots `mop_cfg[pipe][0..8]` (`sim.h:498-499`), so MOP and REPLAY *compose on the same buffer* (a MOP whose loop-op is a REPLAY playback is legal). Expansion is deferred (`defer=true`, `:2699/2712`) against the executable-FIFO watermark of 31 (`tensix.cpp:487-494`, drained one/cycle by `tensix_advance_frontend_stream`, `:2728`). On playback the wait-gate block mask is **recomputed per backend instruction** (`tensix.cpp:2464-2469`), so replayed-body hazards are still enforced individually — the compiler does not re-declare per-body sync.
 
-**Path B — `SFPLOADMACRO` (opcode `0x93`) is a different datapath**, not the 32-slot buffer. It reads a 4-entry `load_macro_instruction_template[4]` / `load_macro_sequence[4]` / `load_macro_misc` (`sim.h:587-589`) populated by `SFPCONFIG` writes (`config_dest 0..3→template, 4..7→sequence, 8→misc`, `tensix.cpp:9740-9757`); each `SFPLOADMACRO` does an implicit `SFPLOAD` into `LReg[VD]` re-dispatched as `0x70` (`tensix.cpp:9911-9927`) then schedules templated work across 4 sub-units. **ttsim models it functionally by whitelisting known LLK signatures** (reduce max/min `0x1b8400de`, int-invert `0x6300005d`, etc., `tensix.cpp:9928-9992`); unknown shapes raise `UnsupportedFunctionality`. A compiler emitting *novel* templates cannot be validated until the sim is generalized to a real 4-sub-unit event model — this is why Welford is closed via path A.
+**Path B — `SFPLOADMACRO` (opcode `0x93`) is a different datapath**, not the 32-slot buffer. It reads a 4-entry `load_macro_instruction_template[4]` / `load_macro_sequence[4]` / `load_macro_misc` (`sim.h:587-589`) populated by `SFPCONFIG` writes (`config_dest 0..3→template, 4..7→sequence, 8→misc`, `tensix.cpp:9740-9757`); each `SFPLOADMACRO` does an implicit `SFPLOAD` into `LReg[VD]` re-dispatched as `0x70` (`tensix.cpp:9911-9927`) then schedules templated work across 4 sub-units. The original path functionally whitelists known LLK signatures. CRAQ `fd8ed6f` adds persistent delayed-event queues, transactional same-cycle evaluation, resource/write arbitration, issue-time store snapshots, and pure evaluators for a conservative WH/BH subset. Unsupported and conflicting shapes still fall back; QSR is not claimed.
 
 #### 18.8.2 What the GCC backend models/emits, and where — grounded in the shipped `rvtt` backend
 
@@ -1883,7 +1887,7 @@ Closing the gap is **finishing this shipped pass**, not building one: extend `re
 
 **MOP compression is GREENFIELD**: there is **no** MOP builtin — `grep ttmop|loadmacro|mop rvtt-insn.def` is empty (verified). For doubly-nested loops, one MOP word (9-slot `mop_cfg` template, up to ~32k expansion) beats N REPLAY playbacks. This needs `new: rvtt_ttmop` builtin + `new: pass_rvtt_mop` (or a mode in `rtl-rvtt-replay.cc`) emitting `MOP`/`MOP_CFG` (`0x01`/`0x03`) with the two MOP types (zmask `:2567`, nested outer/inner `:2594`). Compose-on-same-buffer means the allocator must treat MOP-captured and REPLAY-captured spans as one 32-slot arena.
 
-**`SFPLOADMACRO` is GREENFIELD and sim-blocked.** The `SFPCONFIG` insn ships (`UNSPECV_SFPCONFIG`, `rvtt.md:89,1945-1971`) so template/sequence/misc writes are emittable, but there is no `SFPLOADMACRO` builtin and — critically — the sim whitelists LLK signatures only (`tensix.cpp:9928-9992`). Prerequisite: generalize ttsim's `SFPLOADMACRO` to a real 4-sub-unit event model (the `sfpu_macro_region` descriptor, §6.2) before *any* compiler emission can be validated. Then: `new: rvtt_ttloadmacro` builtin + the §6.2 target-internal collision/drain checker.
+**`SFPLOADMACRO` compiler emission is unlanded; its simulator foundation is partial.** `SFPCONFIG` ships (`UNSPECV_SFPCONFIG`, `rvtt.md:89,1945-1971`), and CRAQ `fd8ed6f` executes a conservative set of structurally validated WH/BH macro events. The compiler still needs a target-internal launch/config descriptor that owns and materializes every template/sequence/misc field, models hidden LREG/LREG16/CC/Dst effects, rejects opaque owners, and preserves byte-identical fallback. Extend CRAQ and the compiler together for each additional admitted shape; do not infer arbitrary template safety from opcode names.
 
 #### 18.8.3 Staged milestones
 
@@ -1891,7 +1895,7 @@ Closing the gap is **finishing this shipped pass**, not building one: extend `re
 - **D1:** Cross-BB / dominator-scoped sequence discovery with per-generation live-value guarding (removes limitation #1). This is the milestone that targets the 3-cycle Welford body.
 - **D2:** Sequence-through-non-Tensix hoisting (limitation #4 / PR 36496) to stop spurious sequence termination.
 - **D3 (MOP, greenfield):** `new: rvtt_ttmop` + emit `MOP_CFG`/`MOP`; teach the allocator MOP∪REPLAY share the 32-slot arena; select MOP over REPLAY for nested loops by word-count cost.
-- **D4 (`SFPLOADMACRO`, greenfield, sim-gated):** ttsim 4-sub-unit event model first; then `new: rvtt_ttloadmacro` + `sfpu_macro_region` collision/drain checker; scoped to Typecast/MulInt/Where (§7 row `:830`).
+- **D4 (`SFPLOADMACRO`, partial foundation):** use CRAQ `fd8ed6f` as the admitted-shape functional gate; land a compiler-internal launch/config descriptor with byte-identical fallback; then expand pure event evaluators and compiler legality shape by shape for Typecast/MulInt/Where (§7 row `:830`).
 
 #### 18.8.4 Hard gate (measurable)
 
@@ -1902,7 +1906,7 @@ Reduce-SDPA from handwritten `840` versus generated `855.5` to handwritten `840`
 implementation remains opt-in and conservatively single-block-loop only.  Broader cross-BB span
 discovery for Welford is still open and must independently satisfy the same changed-binary silicon
 gate; the Reduce result does not imply that unimplemented transform exists.
-**D4 gate (target, sim-blocked):** `SFPLOADMACRO`-lowered Typecast/MulInt/Where run on ttsim **without** `UnsupportedFunctionality` and hit a **≥1.33× steady-state issue rate** — where 1.33× is drawn from the §6.2/§7 "opportunity/potential" range (`:815,830`) and has not been measured; it is a target contingent on the D4 sim work landing first.
+**D4 gate (target, per-shape):** each `SFPLOADMACRO`-lowered Typecast/MulInt/Where shape must first be admitted by the transactional CRAQ model without fallback or `UnsupportedFunctionality`, then pass paired hardware correctness and repeated silicon A/B. The prior **≥1.33×** figure is an unmeasured opportunity target, not an acceptance result; CRAQ modeled cycles are not the performance authority.
 
 #### 18.8.5 Risks / ceiling
 
@@ -1910,7 +1914,7 @@ gate; the Reduce result does not imply that unimplemented transform exists.
 - **32-slot arena is a hard allocation constraint** shared across ALL live captured bodies per pipe (and, at D3, across MOP too). Over-allocation is silent `UndefinedBehavior` in the sim, not a diagnostic — the allocator carries the entire correctness burden, and that allocator is net-new (the shipped `rtl-rvtt-lp-alloc.cc` is a dump-only stub).
 - **User-reservation contract:** LLK hand-kernels reserve slots and there is **no global sim registry** (`sim.h:502`); reservations must be a compiler-known descriptor (the §7 "explicit … ownership metadata … no global reservation" model, `:823`), mirrored on replay slots. Discovery-based reservation (the shipped "not used anywhere in the function" heuristic, `:48`) is sound only within a compilation unit — cross-TU LLK reservations need the metadata ABI.
 - **Cross-BB live values (D1):** the pass author's own note (`:44-45`) flags that cross-BB replay needs better live-value computation for synthesized insns; getting generation-tracking wrong replays a stale-input body → silent numeric error, not a crash.
-- **`SFPLOADMACRO` ceiling:** blocked entirely on ttsim being a pattern-matcher, not an executor (`:9928-9992`). Until D4's sim work lands, path B is unvalidatable — do **not** ship compiler-emitted novel macro templates. This is a sim-fidelity gate, not a GCC-IR ceiling (Track D fits GCC's post-RA peephole/allocation model cleanly; unlike Track C, there is no MLIR-reconsideration trigger here — replay packing is a single-stream, single-pipe problem the shipped pass already proves tractable in RTL).
+- **`SFPLOADMACRO` ceiling:** CRAQ `fd8ed6f` removes the blanket pattern-matcher blocker only for its admitted WH/BH shapes. Novel or conflicting templates remain unvalidated until both a pure transactional evaluator and matching compiler legality proof exist. This is a per-shape simulator/compiler fidelity gate, not a GCC-IR ceiling; Track D remains a single-stream problem, unlike Track C.
 
 ### 18.9 Track B — DST Tile Register + RWC Hazard Model
 
@@ -2631,13 +2635,14 @@ still needs changed-binary silicon acceptance.
 └──────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-### 19.4 Exact MILP as a First-Class Optimization Engine
+### 19.4 Exact MILP as a Bounded Offline Oracle, Then a Candidate Engine
 
-The checked-in MILP is not merely an emergency fallback for cases where the deterministic list
-scheduler fails. Its exact issue-position and liveness model, bounded region size, node cap, and
-independently validated certificate make it the natural optimization oracle for the SFPU roadmap.
-The 11-to-8 fixture already proves that exact search can recover a legal schedule outside the
-heuristic's reach.
+The checked-in MILP is useful beyond emergency fallback: its exact issue-position and liveness
+model, bounded region size, node cap, and independently validated certificate make it a credible
+**offline oracle for that abstract pressure model**.  The 11-to-8 fixture proves that exact search
+can recover a legal pressure schedule outside the heuristic's reach.  It does not yet make the
+current model an oracle for physical makespan, replay throughput, macro calendars, Dst aliasing, or
+constant placement; those semantics and calibrated costs must be added and independently tested.
 
 The present objective is deliberately narrow: if the preferred list schedule already satisfies
 capacity, it becomes the unique zero-deviation optimum. That is a useful fast proof, but it leaves
@@ -2654,17 +2659,17 @@ the engine's larger potential unused. Evolve the bounded model in stages:
 5. **Deterministic tie-break:** only after the architectural objectives are fixed, minimize
    deviation from the stable list/source order.
 
-Run this exact lane on every bounded eligible corpus region in CI/oracle mode, including list hits,
-and publish heuristic-versus-optimal gaps plus solver node/time distributions. The fast list
-scheduler remains valuable for low compile latency; it does not define the quality ceiling.
-Production may invoke MILP for all bounded regions, selected profitable shapes, or explicit
-optimization modes depending on those measurements. Do not hard-code list-miss-only policy before
-collecting the data.
+After the corresponding architectural semantics are present, run this exact lane on bounded corpus
+regions in CI/oracle mode, including list hits, and publish heuristic-versus-optimal gaps plus solver
+node/time distributions.  Start with a sampled/size-capped lane rather than making every bounded
+region a blocking CI solve before compile-cost distributions exist.  The fast list scheduler remains
+valuable for low compile latency; production policy follows the measurements.
 
-This exact engine should also consume Sprint 1's pre-IRA two-row Addcmul groups. Once both independent
-chains are visible, the MILP can jointly prove pressure legality and choose the minimum-latency
-interleave instead of introducing another isolated greedy scheduler. M2 physical coloring remains
-a distinct downstream mechanism and must not be conflated with the scheduling MILP.
+The exact engine may later consume Sprint 1's pre-IRA two-row Addcmul groups, but it is not on the
+critical path to the first changed-binary silicon discriminator.  First prove the group legality and
+calibrated dependency model with the deterministic interleaver; then use that reviewed DAG as the
+MILP/list comparison input. M2 physical coloring remains a distinct downstream mechanism and must
+not be conflated with the scheduling MILP.
 
 ### 19.5 GCC Is the Near-Term Path, with an Explicit Ceiling
 
@@ -2676,24 +2681,24 @@ requires disproportionate backend surgery.
 
 ### 19.6 Evidence-Gated Execution Directive
 
-1. **Elevate the exact scheduler.** Preserve exact-on-request behavior, add the staged objectives in
-   §19.4, run bounded list-versus-MILP corpus comparisons, and archive optimality and compile-cost
-   distributions. Independent validation remains authoritative for every emitted schedule.
-2. **Finish pre-IRA Dst-iteration interleaving.** Require Dst non-aliasing, SSA/cache integrity,
+1. **Finish pre-IRA Dst-iteration interleaving.** Require Dst non-aliasing, SSA/cache integrity,
    exact final-ELF order, byte-identical fallback, CRAQ correctness, and three serialized Blackhole
-   samples. Feed the exposed two-row DAG to both list and exact scheduling. Addcmul's `+21.9%` is a
-   loss to close, not a delivered win.
-3. **Finish the first sound macro-emission slice.** CRAQ `fd8ed6f` provides the admitted WH/BH
+   samples. Addcmul's `+21.9%` is a loss to close, not a delivered win.
+2. **Finish the first sound macro-emission slice.** CRAQ `fd8ed6f` provides the admitted WH/BH
    transactional event model; compiler emission must additionally prove all config words, function-
    scoped scratch/slot ownership, opaque-owner exclusion, hidden effects, and ineligible identity.
    Pin the CRAQ repository commit and runner path in the result manifest so the cited model is
    reproducible outside the author's checkout.
-4. **Build operation-independent invariant placement plus counted-loop replay.** Reject unproven
+3. **Build operation-independent invariant placement plus counted-loop replay.** Reject unproven
    MEM/GPR/config/CC/call/opaque-asm barriers and let IRA allocate coefficients.
-5. **Name and extend the durable corpus runner.** The in-tree `scripts/run-corpus-score.sh` currently
-   has one Welford manifest entry; the broader TT-Metal corpus evidence must name its repository,
-   path, commit, manifest, and exact pytest nodes. Record compiler capability/pin provenance, use
-   CRAQ for functional validation, and accept performance only from scoped device rows.
+4. **Extend the named durable corpus runner.** TT-Metal `86914798e5`,
+   `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
+   pytest-node attribution and compiler capability/pin provenance. Add identical-source scheduler
+   flag-off/flag-on changed-binary classification to that runner; use CRAQ for functional validation
+   and accept performance only from scoped device rows.
+5. **Use MILP as a sampled bounded oracle.** Preserve exact-on-request behavior; after the latency,
+   Dst, replay, or macro semantics being scored are actually modeled, compare list versus MILP and
+   archive optimality plus compile-cost distributions before changing production invocation policy.
 6. **Close architecture coverage.** Retain Blackhole as the current performance authority and add
    the corresponding Wormhole correctness and changed-binary silicon lane before making a
    cross-architecture default-on or superiority claim.
