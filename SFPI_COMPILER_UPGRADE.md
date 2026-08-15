@@ -950,8 +950,8 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │       │                                  │ landed    │ closes Addcmul +21.9%→+0.02% parity; broad│
 │       │                                  │           │ modulo/cross-BB scheduling remains open.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P5**│ **Coprocessor, LICM & Macros**   │ Mixed     │ Replay loop hoist shipped opt-in; LICM / │
-│       │                                  │ Sprint 2-3│ constant pinning planned; SFPLOADMACRO    │
+│ **P5**│ **Coprocessor, LICM & Macros**   │ Mixed     │ Counted replay + pressure-safe invariant │
+│       │                                  │ Sprint 2-3│ constant hoist shipped opt-in; macro      │
 │       │                                  │           │ emitter unlanded; admitted CRAQ model exists.│
 └───────┴──────────────────────────────────┴───────────┴───────────────────────────────────────────┘
 ```
@@ -991,9 +991,11 @@ CRAQ functional gate, and paired Blackhole run close Addcmul from `+21.9%` to `+
 not a general post-RA list/modulo scheduler and has not produced a silicon win.
 
 **P5 must be tracked per mechanism.** Fixed-encoding replay loop hoisting is real, conservative,
-opt-in, and has a changed-binary Reduce-SDPA silicon win. LICM/constant pinning is still a proposed
-response to SigmoidAppx; its current prototype is blocked because hoisting nine constants exceeds
-LREG capacity and reaches a reload ICE, so a conservative pressure budget is a hard prerequisite.
+opt-in, and has a changed-binary Reduce-SDPA silicon win. Counted-loop replay (`6422dbd9e3`) and
+operation-independent invariant SFPU constant hoisting (`2bfa165348`) are now also shipped opt-in.
+The latter's conservative eight-LREG pressure preflight covers entry live-through values,
+loop-defined live-outs, and function-global opaque ownership; the prior nine-constant reload ICE
+now refuses before mutation. Their first semantic Sigmoid silicon result remains open.
 `pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`
 in the checked-in compiler, but the simulator prerequisite is no longer wholly absent: CRAQ
 `fd8ed6f` provides the audited transactional evaluator for its admitted WH/BH shapes. Compiler
@@ -1837,6 +1839,18 @@ byte-identical on/off.  On Blackhole, the paired full-golden Reduce-SDPA test pa
 and measures handwritten replay at `840,840,840` versus generated typed SFPI at `834,834,834`
 scoped `REDUCE_SDPA_BODY` device cycles: a repeatable 6-cycle (`0.714%`) generated-code win.
 CRAQ is a functional gate here, not the performance authority.
+
+**Counted-loop replay + invariant placement follow-up (2026-08-15).** SFPI-GCC `6422dbd9e3`
+extends the opt-in replay-hoist lane to one-BB counted loops containing one uninterrupted,
+fixed-encoding replay-safe SFPU run. It requires an existing dedicated preheader, rejects
+MEM/calls/asm/dynamic words/config/counters/replay owners, preserves WH scheduler NOP payloads,
+and allocates persistent slots around explicit owners. SFPI-GCC `2bfa165348` separately hoists
+loop-invariant SFPU immediate materialization before IRA, but only after a transactional pressure
+preflight proves at most eight LREGs including hoisted constants, PHIs, external live-through values,
+and loop-defined live-outs; any opaque function asm or unmodeled call refuses. The focused suites are
+63/63 replay and 47/47 invariant with WH/BH/QSR byte-identical ineligible fallback. These commits
+are compiler mechanisms, not silicon wins yet; the Sigmoid semantic lane is their first active
+changed-binary performance discriminator.
 
 **Durable corpus checkpoint (2026-08-15).** TT-Metal `164a10f2` replaces the original 11-row
 prioritization list as the coverage authority with 164 surface-qualified implementations and 332
@@ -2709,11 +2723,11 @@ requires disproportionate backend surgery.
    scoped scratch/slot ownership, opaque-owner exclusion, hidden effects, and ineligible identity.
    Pin the CRAQ repository commit and runner path in the result manifest so the cited model is
    reproducible outside the author's checkout.
-3. **Finish operation-independent invariant placement plus counted-loop replay under pressure.** In
-   addition to MEM/GPR/config/CC/call/opaque-asm barriers, compute a conservative eight-LREG peak
-   budget including existing loop-live values. The nine-invariant adversarial case must refuse with
-   option-off byte identity instead of reaching reload and ICEing. Re-review replay lifetime/slot
-   ownership after this fix because counted replay is stacked on the blocked hoist branch.
+3. **Silicon-score the landed invariant-placement + counted-replay pair.** Commits `2bfa165348` and
+   `6422dbd9e3` now include the conservative eight-LREG budget, live-through/live-out accounting,
+   opaque-owner refusal, counted-loop capture legality, and byte-identical fallback. Run the existing
+   semantic Sigmoid lane with both flags, require changed executable `.text` plus CRAQ correctness,
+   then accept or reject it from repeated scoped device cycles.
 4. **Execute the named durable compiler A/B lane.** TT-Metal `da3832b31d`,
    `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
    pytest-node attribution, compiler capability/pin provenance, and identical-source flag-off/on
