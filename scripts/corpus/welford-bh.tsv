@@ -1,0 +1,5 @@
+# kernel<TAB>arch<TAB>correctness pytest node<TAB>CRAQ pytest node<TAB>baseline profile node<TAB>candidate profile node<TAB>shared profile key
+#
+# The test source itself is the corpus input.  `run-corpus-score.sh` forces a
+# producer-only compile before running the CRAQ and physical-device legs.
+welford_bh	blackhole	python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot	python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-2-vfloat_direct]	python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay]	python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[2-vfloat_direct]	test_sfpu_welford_prefix_snapshot
