@@ -1618,6 +1618,50 @@ a generated silicon A/B.  The next large win is therefore still gated on safe, g
 `SFPLOADMACRO` formation rather than more local scheduling; the dump-only formation pass records
 the missing proofs without emitting speculative code.
 
+#### 18.8.0.1 Perf-Loss Root Cause — Why Correct-But-Slower
+
+Reported corpus run (2026-08-15; per-kernel silicon instruction-diff artifacts pending in-repo):
+Binary Min/Max **+41.0%**, Addcmul **+21.9%**, Typecast **+19.6%**, TopK **+5.4%** — all correct.
+
+**Unifying diagnosis.** Register allocation and correctness are solid (the shipped, silicon-validated
+layer); **every loss is a pure throughput gap** from two mechanisms that are not built, and a cost
+model blind to both. Confirmed structurally in `rvtt-passes.def`:
+
+- The reordering scheduler `pass_rvtt_lp_schedule` **gates entirely on `old_peak > 8`**
+  (`gimple-rvtt-lp-schedule.cc:824,829`) — for a peak-≤8 kernel it does nothing.
+- `pass_rvtt_schedule` **only inserts NOPs, never reorders** (header *"schedule tensix insns (insert
+  nops)"*; `emit_insn_after(gen_rvtt_sfpnop())`, `rtl-rvtt-schedule.cc:252`).
+
+So **there is no latency-hiding scheduler** (§5 / P4 unbuilt): the compiler emits one NOP per 2-cycle
+SFPU dependency (§5.2) and cannot fill it with independent work. Combined with no `SFPLOADMACRO`
+formation (path B, GREENFIELD/sim-blocked), that is the whole loss story.
+
+| Kernel | Loss | Hand-tuned uses | Compiler's error (class) |
+| :--- | ---: | :--- | :--- |
+| **Binary Min/Max** | +41.0% | load+compute+store fused across `SFPLOADMACRO`'s 4 sub-units | **No `SFPLOADMACRO`** → serial `SFPLOAD→SFPMAX→SFPSTORE`, load latency exposed (most load-bound → worst) |
+| **Addcmul** | +21.9% | manual `MUL_a,MUL_b,MAD_a,MAD_b` interleave to hide the 2-cycle latency across 2 rows | **No latency scheduler** → emits `MUL,NOP,MAD,NOP`; independent rows never interleaved |
+| **Typecast** | +19.6% | `SFPLOADMACRO` load-convert-store pipeline (§7 "memory bound") | **No `SFPLOADMACRO`** → serial convert loop |
+| **TopK** | +5.4% | tuned sort network | Residual **instruction/move bloat** (the four-SET indexed `SFPSWAP`) + a few exposed-latency NOPs; near parity |
+
+**The compiler's errors, ranked.**
+1. **No latency-hiding reorder (§5 / P4 unbuilt).** Only a pressure scheduler (fires `>8`) + a
+   NOP-inserter. → Addcmul, and a latency tax on every body.
+2. **No `SFPLOADMACRO` formation (path B, GREENFIELD + sim-blocked).** ttsim only whitelists known LLK
+   macro signatures (`tensix.cpp:9928-9992`), so novel emission can't yet be validated. → Min/Max,
+   Typecast, Where.
+3. **Cost model blind to the deciding effects (F1 calibration failure, §18.7).** `rvtt-cost.md` models
+   `sfpu=1` not the real 2-cycle result latency, and has zero model of replay/`SFPLOADMACRO` frontend
+   throughput — so even the scheduling that exists optimizes the wrong objective. Sits under #1/#2.
+4. **Residual instruction/move bloat** where destructive reuse / coalescing / raw→typed conversion
+   doesn't fully fire. → TopK and the long tail.
+
+**Diagnostic path (CRAQ can't be used — it mis-models these; §18.7).** For each loss, take the silicon
+instruction-class diff (handwritten vs generated: `SFPLOADMACRO / TTREPLAY / SFPNOP / SFPLOAD /
+SFPMOV`), as the Reduce-SDPA and TTNN Where notes already do. **Predictions to confirm:** Addcmul shows
+high `SFPNOP`, near-parity `SFPLOAD` (→ error #1); Min/Max and Typecast show `SFPLOADMACRO=0` with high
+`SFPLOAD` (→ error #2). The fixes are Track-D (§18.8) + the P4 latency scheduler, not more register
+allocation — the allocator is already at parity.
+
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) were then closed by generic D1 preheader capture hoisting: the current pinned result is handwritten `840` vs generated `834` — a **−0.7% generated win**, the corpus's first outright flip (§18.8.0). This note is retained for the recovery history (opaque `.ttinsn` → typed API → hoisting). Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
 **Broader LLK conversion checkpoint (2026-08-15).** TT-Metal `c1471817` carries two additional test-only corpus lanes. Binary broadcast passes 8/8 representative Blackhole correctness cases, 6/6 Wormhole generated compiles, and CRAQ A/B; physical `BINARY_BCAST_BODY` is exactly tied at handwritten `608,608,608` versus generated SFPI `608,608,608`. This is a zero-regression compiler-flow replacement, not a speedup.  SFPI-GCC `8f943c2f8` fixes the canonical TTNNWhere `v_if` debug-build ICE by resetting stale `DEBUG_BIND` uses when RVTT removes scalar predicate definitions; WH/BH/QSR focused checks pass and non-debug assembly is byte-identical.  The corrected U16 selector passes CRAQ and Blackhole correctness, but measures handwritten `159.25,159.25,159.25` versus generated `312.50,312.50,312.50` `TTNN_WHERE_BODY` cycles.  The executed caller already receives the generic outermost-CC combine; the remaining 3-slot-versus-7-slot gap is SFPLOADMACRO formation, not PUSH/POP lowering. Evidence is in TT-Metal `tt_metal/tt-llk/tests/corpus/{BINARY_BCAST_SILICON_AB,TTNN_WHERE_COMPILER_AB}.md`.
