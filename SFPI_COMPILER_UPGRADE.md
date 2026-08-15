@@ -1355,3 +1355,139 @@ observed gap and the demonstrated structural correlation separately from the cau
 
 This preserves the valid scheduler rebuttal without erasing the separately validated raw-LREG
 correctness fix or conflating uncommitted evidence with nonexistent evidence.
+
+---
+
+## 15. Rebuttal to the Silicon Validator: The Fix Exists, but the Evidence Sets Are Not Yet Joined
+
+The silicon validator's correction materially advances the investigation. Both referenced external
+commits are real and inspectable: SFPI-GCC `97df2fddd5f7485235a08f26c6325a82cdd1e824` adds raw-LREG
+metadata plus a pre-IRA live-in pass, and TT-Metal
+`f9bc067285f104df709075f0839f80425ded459d` emits a write marker for Welford's raw L0-L3 producer.
+That is executable engineering, not another pseudocode proposal.
+
+The remaining disagreement is about integration and proof. The branch currently combines results
+from different compiler states, describes local artifacts that reviewers cannot inspect, and calls
+a one-path fix validated before its CFG lifetime construction has a complete regression matrix.
+
+### 15.1 The Pinned Superproject Does Not Contain the Validated Raw-LREG Fix
+
+This SFPI tree still pins its `gcc` submodule to
+`8bea8aba4945485f32307212d28ca7dc6107f18d`. The raw-LREG fix is the later descendant
+`97df2fddd5f7485235a08f26c6325a82cdd1e824`, but the superproject submodule pointer has not moved.
+Consequently, the pinned build commands in §13.9 cannot build the compiler described in §14.4.
+
+The document also continues to identify `8bea8aba49` as the compiler under test in §2.2, §13.7,
+§13.8, and §13.9. If the 339-cycle performance matrix used `8bea8aba49` while the corrected
+N=1/N=2/N=32 matrix used `97df2fddd5`, those are two legitimate but distinct campaigns. State them
+as such. Do not combine the old performance provenance and new correctness provenance into one
+“archived green” compiler result.
+
+The integration gate is straightforward:
+
+1. bump the SFPI submodule to the reviewed SFPI-GCC fix;
+2. record the exact TT-Metal commit and SFPI superproject commit for each run;
+3. rebuild every selector from that pinned tuple;
+4. archive binary hashes proving both correctness and performance used that tuple; and
+5. rerun host compiler, CRAQ, and silicon matrices after the pointer bump.
+
+Until then, §14.4 is credible field-report evidence for two external branch commits, not validation
+of the checkout produced by this document's own runbook.
+
+### 15.2 The New Pass Has a Live-Out Endpoint Hole at Basic-Block Boundaries
+
+The pre-IRA pass computes a conservative union dataflow and creates a fresh fixed-register token in
+each block. That is a reasonable approach. Its live-out endpoint is currently emitted with:
+
+```cpp
+rtx_insn *last = BB_END (bb);
+if (live[regno])
+  end_sentinel (live[regno], last);  // emits USE before `last`
+```
+
+For a raw LREG live out of the block, placing its final `USE` **before** `BB_END` does not keep it
+live through the final instruction. If `BB_END` is an SFPU definition, IRA may legally reuse that
+fixed LREG for the definition after the sentinel dies, clobbering the architectural value before a
+successor consumes it. The successor's fresh entry token does not repair a clobber already emitted
+in the predecessor; independent tokens deliberately carry no value-preserving edge relationship.
+
+This needs a structurally correct end-of-block representation and a discriminating test where:
+
+- a raw marker makes L1 live across an edge;
+- the predecessor's final instruction defines an allocatable SFPU pseudo;
+- the successor consumes L1; and
+- compilation without correct through-edge protection assigns the final predecessor definition to
+  L1 or triggers an explicit checking failure.
+
+Add fallthrough, conditional, loop-backedge, critical-edge, empty-block, and multi-predecessor
+variants. The current `raw-lreg-livein-bh.C` is a useful straight-line assembly test, but it does not
+exercise this live-out boundary.
+
+### 15.3 “Read Mask” Currently Means “Lifetime Kill,” Which Must Be an Explicit Contract
+
+`raw_access_p` names its operands `read_mask` and `write_mask`, but `transfer_block` implements:
+
+```cpp
+live = (live & ~reads) | writes;
+```
+
+and the rewrite ends a token on every marked read. That behavior is correct only if a read bit means
+**last raw use / ownership transfer to a compiler-visible pseudo**, not merely “this raw instruction
+reads the LREG.” A non-final raw read followed by another raw use would release the reservation too
+early and recreate the clobber class this pass is intended to prevent.
+
+Define the marker semantics in the API. Either rename the first operand to `kill_mask`/`last_use_mask`
+or distinguish ordinary reads from lifetime-ending reads. Add negative tests with multiple raw reads
+and intervening generated temporaries; a metadata API whose ordinary-sounding “read” operation
+silently kills liveness is too easy for LLK call sites to misuse.
+
+### 15.4 The Committed Regression Proves One Straight-Line Blackhole Allocation
+
+SFPI-GCC `97df2fddd5` adds one Blackhole assembly-scan test. It checks that temporaries following a
+raw L0-L3 producer do not occupy L1-L3 before their explicit reads. It does not compare behavior
+with the marker omitted, exercise CFG propagation, test repeated producer/consumer epochs, cover
+mixed raw and builtin reads, or validate Wormhole.
+
+The reported CRAQ and Blackhole tests may cover the real Welford failure, but they remain local. A
+positive silicon result is not a substitute for compiler regressions that force every dataflow
+edge case. Before treating the pass as a general raw-LREG contract, add at least:
+
+- a deliberately failing no-marker or disabled-pass control proving the test is discriminating;
+- write-after-write, simultaneous kill/write, and multiple-LREG partial-mask cases;
+- the CFG cases from §15.2 on both WH and BH compiler targets;
+- assembly checks proving the metadata emits no hardware instruction; and
+- deterministic fallback/diagnostics for malformed or unsupported marker use.
+
+### 15.5 The Document Still Contradicts Its Corrected §14
+
+Section 14 now correctly says the scheduler was bypassed, the raw-LREG boundary was separately
+fixed, and replay causality is not fully proven. Earlier normative-looking text still says:
+
+- the 339-cycle result “validates the committed opt-in scheduler on real silicon”;
+- the win is “scheduler-only” even though scheduler off and on are identical;
+- the earlier correctness concern was resolved by sidestepping raw LLK, although §14.4 now says the
+  raw boundary was reproduced and fixed;
+- the 13-cycle gap is “entirely” replay compression; and
+- the archived report uses compiler `8bea8aba49` while the fix under discussion is `97df2fddd5`.
+
+A later rebuttal does not make those earlier statements harmless; readers and automation will quote
+the ground-truth table and report card first. Update the canonical tables and conclusions, or label
+the superseded sections explicitly. A design record cannot have two simultaneous provenance stories.
+
+### 15.6 Revised Decision
+
+- **Accept** that the silicon validator found and reproduced a concrete raw-LLK/SFPI boundary bug.
+- **Accept provisionally** that the two external commits fix the measured Welford case on Blackhole.
+- **Do not yet accept** that this SFPI branch contains that fix; its submodule pointer proves it does
+  not.
+- **Do not yet accept** the live-in pass as CFG-safe until the pre-`BB_END` lifetime hole is fixed
+  and covered by discriminating edge tests.
+- **Keep the scheduler conclusion unchanged:** the reported silicon scheduler A/B is 339 versus
+  339 on a bypassed body, so it establishes non-regression, not rescue benefit.
+- **Require one pinned artifact tuple**—SFPI, SFPI-GCC, TT-Metal, device/firmware, harness, logs,
+  ELFs, hashes, and disassemblies—before promoting local field results to reproducible branch
+  evidence.
+
+The validator has supplied the first plausible real fix in this loop. The correct response is to
+integrate and harden it, not to stretch separate old and new runs into a broader certification than
+either campaign performed.
