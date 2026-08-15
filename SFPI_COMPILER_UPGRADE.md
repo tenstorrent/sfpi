@@ -711,3 +711,110 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Reanalysis: Final Correctness Gaps Before Implementation
+
+This revision resolves most of the prior pseudocode objections: normalized precolors are explicit, the extracted matrix is shape-checked, solver and rewrite statuses are separated, all islands are iterated, stale `recog_memoized` checks are removed, and grouped verification is followed by a staged closure check. Those are genuine corrections and should not be reopened without contrary evidence.
+
+The remaining blockers are fewer but fundamental. They concern the parts of the contract that the new types and function names imply without yet proving.
+
+### 12.1 The Non-Normative MILP Still Cannot Enforce Exact Death
+
+Labeling Section 3.1 non-normative is honest. The outline nevertheless continues to say "exact liveness" and that an aliased operand dies at `t(i)` without providing constraints that enforce either statement. The two alias inequalities enforce equal register assignments only. They do not connect alias selection to the operand's final scheduled use.
+
+Before this model becomes normative it still needs:
+
+- binary definition-before-position and use-at-or-after-position variables, or an equivalent exact liveness construction;
+- lower and upper bounds forcing `live[v,t]` to one exactly between the scheduled definition and last scheduled use;
+- explicit live-in, live-out, unused-result, and same-slot destructive-reuse conventions;
+- constraints making `valid_ops(i)` a target-certified constant set rather than solver-controlled data;
+- forbidden/optional alias rules for operations that do not require exactly one destructive operand;
+- allowed-register and precolor assignment constraints; and
+- a justified horizon derived from operation latencies rather than the unexplained `2N` bound.
+
+The current `sum(alias[i,v]) = 1` selects one candidate, but no equation proves that candidate dies at the issue slot. A small exhaustive oracle should compare the MILP against all legal schedules and colorings for bounded DAGs before the formulation is trusted.
+
+### 12.2 "Certified" Ties Are Still Trusted, Not Certified
+
+Renaming the structure to `certified_destructive_tie` creates a useful interface boundary, but neither the displayed extractor nor a certificate validator is defined. The only tie-specific validation shown accepts `operand_death_pos <= insn_pos`; exact destructive reuse requires the target-defined equality/boundary semantics, not merely death sometime earlier.
+
+`validate_extracted_model` also does not validate:
+
+- `op_index` or `insn_pos` against the island layout;
+- `selected_alternative` against the recognized instruction alternatives;
+- `tie_kind` against the selected alternative and `_lv` semantics;
+- result and operand modes/register classes;
+- duplicate or contradictory ties; or
+- whether a mandatory result has exactly the required certified tie set.
+
+The plan must define a separately testable `certify_destructive_tie` operation whose inputs are authoritative RTL, extracted constraints, DF death information, and the selected machine alternative. The coloring solver should receive only certificates that pass that operation, and the independent checker must reconstruct rather than trust them.
+
+### 12.3 Extracted-Model Validation Is Still Incomplete
+
+The new shape, symmetry, interval, mask, and precolor checks are valuable. Additional hostile-input checks are required before the model is safe to index or enforce:
+
+- reject or explicitly define diagonal interference entries;
+- reject duplicate pseudo-regno entries or merge them with proven-identical constraints;
+- require interval endpoints and tie positions to lie within the dense island range;
+- check that fixed colors are included in the original member mask before contraction;
+- validate `assigned_lreg` or remove it from the input structure because the solver does not consume it;
+- prove every interference edge from independently reconstructed liveness; and
+- reject an empty/no-op allocation when the caller expected selected SFPU pseudos.
+
+Because `allowed_color_mask` is already `uint8_t`, a statement that it is a subset of `0xFF` provides no validation. The important question is whether the extractor derived that mask from the actual modes, alternatives, precolors, and hard-register clobbers.
+
+### 12.4 Island-Local Closure Cannot Prove Global Pseudo Closure
+
+The new call to `verify_island_closure(sfpu_island, regno_to_lreg)` can prove that staged island patterns no longer contain selected pseudos, assuming it traverses the proposed patterns correctly. Its arguments cannot establish that the same pseudo is absent from instructions, notes, call usages, debug RTL, or later islands outside `sfpu_island`.
+
+True closure requires two proofs:
+
+1. **Before staging:** authoritative DF plus explicit RTL traversal shows that every definition and non-debug semantic use of every selected pseudo belongs to the island, with a documented debug/note policy.
+2. **After staging, before confirmation:** all selected occurrences inside the proposed island patterns are gone and every replacement matches the certified color mapping.
+
+The first proof must range over the function or at least every DF reference to the selected regnos. An island-only helper cannot provide it. Tests should place an otherwise hidden use in a note, call usage, boundary instruction, and later island and require complete fallback.
+
+### 12.5 GCC's Watermark Does Not Scope Confirmation
+
+`verify_changes(watermark)` and `cancel_changes(watermark)` operate from the saved index, but `confirm_change_group()` confirms the entire pending change group and resets it. There is no `confirm_change_group(watermark)` in the GCC 15 API. Therefore a nonzero watermark means the displayed pass can validate only its suffix and then commit unrelated earlier pending changes.
+
+For a standalone RTL pass the clean contract is to assert `num_validated_changes() == 0` before staging, use zero as the transaction boundary, and leave with zero pending changes on every path. If composability with an existing group is actually required, this code needs an owning API/protocol that prevents confirmation of another caller's transaction; a saved integer alone is insufficient.
+
+This invariant needs checking-build assertions and negative tests. Calling the variable a watermark does not make confirmation suffix-scoped.
+
+### 12.6 Verification Order Needs an Explicit No-Failure Boundary
+
+`verify_changes()` applies and recognizes the staged group and may add required clobber changes. Running closure afterward is reasonable because cancellation can still undo the entire group. However, every fallible semantic check—global closure, mapping consistency, interference, certified ties, clobbers, modes, and state boundaries—must finish before `confirm_change_group()`.
+
+After confirmation, `df_insn_rescan_all()` and zero-pseudo checks must be assertions over already-proven facts, not new fallible validation. The displayed body only calls the island closure helper; it does not call the independent validator promised by pipeline step 10. That validator must be visible in the transaction sequence and must inspect the fully staged patterns, including any clobbers added by grouped verification.
+
+### 12.7 Status Types Need Observable Plumbing
+
+Separating solve and rewrite statuses is correct, but `m2_rewrite_status` is unused, `execute_rvtt_pre_ira_alloc` returns only the GCC pass result, and every solve failure is silently collapsed into `continue`. The implementation needs deterministic dump telemetry and testable counters for at least:
+
+- invalid extracted model;
+- proven UNSAT;
+- search limit;
+- global-closure rejection;
+- grouped-recognition rejection;
+- independent-validator rejection; and
+- successful commit.
+
+This is not cosmetic diagnostics: without it, corpus validation cannot distinguish inadequate search bounds from extractor bugs or unsupported RTL.
+
+### 12.8 P0 Remains a Code-and-Evidence Task
+
+The plan now accurately separates checked-in state from target state, but the compiler is still opt-in and still invokes requested MILP even after a successful list result. The focused harness is not the whole-corpus simulator/silicon workflow required by the rescue contract.
+
+Default-on remains the correct P0 outcome once the implementation short-circuits on validated list success, escalates to bounded MILP only on miss, tests the negative rollback option, and archives full legacy-off/default-on compiler and simulator classification. Silicon numerical and cycle measurements remain separate P3/P4 evidence; static issue-slot opportunities are not device speedups.
+
+### 12.9 Approval Decision
+
+- **Approve P0 implementation and intended default-on deployment** after its explicit differential gates pass.
+- **Approve the P1 direction and the newly added normalized-model checks**, while requiring authoritative tie certification and global closure.
+- **Keep P2 conditional** on exact transaction ownership, visible independent staged-pattern validation, complete hostile-model checks, and negative rollback coverage.
+- **Keep P3/P4 performance claims evidence-gated** until real generated artifacts and silicon measurements are archived.
+
+The plan is now close enough that the remaining work should be implemented rather than argued abstractly. None of these P2 corrections justify keeping the already validated narrow scheduling rescue permanently off; they prevent the future physical-enforcement layer from silently hard-registering an incomplete live range or committing changes outside its transaction ownership.
