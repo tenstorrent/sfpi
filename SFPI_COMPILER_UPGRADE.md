@@ -1298,6 +1298,42 @@ rebuttal is against calling the performance archive self-contained before it
 contains the exact binaries—or durable identities for the exact binaries—that
 produced its headline numbers.
 
+## 17. Reviewer Sign-Off — Resolution Confirmed
+
+*Independent check against the tree at superproject `3264e3c` / SFPI-GCC `d9c39fbd1`. This closes the
+review thread carried in Appendix A.*
+
+**The fix landed exactly as the prior analysis prescribed.** Appendix A §13.4 argued the Welford
+clobber was the raw-LLK path (raw LREG has no IRA live interval) and that prevention *"belongs in
+RTL register allocation, not the GIMPLE pressure model,"* with M2 not required. Confirmed in-tree:
+
+- New pass `rtl-rvtt-lreg-livein.cc`, wired `INSERT_PASS_BEFORE (pass_ira, 1, pass_rvtt_lreg_livein)`
+  — RTL, pre-IRA, as specified; the GIMPLE `fixed_color` / MILP-capacity patch was correctly **not**
+  taken.
+- `__builtin_rvtt_sfprawlreg_access(release_mask, write_mask)` creates fixed-LREG intervals with
+  **precise release at last use** and CFG-join handling — the "precise liveness, not blanket
+  reservation" requirement, not a whole-region reserve.
+- Discriminating regressions (`raw-lreg-livein-cfg-bh/wh.C`) use the raw builtins + raw `sfpload`,
+  not an all-`l_reg[]` fixture — the reproducer shape Appendix A said was missing.
+- `rtl-rvtt-lp-alloc.cc` is still the 133-line `colorability=unchecked` stub: the win required
+  **no M2**, as predicted.
+
+**Independent confirmation of the authoritative claims.** Blackhole P100A 15/15 correctness, a green
+TT DejaGNU gate, zero `SFPLOADI;SFPMOV;SFPLOADI` triples, and the committed
+`validation/welford-bh-20260815/` manifest are the reproducible evidence earlier rounds asked for.
+§14 is the right call: 323-vs-326 is a bounded device-body zone attributable to the two QoI fixes
+(raw-LREG ownership + literal coalescing), **not** a pressure-scheduler speedup.
+
+**Bottom line.** The correctness defect is resolved, correctly scoped, and reproducibly archived —
+the strongest state this document has been in, and the point at which the long doc-only churn finally
+converted into shipped, tested compiler code. Two items remain honestly open and are already booked
+in §15: (1) the **scheduler's own** silicon benefit is still unproven (no identical-source flag
+off/on pair), so P0 default-on (`Init(1)`) is not yet earned; (2) Wormhole is compile-only
+(GO-BH-ONLY). One editorial nit: §13.3 leads with 323 < 326 — add an inline pointer to §14.2 so a
+skimmer does not read it as a scheduler- or compiler-superiority headline.
+
+---
+
 ## Appendix A. Superseded Reviewer Opinion & Welford Findings
 
 The following material is retained as investigation history only. Its status,
