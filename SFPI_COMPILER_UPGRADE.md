@@ -831,3 +831,83 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Reanalysis: The Remaining Stubs Must Become Proofs
+
+This revision genuinely fixes the position-domain mismatch, uses a schedule-dependent ordering condition for destructive candidates, separates recognition and validator telemetry, emits the counters, and correctly labels the missing whole-corpus driver as a P0 deliverable. These changes should remain.
+
+The plan is not yet implementation-complete. Two functions now presented as authoritative validation are still semantic stubs, and one misuses GCC recognition terminology in a way that would certify an unverified machine tie.
+
+### 12.1 `recog_memoized()` Does Not Return a Constraint Alternative
+
+`certify_destructive_tie` assigns `recog_memoized(insn)` to `which_alt`. That return value is the instruction recognition code (`INSN_CODE`), not the selected operand alternative. GCC's selected constraint alternative is established through operand extraction/constraint processing and represented separately (commonly through `which_alternative` after the appropriate constrain operation).
+
+The function then ignores both its local `which_alt` value and its `selected_alternative` input. It never proves that the selected alternative exists, matches the requested operand index, or contains the required matching/destructive constraint. The comment "Verify machine alternative" is therefore false: the body checks only that the instruction is recognizable and that the caller supplied one of two enum values.
+
+An authoritative certifier must:
+
+- extract the instruction operands and alternatives through the GCC 15 constraint APIs appropriate at pre-IRA;
+- validate the alternative index against the actual alternative count;
+- prove that the result and selected operand are tied by that alternative;
+- check early-clobber, matching constraints, modes, register classes, and implicit operands/clobbers;
+- derive `kind` from recognized target semantics rather than trusting the caller;
+- prove exact DF death at the destructive issue boundary; and
+- emit the certificate only after all of those checks pass.
+
+Tests must include recognizable instructions with a wrong alternative, wrong operand index, nonmatching modes, non-dying operands, early-clobber conflicts, and `_lv` versus ordinary two-address semantics.
+
+### 12.2 "Death at or Before" Is Not Exact Destructive Death
+
+Both certification and model validation still accept `operand_death_pos <= insn_pos`. For same-instruction destructive reuse, a death position earlier than the consuming operation is suspicious: if the operation consumes the value, that operation itself participates in its final-use boundary. The representation needs a precise convention—positions before instruction, at issue, or after instruction—and equality consistent with that convention.
+
+The certifier must also prove from authoritative DF/RTL that the tied operand is actually used by this instruction and that no semantic use occurs after the destructive boundary. An integer supplied by the extractor is not proof of death unless independently reconstructed and checked.
+
+### 12.3 The Staged-Pattern Validator Is a No-Op
+
+`verify_staged_island_patterns` accepts the register map, intervals, interference matrix, and certified ties, but never reads any of them. Its entire semantic behavior is:
+
+```cpp
+for (rtx_insn *insn : sfpu_island)
+    if (recog_memoized(insn) < 0) return false;
+return true;
+```
+
+That is not the independent validator promised by pipeline step 12. It is also largely redundant with `verify_changes(0)`, which has already recognized the changed instruction objects.
+
+The real staged validator must independently reconstruct and check:
+
+- every selected pseudo occurrence was replaced and no unrelated pseudo was changed;
+- each replacement hard register equals the solved mapping and is legal for its mode;
+- no simultaneously live values share a color;
+- every precolor, allowed mask, hard-register clobber, and state boundary is respected;
+- every certified destructive tie is realized by the staged machine alternative; and
+- any clobbers added during grouped verification are included in the validation.
+
+Until the function consumes and validates those inputs, P2's claimed independent safety proof does not exist.
+
+### 12.4 Dimensional Validation Is Better but Still Partial
+
+Using `num_positions` fixes the previous category error. The validator still does not range-check `op_index`, validate `selected_alternative`, validate `tie_kind`, require exact death, or detect duplicate/contradictory ties. Those omissions are directly relevant because the coloring engine contracts equality classes solely by trusting these records.
+
+Interval interference must also be independently reconstructed or cross-checked from RTL liveness. Matrix symmetry and shape prove that a matrix is well-formed, not that it describes the program.
+
+### 12.5 Global Closure Still Defers Debug Correctness
+
+The function-level DF walk correctly rejects semantic definitions and non-debug uses outside the island. It explicitly permits debug uses outside the island, while the rewrite does not update or reset them. The plan must specify and test whether affected debug instructions are rewritten, reset through GCC's debug APIs, or cause conservative rejection. `-g` and checking builds must be part of this gate.
+
+### 12.6 Telemetry Is Now Observable but Missing Certification Outcomes
+
+Recognition and staged-validator failures are now separated and printed, which resolves the earlier telemetry objection. Extraction and tie-certification failure still have no distinct status; they can be silently omitted or folded into `INVALID_MODEL`. Add counters and deterministic dumps for extraction rejection and certificate rejection so corpus failures identify the responsible phase.
+
+### 12.7 P0 Status and Approval
+
+The absent corpus driver is now honestly documented as a required deliverable rather than an existing tested tool. That wording is acceptable. The checked-in scheduler nevertheless remains opt-in and still runs requested MILP after list success, so P0 remains planned work.
+
+- **Approve P0 direction:** implement default-on, list-success short-circuiting, MILP-on-miss, rollback testing, and the promised corpus driver.
+- **Approve the corrected P1 positional model:** finish real GCC-alternative tie certification and debug/global closure policy.
+- **Keep P2 conditional:** replace the staged validator stub with an independent semantic checker and exhaustively test rejection/rollback paths.
+- **Keep P3/P4 evidence-gated:** static opportunities remain distinct from silicon performance.
+
+The remaining objections are now concentrated in two functions. Implementing their names without implementing their proofs would be worse than leaving P2 dump-only because it creates the appearance of safety around irreversible hard-register substitution. This does not weaken the case for the independently validated P0 scheduler becoming default-on.
