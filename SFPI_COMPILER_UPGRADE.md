@@ -64,7 +64,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
 | **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
-| **Hardware Silicon Baseline** | **Archived Green (Blackhole)**: 339 cycles (-27.3% vs non-replay, N=32 pass, commit `8bea8aba49` / `be125cd`) | **P3 Deliverable:** Full multi-kernel A/B paired suite |
+| **Hardware Silicon Baseline** | **Archived Green (Blackhole)**: vFloat 339 cyc — −27.3% vs non-replay (466), within 13 cyc / 3.9% of replay LLK (326); N=32 all-selectors pass; compiler `8bea8aba49` / `be125cd`; archived §13.8. Raw-LLK asm path still needs the fixed-range model (§13.4). | **P3 Deliverable:** Full multi-kernel A/B paired suite (initial Welford run archived §13.8) |
 
 ```
 Candidate Region (Peak > 8)
@@ -1141,7 +1141,90 @@ what it validates:
 - **"Derisked" is fair.** Correctness is proven on silicon; the residual ~4% (13 cycles) is the
   **replay-buffer compression** gap (§6 / P5) — a throughput feature the compiler does not emit yet
   — not a correctness or allocation risk. Closing those cycles is perf tuning, not de-risking.
-- **One open item:** the silicon numbers are not yet archived *in this repo* (no committed run
-  artifact / `WELFORD_SILICON_VALIDATION.md` under version control here). Archive the runbook,
-  device/firmware metadata, and raw cycle outputs so §2.2's silicon row can cite a commit — per
-  §13.5.5 the paired A/B numbers must live in-tree, not just in a terminal.
+- **Archived (was open):** the paired A/B numbers are now recorded in-tree at **§13.8** and cited
+  from the §2.2 silicon row. Still to attach when exported from the harness: the raw per-run cycle
+  dumps and correctness vectors + device/firmware metadata, so the summary is backed by primary
+  artifacts, not just a table.
+
+### 13.8 Archived Silicon Results — Blackhole Welford Body (2026-08-15)
+
+*In-repo archive of the paired A/B silicon run, per §13.5.5 / §13.7. This is the reported run
+summary; raw device logs (per-run cycle dumps, correctness vectors) should be attached alongside
+when exported from the harness.*
+
+**Device / provenance**
+- Device: Blackhole (`bh-33`), device **math** cycles.
+- Compiler under test: `gcc` submodule `8bea8aba49` ("riscv: add opt-in SFPU pressure scheduling"),
+  integrated at superproject `be125cd`; `gcc` pointer unchanged since (verified: 0 bumps in the
+  40 commits after `be125cd`). Superproject review commit: this branch (`nkapre/sfpi`).
+- Kernel: Welford (LayerNorm) body. Flags: `vFloat rescue` = `-mtt-tensix-optimize-pressure-schedule`
+  (opt-in pressure scheduler); `vFloat direct` = same source, scheduler off.
+- Correctness: separate **N=32** pass, **all five selectors** pass. Cycle runs are deterministic
+  (three identical samples per variant).
+
+**Results (device math cycles, 3 runs each)**
+
+| Variant | Cycles (run1/2/3) | vs production replay LLK |
+| :--- | :--- | :--- |
+| Handwritten **replay** LLK (production baseline) | 326 / 326 / 326 | baseline |
+| **vFloat direct** (scheduler off) | 339 / 339 / 339 | +13 cyc, **+3.99%** |
+| **vFloat rescue** (pressure scheduler on) | 339 / 339 / 339 | +13 cyc, **+3.99%** |
+| Handwritten **direct** (non-replay) | 466 / 466 / 466 | +140 cyc, **+42.9%** |
+
+**Conclusions**
+- The compiler-generated `vFloat` path is **27.3% faster** than non-replay handwritten code
+  (466 → 339) and within **~4% (13 cycles)** of the production **replay** LLK (326). All runs passed.
+- `direct` and `rescue` tie at 339 here: the Welford body fits without pressure rescue on this
+  input, so the scheduler is correctly a no-op (consistent with the peak-≤8 bypass), not a
+  regression. Rescue's value shows on higher-pressure bodies, not this one.
+- The residual gap to 326 is entirely the **replay-buffer compression** the production LLK uses and
+  the compiler does not yet emit (§6 / P5) — a throughput feature, not a correctness or allocation
+  gap. "Manual early-fold" was in flight at capture time; append its row when it lands.
+- This validates the committed opt-in scheduler on real silicon. It does **not** exercise M2
+  (`rtl-rvtt-lp-alloc.cc` still `colorability=unchecked`); the win is scheduler + baseline IRA.
+
+### 13.9 Reproducer, Runbook & Archived Report Card (folded from WELFORD_SILICON_VALIDATION.md)
+
+Consolidated here per single-document policy; the standalone file is removed. Full build-runbook and
+per-file test drivers remain recoverable from git history (commit `e0057ae`).
+
+**Archived report card (Blackhole)**
+- STATUS: `GO-BH-ONLY` (green on silicon). TESTED_ARCH: Blackhole (`-mcpu=tt-bh-tensix`).
+- COMPILER_COMMIT: `8bea8aba49` (gcc submodule), integrated `be125cd`.
+- FUNCTIONAL: PASSED — N=32 across all 5 selectors, 100% parity vs FP64 reference Welford.
+- DEVICE MATH CYCLES: non-replay handwritten 466; vFloat direct 339 (−27.3%); vFloat rescue 339
+  (−27.3%); production replay LLK 326 (vFloat +13 cyc / +3.9%, attributable to replay-buffer
+  frontend compression).
+- VERDICT: correctness + register-allocation safety verified on silicon; scheduler matches
+  non-replay handwritten perf with automatic allocation (no manual LREG pinning). Passing does not
+  flip default-on; it supplies the silicon evidence for that decision.
+
+**Selectors under one shared wrapper** (loads, transpose, reciprocal, init, stores shared so cost is
+not misattributed): `HANDWRITTEN_DIRECT`, `HANDWRITTEN_REPLAY` (perf golden), `VFLOAT_RESCUE`
+(pressure scheduler on), `VFLOAT_MANUAL_EARLY_FOLD` (control), and baseline direct. Numerical golden
+is sequential FP64 Welford; cycles are real `read_wall_clock()` device counters.
+
+**Reproducer shape** (`sfpu_welford_test.cpp`; note the explicit-LREG loads are the sfpi `l_reg[]`
+path — the IRA-safe one per §13.3, not raw-LLK inline asm):
+```cpp
+// inputs prefetched into L0-L3; state/reciprocal in L4/L5/L7
+vFloat x0=l_reg[LRegs::LReg0], x1=l_reg[LRegs::LReg1], x2=l_reg[LRegs::LReg2], x3=l_reg[LRegs::LReg3];
+vFloat mean=l_reg[LRegs::LReg4], m2=l_reg[LRegs::LReg5], recip=l_reg[LRegs::LReg7];
+// VFLOAT_RESCUE body, per row:
+vFloat delta = x - mean;  mean += delta * recip;
+vFloat delta2 = x - mean; m2   += delta * delta2;
+// ... 4 rows ... then store: l_reg[LRegs::LReg4]=mean; l_reg[LRegs::LReg5]=m2;
+```
+
+**Pinned build / validate**
+```bash
+git clone --recursive --branch nkapre/sfpi git@github.com:tenstorrent/sfpi.git sfpi-scheduler
+git -C sfpi-scheduler submodule update --init --recursive
+SFPI_WITH_LP_SOLVE=yes ./scripts/build.sh --dir="$PWD/../sfpi-silicon-build" --checking
+./scripts/validate-sfpu-pressure-scheduler.sh "$PWD/../sfpi-silicon-build/sfpi" out/
+# Zero-setup: point CUSTOM_SFPI at the build and run existing TT-Metal Blackhole suites
+#   pytest .../operations/fused/test_layer_norm.py ; .../vae/tests/pcc/test_welford_state_leak_regression.py
+```
+
+**Still to attach** (raw primary artifacts, per §13.7): per-run cycle dumps, per-selector
+disassembly + LREG occupancy + SFPMAD/NOP counts + SHA-256 ELF hashes, and device stepping/firmware.
