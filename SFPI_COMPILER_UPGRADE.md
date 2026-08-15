@@ -1231,13 +1231,16 @@ disassembly + LREG occupancy + SFPMAD/NOP counts + SHA-256 ELF hashes, and devic
 
 ---
 
-## 14. Critical Reanalysis: The Silicon Result Is Real but Does Not Measure the Scheduler
+## 14. Critical Reanalysis: Separate Scheduler, Raw-LREG Correctness, and Silicon Claims
 
-The new Blackhole numbers are useful and should be retained. They establish that the tested pure
-`vFloat` Welford body ran correctly and that its generated direct implementation measured 339
-device math cycles in the reported environment. They do **not** establish a scheduler performance
-win, exercise a pressure rescue, validate M2, or yet constitute a reproducible in-tree silicon
-archive. Those distinctions matter for the default-on decision.
+The Blackhole result is real and useful, but three distinct conclusions must not be conflated. The
+clean, capture-free Welford-body measurements were 466 cycles for handwritten direct, 326 cycles
+for handwritten replay, and 339 cycles for generated `vFloat` direct and rescue. Each value was
+repeated in three fresh processes with zero observed spread. A separate matched correctness suite
+validated both mean and M2 for all five selectors at N=1, N=2, and N=32. However, the pressure
+scheduler bypassed the measured body, so these data do **not** establish a scheduler performance
+win or exercise a pressure rescue. The primary logs, binaries, and disassemblies also remain local
+rather than committed as a self-contained in-tree silicon archive.
 
 ### 14.1 The Only Scheduler A/B Delta Reported Is Exactly Zero
 
@@ -1261,17 +1264,19 @@ To measure the scheduler, the silicon fixture must show `old-peak > 8`, `applied
 off/on assembly, then run both binaries under the same wrapper. The existing compiler-only rescue
 fixture supplies the first part but is not the Welford silicon binary reported here.
 
-### 14.2 “Archived Green” Currently Means an Attestation, Not Primary Evidence
+### 14.2 Primary Evidence Exists Locally but Is Not Yet In-Tree
 
-The document explicitly says the raw evidence is “still to attach.” The checked-in
-`sfpu-pressure-results.tar.gz` contains host compiler/assembly validation artifacts, not the
-reported silicon run: it has no cycle logs, selector result vectors, silicon report, ELF images,
-device/firmware record, or per-selector hashes. The single `assembly.sha256` belongs to the focused
-compiler validation bundle and does not identify the measured TT-Metal binaries.
+The silicon campaign produced real local primary evidence: clean per-selector device-cycle logs,
+separate N=1/N=2/N=32 correctness logs, final ELF images, hashes, and disassembly. The measurement
+uses a hardware math-thread counter around `WELFORD_BODY`; it is not pytest wall time. The local
+runner now also persists its profiler rows. Thus it is accurate to call the values **measured on
+Blackhole**, rather than merely inferred or attested.
 
-Accordingly, §13.8 is presently a reported summary with compiler provenance, not a self-contained
-archived experiment. Preserve the numbers as **reported Blackhole results**, but reserve
-**archived/reproducible** for a committed artifact bundle containing at least:
+That evidence is not yet independently reproducible from this branch. The checked-in
+`sfpu-pressure-results.tar.gz` is a host compiler/assembly bundle and does not contain the silicon
+logs, measured TT-Metal ELF images, device record, or the current executable LLK fixture. Local
+absolute paths are useful provenance for the ongoing investigation, but they are not a portable
+archive. Reserve **in-tree archived/reproducible** for a committed bundle containing at least:
 
 - raw output for every cycle and correctness run;
 - exact TT-Metal commit, device ID/stepping, firmware and runtime configuration;
@@ -1279,7 +1284,7 @@ archived experiment. Preserve the numbers as **reported Blackhole results**, but
 - ELF and disassembly hashes proving which binary produced each row; and
 - an executable driver that parses results and fails on correctness/performance thresholds.
 
-### 14.3 The Folded “Harness” Cannot Produce the Claims It Documents
+### 14.3 The Folded Template Is Not the Measurement Harness
 
 The full driver preserved in commit `e0057ae` is explicitly a handoff template. Its functional test
 ends with `assert True`; it never launches a device kernel or compares device output with the FP64
@@ -1288,42 +1293,65 @@ does not read, parse, or report a hardware cycle counter. The C++ timing sketch 
 end_cycles - start_cycles” but contains no implementation that exports that value.
 
 Those snippets cannot substantiate “100% parity,” 339 cycles, or deterministic three-run results.
-If a separate real harness produced the numbers, that harness—not a placeholder recoverable from
-history—is the artifact that must be pinned. Referring to normal TT-Metal LayerNorm tests is also
-not enough unless the exact tests are shown to select these four implementations and collect the
-reported device-math interval.
+They should not be confused with the current local LLK fixture, which launches real selector ELFs,
+compares the captured L4 mean and L5 M2 against a host Welford reference in correctness mode, and
+uses a capture-free `TRACE_N=0` hardware profiler interval in performance mode. The current fixture
+is the evidence-producing harness, but it remains uncommitted. It and its exact invocation must be
+pinned before the branch is self-contained.
 
-### 14.4 Correctness Scope Is One Executed Path, Not Allocation Safety in General
+### 14.4 Correctness Now Exercises the Raw-LLK Boundary, but Scope Remains Bounded
 
-A passing pure-`vFloat` binary is evidence for that binary and input matrix. It does not validate the
-raw-LLK interop path that §13.3 says is the suspected source of an invisible LREG lifetime. In fact,
-§13.9 explicitly says this reproducer uses the already-safe `sfpi::l_reg[]` path. Sidestepping an
-unreproduced failure mode does not resolve it.
+The original failure was reproduced at the actual raw-LLK boundary. Blackhole Welford loads and
+transposes L0-L3 through opaque raw `.ttinsn` operations; without compiler-visible metadata, IRA
+could assign a generated temporary to still-live L1, corrupting the next row's input. CRAQ tracing
+localized the first clobber, and physical Blackhole reproduced the resulting N=2 divergence.
 
-Likewise, because the scheduler bypassed this body, the run does not exercise the transformed
-schedule, validator acceptance, list/MILP choice, rollback, or high-pressure register allocation on
-silicon. “Correctness and register-allocation safety verified on silicon” must be scoped to the
-specific 339-cycle binary; it is not a certification of the scheduler or allocator.
+SFPI-GCC commit `97df2fddd5f7485235a08f26c6325a82cdd1e824` adds explicit raw-LREG access metadata and a
+pre-IRA live-in pass. TT-Metal commit `f9bc067285f104df709075f0839f80425ded459d` marks the Welford
+raw producer after its final transpose. With those changes, CRAQ N=1/N=2 and physical Blackhole
+N=1/N=2/N=32 runs pass for handwritten direct, handwritten replay, `vFloat` direct, `vFloat`
+rescue, and manual early fold. At N=32, all five selectors report mean maximum absolute error
+0.001953125 and M2 maximum absolute error 0.9746094, within the prescribed BF16 tolerances.
 
-### 14.5 The 13-Cycle Replay Attribution Is Plausible, Not Yet Proven
+This validates the marked Welford raw-producer-to-generated-consumer path and the specific raw-LREG
+fix. It does not validate every opaque LLK macro, all CFG shapes, the general allocator, or
+Wormhole silicon. Because the pressure scheduler bypassed this body, it also does not exercise the
+transformed schedule, validator acceptance, list/MILP choice, rollback, or high-pressure register
+allocation on silicon.
 
-The claim that the entire 339-versus-326 gap is replay-buffer compression is a reasonable
-hypothesis, but the document also says the required disassemblies, replay counts, instruction/NOP
-counts, and ELF hashes are absent. Without those controls, “entirely attributable” is stronger than
-the evidence permits. Report the observed 13-cycle gap and test the attribution with matched
-instruction accounting or a replay-disabled control.
+### 14.5 Replay Structure Is Demonstrated; Cycle Attribution Is Still Incomplete
+
+The clean Blackhole triplets are deterministic: handwritten replay is 326/326/326 cycles and
+generated `vFloat` direct is 339/339/339 cycles, a 13-cycle or 3.99% gap. Local final-ELF
+disassembly also demonstrates the structural difference: handwritten replay issues 32 `TTREPLAY`
+commands over fixed six-operation row images, while the generated body has no body replay and
+roughly fifty more static RISC/Tensix words.
+
+That evidence makes replay compression the leading explanation, but it does not prove that the
+entire 13-cycle wall-clock difference is caused by replay. Static command counts do not model
+scoreboard stalls, asynchronous issue, or overlap. A matched replay-disabled control or an
+instruction-issue trace is still required before using “entirely attributable.” Report the exact
+observed gap and the demonstrated structural correlation separately from the causal claim.
 
 ### 14.6 Revised Engineering Verdict
 
-- Accept the 339-cycle result as a promising reported pure-`vFloat` Blackhole datapoint.
+- Accept the 339-cycle value as a clean, capture-free `WELFORD_BODY` Blackhole device-math result;
+  handwritten replay remains the 326-cycle golden implementation, so generated `vFloat` is 3.99%
+  slower in this comparison.
+- Accept mean and M2 correctness for all five selectors on the separately matched N=1/N=2/N=32
+  Blackhole correctness suite for this marked raw-LREG path. The performance invocation itself is
+  capture-free and does not repeat those output comparisons inline.
 - Record the scheduler A/B conclusion accurately: **0.0% delta on a bypassed peak-at-most-eight
   Welford body; non-regression shown, rescue benefit not exercised.**
 - Do not use 466-to-339 to credit the pressure scheduler; it compares different implementations.
-- Do not call the run archived or independently reproducible until its primary artifact bundle and
-  real harness are committed.
+- Treat the raw-LREG fix as positively validated for the Welford boundary, while retaining broader
+  raw-LLK and CFG coverage as open work.
+- Primary evidence exists locally, but do not call the run independently reproducible from the
+  branch until the artifact bundle and real harness are committed.
 - Run the actual 9-to-8 Welford rescue and a non-Welford changed-binary case on silicon, paired
   off/on, before treating this result as scheduler silicon validation.
-- Keep the raw-LLK fixed-live-range work open until a real reproducer exercises that path.
+- Keep the 13-cycle replay attribution qualified until a matched replay-disabled control or
+  instruction-issue trace establishes causality.
 
-This does not invalidate the silicon run. It prevents a good result for generated `vFloat` from
-being promoted into evidence for compiler machinery that the measured binary never invoked.
+This preserves the valid scheduler rebuttal without erasing the separately validated raw-LREG
+correctness fix or conflating uncommitted evidence with nonexistent evidence.
