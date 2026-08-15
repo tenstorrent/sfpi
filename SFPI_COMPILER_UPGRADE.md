@@ -909,3 +909,84 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Reanalysis: Ground Truth Is Better, Proof Wiring Is Still Missing
+
+The latest consolidation improves the plan materially. It labels the checked-in pre-IRA pass as dump-only, labels the corpus driver as absent, keeps both production flags honestly at `Init(0)`, stages debug resets inside the grouped transaction, fixes the DSATUR lambda, and replaces the invalid p95 language with a paired A/B non-inferiority gate. These corrections should remain.
+
+The remaining objections are no longer about presentation. The target pseudocode defines stronger helper functions but does not wire their proofs into the extraction and rewrite path.
+
+### 12.1 The Tie Certifier Is Defined but Not Invoked
+
+`certify_destructive_tie` exists, but the shown allocator calls:
+
+```cpp
+extract_rtl_constraint_model(sfpu_island, raw_intervals,
+                             raw_interference, ties);
+```
+
+where `ties` is already a vector of `certified_destructive_tie`. No displayed code shows the extractor producing raw tie candidates, invoking the certifier for each candidate, rejecting the island on certification failure, or incrementing `tie_cert_reject_count`. The certificate type can therefore still be populated by an unverified extractor path.
+
+Make the boundary structural rather than nominal:
+
+1. extraction emits `destructive_tie_candidate` records;
+2. a separate loop calls `certify_destructive_tie` against the authoritative instruction and dense position;
+3. any required tie that fails certification rejects the complete island;
+4. only successful results enter `vector<certified_destructive_tie>`; and
+5. extraction and certification failures increment distinct telemetry and deterministic dumps.
+
+The current telemetry fields `extraction_reject_count` and `tie_cert_reject_count` are printed but never incremented in the shown execution path.
+
+### 12.2 A Constraint That Exists Is Not Necessarily an Enabled, Satisfied Alternative
+
+The certifier now correctly inspects preprocessed `operand_alternative` data and verifies that the requested input has a matching constraint to operand zero. That is real progress. It still only range-checks `selected_alternative`; it does not prove that the alternative is enabled and satisfied by this instruction at the pre-IRA point.
+
+The certifier must either constrain operands with a mask containing only the requested enabled alternative or independently establish all equivalent conditions. It must also:
+
+- derive the actual output operand index rather than universally assuming operand zero;
+- reject early-clobber or register-class conditions incompatible with the proposed overlap;
+- validate operand predicates, modes, and target register filters;
+- derive `tie_kind` from the target instruction semantics instead of copying `requested_kind`; and
+- preserve/restore global recognition state as required by surrounding GCC code.
+
+`op_alt[op_index].matches == 0` proves that the constraint string references operand zero. It does not by itself prove that this alternative is selectable for the current operands or that `_lv` semantic predication is equivalent to an ordinary matching constraint.
+
+### 12.3 The Staged Validator Still Does Not Match Occurrences to Colors
+
+The validator now proves that no selected pseudo remains, which closes one important hole. It still never records the original pseudo occurrence locations or verifies that each staged location contains the expected hard register from `regno_to_lreg`.
+
+Its interference and tie checks operate entirely on `regno_to_lreg`, the solver output. A traversal bug could replace a pseudo with the wrong LREG: the instruction might remain recognizable, no selected pseudo would remain, and the map would still be internally valid, so all current checks could pass.
+
+Before staging, build an occurrence ledger containing instruction identity, stable operand/path identity, original pseudo, mode, and expected color. After `verify_changes(0)`, independently traverse the staged patterns and prove one-to-one correspondence with that ledger. Also prove that no unselected pseudo, hard register, operand, or clobber changed except changes explicitly added by GCC grouped verification.
+
+Only then does "occurrence-level" mean that the emitted RTL realizes the coloring rather than merely containing no old pseudo names.
+
+### 12.4 Debug Resets Are Transactional but Not Independently Validated
+
+Collecting debug uses read-only and staging their resets in the same change group fixes the prior rollback violation. The staged validator does not receive `debug_resets` and therefore cannot prove that every collected debug use was reset exactly once or that no unrelated debug location changed.
+
+Include debug reset records in the occurrence ledger and validate them before confirmation. Add `-g` negative tests where coloring, recognition, and semantic validation fail after debug uses are collected; each must cancel both semantic substitutions and debug resets.
+
+### 12.5 The Ground-Truth Table Overstates Silicon Status
+
+The row labeled **Hardware Silicon Baseline** says "Functional verification complete," while the same document makes paired Blackhole silicon A/B measurement a future P3 deliverable and provides no committed silicon run artifact. If "functional verification" means compiler tests or simulation, say that explicitly. If it means execution on silicon, cite the runbook, device/firmware metadata, raw outputs, and commit containing the evidence.
+
+Without that artifact, the ground-truth entry should read **No archived silicon A/B result in tree**. A ground-truth table must use a higher evidence standard than roadmap prose.
+
+### 12.6 The P0 Evidence Driver Is Still Absent
+
+The plan now labels `scripts/run-corpus-differential.sh` as a required deliverable, so its absence is no longer a documentation contradiction. It remains a hard blocker for the evidence-based default-on flip. The implementation must define the corpus manifest, baseline/candidate compiler identity, assembly normalization, simulator invocation, changed-artifact classification, deterministic rebuild checks, and archived summary schema.
+
+The checked-in code also still invokes requested MILP after list success. Demand-driven MILP-on-list-miss and `Init(1)` remain target changes rather than tested behavior.
+
+### 12.7 Approval Decision
+
+- **Approve the consolidated ground-truth/target structure.** It is substantially more honest than earlier revisions.
+- **Proceed with P0 engineering**, including list-success short-circuiting, default-on plus rollback, and the real corpus/simulator differential driver.
+- **Keep M2/P2 behind the off flag** until raw tie candidates are visibly certified, requested alternatives are proven enabled/satisfied, and the staged occurrence ledger proves actual RTL-to-color correspondence.
+- **Require transactional debug negative tests** before claiming unchanged fallback under `-g`.
+- **Correct or substantiate the silicon ground-truth row** before using it as an approval premise.
+
+The plan is now good enough to implement. What remains is not another terminology pass: it is connecting the certifier and validator to the real data path so their guarantees cannot be bypassed by construction.
