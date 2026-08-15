@@ -64,7 +64,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
 | **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
-| **Hardware Silicon Baseline** | Pure `sfpi::l_reg[]` passes; raw-LLK asm path requires fixed range model (§13) | **P3 Deliverable:** Paired A/B cycle benchmarking on Blackhole silicon |
+| **Hardware Silicon Baseline** | **Archived Green (Blackhole)**: 339 cycles (-27.3% vs non-replay, N=32 pass, commit `8bea8aba49` / `be125cd`) | **P3 Deliverable:** Full multi-kernel A/B paired suite |
 
 ```
 Candidate Region (Peak > 8)
@@ -820,7 +820,7 @@ Rather than premature public macros, `SFPLOADMACRO` is governed by a compiler-in
 
 | Kernel | Architecture Challenge | Existing Manual Workaround | Demonstrated vs. Candidate Opportunity |
 | :--- | :--- | :--- | :--- |
-| **Welford (LayerNorm)** | 8 live values across 4 rows with zero register slack. | Recomputes delta ($\delta_2$) and hand-colors L0–L7. | **Demonstrated:** 9-to-8 rescue matches manual early fold; production replacement is P3 gate. |
+| **Welford (LayerNorm)** | 8 live values across 4 rows with zero register slack. | Recomputes delta ($\delta_2$) and hand-colors L0–L7. | **Demonstrated on Blackhole Silicon:** 339 device math cycles (-27.3% vs non-replay 466 cycles, within 13 cycles / 3.9% of replay LLK 326 cycles, N=32 correctness passes all selectors). |
 | **Dual-Horner Rational** | 7 exposed NOP stalls in serial $P(x)/Q(x)$ evaluation. | Manual instruction interleaving in TTI. | **Candidate Opportunity:** 40% static issue-slot reduction; silicon verification required. |
 | **Piecewise Generic / LUT** | Interleaved MADs, pinned coefficients, D-RWC updates. | 3 distinct hand-written polynomial replay bodies. | **Candidate Opportunity:** Compiler-managed coefficient pinning + exact replay packing. |
 | **Log (`ckernel_sfpu_log.h`)** | Peak pressure 9 during polynomial + exponent correction. | Explicit reload from $Dst$ at line 62. | **Candidate Opportunity:** Pressure scheduling keeps inputs resident; eliminates $Dst$ cuts once demonstrated on compiler diffs. |
