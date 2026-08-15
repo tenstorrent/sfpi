@@ -993,3 +993,101 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 13. Critical Rebuttal to the Hardened Plan
+
+The maturity ledger is the strongest correction so far. It accurately distinguishes shipped GIMPLE scheduling from the dump-only RTL audit, labels the joint MILP and DSATUR allocator as roadmap work, identifies the absent corpus driver, and promotes silicon evidence. Those changes materially improve the document.
+
+The hardened plan nevertheless introduces one infeasible recovery mechanism and still treats two incomplete checks as authoritative. These issues must be corrected before the ledger can serve as an execution contract.
+
+### 13.1 A Post-IRA Pass Cannot Rewind and Recompile the Function
+
+Section 11.3-D proposes a pass after IRA that detects an SFPU spill, masks the scheduler for the function, and "re-emits the baseline order." This is not a normal GCC pass-manager capability. By the time an after-IRA pass runs, GIMPLE scheduling, expansion, RTL scheduling, and IRA have already mutated or discarded the state needed to reproduce the flag-off compilation. Toggling a target flag at that point does not restore the original GIMPLE order or rerun the earlier pipeline.
+
+More importantly, the SFPU spill path can call `rvtt_mov_error` during allocation/reload. A fatal diagnostic or ICE raised there prevents a later spillguard pass from executing at all. The proposed guard therefore cannot guarantee recovery from the failure it is intended to catch.
+
+There are only three credible fallback designs:
+
+1. **External compiler retry:** the build driver compiles with the candidate option, recognizes the specific spill failure, and launches a fresh compiler invocation with the rollback flag. This can preserve compile coverage but not a single-invocation byte-identity guarantee.
+2. **Pre-IRA proof:** do not commit the GIMPLE reorder unless the authoritative final-RTL model proves colorability and the later allocation contract is enforced. This is the M2 direction.
+3. **Retained pre-IRA alternative state:** preserve both candidate and baseline representations and choose before irreversible downstream passes. This is invasive and must be designed explicitly; a post-IRA pass cannot synthesize it retroactively.
+
+Delete the in-compiler "recompile-fallback" claim unless a concrete GCC pass-manager mechanism and state-restoration implementation are supplied. For P0, use external retry plus corpus evidence, or accept that the current scheduler is advisory and cannot promise automatic in-process recovery.
+
+### 13.2 The Global Closure Check Mutates RTL Outside the Transaction
+
+`verify_global_pseudo_closure` is named as a verifier but resets out-of-island debug locations and rescans their DF records. It runs before model validation, coloring, and the standalone grouped-change transaction. If coloring returns `UNSAT`/`SEARCH_LIMIT`, recognition rejects a replacement, or the staged validator fails, those debug mutations remain committed even though the operational contract says failure leaves RTL untouched.
+
+A read-only precondition must not mutate program state. Use one of these policies:
+
+- reject an island containing external debug references;
+- record affected debug instructions and stage their resets in the same grouped transaction; or
+- perform a documented, non-fallible debug reset only after the semantic transaction commits, while weakening "byte-identical fallback" to exclude debug metadata.
+
+The current implementation violates transactional fallback and can make `-g` output differ on a failed rescue. Add a negative test that forces coloring or recognition failure after discovering an external debug use and verifies identical RTL/debug dumps to baseline.
+
+### 13.3 Constraint-Alternative Certification Still Does Not Inspect the Alternative
+
+The revised certifier now obtains a real instruction code and bounds-checks `selected_alternative`, which fixes the prior `recog_memoized` category error. It still never runs constraint selection for the requested alternative and never inspects that alternative's operand constraints.
+
+Specifically:
+
+- `selected_alternative` is range-checked and copied, but never used to query or constrain operands;
+- `insn_data[icode].n_alternatives` proves only that the index exists;
+- mode equality does not prove a matching constraint or destructive tie;
+- destination operand zero is assumed without proving the target pattern's output index;
+- early-clobber, matching-operand numbers, allowed register classes, and `_lv` semantics are not checked; and
+- the caller still supplies `kind` rather than the certifier deriving it from target semantics.
+
+The implementation must use GCC's preprocessed `operand_alternative` data and/or an explicitly constrained enabled-alternative mask, then prove the result/operand match for `selected_alternative`. `recog_op_alt` is valid only after the required extraction/preprocessing/constraint setup. A merely recognizable instruction with equal operand modes is not a certified two-address tie.
+
+### 13.4 The Staged Validator Checks the Solution Object, Not the Staged RTL
+
+The new staged validator consumes the interference graph and ties, but it checks `regno_to_lreg` against those structures. That map is the solver's own output. Rechecking that the solver map has no conflicting colors and honors contracted ties is useful as a solver sanity check, but it does not prove the substitutions present in `PATTERN(insn)` equal the map.
+
+The validator must traverse every fully staged instruction and establish an occurrence-level correspondence:
+
+- every selected pseudo occurrence became the expected `SFPU_REG_FIRST + color` hard register;
+- no selected pseudo remains;
+- no unselected pseudo or hard register changed;
+- modes and subregister structure remain legal;
+- staged clobbers are included; and
+- the actual recognized operand alternative realizes every certified tie.
+
+Calling `recog(PATTERN(insn), ...)` proves recognizability, not mapping fidelity. Without an occurrence-level check, a traversal bug that omits or misrewrites one operand can pass the current validator.
+
+### 13.5 The DSATUR Listing Still Does Not Compile
+
+The maturity ledger correctly notices the malformed lambda:
+
+```cpp
+std::function<bool(size_t)> backtrack = [&](size_colored_count) -> bool {
+```
+
+The body uses `colored_count`, but the parameter has neither that name nor a valid declared type. Because this remains in the supposed target implementation, the document should fix it now to:
+
+```cpp
+std::function<bool(size_t)> backtrack = [&](size_t colored_count) -> bool {
+```
+
+A roadmap code block need not be production code, but a P2 implementation blueprint should at least compile in an isolated target test before its architecture is approved.
+
+### 13.6 The Silicon Gate Uses Invalid Statistical Language
+
+"Candidate median cycles/tile <= baseline with non-overlapping p95" is not a defined statistical test. A p95 is a quantile estimate, not an interval that can overlap or fail to overlap another p95. With only 30 samples, tail estimates are especially noisy.
+
+Define the gate using raw paired or randomized A/B samples, a declared estimator, confidence interval or bootstrap procedure, practical non-inferiority margin, and noise controls. For example: candidate median is no worse than baseline by more than a predeclared percentage at a 95% confidence level, and any claimed win exceeds both that margin and observed run-to-run noise. Preserve raw samples and device metadata.
+
+Correctness/compile coverage and performance should be separate gates. A scheduler that rescues formerly uncompilable code can merit default-on deployment without a silicon speedup, provided it creates no correctness or compile-success regression. Conversely, one significant speedup does not justify permitting regressions in 5% of kernels. Clarify whether the proposed 95% threshold concerns performance only; correctness and new spill regressions require 100% pass/fallback.
+
+### 13.7 Revised Execution Decision
+
+- **Keep the maturity ledger and shipped/roadmap separation.** They are accurate and valuable.
+- **Proceed with P0 default-on engineering**, but use a real external retry or complete pre-IRA proof; do not rely on an impossible post-IRA rewind.
+- **Require 100% correctness and compile-success non-regression** for the eligible corpus. Treat performance through a separately defined non-inferiority/win policy.
+- **Keep P2 behind the off flag** until tie certification examines real GCC alternatives, debug cleanup is transactional, staged validation checks actual RTL occurrences, and the code compiles with negative rollback tests.
+- **Do not block correctness work on a mandatory speedup.** Silicon evidence controls performance claims and profitability policy, not whether a sound compile-coverage rescue is worth implementing.
+
+The project is now mature enough to stop cycling on terminology and implement the remaining gates. The two dangerous shortcuts are the fictional post-IRA rewind and validation functions that prove properties of metadata without proving the staged RTL actually realizes that metadata.
