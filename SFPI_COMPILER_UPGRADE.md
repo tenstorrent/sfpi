@@ -1515,7 +1515,7 @@ These four subsections give the per-track hardware mechanism, GCC backend delta 
 
 **Status: F1.0 SHIPPED; F1.1–F1.4 IN PROGRESS.** Commit `88598f4` adds the source-to-artifact scorer and its Blackhole Welford corpus entry. The scorer compiles and archives paired ELF/objdump artifacts, requires CRAQ as a functional gate, runs physical correctness, and copies each device-profiler row before the LLK harness overwrites it. Its pinned bring-up reproduced handwritten replay at `326,326,326` device cycles and generated vFloat at `323,325,323` (15/15 correctness). CRAQ's current normalized whole-dispatch fields are explicitly not substituted for the `WELFORD_BODY` silicon interval. The calibrated per-Tensix-op table and identical-source compiler A/B remain open. The *plumbing* they replace is SHIPPED but crude: the backend already inserts hazard NOPs from a mostly-one-cycle rule. No autovectorization, no new engines — this is the perf oracle every other track (D, B, C, A) is scored against, so it goes first (§18.5).
 
-**Re-scoping note vs §18.4.** The master roadmap lists F1's dependents (B/C/D) as "Not started"; this design keeps F1 itself GREENFIELD but is explicit that it *reuses* the shipped NOP-insertion mechanism rather than rebuilding it — the delta is the cost source, not the pass.
+**Re-scoping note vs §18.4.** The master roadmap lists F1's dependents (B/C/D) as "Not started". F1.0 is now shipped; F1.1–F1.4 reuse the shipped NOP-insertion mechanism rather than rebuilding it — the delta is the cost source, not the pass.
 
 #### 18.7.1 Hardware mechanism (what the cost table must reproduce)
 
