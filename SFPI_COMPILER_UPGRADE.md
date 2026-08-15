@@ -990,3 +990,71 @@ The checked-in code also still invokes requested MILP after list success. Demand
 - **Correct or substantiate the silicon ground-truth row** before using it as an approval premise.
 
 The plan is now good enough to implement. What remains is not another terminology pass: it is connecting the certifier and validator to the real data path so their guarantees cannot be bypassed by construction.
+
+---
+
+## 13. Reviewer Opinion & Verified Welford Findings
+
+*Standing external review, folded in per single-document policy. Checked against the actual tree;
+supersedes and replaces the former standalone review file.*
+
+### 13.1 Verdict
+
+The document is materially more honest than early revisions and §12 is genuinely sharp. The
+remaining concern is unchanged: the plan keeps improving **prose about code that does not run**
+while the tree stands still — across many commits, no compiler code has changed
+(`rtl-rvtt-lp-alloc.cc` is still a 133-line dump-only stub, both flags still `Init(0)`,
+`run-corpus-differential.sh` still absent). And the §2.2 row *"Hardware Silicon Baseline:
+Functional verification complete"* is contradicted by an observed **Welford silicon failure**.
+
+### 13.2 The silicon row is false, not merely overstated
+
+§12.5 calls the row *overstated*; given the observed failure it is **false** and should read
+*"Welford FAILS on silicon."* A ground-truth table carrying a known-false row is worse than no row.
+Nuance (see §13.3): the failure is real, but its compiler root cause is **not** the one this
+document's model would predict.
+
+### 13.3 Verified Welford investigation (compiler was built and fixtures were run)
+
+A recon + fix-design + adversarial-verification pass **built `build/sfpi/compiler` and compiled
+fixtures.** Result: the hypothesized "explicit `l_reg[Lx]` is unmodeled" gap **does not reproduce**
+through the sfpi-builtin path.
+
+- `sfpi::l_reg[Lx]` lowers `builtin → GIMPLE gcall(index=INTEGER_CST) → RTL unspec_volatile on an
+  allocatable pseudo → hard reg 80+idx`, with the final binding **forced** by the single-register
+  class `x<N>` (`rvtt.md:186-205` → `rvtt-constraints.md:28-50` → `riscv.h:546-627`). That pseudo
+  has a real live interval, so **baseline IRA already refuses to color a temporary onto L1 while L1
+  is live.**
+- Evidence: a `peak=6` fixture is byte-identical flag-on/off (scheduler never runs, gate
+  `old_peak > 8`); a `peak=10 → new-peak=7` fixture drives the scheduler and **keeps L1 clean**.
+
+**Corrected root cause — the raw-LLK path.** Welford's `L0–L3` arrive from raw LLK code (inline
+asm / direct SFPU emission) outside C++ SSA — **no GCC pseudo, no live interval.** With nothing to
+pin, IRA cannot know L1 holds a live raw value, so a surrounding sfpi temporary can be colored onto
+L1 and clobber it. The reproducer used an all-`l_reg[]` fixture and therefore tested the
+already-safe path.
+
+### 13.4 What this means for §3.1 / §4 and the live patch
+
+- **Drop (wrong IR):** any fix that adds `fixed_color` to the sched value or reduces the MILP
+  `register_capacity`. The pressure scheduler only **reorders** gcalls; the MILP is **count-only**
+  (`sum live ≤ capacity`, `rvtt-lpsolve.cc:351-363`), with no color dimension. It cannot keep a
+  temporary off physical L1. Prevention belongs in **RTL register allocation (IRA conflict
+  edges)**, not the GIMPLE pressure model.
+- **Keep (as a detector):** a post-IRA verifier wired at exactly `INSERT_PASS_AFTER(pass_ira, 1)`
+  (before `pass_rvtt_synth_opcode`), anchored on the readlreg-produced hard regno with source-use
+  interval endpoints, const-reg-guarded (`regno < SFPU_REG_FIRST + SFPU_CREG_IDX_LWM`).
+
+### 13.5 Recommendations
+
+1. Correct the §2.2 silicon row to reflect the real Welford failure.
+2. Obtain the **real raw-LLK reproducer** (raw `L0–L3` loads + sfpi consumers) and confirm the L1
+   clobber on this branch before writing a fix.
+3. Model raw-asm LREG defs/uses as **fixed live ranges** for IRA (precise interval `[raw def, last
+   use]`, not blanket region reservation).
+4. Land the post-IRA verifier as the backstop.
+5. Make the regression **discriminating** — push `old_peak > 8` with an explicit/raw LREG live
+   across, checked against a deliberately-regressed allocator or a checking-assert; a
+   byte-identical-on-this-branch fixture proves nothing.
+6. Stop improving the description; land one real thing behind the off flag rather than another pass
+   over §4.2 or §12.
