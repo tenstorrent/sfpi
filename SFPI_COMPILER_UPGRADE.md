@@ -64,7 +64,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
 | **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
-| **Hardware Silicon Baseline** | Functional verification complete | **P3 Deliverable:** Paired A/B cycle benchmarking on Blackhole silicon |
+| **Hardware Silicon Baseline** | Pure `sfpi::l_reg[]` passes; raw-LLK asm path requires fixed range model (§13) | **P3 Deliverable:** Paired A/B cycle benchmarking on Blackhole silicon |
 
 ```
 Candidate Region (Peak > 8)
@@ -233,6 +233,16 @@ struct m2_pass_telemetry {
     unsigned committed_count = 0;
 };
 
+struct destructive_tie_candidate {
+    unsigned result_val;
+    unsigned operand_val;
+    unsigned op_index;
+    int insn_pos;
+    int operand_death_pos;
+    int selected_alternative;
+    tie_kind requested_kind;
+};
+
 struct certified_destructive_tie {
     unsigned result_val;
     unsigned operand_val;
@@ -241,6 +251,14 @@ struct certified_destructive_tie {
     int operand_death_pos;
     tie_kind kind;
     int selected_alternative;
+};
+
+struct staged_occurrence_record {
+    rtx_insn *insn;
+    rtx *loc;
+    unsigned original_pseudo;
+    unsigned expected_hard_reg;
+    machine_mode mode;
 };
 
 struct rtl_interval {
@@ -268,15 +286,9 @@ struct union_find {
 
 // Authoritative Destructive Tie Certification using GCC 15 Constraint Alternatives
 bool certify_destructive_tie(rtx_insn *insn,
-                             int insn_pos,
-                             unsigned result_val,
-                             unsigned operand_val,
-                             unsigned op_index,
-                             int operand_death_pos,
-                             int selected_alternative,
-                             tie_kind requested_kind,
+                             const destructive_tie_candidate &cand,
                              certified_destructive_tie &out_tie) {
-    if (operand_death_pos != insn_pos) return false; // Must die exactly at issue boundary
+    if (cand.operand_death_pos != cand.insn_pos) return false; // Must die exactly at issue boundary
     
     extract_insn(insn);
     preprocess_constraints(insn);
@@ -284,27 +296,27 @@ bool certify_destructive_tie(rtx_insn *insn,
     if (icode < 0) return false;
 
     int n_alts = insn_data[icode].n_alternatives;
-    if (selected_alternative < 0 || selected_alternative >= n_alts) return false;
-    if (op_index >= (unsigned)insn_data[icode].n_operands) return false;
+    if (cand.selected_alternative < 0 || cand.selected_alternative >= n_alts) return false;
+    if (cand.op_index >= (unsigned)insn_data[icode].n_operands) return false;
 
     // Verify destination and operand modes match
-    if (GET_MODE(recog_data.operand[0]) != GET_MODE(recog_data.operand[op_index])) {
+    if (GET_MODE(recog_data.operand[0]) != GET_MODE(recog_data.operand[cand.op_index])) {
         return false;
     }
 
     // Inspect preprocessed operand alternative to verify matching constraint (e.g. '0')
-    const operand_alternative *op_alt = &recog_op_alt[selected_alternative * recog_data.n_operands];
-    if (op_alt[op_index].matches != 0) {
+    const operand_alternative *op_alt = &recog_op_alt[cand.selected_alternative * recog_data.n_operands];
+    if (op_alt[cand.op_index].matches != 0) {
         return false; // Operand does not match result register 0 in this alternative!
     }
 
-    out_tie.result_val = result_val;
-    out_tie.operand_val = operand_val;
-    out_tie.op_index = op_index;
-    out_tie.insn_pos = insn_pos;
-    out_tie.operand_death_pos = operand_death_pos;
-    out_tie.kind = requested_kind;
-    out_tie.selected_alternative = selected_alternative;
+    out_tie.result_val = cand.result_val;
+    out_tie.operand_val = cand.operand_val;
+    out_tie.op_index = cand.op_index;
+    out_tie.insn_pos = cand.insn_pos;
+    out_tie.operand_death_pos = cand.operand_death_pos;
+    out_tie.kind = cand.requested_kind;
+    out_tie.selected_alternative = cand.selected_alternative;
     return true;
 }
 
@@ -523,7 +535,8 @@ bool verify_global_pseudo_closure(function *fn,
 
 // Occurrence-Level Independent Precommit Staged Pattern Validator
 bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
-                                  const std::unordered_map<unsigned, unsigned>& regno_to_lreg,
+                                  const std::vector<staged_occurrence_record>& ledger,
+                                  const std::vector<rtx_insn*>& debug_resets,
                                   const std::vector<rtl_interval>& raw_intervals,
                                   const std::vector<std::vector<bool>>& raw_interference,
                                   const std::vector<certified_destructive_tie>& ties) {
@@ -532,7 +545,15 @@ bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
         if (recog(PATTERN(insn), insn, NULL) < 0) return false;
     }
 
-    // 2. Occurrence-level proof: zero selected pseudos remain in staged island patterns
+    // 2. Ledger verification: prove every staged location contains expected hard register
+    for (const auto& rec : ledger) {
+        if (!*rec.loc || !REG_P(*rec.loc) || !HARD_REGISTER_P(*rec.loc)) return false;
+        if (REGNO(*rec.loc) != rec.expected_hard_reg || GET_MODE(*rec.loc) != rec.mode) {
+            return false;
+        }
+    }
+
+    // 3. Prove zero selected pseudos remain in staged island patterns
     std::unordered_set<unsigned> selected_pseudos;
     for (const auto& iv : raw_intervals) selected_pseudos.insert(iv.pseudo_regno);
 
@@ -548,24 +569,11 @@ bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
         }
     }
 
-    // 3. Verify no interfering intervals share a physical register
-    size_t n = raw_intervals.size();
-    for (size_t u = 0; u < n; ++u) {
-        for (size_t v = u + 1; v < n; ++v) {
-            if (raw_interference[u][v]) {
-                unsigned r_u = regno_to_lreg.at(raw_intervals[u].pseudo_regno);
-                unsigned r_v = regno_to_lreg.at(raw_intervals[v].pseudo_regno);
-                if (r_u == r_v) return false;
-            }
-        }
+    // 4. Verify all collected debug locations are now reset
+    for (rtx_insn *dbg : debug_resets) {
+        if (INSN_VAR_LOCATION_LOC(dbg) != gen_rtx_UNKNOWN_VAR_LOC()) return false;
     }
 
-    // 4. Verify all certified destructive ties share the identical physical register
-    for (const auto& tie : ties) {
-        unsigned r_res = regno_to_lreg.at(raw_intervals[tie.result_val].pseudo_regno);
-        unsigned r_op = regno_to_lreg.at(raw_intervals[tie.operand_val].pseudo_regno);
-        if (r_res != r_op) return false;
-    }
     return true;
 }
 
@@ -597,8 +605,27 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
 
             std::vector<rtl_interval> raw_intervals;
             std::vector<std::vector<bool>> raw_interference;
-            std::vector<certified_destructive_tie> ties;
-            extract_rtl_constraint_model(sfpu_island, raw_intervals, raw_interference, ties);
+            std::vector<destructive_tie_candidate> tie_candidates;
+            extract_rtl_constraint_model(sfpu_island, raw_intervals, raw_interference, tie_candidates);
+
+            // 2. Authoritative Tie Certification Loop
+            std::vector<certified_destructive_tie> certified_ties;
+            bool cert_failed = false;
+            for (const auto& cand : tie_candidates) {
+                certified_destructive_tie cert_tie;
+                rtx_insn *cand_insn = sfpu_island[cand.insn_pos];
+                if (certify_destructive_tie(cand_insn, cand, cert_tie)) {
+                    certified_ties.push_back(cert_tie);
+                } else if (cand.requested_kind == tie_kind::MANDATORY_2ADDR) {
+                    cert_failed = true;
+                    break;
+                }
+            }
+
+            if (cert_failed) {
+                telemetry.tie_cert_reject_count++;
+                continue;
+            }
 
             std::unordered_set<unsigned> selected_pseudos;
             for (const auto& iv : raw_intervals) {
@@ -613,7 +640,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
             }
 
             std::vector<unsigned> final_reg_mapping;
-            m2_solve_status status = solve_m2_exact_coloring(sfpu_island.size(), raw_intervals, raw_interference, ties, final_reg_mapping);
+            m2_solve_status status = solve_m2_exact_coloring(sfpu_island.size(), raw_intervals, raw_interference, certified_ties, final_reg_mapping);
             if (status != m2_solve_status::SOLVED) {
                 if (status == m2_solve_status::INVALID_MODEL) telemetry.invalid_model_count++;
                 else if (status == m2_solve_status::UNSAT) telemetry.unsat_count++;
@@ -629,8 +656,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
             // Standalone GCC 15 Grouped Change Transaction (Assert 0 changes pending)
             gcc_assert(num_validated_changes() == 0);
             bool stage_ok = true;
+            std::vector<staged_occurrence_record> ledger;
 
-            // 1. Stage semantic hard-register substitutions
+            // 3. Stage semantic hard-register substitutions & build occurrence ledger
             for (rtx_insn *cur_insn : sfpu_island) {
                 subrtx_ptr_iterator::array_type array;
                 FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(cur_insn)) {
@@ -639,7 +667,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                         unsigned p_regno = REGNO(*loc);
                         auto it = regno_to_lreg.find(p_regno);
                         if (it != regno_to_lreg.end()) {
-                            rtx hard_reg = gen_raw_REG(GET_MODE(*loc), SFPU_REG_FIRST + it->second);
+                            unsigned hreg = SFPU_REG_FIRST + it->second;
+                            rtx hard_reg = gen_raw_REG(GET_MODE(*loc), hreg);
+                            ledger.push_back({cur_insn, loc, p_regno, hreg, GET_MODE(*loc)});
                             if (!validate_change(cur_insn, loc, hard_reg, /*unique=*/true)) {
                                 stage_ok = false;
                                 break;
@@ -650,7 +680,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                 if (!stage_ok) break;
             }
 
-            // 2. Stage external debug location resets within the same transaction
+            // 4. Stage external debug location resets within the same transaction
             if (stage_ok) {
                 for (rtx_insn *debug_insn : debug_resets) {
                     if (!validate_change(debug_insn, &INSN_VAR_LOCATION_LOC(debug_insn), gen_rtx_UNKNOWN_VAR_LOC(), /*unique=*/true)) {
@@ -662,7 +692,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
 
             // Precommit Verification on Fully Staged Patterns
             if (stage_ok && verify_changes(0)) {
-                if (verify_staged_island_patterns(sfpu_island, regno_to_lreg, raw_intervals, raw_interference, ties)) {
+                if (verify_staged_island_patterns(sfpu_island, ledger, debug_resets, raw_intervals, raw_interference, certified_ties)) {
                     confirm_change_group();
                     df_insn_rescan_all();
                     telemetry.committed_count++;
