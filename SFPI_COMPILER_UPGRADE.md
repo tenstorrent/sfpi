@@ -63,8 +63,8 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Exact MILP Engine** | **Real** (`rvtt-lpsolve.cc`, 482 lines via `lp_solve`) | Demand-driven escalation on list failure (100k-node cap) |
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
-| **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
-| **Hardware Silicon Baseline** | **GO-BH-ONLY**: pinned vFloat 323/323/323 device cycles versus replay LLK 326/326/326; N=1/2/32 all five selectors pass. SFPI-GCC `d9c39fbd1`, TT-Metal harness `b6dd6370`; primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
+| **Corpus Differential Driver** | **Real** (`scripts/run-corpus-score.sh`, 245 lines; `scripts/corpus/welford-bh.tsv`) | Whole-LLK multi-target automated scoring suite |
+| **Hardware Silicon Baseline** | **GO-BH-ONLY**: 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 6 understood throughput gaps (§18.8.0). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
 ```
 Candidate Region (Peak > 8)
