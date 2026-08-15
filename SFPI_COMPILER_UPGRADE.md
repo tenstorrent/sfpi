@@ -1624,6 +1624,14 @@ not perf — fix them before they are counted for or against the compiler.
 
 **Replay legality and TopK checkpoint (2026-08-15).** SFPI-GCC `32fe8cd23` makes replay payload legality explicit: all 67 emitted Tensix patterns are classified (64 safe, two barriers, one explicit owner), opaque asm defaults to a boundary, and explicit TTREPLAY slot ownership is processed before candidate formation. Its replay corpus is 41/41 and the full target-suite failure set is unchanged from baseline. TT-Metal `02de2580` records why TopK cannot yet be converted safely: typed `SFPSWAP` omits the simultaneous L4–L7 index-pair results when index tracking is enabled, and typed `SFPTRANSP` omits the live L4–L7 transpose group. The required fix is a general multi-result architectural model plus post-RA pair verification; no accidental-allocation silicon result is accepted.
 
+SFPI-GCC `c4e4e809a` implements that architectural model without a TopK-specific
+pattern.  Indexed SFPSWAP is one four-SET RTL operation whose allocation alternatives enforce
+value registers in L0–L3 and exact companion outputs at value+4; the eight-register transpose is
+one PARALLEL with explicit L0–L7 uses and definitions.  WH/BH/QSR allocator and encoding checks
+pass 15/15, including unconstrained adversarial allocation, and the existing CRAQ SFPSWAP
+differential passes 100/100 on both WH and BH.  This clears the typed-IR safety blocker; a generated
+TopK functional/performance A/B remains follow-up work, so no TopK silicon win is claimed yet.
+
 **D1 replay-hoist result (2026-08-15).** SFPI-GCC `5a849606f` adds a default-off,
 post-RA loop optimization for fixed-encoding, compiler-visible Tensix replay payloads.  It records
 with no execution in a dedicated preheader, replaces the in-loop clones with playback, reserves
