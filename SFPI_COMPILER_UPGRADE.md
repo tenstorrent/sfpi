@@ -1228,3 +1228,102 @@ SFPI_WITH_LP_SOLVE=yes ./scripts/build.sh --dir="$PWD/../sfpi-silicon-build" --c
 
 **Still to attach** (raw primary artifacts, per §13.7): per-run cycle dumps, per-selector
 disassembly + LREG occupancy + SFPMAD/NOP counts + SHA-256 ELF hashes, and device stepping/firmware.
+
+---
+
+## 14. Critical Reanalysis: The Silicon Result Is Real but Does Not Measure the Scheduler
+
+The new Blackhole numbers are useful and should be retained. They establish that the tested pure
+`vFloat` Welford body ran correctly and that its generated direct implementation measured 339
+device math cycles in the reported environment. They do **not** establish a scheduler performance
+win, exercise a pressure rescue, validate M2, or yet constitute a reproducible in-tree silicon
+archive. Those distinctions matter for the default-on decision.
+
+### 14.1 The Only Scheduler A/B Delta Reported Is Exactly Zero
+
+The controlled compiler-feature comparison is `vFloat direct` with the scheduler off versus the
+same source with the scheduler on. Both are 339 cycles. Section 13.8 also states that the pass takes
+the peak-at-most-eight bypass and is a no-op. Therefore the measured scheduler effect is:
+
+```text
+scheduler off: 339 cycles
+scheduler on:  339 cycles
+delta:           0 cycles (0.0%)
+```
+
+The 466-to-339 comparison changes the implementation from handwritten non-replay LLK to generated
+`vFloat`; it is not an on/off test of `-mtt-tensix-optimize-pressure-schedule`. Attributing that
+27.3% delta to the scheduler is a category error. The result proves that compiling with the flag is
+non-regressing on this bypassed case, which is valuable, but it cannot demonstrate the pass's
+benefit or justify calling this Welford result “scheduler-only.”
+
+To measure the scheduler, the silicon fixture must show `old-peak > 8`, `applied=yes`, and different
+off/on assembly, then run both binaries under the same wrapper. The existing compiler-only rescue
+fixture supplies the first part but is not the Welford silicon binary reported here.
+
+### 14.2 “Archived Green” Currently Means an Attestation, Not Primary Evidence
+
+The document explicitly says the raw evidence is “still to attach.” The checked-in
+`sfpu-pressure-results.tar.gz` contains host compiler/assembly validation artifacts, not the
+reported silicon run: it has no cycle logs, selector result vectors, silicon report, ELF images,
+device/firmware record, or per-selector hashes. The single `assembly.sha256` belongs to the focused
+compiler validation bundle and does not identify the measured TT-Metal binaries.
+
+Accordingly, §13.8 is presently a reported summary with compiler provenance, not a self-contained
+archived experiment. Preserve the numbers as **reported Blackhole results**, but reserve
+**archived/reproducible** for a committed artifact bundle containing at least:
+
+- raw output for every cycle and correctness run;
+- exact TT-Metal commit, device ID/stepping, firmware and runtime configuration;
+- full compile commands and selector definitions;
+- ELF and disassembly hashes proving which binary produced each row; and
+- an executable driver that parses results and fails on correctness/performance thresholds.
+
+### 14.3 The Folded “Harness” Cannot Produce the Claims It Documents
+
+The full driver preserved in commit `e0057ae` is explicitly a handoff template. Its functional test
+ends with `assert True`; it never launches a device kernel or compares device output with the FP64
+reference. Its performance runner returns only whether a pytest command exited successfully; it
+does not read, parse, or report a hardware cycle counter. The C++ timing sketch comments “Record
+end_cycles - start_cycles” but contains no implementation that exports that value.
+
+Those snippets cannot substantiate “100% parity,” 339 cycles, or deterministic three-run results.
+If a separate real harness produced the numbers, that harness—not a placeholder recoverable from
+history—is the artifact that must be pinned. Referring to normal TT-Metal LayerNorm tests is also
+not enough unless the exact tests are shown to select these four implementations and collect the
+reported device-math interval.
+
+### 14.4 Correctness Scope Is One Executed Path, Not Allocation Safety in General
+
+A passing pure-`vFloat` binary is evidence for that binary and input matrix. It does not validate the
+raw-LLK interop path that §13.3 says is the suspected source of an invisible LREG lifetime. In fact,
+§13.9 explicitly says this reproducer uses the already-safe `sfpi::l_reg[]` path. Sidestepping an
+unreproduced failure mode does not resolve it.
+
+Likewise, because the scheduler bypassed this body, the run does not exercise the transformed
+schedule, validator acceptance, list/MILP choice, rollback, or high-pressure register allocation on
+silicon. “Correctness and register-allocation safety verified on silicon” must be scoped to the
+specific 339-cycle binary; it is not a certification of the scheduler or allocator.
+
+### 14.5 The 13-Cycle Replay Attribution Is Plausible, Not Yet Proven
+
+The claim that the entire 339-versus-326 gap is replay-buffer compression is a reasonable
+hypothesis, but the document also says the required disassemblies, replay counts, instruction/NOP
+counts, and ELF hashes are absent. Without those controls, “entirely attributable” is stronger than
+the evidence permits. Report the observed 13-cycle gap and test the attribution with matched
+instruction accounting or a replay-disabled control.
+
+### 14.6 Revised Engineering Verdict
+
+- Accept the 339-cycle result as a promising reported pure-`vFloat` Blackhole datapoint.
+- Record the scheduler A/B conclusion accurately: **0.0% delta on a bypassed peak-at-most-eight
+  Welford body; non-regression shown, rescue benefit not exercised.**
+- Do not use 466-to-339 to credit the pressure scheduler; it compares different implementations.
+- Do not call the run archived or independently reproducible until its primary artifact bundle and
+  real harness are committed.
+- Run the actual 9-to-8 Welford rescue and a non-Welford changed-binary case on silicon, paired
+  off/on, before treating this result as scheduler silicon validation.
+- Keep the raw-LLK fixed-live-range work open until a real reproducer exercises that path.
+
+This does not invalidate the silicon run. It prevents a good result for generated `vFloat` from
+being promoted into evidence for compiler machinery that the measured binary never invoked.
