@@ -63,7 +63,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Exact MILP Engine** | **Real** and intentionally available whenever explicitly requested for an over-pressure region, including when list scheduling succeeds (`rvtt-lpsolve.cc`, 482 lines via `lp_solve`) | First-class bounded exact lane: pressure rescue, optimality oracle, and multi-objective latency/reuse/replay optimization under deterministic node/time caps |
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **Conditional M2:** build exact transactional coloring only when corpus evidence demonstrates recurring baseline-IRA failures after ownership modeling |
-| **Corpus Scorer / Differential Driver** | **Two real layers:** this repository's `scripts/run-corpus-score.sh` has one Welford entry; TT-Metal `86914798e5` provides `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` with 164 logical implementations / 332 architecture paths, exact pytest-node attribution, compiler capability/pin provenance, CRAQ and serialized-silicon modes. The required identical-source pressure-scheduler off/on differential is still absent. | **P0:** add flag-off/flag-on changed-binary classification and selected silicon A/B to the durable TT-Metal corpus runner |
+| **Corpus Scorer / Differential Driver** | **Two real layers:** this repository's `scripts/run-corpus-score.sh` has one Welford entry; TT-Metal `da3832b31d` provides `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` with 164 logical implementations / 332 architecture paths, exact pytest-node attribution, compiler capability/pin provenance, CRAQ and serialized-silicon modes, plus identical-source flag-off/flag-on executable-`.text` classification in isolated build roots. | **P0:** run that changed-binary lane on selected scheduler rows, then require paired scoped silicon A/B; structure alone is not performance evidence |
 | **Hardware Silicon Baseline** | **GO-BH-ONLY**: 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 6 understood throughput gaps (§18.8.0). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
 ```
@@ -103,7 +103,7 @@ What is implemented and credible today:
 What prevents default-on promotion:
 
 1. **The identical-source pressure-scheduler differential is absent.** The broad TT-Metal corpus
-   runner exists at `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` (TT-Metal `86914798e5`) and tracks
+   runner exists at `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` (TT-Metal `da3832b31d`) and tracks
    164 logical implementations / 332 architecture paths with per-node outcomes.  This repository's
    `run-corpus-score.sh` remains a useful Welford bring-up harness.  Neither currently performs the
    required scheduler flag-off/flag-on changed-binary classification, which remains the P0 delta.
@@ -2714,11 +2714,12 @@ requires disproportionate backend surgery.
    budget including existing loop-live values. The nine-invariant adversarial case must refuse with
    option-off byte identity instead of reaching reload and ICEing. Re-review replay lifetime/slot
    ownership after this fix because counted replay is stacked on the blocked hoist branch.
-4. **Extend the named durable corpus runner.** TT-Metal `86914798e5`,
+4. **Execute the named durable compiler A/B lane.** TT-Metal `da3832b31d`,
    `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
-   pytest-node attribution and compiler capability/pin provenance. Add identical-source scheduler
-   flag-off/flag-on changed-binary classification to that runner; use CRAQ for functional validation
-   and accept performance only from scoped device rows.
+   pytest-node attribution, compiler capability/pin provenance, and identical-source flag-off/on
+   executable-`.text` classification. Use `--require-changed-binary` only on eligible rows, retain
+   byte identity as the expected ineligible fallback, use CRAQ for functional validation, and accept
+   performance only from scoped device rows.
 5. **Use MILP as a sampled bounded oracle.** Preserve exact-on-request behavior; after the latency,
    Dst, replay, or macro semantics being scored are actually modeled, compare list versus MILP and
    archive optimality plus compile-cost distributions before changing production invocation policy.
