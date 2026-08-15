@@ -880,23 +880,24 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 ├───────┬──────────────────────────────────┬───────────┬───────────────────────────────────────────┤
 │ Phase │ Milestone Name                   │ Timeline  │ Deliverable & Hard Gate                   │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P0**│ **Guarded Default-On Feasibility**│ Weeks 1-2 │ List-first + demand-driven MILP; rollback │
-│       │                                  │           │ flag; whole-corpus assembly differential. │
+│ **P0**│ **Guarded Default-On & Scorer**  │ Delivered │ `scripts/run-corpus-score.sh` (F1.0);     │
+│       │                                  │           │ 5-class issue DFA (`daa4eb84e`, F1.1/F1.2)│
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P1**│ **Final-RTL Model & Checker**    │ Weeks 2-4 │ Dense layout positions 0..P-1; extract    │
-│       │                                  │           │ constraint graph; independent validator.  │
+│ **P1**│ **Raw-LREG Ownership & Liveness**│ Delivered │ Sentinel pre-IRA live-in pass;            │
+│       │                                  │           │ debug resets; multi-result indexed SFPU.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P2**│ **Exact Closed-Island M2 Alloc** │ Weeks 4-8 │ DSATUR/backtracking allocator; atomic     │
-│       │                                  │           │ substitution; pass 11->8 fixture.         │
+│ **P2**│ **Exact Closed-Island M2 Alloc** │ Standby   │ DSATUR/backtracking allocator; M2 remains │
+│       │                                  │           │ audit stub (not needed for silicon wins). │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P3**│ **Real Silicon Welford Benchmark**│ Parallel  │ Launch real producer/consumer on Blackhole│
-│       │                                  │ (Weeks 2-3│ Paired A/B cycles & non-inferiority gate. │
+│ **P3**│ **Silicon Corpus Benchmark**     │ Landed    │ **GO-BH-ONLY**: 3 wins (Reduce-SDPA -0.7%,│
+│       │                                  │           │ Reciprocal -1.7%, Welford -0.9%), 1 tie.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P4**│ **Latency Mode (Dual-Horner)**   │ Weeks 8-12│ Goodman-Hsu mode switching; eliminate 40% │
-│       │                                  │           │ of issue slots on Wormhole.               │
+│ **P4**│ **Latency Scheduling & Interleave│ Active    │ Post-RA peak<=8 list scheduler; 2-row     │
+│       │                                  │ Sprint 1  │ chain interleaving (Addcmul +21.9% win).  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P5**│ **Coprocessor & MLIR Roadmaps**  │ Multi-Qtr │ Conflict-graph Replay, Macro event model, │
-│       │                                  │           │ and TT-Vector MLIR Dialect.               │
+│ **P5**│ **Coprocessor, LICM & Macros**   │ Active    │ • Replay loop hoisting landed (5a849606f) │
+│       │                                  │ Sprint 2-3│ • LICM / constant pinning (SigmoidAppx)   │
+│       │                                  │           │ • 4-subunit SFPLOADMACRO event model      │
 └───────┴──────────────────────────────────┴───────────┴───────────────────────────────────────────┘
 ```
 
