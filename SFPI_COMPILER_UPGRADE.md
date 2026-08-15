@@ -1036,19 +1036,24 @@ supersedes and replaces the former standalone review file.*
 
 ### 13.1 Verdict
 
-The document is materially more honest than early revisions and §12 is genuinely sharp. The
-remaining concern is unchanged: the plan keeps improving **prose about code that does not run**
-while the tree stands still — across many commits, no compiler code has changed
+The document is materially more honest than early revisions and §12 is genuinely sharp. As of this
+revision the loop has absorbed §13 well — §2.2 no longer claims completed hardware validation (it
+now reads *"Pure `sfpi::l_reg[]` passes; raw-LLK asm path requires fixed range model"*) and §12
+correctly demotes the raw-LLK cause to a **leading hypothesis, not a verified root cause**. That is
+real convergence toward accuracy. But it is convergence toward an *honest description of an
+unreproduced bug*, not toward a fix: across ~8 doc-only commits no compiler code has changed
 (`rtl-rvtt-lp-alloc.cc` is still a 133-line dump-only stub, both flags still `Init(0)`,
-`run-corpus-differential.sh` still absent). And the §2.2 row *"Hardware Silicon Baseline:
-Functional verification complete"* is contradicted by an observed **Welford silicon failure**.
+`run-corpus-differential.sh` still absent), and neither the raw-LLK reproducer nor the one-line
+IRA/verifier change exists yet.
 
-### 13.2 The silicon row is false, not merely overstated
+### 13.2 The silicon row is now corrected (credit) — keep the document self-consistent
 
-§12.5 calls the row *overstated*; given the observed failure it is **false** and should read
-*"Welford FAILS on silicon."* A ground-truth table carrying a known-false row is worse than no row.
-Nuance (see §13.3): the failure is real, but its compiler root cause is **not** the one this
-document's model would predict.
+§2.2 previously claimed *"Functional verification complete"*; it now correctly scopes the status to
+*"Pure `sfpi::l_reg[]` passes; raw-LLK asm path requires fixed range model."* This is exactly the
+right correction and it supersedes the earlier "the row is false" objection. One housekeeping
+consequence of folding review into the same document: keep §13's quotes in sync with §2.2 — the row
+no longer contains the old text, so no section should still cite it. The failure is real; per §13.3
+its compiler root cause is a **leading hypothesis, not yet reproduced**.
 
 ### 13.3 Verified Welford investigation (compiler was built and fixtures were run)
 
@@ -1083,7 +1088,7 @@ already-safe path.
 
 ### 13.5 Recommendations
 
-1. Correct the §2.2 silicon row to reflect the real Welford failure.
+1. ~~Correct the §2.2 silicon row~~ **(done — §2.2 now scopes silicon status accurately).**
 2. Obtain the **real raw-LLK reproducer** (raw `L0–L3` loads + sfpi consumers) and confirm the L1
    clobber on this branch before writing a fix.
 3. Model raw-asm LREG defs/uses as **fixed live ranges** for IRA (precise interval `[raw def, last
@@ -1094,3 +1099,14 @@ already-safe path.
    byte-identical-on-this-branch fixture proves nothing.
 6. Stop improving the description; land one real thing behind the off flag rather than another pass
    over §4.2 or §12.
+
+### 13.6 The loop has converged on accuracy, not resolution
+
+The document is now a precise, well-hedged description of a bug that has **not been reproduced** and
+a fix that has **not been written**. That epistemic state — "raw-LLK missing live ranges is the
+leading hypothesis; a silicon failure may have other causes" (§12) — is where this investigation
+should have *started*, not where it lands after eight revisions. Each further Rebut/Harmonize pass
+refines the prose; none produces the raw-LLK reproducer or the IRA-conflict/verifier change the
+analysis already specifies. That is the whole finding this round: the plan is no longer blocked on
+understanding or on honesty. It is blocked on someone running the real kernel and writing the one
+change §13.3–13.4 already pin down.
