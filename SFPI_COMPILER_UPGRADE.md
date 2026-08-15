@@ -1595,6 +1595,29 @@ Two-part, and both must hold:
 
 **Status: frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = GREENFIELD (blocked on sim).**
 
+#### 18.8.0 Silicon Scorecard — Compiler-Generated vs Hand-Tuned LLK
+
+Consolidated from the per-kernel notes below (and §13.3 for Welford). **All figures are Blackhole
+device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ deltas are excluded per the
+§18.7 calibration failure.** Lower is better; Δ is generated relative to hand-tuned.
+
+| Kernel | Hand-tuned LLK | Generated | Δ | Correctness | Outcome |
+| :--- | ---: | ---: | ---: | :--- | :--- |
+| **Welford** body | 326 | 323 | **−0.9%** (−3) | 15/15 | Parity / marginal — §14 will not credit it as a scheduler win (bounded zone, different source bodies) |
+| **Binary broadcast** | 608 | 608 | **0.0%** | 8/8 BH, 6/6 WH compile | **Exact tie** — zero-regression compiler-flow replacement |
+| **Reduce-SDPA** body | 839 (8-slot replay) | 855.5 | **+2.0%** (+16.5) | 512×64 golden | **Loss**, narrowed from +8.94%: replay formation auto-recovered 78% once loads were compiler-visible |
+| **TTNN Where** | — | *blocked* | — | compiles WH/BH | No silicon — `rvtt_expand` **SSA ICE** on canonical `v_if` (+ CRAQ vBool→mask blocker) |
+| **TopK** | — | *blocked* | — | — | No silicon — typed `SFPSWAP`/`SFPTRANSP` drop the live L4–L7 multi-results (correctness gap) |
+
+**Read-out: zero outright flips so far.** Two parities (broadcast exact, Welford within noise), one
+loss (Reduce-SDPA, narrowing and replay-gated), two kernels blocked by compiler defects. The compiler
+already **matches** hand-tuning on non-replay kernels; it **trails** on replay-heavy kernels purely
+because it does not yet emit replay — and Reduce-SDPA is the derisking proof that closing that gap is
+mostly mechanical (78% recovered, no compiler change, once the loads stopped being opaque `.ttinsn`).
+**The first real flip is therefore gated on Track D replay/`SFPLOADMACRO` emission, not on more
+scheduling.** The two blocked kernels are correctness bugs (an ICE and a multi-result modeling gap),
+not perf — fix them before they are counted for or against the compiler.
+
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) make safe loop/preheader capture hoisting the next general Track-D target. Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
 **Broader LLK conversion checkpoint (2026-08-15).** TT-Metal `c1471817` carries two additional test-only corpus lanes. Binary broadcast passes 8/8 representative Blackhole correctness cases, 6/6 Wormhole generated compiles, and CRAQ A/B; physical `BINARY_BCAST_BODY` is exactly tied at handwritten `608,608,608` versus generated SFPI `608,608,608`. This is a zero-regression compiler-flow replacement, not a speedup. TTNNWhere compiles both selectors on WH/BH, but the generated path is blocked before silicon: CRAQ fails the vBool-to-integer-mask sequence even with auto-replay disabled, while the direct canonical `v_if` formulation triggers an `rvtt_expand` SSA ICE. The blocker and reproducer are intentionally retained; no unsafe device result is claimed. Evidence is in TT-Metal `tt_metal/tt-llk/tests/corpus/{BINARY_BCAST_SILICON_AB,TTNN_WHERE_COMPILER_AB}.md`.
