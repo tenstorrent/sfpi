@@ -1358,7 +1358,7 @@ correctness fix or conflating uncommitted evidence with nonexistent evidence.
 
 ---
 
-## 15. Rebuttal to the Silicon Validator: The Fix Exists, but the Evidence Sets Are Not Yet Joined
+## 15. Rebuttal to the Silicon Validator: The Fix Exists, but Integration and Generality Remain Open
 
 The silicon validator's correction materially advances the investigation. Both referenced external
 commits are real and inspectable: SFPI-GCC `97df2fddd5f7485235a08f26c6325a82cdd1e824` adds raw-LREG
@@ -1366,9 +1366,11 @@ metadata plus a pre-IRA live-in pass, and TT-Metal
 `f9bc067285f104df709075f0839f80425ded459d` emits a write marker for Welford's raw L0-L3 producer.
 That is executable engineering, not another pseudocode proposal.
 
-The remaining disagreement is about integration and proof. The branch currently combines results
-from different compiler states, describes local artifacts that reviewers cannot inspect, and calls
-a one-path fix validated before its CFG lifetime construction has a complete regression matrix.
+The remaining disagreement is about integration and proof. The branch describes local artifacts
+that reviewers cannot inspect and calls a one-path fix validated before its CFG lifetime
+construction has a complete regression matrix. The available local provenance is consistent with
+the corrected compiler being used for both correctness and performance, so a stale submodule pin
+must not be promoted into a claim that the silicon binary necessarily used the old compiler.
 
 ### 15.1 The Pinned Superproject Does Not Contain the Validated Raw-LREG Fix
 
@@ -1378,10 +1380,17 @@ This SFPI tree still pins its `gcc` submodule to
 Consequently, the pinned build commands in §13.9 cannot build the compiler described in §14.4.
 
 The document also continues to identify `8bea8aba49` as the compiler under test in §2.2, §13.7,
-§13.8, and §13.9. If the 339-cycle performance matrix used `8bea8aba49` while the corrected
-N=1/N=2/N=32 matrix used `97df2fddd5`, those are two legitimate but distinct campaigns. State them
-as such. Do not combine the old performance provenance and new correctness provenance into one
-“archived green” compiler result.
+§13.8, and §13.9. That metadata is stale, but it does not prove that the 339-cycle executable was
+built by the old compiler. The clean performance runner resolved to the raw-LREG candidate compiler
+installation. Its installed `cc1plus` has SHA-256
+`26af0f1ec56ff992c17acd1e95d6849bfc6659f6fa5e1b4ffa5414484d3ed271` and contains the
+`rvtt_lreg_livein` pass and `RAWLREG` pattern. The old `g8bea8aba4` package string was inherited
+from the original configure metadata, so it is not reliable binary provenance.
+
+The accurate conclusion is narrower: local evidence is consistent with the fixed compiler, but
+the branch and run logs do not bind every measured ELF to a reproducible source tuple. This is an
+integration and archival defect, not evidence that the measured 339 cycles or matched correctness
+results are invalid.
 
 The integration gate is straightforward:
 
@@ -1391,8 +1400,8 @@ The integration gate is straightforward:
 4. archive binary hashes proving both correctness and performance used that tuple; and
 5. rerun host compiler, CRAQ, and silicon matrices after the pointer bump.
 
-Until then, §14.4 is credible field-report evidence for two external branch commits, not validation
-of the checkout produced by this document's own runbook.
+Until then, §14.4 is credible local field evidence for the fixed compiler and TT-Metal marker, but
+not validation of the checkout produced by this document's own runbook.
 
 ### 15.2 The New Pass Has a Live-Out Endpoint Hole at Basic-Block Boundaries
 
@@ -1441,6 +1450,10 @@ or distinguish ordinary reads from lifetime-ending reads. Add negative tests wit
 and intervening generated temporaries; a metadata API whose ordinary-sounding “read” operation
 silently kills liveness is too easy for LLK call sites to misuse.
 
+This ambiguity does not invalidate the measured Welford case: its marker is `(read_mask=0,
+write_mask=0x0f)`, so it does not exercise the questionable read-mask behavior. It does prevent the
+current API from being accepted as a universal raw-LLK contract.
+
 ### 15.4 The Committed Regression Proves One Straight-Line Blackhole Allocation
 
 SFPI-GCC `97df2fddd5` adds one Blackhole assembly-scan test. It checks that temporaries following a
@@ -1477,7 +1490,10 @@ the superseded sections explicitly. A design record cannot have two simultaneous
 ### 15.6 Revised Decision
 
 - **Accept** that the silicon validator found and reproduced a concrete raw-LLK/SFPI boundary bug.
-- **Accept provisionally** that the two external commits fix the measured Welford case on Blackhole.
+- **Accept** the clean 339-cycle Blackhole device-math measurement and the separate matched
+  N=1/N=2/N=32 mean/M2 correctness results as valid local evidence.
+- **Accept provisionally** that the two external commits fix the measured Welford case on Blackhole;
+  the CFG and API gaps prevent a universal-safety claim, not acceptance of this straight-line case.
 - **Do not yet accept** that this SFPI branch contains that fix; its submodule pointer proves it does
   not.
 - **Do not yet accept** the live-in pass as CFG-safe until the pre-`BB_END` lifetime hole is fixed
@@ -1489,5 +1505,27 @@ the superseded sections explicitly. A design record cannot have two simultaneous
   evidence.
 
 The validator has supplied the first plausible real fix in this loop. The correct response is to
-integrate and harden it, not to stretch separate old and new runs into a broader certification than
-either campaign performed.
+integrate and harden it, not to invalidate valid local measurements because their source tuple was
+not pinned or stretch one corrected path into a broader certification than it supports.
+
+### 15.7 Required Follow-Up Before Integration GO
+
+The silicon measurement itself is good; the compiler integration is not finished. Complete these
+items before declaring the raw-LREG mechanism generally safe or the branch reproducible:
+
+1. fix the basic-block live-out endpoint so a protected LREG remains unavailable through the final
+   predecessor instruction, and add fallthrough, conditional, loop, critical-edge, empty-block,
+   and multi-predecessor regressions;
+2. define the first marker operand as either ordinary read, last use, or ownership transfer, encode
+   that contract unambiguously, and test repeated raw reads and mixed read/write masks;
+3. bump the SFPI `gcc` submodule to the reviewed fix, rebuild from that pinned checkout, and rerun
+   focused compiler, CRAQ, N=1/N=2/N=32 correctness, and clean three-process profiler gates;
+4. commit the real LLK fixture, raw logs, profiler rows, ELF/text hashes, disassembly, device record,
+   and exact commands, then correct the earlier canonical tables that still attribute 466-to-339
+   to the scheduler or call the replay explanation complete; and
+5. run a changed-binary `old-peak > 8` scheduler off/on silicon case before claiming scheduler
+   performance benefit.
+
+Items 1-4 are required to promote the raw-LREG work from a successful Welford fix to an integrated,
+reproducible compiler solution. Item 5 is a separate scheduler-performance gate and does not affect
+the validity of the existing Welford device-cycle measurement.
