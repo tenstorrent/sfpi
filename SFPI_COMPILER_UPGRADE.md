@@ -55,15 +55,16 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
                            (Compiles Cleanly)                 (Preserves Legacy State)
 ```
 
-### 2.2 Baseline State vs. P0 Target Architecture
+### 2.2 Checked-In Tree Ground Truth vs. Target Implementation
 
-| Dimension | Checked-In Checkpoint | P0 Target Architecture |
+| Dimension | Checked-In Checkpoint (`tree`) | Target Production Architecture |
 | :--- | :--- | :--- |
-| **Pressure Scheduler Flag** | `Init(0)` (Explicit opt-in required) | `Init(1)` for existing WH/BH gate + negative rollback option |
-| **List Scheduler** | Implemented & independently validated | Primary fast-path rescue attempt (<0.1ms compile time) |
-| **MILP Invocation** | Explicit second flag (invoked on all high-pressure) | Demand-driven escalation **only on list failure** (100k-node cap) |
-| **Fallback Behavior** | Fails back to unmutated GIMPLE | Fails back to unmutated GIMPLE |
-| **JIT Cache Integration** | Version-string hashed | Compiler flags & scheduler state hashed in build key |
+| **GIMPLE Pressure Scheduler** | **Real** (`gimple-rvtt-lp-schedule.cc`, 1025 lines) | Fast-path list + independent schedule validator |
+| **Exact MILP Engine** | **Real** (`rvtt-lpsolve.cc`, 482 lines via `lp_solve`) | Demand-driven escalation on list failure (100k-node cap) |
+| **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
+| **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
+| **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
+| **Hardware Silicon Baseline** | Functional verification complete | **P3 Deliverable:** Paired A/B cycle benchmarking on Blackhole silicon |
 
 ```
 Candidate Region (Peak > 8)
@@ -273,6 +274,7 @@ bool certify_destructive_tie(rtx_insn *insn,
                              unsigned op_index,
                              int operand_death_pos,
                              int selected_alternative,
+                             tie_kind requested_kind,
                              certified_destructive_tie &out_tie) {
     if (operand_death_pos != insn_pos) return false; // Must die exactly at issue boundary
     
@@ -301,7 +303,7 @@ bool certify_destructive_tie(rtx_insn *insn,
     out_tie.op_index = op_index;
     out_tie.insn_pos = insn_pos;
     out_tie.operand_death_pos = operand_death_pos;
-    out_tie.kind = tie_kind::MANDATORY_2ADDR;
+    out_tie.kind = requested_kind;
     out_tie.selected_alternative = selected_alternative;
     return true;
 }
