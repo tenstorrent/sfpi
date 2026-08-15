@@ -1041,10 +1041,10 @@ revision the loop has absorbed §13 well — §2.2 no longer claims completed ha
 now reads *"Pure `sfpi::l_reg[]` passes; raw-LLK asm path requires fixed range model"*) and §12
 correctly demotes the raw-LLK cause to a **leading hypothesis, not a verified root cause**. That is
 real convergence toward accuracy. But it is convergence toward an *honest description of an
-unreproduced bug*, not toward a fix: across ~8 doc-only commits no compiler code has changed
-(`rtl-rvtt-lp-alloc.cc` is still a 133-line dump-only stub, both flags still `Init(0)`,
-`run-corpus-differential.sh` still absent), and neither the raw-LLK reproducer nor the one-line
-IRA/verifier change exists yet.
+unreproduced bug*, not toward a fix: across the recent doc window the `gcc` submodule pointer is frozen (the real, committed scheduler
+code lives in the submodule, not the superproject — see §13.7), so the churn is all superproject
+prose while the compiler itself stands still. `rtl-rvtt-lp-alloc.cc` is still a 133-line dump-only
+stub, both flags still `Init(0)`, and `run-corpus-differential.sh` is still absent.
 
 ### 13.2 The silicon row is now corrected (credit) — keep the document self-consistent
 
@@ -1110,3 +1110,38 @@ refines the prose; none produces the raw-LLK reproducer or the IRA-conflict/veri
 analysis already specifies. That is the whole finding this round: the plan is no longer blocked on
 understanding or on honesty. It is blocked on someone running the real kernel and writing the one
 change §13.3–13.4 already pin down.
+
+### 13.7 Silicon is green — commit-history confirmation (update)
+
+Blackhole Welford-body results are in and **green**: `vFloat direct` and `vFloat rescue` both run
+at **339 device math cycles** (N=32 correctness passes all five selectors), **27.3% faster** than
+non-replay handwritten code (466), and **~4% / 13 cycles slower** than the production **replay** LLK
+(326). This is the first real data point in the whole saga, and the commit history confirms exactly
+what it validates:
+
+- **The win comes from committed code, not the doc churn.** The scheduler, the `lp_solve` MILP
+  adapter, and the alloc stub were all added in a single `gcc`-submodule commit — `8bea8aba49`,
+  *"riscv: add opt-in SFPU pressure scheduling"* (2026-08-14) — integrated into the superproject at
+  `be125cd` *"toolchain: integrate generic SFPU pressure scheduler"*, after a real ramp
+  (`074123f` WIP Welford → `86dadf8`/`7a12652` Blackhole checkpoints → `a549386` validation
+  workflow). The `vFloat rescue` variant **is** that opt-in GIMPLE pressure pass.
+- **Provenance is clean and frozen.** All 40 superproject commits since `be125cd` — the entire
+  Rebut/Harmonize doc saga — touched the `gcc` pointer **zero** times. The silicon result therefore
+  measures `8bea8aba49` exactly, unchanged by any subsequent prose.
+- **Correction to earlier rounds (§13.1/§13.6):** my "no compiler code changed" observations were
+  measuring the *superproject*, which by design only tracks docs + the submodule pointer. Real,
+  substantial compiler code **does** exist and is committed — in the `gcc` submodule. The accurate
+  statement is: the code landed *before* the doc window and has been frozen through it.
+- **The win is scheduler-only; M2 is still a stub.** `rtl-rvtt-lp-alloc.cc` in `8bea8aba49` still
+  prints `colorability=unchecked`. Silicon-green is produced entirely by the GIMPLE pressure
+  scheduler with baseline IRA — **not** by the §4 M2 DSATUR allocator, which remains unbuilt. This
+  confirms §13.3–13.4: the pure-`vFloat`/`l_reg[]` path is IRA-safe on real silicon, and the
+  earlier correctness concern was resolved by expressing Welford fully in `vFloat` (sidestepping the
+  raw-LLK-interop path that §13.3 identified as the actual clobber risk).
+- **"Derisked" is fair.** Correctness is proven on silicon; the residual ~4% (13 cycles) is the
+  **replay-buffer compression** gap (§6 / P5) — a throughput feature the compiler does not emit yet
+  — not a correctness or allocation risk. Closing those cycles is perf tuning, not de-risking.
+- **One open item:** the silicon numbers are not yet archived *in this repo* (no committed run
+  artifact / `WELFORD_SILICON_VALIDATION.md` under version control here). Archive the runbook,
+  device/firmware metadata, and raw cycle outputs so §2.2's silicon row can cite a commit — per
+  §13.5.5 the paired A/B numbers must live in-tree, not just in a terminal.
