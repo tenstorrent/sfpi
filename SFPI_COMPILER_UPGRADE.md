@@ -105,9 +105,9 @@ Independent Schedule & Pressure Certificate Validator
 Commit GIMPLE Rewrite  ──(On any validation failure)──► Leave GIMPLE Untouched
 ```
 
-### 3.1 Target M2/M3 Joint MILP Formulation
+### 3.1 Target M2/M3 Joint MILP Model Outline
 
-The target MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan:
+The target joint MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan:
 
 #### Variables:
 - $\text{issue}_{i,t} \in \{0, 1\}$: Binary indicator that operation $i \in \{1 \dots N\}$ is issued in time slot $t \in \{1 \dots T\}$.
@@ -117,7 +117,7 @@ The target MILP optimizer models simultaneous instruction scheduling, exact live
 - $\text{alias}_{i,v} \in \{0, 1\}$: Result of operation $i$ destructively overwrites operand value $v$.
 - $\text{finish} \in \mathbb{R}^+$: Maximum completion time across all sinks in the DAG.
 
-#### Constraints:
+#### Constraints & Linear Implications:
 1. **Single Issue:** Every operation issues exactly once:
    $$\sum_{t=1}^T \text{issue}_{i,t} = 1 \quad \forall i$$
 2. **Resource Capacity:** At most one SFPU operation issues per cycle:
@@ -133,8 +133,9 @@ The target MILP optimizer models simultaneous instruction scheduling, exact live
    $$\text{occupy}_{v,r,t} \ge \text{live}_{v,t} + \text{assign}_{v,r} - 1, \quad \text{occupy}_{v,r,t} \le \text{live}_{v,t}, \quad \text{occupy}_{v,r,t} \le \text{assign}_{v,r}$$
 8. **Physical Register Mutual Exclusion:** At most one live value occupies physical register $r$ at cycle $t$:
    $$\sum_{v=1}^V \text{occupy}_{v,r,t} \le 1 \quad \forall r \in \{0 \dots 7\}, \forall t$$
-9. **Destructive Overlap & Machine Ties:** If $\text{alias}_{i,v} = 1$, operation $i$'s result reuses operand $v$'s physical register only if $v$ dies at $t(i)$ and machine alternatives permit the tie:
-   $$\text{assign}_{\text{def}(i), r} = \text{assign}_{v, r} \quad \text{when } \text{alias}_{i,v} = 1$$
+9. **Linearized Destructive Implication:** When operation $i$ is selected to destructively alias dying operand $v$ ($\text{alias}_{i,v} = 1$), their physical register assignments are forced to match:
+   $$\text{assign}_{\text{def}(i), r} - \text{assign}_{v, r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
+   $$\text{assign}_{v, r} - \text{assign}_{\text{def}(i), r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
 
 #### Multi-Tier Lexicographic Objective (Sequential Solves):
 1. **Solve 1 (Feasibility):** Minimize peak register occupancy: $\min \max_t \sum_v \text{live}_{v,t} \le 8$.
@@ -162,26 +163,26 @@ While greedy list heuristics work for simple expressions, register-constrained D
 
 ### 4.1 The Final-RTL Constraint Architecture
 
-Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spill hazard permanently, M2 executes the following 14-step pipeline on strict, contiguous closed islands:
+Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spill hazard permanently, M2 executes the following 14-step pipeline on strict, contiguous closed islands across the entire basic block:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │              Authoritative Pre-IRA M2 Allocation Pipeline               │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ 1. Discover one contiguous final-RTL island (terminate at unmodeled insn)│
-│ 2. Terminate at any unmodeled instruction, call, branch, or state barrier│
+│ 1. Iterate basic blocks to discover all contiguous final-RTL islands    │
+│ 2. Terminate at any unmodeled instruction, call, branch, or barrier     │
 │ 3. Assign dense layout positions 0..N-1 (never use arbitrary UIDs)      │
 │ 4. Extract all XTT32 pseudo def/use, hard-register clobbers & modes     │
 │ 5. Prove machine-legal dying operand overlaps for destructive ties      │
 │ 6. Separate _lv semantic predication ties from ordinary destructive ties │
 │ 7. Build equality classes only for independently verified ties (UnionF) │
 │ 8. Intersect allowed color masks, reconcile precolors, build conflict G │
-│ 9. Solve exact 8-coloring via bounded DSATUR / Backtracking             │
+│ 9. Solve exact 8-coloring via bounded DSATUR with explicit statuses     │
 │ 10. Independently validate every position, color, tie, clobber & state   │
 │ 11. Apply substitutions atomically via GCC 15 grouped-change transaction│
-│ 12. Re-verify recog_memoized(insn) >= 0 for all rewritten RTL insns     │
+│ 12. Precommit verification: pseudo closure & recog_memoized(insn) >= 0  │
 │ 13. Confirm change group, rebuild DF, assert ZERO SFPU pseudos in island│
-│ 14. On any failure, cancel complete group and leave RTL untouched       │
+│ 14. On any precommit failure, cancel group and leave RTL untouched      │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -208,6 +209,14 @@ namespace {
 
 enum class tie_kind { NONE, PERMITTED, MANDATORY_2ADDR, LV_PREDICATION };
 
+enum class m2_solve_status {
+    SOLVED,
+    INVALID_MODEL,
+    UNSAT,
+    SEARCH_LIMIT,
+    REWRITE_REJECTED
+};
+
 struct destructive_tie {
     unsigned result_val;
     unsigned operand_val;
@@ -217,18 +226,20 @@ struct destructive_tie {
     tie_kind kind;
 };
 
-struct m2_color_node {
-    unsigned stable_id;
-    uint8_t allowed_color_mask; // Bitmask of colors 0..7
-    int fixed_color;            // -1 or L0..L7 (SFPU_REG_FIRST + r)
-    std::vector<unsigned> member_values;
-};
-
 struct rtl_interval {
     unsigned pseudo_regno;
-    int start_pos;  // Dense layout index 0..N-1 [start, end)
-    int end_pos;    // Dense layout index 0..N-1
-    unsigned assigned_lreg; // 0..7 or 8 (unassigned)
+    int start_pos;              // Dense layout index 0..N-1 [start, end)
+    int end_pos;                // Dense layout index 0..N-1
+    uint8_t allowed_color_mask; // Bitmask of legal LREGs 0..7
+    int fixed_color;            // -1 or L0..L7 (SFPU_REG_FIRST + r)
+    unsigned assigned_lreg;     // 0..7 or 8 (unassigned)
+};
+
+struct m2_color_node {
+    unsigned stable_id;
+    uint8_t allowed_color_mask;
+    int fixed_color;
+    std::vector<unsigned> member_values;
 };
 
 // Disjoint Set Union (Union-Find) for Mandatory Equality Ties
@@ -239,27 +250,27 @@ struct union_find {
     void unite(unsigned i, unsigned j) { parent[find(i)] = find(j); }
 };
 
-// Exact Bounded DSATUR / Backtracking 8-Coloring with Contracted Equality Classes
-bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
-                             const std::vector<std::vector<bool>>& raw_interference,
-                             const std::vector<destructive_tie>& ties,
-                             std::vector<unsigned>& final_reg_mapping,
-                             unsigned max_search_nodes = 50000) {
+// Exact Bounded DSATUR 8-Coloring with Color-Mask Intersections
+m2_solve_status solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
+                                        const std::vector<std::vector<bool>>& raw_interference,
+                                        const std::vector<destructive_tie>& ties,
+                                        std::vector<unsigned>& final_reg_mapping,
+                                        unsigned max_search_nodes = 50000) {
     size_t num_vals = raw_intervals.size();
     union_find uf(num_vals);
 
-    // 1. Contract mandatory equality ties (MANDATORY_2ADDR and LV_PREDICATION)
+    // 1. Contract certified mandatory equality ties
     for (const auto& tie : ties) {
         if (tie.kind == tie_kind::MANDATORY_2ADDR || tie.kind == tie_kind::LV_PREDICATION) {
             if (tie.operand_last_use_pos <= tie.insn_pos) {
                 uf.unite(tie.result_val, tie.operand_val);
             } else {
-                return false; // Illegal overlap in mandatory destructive tie
+                return m2_solve_status::INVALID_MODEL;
             }
         }
     }
 
-    // 2. Build contracted node list with color mask intersections
+    // 2. Build contracted node list with strict color mask intersection
     std::unordered_map<unsigned, unsigned> root_to_node_idx;
     std::vector<m2_color_node> contracted_nodes;
 
@@ -269,11 +280,31 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
             root_to_node_idx[root] = contracted_nodes.size();
             m2_color_node node;
             node.stable_id = contracted_nodes.size();
-            node.allowed_color_mask = 0xFF; // All 8 colors allowed initially
+            node.allowed_color_mask = 0xFF;
             node.fixed_color = -1;
             contracted_nodes.push_back(node);
         }
-        contracted_nodes[root_to_node_idx[root]].member_values.push_back(i);
+        
+        m2_color_node& c_node = contracted_nodes[root_to_node_idx[root]];
+        c_node.member_values.push_back(i);
+        c_node.allowed_color_mask &= raw_intervals[i].allowed_color_mask;
+
+        // Reconcile fixed precolors
+        if (raw_intervals[i].fixed_color != -1) {
+            if (c_node.fixed_color != -1 && c_node.fixed_color != raw_intervals[i].fixed_color) {
+                return m2_solve_status::INVALID_MODEL; // Conflicting precolors!
+            }
+            c_node.fixed_color = raw_intervals[i].fixed_color;
+        }
+    }
+
+    for (const auto& c_node : contracted_nodes) {
+        if (c_node.allowed_color_mask == 0) {
+            return m2_solve_status::INVALID_MODEL; // Empty allowed color space!
+        }
+        if (c_node.fixed_color != -1 && !(c_node.allowed_color_mask & (1 << c_node.fixed_color))) {
+            return m2_solve_status::INVALID_MODEL;
+        }
     }
 
     size_t num_nodes = contracted_nodes.size();
@@ -285,7 +316,7 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
                 unsigned node_u = root_to_node_idx[uf.find(u)];
                 unsigned node_v = root_to_node_idx[uf.find(v)];
                 if (node_u == node_v) {
-                    return false; // Self-interference inside equality class!
+                    return m2_solve_status::INVALID_MODEL; // Self-interference in class!
                 }
                 contracted_interference[node_u][node_v] = true;
             }
@@ -295,6 +326,7 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
     // 3. Exact Bounded DSATUR Backtracking Search
     std::vector<unsigned> node_colors(num_nodes, 8);
     unsigned search_steps = 0;
+    bool search_capped = false;
 
     auto get_saturation_degree = [&](size_t u) {
         std::unordered_set<unsigned> neighbor_colors;
@@ -308,7 +340,10 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
 
     std::function<bool(size_t)> backtrack = [&](size_t colored_count) -> bool {
         if (colored_count == num_nodes) return true;
-        if (++search_steps > max_search_nodes) return false; // Deterministic work cap
+        if (++search_steps > max_search_nodes) {
+            search_capped = true;
+            return false;
+        }
 
         size_t best_u = num_nodes;
         size_t max_sat = 0;
@@ -343,7 +378,9 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
         return false;
     };
 
-    if (!backtrack(0)) return false;
+    if (!backtrack(0)) {
+        return search_capped ? m2_solve_status::SEARCH_LIMIT : m2_solve_status::UNSAT;
+    }
 
     // 4. Expand contracted colors back to all raw values
     final_reg_mapping.assign(num_vals, 8);
@@ -352,75 +389,81 @@ bool solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
             final_reg_mapping[val_idx] = node_colors[node_idx];
         }
     }
-    return true;
+    return m2_solve_status::SOLVED;
 }
 
 // Atomic RTL Hard Register Substitution using GCC 15 Grouped-Change APIs
 unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
     basic_block bb;
     FOR_EACH_BB_FN(bb, fn) {
-        rtx_insn *insn;
-        std::vector<rtx_insn*> sfpu_island;
+        rtx_insn *insn = BB_HEAD(bb);
         
-        // Discover strictly contiguous SFPU islands (stop at unmodeled instruction)
-        FOR_BB_INSNS(bb, insn) {
-            if (NONDEBUG_INSN_P(insn)) {
-                if (rvtt_sfpu_insn_p(insn)) {
-                    sfpu_island.push_back(insn);
-                } else if (!sfpu_island.empty()) {
-                    break; // Closed island boundary
+        // Outer cursor loop: discover and process ALL contiguous islands in BB
+        while (insn && insn != NEXT_INSN(BB_END(bb))) {
+            std::vector<rtx_insn*> sfpu_island;
+            
+            // 1. Scan to find next contiguous SFPU island
+            while (insn && insn != NEXT_INSN(BB_END(bb))) {
+                if (NONDEBUG_INSN_P(insn)) {
+                    if (rvtt_sfpu_insn_p(insn)) {
+                        sfpu_island.push_back(insn);
+                    } else if (!sfpu_island.empty()) {
+                        break; // Island boundary reached
+                    }
                 }
+                insn = NEXT_INSN(insn);
             }
-        }
-        
-        if (sfpu_island.empty()) continue;
+            
+            if (sfpu_island.empty()) continue;
 
-        std::vector<rtl_interval> raw_intervals;
-        std::vector<std::vector<bool>> raw_interference;
-        std::vector<destructive_tie> ties;
-        extract_rtl_constraint_model(sfpu_island, raw_intervals, raw_interference, ties);
+            std::vector<rtl_interval> raw_intervals;
+            std::vector<std::vector<bool>> raw_interference;
+            std::vector<destructive_tie> ties;
+            extract_rtl_constraint_model(sfpu_island, raw_intervals, raw_interference, ties);
 
-        std::vector<unsigned> final_reg_mapping;
-        if (!solve_m2_exact_coloring(raw_intervals, raw_interference, ties, final_reg_mapping)) {
-            continue; // Fall back safely to IRA if uncolorable
-        }
+            std::vector<unsigned> final_reg_mapping;
+            if (solve_m2_exact_coloring(raw_intervals, raw_interference, ties, final_reg_mapping) != m2_solve_status::SOLVED) {
+                continue; // Preserve original RTL on non-solved status
+            }
 
-        std::unordered_map<unsigned, unsigned> regno_to_lreg;
-        for (size_t i = 0; i < raw_intervals.size(); ++i) {
-            regno_to_lreg[raw_intervals[i].pseudo_regno] = final_reg_mapping[i];
-        }
+            std::unordered_map<unsigned, unsigned> regno_to_lreg;
+            for (size_t i = 0; i < raw_intervals.size(); ++i) {
+                regno_to_lreg[raw_intervals[i].pseudo_regno] = final_reg_mapping[i];
+            }
 
-        // Real GCC 15 Grouped Changes Transaction
-        int checkpoint = num_validated_changes();
-        bool rewrite_ok = true;
+            // Real GCC 15 Grouped Changes Transaction
+            int checkpoint = num_validated_changes();
+            bool rewrite_ok = true;
 
-        for (rtx_insn *cur_insn : sfpu_island) {
-            subrtx_ptr_iterator::array_type array;
-            FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(cur_insn)) {
-                rtx *loc = *iter;
-                if (*loc && REG_P(*loc) && !HARD_REGISTER_P(*loc)) {
-                    unsigned p_regno = REGNO(*loc);
-                    auto it = regno_to_lreg.find(p_regno);
-                    if (it != regno_to_lreg.end()) {
-                        rtx hard_reg = gen_raw_REG(GET_MODE(*loc), SFPU_REG_FIRST + it->second);
-                        if (!validate_change(cur_insn, loc, hard_reg, /*unique=*/true)) {
-                            rewrite_ok = false;
-                            break;
+            for (rtx_insn *cur_insn : sfpu_island) {
+                subrtx_ptr_iterator::array_type array;
+                FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(cur_insn)) {
+                    rtx *loc = *iter;
+                    if (*loc && REG_P(*loc) && !HARD_REGISTER_P(*loc)) {
+                        unsigned p_regno = REGNO(*loc);
+                        auto it = regno_to_lreg.find(p_regno);
+                        if (it != regno_to_lreg.end()) {
+                            rtx hard_reg = gen_raw_REG(GET_MODE(*loc), SFPU_REG_FIRST + it->second);
+                            if (!validate_change(cur_insn, loc, hard_reg, /*unique=*/true)) {
+                                rewrite_ok = false;
+                                break;
+                            }
                         }
                     }
                 }
+                if (!rewrite_ok || recog_memoized(cur_insn) < 0) {
+                    rewrite_ok = false;
+                    break;
+                }
             }
-            if (!rewrite_ok || recog_memoized(cur_insn) < 0) {
-                rewrite_ok = false;
-                break;
-            }
-        }
 
-        if (rewrite_ok && verify_changes(checkpoint)) {
-            confirm_change_group();
-            df_insn_rescan_all();
-        } else {
-            cancel_changes(checkpoint);
+            // Precommit verification & atomic commit
+            if (rewrite_ok && verify_changes(checkpoint)) {
+                confirm_change_group();
+                df_insn_rescan_all();
+            } else {
+                cancel_changes(checkpoint);
+            }
         }
     }
     return 0;
@@ -533,7 +576,7 @@ Rather than premature public macros, `SFPLOADMACRO` is governed by a compiler-in
 | **Welford (LayerNorm)** | 8 live values across 4 rows with zero register slack. | Recomputes delta ($\delta_2$) and hand-colors L0–L7. | **Demonstrated:** 9-to-8 rescue matches manual early fold; production replacement is P3 gate. |
 | **Dual-Horner Rational** | 7 exposed NOP stalls in serial $P(x)/Q(x)$ evaluation. | Manual instruction interleaving in TTI. | **Candidate Opportunity:** 40% static issue-slot reduction; silicon verification required. |
 | **Piecewise Generic / LUT** | Interleaved MADs, pinned coefficients, D-RWC updates. | 3 distinct hand-written polynomial replay bodies. | **Candidate Opportunity:** Compiler-managed coefficient pinning + exact replay packing. |
-| **Log (`ckernel_sfpu_log.h`)** | Peak pressure 9 during polynomial + exponent correction. | Explicit reload from $Dst$ at line 62. | **Demonstrated:** Pressure scheduling keeps inputs resident; eliminates $Dst$ cuts. |
+| **Log (`ckernel_sfpu_log.h`)** | Peak pressure 9 during polynomial + exponent correction. | Explicit reload from $Dst$ at line 62. | **Candidate Opportunity:** Pressure scheduling keeps inputs resident; eliminates $Dst$ cuts once demonstrated on compiler diffs. |
 | **GELU / Erfinv** | High register pressure across nested inlined tanh/log/sqrt. | Intermediate state dumped to $Dst$. | **Candidate Opportunity:** Continuous 8-LREG allocation eliminates $Dst$ round-trip overhead. |
 | **Addcmul (`ckernel_sfpu_addcmul.h`)** | Inter-row RAW dependencies across 2 rows. | Manual `MUL_a, MUL_b, MAD_a, MAD_b` ordering. | **Candidate Opportunity:** Latency scheduler automatically pipelines adjacent rows. |
 | **Integer Remainder / Div** | Divisor chunk pressure. | Recomputes divisor expressions. | **Candidate Opportunity:** Target-directed rematerialization. |
@@ -642,128 +685,3 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 12. Critical Reanalysis: Remaining Conditions for Engineering Approval
-
-The corrected plan now has the right default-on policy foundation: it replaces the unprovable non-negative-delta claim with an evidence-based rescue contract, distinguishes checked-in behavior from the P0 target, and adds part of the missing physical-assignment model. Those are substantive improvements. They do not, however, make the displayed M2/M3 formulation or RTL rewrite implementation-ready. The remaining gaps below must be closed in code and tests rather than by stronger comments.
-
-### 12.1 The Joint MILP Is Still a Model Outline
-
-The assignment, occupancy, and physical-register exclusion constraints are necessary additions. The model still describes "exact liveness" and conditional destructive aliasing in prose rather than defining their linear constraints.
-
-An executable formulation must specify:
-
-- a finite scheduling horizon and the issue-time expression for every operation;
-- live-in, live-out, unused-result, definition, and last-use boundary conventions;
-- the inequalities that make `live[v,t]` exactly one between definition and final use rather than allowing an advantageous fractional or zero value;
-- allowed-register and fixed/precolored constraints for every value;
-- legal machine-alternative eligibility for every `alias[i,v]` variable;
-- required, optional, and mutually exclusive destructive alias choices;
-- a linear implication tying result and dying-operand assignments when aliasing is selected; and
-- deterministic objective fixing and tie-breaking between sequential solves.
-
-In particular, the equation written as `assign[def(i),r] = assign[v,r] when alias[i,v] = 1` is a logical implication, not a linear constraint. It needs a standard binary implication linearization for every register. Likewise, `sum(live[v,t]) <= 8` and per-register occupancy are meaningful only after exact liveness is enforced.
-
-Until these constraints exist, the document must call Section 3.1 a target model outline rather than a complete joint MILP specification.
-
-### 12.2 The Displayed Color-Mask Intersection Does Not Exist
-
-The coloring listing says it builds contracted nodes "with color mask intersections," but every class is initialized with `allowed_color_mask = 0xFF` and `fixed_color = -1`. No member-specific allowed mask or precolor exists in `rtl_interval`, and the construction loop performs no intersection or precolor reconciliation.
-
-P1 must supply each extracted value with, at minimum, its mode, allowed LREG mask, optional precolor, implicit hard-register conflicts, and verified tie metadata. Contraction must then:
-
-1. intersect all member masks;
-2. reject an empty intersection;
-3. reject conflicting precolors;
-4. constrain a surviving precolor to its corresponding bit;
-5. reject interference internal to the equality class; and
-6. preserve the union of all external interference edges.
-
-A comment claiming these operations is not a substitute for data structures and executable steps that perform them.
-
-### 12.3 Mandatory Tie Legality Remains Unproved
-
-The sample still contracts mandatory ties based only on `operand_last_use_pos <= insn_pos`. That condition is insufficient and is also too loose: destructive reuse requires the precise target-defined boundary, not merely a last-use position no later than the instruction.
-
-Before contraction, the independent extractor/checker must prove:
-
-- a selected machine-description alternative actually permits or requires the tie;
-- result and operand modes and register classes are compatible;
-- the operand dies at the exact destructive boundary;
-- no implicit, conditional, or intervening use survives that boundary;
-- early-clobber and hard-register clobber rules are satisfied; and
-- `_lv` predication semantics are modeled separately from ordinary two-address reuse.
-
-The solver should consume already-certified ties rather than attempting to infer machine legality from a single interval comparison.
-
-### 12.4 Closed-Island Discovery Must Process Every Island
-
-The revised discovery loop stops at the first non-SFPU instruction after the first SFPU run. It therefore processes at most one island per basic block and never resumes scanning for later eligible islands. A correct implementation needs an outer cursor that repeatedly:
-
-1. finds the next eligible island start;
-2. grows the island only across explicitly modeled instructions;
-3. terminates at calls, branches, state barriers, unmodeled instructions, and relevant hard-register effects;
-4. proves closure for all selected pseudo definitions and uses; and
-5. continues from the boundary to find subsequent islands.
-
-Debug instructions and notes need an explicit policy, not accidental omission. Island closure must also be checked before any substitution: every occurrence of every pseudo selected for hard-register replacement must be accounted for inside the transaction.
-
-### 12.5 The Grouped-Change Rewrite Still Falls Short of Atomic Validation
-
-Saving a checkpoint and checking `validate_change` are real improvements. The remaining sequence still calls `recog_memoized` while changes are pending, omits the promised precommit closure and allocation checks, confirms the group, and only then rebuilds DF. After `confirm_change_group()`, a failed postcondition cannot be repaired by `cancel_changes(checkpoint)`.
-
-The implementation contract should instead be:
-
-1. save `num_validated_changes()`;
-2. validate every replacement and check every return value;
-3. use the grouped-change verification API to validate the complete proposed patterns;
-4. before confirmation, independently verify pseudo closure, color legality, interference, ties, modes, and clobbers against the proposed mapping;
-5. cancel back to the saved checkpoint on any precommit failure;
-6. confirm exactly once after all fallible validation succeeds;
-7. rebuild DF; and
-8. use compiler-checking assertions for postcommit invariants already proven before confirmation.
-
-Negative tests must inject or construct failures at extraction, coloring, individual substitution, grouped verification, and closure validation, then demonstrate unchanged RTL and assembly fallback.
-
-### 12.6 Solver Outcomes Need Distinct Semantics
-
-The bounded coloring function currently returns one Boolean failure for an invalid tie, contracted self-interference, empty legal-color space, proven uncolorability, and search-cap exhaustion. These outcomes should be represented separately, for example:
-
-```text
-SOLVED
-INVALID_MODEL
-UNSAT
-SEARCH_LIMIT
-REWRITE_REJECTED
-```
-
-All non-solved outcomes may safely preserve legacy compilation, but distinct status and deterministic diagnostics are required for debugging, coverage, telemetry, and deciding whether a larger search bound can help. Search-limit exhaustion must never be reported as a proof of uncolorability.
-
-### 12.7 Evidence Labels and Validation Workflow Must Match the Claims
-
-The Welford 9-to-8 rescue and generic fused-DAG 9-to-8 rescue are demonstrated scheduling results. The Log `$Dst`-cut elimination remains a candidate until an archived compiler-generated before/after artifact demonstrates that transformation and passes functional execution. Dual-Horner's 40% static issue-slot opportunity must not be written as a guaranteed Wormhole performance result.
-
-The evidence-based rescue contract requires more than the focused validation script. P0/P3/P4 gates must identify and archive:
-
-- exact baseline and candidate revisions, compiler configurations, and flags;
-- complete legacy-off/default-on assembly differentials for the eligible corpus;
-- full compiler CI and expected-failure accounting;
-- simulator results for every changed artifact;
-- silicon numerical-equivalence results with declared tolerances;
-- raw device-cycle samples, warmup and iteration policy, median and dispersion;
-- WH/BH device and firmware metadata; and
-- randomized A/B or A/B/A execution order to expose drift.
-
-Static instruction counts, simulator correctness, and silicon cycle improvements are three different evidence classes and must remain separately labeled.
-
-### 12.8 Updated Approval Decision
-
-- **P0 remains approved for implementation and default-on deployment after its stated A/B gates pass.** The current checked-in `Init(0)` options and unconditional requested-MILP behavior remain work items, not reasons to abandon default-on.
-- **P1 architecture is approved.** The authoritative RTL extractor and independent checker are prerequisites for mutation.
-- **P2 remains conditional.** The displayed DSATUR and grouped-change code is illustrative pseudocode until allowed masks, precolors, tie legality, complete island iteration, closure proof, transaction ordering, and negative rollback tests exist.
-- **P3/P4 claims remain evidence-gated.** Compiler rescue is already valuable; performance language requires actual generated transformations and silicon measurements.
-- **P5 remains a separate long-range program.** Replay, macro scheduling, and MLIR should not dilute the immediate correctness and deployment gates.
-
-The engineering conclusion is unchanged: enable the narrow, independently validated scheduling rescue by default once P0 differential gates pass, but do not confuse that decision with approval of an incomplete physical allocator. One IRA spill is a tractable compiler problem. It warrants finishing the authoritative RTL model and transactional enforcement path, not disabling the rescue and not declaring unfinished pseudocode safe.
