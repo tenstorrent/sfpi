@@ -64,7 +64,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **M2 Engine:** 14-step exact DSATUR allocator with GCC 15 change transactions |
 | **Corpus Differential Driver** | Absent | **P0 Deliverable:** `scripts/run-corpus-differential.sh` |
-| **Hardware Silicon Baseline** | **Archived Green (Blackhole)**: vFloat 339 cyc — −27.3% vs non-replay (466), within 13 cyc / 3.9% of replay LLK (326); N=32 all-selectors pass; compiler `8bea8aba49` / `be125cd`; archived §13.8. Raw-LLK asm path still needs the fixed-range model (§13.4). | **P3 Deliverable:** Full multi-kernel A/B paired suite (initial Welford run archived §13.8) |
+| **Hardware Silicon Baseline** | **GO-BH-ONLY**: pinned vFloat 323/323/323 device cycles versus replay LLK 326/326/326; N=1/2/32 all five selectors pass. SFPI-GCC `d9c39fbd1`, TT-Metal harness `b6dd6370`; primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
 ```
 Candidate Region (Peak > 8)
@@ -820,7 +820,7 @@ Rather than premature public macros, `SFPLOADMACRO` is governed by a compiler-in
 
 | Kernel | Architecture Challenge | Existing Manual Workaround | Demonstrated vs. Candidate Opportunity |
 | :--- | :--- | :--- | :--- |
-| **Welford (LayerNorm)** | 8 live values across 4 rows with zero register slack. | Recomputes delta ($\delta_2$) and hand-colors L0–L7. | **Demonstrated on Blackhole Silicon:** 339 device math cycles (-27.3% vs non-replay 466 cycles, within 13 cycles / 3.9% of replay LLK 326 cycles, N=32 correctness passes all selectors). |
+| **Welford (LayerNorm)** | Raw LLK produces L0–L3; generated SFPI consumes them across the recurrence. | Explicit raw-LREG ownership metadata plus late full-literal coalescing; no global LREG reservation. | **Demonstrated on Blackhole silicon:** 323/323/323 `WELFORD_BODY` device cycles versus replay LLK 326/326/326; N=1/2/32 correctness passes all five selectors. |
 | **Dual-Horner Rational** | 7 exposed NOP stalls in serial $P(x)/Q(x)$ evaluation. | Manual instruction interleaving in TTI. | **Candidate Opportunity:** 40% static issue-slot reduction; silicon verification required. |
 | **Piecewise Generic / LUT** | Interleaved MADs, pinned coefficients, D-RWC updates. | 3 distinct hand-written polynomial replay bodies. | **Candidate Opportunity:** Compiler-managed coefficient pinning + exact replay packing. |
 | **Log (`ckernel_sfpu_log.h`)** | Peak pressure 9 during polynomial + exponent correction. | Explicit reload from $Dst$ at line 62. | **Candidate Opportunity:** Pressure scheduling keeps inputs resident; eliminates $Dst$ cuts once demonstrated on compiler diffs. |
@@ -1007,29 +1007,181 @@ The second layer must rebuild the interference and tie facts from staged RTL rat
 
 A robust ledger records instruction identity plus a stable operand/path descriptor and independently traverses the post-verification pattern. Merely rereading the same pointer used to stage a change risks validating the mutation mechanism against itself.
 
-### 12.7 Verified Compiler Fixtures Do Not Establish the Raw-LLK Root Cause
+### 12.7 Raw-LLK Root Cause Is Reproduced and Fixed
 
-Section 13 correctly demonstrates that the pure `sfpi::l_reg[]` builtin path creates constrained pseudos and does not reproduce the suspected L1 collision. That is valuable negative evidence. It does not verify the asserted "corrected root cause" in the raw-LLK path. The same section admits that the real raw-LLK reproducer has not yet been obtained.
+The earlier pure-`sfpi::l_reg[]` fixture was correctly rejected as
+non-discriminating: constrained builtin pseudos already carried allocator-visible
+lifetimes. The actual Welford boundary was subsequently traced in CRAQ and on
+Blackhole. Opaque raw `.ttinsn` loads/transposes produced L0-L3 without an RTL
+definition, so IRA assigned a generated row-1 delta temporary to still-live L1;
+the row-2 input was destroyed before its first generated use.
 
-Until a fixture combines the actual raw LREG producer/consumer sequence with surrounding SFPI temporaries and reproduces the silicon failure or assembly collision, classify raw-LLK missing live ranges as the leading hypothesis—not a verified root cause. Inline assembly may expose clobbers or constraints that change the analysis, and a silicon failure can have causes other than L1 allocation.
+The integrated solution is pre-IRA prevention, not post-IRA recovery. Raw LLK
+emits explicit no-code ownership metadata and `rtl-rvtt-lreg-livein` constructs
+fixed-LREG intervals across the CFG. The Welford producer marker, discriminating
+old/new allocation test, loop/edge/join regressions, CRAQ N=2 trace, and physical
+N=1/N=2/N=32 results establish the cause and repair. A future post-IRA verifier
+would be defense in depth, not the primary fix.
 
-A post-IRA verifier can diagnose a realized conflict but cannot repair an earlier clobber or recover from a fatal allocation path. Treat it as a checking backstop, not the primary fix. The primary fix should model verified raw-LLK fixed live ranges before IRA once the reproducer establishes their true boundaries.
+### 12.8 Executable Status and Remaining Allocator Work
 
-### 12.8 Stop the Documentation Loop and Land Discriminating Code
+The raw-LREG reproducer, preventative pass, CFG regressions, executable LLK
+harness, pinned build, and silicon archive are now landed. The pressure scheduler
+remains opt-in and the proposed M2 coloring allocator remains a dump/audit stub;
+those facts are separate from the completed Welford interop fix.
 
-The checked-in allocator remains a dump-only stub, both flags remain `Init(0)`, and the corpus differential driver remains absent. Section 13 is right that the next useful milestone is executable work.
-
-- Land the real raw-LLK reproducer first and require it to fail for the intended reason.
-- Fix candidate validation, mandatory-kind handling, alternative feasibility, and debug predicates in compiled P1 code behind the off flag.
-- Implement an independently reconstructed staged-RTL checker, not only a solver/ledger consistency check.
-- Build the corpus/simulator differential driver and list-success MILP short-circuit before the default-on flip.
-- Keep silicon performance claims separate from correctness and compile-coverage gates.
-
-The architecture is sufficiently specified. The remaining risk is now that repeated prose harmonization creates confidence in pseudocode that has never compiled or survived adversarial fixtures.
+Before any default-on scheduler or M2 claim, retain the earlier requirements for
+independent staged-RTL validation, corpus/simulator differential coverage, and a
+changed-binary high-pressure silicon A/B. Keep those performance claims separate
+from the correctness and literal-coalescing evidence in §§13-15.
 
 ---
 
-## 13. Reviewer Opinion & Verified Welford Findings
+## 13. Integrated Welford Result (Authoritative)
+
+This section supersedes the historical review material retained in Appendices A-C.
+
+### 13.1 Final source tuple
+
+- SFPI build tuple: superproject `3264e3c3a15e9e6bcb782dee8730e574f34bd119`,
+  SFPI-GCC `d9c39fbd15c3e3a1ccefdca3aa994029e07efb57`.
+- TT-Metal producer marker and executable LLK harness:
+  `b6dd63708583a9762cce042a30d5e1ee10872a62`.
+- Installed checked compiler `cc1plus` SHA-256:
+  `284d266fd681a1d40f0e74c586b93eef1b862ca6b915823f4fd77e1c6782c54f`.
+- Primary evidence: `validation/welford-bh-20260815/`.
+
+SFPI-GCC now models opaque raw-LLK LREG ownership explicitly. The no-code
+`sfprawlreg_access(release_mask, write_mask)` marker starts and ends fixed-LREG
+ownership intervals, and the pre-IRA CFG pass keeps those registers unavailable
+to generated temporaries. `0c9adf7d2` fixes live-out placement and documents the
+first operand as a last-use/ownership-release mask. `3b5d6a43d` adds Blackhole
+and Wormhole tests covering straight-line, fallthrough, conditional, loop,
+empty-block, multi-predecessor, repeated-use, and mixed release/write cases.
+
+The generic literal optimization is also integrated. `30b86b491` first removed
+the reload move between low and upper `SFPLOADI` halves, but its early bypass was
+too broad and caused 69 TT assembly-test failures by skipping established
+constant folding. `d9c39fbd1` fixes the design: all immediate shortening and
+constant-register/scalar combines run first; only a remaining single-use,
+otherwise-unsimplifiable low/upper pair is recombined for one-result RTL
+expansion. The complete TT gate then passes with no golden-file churn.
+
+### 13.2 Validation gates
+
+- Solver-enabled checked compiler build: pass (`--with-lp-solve=yes`).
+- Focused WH/BH scheduler validation, MILP required, three determinism runs:
+  pass.
+- TT target DejaGNU gate: pass (`Tests passed. Yay!`).
+- Blackhole P100A physical correctness: 15/15 pass — five selectors at N=1,
+  N=2, and N=32, checking captured L4 mean and L5 M2 against the host Welford
+  reference.
+- Final vFloat N=32 math ELF SHA-256:
+  `81ccafc96c30256758f07e70c547b1ecf0722cb16bf329fe592872877420cfdc`.
+- Final linked disassembly contains zero
+  `SFPLOADI; SFPMOV; SFPLOADI` staging triples (seven before coalescing).
+
+Wormhole produced all compile artifacts but no Wormhole device was available;
+the silicon verdict is therefore **GO-BH-ONLY**, not cross-architecture GO.
+
+### 13.3 Archived Blackhole device result
+
+Each timing sample used a fresh pytest process and device session. Raw and post
+CSV rows were copied immediately after each run and are archived separately.
+
+| Implementation | WELFORD_BODY cycles | Minimum | Mean | Range |
+| :--- | :--- | ---: | ---: | ---: |
+| Handwritten replay | 326 / 326 / 326 | 326 | 326 | 0 |
+| Compiler-generated vFloat direct | 323 / 323 / 323 | 323 | 323 | 0 |
+
+The generated recurrence is 3 cycles (0.92%) faster than handwritten replay in
+this bounded microbenchmark. That is a measured result, not a static instruction
+count estimate.
+
+## 14. Silicon Measurement Reanalysis and Rebuttal (Authoritative)
+
+The earlier rebuttal was right about the central category error: the Welford
+numbers do not demonstrate a pressure-scheduler speedup. It was wrong or stale
+about the exact measurement mechanism, the source relationship between the
+selectors, and the integration state.
+
+### 14.1 What was actually measured
+
+The fixture records a math-TRISC `WELFORD_BODY` profiler-zone delta using device
+`read_wall_clock()` timestamps. It is not pytest wall time and not a raw hardware
+performance-counter event. `TRACE_N=0` removes diagnostic stores, while the zone
+wraps only the recurrence; initialization, wait-for-destination, destination
+completion, and host/runtime overhead are excluded. These are therefore valid,
+repeatable device-body cycles, not end-to-end kernel throughput.
+
+### 14.2 What the selector comparison does not prove
+
+Historical `vFloat direct` and `vFloat rescue` are different source bodies in
+the fixture. The harness did not record an identical-source compiler-flag
+off/on pair with pass dumps and different ELF hashes. Their historical equal
+timings therefore did **not** establish a 0.0% scheduler delta, prove that the
+pass bypassed, or validate a pressure rescue. Likewise, comparing handwritten
+direct with generated vFloat changes implementations and cannot credit the
+pressure scheduler.
+
+The current 323-versus-326 result is instead evidence for the generated vFloat
+body after two generic correctness/QoI changes: raw-LREG ownership modeling and
+late full-literal coalescing. It makes no scheduler-performance claim.
+
+### 14.3 What is now reproducible
+
+The previous criticism that the fixture and primary rows existed only in local
+scratch space is resolved:
+
+- TT-Metal `b6dd6370` commits the executable C++ and Python LLK harness.
+- `validation/welford-bh-20260815/` commits correctness output, per-run raw/post
+  profiler CSVs, compiler-gate artifacts, device/firmware metadata, final
+  disassembly, ELF hashes, commands, and a complete SHA-256 manifest.
+- SFPI pins the exact SFPI-GCC source used for the final rebuild.
+
+The archive intentionally calls the metric a device-body profiler-zone result.
+It does not relabel it as whole-kernel timing.
+
+### 14.4 Corrected engineering conclusion
+
+- Accept the raw-LREG fix as integrated and positively validated for the marked
+  Welford boundary on Blackhole, with broad BH/WH compiler CFG regressions.
+- Accept the literal-coalescing optimization: it preserves the mature immediate
+  simplification pipeline, passes the complete TT gate, removes all seven
+  Welford staging triples, and retains silicon correctness.
+- Accept 323/323/323 versus 326/326/326 as the final pinned Blackhole
+  `WELFORD_BODY` result.
+- Do not infer pressure-scheduler benefit, replay causality, whole-kernel
+  throughput, or Wormhole silicon behavior from this measurement.
+
+## 15. Remaining Follow-Up
+
+The Welford correctness fix, compiler optimization, branch integration, and
+Blackhole microbenchmark archive are complete. They do not require another
+rebuttal cycle.
+
+The remaining work is separate in scope:
+
+1. Run an identical-source, changed-binary `old-peak > 8` pressure-scheduler
+   off/on case on silicon, retaining pass dumps, flags, ELF/disassembly hashes,
+   and three paired device samples. Until then, scheduler silicon benefit is
+   unproven.
+2. Repeat the correctness and timing campaign on Wormhole hardware when one is
+   available.
+3. Add full TRISC/kernel or TT-Metal device-profiler timing if an end-to-end
+   product-throughput claim is required; the archived body metric must not be
+   substituted for it.
+4. Continue annotating other opaque raw-LLK producer/consumer boundaries as
+   they adopt the explicit ownership API. The pass is general, but unmarked raw
+   assembly is intentionally not decoded or guessed by GCC.
+5. The proposed M2 coloring allocator remains audit-only
+   (`colorability=unchecked`) and is not exercised or required by this Welford
+   result.
+
+## Appendix A. Superseded Reviewer Opinion & Welford Findings
+
+The following material is retained as investigation history only. Its status,
+provenance, cycle values, and open-item claims are superseded by §§13-15 above.
 
 *Standing external review, folded in per single-document policy. Checked against the actual tree;
 supersedes and replaces the former standalone review file.*
@@ -1231,7 +1383,9 @@ disassembly + LREG occupancy + SFPMAD/NOP counts + SHA-256 ELF hashes, and devic
 
 ---
 
-## 14. Critical Reanalysis: Separate Scheduler, Raw-LREG Correctness, and Silicon Claims
+## Appendix B. Superseded Silicon Reanalysis
+
+This appendix records the pre-integration critique. See authoritative §14.
 
 The Blackhole result is real and useful, but three distinct conclusions must not be conflated. The
 clean, capture-free Welford-body measurements were 466 cycles for handwritten direct, 326 cycles
@@ -1358,7 +1512,10 @@ correctness fix or conflating uncommitted evidence with nonexistent evidence.
 
 ---
 
-## 15. Rebuttal to the Silicon Validator: The Fix Exists, but Integration and Generality Remain Open
+## Appendix C. Superseded Integration Rebuttal
+
+The integration and CFG objections below were resolved by `0c9adf7d2`,
+`3b5d6a43d`, `d9c39fbd1`, and the committed archive. See authoritative §15.
 
 The silicon validator's correction materially advances the investigation. Both referenced external
 commits are real and inspectable: SFPI-GCC `97df2fddd5f7485235a08f26c6325a82cdd1e824` adds raw-LREG
