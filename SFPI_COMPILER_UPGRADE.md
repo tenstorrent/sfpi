@@ -1349,6 +1349,57 @@ detail?" — the honest prior answer was no: §8 was a one-diagram MLIR vision a
 entire future into one cell. This section is the actual roadmap under the chosen strategy: **extend
 the GCC/sfpi backend; defer MLIR (§8) to an optional later layer.***
 
+### 18.0 Implementation Onboarding (read this first)
+
+Curated reading list for an agent about to *implement* the roadmap. Ordered; honest about what is
+real vs. stub vs. superseded. Paths under `gcc/config/riscv/tt/` are in the **`sfpi-gcc` submodule**
+(from the superproject root that is `gcc/gcc/config/riscv/tt/`).
+
+**One-line brief.** Start on **Track F1 (§18.7)**. You are not writing a new compiler — you are
+replacing the near-binary latency rule in `rtl-rvtt-schedule.cc` with a cost table fit to
+`craq-sim`'s issue-gap model, exposed via a new `rvtt-cost.md` DFA + an extended `rvtt-tune.md`, plus
+a `run-corpus-score.sh` scorer. **The M2 allocator and the MLIR stack do not exist — do not depend on
+them.**
+
+**0. Orient — only the live parts of this doc.** §2.2 (Ground Truth vs Target — read first), §13+§14
+(authoritative Welford result + measurement hygiene), §18 (this roadmap; §18.7 F1 is the first task).
+**Skip / do not build from:** §3.1 ("Non-Normative Target"), §4.2 (the "Target Implementation" C++ —
+*not in the tree*), §8 (MLIR, deferred), Appendices A/B/C (superseded history).
+
+**1. The shipped backend you are extending** (`gcc/config/riscv/tt/`):
+- `gimple-rvtt-lp-schedule.cc` + `rvtt-lpsolve.cc` + `rvtt-schedule.h` — the real pressure scheduler,
+  lp_solve model, and its data structures (the opt-in pass that went green on silicon).
+- `rtl-rvtt-lreg-livein.cc` — the recent raw-LREG-liveness fix; **read as the template** for adding a
+  correct pre-IRA pass (sentinels, CFG dataflow, `INSERT_PASS_BEFORE(pass_ira, …)`).
+- `rtl-rvtt-schedule.cc` — the `xtt_delay` STATIC/DYNAMIC NOP rule (+ the `XTT_DYNAMIC_BUG` scoreboard
+  exception). **F1 swaps its cost source — read closely.**
+- `ttrocc.md` (flat `type`, **no `define_automaton`**) and `rvtt-tune.md` (exists, but **no tensix
+  reservations** today) — the two files F1 turns into a real DFA / cost table.
+- `rvtt.md`, `rvtt-insn.def`, `rvtt-constraints.md` — ISA patterns, builtins, and the `x<N>`
+  single-register-class LREG pinning.
+- `rvtt-passes.def` — pass ordering; `riscv.opt` — the two flags, both `Init(0)`.
+- `rtl-rvtt-replay.cc` — **existing** replay codegen; Track D (§18.8) extends this, it is not a blank
+  slate.
+- `include/sfpi_classes.h` (superproject) — how `l_reg[Lx]` / `vFloat` lower to builtins.
+- ⚠️ `rtl-rvtt-lp-alloc.cc` — a 133-line **dump-only stub** (`colorability=unchecked`). **Do NOT build
+  on it or assume the M2 allocator exists.**
+
+**2. The machine model / cost oracle** (`/root/craq-sim`):
+- `src/tensix.cpp` — issue gaps + `busy_until` timers (`tensix_sfpu_issue_gap`, `math_busy_until`,
+  ~L2251–2283, L478–494); SFPU/DST/`l_regs`/`load_macro_*` execution (Tracks B/D).
+- `src/libttsim.cpp` — per-cycle clock loop, the 5 issue classes + priority (~L2265–2280), and the
+  profile counters that emit device cycles (~L260–277).
+- `src/sim.h` — `TensixState` (l_regs, dst, rwc). `scripts/perf/` — existing perf extraction to mirror
+  in `run-corpus-score.sh`.
+
+**3. Build, validate, reproduce:**
+- `scripts/build.sh` (with `SFPI_WITH_LP_SOLVE=yes`) and `scripts/validate-sfpu-pressure-scheduler.sh`
+  — the pinned build + validation lane (§10.1).
+- `gcc/.../testsuite/g++.target/riscv/tt/tensix/raw-lreg-livein*.C` — the raw-LREG regressions; the
+  pattern for a *discriminating* test.
+- `validation/welford-bh-20260815/` — the archived silicon run. Note there is **no from-source
+  reproduction path yet**, only this archive — building that path is F1's first milestone (§18.7 M-F1.0).
+
 ### 18.1 What "SOTA" means here (definition + baseline)
 
 SOTA is a claim relative to a baseline, so fix one: **match or beat the hand-tuned TT-LLK
