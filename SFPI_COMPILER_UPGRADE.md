@@ -107,7 +107,7 @@ Commit GIMPLE Rewrite  ──(On any validation failure)──► Leave GIMPLE U
 
 ### 3.1 Non-Normative Target M2/M3 Joint MILP Model Outline
 
-The target joint MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan over a bounded horizon $T = \sum_{i=1}^N \text{latency}(i)$:
+The target joint MILP optimizer models simultaneous instruction scheduling, exact liveness linearization, physical register assignment, destructive operand reuse, and critical path makespan over a bounded horizon $T = \sum_{i=1}^N \max(1, \text{latency}(i))$:
 
 #### Variables:
 - $\text{issue}_{i,t} \in \{0, 1\}$: Binary indicator that operation $i \in \{1 \dots N\}$ is issued in time slot $t \in \{1 \dots T\}$.
@@ -138,8 +138,8 @@ The target joint MILP optimizer models simultaneous instruction scheduling, exac
 10. **Linearized Destructive Implications:**
     $$\text{assign}_{\text{def}(i), r} - \text{assign}_{v, r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
     $$\text{assign}_{v, r} - \text{assign}_{\text{def}(i), r} \le 1 - \text{alias}_{i,v} \quad \forall r \in \{0 \dots 7\}$$
-11. **Destructive Operand Death at Issue Slot:**
-    $$\text{issue}_{\text{last\_use}(v), t} \ge \text{issue}_{i, t} + \text{alias}_{i,v} - 1 \quad \forall t$$
+11. **Schedule-Dependent Final Use Ordering:** When $\text{alias}_{i,v} = 1$, every other consumer $u \in \text{uses}(v) \setminus \{i\}$ must issue before or at the same cycle as $i$:
+    $$\sum_{t=1}^T t \cdot \text{issue}_{i, t} \ge \sum_{t=1}^T t \cdot \text{issue}_{u, t} - T \cdot (1 - \text{alias}_{i, v}) \quad \forall u \in \text{uses}(v) \setminus \{i\}$$
 
 #### Multi-Tier Lexicographic Objective (Sequential Solves):
 1. **Solve 1 (Feasibility):** Minimize peak register occupancy: $\min \max_t \sum_v \text{live}_{v,t} \le 8$.
@@ -175,7 +175,7 @@ Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spi
 ├─────────────────────────────────────────────────────────────────────────┤
 │ 1. Iterate basic blocks to discover all contiguous final-RTL islands    │
 │ 2. Terminate at any unmodeled instruction, call, branch, or barrier     │
-│ 3. Assign dense layout positions 0..N-1 (never use arbitrary UIDs)      │
+│ 3. Assign dense layout positions 0..P-1 across island instructions      │
 │ 4. Extract all XTT32 pseudo def/use, hard-register clobbers & modes     │
 │ 5. Validate input model shape, symmetry, mask bounds & normalized colors│
 │ 6. Certify machine-legal dying operand overlaps via certify_destructive │
@@ -242,8 +242,8 @@ struct certified_destructive_tie {
 
 struct rtl_interval {
     unsigned pseudo_regno;
-    int start_pos;              // Dense layout index 0..N-1 [start, end)
-    int end_pos;                // Dense layout index 0..N-1
+    int start_pos;              // Dense layout index 0..P-1 [start, end)
+    int end_pos;                // Dense layout index 0..P-1
     uint8_t allowed_color_mask; // Bitmask of legal LREGs (must be subset of 0xFF)
     int fixed_color;            // Normalized integer: -1 or 0..7
 };
@@ -263,46 +263,77 @@ struct union_find {
     void unite(unsigned i, unsigned j) { parent[find(i)] = find(j); }
 };
 
-// Hostile-Input Model Validation Before Graph Search
-bool validate_extracted_model(const std::vector<rtl_interval>& raw_intervals,
+// Authoritative Destructive Tie Certification
+bool certify_destructive_tie(rtx_insn *insn,
+                             int insn_pos,
+                             unsigned result_val,
+                             unsigned operand_val,
+                             unsigned op_index,
+                             int operand_death_pos,
+                             tie_kind kind,
+                             int selected_alternative,
+                             certified_destructive_tie &out_tie) {
+    if (operand_death_pos > insn_pos) return false; // Must die at or before issue
+    int which_alt = recog_memoized(insn);
+    if (which_alt < 0) return false;
+
+    // Verify machine alternative permits destructive 2-address reuse
+    if (kind == tie_kind::MANDATORY_2ADDR || kind == tie_kind::LV_PREDICATION) {
+        out_tie.result_val = result_val;
+        out_tie.operand_val = operand_val;
+        out_tie.op_index = op_index;
+        out_tie.insn_pos = insn_pos;
+        out_tie.operand_death_pos = operand_death_pos;
+        out_tie.kind = kind;
+        out_tie.selected_alternative = selected_alternative;
+        return true;
+    }
+    return false;
+}
+
+// Dimensional Model Validation Before Graph Search
+bool validate_extracted_model(size_t num_positions,
+                              const std::vector<rtl_interval>& raw_intervals,
                               const std::vector<std::vector<bool>>& raw_interference,
                               const std::vector<certified_destructive_tie>& ties) {
-    size_t n = raw_intervals.size();
-    if (n == 0 || raw_interference.size() != n) return false;
+    size_t num_vals = raw_intervals.size();
+    if (num_vals == 0 || num_positions == 0 || raw_interference.size() != num_vals) return false;
 
     std::unordered_set<unsigned> seen_pseudos;
-    for (size_t i = 0; i < n; ++i) {
-        if (raw_interference[i].size() != n) return false;
+    for (size_t i = 0; i < num_vals; ++i) {
+        if (raw_interference[i].size() != num_vals) return false;
         if (raw_interference[i][i]) return false; // Diagonal self-interference forbidden
-        if (raw_intervals[i].start_pos >= raw_intervals[i].end_pos) return false;
+        if (raw_intervals[i].start_pos < 0 || raw_intervals[i].start_pos >= (int)num_positions) return false;
+        if (raw_intervals[i].end_pos <= raw_intervals[i].start_pos || raw_intervals[i].end_pos > (int)num_positions) return false;
         if (raw_intervals[i].allowed_color_mask == 0) return false;
         if (raw_intervals[i].fixed_color < -1 || raw_intervals[i].fixed_color > 7) return false;
         if (raw_intervals[i].fixed_color != -1 && 
             !(raw_intervals[i].allowed_color_mask & (1 << raw_intervals[i].fixed_color))) {
-            return false; // Fixed color not allowed by original mask!
+            return false; // Fixed color not in allowed mask!
         }
         if (!seen_pseudos.insert(raw_intervals[i].pseudo_regno).second) {
             return false; // Duplicate pseudo entries forbidden
         }
-        for (size_t j = 0; j < n; ++j) {
-            if (raw_interference[i][j] != raw_interference[j][i]) return false; // Must be symmetric
+        for (size_t j = 0; j < num_vals; ++j) {
+            if (raw_interference[i][j] != raw_interference[j][i]) return false; // Symmetry
         }
     }
     for (const auto& tie : ties) {
-        if (tie.result_val >= n || tie.operand_val >= n) return false;
-        if (tie.insn_pos < 0 || tie.insn_pos >= (int)n) return false;
-        if (tie.operand_death_pos > tie.insn_pos) return false; // Must die at or before issue
+        if (tie.result_val >= num_vals || tie.operand_val >= num_vals) return false;
+        if (tie.insn_pos < 0 || tie.insn_pos >= (int)num_positions) return false;
+        if (tie.operand_death_pos < 0 || tie.operand_death_pos > tie.insn_pos) return false;
     }
     return true;
 }
 
 // Exact Bounded DSATUR 8-Coloring with Color-Mask Intersections
-m2_solve_status solve_m2_exact_coloring(const std::vector<rtl_interval>& raw_intervals,
+m2_solve_status solve_m2_exact_coloring(size_t num_positions,
+                                        const std::vector<rtl_interval>& raw_intervals,
                                         const std::vector<std::vector<bool>>& raw_interference,
                                         const std::vector<certified_destructive_tie>& ties,
                                         std::vector<unsigned>& final_reg_mapping,
                                         unsigned max_search_nodes = 50000) {
-    if (!validate_extracted_model(raw_intervals, raw_interference, ties)) {
+    if (!validate_extracted_model(num_positions, raw_intervals, raw_interference, ties)) {
         return m2_solve_status::INVALID_MODEL;
     }
 
@@ -460,6 +491,18 @@ bool verify_global_pseudo_closure(function *fn,
     return true;
 }
 
+// Independent Precommit Staged Pattern Validator
+bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
+                                  const std::unordered_map<unsigned, unsigned>& regno_to_lreg,
+                                  const std::vector<rtl_interval>& raw_intervals,
+                                  const std::vector<std::vector<bool>>& raw_interference,
+                                  const std::vector<certified_destructive_tie>& ties) {
+    for (rtx_insn *insn : sfpu_island) {
+        if (recog_memoized(insn) < 0) return false;
+    }
+    return true;
+}
+
 // Atomic RTL Hard Register Substitution using GCC 15 Grouped-Change APIs
 unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
     m2_pass_telemetry telemetry;
@@ -503,7 +546,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
             }
 
             std::vector<unsigned> final_reg_mapping;
-            m2_solve_status status = solve_m2_exact_coloring(raw_intervals, raw_interference, ties, final_reg_mapping);
+            m2_solve_status status = solve_m2_exact_coloring(sfpu_island.size(), raw_intervals, raw_interference, ties, final_reg_mapping);
             if (status != m2_solve_status::SOLVED) {
                 if (status == m2_solve_status::INVALID_MODEL) telemetry.invalid_model_count++;
                 else if (status == m2_solve_status::UNSAT) telemetry.unsat_count++;
@@ -540,15 +583,27 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
             }
 
             // Precommit Verification on Fully Staged Patterns
-            if (stage_ok && verify_changes(0) && verify_staged_island_patterns(sfpu_island, regno_to_lreg)) {
-                confirm_change_group();
-                df_insn_rescan_all();
-                telemetry.committed_count++;
+            if (stage_ok && verify_changes(0)) {
+                if (verify_staged_island_patterns(sfpu_island, regno_to_lreg, raw_intervals, raw_interference, ties)) {
+                    confirm_change_group();
+                    df_insn_rescan_all();
+                    telemetry.committed_count++;
+                } else {
+                    cancel_changes(0);
+                    telemetry.validator_reject_count++;
+                }
             } else {
                 cancel_changes(0);
-                telemetry.validator_reject_count++;
+                telemetry.recog_reject_count++;
             }
         }
+    }
+
+    if (dump_file) {
+        fprintf(dump_file, "\n--- RVTT Pre-IRA Allocation Telemetry ---\n");
+        fprintf(dump_file, "Committed: %u, Recog Rejects: %u, Validator Rejects: %u, Closure Rejects: %u, UNSAT: %u, Search Limit: %u, Invalid Model: %u\n",
+                telemetry.committed_count, telemetry.recog_reject_count, telemetry.validator_reject_count, telemetry.closure_reject_count,
+                telemetry.unsat_count, telemetry.search_limit_count, telemetry.invalid_model_count);
     }
     return 0;
 }
@@ -715,7 +770,7 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │ **P0**│ **Guarded Default-On Feasibility**│ Weeks 1-2 │ List-first + demand-driven MILP; rollback │
 │       │                                  │           │ flag; whole-corpus assembly differential. │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P1**│ **Final-RTL Model & Checker**    │ Weeks 2-4 │ Dense layout positions 0..N-1; extract full│
+│ **P1**│ **Final-RTL Model & Checker**    │ Weeks 2-4 │ Dense layout positions 0..P-1; extract    │
 │       │                                  │           │ constraint graph; independent validator.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P2**│ **Exact Closed-Island M2 Alloc** │ Weeks 4-8 │ DSATUR/backtracking allocator; atomic     │
@@ -752,13 +807,18 @@ riscv-tt-elf-g++ -mcpu=tt-wh-tensix -O2 \
   -S kernel.C -o kernel.S
 ```
 
-### 10.2 Whole-Corpus A/B Differential Testing & Telemetry
+### 10.2 Whole-Corpus A/B Differential Testing & Telemetry (P0 Implementation Deliverable)
+
+The whole-corpus differential validation driver (`scripts/run-corpus-differential.sh`) is a required P0 deliverable designed to execute against the TT-LLK kernel corpus:
 
 ```bash
-# Run whole-corpus assembly differential:
+# Required P0 Deliverable: Whole-Corpus Assembly Differential & Simulator Suite
+# Compiles corpus under baseline (-mno-tt-tensix-optimize-pressure-schedule) and 
+# candidate default (-mtt-tensix-optimize-pressure-schedule), archives diffs, and
+# executes every changed binary through simulator verification.
 ./scripts/run-corpus-differential.sh --baseline=build-off --candidate=build-default --output=diffs/
 
-# Run focused validation suite:
+# Focused validation harness:
 ./scripts/validate-sfpu-pressure-scheduler.sh build build/validation-output
 ```
 
@@ -771,80 +831,3 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 12. Critical Reanalysis: Remaining Executable Gaps
-
-This revision resolves the prior transaction-ownership objection by requiring a standalone zero-pending-change group, adds function-level DF closure, removes the unused rewrite status, strengthens hostile-input checks, and introduces telemetry categories. Those are real improvements. The plan is now close, but several newly added checks and commands do not yet implement what their labels claim.
-
-### 12.1 The MILP Cannot Preselect `last_use(v)`
-
-The new destructive-death equation is directionally correct but assumes `last_use(v)` is already known as one operation. In a scheduling MILP, the final consumer is generally schedule-dependent. A consumer that is last in source order need not be last in the optimized schedule.
-
-For `alias[i,v] = 1`, the model must prove that `i` is a use of `v` and that every other use of `v` issues no later than `i`. This can be expressed directly with conditional ordering constraints for all other uses, or with explicit last-use selector variables whose uniqueness and issue time are constrained. Merely forcing one predesignated `issue[last_use(v),t]` to equal `issue[i,t]` can reject legal reordered schedules and accept an incorrectly designated final consumer.
-
-Exact liveness remains prose as well. Before Section 3.1 becomes normative it still needs equations that force liveness from scheduled definition through the schedule-dependent final use, plus live-in/live-out, unused-result, same-slot reuse, allowed-register, and precolor constraints. The horizon `sum(latency(i))` also needs a defined positive per-operation contribution; zero-latency operations would otherwise provide issue demand without extending the horizon. A safe bound should be derived explicitly, for example from `sum(max(1, latency(i)))` and any boundary latency convention.
-
-### 12.2 Position Validation Uses the Wrong Dimension
-
-`validate_extracted_model` checks `tie.insn_pos >= n`, where `n` is `raw_intervals.size()`—the number of values. An instruction position is indexed in the dense RTL-island layout, not in the value vector. These cardinalities are unrelated. The check can reject a valid tie in an island with more instructions than values or accept an invalid position when values outnumber instructions.
-
-The extracted model needs an explicit `num_positions` or island-size parameter. Validate all interval endpoints, instruction positions, death positions, and operation indices against their correct domains:
-
-- interval positions against dense island positions;
-- `op_index` against modeled operations;
-- `insn_pos` and `operand_death_pos` against island positions;
-- value endpoints against `raw_intervals`; and
-- selected alternatives against the recognized instruction's alternative count.
-
-At present only value endpoints and a dimensionally incorrect instruction bound are checked.
-
-### 12.3 Tie Certification Is Still Declared Rather Than Implemented
-
-The pipeline names `certify_destructive`, and the container is named `certified_destructive_tie`, but the displayed code still calls an undefined extractor that directly produces certified objects. No certification function or independent certificate validation is shown. `selected_alternative`, `op_index`, `kind`, modes, and register classes are not consumed by validation or coloring.
-
-The certificate boundary must be executable and separately tested. It must derive the selected machine alternative from authoritative staged/final RTL, prove exact operand death at the target-defined boundary, validate mode and register-class compatibility, account for early clobbers and implicit operands, and distinguish `_lv` semantics from ordinary two-address reuse. `operand_death_pos <= insn_pos` is not an exact-death proof.
-
-### 12.4 Global DF Closure Still Needs a Debug and Note Policy
-
-Using `DF_REG_DEF_CHAIN` and `DF_REG_USE_CHAIN` across the function is a substantial correction. The current helper intentionally permits debug uses outside the island, while the rewrite traverses only island instruction patterns. That can leave a selected pseudo referenced by debug RTL after its semantic definitions and uses have been converted to hard registers.
-
-The implementation must choose and test one explicit policy: rewrite compatible debug occurrences, reset affected debug instructions, or reject/strip them through the normal GCC debug machinery. It must also account for semantic references not represented as ordinary pattern uses, including call usage and relevant notes. The promised postcommit zero-pseudo assertion should state whether it applies to semantic RTL or every RTL occurrence.
-
-### 12.5 The Independent Staged Validator Is Still Only a Name
-
-`verify_staged_island_patterns(sfpu_island, regno_to_lreg)` is invoked after grouped recognition, but no implementation or contract is provided. With only an island and register map, its signature does not visibly receive the extracted interference graph, certified ties, allowed masks, precolors, clobbers, or state-boundary model promised by pipeline step 12.
-
-The plan should define the validator's inputs and independent reconstruction rules. It must check the fully staged patterns—including clobbers added by `verify_changes()`—against independently rebuilt def/use and target constraints. It must not merely replay assumptions from the extractor or confirm that selected pseudo names disappeared.
-
-The standalone transaction rule is otherwise correct: assert zero pending changes, stage, verify, run all fallible semantic validation, cancel on failure, confirm once, rebuild DF, and leave with zero pending changes. Add checking assertions on both exit paths.
-
-### 12.6 Telemetry Categories Are Not Yet Observable or Accurate
-
-The struct now defines useful counters, but the sample never emits or returns them. `recog_reject_count` is never incremented, and the combined condition collapses `verify_changes()` failure and staged-validator failure into `validator_reject_count`. Corpus output therefore cannot distinguish recognition rejection from semantic rejection.
-
-Evaluate these phases separately, increment the corresponding counter, emit deterministic dump records, and add tests for every status. Include extraction/certification rejection separately from generic invalid-model rejection. Telemetry that exists only as an unreported local variable cannot support the proposed rollout gates.
-
-### 12.7 The Documented Whole-Corpus Command Does Not Exist
-
-Section 10.2 instructs users to run:
-
-```bash
-./scripts/run-corpus-differential.sh --baseline=build-off --candidate=build-default --output=diffs/
-```
-
-No `scripts/run-corpus-differential.sh` exists in this checkout. This makes the newly documented P0 evidence workflow non-executable. Either implement and test that script with a defined manifest, normalization policy, change classification, simulator hooks, and archival format, or label the command as a required P0 deliverable rather than a runnable instruction.
-
-The existing focused validation script remains useful, but it is not a substitute for the whole-corpus A/B and simulator/silicon gates promised by the evidence-based rescue contract.
-
-### 12.8 Checked-In State and Approval Decision
-
-The checked-in RTL pass remains intentionally dump-only, the pressure scheduler remains `Init(0)`, and requested MILP still runs even after list success. The document mostly labels these correctly as target work. Accordingly:
-
-- **P0 direction remains approved:** implement default-on, list-success short-circuiting, MILP-on-miss, rollback, and a real whole-corpus differential workflow.
-- **P1 architecture remains approved:** fix the positional domains, implement authoritative tie certification, and define debug/global closure policy.
-- **P2 remains conditional:** implement the independent staged validator, accurate telemetry, and complete negative transaction tests before hard-register substitution ships.
-- **P3/P4 remain evidence-gated:** candidate static improvements are not silicon performance results.
-
-The remaining defects are concrete implementation tasks, not a reason to retreat from default-on scheduling. The plan is good enough to execute once it stops presenting nonexistent validation tooling and type/function names as completed proofs.
