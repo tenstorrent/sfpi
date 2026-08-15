@@ -1,0 +1,5 @@
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/post.csv 445
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/raw.csv
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay] WELFORD_DEVICE_PROFILE impl=handwritten_replay math_cycles=326

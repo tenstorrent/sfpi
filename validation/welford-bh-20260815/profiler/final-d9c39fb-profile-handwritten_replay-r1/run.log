@@ -1,0 +1,11 @@
+
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay] WELFORD_DEVICE_PROFILE impl=handwritten_replay math_cycles=326
+PASSED
+---------------------------- live log sessionfinish ----------------------------
+2026-08-15 10:58:40 | INFO     | helpers.perf.core:combine_perf_reports:529 - Raw appending: /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/temp/tt-llk-build/temp_perf_data/test_sfpu_welford_prefix_snapshot.master.csv
+2026-08-15 10:58:40 | INFO     | helpers.perf.core:combine_perf_reports:554 - Post appending: /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/temp/tt-llk-build/temp_perf_data/test_sfpu_welford_prefix_snapshot.master.post.csv
+2026-08-15 10:58:42 | WARNING  | helpers.perf.core:_write_run_parquet:476 - perf Parquet: 2 column(s) not in the schema were dropped
+2026-08-15 10:58:42 | INFO     | helpers.perf.core:_write_run_parquet:479 - Wrote run Parquet batch: /localdev/nkapre/tt-metal-sfpi-welford-full-trace/tt_metal/tt-llk/perf_data/local.parquet
+
+
+============================== 1 passed in 4.97s ===============================

@@ -1,0 +1,5 @@
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/post.csv 445
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/raw.csv
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[2-vfloat_direct] WELFORD_DEVICE_PROFILE impl=vfloat_direct math_cycles=323

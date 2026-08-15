@@ -1,0 +1,30 @@
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/post.csv 445
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/raw.csv
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r1/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay] WELFORD_DEVICE_PROFILE impl=handwritten_replay math_cycles=326
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r2/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r2/post.csv 445
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r2/raw.csv
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r2/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay] WELFORD_DEVICE_PROFILE impl=handwritten_replay math_cycles=326
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/post.csv 445
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/raw.csv
+9fe7f18a46fec3137c786c235c0b6a04c6a9155c2b3d1153ebdb3c3c966ca735  /localdev/nkapre/final-d9c39fb-profile-handwritten_replay-r3/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[1-handwritten_replay] WELFORD_DEVICE_PROFILE impl=handwritten_replay math_cycles=326
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/post.csv 445
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/raw.csv
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r1/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[2-vfloat_direct] WELFORD_DEVICE_PROFILE impl=vfloat_direct math_cycles=323
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r2/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r2/post.csv 445
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r2/raw.csv
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r2/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[2-vfloat_direct] WELFORD_DEVICE_PROFILE impl=vfloat_direct math_cycles=323
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r3/raw.csv 445
+/localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r3/post.csv 445
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r3/raw.csv
+3c995683117d448bb903ceca2a483647983b228db0d934342394f7a4a7b5de34  /localdev/nkapre/final-d9c39fb-profile-vfloat_direct-r3/post.csv
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_device_profile[2-vfloat_direct] WELFORD_DEVICE_PROFILE impl=vfloat_direct math_cycles=323

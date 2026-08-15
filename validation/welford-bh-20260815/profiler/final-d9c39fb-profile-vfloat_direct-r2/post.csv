@@ -1,0 +1,3 @@
+formats.input_A,formats.input_B,formats.register_A,formats.register_B,formats.output,formats.sfpu_math,unpack_to_dest,dest_acc,speed_of_light,trace_impl,trace_n,marker,mean(MATH_ISOLATE),TEXT_SIZE(MATH_ISOLATE)
+Float16_b,Float16_b,Float16_b,Float16_b,Float16_b,Float16_b,False,DestAccumulation.No,False,2,0,KERNEL,737.0,3019
+Float16_b,Float16_b,Float16_b,Float16_b,Float16_b,Float16_b,False,DestAccumulation.No,False,2,0,WELFORD_BODY,323.0,3019

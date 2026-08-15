@@ -1,0 +1,168 @@
+
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[1-0-handwritten_direct] PREFIX_ABI impl=handwritten_direct n=1 reg=LREG0 value0=0
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG1 value0=2.8125
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG3 value0=1.375
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG4 value0=-3.53125
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG5 value0=0
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG6 value0=-3.53125
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG7 value0=1
+PREFIX_ABI impl=handwritten_direct n=1 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_direct n=1 mean_max_abs=0 m2_max_abs=0
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[1-1-handwritten_replay] PREFIX_ABI impl=handwritten_replay n=1 reg=LREG0 value0=0
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG1 value0=2.8125
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG3 value0=1.375
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG4 value0=-3.53125
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG5 value0=0
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG6 value0=-3.53125
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG7 value0=1
+PREFIX_ABI impl=handwritten_replay n=1 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_replay n=1 mean_max_abs=0 m2_max_abs=0
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[1-2-vfloat_direct] PREFIX_ABI impl=vfloat_direct n=1 reg=LREG0 value0=0
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG1 value0=2.8125
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG4 value0=-3.53125
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG5 value0=0
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG6 value0=-3.53125
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG7 value0=0.03125
+PREFIX_ABI impl=vfloat_direct n=1 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_direct n=1 mean_max_abs=0 m2_max_abs=0
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[1-3-vfloat_rescue] PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG0 value0=0
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG1 value0=2.8125
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG4 value0=-3.53125
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG5 value0=0
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG6 value0=-3.53125
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG7 value0=0.03442383
+PREFIX_ABI impl=vfloat_rescue n=1 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_rescue n=1 mean_max_abs=0 m2_max_abs=0
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[1-4-vfloat_manual_early_fold] PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG0 value0=0
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG1 value0=2.8125
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG4 value0=-3.53125
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG5 value0=0
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG6 value0=-3.53125
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG7 value0=3.53125
+PREFIX_ABI impl=vfloat_manual_early_fold n=1 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_manual_early_fold n=1 mean_max_abs=0 m2_max_abs=0
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-0-handwritten_direct] PREFIX_ABI impl=handwritten_direct n=2 reg=LREG0 value0=0
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG1 value0=3.171875
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG3 value0=1.375
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG4 value0=-0.359375
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG5 value0=20
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG6 value0=-0.359375
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG7 value0=0.5
+PREFIX_ABI impl=handwritten_direct n=2 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_direct n=2 mean_max_abs=0 m2_max_abs=0.121582
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-1-handwritten_replay] PREFIX_ABI impl=handwritten_replay n=2 reg=LREG0 value0=0
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG1 value0=3.171875
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG3 value0=1.375
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG4 value0=-0.359375
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG5 value0=20
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG6 value0=-0.359375
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG7 value0=0.5
+PREFIX_ABI impl=handwritten_replay n=2 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_replay n=2 mean_max_abs=0 m2_max_abs=0.121582
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-2-vfloat_direct] PREFIX_ABI impl=vfloat_direct n=2 reg=LREG0 value0=6.34375
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG1 value0=3.171875
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG4 value0=-0.359375
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG5 value0=20
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG6 value0=3.171875
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG7 value0=0.03125
+PREFIX_ABI impl=vfloat_direct n=2 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_direct n=2 mean_max_abs=0 m2_max_abs=0.121582
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-3-vfloat_rescue] PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG0 value0=6.34375
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG1 value0=3.171875
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG4 value0=-0.359375
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG5 value0=20
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG6 value0=3.171875
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG7 value0=0.03442383
+PREFIX_ABI impl=vfloat_rescue n=2 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_rescue n=2 mean_max_abs=0 m2_max_abs=0.121582
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[2-4-vfloat_manual_early_fold] PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG0 value0=6.34375
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG1 value0=3.171875
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG2 value0=-0.28125
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG3 value0=1.375
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG4 value0=-0.359375
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG5 value0=20
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG6 value0=3.171875
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG7 value0=3.53125
+PREFIX_ABI impl=vfloat_manual_early_fold n=2 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_manual_early_fold n=2 mean_max_abs=0 m2_max_abs=0.121582
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[32-0-handwritten_direct] PREFIX_ABI impl=handwritten_direct n=32 reg=LREG0 value0=2.640625
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG1 value0=-0.1020508
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG2 value0=-1.15625
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG3 value0=-3.4375
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG4 value0=-0.2353516
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG5 value0=192
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG6 value0=-0.2353516
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG7 value0=0.03125
+PREFIX_ABI impl=handwritten_direct n=32 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_direct n=32 mean_max_abs=0.001953125 m2_max_abs=0.9746094
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[32-1-handwritten_replay] PREFIX_ABI impl=handwritten_replay n=32 reg=LREG0 value0=2.640625
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG1 value0=-0.1020508
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG2 value0=-1.15625
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG3 value0=-3.4375
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG4 value0=-0.2353516
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG5 value0=192
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG6 value0=-0.2353516
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG7 value0=0.03125
+PREFIX_ABI impl=handwritten_replay n=32 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=handwritten_replay n=32 mean_max_abs=0.001953125 m2_max_abs=0.9746094
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[32-2-vfloat_direct] PREFIX_ABI impl=vfloat_direct n=32 reg=LREG0 value0=-3.5625
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG1 value0=-0.1113281
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG2 value0=-1.15625
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG3 value0=-3.4375
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG4 value0=-0.2353516
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG5 value0=192
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG6 value0=-0.1054688
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG7 value0=0.03442383
+PREFIX_ABI impl=vfloat_direct n=32 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_direct n=32 mean_max_abs=0.001953125 m2_max_abs=0.9746094
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[32-3-vfloat_rescue] PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG0 value0=-3.5625
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG1 value0=-0.1113281
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG2 value0=-1.15625
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG3 value0=-3.4375
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG4 value0=-0.2353516
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG5 value0=192
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG6 value0=-0.1054688
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG7 value0=0.03442383
+PREFIX_ABI impl=vfloat_rescue n=32 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_rescue n=32 mean_max_abs=0.001953125 m2_max_abs=0.9746094
+PASSED
+python_tests/test_sfpu_welford_prefix_snapshot.py::test_sfpu_welford_prefix_snapshot[32-4-vfloat_manual_early_fold] PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG0 value0=-3.5625
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG1 value0=-0.1113281
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG2 value0=-1.15625
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG3 value0=-3.4375
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG4 value0=-0.2353516
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG5 value0=192
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG6 value0=0.03320312
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG7 value0=0.03442383
+PREFIX_ABI impl=vfloat_manual_early_fold n=32 reg=LREG11 value0=-1
+PREFIX_CORRECTNESS impl=vfloat_manual_early_fold n=32 mean_max_abs=0.001953125 m2_max_abs=0.9746094
+PASSED
+
+============================= 15 passed in 49.03s ==============================
