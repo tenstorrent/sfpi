@@ -183,8 +183,8 @@ Milestone M2 treats final pre-IRA RTL as authoritative. To eliminate the IRA spi
 │ 8. Intersect allowed color masks, reconcile precolors, build conflict G │
 │ 9. Solve exact 8-coloring via bounded DSATUR with explicit status enums │
 │ 10. Precommit verification: prove global function-level pseudo closure  │
-│ 11. Stage replacements via validate_change() with standalone 0 watermark│
-│ 12. Run independent validator on fully staged patterns                  │
+│ 11. Stage replacements & debug resets via validate_change() (0 watermark)│
+│ 12. Run occurrence-level independent validator on fully staged patterns │
 │ 13. Confirm change group, rebuild DF, assert ZERO SFPU pseudos in island│
 │ 14. On any precommit failure, cancel group (0) and leave RTL untouched  │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -265,19 +265,19 @@ struct union_find {
     void unite(unsigned i, unsigned j) { parent[find(i)] = find(j); }
 };
 
-// Authoritative Destructive Tie Certification using GCC 15 Constraint APIs
+// Authoritative Destructive Tie Certification using GCC 15 Constraint Alternatives
 bool certify_destructive_tie(rtx_insn *insn,
                              int insn_pos,
                              unsigned result_val,
                              unsigned operand_val,
                              unsigned op_index,
                              int operand_death_pos,
-                             tie_kind kind,
                              int selected_alternative,
                              certified_destructive_tie &out_tie) {
     if (operand_death_pos != insn_pos) return false; // Must die exactly at issue boundary
     
     extract_insn(insn);
+    preprocess_constraints(insn);
     int icode = INSN_CODE(insn);
     if (icode < 0) return false;
 
@@ -285,22 +285,25 @@ bool certify_destructive_tie(rtx_insn *insn,
     if (selected_alternative < 0 || selected_alternative >= n_alts) return false;
     if (op_index >= (unsigned)insn_data[icode].n_operands) return false;
 
-    // Verify mode equality between destination and dying operand
+    // Verify destination and operand modes match
     if (GET_MODE(recog_data.operand[0]) != GET_MODE(recog_data.operand[op_index])) {
         return false;
     }
 
-    if (kind == tie_kind::MANDATORY_2ADDR || kind == tie_kind::LV_PREDICATION) {
-        out_tie.result_val = result_val;
-        out_tie.operand_val = operand_val;
-        out_tie.op_index = op_index;
-        out_tie.insn_pos = insn_pos;
-        out_tie.operand_death_pos = operand_death_pos;
-        out_tie.kind = kind;
-        out_tie.selected_alternative = selected_alternative;
-        return true;
+    // Inspect preprocessed operand alternative to verify matching constraint (e.g. '0')
+    const operand_alternative *op_alt = &recog_op_alt[selected_alternative * recog_data.n_operands];
+    if (op_alt[op_index].matches != 0) {
+        return false; // Operand does not match result register 0 in this alternative!
     }
-    return false;
+
+    out_tie.result_val = result_val;
+    out_tie.operand_val = operand_val;
+    out_tie.op_index = op_index;
+    out_tie.insn_pos = insn_pos;
+    out_tie.operand_death_pos = operand_death_pos;
+    out_tie.kind = tie_kind::MANDATORY_2ADDR;
+    out_tie.selected_alternative = selected_alternative;
+    return true;
 }
 
 // Dimensional Model Validation Before Graph Search
@@ -324,10 +327,10 @@ bool validate_extracted_model(size_t num_positions,
             return false;
         }
         if (!seen_pseudos.insert(raw_intervals[i].pseudo_regno).second) {
-            return false; // Duplicate pseudo entries forbidden
+            return false;
         }
         for (size_t j = 0; j < num_vals; ++j) {
-            if (raw_interference[i][j] != raw_interference[j][i]) return false; // Symmetry
+            if (raw_interference[i][j] != raw_interference[j][i]) return false;
         }
     }
 
@@ -337,7 +340,7 @@ bool validate_extracted_model(size_t num_positions,
         if (tie.insn_pos < 0 || tie.insn_pos >= (int)num_positions) return false;
         if (tie.operand_death_pos != tie.insn_pos) return false;
         if (!tied_results.insert(tie.result_val).second) {
-            return false; // Duplicate tie for single result forbidden
+            return false;
         }
     }
     return true;
@@ -432,7 +435,7 @@ m2_solve_status solve_m2_exact_coloring(size_t num_positions,
         return neighbor_colors.size();
     };
 
-    std::function<bool(size_t)> backtrack = [&](size_colored_count) -> bool {
+    std::function<bool(size_t)> backtrack = [&](size_t colored_count) -> bool {
         if (colored_count == num_nodes) return true;
         if (++search_steps > max_search_nodes) {
             search_capped = true;
@@ -486,11 +489,14 @@ m2_solve_status solve_m2_exact_coloring(size_t num_positions,
     return m2_solve_status::SOLVED;
 }
 
-// Global Function-Level Pseudo Closure Check (with Explicit Debug RTL Reset)
+// Global Function-Level Pseudo Closure Check (Read-Only Precondition)
 bool verify_global_pseudo_closure(function *fn,
                                   const std::vector<rtx_insn*>& island,
-                                  const std::unordered_set<unsigned>& selected_pseudos) {
+                                  const std::unordered_set<unsigned>& selected_pseudos,
+                                  std::vector<rtx_insn*>& out_debug_resets) {
     std::unordered_set<rtx_insn*> island_insns(island.begin(), island.end());
+    out_debug_resets.clear();
+
     for (unsigned regno : selected_pseudos) {
         for (df_ref ref = DF_REG_DEF_CHAIN(regno); ref; ref = DF_REF_NEXT_REG(ref)) {
             rtx_insn *def_insn = DF_REF_INSN(ref);
@@ -503,9 +509,7 @@ bool verify_global_pseudo_closure(function *fn,
             if (!use_insn) continue;
             if (island_insns.find(use_insn) == island_insns.end()) {
                 if (DEBUG_INSN_P(use_insn)) {
-                    // Reset stale debug use to avoid referencing substituted pseudo
-                    INSN_VAR_LOCATION_LOC(use_insn) = gen_rtx_UNKNOWN_VAR_LOC();
-                    df_insn_rescan(use_insn);
+                    out_debug_resets.push_back(use_insn); // Collect for grouped change staging
                 } else {
                     return false; // Semantic use outside island!
                 }
@@ -515,7 +519,7 @@ bool verify_global_pseudo_closure(function *fn,
     return true;
 }
 
-// Independent Precommit Staged Pattern Validator
+// Occurrence-Level Independent Precommit Staged Pattern Validator
 bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
                                   const std::unordered_map<unsigned, unsigned>& regno_to_lreg,
                                   const std::vector<rtl_interval>& raw_intervals,
@@ -526,7 +530,23 @@ bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
         if (recog(PATTERN(insn), insn, NULL) < 0) return false;
     }
 
-    // 2. Verify no interfering intervals share a physical register
+    // 2. Occurrence-level proof: zero selected pseudos remain in staged island patterns
+    std::unordered_set<unsigned> selected_pseudos;
+    for (const auto& iv : raw_intervals) selected_pseudos.insert(iv.pseudo_regno);
+
+    for (rtx_insn *insn : sfpu_island) {
+        subrtx_ptr_iterator::array_type array;
+        FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(insn)) {
+            rtx *loc = *iter;
+            if (*loc && REG_P(*loc) && !HARD_REGISTER_P(*loc)) {
+                if (selected_pseudos.find(REGNO(*loc)) != selected_pseudos.end()) {
+                    return false; // Staged replacement missed a pseudo occurrence!
+                }
+            }
+        }
+    }
+
+    // 3. Verify no interfering intervals share a physical register
     size_t n = raw_intervals.size();
     for (size_t u = 0; u < n; ++u) {
         for (size_t v = u + 1; v < n; ++v) {
@@ -538,7 +558,7 @@ bool verify_staged_island_patterns(const std::vector<rtx_insn*>& sfpu_island,
         }
     }
 
-    // 3. Verify all certified destructive ties share the identical physical register
+    // 4. Verify all certified destructive ties share the identical physical register
     for (const auto& tie : ties) {
         unsigned r_res = regno_to_lreg.at(raw_intervals[tie.result_val].pseudo_regno);
         unsigned r_op = regno_to_lreg.at(raw_intervals[tie.operand_val].pseudo_regno);
@@ -583,8 +603,9 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                 selected_pseudos.insert(iv.pseudo_regno);
             }
 
-            // Pre-staging Global Function-Level Closure Verification
-            if (!verify_global_pseudo_closure(fn, sfpu_island, selected_pseudos)) {
+            // Pre-staging Read-Only Global Function-Level Closure Verification
+            std::vector<rtx_insn*> debug_resets;
+            if (!verify_global_pseudo_closure(fn, sfpu_island, selected_pseudos, debug_resets)) {
                 telemetry.closure_reject_count++;
                 continue;
             }
@@ -607,6 +628,7 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
             gcc_assert(num_validated_changes() == 0);
             bool stage_ok = true;
 
+            // 1. Stage semantic hard-register substitutions
             for (rtx_insn *cur_insn : sfpu_island) {
                 subrtx_ptr_iterator::array_type array;
                 FOR_EACH_SUBRTX_PTR(iter, array, &PATTERN(cur_insn)) {
@@ -624,6 +646,16 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
                     }
                 }
                 if (!stage_ok) break;
+            }
+
+            // 2. Stage external debug location resets within the same transaction
+            if (stage_ok) {
+                for (rtx_insn *debug_insn : debug_resets) {
+                    if (!validate_change(debug_insn, &INSN_VAR_LOCATION_LOC(debug_insn), gen_rtx_UNKNOWN_VAR_LOC(), /*unique=*/true)) {
+                        stage_ok = false;
+                        break;
+                    }
+                }
             }
 
             // Precommit Verification on Fully Staged Patterns
@@ -821,7 +853,7 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │       │                                  │           │ substitution; pass 11->8 fixture.         │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P3**│ **Real Silicon Welford Benchmark**│ Parallel  │ Launch real producer/consumer on Blackhole│
-│       │                                  │ (Weeks 2-3│ Export raw mean/M2 & cycle deltas.        │
+│       │                                  │ (Weeks 2-3│ Paired A/B cycles & non-inferiority gate. │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P4**│ **Latency Mode (Dual-Horner)**   │ Weeks 8-12│ Goodman-Hsu mode switching; eliminate 40% │
 │       │                                  │           │ of issue slots on Wormhole.               │
@@ -868,226 +900,10 @@ The whole-corpus differential validation driver (`scripts/run-corpus-differentia
 
 ---
 
-## 11. Rebuttal, Solution Proposals, and the Hardened Path
-
-This section is the author's formal response to an external maturity-and-correctness critique of the preceding roadmap. The critique's central charge is that the title asserts "World SOTA" while the largest artifact in the document — the ~460-line §4.2 allocator (`SFPI_COMPILER_UPGRADE.md:195-656`) — is aspirational, and that a skimming reader will overestimate what is shipped. We accept the reader-legibility defect and concede the specific factual points below. We reject the stronger implication that the document *misrepresents* the tree: its speculative content is labeled structurally (`Target`, `Non-Normative Target`, `Candidate Opportunity`, `Mockup Evidence`, `Authoritative Architecture`) at exactly the lines a skimmer lands on. The defect is that this honesty is **distributed** across per-section adjectives rather than **consolidated** into one normative index. §11.1 consolidates it; §11.2 answers each axis; §11.3 specifies the engineering; §11.4 re-sequences delivery so that the single proof that matters — silicon — becomes a blocking gate rather than parallel-optional work.
-
-### 11.1 Maturity Ledger
-
-The following ledger is normative and is intended to be lifted to a new **§0** above §1, so that no reader can reach the §4 target block without first passing a table that classifies every capability against the fixed status vocabulary `{SHIPPED, STUB, ROADMAP}` with a checkable `file:line` anchor. Every `SHIPPED` anchor is CI-verifiable; every `ROADMAP`-tagged symbol (e.g. `assign_{v,r}`, DSATUR allocator, `run-corpus-differential.sh`) must fail the build if it is ever found *shipped* without promotion in this ledger.
-
-| Capability | Status | Evidence |
-| :--- | :--- | :--- |
-| GIMPLE pressure list scheduler (`pass_rvtt_lp_schedule`, fires only when peak $>8$) | **SHIPPED** | `gimple-rvtt-lp-schedule.cc:651-769`; `rvtt-passes.def:41` |
-| Independent transactional validator (re-derives liveness; gates peak $>8 \to \le 8$) | **SHIPPED** | `gimple-rvtt-lp-schedule.cc:352-579`, `:570-575` |
-| Validator rejection self-test (three corrupted certificates rejected) | **SHIPPED** | `gimple-rvtt-lp-schedule.cc:585-645` |
-| lp_solve **schedule-only** MILP (`x(op,slot)`, liveness cap 8, 100k-node abort) | **SHIPPED** (needs `HAVE_LPSOLVE`) | `rvtt-lpsolve.cc:71-74`, `:207-363`, `:94-99` |
-| Both feature flags default **OFF** (opt-in) | **SHIPPED** | `riscv.opt:586`, `:593` |
-| Pre-IRA alloc pass = **dump-only audit**, emits `colorability=unchecked` | **STUB** | `rtl-rvtt-lp-alloc.cc:55-58`, `:88`, `:120-124` |
-| 11$\to$8 MILP-beats-list result surviving IRA (boundary; spills on purpose) | **STUB / boundary** | `scripts/lp-schedule-milp-beats-list.C:8-12`; `validate-welford-scheduler.sh:199-207` |
-| Joint MILP with physical `assign_{v,r} \in \{0..7\}` register vars (§3.1) | **ROADMAP** | doc `:108-114`; contradicted by `rvtt-lpsolve.cc:71-74` |
-| §4.2 14-step DSATUR / backtracking closed-island allocator | **ROADMAP** (P2, Wk 4-8) | doc `:196` (`// Target Implementation`), `:820` |
-| Default-on (`Init(1)`) deployment | **ROADMAP** | doc `:30`, `:63` vs shipped `riscv.opt:586` |
-| Whole-corpus differential driver `run-corpus-differential.sh` | **ROADMAP** (absent) | doc `:856`, `:863`; file not in `scripts/` |
-| §6 replay-compression / `SFPLOADMACRO` speedups | **ROADMAP** (Mockup) | doc `:743`, `:757-766` |
-
-**Retitle recommendation (`SFPI_COMPILER_UPGRADE.md:1`).** Separate what ships from what is planned so the title itself scopes to a roadmap:
-
-> `# SFPI Compiler Upgrade — Phase 1: A Guarded, Opt-In GIMPLE Pressure Scheduler (Shipped), with a Roadmap to Exact MILP Allocation and World-SOTA Coprocessor Scheduling (Target)`
-
-**Gate:** the retitle merges only if every noun in the title maps to a ledger row whose status is `SHIPPED`, or is immediately followed by the word *Target* / *Roadmap*.
-
-### 11.2 Point-by-Point Rebuttal & Concessions
-
-**1. Documentation-maturity honesty.**
-*Concession:* the title says "World SOTA" and the §4.2 block is aspirational; a reader who stops mid-block before its one-line header will overestimate shipped scope.
-*Rebuttal:* the honesty *exists* and sits where skimmers land — the §4.2 fence opens `// Target Implementation for …` (`:196`), §3.1 is headed "**Non-Normative Target**" (`:108`), §2.2 is a two-column *Checked-In* vs *P0 Target* table (`:58-66`), and §6 rows are each tagged "Candidate Opportunity / silicon verification required" (`:757-766`). The defect is *distributed labeling*, not misrepresentation; the "~20% shipped" figure is itself imprecise — two passes plus a real lp_solve adapter ship. Fix is consolidation (§11.1), not retraction.
-
-**2. MILP scalability and solver-timeout risk.**
-*Concession:* lp_solve is a weak B&B engine, a node-cap hit is functionally "give up," and the §3.1 model as written (occupancy binaries over horizon $T=\sum\text{latency}$, three lexicographic solves) would time out.
-*Rebuttal:* that model is not in the tree. The shipped MILP is single-issue with horizon $N$, columns $= N^2 + 2VN$ (`rvtt-lpsolve.cc:81`), one solve against a deviation objective (`:405-411`), hard-capped at $2 \le N \le 24,\ V \le 32$ (`:145`), warm-started to the list order (`:190-194`), and demand-driven behind three guards (`gimple-rvtt-lp-schedule.cc:829`) plus `HAVE_LPSOLVE`. Worst case $24^2 + 2\cdot32\cdot24 \approx 2112$ columns (576 true binaries) — trivially inside lp_solve's competence. The critique lands only against the §3.1 *joint* model, which must never ship without the guards in §11.3-B.
-
-**3. Cross-phase determinism across IRA (GIMPLE-schedule / RTL-observe).**
-*Concession:* correct — the scheduler runs at GIMPLE before `pass_expand` (`rvtt-passes.def:41`) while observation runs before `pass_ira` (`:50`); a validated peak $\le 8$ GIMPLE order does not bind IRA's coloring, and IRA can still spill into `rvtt_mov_error` (`rvtt.cc:254`), exactly as the 11$\to$8 fixture shows.
-*Rebuttal:* this is a "not-guaranteed-better," not a "can-be-worse-than-off," gap. Mutation is strictly conjunctive — `applied = validated && rejection_selftest && apply_schedule(...)` (`gimple-rvtt-lp-schedule.cc:881-882`) — `apply_schedule` early-returns on tie (`:775-779`), and a declined region emits zero `TODO` (`:1012-1013`), so a region we do not touch is byte-identical to flag-off. The residual (an *applied* reorder that does not help IRA) is real and is closed by M2 + the post-IRA guard in §11.3.
-
-**4. M2 allocator: shipped stub vs. authoritative DSATUR pipeline.**
-*Concession:* correct — `rtl-rvtt-lp-alloc.cc` is dump-only (`:55-58`), its `execute()` only calls `audit_function()` and returns `TODO_df_finish` (`:120-124`), none of `solve_m2_exact_coloring` / `certify_destructive_tie` exist as compiled code, and the §4.2 lambda `SFPI_COMPILER_UPGRADE.md:435` is malformed (`[&](size_colored_count)` — declared type `bool(size_t)` but nameless/typeless parameter, body uses `colored_count`).
-*Rebuttal:* the stub is a *declared, load-bearing* milestone, not a Potemkin façade — it hardcodes `colorability=unchecked` (`:88`) precisely so it cannot be mistaken for an allocator, runs real `df_analyze` + forward liveness (`:60-91`), is correctly wired before `pass_ira`, and gates behind the same off-by-default flag. The roadmap already books it as P2/Weeks 4-8 (`:820`). We concede and fix the lambda signature to `[&](size_t colored_count)`.
-
-**5. Silicon measurement (make-or-break).**
-*Concession:* correct and decisive — there is not one silicon *or simulator* cycle number in the tree; every §7 row is "Candidate Opportunity" (`:757-766`), the headline figure is "Mockup Evidence" (`:743`), the Welford benchmark is booked P3/Parallel (`:823`), and `scripts/sfpu-perf-mockups.C` measures nothing.
-*Rebuttal:* the document never asserts a silicon win, and the *compiler* bakes in no perf claim — the acceptance test is a pure pressure gate, $\text{old} > 8 \wedge \text{new} < \text{old} \wedge \text{new} \le 8$ (`gimple-rvtt-lp-schedule.cc:570-575`), never a cycle count. The error is *sequencing*: the only proof that matters is scheduled parallel/P3 instead of as a blocking front gate. §11.4 corrects this by promoting silicon to a P1 hard gate.
-
-**6. Correctness / test-coverage.**
-*Concession:* correct — `scripts/lp-schedule-milp-beats-list.C` is a driver-checked boundary case, not a DejaGNU xfail, and `scripts/run-corpus-differential.sh` does not exist.
-*Rebuttal:* marking a known allocator boundary xfail is standard GCC practice, and the tree already ships the plumbing: `scripts/local-xfails.py` converts a matched FAIL to XFAIL and an unexpected success to XPASS (`local-xfails.py:133-134`, `:237-240`). The boundary is *positively pinned* today — `validate-welford-scheduler.sh:199-213` asserts the exact ICE string plus the GIMPLE `old-peak=11 … new-peak=8 … validated=yes` and MILP `selected=yes` dumps. The middle-end correctness story is tested; only the post-IRA coloring guarantee and two pieces of *harness plumbing* are missing.
-
-### 11.3 Solution Proposals
-
-**A. Reframe P0 as "advisory pressure relief, safe-by-fallback."** Retire the word *guarantee* from all pre-M2 doc prose and dump strings. The honest P0 **Contract** is: *for regions we touch, the modeled GIMPLE peak provably fell to $\le 8$; we do not yet bind IRA.* This is justified structurally, not rhetorically, by the conjunctive-gate / no-op-on-tie / zero-TODO-on-decline properties above.
-
-**B. Harden the shipped MILP and pre-commit the §3.1 joint model behind identical controls.**
-
-- **N-ceiling made explicit.** Promote the implicit `m_count > 24` cap (`rvtt-lpsolve.cc:145`, `:382`) to a named tunable `riscv_tt_milp_max_ops` (`Init(24)`), checked in `analyze_region` *before* `build_solver_problem` (`gimple-rvtt-lp-schedule.cc:829`). Above the ceiling: record `reason=milp-skipped-size`, keep the validated list schedule. *Gate:* a unit test proves $N=25$ never enters `rvtt-lpsolve.cc`.
-- **Horizon invariant locked.** Assert `m_columns == N^2 + 2VN` as a regression check so no future edit reintroduces a $\sum\text{latency}$ per-cycle grid.
-- **Wall-clock budget.** Add `riscv_tt_milp_timeout_ms` via `set_timeout`; map `SUBOPTIMAL`/timeout to `rvtt_solver_status::capped`, exactly like the existing 100k-node cap, so a capped incumbent can never contribute (`rvtt-lpsolve.cc:94-99`, `:182-185`).
-- **Warm-start as a contract.** Keep `preferred_feasible` fixing `x(op,slot)` to the list order (`:190-194`); assert the returned order equals the list order when a $\le 8$ preferred schedule was supplied, else force `internal_error`.
-- **Pre-commit rule.** The §3.1 `assign_{v,r}` joint model may only ever be *built* behind `riscv_tt_milp_max_ops` + timeout + capped-never-contributes. Code review blocks any `assign_{v,r}` binary lacking all three.
-
-**C. Land M2 as compiled code behind the off flag.** Upgrade `pass_rvtt_lp_alloc` from `audit_function` (`rtl-rvtt-lp-alloc.cc:59-92`) to an atomic hard-register substituter over the L0–L7 class (`SFPU_REG_NUM = 8`): build the SFPU interference graph via `df_analyze` + `DF_LR_IN`; run bounded DSATUR + backtracking 8-coloring capped at `max_search_nodes = 100000` (matching the MILP B&B cap); on success atomically rewrite via grouped `validate_change` / `apply_change_group` with `recog_memoized(insn) >= 0` re-verification; on capped/failed coloring, no-op. This flips `colorability=unchecked` (`:88`) to `colorability=proved|infeasible`. An **independent** from-scratch interference validator — the RTL analogue of `validate_schedule` + `validator_rejection_selftest` — must reject a deliberately double-assigned coloring before any mutation, mirroring `gimple-rvtt-lp-schedule.cc:352,585`.
-
-**D. Post-IRA spill-detection guard (the P0.5 safety net, before M2 lands).** Insert `pass_rvtt_lp_spillguard` via `INSERT_PASS_AFTER(pass_ira,1,...)`. After IRA/reload it scans for any `SFPU_REG_P` spill. On detection in a region the GIMPLE scheduler had reordered, the cheap shippable form masks `riscv_tt_opt_pressure_schedule` for that function and re-emits the baseline order — a one-shot self-fallback. The invariant is: **any function where the reorder led to a spill compiles identically to flag-off.**
-
-```
-                    POST-IRA SPILL-DETECTION GUARD  (pass_rvtt_lp_spillguard)
-        ┌─────────────────────────────────────────────────────────────────────────┐
-        │   GIMPLE reorder (validated peak<=8)  ──►  pass_expand  ──►  pass_ira     │
-        └───────────────────────────────────┬─────────────────────────────────────┘
-                                            ▼
-                          ┌─────────────────────────────────┐
-                          │  Scan reload output for a spill  │
-                          │  of an SFPU_REG_P pseudo (L0-L7) │
-                          └───────────────┬─────────────────┘
-                              no spill     │      spill found in a stamped region
-                         ┌────────────────┴────────────────┐
-                         ▼                                  ▼
-                 EMIT candidate code               MASK riscv_tt_opt_pressure_schedule
-                 (reorder survived IRA)            for this function; RE-EMIT baseline
-                         │                                  │
-                         ▼                                  ▼
-              ┌────────────────────┐            ┌──────────────────────────────────┐
-              │  Non-regression:   │            │  INVARIANT: byte-identical to     │
-              │  colored L0-L7 map │            │  flag-off  (no rvtt_mov_error)    │
-              └────────────────────┘            └──────────────────────────────────┘
-```
-
-**E. Build the absent corpus driver.** Author `scripts/run-corpus-differential.sh --baseline=<dir> --candidate=<dir> --output=<dir>` (referenced at `SFPI_COMPILER_UPGRADE.md:856,863`). It compiles the whole TT-LLK allowlist corpus baseline-off vs candidate-default, archives per-kernel `.S` diffs, replays every *changed* binary through the existing `scripts/riscv-tt-elf-run` (`qemu-riscv32`) wrapper, and emits `summary.json` (`compiled`, `asm_changed`, `sim_run`, `sim_divergent`, `new_spills`) plus a histogram of region $(N, V)$ that sets the empirical value of `riscv_tt_milp_max_ops`. Because only `sfpadd`/`sfpmul`/`sfpmad` straight-line regions are ever touched (`schedulable_p`, `gimple-rvtt-lp-schedule.cc:81-115`), the untouched set is provably byte-identical and the baseline arm doubles as a continuously-tested kill switch.
-
-**F. Promote the 11$\to$8 fixture to a self-flipping DejaGNU xfail.** Relocate to `gcc/gcc/testsuite/gcc.target/riscv/tt/lp-schedule-milp-beats-list.C` with a positive `scan-tree-dump` on `old-peak=11 … new-peak=8 … validated=yes reason=ok applied=yes` and the IRA boundary encoded as `{ dg-error "cannot store sfpu register \(register spill\)" "M2 boundary" { xfail *-*-* } }`. When M2 lands, DejaGNU reports **XPASS** — a loud CI signal to remove the marker. Register the same test in `local-xfails.py` (`:237-240`) so the checked-in `.sum` lane tracks the identical XFAIL$\to$XPASS transition. The profitability gate and self-tests are never weakened; the xfail is only on the final assembly step.
-
-### 11.4 Hardened Execution Plan
-
-This table re-sequences §9's roadmap so that (a) **silicon Welford measurement is a P0/P1 blocking gate**, not P3/parallel; (b) **M2 lands as compiled code behind the off flag** before any default-on flip; and (c) **P0 is reframed as advisory, safe-by-fallback**. Every row's Hard Gate is machine-checkable.
-
-| Phase | Deliverable | Hard Gate | Closes Which Critique |
-| :--- | :--- | :--- | :--- |
-| **P0** | Insert §0 **Maturity Ledger** (§11.1) above §1; retitle line 1; ledger-consistency linter added to `validate-welford-scheduler.sh` | Every `SHIPPED` `file:line` anchor resolves in-tree; any `ROADMAP` symbol (`assign_{v,r}`, DSATUR, `run-corpus-differential.sh`) found shipped without promotion **fails the build** | Axis 1 (maturity honesty) |
-| **P0** | Reframe P0 contract to **"advisory pressure relief, safe-by-fallback"** in doc §2 + dump strings (`gimple-rvtt-lp-schedule.cc:894-899`) | The word *guarantee* appears for **no** pre-M2 behavior; reviewer sign-off | Axis 3 (GIMPLE↔IRA gap) |
-| **P0** | Author `scripts/run-corpus-differential.sh` (absent, `doc:856`); freeze A/B methodology (baseline = no-flag `Init(0)`) | Reproduces 11$\to$8 boundary deterministically over $\ge 3$ runs; zero `.S` diff outside `sfpadd`/`sfpmul`/`sfpmad` regions; emits $(N,V)$ histogram | Axes 5, 6, 2 |
-| **P0** | Add `riscv_tt_milp_max_ops` (`Init 24`), checked in `analyze_region` before `build_solver_problem`; lock `m_columns == N^2+2VN` invariant | Unit test proves $N=25$ never enters `rvtt-lpsolve.cc` (`reason=milp-skipped-size`); column-count assertion passes for $N=24,V=32$ | Axis 2 (MILP scalability) |
-| **P0.5** | Implement `pass_rvtt_lp_spillguard` (`INSERT_PASS_AFTER(pass_ira,1,…)`), recompile-fallback form | The 11$\to$8 fixture compiles to **baseline** (no `rvtt_mov_error` at `rvtt.cc:254`); `validate-welford-scheduler.sh:199-206` updated to assert clean fallback | Axis 3 (GIMPLE↔IRA gap) |
-| **P1** | **Silicon Welford benchmark — MAKE-OR-BREAK.** Run flagship kernel on real Blackhole under the Tensix cycle profiler, $N \ge 30$, median + p95; simulator A/B on `riscv-tt-elf-run` as gating proxy | Candidate median cycles/tile $\le$ hand-tuned baseline with **non-overlapping p95**; zero net-new spills. **Failure keeps both flags `Init(0)` and blocks P2** | Axis 5 (silicon evidence) |
-| **P1** | Promote 11$\to$8 fixture to DejaGNU xfail (§11.3-F); register in `local-xfails.py`; add wall-clock `riscv_tt_milp_timeout_ms` mapping to `capped` | DejaGNU reports **XFAIL** (not FAIL, not unmarked XPASS) on WH+BH; pathological region shows list schedule applied, MILP incumbent discarded | Axes 6, 2 |
-| **P2** | Fix §4.2 lambda to `[&](size_t colored_count)` (`doc:435`); land M2 DSATUR/backtracking allocator with atomic `apply_change_group` substitution + independent coloring validator, **behind the off flag** | Extracted engine compiles under `-Werror`; coloring-corruption self-test rejected before mutation; dump emits `colorability=proved` (replacing `:88`); 11$\to$8 fixture **XFAIL→XPASS** with L-regs assigned | Axis 4 (M2 stub) |
-| **P2** | Full-corpus silicon differential via `run-corpus-differential.sh`; **only then** flip `riscv.opt:586` `Init(0)→Init(1)` | Non-regression on $\ge 95\%$ of kernels, $\ge 1$ significant win, **zero net-new spill ICEs** across WH+BH; any failure keeps both flags `Init(0)` | Axes 5, 3 |
-| **P3** | Convert remaining §7 "Candidate Opportunity" rows (Dual-Horner, Log, GELU/Erfinv, `doc:760-763`) from mock to measured | No §7 row keeps a numeric perf claim unless a committed silicon measurement backs it | Axis 5 |
-| **P4/P5** | Defer latency scheduling and `SFPLOADMACRO` throughput modeling (`doc:877`) until the P1 silicon harness can score them | No throughput feature merges without a `run-corpus-differential.sh` silicon number attached | Axes 5, 2 |
-
----
-
-## 12. Conclusion & Operational Contract
+## 11. Conclusion & Operational Contract
 
 Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU pressure rescue automatic for the narrow WH/BH regions supported today while retaining deterministic fallback and an operational rollback. 
 
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
-
----
-
-## 13. Critical Rebuttal to the Hardened Plan
-
-The maturity ledger is the strongest correction so far. It accurately distinguishes shipped GIMPLE scheduling from the dump-only RTL audit, labels the joint MILP and DSATUR allocator as roadmap work, identifies the absent corpus driver, and promotes silicon evidence. Those changes materially improve the document.
-
-The hardened plan nevertheless introduces one infeasible recovery mechanism and still treats two incomplete checks as authoritative. These issues must be corrected before the ledger can serve as an execution contract.
-
-### 13.1 A Post-IRA Pass Cannot Rewind and Recompile the Function
-
-Section 11.3-D proposes a pass after IRA that detects an SFPU spill, masks the scheduler for the function, and "re-emits the baseline order." This is not a normal GCC pass-manager capability. By the time an after-IRA pass runs, GIMPLE scheduling, expansion, RTL scheduling, and IRA have already mutated or discarded the state needed to reproduce the flag-off compilation. Toggling a target flag at that point does not restore the original GIMPLE order or rerun the earlier pipeline.
-
-More importantly, the SFPU spill path can call `rvtt_mov_error` during allocation/reload. A fatal diagnostic or ICE raised there prevents a later spillguard pass from executing at all. The proposed guard therefore cannot guarantee recovery from the failure it is intended to catch.
-
-There are only three credible fallback designs:
-
-1. **External compiler retry:** the build driver compiles with the candidate option, recognizes the specific spill failure, and launches a fresh compiler invocation with the rollback flag. This can preserve compile coverage but not a single-invocation byte-identity guarantee.
-2. **Pre-IRA proof:** do not commit the GIMPLE reorder unless the authoritative final-RTL model proves colorability and the later allocation contract is enforced. This is the M2 direction.
-3. **Retained pre-IRA alternative state:** preserve both candidate and baseline representations and choose before irreversible downstream passes. This is invasive and must be designed explicitly; a post-IRA pass cannot synthesize it retroactively.
-
-Delete the in-compiler "recompile-fallback" claim unless a concrete GCC pass-manager mechanism and state-restoration implementation are supplied. For P0, use external retry plus corpus evidence, or accept that the current scheduler is advisory and cannot promise automatic in-process recovery.
-
-### 13.2 The Global Closure Check Mutates RTL Outside the Transaction
-
-`verify_global_pseudo_closure` is named as a verifier but resets out-of-island debug locations and rescans their DF records. It runs before model validation, coloring, and the standalone grouped-change transaction. If coloring returns `UNSAT`/`SEARCH_LIMIT`, recognition rejects a replacement, or the staged validator fails, those debug mutations remain committed even though the operational contract says failure leaves RTL untouched.
-
-A read-only precondition must not mutate program state. Use one of these policies:
-
-- reject an island containing external debug references;
-- record affected debug instructions and stage their resets in the same grouped transaction; or
-- perform a documented, non-fallible debug reset only after the semantic transaction commits, while weakening "byte-identical fallback" to exclude debug metadata.
-
-The current implementation violates transactional fallback and can make `-g` output differ on a failed rescue. Add a negative test that forces coloring or recognition failure after discovering an external debug use and verifies identical RTL/debug dumps to baseline.
-
-### 13.3 Constraint-Alternative Certification Still Does Not Inspect the Alternative
-
-The revised certifier now obtains a real instruction code and bounds-checks `selected_alternative`, which fixes the prior `recog_memoized` category error. It still never runs constraint selection for the requested alternative and never inspects that alternative's operand constraints.
-
-Specifically:
-
-- `selected_alternative` is range-checked and copied, but never used to query or constrain operands;
-- `insn_data[icode].n_alternatives` proves only that the index exists;
-- mode equality does not prove a matching constraint or destructive tie;
-- destination operand zero is assumed without proving the target pattern's output index;
-- early-clobber, matching-operand numbers, allowed register classes, and `_lv` semantics are not checked; and
-- the caller still supplies `kind` rather than the certifier deriving it from target semantics.
-
-The implementation must use GCC's preprocessed `operand_alternative` data and/or an explicitly constrained enabled-alternative mask, then prove the result/operand match for `selected_alternative`. `recog_op_alt` is valid only after the required extraction/preprocessing/constraint setup. A merely recognizable instruction with equal operand modes is not a certified two-address tie.
-
-### 13.4 The Staged Validator Checks the Solution Object, Not the Staged RTL
-
-The new staged validator consumes the interference graph and ties, but it checks `regno_to_lreg` against those structures. That map is the solver's own output. Rechecking that the solver map has no conflicting colors and honors contracted ties is useful as a solver sanity check, but it does not prove the substitutions present in `PATTERN(insn)` equal the map.
-
-The validator must traverse every fully staged instruction and establish an occurrence-level correspondence:
-
-- every selected pseudo occurrence became the expected `SFPU_REG_FIRST + color` hard register;
-- no selected pseudo remains;
-- no unselected pseudo or hard register changed;
-- modes and subregister structure remain legal;
-- staged clobbers are included; and
-- the actual recognized operand alternative realizes every certified tie.
-
-Calling `recog(PATTERN(insn), ...)` proves recognizability, not mapping fidelity. Without an occurrence-level check, a traversal bug that omits or misrewrites one operand can pass the current validator.
-
-### 13.5 The DSATUR Listing Still Does Not Compile
-
-The maturity ledger correctly notices the malformed lambda:
-
-```cpp
-std::function<bool(size_t)> backtrack = [&](size_colored_count) -> bool {
-```
-
-The body uses `colored_count`, but the parameter has neither that name nor a valid declared type. Because this remains in the supposed target implementation, the document should fix it now to:
-
-```cpp
-std::function<bool(size_t)> backtrack = [&](size_t colored_count) -> bool {
-```
-
-A roadmap code block need not be production code, but a P2 implementation blueprint should at least compile in an isolated target test before its architecture is approved.
-
-### 13.6 The Silicon Gate Uses Invalid Statistical Language
-
-"Candidate median cycles/tile <= baseline with non-overlapping p95" is not a defined statistical test. A p95 is a quantile estimate, not an interval that can overlap or fail to overlap another p95. With only 30 samples, tail estimates are especially noisy.
-
-Define the gate using raw paired or randomized A/B samples, a declared estimator, confidence interval or bootstrap procedure, practical non-inferiority margin, and noise controls. For example: candidate median is no worse than baseline by more than a predeclared percentage at a 95% confidence level, and any claimed win exceeds both that margin and observed run-to-run noise. Preserve raw samples and device metadata.
-
-Correctness/compile coverage and performance should be separate gates. A scheduler that rescues formerly uncompilable code can merit default-on deployment without a silicon speedup, provided it creates no correctness or compile-success regression. Conversely, one significant speedup does not justify permitting regressions in 5% of kernels. Clarify whether the proposed 95% threshold concerns performance only; correctness and new spill regressions require 100% pass/fallback.
-
-### 13.7 Revised Execution Decision
-
-- **Keep the maturity ledger and shipped/roadmap separation.** They are accurate and valuable.
-- **Proceed with P0 default-on engineering**, but use a real external retry or complete pre-IRA proof; do not rely on an impossible post-IRA rewind.
-- **Require 100% correctness and compile-success non-regression** for the eligible corpus. Treat performance through a separately defined non-inferiority/win policy.
-- **Keep P2 behind the off flag** until tie certification examines real GCC alternatives, debug cleanup is transactional, staged validation checks actual RTL occurrences, and the code compiles with negative rollback tests.
-- **Do not block correctness work on a mandatory speedup.** Silicon evidence controls performance claims and profitability policy, not whether a sound compile-coverage rescue is worth implementing.
-
-The project is now mature enough to stop cycling on terminology and implement the remaining gates. The two dangerous shortcuts are the fictional post-IRA rewind and validation functions that prove properties of metadata without proving the staged RTL actually realizes that metadata.
