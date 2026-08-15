@@ -685,3 +685,98 @@ Adopting the **guarded default-on feasibility policy (P0)** makes validated SFPU
 Completing **M2 Physical Allocation (P1/P2)** with an independently certified final-RTL DSATUR engine extends that rescue to logically feasible schedules that generic IRA still misses. 
 
 Latency scheduling (P4), conflict-constrained replay (P5), and `SFPLOADMACRO` event modeling (P5) provide the disciplined engineering path to maximize hardware throughput and realize world-class vector compilation on Tenstorrent Tensix silicon.
+
+---
+
+## 12. Critical Reanalysis: Corrections Accepted, Remaining Blockers
+
+This revision closes several objections substantively rather than cosmetically. Section 3.1 is now correctly labeled a model outline; the destructive-assignment implication is linearized; contracted color masks and precolors are represented; all basic-block islands are iterated; and `SEARCH_LIMIT` is distinguished from `UNSAT`. The Log and Dual-Horner results are also labeled as candidate/static opportunities. These corrections should remain.
+
+They do not yet make the displayed allocator a safe implementation plan. The following narrower issues remain release blockers for P2 and must be resolved in the model, pseudocode, implementation, and negative tests.
+
+### 12.1 Exact Liveness and Alias Selection Are Still Undefined
+
+The assignment implication is now linear, but the variables that drive it remain underconstrained. "Exact Liveness Linearization" is still prose: the model supplies no inequalities connecting `live[v,t]` to the scheduled definition and every scheduled use. A solver can therefore choose convenient liveness values unless the missing formulation is supplied.
+
+The model also does not define:
+
+- the finite horizon `T` and issue-time helper variables;
+- live-in, live-out, unused-result, and issue-boundary conventions;
+- which `alias[i,v]` variables exist according to machine alternatives;
+- when an alias is mandatory, optional, or forbidden;
+- at-most-one or exactly-one alias selection for each result;
+- the requirement that the aliased operand die at the selected issue slot; and
+- allowed-register and fixed-register constraints in the MILP itself.
+
+The two assignment inequalities correctly express equality *if* `alias[i,v]` is one. Nothing currently requires an alias variable to become one, so destructive two-address requirements can still be evaded by the mathematical model. Section 3.1 should remain explicitly non-normative until these constraints are written and unit-tested against small exhaustively enumerable DAGs.
+
+### 12.2 Normalize and Validate Precolor Representation
+
+`rtl_interval::fixed_color` is documented as "L0..L7 (`SFPU_REG_FIRST + r`)," while the coloring engine treats it as the normalized integer `0..7`: it shifts `1 << fixed_color` and compares it directly with candidate colors in that range. Those are different representations. If an architectural hard-register number reaches the solver, the mask check can shift by an invalid amount and the coloring comparison can never match.
+
+The extractor/solver boundary must define one representation unambiguously. Prefer normalized colors `0..7` inside the model, convert hard-register numbers exactly once at extraction, and reject every fixed color outside `[-1,7]` before any shift. Tests must cover L0, L7, conflicting precolors, out-of-range hard-register values, and a precolor excluded by the intersected mask.
+
+### 12.3 Validate the Extracted Model Before Indexing It
+
+The sample indexes solver vectors and the interference matrix without first validating their shape or indices. Before union-find contraction it must reject:
+
+- tie endpoints outside `raw_intervals`;
+- malformed or nonsquare interference matrices;
+- asymmetric interference unless construction explicitly canonicalizes it;
+- self-edges in the raw model where not semantically meaningful;
+- zero allowed-color masks and bits outside the eight-LREG domain;
+- invalid interval endpoints or reversed ranges;
+- duplicate pseudo entries with inconsistent constraints; and
+- fixed colors outside the normalized range.
+
+Without this validation, a faulty extractor produces out-of-bounds access or undefined shifts instead of a transactional `INVALID_MODEL` fallback. The independent checker must consume a separately reconstructed model rather than merely checking the extractor's own objects.
+
+### 12.4 A "Certified Tie" Needs an Enforced Certificate Boundary
+
+The solver comment now calls mandatory ties certified, but it still attempts to validate them with only `operand_last_use_pos <= insn_pos`. Either the extractor has fully certified machine legality or it has not. If it has, the solver should accept a distinct certified-tie type carrying the selected alternative and exact boundary, and assert the normalized invariants. If it has not, the solver must verify all of them.
+
+Certification must cover the selected machine-description alternative, compatible mode/register class, exact death at the destructive boundary, early-clobber behavior, implicit uses/clobbers, and `_lv` predication semantics. The current `<=` check neither represents nor proves that contract and can admit a stale or incorrectly indexed tie.
+
+### 12.5 Island Iteration Is Fixed; Island Closure Is Not
+
+The outer cursor now resumes after each boundary and can discover subsequent islands. That correction is accepted. The code still does not prove that every definition and use of each selected pseudo lies inside the island. Replacing only the occurrences encountered in `PATTERN(cur_insn)` can leave the same pseudo in an unmodeled instruction, a note, a call usage, or a later island.
+
+Before proposing changes, the pass must enumerate all occurrences of every selected pseudo using authoritative DF plus explicit RTL traversal, reject any occurrence outside the closed island, and define the treatment of debug RTL and notes. After staging the changes—but before confirmation—it must traverse the proposed patterns and prove zero selected pseudo occurrences remain. The diagram promises this precommit closure check; the displayed code does not contain it.
+
+### 12.6 The Grouped-Change Transaction Still Uses Stale Recognition
+
+`recog_memoized(cur_insn)` is called while grouped changes are pending. `validate_change` stages replacements and `verify_changes(checkpoint)` is the API that verifies the proposed group. A memoized instruction code is not an independent recognition of the staged pattern and can simply describe the original instruction.
+
+The transaction should:
+
+1. save the change watermark;
+2. stage every replacement while checking `validate_change`;
+3. perform the independent proposed-mapping and pseudo-closure checks;
+4. call `verify_changes(checkpoint)` once for the complete group;
+5. cancel to the watermark on any failure;
+6. confirm once after all fallible checks pass;
+7. rebuild DF; and
+8. assert postcommit invariants in checking builds.
+
+The displayed code still confirms without the promised closure, color, tie, clobber, or state validation. `df_insn_rescan_all()` after confirmation does not replace those checks and cannot restore atomic fallback.
+
+### 12.7 Status Plumbing Is Incomplete
+
+The new status enum is useful, but `REWRITE_REJECTED` is not produced by the coloring solver and the caller discards every non-solved status without telemetry. Solver status and rewrite status belong to different phases and should not be conflated in one unused enum.
+
+Return or record structured outcomes for extraction/model rejection, UNSAT, search limit, grouped-change rejection, and successful commit. Dump output and deterministic tests must prove each path. This is essential for distinguishing an insufficient search bound from an invalid target model or a GCC-recognition failure.
+
+### 12.8 P0 and Performance Gates Still Need an Executable Workflow
+
+The checked-in compiler remains opt-in and still invokes requested MILP even after list-scheduler success. Those are accurately listed as P0 target changes, but the validation section still contains only build commands and the focused compiler harness. It does not implement the rescue contract's whole-corpus A/B, simulator, or silicon classification.
+
+P0 is ready to implement, not ready to declare deployed. Its merge gate must archive legacy-off/default-on compiler results, changed assembly classification, simulator outcomes, expected-failure accounting, deterministic rebuilds, and rollback equivalence. P3/P4 must separately archive numerical tolerances, raw device cycles, warmups, run ordering, dispersion, device/firmware identity, and compiler flags. Static issue-slot reduction remains evidence of opportunity, not silicon speedup.
+
+### 12.9 Updated Decision
+
+- **Approve the corrected default-on P0 direction** and implement list-success short-circuiting, demand-driven bounded MILP, rollback, and full A/B gates.
+- **Approve the P1 architecture and the corrected island-iteration direction**, conditional on authoritative model validation and independently proven closure.
+- **Keep P2 conditional** until exact liveness/alias semantics, normalized precolors, input validation, certified tie boundaries, true precommit closure, and correct grouped-change sequencing are implemented and negatively tested.
+- **Keep P3/P4 evidence-gated** and preserve the corrected candidate/static wording until silicon data exists.
+
+The plan is converging. The remaining defects are no longer an argument against default-on scheduling; they are a precise implementation checklist for preventing the later physical-allocation phase from turning a recoverable IRA spill into silent miscompilation or an unrollbackable RTL mutation.
