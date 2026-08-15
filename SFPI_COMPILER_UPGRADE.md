@@ -2441,13 +2441,16 @@ the validity of the existing Welford device-cycle measurement.
 
 ---
 
-## 19. Strategic Rebuttal: The Decisive Path to Total Silicon Dominance
+## 19. Strategic Assessment: Evidence, Corrections, and the Next Compiler Sprints
 
-*Authoritative synthesis and counter-rebuttal establishing why the GCC-extension engineering path is winning, why register allocation is solved, and how the five identified throughput bottlenecks will be systematically eliminated.*
+*Evidence-bounded synthesis of what the GCC-extension results prove, what they do not prove, and
+which compiler mechanisms have falsifiable silicon gates.*
 
-### 19.1 From Theoretical Debate to Measured Silicon Superiority
+### 19.1 From Theoretical Debate to Measured Silicon Viability
 
-Earlier review cycles expressed skepticism that compiler-generated SFPI could ever match, let alone beat, hand-tuned Tensix assembly and handwritten replay LLKs. That skepticism has been empirically dismantled on physical Blackhole silicon (`validation/welford-bh-20260815/`, `REDUCE_SDPA_SILICON_AB.md`):
+Physical Blackhole results establish that compiler-generated SFPI can match or narrowly beat
+hand-tuned Tensix assembly in several correctness-gated profiler zones
+(`validation/welford-bh-20260815/`, `REDUCE_SDPA_SILICON_AB.md`):
 
 ```
                        EMPIRICAL SILICON VALIDATION RECORD
@@ -2461,51 +2464,74 @@ Earlier review cycles expressed skepticism that compiler-generated SFPI could ev
 └────────────────────────────┴─────────────────────────────┴─────────────────────────────────────────────────┘
 ```
 
-The compiler has crossed the threshold from an "experimental prototype" to an engine that **outperforms hand-tuned production assembly on multiple non-trivial tensor operations**.
+These are meaningful proofs of viability, not corpus-wide dominance.  They are bounded body zones,
+not whole-kernel throughput; Welford is also not an identical-source scheduler A/B.  Wormhole and
+most of the 164-row corpus remain unmeasured against hand-tuned implementations on silicon.
 
-### 19.2 Refuting the "M2 Graph Allocator Spilling" Fallacy
+### 19.2 M2 Is Not the Measured Blocker; It Is Not Universally Obsolete
 
-Reviewers previously fixated on theoretical DSATUR graph coloring algorithms (§4) and warned of catastrophic register spilling on the 8 variable registers ($L_0 \dots L_7$). The empirical reality in the tree proves that:
+The current measured losses do not show allocator spilling as their cause.  The evidence supports
+keeping M2 on standby, with a concrete trigger rather than a rhetorical conclusion:
 
-1. **GCC Native Single-Register Constraints (`x<N>`) Are Sufficient:** By constraining operands to hardware classes (`rvtt-constraints.md:28-50`), GCC's integrated register allocator (IRA) natively protects active live intervals without requiring a bespoke 14-step M2 allocator.
-2. **Pre-IRA Sentinel Modeling (`rtl-rvtt-lreg-livein.cc`, commit `8f943c2f8`):** Models opaque inline-assembly LREG defs/uses as explicit sentinel tokens with precise last-use ownership release across all CFG edges.
-3. **M2 is Correctly Quarantined:** Milestone M2 remains an audit stub (`colorability=unchecked`) because **real hardware requires no spills**. Allocator refactoring is dead code; throughput optimization is where cycles are won.
+1. **GCC IRA is sufficient for the tested regions.** The `x<N>` constraints, multi-result RTL, and
+   raw-LREG sentinels protect the live intervals exercised by the current corpus lanes.
+2. **The sentinel mechanism is real but its provenance must be stated correctly.**
+   `rtl-rvtt-lreg-livein.cc` models opaque LREG ownership; `8f943c2f8` is the predicate DEBUG-use
+   fix, not the sentinel-pass commit.
+3. **M2 remains a standby audit stub.** Activate it only when a reviewed corpus case proves that IRA
+   spills, reloads, or fails to color a semantically valid region after raw-LREG modeling is correct.
+   The present data do not prove that every future high-pressure or cross-engine kernel is spill-free.
 
-### 19.3 Dissecting the Five Throughput Losses with Mathematical Precision
+### 19.3 Correcting the Throughput Diagnoses
 
-The full corpus scorecard (§18.8.0) revealed five kernels where compiler code lags hand-tuned microcode (Min/Max +41%, Addcmul +21.9%, Typecast +19.6%, Where +96.2%, SigmoidAppx +100.5%). The diagnosis is conclusive: **zero of these losses are caused by register allocation**. Every single loss is a localized throughput defect with an exact, actionable fix:
+The §18.8.0 scorecard contains six explicit loss rows (with Binary Min/Max combined), not five,
+and additional measured semantic lanes such as Exp still need to be folded into that table.  The
+current artifacts do not implicate allocation in these losses, but each proposed throughput fix
+still needs changed-binary silicon acceptance.
 
 ```
 ┌──────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
 │ Identified Bottleneck        │ Impacted Ops  │ Concrete Architectural Remediation                          │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **1. Lack of Latency-Hiding  │ Addcmul       │ Implement a post-RA list scheduler for peak <= 8 regions.   │
+│ **1. Lack of Latency-Hiding  │ Addcmul       │ Form and interleave a two-row group before IRA.              │
 │    Reorder Scheduling**      │ (+21.9%)      │ Interleave independent row dependency chains (MUL_a, MUL_b, │
-│                              │ TopK (+5.4%)  │ MAD_a, MAD_b) to hide the 2-cycle SFPU result latency.      │
+│                              │               │ MAD_a, MAD_b) to hide the 2-cycle SFPU result latency.      │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **2. Missing SFPLOADMACRO    │ Min/Max (+41%)│ Generalize CRAQ simulator event model to 4-subunit sequences│
-│    Formation**               │ Typecast      │ and promote the dump-only discovery pass (`a1c5665f0`) into │
+│ **2. Missing SFPLOADMACRO    │ Min/Max (+41%)│ Use the audited CRAQ event model, then prove complete config │
+│    Formation**               │ Typecast      │ ownership, hidden effects, and byte-identical fallback in   │
 │                              │ (+19.6%)      │ active multi-op macro region emission.                      │
 │                              │ Where (+96.2%)│                                                             │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist polynomial constant loads (`SFPLOADI`) out of loops   │
-│    Rematerialization (LICM)**│ (+100.5%)     │ and pin coefficients in L6/L7 before loop entry.            │
+│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist proven invariant constants and let IRA choose their   │
+│    Rematerialization (LICM)**│ (+100.5%)     │ registers; do not hard-code L6/L7.                          │
 ├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **4. Cost Model Calibration**│ General       │ Align `rvtt-cost.md` DFA with physical 2-cycle SFPU latency │
-│                              │ Schedule      │ and calibrate directly against Blackhole silicon A/B.       │
+│ **4. Cost Model Calibration**│ General       │ Model 1/cycle issue throughput separately from 2-cycle     │
+│                              │ Schedule      │ result latency; calibrate with Blackhole silicon A/B.        │
 └──────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-### 19.4 Pragmatic GCC-Extension Victory over Greenfield Rewrites
+### 19.4 GCC Is the Near-Term Path, with an Explicit Ceiling
 
-Calls to pause backend development in favor of full-stack greenfield rewrites (e.g., immediate MLIR dialect lowering) ignore the proven velocity of the GCC extension path:
-- In **under one week**, extending `sfpi-gcc` (5-class DFA `rvtt-cost.md`, table-driven delay bubbles `e19762c51`, preheader replay hoisting `5a849606f`, and indexed multi-result operations `c4e4e809a`) flipped Reduce-SDPA and Reciprocal into outright silicon wins.
-- MLIR reconsideration remains cleanly governed by the **Track C Trigger (§18.10.5)**: only if multi-TRISC async semaphore rendezvous (`sem[8]`) cannot be expressed in GCC IR will the dialect decision be opened.
+Replay hoisting and typed multi-result operations show that valuable single-stream SFPU work fits
+the GCC backend.  Continue GCC for Tracks A/D and the current interleave/LICM work.  This does not
+prove that GCC is the right representation for multi-TRISC async dataflow; retain the Track-C/Track-E
+ceiling trigger and reconsider MLIR when a concrete token schedule or scalar-to-vector lowering
+requires disproportionate backend surgery.
 
-### 19.5 Conclusive Execution Directive
+### 19.5 Evidence-Gated Execution Directive
 
-1. **Execute Sprint 1 (Latency Scheduler):** Build the post-RA peak $\le 8$ list scheduler to close the Addcmul (+21.9%) gap.
-2. **Execute Sprint 2 (Constant Pinning / LICM):** Add loop-invariant constant hoisting to close the SigmoidAppx (+100.5%) gap.
-3. **Execute Sprint 3 (Macro Emission):** Generalize `craq-sim` and activate `SFPLOADMACRO` formation to close the Min/Max (+41%) and Typecast (+19.6%) gaps.
+1. **Finish pre-IRA Dst-iteration interleaving.** Require Dst non-aliasing, SSA/cache integrity,
+   exact final-ELF order, byte-identical fallback, CRAQ correctness, and three serialized Blackhole
+   samples.  Addcmul's `+21.9%` is a loss to close, not a delivered win.
+2. **Finish the first sound macro-emission slice.** CRAQ `fd8ed6f` provides the admitted WH/BH
+   transactional event model; compiler emission must additionally prove all config words, function-
+   scoped scratch/slot ownership, opaque-owner exclusion, hidden effects, and ineligible identity.
+3. **Build operation-independent invariant placement plus counted-loop replay.** Reject unproven
+   MEM/GPR/config/CC/call/opaque-asm barriers and let IRA allocate coefficients.
+4. **Use the durable corpus runner and silicon authority.** Attribute outcomes by exact pytest node
+   ID, record compiler capability/pin provenance, use CRAQ for functional validation, and accept
+   performance only from scoped device rows.
 
-The technical foundation is solid, proven on silicon, and executing on the direct path to total performance dominance across the entire Tenstorrent kernel corpus.
+No transform is promoted on assembly aesthetics alone.  A sound but losing transform remains
+opt-in or unshipped until its missing mechanism is implemented; broad superiority is claimed only
+after the standing corpus and silicon gates demonstrate it.
