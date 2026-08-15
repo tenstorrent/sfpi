@@ -1605,22 +1605,22 @@ device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ delta
 | :--- | ---: | ---: | ---: | :--- | :--- |
 | **Welford** body | 326 | 323 | **−0.9%** (−3) | 15/15 | Parity / marginal — §14 will not credit it as a scheduler win (bounded zone, different source bodies) |
 | **Binary broadcast** | 608 | 608 | **0.0%** | 8/8 BH, 6/6 WH compile | **Exact tie** — zero-regression compiler-flow replacement |
-| **Reduce-SDPA** body | 839 (8-slot replay) | 855.5 | **+2.0%** (+16.5) | 512×64 golden | **Loss**, narrowed from +8.94%: replay formation auto-recovered 78% once loads were compiler-visible |
-| **TTNN Where** | — | *blocked* | — | compiles WH/BH | No silicon — `rvtt_expand` **SSA ICE** on canonical `v_if` (+ CRAQ vBool→mask blocker) |
-| **TopK** | — | *blocked* | — | — | No silicon — typed `SFPSWAP`/`SFPTRANSP` drop the live L4–L7 multi-results (correctness gap) |
+| **Reduce-SDPA** body | 840 (8-slot replay) | 834 | **−0.7%** (−6) | paired full golden | **Generated win** — generic D1 preheader capture hoisting flips the prior +2.0% loss |
+| **TTNN Where** | 159.25 | 312.50 | **+96.2%** (+153.25) | 2/2 BH | **Loss** — correct canonical SFPI; 7 replay slots versus handwritten SFPLOADMACRO's 3 |
+| **TopK** | — | *not measured* | — | compiler model WH/BH/QSR 15/15 | Multi-result typed-IR blocker fixed; generated functional/perf A/B remains open |
 
-**Read-out: zero outright flips so far.** Two parities (broadcast exact, Welford within noise), one
-loss (Reduce-SDPA, narrowing and replay-gated), two kernels blocked by compiler defects. The compiler
-already **matches** hand-tuning on non-replay kernels; it **trails** on replay-heavy kernels purely
-because it does not yet emit replay — and Reduce-SDPA is the derisking proof that closing that gap is
-mostly mechanical (78% recovered, no compiler change, once the loads stopped being opaque `.ttinsn`).
-**The first real flip is therefore gated on Track D replay/`SFPLOADMACRO` emission, not on more
-scheduling.** The two blocked kernels are correctness bugs (an ICE and a multi-result modeling gap),
-not perf — fix them before they are counted for or against the compiler.
+**Read-out: the first outright flip is now measured.** Generic D1 replay hoisting moves Reduce-SDPA
+from a 2.0% generated loss to a repeatable 0.7% generated win.  Binary broadcast ties exactly and
+Welford remains a marginal generated win.  TTNNWhere is correct but nearly 2× slower because the
+handwritten three-slot body uses SFPLOADMACRO while canonical generated SFPI needs seven replay
+slots.  TopK's architectural multi-result blocker is fixed in the compiler but has not yet reached
+a generated silicon A/B.  The next large win is therefore still gated on safe, general
+`SFPLOADMACRO` formation rather than more local scheduling; the dump-only formation pass records
+the missing proofs without emitting speculative code.
 
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) make safe loop/preheader capture hoisting the next general Track-D target. Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
-**Broader LLK conversion checkpoint (2026-08-15).** TT-Metal `c1471817` carries two additional test-only corpus lanes. Binary broadcast passes 8/8 representative Blackhole correctness cases, 6/6 Wormhole generated compiles, and CRAQ A/B; physical `BINARY_BCAST_BODY` is exactly tied at handwritten `608,608,608` versus generated SFPI `608,608,608`. This is a zero-regression compiler-flow replacement, not a speedup. TTNNWhere compiles both selectors on WH/BH, but the generated path is blocked before silicon: CRAQ fails the vBool-to-integer-mask sequence even with auto-replay disabled, while the direct canonical `v_if` formulation triggers an `rvtt_expand` SSA ICE. The blocker and reproducer are intentionally retained; no unsafe device result is claimed. Evidence is in TT-Metal `tt_metal/tt-llk/tests/corpus/{BINARY_BCAST_SILICON_AB,TTNN_WHERE_COMPILER_AB}.md`.
+**Broader LLK conversion checkpoint (2026-08-15).** TT-Metal `c1471817` carries two additional test-only corpus lanes. Binary broadcast passes 8/8 representative Blackhole correctness cases, 6/6 Wormhole generated compiles, and CRAQ A/B; physical `BINARY_BCAST_BODY` is exactly tied at handwritten `608,608,608` versus generated SFPI `608,608,608`. This is a zero-regression compiler-flow replacement, not a speedup.  SFPI-GCC `8f943c2f8` fixes the canonical TTNNWhere `v_if` debug-build ICE by resetting stale `DEBUG_BIND` uses when RVTT removes scalar predicate definitions; WH/BH/QSR focused checks pass and non-debug assembly is byte-identical.  The corrected U16 selector passes CRAQ and Blackhole correctness, but measures handwritten `159.25,159.25,159.25` versus generated `312.50,312.50,312.50` `TTNN_WHERE_BODY` cycles.  The executed caller already receives the generic outermost-CC combine; the remaining 3-slot-versus-7-slot gap is SFPLOADMACRO formation, not PUSH/POP lowering. Evidence is in TT-Metal `tt_metal/tt-llk/tests/corpus/{BINARY_BCAST_SILICON_AB,TTNN_WHERE_COMPILER_AB}.md`.
 
 **Replay legality and TopK checkpoint (2026-08-15).** SFPI-GCC `32fe8cd23` makes replay payload legality explicit: all 67 emitted Tensix patterns are classified (64 safe, two barriers, one explicit owner), opaque asm defaults to a boundary, and explicit TTREPLAY slot ownership is processed before candidate formation. Its replay corpus is 41/41 and the full target-suite failure set is unchanged from baseline. TT-Metal `02de2580` records why TopK cannot yet be converted safely: typed `SFPSWAP` omits the simultaneous L4–L7 index-pair results when index tracking is enabled, and typed `SFPTRANSP` omits the live L4–L7 transpose group. The required fix is a general multi-result architectural model plus post-RA pair verification; no accidental-allocation silicon result is accepted.
 
@@ -1715,7 +1715,12 @@ Closing the gap is **finishing this shipped pass**, not building one: extend `re
 #### 18.8.4 Hard gate (measurable)
 
 **D0 gate (shipped/measurable now):** auto-replay compression on the 8-row unrolled mockup holds **88→19 static Tensix insns on WH and 56→15 on BH** (§6.1, `:807`, *Mockup Evidence*), and `WELFORD_BODY` on Blackhole silicon holds the pinned **323/323/323 device cycles** for N=1/2/32 vs replay-LLK's 326 (`:823`) — with all 5 Welford selectors passing correctness. Any `replay_buf` `start_idx+len>32` at emit is a hard fail (`UndefinedBehavior`, `tensix.cpp:2447`); the pass must prove `S+L<=32` as an allocation invariant.
-**D1 gate (aspirational until measured):** cross-BB span discovery drives `WELFORD_BODY` from the replay-LLK 326 down to the pressure-scheduled 323 by compressing the unrolled recurrence body — this cross-BB compression has **never been measured** and is a target, not an established number; it is cleared only when `run-corpus-score.sh` (F1) shows a correctly-signed non-zero device-cycle delta on the cross-BB case.
+**D1 loop-hoist gate (cleared on Blackhole):** fixed-encoding replay capture hoisting changes
+Reduce-SDPA from handwritten `840` versus generated `855.5` to handwritten `840` versus generated
+`834` scoped device cycles, with paired correctness and three zero-spread processes per arm.  The
+implementation remains opt-in and conservatively single-block-loop only.  Broader cross-BB span
+discovery for Welford is still open and must independently satisfy the same changed-binary silicon
+gate; the Reduce result does not imply that unimplemented transform exists.
 **D4 gate (target, sim-blocked):** `SFPLOADMACRO`-lowered Typecast/MulInt/Where run on ttsim **without** `UnsupportedFunctionality` and hit a **≥1.33× steady-state issue rate** — where 1.33× is drawn from the §6.2/§7 "opportunity/potential" range (`:815,830`) and has not been measured; it is a target contingent on the D4 sim work landing first.
 
 #### 18.8.5 Risks / ceiling
