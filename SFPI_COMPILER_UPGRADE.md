@@ -1373,10 +1373,11 @@ them.**
   correct pre-IRA pass (sentinels, CFG dataflow, `INSERT_PASS_BEFORE(pass_ira, …)`).
 - `rtl-rvtt-schedule.cc` — the `xtt_delay` STATIC/DYNAMIC NOP rule (+ the `XTT_DYNAMIC_BUG` scoreboard
   exception). **F1 swaps its cost source — read closely.**
-- `ttrocc.md` (flat `type`, **no `define_automaton`**) and `rvtt-tune.md` (exists, but **no tensix
-  reservations** today) — the two files F1 turns into a real DFA / cost table.
-- `rvtt.md`, `rvtt-insn.def`, `rvtt-constraints.md` — ISA patterns, builtins, and the `x<N>`
-  single-register-class LREG pinning.
+- `rvtt.md` (`type=tensix`) and `rvtt-tune.md` (exists, but **no Tensix reservations** today) — F1
+  keeps `type=tensix` as the pass-membership attribute and adds an orthogonal five-value issue-class
+  attribute plus a real DFA / cost table. `ttrocc.md` is the separate QSR RISC-V RoCC interface and
+  is not the Tensix FIFO command stream.
+- `rvtt-insn.def`, `rvtt-constraints.md` — builtins and the `x<N>` single-register-class LREG pinning.
 - `rvtt-passes.def` — pass ordering; `riscv.opt` — the two flags, both `Init(0)`.
 - `rtl-rvtt-replay.cc` — **existing** replay codegen; Track D (§18.8) extends this, it is not a blank
   slate.
@@ -1413,8 +1414,9 @@ them.**
 > - **F1.0** — `run-corpus-score.sh`: compile → assemble → run under `craq-sim` → read device cycles
 >   from the profile counters; build the *from-source* path that reproduces the archived Welford
 >   **323 vs 326** on Blackhole (today `validation/welford-bh-20260815/` is only an archive of numbers).
-> - **F1.1** — new `rvtt-cost.md`: split the flat `type` attr into the 5 craq-sim issue classes; add a
->   `define_automaton` + per-class `define_insn_reservation` with latencies from craq-sim's issue gaps.
+> - **F1.1** — new `rvtt-cost.md`: retain `type=tensix` and add an orthogonal five-value craq-sim
+>   issue-class attribute; add a `define_automaton` + per-class `define_insn_reservation` with
+>   latencies from craq-sim's issue gaps.
 > - **F1.2** — make `rtl-rvtt-schedule.cc` table-driven, replacing the `xtt_delay` STATIC/DYNAMIC rule
 >   (incl. the `XTT_DYNAMIC_BUG` path). Same insertion point / same NOP mechanism — swap the cost
 >   *source*, not a new pass.
@@ -1531,11 +1533,22 @@ Device cycle counts are surfaced by the per-cycle clock loop (`clock_tensix_tile
 The shipped scheduler proves the *insertion mechanism* but has no calibrated cost:
 
 - `rtl-rvtt-schedule.cc` (`pass_rvtt_schedule`, registered `INSERT_PASS_BEFORE (pass_postreload, 1, ...)` in `rvtt-passes.def`) walks each insn and, for `get_attr_type == TYPE_TENSIX`, reads a **three-valued** attribute `xtt_delay ∈ {NONE, STATIC, DYNAMIC}` (`rtl-rvtt-schedule.cc:187-249`). STATIC → always emit one `rvtt_sfpnop` after; DYNAMIC → emit a NOP only if the next reader of the written SFPU reg is adjacent; NONE → nothing. This is **latency-1 with a BH/QSR scoreboard-bug exception**, not a pure hardcoded 1: BH/QSR carry a (buggy) scoreboard via `XTT_DYNAMIC_BUG_{BH,QSR}` that can clear `is_dependent` (`rtl-rvtt-schedule.cc:132-141`). The model is therefore *almost* a hardcoded single-cycle latency — enough to prove insertion, not enough to be a cost oracle.
-- Every insn carries the same flat `(set_attr "type" "ttrocc")` — there is **no `define_automaton`, no `define_insn_reservation`, no per-engine `define_cpu_unit`** in `ttrocc.md` (verified: none present). GCC's DFA scheduler is effectively unused for tensix ops.
+- Generated Tensix commands in `tt/rvtt.md` carry `(set_attr "type" "tensix")`; that membership
+  attribute is consumed by `rtl-rvtt-schedule.cc`, `rtl-rvtt-replay.cc`, and related passes. There
+  is no orthogonal issue-class attribute, `define_automaton`, per-class `define_insn_reservation`, or
+  per-engine `define_cpu_unit`, so GCC's DFA scheduler is effectively unused for these commands.
+  `ttrocc.md`'s 87 `type=ttrocc` patterns are QSR RISC-V RoCC interface operations, not the Tensix
+  FIFO words classified by craq-sim's opcode ranges.
 
 F1 concretely delivers:
 
-1. **new: `rvtt-cost.md`** — a real DFA. Split the flat `type` attr into the 5 craq-sim issue classes (`math`, `sfpu`, `tdma`, `cfg`, `sync`), add one `define_automaton` with a `define_cpu_unit` per class, and a `define_insn_reservation` per class whose latency is the craq-sim gap for that class (sfpu-gap, math-gap, cfg=2, else=1). The class boundaries are the exact opcode ranges craq-sim uses (`libttsim.cpp:2265-2280`; `tensix_wait_gate_block_mask_for_inst` bit map, `tensix.cpp:1723-1897`) — mechanically portable, not guessed.
+1. **new: `rvtt-cost.md`** — a real DFA. Keep `type=tensix` and add an orthogonal issue-class
+   attribute (`math`, `sfpu`, `tdma`, `cfg`, `sync`) to the generated Tensix patterns in `rvtt.md`;
+   add one `define_automaton` with a `define_cpu_unit` per class, and a
+   `define_insn_reservation` per class whose latency is the craq-sim gap for that class (sfpu-gap,
+   math-gap, cfg=2, else=1). The class boundaries are the exact opcode ranges craq-sim uses
+   (`libttsim.cpp:2265-2280`; `tensix_wait_gate_block_mask_for_inst` bit map,
+   `tensix.cpp:1723-1897`) — mechanically portable, not guessed.
 2. **Replace the near-binary `xtt_delay`** in `rtl-rvtt-schedule.cc` with a table-driven latency: the NOP count between a def and its use becomes `max(0, latency(def_class) − distance)`, where `latency` comes from `rvtt-cost.md` / a small `adjust_cost`-style hook rather than the hardcoded-1-plus-bug rule. Keep the same insertion point (`pass_rvtt_schedule`); this is a swap of the *cost source*, not a new pass, so it inherits the shipped, silicon-validated NOP mechanism.
 3. **extend the SHIPPED `rvtt-tune.md`** (per `-mcpu`: `tt-wh-tensix`, `tt-bh-tensix`, QSR). The file already exists (`tt/rvtt-tune.md`, 66 lines) but carries **only** standard RISC-V `load/fpload/store/imul/idiv/alu` reservations — there is **no** tensix/sfpu reservation in it today. F1 adds one latency row per issue class per arch, each a fitted constant, because craq-sim's own gaps are per-build env constants (`tensix.cpp:478-494`). The `sfpu-ops-{wh,bh,qsr}.h` split already establishes the per-arch table pattern to mirror.
 4. **new: `run-corpus-score.sh` (the oracle harness)** — compile → assemble → run under craq-sim → read device cycles from the profile counters (`libttsim.cpp:260-277`), producing a `(kernel, baseline_cycles, candidate_cycles)` table. This is the offline scorer every codegen change is graded by, and the input to the silicon A/B. It builds on the pinned-build + per-selector setup behind the §13.8 Welford archive (`validation/welford-bh-20260815/`), which is today an *archive of numbers*, not a from-source reproduction path — F1.0 builds that path.
@@ -1547,7 +1560,7 @@ Explicitly **not** in F1: no MLIR, no new engine model, no autovectorizer, no ex
 | M | Deliverable | Anchor |
 | :-- | :--- | :--- |
 | F1.0 | `run-corpus-score.sh`: craq-sim device-cycle scorer over the LLK corpus; **builds** the from-source path that reproduces the published Welford 323 vs 326 on BH (today only an archive of numbers exists). | `libttsim.cpp:260-277`; §13.8 archive |
-| F1.1 | `rvtt-cost.md`: 5-class `type` split + `define_automaton` + per-class `define_insn_reservation`; latencies from the craq-sim gaps. | `libttsim.cpp:2265-2280`; `tensix.cpp:478-494`, `2251-2283` |
+| F1.1 | `rvtt-cost.md`: orthogonal five-class issue attribute on `type=tensix` patterns + `define_automaton` + per-class `define_insn_reservation`; latencies from the craq-sim gaps. | `tt/rvtt.md`; `libttsim.cpp:2265-2280`; `tensix.cpp:478-494`, `2251-2283` |
 | F1.2 | Table-driven latency in `pass_rvtt_schedule`, replacing the `xtt_delay` STATIC/DYNAMIC rule (incl. the `XTT_DYNAMIC_BUG` path); identical NOP placement on Welford re-verified. | `rtl-rvtt-schedule.cc:132-141,187-249` |
 | F1.3 | **extend** `rvtt-tune.md` with per-arch tensix/sfpu reservations (WH/BH/QSR); scorer error vs craq-sim ≤ target on the corpus. | `tt/rvtt-tune.md` (existing); `sfpu-ops-{wh,bh,qsr}.h` pattern |
 | F1.4 | Silicon A/B **brought up** (net-new): identical-source, changed-binary, paired off/on device runs feed the same scorer table. No shipped A/B harness exists to "wire" (§14.2/§14.4 mark it Open). | §14; §2.2 GO-BH-ONLY row |
@@ -1564,7 +1577,10 @@ Two-part, and both must hold:
 - **Silicon A/B is net-new bring-up, not wiring.** §14.2/§14.4 and the §2.2 baseline row list the identical-source, changed-binary silicon A/B as **Open**, and §14.1 records the only silicon run as a *bypassed* 0.0%-delta case. F1.4 must stand up that harness from scratch; until it exists, the silicon leg of the gate is unmet.
 - **Calibration drift.** craq-sim gaps are build/env constants (`tensix.cpp:478-494`), not silicon-measured; a `rvtt-tune.md` fit to craq-sim can diverge from silicon. Mitigation: the silicon A/B leg (F1.4) is a *required* half of the gate — craq-sim is the fast oracle, silicon is the acceptance authority (GO-BH-ONLY posture, §2.2). Wormhole silicon remains an open validation surface.
 - **Single-stream ceiling is inherited, not solved.** The `rvtt-cost.md` DFA models one in-order pipe. It correctly carries per-engine latency and same-class structural hazards, but it **cannot** price cross-TRISC semaphore rendezvous or the implicit SrcA/SrcB bank-valid handshake — true multi-stream dataflow tokens with no RTL analog. F1 must therefore mark those stalls as *modeled-as-barrier* (conservative, non-free), not schedule through them. That boundary is exactly the **Track C GCC-ceiling / MLIR-reconsideration trigger** (§18.4 C, §18.5, `SFPI_COMPILER_UPGRADE.md:1393-1395`): if the corpus shows F1's single-stream cost model systematically mispredicting on multi-engine kernels because the dominant stalls are cross-thread, that is the documented signal to reconsider an MLIR async-token representation (§8) rather than force a fused-stream fiction into GCC's DFA. F1's honest scope is the SFPU single-pipe cost table; it must not over-claim whole-kernel accuracy.
-- **Attribute migration regression.** Rewriting the ~87 `type "ttrocc"` sites into 5 classes risks silently changing NOP placement on already-validated kernels. Mitigation: F1.2 gates on bit-identical scheduling of the shipped Welford binary before the new latencies are allowed to differ elsewhere.
+- **Attribute migration regression.** Annotating the generated `type=tensix` patterns in `rvtt.md`
+  risks silently changing NOP placement on already-validated kernels. Keep `type=tensix` intact so
+  existing pass membership does not change, and gate F1.2 on bit-identical scheduling of the shipped
+  Welford binary before the new latencies are allowed to differ elsewhere.
 
 ### 18.8 Track D — Replay / MOP / `SFPLOADMACRO` Emission (closes the ~4% gap)
 
@@ -1687,7 +1703,14 @@ On craq-sim (Blackhole target), for the log, GELU, and erfinv SFPU kernels: **(1
 
 ### 18.10 Track C — Cross-Engine (matrix + pack/unpack + 3-TRISC) Scheduling
 
-**Status: GREENFIELD.** Nothing in the shipped `sfpi` backend models cross-engine timing. All 87 `ttrocc.md` insns carry a single flat `(set_attr "type" "ttrocc")`, there is **no `define_automaton`, no `define_insn_reservation`, no `define_cpu_unit`** in `ttrocc.md` (verified: none present), and the existing rvtt passes (`tt/rvtt-passes.def`: `pass_rvtt_check_early/immvar_expand/synth_split/noval_elide/synth_cse/dce/...`) are all single-stream SFPU-lowering passes with no notion of engines or TRISC threads. This track is the one that tests whether GCC's IR can carry tile/dataflow scheduling at all, and it is the documented MLIR-reconsideration checkpoint (SFPI_COMPILER_UPGRADE.md:1381, 1393–1395).
+**Status: GREENFIELD.** Nothing in the shipped `sfpi` backend models cross-engine timing. Generated
+Tensix commands live in `tt/rvtt.md`; the 87 `ttrocc.md` patterns are a separate QSR RISC-V RoCC
+interface and must not be classified using Tensix FIFO opcode ranges. The existing rvtt passes
+(`tt/rvtt-passes.def`: `pass_rvtt_check_early/immvar_expand/synth_split/noval_elide/synth_cse/dce/...`)
+are all single-stream SFPU-lowering passes with no notion of engines or TRISC threads, while most
+handwritten matrix/unpack/pack commands enter as opaque `.ttinsn` assembly. This track is the one
+that tests whether GCC's IR can carry tile/dataflow scheduling at all, and it is the documented
+MLIR-reconsideration checkpoint (SFPI_COMPILER_UPGRADE.md:1381, 1393–1395).
 
 #### 18.10.1 Hardware mechanism (craq-sim ground truth)
 
@@ -1711,9 +1734,12 @@ Split cleanly into what the single-stream Haifa/DFA scheduler carries versus wha
 
 **Modelable in GCC (the part worth building):**
 
-- **The 5 issue classes + structural "one per class per cycle" hazard** map onto GCC function units. Replace the flat `type` with a 5-value class attribute and add reservations:
-  - **new: `ttrocc-sched.md`** — `(define_automaton "tensix")`; `(define_cpu_unit "u_math u_sfpu u_tdma u_cfg u_sync" "tensix")`; one `(define_insn_reservation ...)` per class mirroring the busy-until latencies from tensix.cpp:2251–2283 (Math/Sfpu tunable gap, `Cfg` = 2 cycles for the clock+2 pipe).
-  - **Edit `ttrocc.md`:** split `(set_attr "type" "ttrocc")` on all 87 insns into `math/sfpu/tdma/cfg/sync` per the exact opcode→class map (`0xA0–0xA7→Sync`, `0xB0–0xB8/0x05→Cfg`, `0x70–0x99→Sfpu`, `0x08–0x18 || 0x21–0x3A→Math`, else `Tdma`; libttsim.cpp:2265–2280). This is mechanical and is Track C's first landable milestone.
+- **The 5 issue classes + structural "one per class per cycle" hazard** map onto GCC function units
+  for commands represented in RTL. Reuse F1's `rvtt-cost.md`: keep `type=tensix`, attach the
+  orthogonal `math/sfpu/tdma/cfg/sync` attribute to compiler-visible `rvtt.md` patterns, and use its
+  `define_automaton` / per-class reservations. Track C must first introduce compiler-visible RVTT
+  patterns for any matrix/unpack/pack `.ttinsn` commands it intends to schedule; it cannot classify
+  opaque inline assembly or infer classes by rewriting `ttrocc.md`.
 - **Per-engine issue latency** is a standard `adjust_cost`/reservation-latency entry — direct port of the `*_busy_until` deltas.
 - **SrcA/SrcB/Dst bank-valid producer→consumer edges** are expressible as true/anti/output dependencies **once the compiler emits all engines' code in one stream** — this is exactly Track B (DST + RWC hazard tokens, §18.9); the Haifa scheduler can order a single fused stream against those deps. Track B is a hard prerequisite for any single-stream fusion attempt here.
 
@@ -1731,9 +1757,13 @@ Modeling these forces one of two bad shapes: **(a)** three separately-compiled T
 
 #### 18.10.3 Staged milestones
 
-- **C0 — Issue-class model (GCC-clean, lands first).** Split `ttrocc.md` `type` into the 5 classes; add **new: `ttrocc-sched.md`** with `(define_automaton "tensix")` + one cpu-unit and one `define_insn_reservation` per class + per-engine latency. Deliverable: the scheduler models the one-per-class-per-cycle structural hazard within a **single** pipe's stream. No cross-thread reasoning yet. This is genuinely greenfield and GCC-clean.
+- **C0 — Issue-class model (GCC-clean, lands first).** Extend F1's orthogonal issue-class model to
+  compiler-visible matrix/unpack/pack RVTT patterns as those patterns are introduced; do not change
+  `type=tensix` membership and do not touch QSR `ttrocc.md`. Deliverable: the scheduler models the
+  one-per-class-per-cycle structural hazard within a **single** pipe's represented stream. No
+  cross-thread reasoning yet.
 - **C1 — Single-stream fused block (requires Track B, transitively M2).** With DST/RWC hazard tokens landed (§18.9), emit and schedule a **fused** unpack+matmul+SFPU+pack straight-line region (no semaphore rendezvous — one logical thread) and verify the bank-valid deps are honored. Note the dependency chain: C1 needs Track B's alias model (B2), and Track B's coloring-enforcement leg (B3) is itself blocked on the unbuilt M2 grouped-change/DSATUR allocator — so C1 is further from buildable than "requires Track B" alone implies. This is the honest ceiling of what RTL carries.
-- **C2 — Multi-TRISC rendezvous (the ceiling test).** Attempt whole-kernel scheduling across the 3 pipes with `SEMPOST`/`SEMWAIT` handoffs. Represent semaphores as **new: `__builtin_rvtt_sem_post/sem_wait`** intrinsics (new `unspecv` in `ttrocc.md`, modeled `unspec_volatile` so they pin) and a **new: `rtl-rvtt-crossthread-sched` pass** that carries cross-stream happens-before edges. **This milestone is the go/no-go for MLIR** — if C2 needs a fictitious fused stream or blind per-thread compilation to build, the trigger fires.
+- **C2 — Multi-TRISC rendezvous (the ceiling test).** Attempt whole-kernel scheduling across the 3 pipes with `SEMPOST`/`SEMWAIT` handoffs. Represent semaphores as **new: `__builtin_rvtt_sem_post/sem_wait`** intrinsics (new `unspecv` RVTT patterns, modeled `unspec_volatile` so they pin) and a **new: `rtl-rvtt-crossthread-sched` pass** that carries cross-stream happens-before edges. **This milestone is the go/no-go for MLIR** — if C2 needs a fictitious fused stream or blind per-thread compilation to build, the trigger fires.
 
 #### 18.10.4 Hard gate
 
