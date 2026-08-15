@@ -1594,6 +1594,27 @@ Two-part, and both must hold:
 
 **Replay legality and TopK checkpoint (2026-08-15).** SFPI-GCC `32fe8cd23` makes replay payload legality explicit: all 67 emitted Tensix patterns are classified (64 safe, two barriers, one explicit owner), opaque asm defaults to a boundary, and explicit TTREPLAY slot ownership is processed before candidate formation. Its replay corpus is 41/41 and the full target-suite failure set is unchanged from baseline. TT-Metal `02de2580` records why TopK cannot yet be converted safely: typed `SFPSWAP` omits the simultaneous L4–L7 index-pair results when index tracking is enabled, and typed `SFPTRANSP` omits the live L4–L7 transpose group. The required fix is a general multi-result architectural model plus post-RA pair verification; no accidental-allocation silicon result is accepted.
 
+**D1 replay-hoist result (2026-08-15).** SFPI-GCC `5a849606f` adds a default-off,
+post-RA loop optimization for fixed-encoding, compiler-visible Tensix replay payloads.  It records
+with no execution in a dedicated preheader, replaces the in-loop clones with playback, reserves
+the selected slots for the remaining function, and rejects MEM/GPR-dependent payloads, opaque
+assembly, calls, explicit replay owners, abnormal entries, and non-single-block loops.  A typed
+architectural-L8 discard load closes the final Reduce-SDPA raw-instruction boundary without
+manufacturing an allocatable result.  The compiler gates are 52/52 replay tests and 713 target
+passes with the baseline 15 failures and two expected failures unchanged; ineligible output is
+byte-identical on/off.  On Blackhole, the paired full-golden Reduce-SDPA test passes both selectors
+and measures handwritten replay at `840,840,840` versus generated typed SFPI at `834,834,834`
+scoped `REDUCE_SDPA_BODY` device cycles: a repeatable 6-cycle (`0.714%`) generated-code win.
+CRAQ is a functional gate here, not the performance authority.
+
+**Durable corpus checkpoint (2026-08-15).** TT-Metal `164a10f2` replaces the original 11-row
+prioritization list as the coverage authority with 164 surface-qualified implementations and 332
+WH/BH/QSR paths (152 BH, 138 WH, 42 QSR).  The versioned manifest hard-fails on inventory drift;
+compile CI covers all three architectures; pinned CRAQ runs publish modeled-cycle artifacts; and
+serialized silicon results compare against a checked-in baseline keyed by operation, architecture,
+metric, scope, and selector.  CRAQ `aabbd10` adds spec-correct SFPSTORE LO16 mode-9 execution and
+WH/BH regressions.  Simulator modeled cycles remain distinct from physical device cycles.
+
 **Re-scoping note vs §18.4.** The master roadmap lists Track D as "Not started"; this design upgrades the REPLAY leg to PARTIAL because it genuinely reuses the shipped `pass_rvtt_replay` (834 lines) and the `ttreplay` builtin — the MOP and `SFPLOADMACRO` legs remain GREENFIELD.
 
 The ~4% Welford gap (323 vs replay-LLK 326 device cycles on Blackhole, `SFPI_COMPILER_UPGRADE.md:823`) is a *frontend-replay* compression gap — path A below — **not** an `SFPLOADMACRO` (path B) gap. There are two independent "macro" datapaths in the Tensix frontend and they must not be conflated.
