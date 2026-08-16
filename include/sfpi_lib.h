@@ -986,10 +986,17 @@ vSMag impl_::int_to_smag (vInt val) {
 }
 
 vInt impl_::smag_to_int (vSMag val) {
-  // Unfortunately BH's sfpcast implementation cannot be used here :(
-#if __riscv_xtttensixqsr
+#if !__riscv_xtttensixwh
+  // QSR has a dedicated SM32->INT32 cast.  BH's int<->int cast (mod1=3) is a
+  // self-inverse sign-preserving conditional negate, so the one encoding
+  // implements both directions (see sfpi_constants.h).  The documented BH
+  // hardware cast bug is in mod1=2 (computes ABS), which is not used here;
+  // no SFPSETSGN fixup is needed after the mod1=3 cast.  ISA-defined corner:
+  // SM32 -0 casts to the unrepresentable mostneg int32 (matching the
+  // handwritten BH LLK kernels), whereas WH's predicated fallback yields 0.
   val = vSMag (__builtin_rvtt_sfpcast (val.get (), SFPCAST_MOD1_SM32_TO_INT32));
 #else
+  // WH has no int<->int cast; use a predicated negate.
   v_if (as<vInt>(val) < 0) {
     val = setsgn (val, 0);
     val = as<vSMag>(0 - as<vInt> (val));
