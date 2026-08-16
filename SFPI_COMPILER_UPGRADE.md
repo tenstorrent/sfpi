@@ -64,7 +64,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
 | **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **Conditional M2:** build exact transactional coloring only when corpus evidence demonstrates recurring baseline-IRA failures after ownership modeling |
 | **Corpus Scorer / Differential Driver** | **Two real layers:** this repository's `scripts/run-corpus-score.sh` has one Welford entry; TT-Metal `da3832b31d` provides `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` with 164 logical implementations / 332 architecture paths, exact pytest-node attribution, compiler capability/pin provenance, CRAQ and serialized-silicon modes, plus identical-source flag-off/flag-on executable-`.text` classification in isolated build roots. | **P0:** run that changed-binary lane on selected scheduler rows, then require paired scoped silicon A/B; structure alone is not performance evidence |
-| **Hardware Silicon Baseline** | **GO-BH-ONLY**: 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 6 understood throughput gaps (§18.8.0). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
+| **Hardware Silicon Baseline** | **GO-BH-ONLY** (Blackhole **p100a**-era record, pre-planner compiler lineage — per the §18 reading discipline every number carries chip class + compiler era): 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 1 parity (Addcmul +0.02%), and understood throughput gaps. Authoritative current scoreboard: **§18.8.0.4** (p150). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
 ```
 Candidate Region (Peak > 8)
@@ -944,15 +944,16 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │       │                                  │           │ if corpus exposes recurring IRA failures.│
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P3**│ **Silicon Flow Scorecard**       │ Partial   │ **GO-BH-ONLY**: 3 generated-vs-handwritten│
-│       │                                  │           │ wins, 2 ties; scheduler A/B + WH remain open.│
+│       │                                  │           │ wins, 1 tie, 1 parity (Addcmul; §18.8.0.2)│
+│       │                                  │           │ scheduler A/B + WH remain open.           │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P4**│ **Latency Scheduling**           │ Partial   │ Generic proven 2-row Dst fusion/interleave│
 │       │                                  │ landed    │ closes Addcmul +21.9%→+0.02% parity; broad│
 │       │                                  │           │ modulo/cross-BB scheduling remains open.  │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P5**│ **Coprocessor, LICM & Macros**   │ Mixed     │ Counted replay + pressure-safe invariant │
-│       │                                  │ Sprint 2-3│ constant hoist shipped opt-in; macro      │
-│       │                                  │           │ emitter unlanded; admitted CRAQ model exists.│
+│       │                                  │ Sprint 2-3│ constant hoist shipped opt-in; generic    │
+│       │                                  │           │ macro planner LANDED default-off (§18.8.0.4).│
 └───────┴──────────────────────────────────┴───────────┴───────────────────────────────────────────┘
 ```
 
@@ -996,11 +997,16 @@ operation-independent invariant SFPU constant hoisting (`2bfa165348`) are now al
 The latter's conservative eight-LREG pressure preflight covers entry live-through values,
 loop-defined live-outs, and function-global opaque ownership; the prior nine-constant reload ICE
 now refuses before mutation. Their first semantic Sigmoid silicon result remains open.
-`pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no`
-in the checked-in compiler, but the simulator prerequisite is no longer wholly absent: CRAQ
-`fd8ed6f` provides the audited transactional evaluator for its admitted WH/BH shapes. Compiler
-configuration ownership, fallback identity, unsupported shapes, and silicon validation remain
-open. A single “Active” label obscures these materially different maturity levels.
+*[Superseded 2026-08-17 — the struck text below was true of the `fd8ed6f`-era tree:]*
+~~`pass_rvtt_loadmacro` remains a default-off discovery pass with `emit=no` in the checked-in
+compiler, but the simulator prerequisite is no longer wholly absent: CRAQ `fd8ed6f` provides the
+audited transactional evaluator for its admitted WH/BH shapes. Compiler configuration ownership,
+fallback identity, unsupported shapes, and silicon validation remain open.~~ Current state:
+`rtl-rvtt-loadmacro.cc` was deleted entirely at sfpi-gcc `5f31e00f0` (oracle-minted first at
+`32e20f9fd`) and its `-mtt-tensix-{analyze,emit}-loadmacro` flags hard-error on use; macro
+emission is now the generic 7-layer planner (`-mtt-tensix-macro-planner`, default-off) at gcc
+`bb56f1d77`, executed generically by craq-sim `f80a8d6` and silicon-proven on Min/Max
+(§18.8.0.4). A single “Active” label obscures these materially different maturity levels.
 
 **Execution recommendation:** finish the smallest discriminating evidence loop while expanding the
 exact engine deliberately: (1) preserve bounded MILP execution on request and run it as a corpus
@@ -1469,7 +1475,7 @@ the GCC/sfpi backend; defer MLIR (§8) to an optional later layer.***
 > | **sfpi** (superproject) | `9a555cb89f` | gcc pin `bb56f1d77` (chain `ddf44ed64 → cd0af49be → bb56f1d77`, verified exact); wrappers incl. `dst_face_advance` (`ded6e4e9`); this document |
 > | **sfpi-gcc** | `bb56f1d77` | three-branch unification (planner → sdpa → profit: `b3c031380` / `b5e07e458` / `6724f48c6`, mechanically faithful unions); all of WP8 (quarantined pass deleted `5f31e00f0` after oracle mint `32e20f9fd`); silicon-recalibrated profitability gate; `docs/MACRO_PLANNER.md` |
 > | **tt-metal** | `69d61d66` | sweep_2x2 automation + weekly/nightly scripts; p150 chip-class baselines; Min/Max perf-harness fixes; Reduce-SDPA 834/840 p150 baseline pair; typed-LLK migration |
-> | **craq-sim** | `f80a8d6` | §6a recognizer deletion complete — generic descriptor-driven macro execution only |
+> | **craq-sim** | `f80a8d6` | recognizer deletion (machine-local HANDOFF §6a worklist) complete — generic descriptor-driven macro execution only |
 >
 > Bootstrap knowledge that used to live only in the machine-local HANDOFF now lives in-repo: this §18
 > (track statuses; the reconciled state in §18.8.0.4 and the pull-analysis in §18.8.0.5),
@@ -1516,7 +1522,7 @@ the MLIR stack do not exist — do not depend on them without a corpus-demonstra
 - ⚠️ `rtl-rvtt-lp-alloc.cc` — a 133-line **dump-only stub** (`colorability=unchecked`). **Do NOT build
   on it or assume the M2 allocator exists.**
 
-**2. The machine model / cost oracle** (`/root/craq-sim`):
+**2. The machine model / cost oracle** (your `craq-sim` checkout at the §18 current-coordinates tip; paths below are repo-relative):
 - `src/tensix.cpp` — issue gaps + `busy_until` timers (`tensix_sfpu_issue_gap`, `math_busy_until`,
   ~L2251–2283, L478–494); SFPU/DST/`l_regs`/`load_macro_*` execution (Tracks B/D).
 - `src/libttsim.cpp` — per-cycle clock loop, the 5 issue classes + priority (~L2265–2280), and the
@@ -1571,7 +1577,7 @@ the MLIR stack do not exist — do not depend on them without a corpus-demonstra
 > DejaGNU stays green; changed binaries are measured on silicon.
 >
 > **Ground truth / where to build:** compiler code is in the **`sfpi-gcc` submodule**
-> (`gcc/config/riscv/tt/…`), not the superproject. Functional/timing reference: `/root/craq-sim` — `src/tensix.cpp`
+> (`gcc/config/riscv/tt/…`), not the superproject. Functional/timing reference: your `craq-sim` checkout (§18 current-coordinates block) — `src/tensix.cpp`
 > (issue gaps/`busy_until`), `src/libttsim.cpp` (cycle loop, 5 issue classes, profile counters); your
 > latency numbers must explain these and then fit silicon. Build: `SFPI_WITH_LP_SOLVE=yes scripts/build.sh …`. Test pattern:
 > `testsuite/g++.target/riscv/tt/tensix/raw-lreg-livein*.C`.
@@ -1599,7 +1605,12 @@ pressure rewrite, so scheduler-specific silicon validation remains open. That is
 the DST/RWC hazard model, the matrix + pack/unpack pipeline, cross-TRISC coordination, general
 replay allocation/MOP, `SFPLOADMACRO` emission, and autovectorization — is not complete. Replay
 formation and conservative loop capture hoisting are already real; do not describe Track D as
-greenfield wholesale.
+greenfield wholesale. *[Update 2026-08-17: this paragraph's shipped-scope snapshot is the
+2026-08-15-era view and predates the landed unified sdpa stack and the generic `SFPLOADMACRO`
+macro planner (both default-off at gcc `bb56f1d77` — §18.4 rows A/D, §18.8.0.4). `SFPLOADMACRO`
+emission has therefore moved from the not-complete list to LANDED, and "one op class
+(add/mul/mad)" understates the current coverage; the DST/RWC hazard model, cross-TRISC
+coordination, MOP, and autovectorization remain the open hard 90%.]*
 
 ### 18.3 Foundation (cross-cutting — must precede the tracks)
 
@@ -1658,7 +1669,7 @@ These four subsections give the per-track hardware mechanism, GCC backend delta 
 - **CRAQ makes replay look ~15% too slow** (376 vs 326) — it under-credits the **replay-buffer / MOP frontend compression** that is the whole point of the handwritten replay path (§6). CRAQ models backend issue, not frontend throughput.
 - **CRAQ makes the vFloat stream ~12% too fast** (284 vs 323) — it under-models **SFPU backend hazards**: the shipped `rvtt-cost.md` DFA sets `rvtt_issue_sfpu = 1`, but §5.2 states SFPU floating-point ops have a **2-cycle result latency**. The DFA mirrors CRAQ's *issue gap* (1/cycle throughput), not the *result latency* (2), and has no notion of concurrent-pipe overlap. Aggregate instruction/stall totals cannot repair this because Tensix pipes progress concurrently.
 
-**Consequences for the roadmap.** (1) F1 must be re-scoped: CRAQ is **not** a performance oracle for SFPU-vs-replay; calibrate its SFPU/replay timing to silicon micro-benchmarks first, or make silicon A/B the scoring authority (§18.7 M-F1.4). (2) The `rvtt-cost.md` DFA is sound as a **NOP-placement / correctness** mechanism but its latencies must not be read as a perf predictor until recalibrated to silicon (not to CRAQ). (3) **Track D performance claims scored only via CRAQ are untrustworthy** because replay is exactly the frontend effect CRAQ mis-models. Existing replay formation remains shipped, and the conservative opt-in loop-hoist has its own changed-binary Reduce-SDPA silicon result; neither should be described as dump-only. Novel `SFPLOADMACRO` emission, broader cross-BB replay discovery, and future replay allocation changes still require independent correctness plus silicon performance gates. Keep only the shipped `pass_rvtt_loadmacro` formation analysis at `emit=no` until its simulator execution model and silicon validation path exist.
+**Consequences for the roadmap.** (1) F1 must be re-scoped: CRAQ is **not** a performance oracle for SFPU-vs-replay; calibrate its SFPU/replay timing to silicon micro-benchmarks first, or make silicon A/B the scoring authority (§18.7 M-F1.4). (2) The `rvtt-cost.md` DFA is sound as a **NOP-placement / correctness** mechanism but its latencies must not be read as a perf predictor until recalibrated to silicon (not to CRAQ). (3) **Track D performance claims scored only via CRAQ are untrustworthy** because replay is exactly the frontend effect CRAQ mis-models. Existing replay formation remains shipped, and the conservative opt-in loop-hoist has its own changed-binary Reduce-SDPA silicon result; neither should be described as dump-only. Novel `SFPLOADMACRO` emission, broader cross-BB replay discovery, and future replay allocation changes still require independent correctness plus silicon performance gates. ~~Keep only the shipped `pass_rvtt_loadmacro` formation analysis at `emit=no` until its simulator execution model and silicon validation path exist.~~ *[Directive superseded 2026-08-17: that pass is deleted (`5f31e00f0`; its flags hard-error on use) and the prerequisites now exist — generic sim execution at craq-sim `f80a8d6` and Min/Max silicon validation (§18.8.0.4). The surviving rule is the preceding sentence's per-emission correctness + silicon gate.]*
 
 **Re-scoping note vs §18.4.** The master roadmap lists F1's dependents (B/C/D) as "Not started". F1.0 is now shipped; F1.1–F1.4 reuse the shipped NOP-insertion mechanism rather than rebuilding it — the delta is the cost source, not the pass.
 
@@ -1724,15 +1735,17 @@ Two-part, and both must hold:
 
 - **Silicon A/B is net-new bring-up, not wiring.** §14.2/§14.4 and the §2.2 baseline row list the identical-source, changed-binary silicon A/B as **Open**, and §14.1 records the only silicon run as a *bypassed* 0.0%-delta case. F1.4 must stand up that harness from scratch; until it exists, the silicon leg of the gate is unmet.
 - **Calibration drift.** craq-sim gaps are build/env constants (`tensix.cpp:478-494`), not silicon-measured; a `rvtt-tune.md` fit to craq-sim can diverge from silicon. Mitigation: the silicon A/B leg (F1.4) is a *required* half of the gate — craq-sim is the fast oracle, silicon is the acceptance authority (GO-BH-ONLY posture, §2.2). Wormhole silicon remains an open validation surface.
-- **Single-stream ceiling is inherited, not solved.** The `rvtt-cost.md` DFA models one in-order pipe. It correctly carries per-engine latency and same-class structural hazards, but it **cannot** price cross-TRISC semaphore rendezvous or the implicit SrcA/SrcB bank-valid handshake — true multi-stream dataflow tokens with no RTL analog. F1 must therefore mark those stalls as *modeled-as-barrier* (conservative, non-free), not schedule through them. That boundary is exactly the **Track C GCC-ceiling / MLIR-reconsideration trigger** (§18.4 C, §18.5, `SFPI_COMPILER_UPGRADE.md:1393-1395`): if the corpus shows F1's single-stream cost model systematically mispredicting on multi-engine kernels because the dominant stalls are cross-thread, that is the documented signal to reconsider an MLIR async-token representation (§8) rather than force a fused-stream fiction into GCC's DFA. F1's honest scope is the SFPU single-pipe cost table; it must not over-claim whole-kernel accuracy.
+- **Single-stream ceiling is inherited, not solved.** The `rvtt-cost.md` DFA models one in-order pipe. It correctly carries per-engine latency and same-class structural hazards, but it **cannot** price cross-TRISC semaphore rendezvous or the implicit SrcA/SrcB bank-valid handshake — true multi-stream dataflow tokens with no RTL analog. F1 must therefore mark those stalls as *modeled-as-barrier* (conservative, non-free), not schedule through them. That boundary is exactly the **Track C GCC-ceiling / MLIR-reconsideration trigger** (§18.4 Track C, §18.5): if the corpus shows F1's single-stream cost model systematically mispredicting on multi-engine kernels because the dominant stalls are cross-thread, that is the documented signal to reconsider an MLIR async-token representation (§8) rather than force a fused-stream fiction into GCC's DFA. F1's honest scope is the SFPU single-pipe cost table; it must not over-claim whole-kernel accuracy.
 - **Attribute migration regression.** Annotating the generated `type=tensix` patterns in `rvtt.md`
   risks silently changing NOP placement on already-validated kernels. Keep `type=tensix` intact so
   existing pass membership does not change, and gate F1.2 on bit-identical scheduling of the shipped
   Welford binary before the new latencies are allowed to differ elsewhere.
 
-### 18.8 Track D — Replay / MOP / `SFPLOADMACRO` Emission (closes the ~4% gap)
+### 18.8 Track D — Replay / MOP / `SFPLOADMACRO` Emission
 
-**Status (2026-08-17): frontend REPLAY = LANDED with the silicon-recalibrated profitability gate (default-off); MOP compression = GREENFIELD; `SFPLOADMACRO` = LANDED as the generic 7-layer macro planner at gcc `bb56f1d77` (`-mtt-tensix-macro-planner`, default-off; Min/Max exact calendar deleted and planner-derived byte-identically; silicon-proven −30.73% same-source), executed generically by craq-sim `f80a8d6` (all shape recognizers deleted). See §18.8.0.4 for the reconciled current state and §18.8.0.5 for its adversarial verification; earlier status lines below are retained as lineage.**
+*(The heading's former "closes the ~4% gap" tagline was the superseded 339-era Welford figure; the authoritative 323-vs-326 result establishes no remaining Welford replay gap — see the end of §18.8.0.3.)*
+
+**Status (2026-08-17): frontend REPLAY = LANDED with the silicon-recalibrated profitability gate (default-off); MOP compression = GREENFIELD; `SFPLOADMACRO` = LANDED as the generic 7-layer macro planner at gcc `bb56f1d77` (`-mtt-tensix-macro-planner`, default-off; Min/Max exact calendar deleted and planner-derived byte-identically; silicon-proven −30.73% same-source on Blackhole **p100a**, re-confirmed −30.72% on p150), executed generically by craq-sim `f80a8d6` (all shape recognizers deleted). See §18.8.0.4 for the reconciled current state and §18.8.0.5 for its adversarial verification; earlier status lines below are retained as lineage.**
 
 *[Historical status line, SUPERSEDED by the above: "frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = PARTIAL FOUNDATION (CRAQ `fd8ed6f` executes admitted WH/BH transactional shapes; compiler emission is unlanded)."]*
 
@@ -1747,7 +1760,7 @@ Two-part, and both must hold:
 **Framing (mandatory 2×2):** `{semantic source, handwritten source} × {passes OFF, ON}`. **Causal** =
 semantic OFF→ON (the compiler's own improvement, a causal compiler claim). **Competitive** = semantic-ON
 vs hand. *Never mix them.* Blackhole p100a, 3 fresh procs/selector, deterministic ×3. **CRAQ is never a
-perf oracle.** Numbers are records — a fresh machine re-measures (HANDOFF §11) to re-verify.
+perf oracle.** Numbers are records — a fresh machine re-measures (machine-local HANDOFF §9–§10 bootstrap/harness recipes) to re-verify.
 
 **Ops with a distinct hand LLK (full 2×2):**
 
@@ -1757,9 +1770,9 @@ perf oracle.** Numbers are records — a fresh machine re-measures (HANDOFF §11
 | — same, KERNEL marker (migrated infra) | 1299 | 1057 | **−18.63%** | 1018 | +3.83% | drain-inclusive marker (BODY marker is invalid for fire-and-forget replay shapes) |
 | **Binary Min/Max** | 226.65 | 156.99 | **−30.73%** | 144.02 | +9.0% | **first physical proof of *derived* (non-hardcoded) SFPLOADMACRO**; was booked as a +41% open loss |
 | **Addcmul** | — | 292.99 | — | 292.93 | +0.02% | parity (single paired run); generic pre-IRA Dst-iteration fusion/interleave |
-| **Typecast** | — | 313 / 317 | — | 267 / 265 | +17.2% macro / +19.6% sem | open — needs 4-region descriptor sharing (§6b.4) |
-| **Exp semantic** | — | 989.75 | — | 579.74 | +70.7% | biggest open loss (§7b) |
-| **SigmoidAppx** | — | 361.80 | — | 222.88 | +62.3% | open — needs semantic LUT lowering (§7c); improved from the earlier +100.5% |
+| **Typecast** | — | 313 / 317 | — | 267 / 265 | +17.2% macro / +19.6% sem | open — needs 4-region descriptor sharing (HANDOFF §6b step 4) |
+| **Exp semantic** | — | 989.75 | — | 579.74 | +70.7% | biggest open loss (HANDOFF §7b lane) |
+| **SigmoidAppx** | — | 361.80 | — | 222.88 | +62.3% | open — needs semantic LUT lowering (HANDOFF §7c lane); improved from the earlier +100.5% |
 | **TTNN Where** | — | — | — | — | +96.2% | misc `0x706` ≠ sim `0x770` (different protocols) — closes via the planner's CC-template extension, **not** a patch |
 | **TopK** | — | — | — | — | +5.4% | runtime loop/control vs static expansion (zero `SFPMOV` in both) |
 | **Signbit** | — | — | — | — | −7.48% | win, but via the **old exact calendar** — must be planner-reproduced (WP8) before it counts |
@@ -1774,7 +1787,7 @@ vs hand) and **Min/Max −30.73%** (only +9% vs hand, flipping a +41% loss) — 
 hacks. The open losses (Where, Exp, Sigmoid, Typecast, TopK) each map to a named generic mechanism still to
 land. Caveats: delivery cost re-fit to **1.23× per replayed slot** (old 2.2:1 over-predicted launch gains
 ~7×); all planner/macro flags are **default-off**; the craq-sim magic-number recognizers are now **DELETED**
-(the §6a authorization was executed at craq-sim `f80a8d6` — see §18.8.0.4). **Lineage note:** the earlier F1-track figures (Welford −0.9%, Reduce-SDPA −0.7%,
+(the HANDOFF-§6a authorization was executed at craq-sim `f80a8d6` — see §18.8.0.4). **Lineage note:** the earlier F1-track figures (Welford −0.9%, Reduce-SDPA −0.7%,
 Reciprocal −1.7%, Binary broadcast tie) are a **different, pre-planner lineage** (HANDOFF §A, "reconcile/retire")
 and are retained in the notes below — do **not** sum them with the planner-lineage rows above.
 
@@ -2031,7 +2044,7 @@ the §18 current-coordinates block (sfpi-gcc `bb56f1d77` / tt-metal `69d61d66` /
   named `cc-template-unsupported` refusals; `-mtt-tensix-{analyze,emit}-loadmacro` now hard-error
   on use. Signbit formation is structural (no transplanted calendar; shifts form-or-refuse by
   encodability).
-- **Recognizers deleted from the sim** (craq-sim `f80a8d6`): every §6a recognizer and all recognizer
+- **Recognizers deleted from the sim** (craq-sim `f80a8d6`): every HANDOFF-§6a-listed recognizer and all recognizer
   state removed, no renamed re-introduction; `SFPLOADMACRO` decodes templates/sequence/misc purely
   from SFPCONFIG-written state; 8/8 Min/Max matrix bit-exact through the generic path (1024
   launches/test on ON legs, 0 on OFF); diff-fuzz strengthened 12→13 directed tests, 1000/1000 PASS
@@ -2049,7 +2062,9 @@ the §18 current-coordinates block (sfpi-gcc `bb56f1d77` / tt-metal `69d61d66` /
 **Per-error-class roll-up (supersedes the §18.8.0.2 table):** class 1 (latency reorder) partial,
 silicon-proven for Addcmul and the sdpa stack; class 2 (`SFPLOADMACRO` formation) **CLOSED
 generically** — planner-derived, Min/Max silicon win — with the residual losses attributed
-elsewhere; class 3 (cost model) — the *profitability* model is now silicon-recalibrated (the F1
+elsewhere *(caveat: the Typecast +22.64% attribution is SUSPECT pending the fired-vs-refused
+planner dump on the real node — if the shared descriptor refused, that residual IS a formation
+gap; see the loss table below and §18.8.0.5)*; class 3 (cost model) — the *profitability* model is now silicon-recalibrated (the F1
 Welford-timing oracle calibration remains a separate open item, §18.7); class 4 (counted replay)
 landed + silicon-measured (Reduce-SDPA 834 vs 840); class 5 (LICM/invariant hoist) landed and
 silicon-exercised inside the SDPA stack. The "0 classes Closed" framing is obsolete.
@@ -2066,8 +2081,8 @@ mix classes arithmetically):
 | **Reduce-SDPA** | generated **834** vs hand **840** (`bb56f1d77`-built compiler; gate-fix promotion pair) | equals the archived p100a-era 834/840 (corroborated by post.csv); labeled a reproduction in-repo |
 | **Expm1** | −2.49% | was exactly 0.000% on p100a |
 | **Lerp** | −13.43% | was −2.75% on p100a |
-| **Exp** | **+37.61%** (open loss, §7b lane) | was +70.7% |
-| **SigmoidAppx** | **+63.68%** (open loss, §7c LUT lane) | was +62.33% |
+| **Exp** | **+37.61%** (open loss, HANDOFF §7b lane) | was +70.7% |
+| **SigmoidAppx** | **+63.68%** (open loss, HANDOFF §7c LUT lane) | was +62.33% |
 | **Typecast** | **+22.64%** (WORSENED; the "WP8 step 4 targets it" attribution is SUSPECT — see §18.8.0.5) | was +17.2%/+19.6%; the ON leg used a BODY-family marker on a macro-launch shape with no issue-slot lower-bound check recorded |
 | **Log / Log1p** | byte-identical refusals under the recalibrated gate | unchanged (correctly not shipping a regression) |
 
@@ -2127,7 +2142,7 @@ fixed **before the next scheduled nightly/weekly is trusted**.
   precisely when clean**; the intended zero-FAIL enforcement never functions.
 - **D3 — `knob_silicon()` bypasses CRAQ + correctness (P1).** In `sweep_2x2.py run()`, weekly
   per-knob device jobs execute BEFORE the BH-CRAQ gate is evaluated, consult no craq verdicts, and
-  never run correctness for the single-knob flag sets — violating the §1(3)/(6) ordering for every
+  never run correctness for the single-knob flag sets — violating the silicon-protocol items (3)/(6) ordering (machine-local HANDOFF §1) for every
   weekly headline row.
 - **D4 — win→refusal regressions pass GREEN (P1).** If a previously winning row goes OFF/ON
   byte-identical (planner stops firing), `report()` emits "refusal byte-identical: GREEN" and never
@@ -2194,7 +2209,7 @@ fixed **before the next scheduled nightly/weekly is trusted**.
 
 Hard bounds the emitter MUST honor: `1<=len<=32` (`tensix.cpp:2444`), `start_idx<32` (`:2446`), and `start_idx+len<=32` — **overflow is `UndefinedBehavior`** (`:2447`). MOP (`tensix.cpp:2559`) is a hardware loop nest that calls `replay_expander` on its 9 template slots `mop_cfg[pipe][0..8]` (`sim.h:498-499`), so MOP and REPLAY *compose on the same buffer* (a MOP whose loop-op is a REPLAY playback is legal). Expansion is deferred (`defer=true`, `:2699/2712`) against the executable-FIFO watermark of 31 (`tensix.cpp:487-494`, drained one/cycle by `tensix_advance_frontend_stream`, `:2728`). On playback the wait-gate block mask is **recomputed per backend instruction** (`tensix.cpp:2464-2469`), so replayed-body hazards are still enforced individually — the compiler does not re-declare per-body sync.
 
-**Path B — `SFPLOADMACRO` (opcode `0x93`) is a different datapath**, not the 32-slot buffer. It reads a 4-entry `load_macro_instruction_template[4]` / `load_macro_sequence[4]` / `load_macro_misc` (`sim.h:587-589`) populated by `SFPCONFIG` writes (`config_dest 0..3→template, 4..7→sequence, 8→misc`, `tensix.cpp:9740-9757`); each `SFPLOADMACRO` does an implicit `SFPLOAD` into `LReg[VD]` re-dispatched as `0x70` (`tensix.cpp:9911-9927`) then schedules templated work across 4 sub-units. The original path functionally whitelists known LLK signatures. CRAQ `fd8ed6f` adds persistent delayed-event queues, transactional same-cycle evaluation, resource/write arbitration, issue-time store snapshots, and pure evaluators for a conservative WH/BH subset. Unsupported and conflicting shapes still fall back; QSR is not claimed.
+**Path B — `SFPLOADMACRO` (opcode `0x93`) is a different datapath**, not the 32-slot buffer. It reads a 4-entry `load_macro_instruction_template[4]` / `load_macro_sequence[4]` / `load_macro_misc` (`sim.h:587-589`) populated by `SFPCONFIG` writes (`config_dest 0..3→template, 4..7→sequence, 8→misc`, `tensix.cpp:9740-9757`); each `SFPLOADMACRO` does an implicit `SFPLOAD` into `LReg[VD]` re-dispatched as `0x70` (`tensix.cpp:9911-9927`) then schedules templated work across 4 sub-units. *[SUPERSEDED 2026-08-17: at craq-sim `f80a8d6` every recognizer is deleted and generic descriptor decode with delayed events (retiring at issue+1+Delay) is the ONLY path — there is no signature whitelist and no admitted-shape fallback (§18.8.0.4). The `fd8ed6f`-era description below is retained as lineage.]* ~~The original path functionally whitelists known LLK signatures. CRAQ `fd8ed6f` adds persistent delayed-event queues, transactional same-cycle evaluation, resource/write arbitration, issue-time store snapshots, and pure evaluators for a conservative WH/BH subset. Unsupported and conflicting shapes still fall back; QSR is not claimed.~~
 
 #### 18.8.2 What the GCC backend models/emits, and where — grounded in the shipped `rvtt` backend
 
@@ -2224,26 +2239,26 @@ Closing the gap is **finishing this shipped pass**, not building one: extend `re
 - **D1:** Cross-BB / dominator-scoped sequence discovery with per-generation live-value guarding (removes limitation #1). This is the milestone that targets the 3-cycle Welford body.
 - **D2:** Sequence-through-non-Tensix hoisting (limitation #4 / PR 36496) to stop spurious sequence termination.
 - **D3 (MOP, greenfield):** `new: rvtt_ttmop` + emit `MOP_CFG`/`MOP`; teach the allocator MOP∪REPLAY share the 32-slot arena; select MOP over REPLAY for nested loops by word-count cost.
-- **D4 (`SFPLOADMACRO`, partial foundation):** use CRAQ `fd8ed6f` as the admitted-shape functional gate; land a compiler-internal launch/config descriptor with byte-identical fallback; then expand pure event evaluators and compiler legality shape by shape for Typecast/MulInt/Where (§7 row `:830`).
+- **D4 (`SFPLOADMACRO`) — LANDED 2026-08-17 (§18.8.0.4):** ~~use CRAQ `fd8ed6f` as the admitted-shape functional gate; land a compiler-internal launch/config descriptor with byte-identical fallback; then expand pure event evaluators and compiler legality shape by shape~~ — the generic 7-layer planner (capability tables → descriptor synthesis → emission-gating verifier, byte-identical refusals) is landed at gcc `bb56f1d77`, and craq-sim `f80a8d6` decodes any programmed descriptor generically (the admitted-shape sim model is gone). Remaining D4 work: attribute/close the residual Typecast loss (fired-vs-refused, §18.8.0.5), the Where CC-template extension, and MulInt silicon — each still per-shape correctness + silicon gated (the §7 Typecast/MulInt/Where row).
 
 #### 18.8.4 Hard gate (measurable)
 
-**D0 gate (shipped/measurable now):** auto-replay compression on the 8-row unrolled mockup holds **88→19 static Tensix insns on WH and 56→15 on BH** (§6.1, `:807`, *Mockup Evidence*), and `WELFORD_BODY` on Blackhole silicon holds the pinned **323/323/323 device cycles** for N=1/2/32 vs replay-LLK's 326 (`:823`) — with all 5 Welford selectors passing correctness. Any `replay_buf` `start_idx+len>32` at emit is a hard fail (`UndefinedBehavior`, `tensix.cpp:2447`); the pass must prove `S+L<=32` as an allocation invariant.
+**D0 gate (shipped/measurable now):** auto-replay compression on the 8-row unrolled mockup holds **88→19 static Tensix insns on WH and 56→15 on BH** (§6.1 *Mockup Evidence*), and `WELFORD_BODY` on Blackhole silicon holds the pinned **323/323/323 device cycles** for N=1/2/32 vs replay-LLK's 326 (§7 Welford row, §13.3) — with all 5 Welford selectors passing correctness. Any `replay_buf` `start_idx+len>32` at emit is a hard fail (`UndefinedBehavior`, `tensix.cpp:2447`); the pass must prove `S+L<=32` as an allocation invariant.
 **D1 loop-hoist gate (cleared on Blackhole):** fixed-encoding replay capture hoisting changes
 Reduce-SDPA from handwritten `840` versus generated `855.5` to handwritten `840` versus generated
 `834` scoped device cycles, with paired correctness and three zero-spread processes per arm.  The
 implementation remains opt-in and conservatively single-block-loop only.  Broader cross-BB span
 discovery for Welford is still open and must independently satisfy the same changed-binary silicon
 gate; the Reduce result does not imply that unimplemented transform exists.
-**D4 gate (target, per-shape):** each `SFPLOADMACRO`-lowered Typecast/MulInt/Where shape must first be admitted by the transactional CRAQ model without fallback or `UnsupportedFunctionality`, then pass paired hardware correctness and repeated silicon A/B. The prior **≥1.33×** figure is an unmeasured opportunity target, not an acceptance result; CRAQ modeled cycles are not the performance authority.
+**D4 gate (per-shape; restated 2026-08-17 for the generic sim):** each `SFPLOADMACRO`-lowered Typecast/MulInt/Where shape must first execute bit-exactly under craq-sim `f80a8d6`'s generic descriptor decode against an independent explicit decomposition (the `fd8ed6f`-era "admitted by the transactional model without fallback" whitelist framing is obsolete — the sim now decodes any programmed descriptor; compiler-side refusals must remain byte-identical), then pass paired hardware correctness and repeated silicon A/B. The prior **≥1.33×** figure is an unmeasured opportunity target, not an acceptance result; CRAQ modeled cycles are not the performance authority.
 
 #### 18.8.5 Risks / ceiling
 
 - **Emit-ordering invariant (correctness-critical):** an arm (`load_mode=1`) must be followed *immediately in program order* by exactly `len` pushes before any playback — `replay_expander` in capture mode swallows everything until `replay_left==0` (`tensix.cpp:2411-2424`). The post-reload pass must never let another REPLAY or a scheduler move interleave between arm and body. Running `pass_rvtt_replay` after `pass_postreload` (`:54`) is correct precisely because no reordering pass follows.
 - **32-slot arena is a hard allocation constraint** shared across ALL live captured bodies per pipe (and, at D3, across MOP too). Over-allocation is silent `UndefinedBehavior` in the sim, not a diagnostic — the allocator carries the entire correctness burden, and that allocator is net-new (the shipped `rtl-rvtt-lp-alloc.cc` is a dump-only stub).
-- **User-reservation contract:** LLK hand-kernels reserve slots and there is **no global sim registry** (`sim.h:502`); reservations must be a compiler-known descriptor (the §7 "explicit … ownership metadata … no global reservation" model, `:823`), mirrored on replay slots. Discovery-based reservation (the shipped "not used anywhere in the function" heuristic, `:48`) is sound only within a compilation unit — cross-TU LLK reservations need the metadata ABI.
+- **User-reservation contract:** LLK hand-kernels reserve slots and there is **no global sim registry** (`sim.h:502`); reservations must be a compiler-known descriptor (the §7 "explicit … ownership metadata … no global reservation" model — Welford row), mirrored on replay slots. Discovery-based reservation (the shipped "not used anywhere in the function" heuristic, `:48`) is sound only within a compilation unit — cross-TU LLK reservations need the metadata ABI.
 - **Cross-BB live values (D1):** the pass author's own note (`:44-45`) flags that cross-BB replay needs better live-value computation for synthesized insns; getting generation-tracking wrong replays a stale-input body → silent numeric error, not a crash.
-- **`SFPLOADMACRO` ceiling:** CRAQ `fd8ed6f` removes the blanket pattern-matcher blocker only for its admitted WH/BH shapes. Novel or conflicting templates remain unvalidated until both a pure transactional evaluator and matching compiler legality proof exist. This is a per-shape simulator/compiler fidelity gate, not a GCC-IR ceiling; Track D remains a single-stream problem, unlike Track C.
+- **`SFPLOADMACRO` ceiling — *[risk retired 2026-08-17]*:** ~~CRAQ `fd8ed6f` removes the blanket pattern-matcher blocker only for its admitted WH/BH shapes. Novel or conflicting templates remain unvalidated until both a pure transactional evaluator and matching compiler legality proof exist.~~ At `f80a8d6` the recognizers are deleted and an adversarial never-whitelisted descriptor executes bit-exactly through the generic decode (§18.8.0.5); the residual fidelity surface is the ~450-line `execute_load_macro_template_direct` parallel evaluator for the two non-encodable overrides (opcode-generic, fuzz-pinned — tracked in §18.8.0.5). Track D remains a single-stream problem, unlike Track C.
 
 ### 18.9 Track B — DST Tile Register + RWC Hazard Model (executable design)
 
@@ -2269,7 +2284,7 @@ DST is not flat storage — it is a physically-banked 16-bit tile register file 
 
 5. **Cross-engine hazard gating.** Two implicit data hazards sit under the explicit `STALLWAIT`/`SEMWAIT` waits (which map math→bit6, PACR→bit2, UNPACR→bit3, `tensix.cpp:1723-1777`): (a) the SrcA/SrcB dvalid handshake — an `MVMUL` stalls until both src valids are set by the unpacker, then retires them through a one-cycle pipeline and flips `src_a_matrix_bank` (`tensix.cpp:4951-4966, 3395-3437`); (b) the `dst_row_valid` bitmap gating matrix/SFPU→pack.
 
-**Why the round-trips exist (sfpi §7).** SFPU vFloat values live in 8 architectural LRegs; transcendentals that exceed LReg pressure SFPSTORE an intermediate to a Dst row and SFPLOAD it back. The concrete sites this track targets: log reloads the original input at the zero/inf/nan special case (`v_if(in == 0.0F) { // Reload for register pressure`, `ckernel_sfpu_log.h:53/54`, peak pressure 9, §7 `:880`); erfinv reloads `in` from `sfpi::dst_reg[0]` to reattach the sign after nested inlined log + two `sqrt_custom` (`ckernel_sfpu_erfinv.h:54`, §7 `:881`); GELU reloads `x` from `dst_reg[0]` after the accurate FP32 tanh to finish `0.5*x*(1+tanh(...))` (`ckernel_sfpu_gelu.h:373`). Physically a store-then-load of the same row with no intervening writer is identity — but because the row is chosen through the moving RWC base and the format depends on CFG state, the compiler cannot fold it without modeling both. (`/root/tt-metal` already carries the *eliminated* log form; `/root/tt-metal-ci` carries the old hand-spilled bodies — the diff is the target.)
+**Why the round-trips exist (sfpi §7).** SFPU vFloat values live in 8 architectural LRegs; transcendentals that exceed LReg pressure SFPSTORE an intermediate to a Dst row and SFPLOAD it back. The concrete sites this track targets: log reloads the original input at the zero/inf/nan special case (`v_if(in == 0.0F) { // Reload for register pressure`, `ckernel_sfpu_log.h:53/54`, peak pressure 9, §7 `:880`); erfinv reloads `in` from `sfpi::dst_reg[0]` to reattach the sign after nested inlined log + two `sqrt_custom` (`ckernel_sfpu_erfinv.h:54`, §7 `:881`); GELU reloads `x` from `dst_reg[0]` after the accurate FP32 tanh to finish `0.5*x*(1+tanh(...))` (`ckernel_sfpu_gelu.h:373`). Physically a store-then-load of the same row with no intervening writer is identity — but because the row is chosen through the moving RWC base and the format depends on CFG state, the compiler cannot fold it without modeling both. (Era note: on the original dev box the working tt-metal checkout carried the *eliminated* log form while the CI checkout carried the old hand-spilled bodies — that diff is the target; reproduce it from any tt-metal `nkapre/sfpi` checkout against a mainline checkout.)
 
 #### 18.9.2 The enabler — typed `ttdstface` / `ttsetrwc` boundaries, and why they mirror raw-LREG-livein
 
@@ -2326,12 +2341,12 @@ A new pre-IRA `rtl_opt_pass`, `pass_rvtt_dst_ownership` in `new: rtl-rvtt-dst-ow
 
 #### 18.9.5 Hard gate (measurable)
 
-Grounded in §18.4 Track B ("Kernels that spill to Dst by hand keep values resident; correctness + non-inferiority", `:1603`). For log, GELU, and erfinv:
+Grounded in the §18.4 Track B gate row ("Kernels that spill to Dst by hand keep values resident; correctness + non-inferiority"). For log, GELU, and erfinv:
 
 1. **Round-trips eliminated.** The compiler-produced code contains **no author reload of the input from `dst_reg`** — the `ckernel_sfpu_log.h:53/54`, `ckernel_sfpu_erfinv.h:54`, and `ckernel_sfpu_gelu.h:373` reloads are replaced by LReg-resident values. Static SFPSTORE/SFPLOAD Dst round-trip count strictly below B1, and zero for the provably-identity cases.
-2. **Correctness (bit-exact).** Bit-exact numeric output vs. the pre-optimization build across the tile, and the LLK numeric-correctness suites stay green (parity vs handwritten; cf. §7 Welford 15/15 five-selector precedent, `:877`).
+2. **Correctness (bit-exact).** Bit-exact numeric output vs. the pre-optimization build across the tile, and the LLK numeric-correctness suites stay green (parity vs handwritten; cf. the §7 Welford 15/15 five-selector precedent).
 3. **Ordering preserved.** No regression on the retained matrix-write→pack-read `dst_row_valid` edge — no read of a stale / `!dst_row_valid` row.
-4. **Silicon non-inferiority.** Measured Blackhole device cycles **no worse than** the handwritten Dst-spilling baseline, run as a paired off/on flag-as-only-variable measurement (the §7/§13 WELFORD_BODY 323-vs-326 discipline, `:113,:877`).
+4. **Silicon non-inferiority.** Measured Blackhole device cycles **no worse than** the handwritten Dst-spilling baseline, run as a paired off/on flag-as-only-variable measurement (the §7/§13 WELFORD_BODY 323-vs-326 discipline).
 
 A fold that changes any output bit, violates a valid-bitmap edge, or crosses an unmodeled RWC/layout boundary fails the gate. craq-sim is the functional/correctness authority; silicon is the performance authority (§18.7 calibration failure — CRAQ cycle deltas are not admitted as a perf oracle). B4 clears gate parts 1–3; B5 clears part 4.
 
@@ -2353,7 +2368,7 @@ interface and must not be classified using Tensix FIFO opcode ranges. The existi
 are all single-stream SFPU-lowering passes with no notion of engines or TRISC threads, while most
 handwritten matrix/unpack/pack commands enter as opaque `.ttinsn` assembly. This track is the one
 that tests whether GCC's IR can carry tile/dataflow scheduling at all, and it is the documented
-MLIR-reconsideration checkpoint (SFPI_COMPILER_UPGRADE.md:1381, 1393–1395).
+MLIR-reconsideration checkpoint (§18.4 Track C gate row, §18.5).
 
 #### 18.10.1 Hardware mechanism (craq-sim ground truth)
 
@@ -2396,7 +2411,7 @@ GCC schedules **one in-order stream per compilation.** The three cross-cutting b
 | Wait-gate latch (met predicate forgotten, not re-armable) | tensix.cpp:2075–2088, 12054 | Not a monotone dependency; it is stateful dataflow-token semantics. |
 | Implicit SrcA/SrcB bank-valid handshake | tensix.cpp:3941–3944 | No IR for "this op stalls until a bank owned by another thread goes valid." |
 
-Modeling these forces one of two bad shapes: **(a)** three separately-compiled TRISC units with the compiler blind to the joint schedule (no cross-engine optimization — fails the whole-kernel gate at SFPI_COMPILER_UPGRADE.md:1381), or **(b)** a fictitious fused single stream with barrier pseudos, which serializes away the very concurrency the hardware exists to exploit. This is the documented §8 TT-Vector-dialect trigger (SFPI_COMPILER_UPGRADE.md:834–870, 1393–1395): async tokens / multiple concurrent value streams are the natural representation.
+Modeling these forces one of two bad shapes: **(a)** three separately-compiled TRISC units with the compiler blind to the joint schedule (no cross-engine optimization — fails the §18.4 Track C whole-kernel gate), or **(b)** a fictitious fused single stream with barrier pseudos, which serializes away the very concurrency the hardware exists to exploit. This is the documented §8 TT-Vector-dialect trigger (§8, §18.5): async tokens / multiple concurrent value streams are the natural representation.
 
 #### 18.10.3 Staged milestones
 
@@ -2410,7 +2425,7 @@ Modeling these forces one of two bad shapes: **(a)** three separately-compiled T
 
 #### 18.10.4 Hard gate
 
-**An end-to-end unpack→matmul→SFPU→pack kernel scheduled by the compiler, measured whole-kernel on silicon, non-inferior to the handwritten LLK** (SFPI_COMPILER_UPGRADE.md:1381). Measured, not asserted: device cycle count on the real kernel, same corpus/oracle harness as §18.5 (F1). C0 alone does not clear the gate — it is validated only that the DFA schedule matches the arbiter's per-class issue order on a single pipe (compare against `tensix_rtl_issue_class_for_inst` traces). The gate is cleared only at C2 with the joint schedule beating (or tying) handwritten whole-kernel cycles. The prerequisite is Track B2's DST/RWC alias model plus verified ownership enforcement; M2 becomes a dependency only if an actual fused corpus case demonstrates a physical-coloring failure that baseline IRA cannot resolve.
+**An end-to-end unpack→matmul→SFPU→pack kernel scheduled by the compiler, measured whole-kernel on silicon, non-inferior to the handwritten LLK** (§18.4 Track C gate row). Measured, not asserted: device cycle count on the real kernel, same corpus/oracle harness as §18.5 (F1). C0 alone does not clear the gate — it is validated only that the DFA schedule matches the arbiter's per-class issue order on a single pipe (compare against `tensix_rtl_issue_class_for_inst` traces). The gate is cleared only at C2 with the joint schedule beating (or tying) handwritten whole-kernel cycles. The prerequisite is Track B2's DST/RWC alias model plus verified ownership enforcement; M2 becomes a dependency only if an actual fused corpus case demonstrates a physical-coloring failure that baseline IRA cannot resolve.
 
 #### 18.10.5 Risks and the explicit GCC-ceiling / MLIR trigger
 
@@ -3073,11 +3088,15 @@ requires disproportionate backend surgery.
    `+21.9%` to `+0.02%` parity with Dst non-aliasing, SSA/cache integrity, exact final-ELF order,
    byte-identical fallback, CRAQ correctness, and repeated Blackhole samples. Generalize only when
    another corpus row presents the same proven shape; do not call parity a win.
-2. **Finish the first sound macro-emission slice.** CRAQ `fd8ed6f` provides the admitted WH/BH
-   transactional event model; compiler emission must additionally prove all config words, function-
-   scoped scratch/slot ownership, opaque-owner exclusion, hidden effects, and ineligible identity.
-   Pin the CRAQ repository commit and runner path in the result manifest so the cited model is
-   reproducible outside the author's checkout.
+2. **Finish the first sound macro-emission slice.** *[DONE 2026-08-17 — this directive is
+   executed: the generic planner at gcc `bb56f1d77` proves config-word ownership, hidden effects,
+   opaque-owner exclusion, and byte-identical refusals, and craq-sim `f80a8d6` replaced the
+   `fd8ed6f` admitted-shape model with generic descriptor decode; see §18.8.0.4.]*
+   ~~CRAQ `fd8ed6f` provides the admitted WH/BH transactional event model; compiler emission must
+   additionally prove all config words, function-scoped scratch/slot ownership, opaque-owner
+   exclusion, hidden effects, and ineligible identity.~~
+   Still good practice: pin the CRAQ repository commit and runner path in every result manifest so
+   the cited model is reproducible outside the author's checkout.
 3. **Silicon-score the landed invariant-placement + counted-replay pair.** Commits `2bfa165348` and
    `6422dbd9e3` now include the conservative eight-LREG budget, live-through/live-out accounting,
    opaque-owner refusal, counted-loop capture legality, and byte-identical fallback. Run the existing
