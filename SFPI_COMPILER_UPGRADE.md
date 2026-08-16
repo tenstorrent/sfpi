@@ -1717,35 +1717,41 @@ Two-part, and both must hold:
 
 **Status: frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = PARTIAL FOUNDATION (CRAQ `fd8ed6f` executes admitted WH/BH transactional shapes; compiler emission is unlanded).**
 
-#### 18.8.0 Silicon Scorecard — Compiler-Generated vs Hand-Tuned LLK
+#### 18.8.0 Silicon Scorecard — Compiler vs Hand-Tuned LLK (authoritative; synced from `~/HANDOFF.md` §3, 2026-08-17)
 
-Consolidated from the per-kernel notes below (and §13.3 for Welford). **All figures are Blackhole
-device profiler-zone `*_BODY` cycles — not whole-kernel throughput; CRAQ deltas are excluded per the
-§18.7 calibration failure.** Lower is better; Δ is generated relative to hand-tuned.
+**Framing (mandatory 2×2):** `{semantic source, handwritten source} × {passes OFF, ON}`. **Causal** =
+semantic OFF→ON (the compiler's own improvement, a causal compiler claim). **Competitive** = semantic-ON
+vs hand. *Never mix them.* Blackhole p100a, 3 fresh procs/selector, deterministic ×3. **CRAQ is never a
+perf oracle.** Numbers are records — a fresh machine re-measures (HANDOFF §11) to re-verify.
 
-| Kernel | Hand-tuned LLK | Generated | Δ | Correctness | Outcome |
-| :--- | ---: | ---: | ---: | :--- | :--- |
-| **Welford** body | 326 | 323 | **−0.9%** (−3) | 15/15 | Parity / marginal — §14 will not credit it as a scheduler win (bounded zone, different source bodies) |
-| **Binary broadcast** | 608 | 608 | **0.0%** | 8/8 BH, 6/6 WH compile | **Exact tie** — zero-regression compiler-flow replacement |
-| **Reduce-SDPA** body | 840 (8-slot replay) | 834 | **−0.7%** (−6) | paired full golden | **Generated win** — generic D1 preheader capture hoisting flips the prior +2.0% loss |
-| **Reciprocal, accurate BF16** | 467 | 459 | **−1.7%** (−8) | paired canonical tolerance + PCC, 2/2 BH | **Generated win** — fresh semantic cubic becomes a generic 10-slot replay capture plus seven playbacks |
-| **Binary Min/Max** | 140.93 | 198.76 | **+41.0%** (+57.83) | paired element tolerance + PCC | **Loss** — ordinary load/load/swap/store replay cannot match the handwritten SFPLOADMACRO pipeline |
-| **Addcmul** | 292.93 | 292.99 | **+0.02%** (+0.06) | paired element tolerance + PCC, 2/2 BH | **Parity** — generic pre-IRA Dst-iteration fusion/interleave closes the prior +21.9% loss; not a win |
-| **Typecast, Float16_b lane** | 265 | 317 | **+19.6%** (+52) | paired element tolerance + PCC, 2/2 BH | **Loss** — typed five-slot replay versus handwritten SFPLOADMACRO pipeline |
-| **TTNN Where** | 159.25 | 312.50 | **+96.2%** (+153.25) | 2/2 BH | **Loss** — correct canonical SFPI; 7 replay slots versus handwritten SFPLOADMACRO's 3 |
-| **TopK** | 5038 | 5310 | **+5.4%** (+272) | exact value/index pairing, 2/2 BH | **Loss** — multi-result typed model is sound; final delivery/schedule remains longer |
-| **SigmoidAppx** | 222.85 | 446.85 | **+100.5%** (+224) | `atol=.13`, `rtol=.05`, PCC > .99, 2/2 BH | **Loss** — fresh cubic rematerializes constants per row and forms no replay |
+**Ops with a distinct hand LLK (full 2×2):**
 
-**Read-out: three generated wins are now measured.** Generic D1 replay hoisting moves Reduce-SDPA
-from a 2.0% generated loss to a repeatable 0.7% generated win; fresh semantic accurate-BF16
-Reciprocal is 1.7% faster because the ordinary compiler replay pass compresses its ten-instruction
-body; Welford remains a marginal generated win. Binary broadcast ties exactly. The loss rows split
-cleanly into missing SFPLOADMACRO formation (Binary Min/Max, Typecast, Where), loop-invariant
-constant/replay formation (SigmoidAppx), and a smaller TopK delivery/schedule gap. Addcmul is now a
-separate parity result: the generic pre-IRA Dst-iteration fusion/interleave pass closes its measured
-21.9% deficit, but does not beat the handwritten schedule. The macro formation work remains opt-in
-and per-shape; it must not be described as corpus-ready until a real typed final ELF passes CRAQ,
-hardware correctness, and repeated silicon A/B.
+| Op | sem OFF | sem ON | causal (OFF→ON) | hand | vs hand | note |
+| :--- | ---: | ---: | ---: | ---: | ---: | :--- |
+| **SDPA Exp Unclamped** (BODY marker) | 1048 | 715 | **−31.77%** | 632 | +13.13% | strongest result; large causal win from generic replay-hoist → scoped ownership → dst-autoincr → launch conversion |
+| — same, KERNEL marker (migrated infra) | 1299 | 1057 | **−18.63%** | 1018 | +3.83% | drain-inclusive marker (BODY marker is invalid for fire-and-forget replay shapes) |
+| **Binary Min/Max** | 226.65 | 156.99 | **−30.73%** | 144.02 | +9.0% | **first physical proof of *derived* (non-hardcoded) SFPLOADMACRO**; was booked as a +41% open loss |
+| **Addcmul** | — | 292.99 | — | 292.93 | +0.02% | parity (single paired run); generic pre-IRA Dst-iteration fusion/interleave |
+| **Typecast** | — | 313 / 317 | — | 267 / 265 | +17.2% macro / +19.6% sem | open — needs 4-region descriptor sharing (§6b.4) |
+| **Exp semantic** | — | 989.75 | — | 579.74 | +70.7% | biggest open loss (§7b) |
+| **SigmoidAppx** | — | 361.80 | — | 222.88 | +62.3% | open — needs semantic LUT lowering (§7c); improved from the earlier +100.5% |
+| **TTNN Where** | — | — | — | — | +96.2% | misc `0x706` ≠ sim `0x770` (different protocols) — closes via the planner's CC-template extension, **not** a patch |
+| **TopK** | — | — | — | — | +5.4% | runtime loop/control vs static expansion (zero `SFPMOV` in both) |
+| **Signbit** | — | — | — | — | −7.48% | win, but via the **old exact calendar** — must be planner-reproduced (WP8) before it counts |
+
+**Semantic-only ops (no distinct hand — causal only):** **Lerp −2.75%** (landed win); **Expm1 0.000%**
+(latency reorder absorbed by BH dynamic stalls); **Log +1.81% / Log1p +2.30%** regressions — now
+**byte-identical refusals** under the profitability gate (correctly not shipping a regression).
+
+**Read-out.** Two genuine *causal* wins on hand-having ops — **SDPA Exp Unclamped −31.77%** (only +13.13%
+vs hand) and **Min/Max −30.73%** (only +9% vs hand, flipping a +41% loss) — both from **generic** mechanisms
+(replay hoisting / scoped ownership / launch conversion; derived non-hardcoded macro emission), not per-kernel
+hacks. The open losses (Where, Exp, Sigmoid, Typecast, TopK) each map to a named generic mechanism still to
+land. Caveats: delivery cost re-fit to **1.23× per replayed slot** (old 2.2:1 over-predicted launch gains
+~7×); all planner/macro flags are **default-off**; the craq-sim magic-number recognizers are now **authorized
+for deletion** (HANDOFF §6a). **Lineage note:** the earlier F1-track figures (Welford −0.9%, Reduce-SDPA −0.7%,
+Reciprocal −1.7%, Binary broadcast tie) are a **different, pre-planner lineage** (HANDOFF §A, "reconcile/retire")
+and are retained in the notes below — do **not** sum them with the planner-lineage rows above.
 
 #### 18.8.0.1 Perf-Loss Root Cause — Why Correct-But-Slower
 
@@ -1891,20 +1897,6 @@ shapes (the compiler out-generalized its own oracle), and no sim path yields SFP
 So every macro kernel (Where +96%, Min/Max +41%, Typecast +20%) remains **unvalidatable beyond the
 whitelist, unscorable on CRAQ, and unmeasured** (all planner flags default-off). The next gate is the
 4-sub-unit timing model in craq-sim (or a silicon-only harness), not more compiler passes.
-
-#### 18.8.0.4 Reconciliation with `~/HANDOFF.md` (authoritative, 2026-08-17)
-
-The clean-machine handoff `~/HANDOFF.md` is now the authoritative live scoreboard and directive set; it enforces a strict **2×2** — `{semantic, handwritten} × {passes OFF, ON}`: *causal* (semantic OFF→ON) vs *competitive* (semantic-ON vs hand), never mixed. The §18.8.0 table above predates this framing and is superseded where they disagree:
-
-| Kernel | §18.8.0 (old) | HANDOFF.md (authoritative) |
-| :--- | :--- | :--- |
-| **SDPA Exp Unclamped** | not present | **−31.77% causal** (1048→715); **+13.13% vs hand** (632) — the strongest result |
-| **Binary Min/Max** | +41.0% open loss | **−30.73% causal** (226.65→156.99); **+9.0% vs hand** — first physical proof of *derived* (non-hardcoded) SFPLOADMACRO emission |
-| **Lerp** | — | −2.75% win (semantic-only) |
-| **Log / Log1p** | (loss class) | now **byte-identical refusals** under the profitability gate (correctly not regressing) |
-| **Expm1** | — | 0.000% (latency reorder absorbed by BH dynamic stalls) |
-
-Still open / stale-pending in the handoff: TTNN Where +96.2% (misc `0x706`≠sim `0x770` — closes via the planner's CC-template extension, not a patch), SigmoidAppx +62.3% (needs semantic LUT lowering), Exp-semantic +70.7%, Typecast +17–19%, TopK +5.4%, Addcmul parity. Caveats from the handoff: the SDPA **BODY marker is invalid** for fire-and-forget replay shapes (use the KERNEL marker); delivery cost re-fit to **1.23× per replayed slot** (old 2.2:1 over-predicted ~7×); CRAQ is never a perf oracle. The craq-sim magic-number recognizers (`0x1b8400de`/`0x770`) are now **authorized for deletion** (HANDOFF §6a) — the sim wall §18.8.0.3 flagged has a demolition order, optionally with a D4 4-sub-unit FIFO timing model.
 
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) were then closed by generic D1 preheader capture hoisting: the current pinned result is handwritten `840` vs generated `834` — a **−0.7% generated win**, the corpus's first outright flip (§18.8.0). This note is retained for the recovery history (opaque `.ttinsn` → typed API → hoisting). Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
