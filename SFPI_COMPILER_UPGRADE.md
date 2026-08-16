@@ -1461,6 +1461,23 @@ detail?" — the honest prior answer was no: §8 was a one-diagram MLIR vision a
 entire future into one cell. This section is the actual roadmap under the chosen strategy: **extend
 the GCC/sfpi backend; defer MLIR (§8) to an optional later layer.***
 
+> **Current coordinates (2026-08-17) — read before any track status below.** The authoritative state
+> of all four repos is branch `nkapre/sfpi`:
+>
+> | Repo | Tip | Carries |
+> | :--- | :--- | :--- |
+> | **sfpi** (superproject) | `9a555cb89f` | gcc pin `bb56f1d77` (chain `ddf44ed64 → cd0af49be → bb56f1d77`, verified exact); wrappers incl. `dst_face_advance` (`ded6e4e9`); this document |
+> | **sfpi-gcc** | `bb56f1d77` | three-branch unification (planner → sdpa → profit: `b3c031380` / `b5e07e458` / `6724f48c6`, mechanically faithful unions); all of WP8 (quarantined pass deleted `5f31e00f0` after oracle mint `32e20f9fd`); silicon-recalibrated profitability gate; `docs/MACRO_PLANNER.md` |
+> | **tt-metal** | `69d61d66` | sweep_2x2 automation + weekly/nightly scripts; p150 chip-class baselines; Min/Max perf-harness fixes; Reduce-SDPA 834/840 p150 baseline pair; typed-LLK migration |
+> | **craq-sim** | `f80a8d6` | §6a recognizer deletion complete — generic descriptor-driven macro execution only |
+>
+> Bootstrap knowledge that used to live only in the machine-local HANDOFF now lives in-repo: this §18
+> (track statuses; the reconciled state in §18.8.0.4 and the pull-analysis in §18.8.0.5),
+> `docs/MACRO_PLANNER.md` in sfpi-gcc, and the sweep/harness scripts under tt-metal
+> `tt_metal/tt-llk/tests/`. Reading discipline for every number below: it must carry its **chip class**
+> (p100a vs p150 — never mixed arithmetically) and its **compiler era**, and same-source (OFF→ON
+> causal) claims are never mixed with vs-hand (competitiveness) claims.
+
 ### 18.0 Implementation Onboarding (read this first)
 
 Curated reading list for an agent about to *implement* the roadmap. Ordered; honest about what is
@@ -1599,10 +1616,10 @@ greenfield wholesale.
 
 | Track | Scope (all GCC-internal) | Status | Hard gate |
 | :--- | :--- | :--- | :--- |
-| **A. Finish the SFPU story** | Full SFPU ISA scheduling/alloc beyond add/mul/mad (LUT/transcendental, int, casts); predication/masking under CC divergence; software pipelining across loops; M2 exact allocator **only if** raw-LREG+IRA proves insufficient on the corpus (still a stub, §4). | Partly shipped | Match/beat handwritten **non-replay** LLK across the SFPU corpus on silicon. |
-| **B. DST tile register + RWC** | Model the DST accumulator (fp16/fp32 layout) and RWC (read/write-clear) hazard tokens between matrix engine, SFPU, and pack. Eliminate the hand-written `Dst` round-trips §7 kernels use (log/GELU/erfinv dump state to `Dst`). Annotated raw-LREG ownership enforcement already ships; layout/RWC aliasing and its post-IRA verifier remain. | Partial | Kernels that spill to `Dst` by hand keep values resident; correctness + non-inferiority. |
+| **A. Finish the SFPU story** | Full SFPU ISA scheduling/alloc beyond add/mul/mad (LUT/transcendental, int, casts); predication/masking under CC divergence; software pipelining across loops; M2 exact allocator **only if** raw-LREG+IRA proves insufficient on the corpus (still a stub, §4). | Partly shipped — the unified sdpa stack (pressure-aware invariant hoist, replay-aware unroll, dst-autoincr, launch conversion) is LANDED default-off at gcc `bb56f1d77` and silicon-proven (SDPA −19.63% causal on p150); LUT lowering (SigmoidAppx) and Exp remain open (§18.8.0.4) | Match/beat handwritten **non-replay** LLK across the SFPU corpus on silicon. |
+| **B. DST tile register + RWC** | Model the DST accumulator (fp16/fp32 layout) and RWC (read/write-clear) hazard tokens between matrix engine, SFPU, and pack. Eliminate the hand-written `Dst` round-trips §7 kernels use (log/GELU/erfinv dump state to `Dst`). Annotated raw-LREG ownership enforcement already ships; layout/RWC aliasing and its post-IRA verifier remain. | B0 enabler LANDED (typed `ttdstface`/`ttsetrwc` at gcc `bb56f1d77`; wrappers `ded6e4e9`; LLK migrated on tt-metal `nkapre/sfpi`); B1–B5 pass unbuilt; lane PAUSED (§18.9) | Kernels that spill to `Dst` by hand keep values resident; correctness + non-inferiority. |
 | **C. Cross-engine scheduling** | Model matrix engine (FPU/matmul) + pack/unpack pipelines; coordinate the three TRISCs (unpack/math/pack) via semaphores/wait-gates; schedule across engine boundaries. **This is where GCC's tile/dataflow abstractions may hit a ceiling — MLIR reconsideration checkpoint (§8).** | Not started | An end-to-end unpack→matmul→SFPU→pack kernel scheduled by the compiler, measured **whole-kernel** on silicon. |
-| **D. Replay / MOP / `SFPLOADMACRO` emission** | Existing post-RA replay formation ships, and conservative loop-capture hoisting is opt-in with a changed-binary Reduce-SDPA silicon win. General cross-BB replay allocation, MOP, and `SFPLOADMACRO` emission remain. | Partial | Compiler-emitted replay matches handwritten replay cycle count across the corpus; every novel formation is correctness-checked and silicon-scored. |
+| **D. Replay / MOP / `SFPLOADMACRO` emission** | Existing post-RA replay formation ships, and conservative loop-capture hoisting is opt-in with a changed-binary Reduce-SDPA silicon win. General cross-BB replay allocation and MOP remain. | Planner LANDED — the generic 7-layer `SFPLOADMACRO` planner is at gcc `bb56f1d77` (default-off; Min/Max exact calendar deleted and planner-derived byte-identically; silicon-proven −30.73% same-source p100a, −30.72% p150), executed generically by craq-sim `f80a8d6`; replay-hoist + recalibrated profitability gate landed; MOP still greenfield (§18.8.0.4) | Compiler-emitted replay matches handwritten replay cycle count across the corpus; every novel formation is correctness-checked and silicon-scored. |
 | **E. Front-end / autovectorization** | Auto-vectorize scalar SFPU loops within GCC (today `sfpi` is *explicit* `vFloat` intrinsics, not a vectorizing compiler). Higher-level entry (Triton/linalg) stays deferred with MLIR. **Second GCC-ceiling checkpoint.** | Not started | A scalar-source kernel auto-vectorizes to within a set % of hand-written `vFloat`. |
 | **F. Precision & numerics** | bf16/fp32 mixed-precision paths; parity gates against the LLK numeric corpus. | Not started | No precision regression vs handwritten across the corpus. |
 
@@ -1715,9 +1732,17 @@ Two-part, and both must hold:
 
 ### 18.8 Track D — Replay / MOP / `SFPLOADMACRO` Emission (closes the ~4% gap)
 
-**Status: frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = PARTIAL FOUNDATION (CRAQ `fd8ed6f` executes admitted WH/BH transactional shapes; compiler emission is unlanded).**
+**Status (2026-08-17): frontend REPLAY = LANDED with the silicon-recalibrated profitability gate (default-off); MOP compression = GREENFIELD; `SFPLOADMACRO` = LANDED as the generic 7-layer macro planner at gcc `bb56f1d77` (`-mtt-tensix-macro-planner`, default-off; Min/Max exact calendar deleted and planner-derived byte-identically; silicon-proven −30.73% same-source), executed generically by craq-sim `f80a8d6` (all shape recognizers deleted). See §18.8.0.4 for the reconciled current state and §18.8.0.5 for its adversarial verification; earlier status lines below are retained as lineage.**
 
-#### 18.8.0 Silicon Scorecard — Compiler vs Hand-Tuned LLK (authoritative; synced from `~/HANDOFF.md` §3, 2026-08-17)
+*[Historical status line, SUPERSEDED by the above: "frontend REPLAY = PARTIAL (shipped, single-BB); MOP compression = GREENFIELD; `SFPLOADMACRO` = PARTIAL FOUNDATION (CRAQ `fd8ed6f` executes admitted WH/BH transactional shapes; compiler emission is unlanded)."]*
+
+#### 18.8.0 Silicon Scorecard — Compiler vs Hand-Tuned LLK (p100a-era record; SUPERSEDED as the authoritative scoreboard by §18.8.0.4's p150 table — retained for lineage)
+
+> **[SUPERSESSION NOTE 2026-08-17.]** The table below is the p100a record. The authoritative chip
+> class is now **p150** (tt-metal `69d61d66` chip-class-separated baselines); several rows moved
+> (Signbit's planner-reproduction condition is DISCHARGED; Typecast worsened to +22.64%; Exp improved
+> to +37.61%; Lerp to −13.43%; Expm1 to −2.49%). Do not mix p100a and p150 cells arithmetically.
+> Current numbers + comparability rules: **§18.8.0.4**.
 
 **Framing (mandatory 2×2):** `{semantic source, handwritten source} × {passes OFF, ON}`. **Causal** =
 semantic OFF→ON (the compiler's own improvement, a causal compiler claim). **Competitive** = semantic-ON
@@ -1748,12 +1773,17 @@ vs hand) and **Min/Max −30.73%** (only +9% vs hand, flipping a +41% loss) — 
 (replay hoisting / scoped ownership / launch conversion; derived non-hardcoded macro emission), not per-kernel
 hacks. The open losses (Where, Exp, Sigmoid, Typecast, TopK) each map to a named generic mechanism still to
 land. Caveats: delivery cost re-fit to **1.23× per replayed slot** (old 2.2:1 over-predicted launch gains
-~7×); all planner/macro flags are **default-off**; the craq-sim magic-number recognizers are now **authorized
-for deletion** (HANDOFF §6a). **Lineage note:** the earlier F1-track figures (Welford −0.9%, Reduce-SDPA −0.7%,
+~7×); all planner/macro flags are **default-off**; the craq-sim magic-number recognizers are now **DELETED**
+(the §6a authorization was executed at craq-sim `f80a8d6` — see §18.8.0.4). **Lineage note:** the earlier F1-track figures (Welford −0.9%, Reduce-SDPA −0.7%,
 Reciprocal −1.7%, Binary broadcast tie) are a **different, pre-planner lineage** (HANDOFF §A, "reconcile/retire")
 and are retained in the notes below — do **not** sum them with the planner-lineage rows above.
 
 #### 18.8.0.1 Perf-Loss Root Cause — Why Correct-But-Slower
+
+> **[SUPERSEDED 2026-08-17 — retained as the 2026-08-15-era diagnosis.]** The "No `SFPLOADMACRO`"
+> error class below is CLOSED generically: the planner now forms derived macros and Min/Max is a
+> silicon-proven **−30.73% same-source win** (was +41.0% here). SigmoidAppx's +100.5% and Typecast's
+> +19.6% are also stale (now +63.68% / +22.64% on p150). Current table: **§18.8.0.4**.
 
 Reported corpus run (2026-08-15; per-kernel silicon instruction-diff artifacts pending in-repo):
 Binary Min/Max **+41.0%**, Typecast **+19.6%**, TopK **+5.4%** — all correct. Addcmul's original
@@ -1821,6 +1851,13 @@ gates rather than treating parity as a corpus-wide scheduler win.
 
 ### 18.8.0.2 Current-State Audit (2026-08-16)
 
+> **[SUPERSEDED 2026-08-17 by §18.8.0.4.]** This audit's "**0 classes Closed, 4 Partial, 1 Open**"
+> roll-up and its kernel accounting were true against tip `e4b974208cc` / HEAD `8f943c2f84a` and are
+> obsolete at pin `bb56f1d77`: the Min/Max exact calendar is deleted and planner-derived (silicon
+> −30.73%), WP8 is complete (quarantined pass deleted), the sim recognizers are gone (`f80a8d6`),
+> and the profitability gate is landed + recalibrated. Retained unedited as the audit-methodology
+> record.
+
 Scope: reconciles the five error classes and the §18.8.0 kernel scorecard against what is actually checked in on `origin/nkapre/sfpi` (tip `e4b974208cc`) vs the checked-out HEAD `8f943c2f84a`. Rule applied throughout: **no win and no closed loss is claimed without a fresh Blackhole silicon number.** Where a fix has landed but not been re-measured, the status is stated as *landed; silicon remeasure pending* and the old loss figure is treated as **stale-pending**, not superseded.
 
 #### (1) Per-error-class status
@@ -1873,6 +1910,15 @@ Net: **3 silicon wins, 1 tie, 1 silicon parity (Addcmul), 1 open silicon loss (M
 **Provenance caveat.** The SFPLOADMACRO emitters, counted-loop replay hoist, invariant-hoist matcher fix, and the Dst-iteration passes all live on `origin/nkapre/sfpi` and are **not ancestors of the checked-out HEAD `8f943c2f84a`** (all 13 commits verified non-ancestors); `gimple-rvtt-dst-iteration.cc` and the counted-loop payload code do not exist on-disk at HEAD. The on-HEAD `rtl-rvtt-replay.cc` is the pre-extension version. Any default build of HEAD reflects none of the class 1/2/4-counted/5 mechanisms.
 
 #### 18.8.0.3 Update (2026-08-16): generic macro planner pinned — provenance closed, sim gap now the wall
+
+> **[PARTIALLY SUPERSEDED 2026-08-17 — see §18.8.0.4.]** The compiler-side account below stands, but
+> two of its findings are now CLOSED: (a) the "sim side untouched" wall fell — craq-sim `f80a8d6`
+> deleted every recognizer (`0x1b8400de`, `0x770`, all template constants) and executes macros
+> generically from SFPCONFIG-programmed state, so planner shapes are no longer whitelist-bound; (b)
+> "unvalidatable, unscorable, unmeasured" no longer holds — the 8/8 Min/Max CRAQ matrix is bit-exact
+> through the generic path and fresh p150 silicon exists for Min/Max and Typecast; lane-predicated
+> shapes (typecast faces, Where successors) remain gated on the D1 all-lanes fix (§18.8.0.5). The pin
+> reference `ddf44ed64` is stale by two advances (now `bb56f1d77`).
 
 Supersedes the two stale findings above. The `agent/generic-macro-planner` + `agent/toolchain-pin`
 merges advanced the submodule pin `8f943c2f84a → ddf44ed64` (`nkapre/sfpi` `02bf3e1`), so the
@@ -1964,6 +2010,178 @@ remaining Welford replay gap and does not motivate scheduler default-on. Track D
 other corpus kernels and by general frontend compression opportunity; path A replay and path B
 `SFPLOADMACRO` are independent datapaths and must not be conflated.
 
+#### 18.8.0.4 Landed-State Reconciliation (2026-08-17) — current authoritative status
+
+Supersedes the §18.8.0.2 "0 closed / 4 partial / 1 open" framing, the §18.8.0 p100a scorecard as
+the authoritative table, and §18.8.0.3's "sim gap is the wall" finding. State is at the tips in
+the §18 current-coordinates block (sfpi-gcc `bb56f1d77` / tt-metal `69d61d66` / craq-sim `f80a8d6`
+/ sfpi `9a555cb89f`), adversarially verified per §18.8.0.5.
+
+**What landed since the 2026-08-16 audits:**
+
+- **Min/Max exact calendar DELETED and planner-derived.** WP7 deleted the hardcoded calendar; the
+  generic planner re-derives the emission byte-identically (including the real in-place-store kernel
+  via a generic store-demoted scheduling fallback). Evidence: byte-parity oracles, **8/8 CRAQ
+  digests EXACT** vs the frozen oracle, and silicon — p100a **−30.73% same-source**, **+9.0% vs
+  hand** (was a booked +41% open loss); re-confirmed on p150 at −30.72% / +8.26% (ratio-level, see
+  table). First physical proof of *derived* (non-hardcoded) `SFPLOADMACRO` emission.
+- **WP8 complete.** `rtl-rvtt-loadmacro.cc` (the quarantined exact-calendar pass) deleted entirely
+  (`5f31e00f0`) *after* oracle mint (`32e20f9fd`; re-minting with an independent tip build reproduces
+  every committed hash); typecast four-region descriptor sharing landed (`50cad63fa`); Where →
+  named `cc-template-unsupported` refusals; `-mtt-tensix-{analyze,emit}-loadmacro` now hard-error
+  on use. Signbit formation is structural (no transplanted calendar; shifts form-or-refuse by
+  encodability).
+- **Recognizers deleted from the sim** (craq-sim `f80a8d6`): every §6a recognizer and all recognizer
+  state removed, no renamed re-introduction; `SFPLOADMACRO` decodes templates/sequence/misc purely
+  from SFPCONFIG-written state; 8/8 Min/Max matrix bit-exact through the generic path (1024
+  launches/test on ON legs, 0 on OFF); diff-fuzz strengthened 12→13 directed tests, 1000/1000 PASS
+  bh+wh. The compiler no longer out-generalizes its own oracle.
+- **Profitability gate landed + RECALIBRATED** at `bb56f1d77` from 4 silicon points (the old formula
+  ordered the silicon winner below both losers): `benefit = trips×(deliver − max(123, execute)) −
+  deliver` in **centislots** (deliver = (1+len)×123, execute = 100×len), MIN_BENEFIT=60;
+  `-mtt-tensix-replay-hoist-min-benefit=` changed units slots→centislots and default 64→60.
+  Verified a *plane, not a curve-fit notch* (76 unseen probes match exactly; no notch near
+  ReduceSDPA (4,8)=121). Log/Log1p remain byte-identical refusals; ReduceSDPA (4,8)=121 and
+  SDPA-exp (8,24)=2325 fire. The no-silicon band is now modeled benefit **[60,121)** centislots.
+- **Default codegen byte-identical** vs `e4b974208` (pin corpus 3/3 recorded hashes + 238 tensix
+  testsuite files at default flags).
+
+**Per-error-class roll-up (supersedes the §18.8.0.2 table):** class 1 (latency reorder) partial,
+silicon-proven for Addcmul and the sdpa stack; class 2 (`SFPLOADMACRO` formation) **CLOSED
+generically** — planner-derived, Min/Max silicon win — with the residual losses attributed
+elsewhere; class 3 (cost model) — the *profitability* model is now silicon-recalibrated (the F1
+Welford-timing oracle calibration remains a separate open item, §18.7); class 4 (counted replay)
+landed + silicon-measured (Reduce-SDPA 834 vs 840); class 5 (LICM/invariant hoist) landed and
+silicon-exercised inside the SDPA stack. The "0 classes Closed" framing is obsolete.
+
+**Current loss table — chip-class split. AUTHORITATIVE CLASS = p150** (tt-metal `69d61d66`,
+chip-class-separated baseline files; the p100a file is immutable and retained for lineage; never
+mix classes arithmetically):
+
+| Op | p150 status (at `69d61d66`) | Comparability to the p100a record |
+| :--- | :--- | :--- |
+| **SDPA Exp Unclamped** | sem 1289→1036 (**−19.63% causal**, KERNEL marker) / hand 1009 (+2.7% vs hand) | ratio-level only (chip changed; whether the measured ON bytes equal `b0d9e72e` is not recorded in-repo) |
+| **Binary Min/Max** | **−30.72% causal** / +8.26% vs hand | **NOT same-source** with the p100a 226.65/156.99/144.02 records — `65d2c873`/`4ff5c848` changed the measured kernel's `.text` for both impls (verified); ratio-level reproduction only |
+| **Signbit** | planner-fired sem ON **−22.98% causal**; **beats hand −5.81%** | the §18.8.0 "must be planner-reproduced before it counts" condition is **DISCHARGED** |
+| **Reduce-SDPA** | generated **834** vs hand **840** (`bb56f1d77`-built compiler; gate-fix promotion pair) | equals the archived p100a-era 834/840 (corroborated by post.csv); labeled a reproduction in-repo |
+| **Expm1** | −2.49% | was exactly 0.000% on p100a |
+| **Lerp** | −13.43% | was −2.75% on p100a |
+| **Exp** | **+37.61%** (open loss, §7b lane) | was +70.7% |
+| **SigmoidAppx** | **+63.68%** (open loss, §7c LUT lane) | was +62.33% |
+| **Typecast** | **+22.64%** (WORSENED; the "WP8 step 4 targets it" attribution is SUSPECT — see §18.8.0.5) | was +17.2%/+19.6%; the ON leg used a BODY-family marker on a macro-launch shape with no issue-slot lower-bound check recorded |
+| **Log / Log1p** | byte-identical refusals under the recalibrated gate | unchanged (correctly not shipping a regression) |
+
+Comparability rules: the p150 2×2 cells are internally same-source and valid; p100a "CONFIRMED"
+annotations on Min/Max must be read as **ratio-level reproductions across a changed kernel and a
+changed chip**, not same-source identity; per-class baseline files + `chip_class` column, no
+cross-class arithmetic. Raw Lane D/E run records live on tt-quietbox-0 (`~/sfpi-uplift`), not
+in-repo.
+
+#### 18.8.0.5 Adversarial Pull-Analysis (2026-08-17) — four independent reviews of the landed state
+
+Condensation of `PULL_ANALYSIS-20260817.md` (kept alongside the HANDOFF): four adversarial reviews
+(GCC, CRAQ-sim, tt-metal, cross-repo), each with independent scratch builds, no silicon, covering
+sfpi-gcc `e4b974208 → bb56f1d77`, tt-metal `55ce75be → 69d61d66`, craq-sim `be8e8597 → f80a8d6`,
+sfpi `→ 9a555cb89f`.
+
+**Headline verdict.** *The newly-landed state is trustworthy in its core claims and clean of
+hardcoding, but NOT yet trustworthy as an unattended pipeline: 6 CONFIRMED defects, all fixable,
+none requiring a rollback.* sfpi-gcc `bb56f1d77`, craq-sim `f80a8d6`, and the sfpi pin are sound to
+keep. The compiler all-lanes gap (D1) must be fixed **before any lane-predicated shape class
+(typecast faces, Where successors) reaches silicon**; the tt-metal sweep gates (D2–D4, D6) must be
+fixed **before the next scheduled nightly/weekly is trusted**.
+
+**Refuted suspicions (every load-bearing claim survived attack):**
+
+- The profitability recalibration is a **verified plane, not a curve-fit notch**: 76 unseen
+  (trips,len) probes with aperiodic payloads match the decision surface exactly; single kink at
+  len≈1.23; no notch near Reduce-SDPA (4,8)=121; only threshold 60 is calibration, and any
+  threshold in (0,121] gives identical decisions on all measured points.
+- The **WP8 oracle chain is byte-verified end-to-end**: mint precedes delete; re-running
+  `mint-wp8-oracles.sh` with an independent tip build reproduces every committed hash; planner
+  output byte-identical to the frozen quarantined-pass oracles; all refusal shapes byte-identical.
+- The three **unification merges are mechanically faithful** semantic unions (recreated trees
+  byte-identical to the committed merges).
+- The **sim recognizers are genuinely gone**: zero hits for the deletion inventory, no renamed
+  re-introduction; Min/Max executes 8/8 bit-exact purely from programmed state — the very words
+  (seq `0x00dd008c` / misc `0x330`) the deleted recognizer special-cased now run generically.
+- **Zero hardcoding findings across all four reviews** — the non-negotiable rule and its sim
+  extension both hold at the tips (the `desc_programs[]` three-entry whitelist passed: keyed by
+  derived structure, unproven values refuse, genericity proven by renamed/varied/near-miss tests).
+- Default codegen byte-identity vs `e4b974208` confirmed; `12e1dc0b4` (test separation) does NOT
+  hide a default-gate regression.
+
+**The 6 CONFIRMED defects (file anchors):**
+
+- **D1 — all-lanes-enable proof gap (compiler soundness, P0).** The planner accepts *any pure CC
+  write* as the ambient enable (`rtl-rvtt-macro-planner.cc:216-266`, both as `rows[0].enable` and
+  via `preheader_trailing_enable`). Reproduced on a tip build: a lanes-OFF `SFPENCC(0,10)`
+  (imm12=0 ≠ SFPENCC_IMM12_BOTH=3) **forms the full frozen macro calendar**; the deleted quarantined
+  pass refused this. `sfpencc_all_lanes_word()` is dead code; the comment at
+  `rvtt-macro-ownership.cc:98-102` overstates the implemented guarantee. Formation outside the
+  proven envelope is CONFIRMED; hardware misbehavior is PLAUSIBLE. Fix before lane-predicated
+  shapes hit silicon.
+- **D2 — weekly DejaGnu gate inversion (gate integrity, P1).** In `weekly_bh_sweep.sh`,
+  `FAIL=$(grep -c '^FAIL' g++.sum || echo 0)` yields the two-line string `0\n0` on a clean run
+  (`grep -c` prints 0 AND exits 1), the `-eq` test errors, and the `||` branch sets RC=1 — **RED
+  precisely when clean**; the intended zero-FAIL enforcement never functions.
+- **D3 — `knob_silicon()` bypasses CRAQ + correctness (P1).** In `sweep_2x2.py run()`, weekly
+  per-knob device jobs execute BEFORE the BH-CRAQ gate is evaluated, consult no craq verdicts, and
+  never run correctness for the single-knob flag sets — violating the §1(3)/(6) ordering for every
+  weekly headline row.
+- **D4 — win→refusal regressions pass GREEN (P1).** If a previously winning row goes OFF/ON
+  byte-identical (planner stops firing), `report()` emits "refusal byte-identical: GREEN" and never
+  consults the measured baseline cells — total-refusal regressions are invisible.
+- **D5 — `65d2c873`'s "neither instruction stream changes" claim REFUTED (P2).** Recompiled at
+  `65d2c873~1` vs tip, same toolchain/flags: `math.elf` `.text` changes for BOTH Min/Max impls, and
+  the clamp is inside the timed TILE_LOOP zone. Consequence: the p150 Min/Max cells are NOT
+  same-source with the p100a records (which also predate compile-fix `4ff5c848`); the p150 2×2 is
+  internally valid, but "p100a record CONFIRMED" annotations must be reworded to ratio-level
+  reproduction.
+- **D6 — `PINNED_COMPILER_SHA256` skew (version-skew trap, P1).** tt-metal `69d61d66` rebooked the
+  Reduce-SDPA baseline pair from a **`bb56f1d77`-built** compiler, but `sweep_2x2.conf` still pins
+  the pre-recalibration `4633999c` build (and the p150 TSV header claims it file-wide). The next
+  scheduled nightly either refuses (sha mismatch) or runs the OLD compiler — whose +1.97% Reduce-SDPA
+  regression sits WITHIN the 5% MAX_DRIFT of the new 834 baseline and could be silently blessed
+  GREEN. No per-row `compiler_sha` exists in the baseline/scoreboard schema.
+
+**SUSPECT (credible, not locally verifiable — tracked):**
+
+- The recalibration's fresh A/B numbers (855.50 refused / 832.75 re-enabled / 839.00 hand, "BH
+  p150") have **no discoverable evidence archive** on the dev box, and the device class silently
+  moved p100a→p150 with no recorded cross-device control (the archived-era 834/840 IS corroborated).
+- The Typecast **"WP8 step 4 targets it" attribution is a misattribution risk**: step 4
+  (`50cad63fa`) landed BEFORE the measuring compiler `4633999c` was built — either the shared
+  descriptor fired and the annotation mislabels the residual +22.64%, or it refused and the row
+  should record the refusal. No fired/refused dump archived for the real node's ON leg.
+- The Typecast **BODY-marker cells lack the issue-slot lower-bound check**: the ON leg is a
+  macro-launch shape measured with a BODY-family marker, no math-drain barrier — the metric class
+  the §1 caveat declares invalid for fire-and-forget launch shapes.
+- Also tracked: chip class is config-asserted, never device-probed; `scoreboard.tsv` lacks a
+  `chip_class` column; the minmax-max hand baseline cell was aggregated by MIN while the tool
+  aggregates by MEAN; craq-sim's `execute_load_macro_template_direct` (~450-line parallel evaluator
+  for the two non-encodable overrides) is an opcode-generic but permanent divergence-risk surface
+  pinned only by fuzz.
+
+**Required fixes, ranked** (full list with anchors in `PULL_ANALYSIS-20260817.md` §4):
+
+1. **P0:** wire the all-lanes proof (consume `sfpencc_all_lanes_word()` or CRAQ-prove the
+   partial-lane envelope; tests both directions; fix the ownership comment) — before any
+   lane-predicated shape reaches silicon.
+2. **P1:** fix the `weekly_bh_sweep.sh` FAIL counting; move `knob_silicon()` behind the BH CRAQ
+   gate + paired correctness; make win→refusal RED in `report()`; promote `PINNED_COMPILER_SHA256`
+   to the `bb56f1d77`-built compiler and add per-row `compiler_sha` to the baseline/scoreboard
+   schema — before the next scheduled sweep is trusted.
+3. **P2:** reword the `65d2c873` comparability claims to ratio-level; planner-dump the real
+   `metal__ckernel_sfpu_typecast` BH node to attribute the +22.64% (fired vs refused); implement
+   the issue-slot lower-bound check + drain barrier/KERNEL leg for BODY-marker macro-launch rows;
+   add a device chip-class probe + `chip_class` in scoreboard; archive the recalibration A/B
+   evidence and commit the WP7 minmax parity manifests + refusal-oracle store.
+4. **P3:** re-record the [60,121) no-silicon profitability band + restore rvtt-cost.md's
+   non-itemized-dynamic-costs sentence; add `loop_trip_weight` to the carry-forward list;
+   cross-validate `sweep_2x2_ops.tsv` against the corpus; this document's own reconciliation
+   (done in this revision: §18.9 B0/GREENFIELD supersessions, this section).
+
 #### 18.8.1 Hardware mechanism (simulator semantics; silicon performance authority)
 
 **Path A — MOP + REPLAY share ONE 32-slot circular buffer.** Every RISC-pushed Tensix instruction enters `tensix_push_inst` (`tensix.cpp:2666`), whose opcode switch routes `0x01→MOP`, `0x03→MOP_CFG`, `0x04→REPLAY`, else passthrough — all funneling into the single choke point `replay_expander` (`tensix.cpp:2408`). State is per-pipe (per-TRISC): `replay_buf[TENSIX_INST_PIPES][32]`, `replay_index`, `replay_left`, `replay_execute_while_loading` (`sim.h:502-507`). `replay_expander` has three state-keyed modes:
@@ -1998,7 +2216,7 @@ Closing the gap is **finishing this shipped pass**, not building one: extend `re
 
 **MOP compression is GREENFIELD**: there is **no** MOP builtin — `grep ttmop|loadmacro|mop rvtt-insn.def` is empty (verified). For doubly-nested loops, one MOP word (9-slot `mop_cfg` template, up to ~32k expansion) beats N REPLAY playbacks. This needs `new: rvtt_ttmop` builtin + `new: pass_rvtt_mop` (or a mode in `rtl-rvtt-replay.cc`) emitting `MOP`/`MOP_CFG` (`0x01`/`0x03`) with the two MOP types (zmask `:2567`, nested outer/inner `:2594`). Compose-on-same-buffer means the allocator must treat MOP-captured and REPLAY-captured spans as one 32-slot arena.
 
-**`SFPLOADMACRO` compiler emission is unlanded; its simulator foundation is partial.** `SFPCONFIG` ships (`UNSPECV_SFPCONFIG`, `rvtt.md:89,1945-1971`), and CRAQ `fd8ed6f` executes a conservative set of structurally validated WH/BH macro events. The compiler still needs a target-internal launch/config descriptor that owns and materializes every template/sequence/misc field, models hidden LREG/LREG16/CC/Dst effects, rejects opaque owners, and preserves byte-identical fallback. Extend CRAQ and the compiler together for each additional admitted shape; do not infer arbitrary template safety from opcode names.
+**`SFPLOADMACRO` compiler emission — *[SUPERSEDED 2026-08-17: emission is now LANDED as the generic 7-layer macro planner at gcc `bb56f1d77`, and the sim executes descriptors generically at `f80a8d6`; see §18.8.0.4. The paragraph below is the pre-planner design context.]* —** was unlanded; its simulator foundation was partial. `SFPCONFIG` ships (`UNSPECV_SFPCONFIG`, `rvtt.md:89,1945-1971`), and CRAQ `fd8ed6f` executes a conservative set of structurally validated WH/BH macro events. The compiler still needs a target-internal launch/config descriptor that owns and materializes every template/sequence/misc field, models hidden LREG/LREG16/CC/Dst effects, rejects opaque owners, and preserves byte-identical fallback. Extend CRAQ and the compiler together for each additional admitted shape; do not infer arbitrary template safety from opcode names.
 
 #### 18.8.3 Staged milestones
 
@@ -2029,9 +2247,9 @@ gate; the Reduce result does not imply that unimplemented transform exists.
 
 ### 18.9 Track B — DST Tile Register + RWC Hazard Model (executable design)
 
-> **B0 reconciliation (per `~/HANDOFF.md` §7a/§8.6, 2026-08-17) — supersedes the GREENFIELD/"enabler absent" status in §18.9.2/§18.9.6 below.** The B0 prerequisite is **SATISFIED**: the typed `ttdstface`/`ttsetrwc` builtins are on both sfpi-gcc branches and in the pinned gcc `ddf44ed64` (the `0x37120004` magic word was deleted; typed `rvtt_ttdstface` assembles byte-identically to `0xdc480010`); the wrappers are on sfpi `ded6e4e9`; the LLK migration is on tt-metal `nkapre/sfpi`. What remains greenfield is only the pass itself — `pass_rvtt_dst_ownership` (B1–B5), still to build.
+> **B0 reconciliation (updated 2026-08-17 post pull-analysis) — supersedes the GREENFIELD/"enabler absent" status in the §18.9 status line and §18.9.2/§18.9.6 below.** The B0 prerequisite is **SATISFIED and fully landed on `nkapre/sfpi`**: the typed `ttdstface`/`ttsetrwc` builtins (the `85151036f`/`30d3c6207` lineage, carried into mainline by the merged planner chain) are in the pinned gcc **`bb56f1d77`** (the `0x37120004` magic word was deleted; typed `rvtt_ttdstface` assembles byte-identically to `0xdc480010`); the wrapper commit `ded6e4e9` (`dst_face_advance` / `setrwc<>`) is merged on sfpi; the LLK migration is landed on tt-metal `nkapre/sfpi` (`69d61d66`). **B1–B5 remain OPEN** — `pass_rvtt_dst_ownership` does not exist and no Track B silicon exists; this is the **paused Track B lane** (resume only on user go-ahead). Note: an earlier revision of this block cited the stale pin `ddf44ed64`; the pin has since advanced `ddf44ed64 → cd0af49be → bb56f1d77`.
 
-**Status: GREENFIELD (enabler is branch-only/absent; no pass; no silicon).** The strategy is *extend GCC, defer MLIR*: model the DST accumulator and its read-write-clear (RWC) address counters as first-class compiler-visible resources so the hand-written `Dst` round-trips in the log/GELU/erfinv transcendentals (§7) fold into resident LRegs instead of surviving as opaque `.ttinsn` barriers. The mechanism is fully specified by craq-sim; the compiler side is a mirror of the shipped raw-LREG-livein solution. What blocks a first line of code is that the two typed boundary builtins this design depends on — `__builtin_rvtt_ttdstface` and `__builtin_rvtt_ttsetrwc` — **do not exist in the pinned gcc tree**, and even their thin header wrappers are not resident here: the `setrwc<>` wrapper (`lltt.h`) exists only on an unmerged branch commit (`c010af4a28`, "sfpi: add typed SETRWC boundary wrapper") that is **not reachable from HEAD** (`63516cc`) — at HEAD `include/lltt.h` is 41 lines and lines 35-42 are `replay_insn`, with no `setrwc`; and the `dst_face_advance` wrapper cited to `sfpi.h` at commit `ded6e4e9dc` has **no on-disk source at all** — that commit is not reachable/materialized in the working tree, and `include/sfpi.h:671-679` at HEAD is unrelated (`l_reg`/`dst_reg`/SrcS aliases). The compiler commit the branch cites as the required backend, sfpi-gcc `30d3c6207`, is *not a valid object* in the pinned submodule (`git cat-file -t 30d3c6207` fails; submodule HEAD is `8f943c2f84a`). A `grep` for `ttsetrwc|ttdstface` across `gcc/` and `include/` returns only unrelated `TT_OP_*_SETRWC` assembler macros — no `RVTT_FN`, no expander, no insn. So Track B is greenfield on both halves: the enabler builtins must be landed in the backend first, then the ownership pass built on top.
+**Status (2026-08-17): B0 SATISFIED (see the reconciliation block above); the pass (B1–B5) and silicon remain OPEN; lane PAUSED.** *The original status line — "GREENFIELD (enabler is branch-only/absent; no pass; no silicon)" — and this paragraph's availability claims are retained below SUPERSEDED: they were verified against the old pin `8f943c2f84a` and are FALSE at the current pin `bb56f1d77`, where the builtins, wrappers, and LLK migration are all landed.* The strategy is *extend GCC, defer MLIR*: model the DST accumulator and its read-write-clear (RWC) address counters as first-class compiler-visible resources so the hand-written `Dst` round-trips in the log/GELU/erfinv transcendentals (§7) fold into resident LRegs instead of surviving as opaque `.ttinsn` barriers. The mechanism is fully specified by craq-sim; the compiler side is a mirror of the shipped raw-LREG-livein solution. What blocks a first line of code is that the two typed boundary builtins this design depends on — `__builtin_rvtt_ttdstface` and `__builtin_rvtt_ttsetrwc` — **do not exist in the pinned gcc tree**, and even their thin header wrappers are not resident here: the `setrwc<>` wrapper (`lltt.h`) exists only on an unmerged branch commit (`c010af4a28`, "sfpi: add typed SETRWC boundary wrapper") that is **not reachable from HEAD** (`63516cc`) — at HEAD `include/lltt.h` is 41 lines and lines 35-42 are `replay_insn`, with no `setrwc`; and the `dst_face_advance` wrapper cited to `sfpi.h` at commit `ded6e4e9dc` has **no on-disk source at all** — that commit is not reachable/materialized in the working tree, and `include/sfpi.h:671-679` at HEAD is unrelated (`l_reg`/`dst_reg`/SrcS aliases). The compiler commit the branch cites as the required backend, sfpi-gcc `30d3c6207`, is *not a valid object* in the pinned submodule (`git cat-file -t 30d3c6207` fails; submodule HEAD is `8f943c2f84a`). A `grep` for `ttsetrwc|ttdstface` across `gcc/` and `include/` returns only unrelated `TT_OP_*_SETRWC` assembler macros — no `RVTT_FN`, no expander, no insn. So Track B is greenfield on both halves: the enabler builtins must be landed in the backend first, then the ownership pass built on top.
 
 **Re-scoping note vs §18.4.** The master roadmap lists Track B as "Partial", crediting the shipped `_lv` live-value forwarding, the enforcing `pass_rvtt_lreg_livein`, and the `rvtt.gc` combiner. That machinery is real and it deletes *same-scope, same-layout* LReg round-trips — but it is Track A's SFPU-value plumbing, not a DST/RWC model. It cannot fold the §7 spills, because those cross the moving `dst_rwc` base and the CFG-state layout mode, and the loads reach the compiler as opaque `.ttinsn` words with no def/use edge for the Dst rows or RWC counters they touch. The honest status for the DST/RWC *hazard model* — the thing this subsection specs — is greenfield: the typed boundary that would make those effects visible is branch-only/absent, and no ownership pass, no post-IRA verifier, and no silicon result exist yet. This design does **not** depend on the M2 physical allocator (a dump-only stub, §18.8) or on any MLIR reconsideration; it is entirely a GCC-backend extension.
 
@@ -2053,7 +2271,13 @@ DST is not flat storage — it is a physically-banked 16-bit tile register file 
 
 **Why the round-trips exist (sfpi §7).** SFPU vFloat values live in 8 architectural LRegs; transcendentals that exceed LReg pressure SFPSTORE an intermediate to a Dst row and SFPLOAD it back. The concrete sites this track targets: log reloads the original input at the zero/inf/nan special case (`v_if(in == 0.0F) { // Reload for register pressure`, `ckernel_sfpu_log.h:53/54`, peak pressure 9, §7 `:880`); erfinv reloads `in` from `sfpi::dst_reg[0]` to reattach the sign after nested inlined log + two `sqrt_custom` (`ckernel_sfpu_erfinv.h:54`, §7 `:881`); GELU reloads `x` from `dst_reg[0]` after the accurate FP32 tanh to finish `0.5*x*(1+tanh(...))` (`ckernel_sfpu_gelu.h:373`). Physically a store-then-load of the same row with no intervening writer is identity — but because the row is chosen through the moving RWC base and the format depends on CFG state, the compiler cannot fold it without modeling both. (`/root/tt-metal` already carries the *eliminated* log form; `/root/tt-metal-ci` carries the old hand-spilled bodies — the diff is the target.)
 
-#### 18.9.2 The enabler — typed `ttdstface` / `ttsetrwc` boundaries (branch-only/absent), and why they mirror raw-LREG-livein
+#### 18.9.2 The enabler — typed `ttdstface` / `ttsetrwc` boundaries, and why they mirror raw-LREG-livein
+
+> *[SUPERSEDED 2026-08-17: the "branch-only/absent"/"not a valid object" availability claims in this
+> subsection were true against the old pin `8f943c2f84a` and are FALSE at pin `bb56f1d77` — the
+> builtins (`85151036f`/`30d3c6207` lineage), the sfpi wrappers (`ded6e4e9`), and the tt-metal LLK
+> migration are all landed on `nkapre/sfpi`. The **contract description** below remains the accurate
+> design reference. See the B0 block at the top of §18.9.]*
 
 The problem is exactly the one raw-LREG-livein already solved for L-registers, one level up. Today a raw `.ttinsn` L-register access is emitted as `rvtt_sfprawlreg_access`, a length-0 `UNSPEC_VOLATILE` whose only operands are `release_mask`/`write_mask` const_ints (`rvtt.md:222-236`); it has **no** RTL def/use of any SFPU pseudo, so IRA sees the architectural LREGs it touches as free (`rtl-rvtt-lreg-livein.cc:40-45`). `pass_rvtt_lreg_livein` makes those opaque lifetimes visible *without inventing real dataflow*, by pinning single-hard-register sentinel pseudos (`rvtt_sfpreadlreg<N>`/`rvtt_sfpwritelreg<N>`, `=x<N>` bound to single-register class `SFPU_REGS_L<N>`, `rvtt.md:199-220`, `rvtt-constraints.md:28-49`) across each interval, running a forward union-join dataflow over an 8-bit mask, and closing joins with a fresh local token per BB rather than a cross-CFG phi.
 
@@ -2093,7 +2317,7 @@ A new pre-IRA `rtl_opt_pass`, `pass_rvtt_dst_ownership` in `new: rtl-rvtt-dst-ow
 
 | # | Milestone | Deliverable | Verify against |
 |---|-----------|-------------|----------------|
-| B0 | Land the enabler builtins (GREENFIELD prerequisite) | Add `RVTT_FN(ttsetrwc...)` / `RVTT_FN(ttdstface...)` to `rvtt-insn.def`; `define_expand`+`define_insn` in `rvtt.md` shaped on `rvtt_ttincrwc`/`rvtt_ttreplay`, typed const_int operands, `xtt_replay` barrier attr; re-pin sfpi-gcc and merge the branch wrappers (`lltt.h` `setrwc` from `c010af4a28`; a materialized `sfpi.h` `dst_face_advance` — no on-disk source exists yet) so header calls compile | branch/wrapper header calls compile (no "unknown builtin"/"cannot convert"); WH/BH emit the SETRWC/face-advance mnemonic; QSR arm `gcc_unreachable`s (see risks) |
+| B0 | **SATISFIED (2026-08-17)** — enabler builtins landed | **DONE:** typed `ttdstface`/`ttsetrwc` builtins in pinned gcc `bb56f1d77` (`85151036f`/`30d3c6207` lineage; the `0x37120004` magic word is deleted and typed `rvtt_ttdstface` assembles byte-identically to `0xdc480010`); wrappers merged on sfpi (`ded6e4e9`); LLK migration on tt-metal `nkapre/sfpi`. *(Historical deliverable text: add `RVTT_FN(ttsetrwc/ttdstface)` to `rvtt-insn.def`; `define_expand`+`define_insn` shaped on `rvtt_ttincrwc`/`rvtt_ttreplay`; merge the branch wrappers.)* | header calls compile; WH/BH emit the mnemonics; QSR arm refuses — all verified in the landed state (8/8 minmax CRAQ with the typed trio byte-identical to the frozen raw-word oracle) |
 | B1 | Baseline capture | Count surviving SFPSTORE/SFPLOAD Dst round-trips + device cycles in log/GELU/erfinv (`ckernel_sfpu_{log,erfinv,gelu}.h`) on today's backend | craq-sim device-cycle + static insn count |
 | B2 | Decode + sentinel skeleton | `new: rtl-rvtt-dst-ownership.cc`: decode helper for SFPLOAD/SFPSTORE/`ttsetrwc`/`ttdstface`/`ttincrwc`; single-register-class Dst-face/RWC sentinel pseudos; forward union-join fixpoint (transfer `live=(live&~rel)\|wr`) | reserves the modeled resource across an interval; identical instruction stream (length-0 sentinels emit nothing) |
 | B3 | Face-liveness + RWC-boundary + layout tag | Track live Dst faces via `dst_row_valid`(HI-row) with ZEROACC as death; split the chain at every ADDR_MOD-clr/cr/c_to_cr, SETRWC/INCRWC dst leg, ZEROACC; attach `fp32/bf16/int8` layout tag from reaching `ALU_ACC_CTRL_*`/`dst_32bit_addr_en` | boundaries land at the sim's exact reset/jump points; 32b face owns `{adj,adj+8}` on the permuted address; lossy join → `dst-rwc-effect-unproved` |
@@ -2113,7 +2337,7 @@ A fold that changes any output bit, violates a valid-bitmap edge, or crosses an 
 
 #### 18.9.6 Honest status and risks
 
-- **GREENFIELD on both halves — no code exists yet.** The enabler builtins are wrapped only on an unmerged branch / not materialized at all, over compiler builtins that are **absent from the pinned gcc tree**: `grep ttsetrwc|ttdstface` over `gcc/`+`include/` finds only `TT_OP_*_SETRWC` assembler macros, no `RVTT_FN`/expander/insn. The `setrwc<>` wrapper is on unmerged commit `c010af4a28`, **not reachable from HEAD** (`63516cc`); at HEAD `lltt.h:35-42` is `replay_insn`, no `setrwc`. The `dst_face_advance` wrapper cited to commit `ded6e4e9dc`/`sfpi.h:671-679` has **no on-disk source in the working tree** (that content is not materialized here; `sfpi.h:671-679` at HEAD is `l_reg`/`dst_reg`/SrcS aliases). The cited backend commit sfpi-gcc `30d3c6207` is *not a valid object* (submodule HEAD `8f943c2f84a`). Code that includes those wrappers and calls `dst_face_advance()`/`setrwc<>()` **cannot be built here today** ("unknown builtin"/"cannot convert", or the header itself is missing). `pass_rvtt_dst_ownership` does not exist, and there is no silicon number for this track. B0 (materialize/merge the wrappers, land the builtins, re-pin sfpi-gcc) is a hard prerequisite for everything after it. This design deliberately does **not** depend on the M2 physical allocator (a dump-only stub, §18.8) or on any MLIR path.
+- **[SUPERSEDED 2026-08-17 — B0 is SATISFIED at pin `bb56f1d77` (builtins, wrappers `ded6e4e9`, and LLK migration all landed); only the pass (B1–B5) and silicon remain greenfield, and the lane is PAUSED. The bullet below is the historical 2026-08-16 finding against pin `8f943c2f84a`.]** ~~GREENFIELD on both halves — no code exists yet.~~ The enabler builtins are wrapped only on an unmerged branch / not materialized at all, over compiler builtins that are **absent from the pinned gcc tree**: `grep ttsetrwc|ttdstface` over `gcc/`+`include/` finds only `TT_OP_*_SETRWC` assembler macros, no `RVTT_FN`/expander/insn. The `setrwc<>` wrapper is on unmerged commit `c010af4a28`, **not reachable from HEAD** (`63516cc`); at HEAD `lltt.h:35-42` is `replay_insn`, no `setrwc`. The `dst_face_advance` wrapper cited to commit `ded6e4e9dc`/`sfpi.h:671-679` has **no on-disk source in the working tree** (that content is not materialized here; `sfpi.h:671-679` at HEAD is `l_reg`/`dst_reg`/SrcS aliases). The cited backend commit sfpi-gcc `30d3c6207` is *not a valid object* (submodule HEAD `8f943c2f84a`). Code that includes those wrappers and calls `dst_face_advance()`/`setrwc<>()` **cannot be built here today** ("unknown builtin"/"cannot convert", or the header itself is missing). `pass_rvtt_dst_ownership` does not exist, and there is no silicon number for this track. B0 (materialize/merge the wrappers, land the builtins, re-pin sfpi-gcc) is a hard prerequisite for everything after it. This design deliberately does **not** depend on the M2 physical allocator (a dump-only stub, §18.8) or on any MLIR path.
 - **QSR refuses at expansion (by design, must be enforced).** QSR's SETRWC has a *different field shape*: `TT_OP_QSR_SETRWC(clear_ab_vld,rwc_cr,rwc_val,BitMask)` fuses D/B/A into one `rwc_val` (`sfpu-ops-qsr.h:205`), whereas WH/BH keep the six separate fields the typed wrapper exposes (`sfpu-ops-wh.h:211`, `sfpu-ops-bh.h:224`). The six-field typed boundary therefore has **no faithful QSR encoding**. craq-sim itself reinforces this: its QSR SETRWC path (`TT_VERSION>1`, `tensix.cpp:5404-5418`) is `TTSIM_ERROR(UntestedFunctionality)` and only accepts `rwc_cr ∈ {0,4}`. So the per-target expander must drop the QSR arm (`: (gcc_unreachable(),0)`, the mechanism at `rvtt.md:487,564,639,696,817,1093`) or hard-`error_at` in the early gimple check (precedent: the QSR replay-erratum diagnostic `gimple-rvtt-check.cc:255-261`) rather than silently mis-encode. Ownership is modeled precisely on WH/BH and hard-rejected on QSR — never wrong.
 - **fp32/int8 Dst layout is CFG-state, a reaching-definition problem.** `ALU_ACC_CTRL_Fp32_enabled`/`ALU_ACC_CTRL_INT8_math_enabled` are cfg-register fields and `dst_32bit_addr_en` is a debug-bus global set far from the SFPU op (`tensix.cpp:3822-3823`, `tile.cpp:1556`). If the layout tag is imprecise the fold must **default-deny** (safe, leaves the round-trip). The FP32-acc BF16-in-HI-half special case (`sfpu_dst32_layout = dst_32bit_addr_en || ALU_ACC_CTRL_Fp32_enabled`, `tensix.cpp:8461-8463`) means an SFPLOAD's layout is not always readable off the opcode alone — the reaching-definition analysis, not the mnemonic, decides.
 - **RWC base is mutated as an ADDR_MOD side effect**, not an explicit operand (`math_update_rwc` at `tensix.cpp:3356`). Missing one mutator (SETRWC/INCRWC/cr/c_to_cr/ZEROACC) between a store and reload folds an aliasing pair and silently corrupts data. This is the primary correctness risk: the pass must treat *any* unmodeled RWC-touching op as a barrier, and a lossy CFG join must fall to `dst-rwc-effect-unproved` rather than merge.
@@ -2721,6 +2945,12 @@ the validity of the existing Welford device-cycle measurement.
 
 *Evidence-bounded synthesis of what the GCC-extension results prove, what they do not prove, and
 which compiler mechanisms have falsifiable silicon gates.*
+
+> **[CURRENCY NOTE 2026-08-17.]** This assessment predates the planner/WP8/recalibration landings
+> and the p150 re-measurements. Its stale figures (Min/Max +41%, Typecast +19.6%, Where +96.2%,
+> SigmoidAppx +100.5%) and its `fd8ed6f`-era sim framing are SUPERSEDED by **§18.8.0.4** (current
+> loss table, chip-class split) and **§18.8.0.5** (adversarial verification of the landed state).
+> Retained for the strategy reasoning, which stands.
 
 ### 19.1 From Theoretical Debate to Measured Silicon Viability
 
