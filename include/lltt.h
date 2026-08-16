@@ -32,6 +32,16 @@ record(unsigned start, unsigned length) {
   __builtin_rvtt_ttreplay(start, length, false, false);
 }
 
+// Compiler-visible SETRWC boundary.  Keep the architectural fields typed so
+// backend ownership analyses can model Dst/RWC effects without decoding an
+// opaque instruction word.  Constants are template arguments because the
+// instruction has immediate-only fields on every Tensix target.
+template<unsigned Clear, unsigned Cr, unsigned D, unsigned B, unsigned A,
+         unsigned Set>
+[[gnu::always_inline]] inline void setrwc() {
+  __builtin_rvtt_ttsetrwc(Clear, Cr, D, B, A, Set);
+}
+
 [[gnu::always_inline]] constexpr std::uint32_t
 replay_insn(unsigned start, unsigned length) {
   // Perhaps another builtin?
