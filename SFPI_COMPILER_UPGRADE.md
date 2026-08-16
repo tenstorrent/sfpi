@@ -1866,6 +1866,32 @@ Net: **3 silicon wins, 1 tie, 1 silicon parity (Addcmul), 1 open silicon loss (M
 
 **Provenance caveat.** The SFPLOADMACRO emitters, counted-loop replay hoist, invariant-hoist matcher fix, and the Dst-iteration passes all live on `origin/nkapre/sfpi` and are **not ancestors of the checked-out HEAD `8f943c2f84a`** (all 13 commits verified non-ancestors); `gimple-rvtt-dst-iteration.cc` and the counted-loop payload code do not exist on-disk at HEAD. The on-HEAD `rtl-rvtt-replay.cc` is the pre-extension version. Any default build of HEAD reflects none of the class 1/2/4-counted/5 mechanisms.
 
+#### 18.8.0.3 Update (2026-08-16): generic macro planner pinned — provenance closed, sim gap now the wall
+
+Supersedes the two stale findings above. The `agent/generic-macro-planner` + `agent/toolchain-pin`
+merges advanced the submodule pin `8f943c2f84a → ddf44ed64` (`nkapre/sfpi` `02bf3e1`), so the
+"a default build reflects none of the landings" finding in §18.8.0.2 and the "enabler absent /
+`30d3c6207` not a valid object" status in §18.9 are **now closed** — the enabler and planner are in
+the pinned toolchain (all `Init(0)`, default-off).
+
+**Compiler side (real, pinned).** A WP0–WP8 refactor replaces the hardcoded magic-number emitters with
+a table-driven planner: per-arch capability tables (`rvtt-macro-tables-{bh,wh}.def`), descriptor /
+ownership / region / scheduler / verifier subsystems (`rtl-rvtt-macro-planner.cc`,
+`rvtt-macro-{desc,ownership,region,sched,verify}.*`), typed RWC barriers (`TTSETRWC`, Dst-face-advance
+= WP1, the Track B enabler §18.9 designed), and a path-sensitive ownership analysis (WP3). WP7 **deletes
+the Min/Max hardcoded calendar**; WP8 **quarantines the old loadmacro pass for deletion**. Flags:
+`-mtt-tensix-{analyze,emit}-loadmacro`, `-mtt-tensix-macro-planner`, all `Init(0)`. The planner
+"emits only structurally proven SFPLOADMACRO calendars" — a real resource model, not constant-matching.
+
+**Sim side (untouched — now the binding constraint).** Zero craq-sim commits. It still recognizes
+macros by hardcoded constants (`0x1b8400de`, `0x770`, `tensix.cpp:9928,10106`) and still ignores the
+delay field (functional-immediate, `tensix.cpp:9877`). Consequence: the planner can now form *general*
+macro shapes, but the sim only accepts whitelisted templates → `UnsupportedFunctionality` on novel
+shapes (the compiler out-generalized its own oracle), and no sim path yields SFPLOADMACRO *timing*.
+So every macro kernel (Where +96%, Min/Max +41%, Typecast +20%) remains **unvalidatable beyond the
+whitelist, unscorable on CRAQ, and unmeasured** (all planner flags default-off). The next gate is the
+4-sub-unit timing model in craq-sim (or a silicon-only harness), not more compiler passes.
+
 **Reduce-SDPA discriminator (2026-08-15).** TT-Metal `6d7c0fdb` adds a test-only identical-math handwritten-replay/generated-SFPI selector and a serialized Blackhole profiler archive without changing the production LLK. Both paths pass the full 512x64 four-subblock golden. The handwritten 8-slot replay body measures `839,839,839` `REDUCE_SDPA_BODY` device cycles; the first generated SFPI form measures `914,914,914` (`+75`, `+8.94%`). Its raw `TTI_SFPLOAD` operations are opaque `.ttinsn` barriers to GCC even though the linked ELF looks replayable. TT-Metal `f46e98b5` expresses the same loads through the typed compiler API; the existing post-RA pass then forms two 8-slot captures and fourteen static playbacks, and silicon improves to `855.5,855.5,855.5`, recovering 58.5 cycles (78% of the deficit) without a compiler change. The remaining `+16.5` cycles (`+1.97%`) were then closed by generic D1 preheader capture hoisting: the current pinned result is handwritten `840` vs generated `834` — a **−0.7% generated win**, the corpus's first outright flip (§18.8.0). This note is retained for the recovery history (opaque `.ttinsn` → typed API → hoisting). Arbitrary raw-asm decoding is rejected; opaque asm remains a barrier. Artifacts and hashes are recorded in TT-Metal `tt_metal/tt-llk/tests/corpus/REDUCE_SDPA_SILICON_AB.md`.
 
 **Broader LLK conversion checkpoint (2026-08-15).** TT-Metal `c1471817` carries two additional test-only corpus lanes. Binary broadcast passes 8/8 representative Blackhole correctness cases, 6/6 Wormhole generated compiles, and CRAQ A/B; physical `BINARY_BCAST_BODY` is exactly tied at handwritten `608,608,608` versus generated SFPI `608,608,608`. This is a zero-regression compiler-flow replacement, not a speedup.  SFPI-GCC `8f943c2f8` fixes the canonical TTNNWhere `v_if` debug-build ICE by resetting stale `DEBUG_BIND` uses when RVTT removes scalar predicate definitions; WH/BH/QSR focused checks pass and non-debug assembly is byte-identical.  The corrected U16 selector passes CRAQ and Blackhole correctness, but measures handwritten `159.25,159.25,159.25` versus generated `312.50,312.50,312.50` `TTNN_WHERE_BODY` cycles.  The executed caller already receives the generic outermost-CC combine; the remaining 3-slot-versus-7-slot gap is SFPLOADMACRO formation, not PUSH/POP lowering. Evidence is in TT-Metal `tt_metal/tt-llk/tests/corpus/{BINARY_BCAST_SILICON_AB,TTNN_WHERE_COMPILER_AB}.md`.
