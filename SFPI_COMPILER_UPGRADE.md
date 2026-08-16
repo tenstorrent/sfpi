@@ -2264,7 +2264,7 @@ gate; the Reduce result does not imply that unimplemented transform exists.
 
 > **B0 reconciliation (updated 2026-08-17 post pull-analysis) — supersedes the GREENFIELD/"enabler absent" status in the §18.9 status line and §18.9.2/§18.9.6 below.** The B0 prerequisite is **SATISFIED and fully landed on `nkapre/sfpi`**: the typed `ttdstface`/`ttsetrwc` builtins (the `85151036f`/`30d3c6207` lineage, carried into mainline by the merged planner chain) are in the pinned gcc **`bb56f1d77`** (the `0x37120004` magic word was deleted; typed `rvtt_ttdstface` assembles byte-identically to `0xdc480010`); the wrapper commit `ded6e4e9` (`dst_face_advance` / `setrwc<>`) is merged on sfpi; the LLK migration is landed on tt-metal `nkapre/sfpi` (`69d61d66`). **B1–B5 remain OPEN** — `pass_rvtt_dst_ownership` does not exist and no Track B silicon exists; this is the **paused Track B lane** (resume only on user go-ahead). Note: an earlier revision of this block cited the stale pin `ddf44ed64`; the pin has since advanced `ddf44ed64 → cd0af49be → bb56f1d77`.
 
-**Status (2026-08-17): B0 SATISFIED (see the reconciliation block above); the pass (B1–B5) and silicon remain OPEN; lane PAUSED.** *The original status line — "GREENFIELD (enabler is branch-only/absent; no pass; no silicon)" — and this paragraph's availability claims are retained below SUPERSEDED: they were verified against the old pin `8f943c2f84a` and are FALSE at the current pin `bb56f1d77`, where the builtins, wrappers, and LLK migration are all landed.* The strategy is *extend GCC, defer MLIR*: model the DST accumulator and its read-write-clear (RWC) address counters as first-class compiler-visible resources so the hand-written `Dst` round-trips in the log/GELU/erfinv transcendentals (§7) fold into resident LRegs instead of surviving as opaque `.ttinsn` barriers. The mechanism is fully specified by craq-sim; the compiler side is a mirror of the shipped raw-LREG-livein solution. What blocks a first line of code is that the two typed boundary builtins this design depends on — `__builtin_rvtt_ttdstface` and `__builtin_rvtt_ttsetrwc` — **do not exist in the pinned gcc tree**, and even their thin header wrappers are not resident here: the `setrwc<>` wrapper (`lltt.h`) exists only on an unmerged branch commit (`c010af4a28`, "sfpi: add typed SETRWC boundary wrapper") that is **not reachable from HEAD** (`63516cc`) — at HEAD `include/lltt.h` is 41 lines and lines 35-42 are `replay_insn`, with no `setrwc`; and the `dst_face_advance` wrapper cited to `sfpi.h` at commit `ded6e4e9dc` has **no on-disk source at all** — that commit is not reachable/materialized in the working tree, and `include/sfpi.h:671-679` at HEAD is unrelated (`l_reg`/`dst_reg`/SrcS aliases). The compiler commit the branch cites as the required backend, sfpi-gcc `30d3c6207`, is *not a valid object* in the pinned submodule (`git cat-file -t 30d3c6207` fails; submodule HEAD is `8f943c2f84a`). A `grep` for `ttsetrwc|ttdstface` across `gcc/` and `include/` returns only unrelated `TT_OP_*_SETRWC` assembler macros — no `RVTT_FN`, no expander, no insn. So Track B is greenfield on both halves: the enabler builtins must be landed in the backend first, then the ownership pass built on top.
+**Status (2026-08-17): B0 SATISFIED (see the reconciliation block above); the pass (B1–B5) and silicon remain OPEN; lane PAUSED.** *The original status line — "GREENFIELD (enabler is branch-only/absent; no pass; no silicon)" — and this paragraph's availability claims are retained below SUPERSEDED: they were verified against the old pin `8f943c2f84a` and are FALSE at the current pin `bb56f1d77`, where the builtins, wrappers, and LLK migration are all landed.* The strategy is *extend GCC, defer MLIR*: model the DST accumulator and its read-write-clear (RWC) address counters as first-class compiler-visible resources so the hand-written `Dst` round-trips in the log/GELU/erfinv transcendentals (§7) fold into resident LRegs instead of surviving as opaque `.ttinsn` barriers. The mechanism is fully specified by craq-sim; the compiler side is a mirror of the shipped raw-LREG-livein solution. *[The remainder of this paragraph is the retained-FALSE historical finding — struck 2026-08-17 so no skimmer reads it as current:]* ~~What blocks a first line of code is that the two typed boundary builtins this design depends on — `__builtin_rvtt_ttdstface` and `__builtin_rvtt_ttsetrwc` — **do not exist in the pinned gcc tree**, and even their thin header wrappers are not resident here: the `setrwc<>` wrapper (`lltt.h`) exists only on an unmerged branch commit (`c010af4a28`, "sfpi: add typed SETRWC boundary wrapper") that is **not reachable from HEAD** (`63516cc`) — at HEAD `include/lltt.h` is 41 lines and lines 35-42 are `replay_insn`, with no `setrwc`; and the `dst_face_advance` wrapper cited to `sfpi.h` at commit `ded6e4e9dc` has **no on-disk source at all** — that commit is not reachable/materialized in the working tree, and `include/sfpi.h:671-679` at HEAD is unrelated (`l_reg`/`dst_reg`/SrcS aliases). The compiler commit the branch cites as the required backend, sfpi-gcc `30d3c6207`, is *not a valid object* in the pinned submodule (`git cat-file -t 30d3c6207` fails; submodule HEAD is `8f943c2f84a`). A `grep` for `ttsetrwc|ttdstface` across `gcc/` and `include/` returns only unrelated `TT_OP_*_SETRWC` assembler macros — no `RVTT_FN`, no expander, no insn. So Track B is greenfield on both halves: the enabler builtins must be landed in the backend first, then the ownership pass built on top.~~
 
 **Re-scoping note vs §18.4.** The master roadmap lists Track B as "Partial", crediting the shipped `_lv` live-value forwarding, the enforcing `pass_rvtt_lreg_livein`, and the `rvtt.gc` combiner. That machinery is real and it deletes *same-scope, same-layout* LReg round-trips — but it is Track A's SFPU-value plumbing, not a DST/RWC model. It cannot fold the §7 spills, because those cross the moving `dst_rwc` base and the CFG-state layout mode, and the loads reach the compiler as opaque `.ttinsn` words with no def/use edge for the Dst rows or RWC counters they touch. The honest status for the DST/RWC *hazard model* — the thing this subsection specs — is greenfield: the typed boundary that would make those effects visible is branch-only/absent, and no ownership pass, no post-IRA verifier, and no silicon result exist yet. This design does **not** depend on the M2 physical allocator (a dump-only stub, §18.8) or on any MLIR reconsideration; it is entirely a GCC-backend extension.
 
@@ -2429,12 +2429,180 @@ Modeling these forces one of two bad shapes: **(a)** three separately-compiled T
 
 #### 18.10.5 Risks and the explicit GCC-ceiling / MLIR trigger
 
-- **Primary risk — the ceiling is real and structural, not a coding gap.** The three behaviors in §18.10.2's table are the exact "cannot be expressed cleanly in GCC's IR without disproportionate backend surgery" condition (SFPI_COMPILER_UPGRADE.md:1393–1395). **Trigger, stated concretely:** if milestone **C2** cannot represent cross-TRISC `sem[8]` acquire/release matching (tensix.cpp:11685–11731) and the wait-gate latch (tensix.cpp:2075–2088) as first-class scheduler constraints — i.e. it degenerates to blind per-thread compilation (a) or barrier-pseudo serialization (b) — **stop and open the §8 MLIR TT-Vector dialect decision** (SFPI_COMPILER_UPGRADE.md:834–870). Make it a documented decision point, not drift (SFPI_COMPILER_UPGRADE.md:1395).
+- **Primary risk — the ceiling is real and structural, not a coding gap.** The three behaviors in §18.10.2's table are the exact "cannot be expressed cleanly in GCC's IR without disproportionate backend surgery" condition (§18.5). **Trigger, stated concretely:** if milestone **C2** cannot represent cross-TRISC `sem[8]` acquire/release matching (tensix.cpp:11685–11731) and the wait-gate latch (tensix.cpp:2075–2088) as first-class scheduler constraints — i.e. it degenerates to blind per-thread compilation (a) or barrier-pseudo serialization (b) — **stop and open the §8 MLIR TT-Vector dialect decision**. Make it a documented decision point, not drift (§18.5).
 - **Dependency risk:** C1/C2 require Track B's DST/RWC tokens (§18.9); without resident Dst values and RWC-indexed aliasing, the single-stream dependencies do not exist. M2 is conditional rather than transitive: require it only if corpus evidence shows baseline IRA cannot color a qualifying fused region.
 - **Fidelity risk:** the `busy_until` gaps and CFG clock+2 (tensix.cpp:2251–2283) are tunable in the sim; the reservation latencies in `ttrocc-sched.md` must be re-derived per silicon target (WH/BH/QSR), not hardcoded — the same F1 calibration surface.
 - **Scope risk:** C0 is genuinely GCC-clean and high-value on its own (it fixes the flat-`type` scheduling blindness that also helps Tracks A/B/D). Land C0 regardless of the C2 verdict.
 
 ---
+
+
+## 19. Strategic Assessment: Evidence, Corrections, and the Next Compiler Sprints
+
+*Evidence-bounded synthesis of what the GCC-extension results prove, what they do not prove, and
+which compiler mechanisms have falsifiable silicon gates.*
+
+> **[CURRENCY NOTE 2026-08-17.]** This assessment predates the planner/WP8/recalibration landings
+> and the p150 re-measurements. Its stale figures (Min/Max +41%, Typecast +19.6%, Where +96.2%,
+> SigmoidAppx +100.5%) and its `fd8ed6f`-era sim framing are SUPERSEDED by **§18.8.0.4** (current
+> loss table, chip-class split) and **§18.8.0.5** (adversarial verification of the landed state).
+> Retained for the strategy reasoning, which stands.
+
+### 19.1 From Theoretical Debate to Measured Silicon Viability
+
+Physical Blackhole results establish that compiler-generated SFPI can match or narrowly beat
+hand-tuned Tensix assembly in several correctness-gated profiler zones
+(`validation/welford-bh-20260815/`, `REDUCE_SDPA_SILICON_AB.md`):
+
+```
+                       EMPIRICAL SILICON VALIDATION RECORD
+┌────────────────────────────┬─────────────────────────────┬─────────────────────────────────────────────────┐
+│ Kernel Benchmark           │ Silicon Outcome (Blackhole) │ Technical Driver                                │
+├────────────────────────────┼─────────────────────────────┼─────────────────────────────────────────────────┤
+│ **Reduce-SDPA Body**       │ **834 vs 840 cycles (-0.7%)**│ Generic D1 preheader replay capture hoisting    │
+│ **Reciprocal BF16**        │ **459 vs 467 cycles (-1.7%)**│ 10-slot compiler replay capture + 7 playbacks   │
+│ **Welford Body**           │ **323 vs 326 cycles (-0.9%)**│ Raw-LREG ownership + literal coalescing         │
+│ **Binary Broadcast**       │ **608 vs 608 cycles (0.0%)** │ Exact cycle parity; 100% functional match       │
+│ **Addcmul**                │ **292.99 vs 292.93 (+0.02%)**│ Generic two-row fusion/interleave; parity, no win│
+└────────────────────────────┴─────────────────────────────┴─────────────────────────────────────────────────┘
+```
+
+These are meaningful proofs of viability, not corpus-wide dominance.  They are bounded body zones,
+not whole-kernel throughput; Welford is also not an identical-source scheduler A/B.  Wormhole and
+most of the 164-row corpus remain unmeasured against hand-tuned implementations on silicon.
+
+### 19.2 M2 Is Not the Measured Blocker; It Is Not Universally Obsolete
+
+The current measured silicon losses do not show allocator spilling as their cause.  The evidence
+supports keeping M2 on standby, with a concrete trigger rather than a rhetorical conclusion. A new
+compile-time adversarial result also sharpens that trigger: hoisting nine invariant SFPU constants
+without a pressure budget extends their simultaneous LREG lifetimes and ICEs in reload, while the
+option-off source compiles. This blocks that LICM prototype; it does not retroactively explain the
+measured kernel losses.
+
+1. **GCC IRA is sufficient for the tested regions.** The `x<N>` constraints, multi-result RTL, and
+   raw-LREG sentinels protect the live intervals exercised by the currently measured kernels.
+2. **The sentinel mechanism is real but its provenance must be stated correctly.**
+   `rtl-rvtt-lreg-livein.cc` models opaque LREG ownership; `8f943c2f8` is the predicate DEBUG-use
+   fix, not the sentinel-pass commit.
+3. **M2 remains a standby audit stub, but pressure accounting is immediately required.** The
+   invariant-hoist pass must conservatively budget existing loop-live values plus every proposed
+   hoist and refuse before mutation when the eight allocatable LREGs may be exceeded. Activate the
+   exact allocator only if a reviewed, semantically valid corpus region remains profitable after that
+   guard yet IRA cannot color it. The present data do not prove every future region spill-free.
+
+### 19.3 Correcting the Throughput Diagnoses
+
+The §18.8.0 scorecard contains six explicit loss rows (with Binary Min/Max combined), not five,
+and additional measured semantic lanes such as Exp still need to be folded into that table.  The
+current artifacts do not implicate allocation in these losses, but each proposed throughput fix
+still needs changed-binary silicon acceptance.
+
+```
+┌──────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
+│ Identified Bottleneck        │ Impacted Ops  │ Concrete Architectural Remediation                          │
+├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ **1. Partial Latency-Hiding │ Addcmul       │ Landed: form/interleave a proven two-row group before IRA;  │
+│    Reorder Scheduling**      │ +21.9%→+0.02% │ now silicon parity. Generalize only from measured residuals │
+│                              │               │ and retain alias/SSA/byte-identity fallback proofs.         │
+├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ **2. Missing SFPLOADMACRO    │ Min/Max (+41%)│ Use the audited CRAQ event model, then prove complete config │
+│    Formation**               │ Typecast      │ ownership, hidden effects, and byte-identical fallback in   │
+│                              │ (+19.6%)      │ active multi-op macro region emission.                      │
+│                              │ Where (+96.2%)│                                                             │
+├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist proven invariants only under an explicit peak-LREG    │
+│    Rematerialization (LICM)**│ (+100.5%)     │ budget; refuse transactionally before IRA spill/reload ICE. │
+├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ **4. Cost Model Calibration**│ General       │ Model 1/cycle issue throughput separately from 2-cycle     │
+│                              │ Schedule      │ result latency; calibrate with Blackhole silicon A/B.        │
+└──────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘
+```
+
+### 19.4 Exact MILP as a Bounded Offline Oracle, Then a Candidate Engine
+
+The checked-in MILP is useful beyond emergency fallback: its exact issue-position and liveness
+model, bounded region size, node cap, and independently validated certificate make it a credible
+**offline oracle for that abstract pressure model**.  The 11-to-8 fixture proves that exact search
+can recover a legal pressure schedule outside the heuristic's reach.  It does not yet make the
+current model an oracle for physical makespan, replay throughput, macro calendars, Dst aliasing, or
+constant placement; those semantics and calibrated costs must be added and independently tested.
+
+The present objective is deliberately narrow: if the preferred list schedule already satisfies
+capacity, it becomes the unique zero-deviation optimum. That is a useful fast proof, but it leaves
+the engine's larger potential unused. Evolve the bounded model in stages:
+
+1. **Pressure feasibility and optimality:** retain the exact peak-at-most-eight constraint and
+   distinguish proven infeasibility, cap exhaustion, and optimal solutions.
+2. **Physical makespan:** with feasibility fixed, minimize the calibrated dependency schedule using
+   separate issue-throughput and result-latency inputs.
+3. **Reuse and movement:** with makespan fixed, minimize copies, destructive-reuse misses, and
+   harmful rematerialization.
+4. **Frontend opportunity:** score legal replay bodies, invariant placement, and macro-compatible
+   groups without weakening ownership or barrier constraints.
+5. **Deterministic tie-break:** only after the architectural objectives are fixed, minimize
+   deviation from the stable list/source order.
+
+After the corresponding architectural semantics are present, run this exact lane on bounded corpus
+regions in CI/oracle mode, including list hits, and publish heuristic-versus-optimal gaps plus solver
+node/time distributions.  Start with a sampled/size-capped lane rather than making every bounded
+region a blocking CI solve before compile-cost distributions exist.  The fast list scheduler remains
+valuable for low compile latency; production policy follows the measurements.
+
+The exact engine may later consume Sprint 1's pre-IRA two-row Addcmul groups, but it is not on the
+critical path to the first changed-binary silicon discriminator.  First prove the group legality and
+calibrated dependency model with the deterministic interleaver; then use that reviewed DAG as the
+MILP/list comparison input. M2 physical coloring remains a distinct downstream mechanism and must
+not be conflated with the scheduling MILP.
+
+### 19.5 GCC Is the Near-Term Path, with an Explicit Ceiling
+
+Replay hoisting and typed multi-result operations show that valuable single-stream SFPU work fits
+the GCC backend.  Continue GCC for Tracks A/D and the current interleave/LICM work.  This does not
+prove that GCC is the right representation for multi-TRISC async dataflow; retain the Track-C/Track-E
+ceiling trigger and reconsider MLIR when a concrete token schedule or scalar-to-vector lowering
+requires disproportionate backend surgery.
+
+### 19.6 Evidence-Gated Execution Directive
+
+1. **Keep the landed pre-IRA Dst-iteration interleaver evidence-bounded.** Addcmul is closed from
+   `+21.9%` to `+0.02%` parity with Dst non-aliasing, SSA/cache integrity, exact final-ELF order,
+   byte-identical fallback, CRAQ correctness, and repeated Blackhole samples. Generalize only when
+   another corpus row presents the same proven shape; do not call parity a win.
+2. **Finish the first sound macro-emission slice.** *[DONE 2026-08-17 — this directive is
+   executed: the generic planner at gcc `bb56f1d77` proves config-word ownership, hidden effects,
+   opaque-owner exclusion, and byte-identical refusals, and craq-sim `f80a8d6` replaced the
+   `fd8ed6f` admitted-shape model with generic descriptor decode; see §18.8.0.4.]*
+   ~~CRAQ `fd8ed6f` provides the admitted WH/BH transactional event model; compiler emission must
+   additionally prove all config words, function-scoped scratch/slot ownership, opaque-owner
+   exclusion, hidden effects, and ineligible identity.~~
+   Still good practice: pin the CRAQ repository commit and runner path in every result manifest so
+   the cited model is reproducible outside the author's checkout.
+3. **Silicon-score the landed invariant-placement + counted-replay pair.** Commits `2bfa165348` and
+   `6422dbd9e3` now include the conservative eight-LREG budget, live-through/live-out accounting,
+   opaque-owner refusal, counted-loop capture legality, and byte-identical fallback. Run the existing
+   semantic Sigmoid lane with both flags, require changed executable `.text` plus CRAQ correctness,
+   then accept or reject it from repeated scoped device cycles.
+4. **Execute the named durable compiler A/B lane.** TT-Metal `da3832b31d`,
+   `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
+   pytest-node attribution, compiler capability/pin provenance, and identical-source flag-off/on
+   executable-`.text` classification. Use `--require-changed-binary` only on eligible rows, retain
+   byte identity as the expected ineligible fallback, use CRAQ for functional validation, and accept
+   performance only from scoped device rows.
+5. **Use MILP as a sampled bounded oracle.** Preserve exact-on-request behavior; after the latency,
+   Dst, replay, or macro semantics being scored are actually modeled, compare list versus MILP and
+   archive optimality plus compile-cost distributions before changing production invocation policy.
+6. **Close architecture coverage.** Retain Blackhole as the current performance authority and add
+   the corresponding Wormhole correctness and changed-binary silicon lane before making a
+   cross-architecture default-on or superiority claim.
+
+No transform is promoted on assembly aesthetics alone.  A sound but losing transform remains
+opt-in or unshipped until its missing mechanism is implemented; broad superiority is claimed only
+after the standing corpus and silicon gates demonstrate it.
+
+---
+
+*(Appendices A–C were relocated 2026-08-17 from between §18 and §19 to the end of the document so the numbered main body reads contiguously; content unchanged.)*
 
 ## Appendix A. Superseded Reviewer Opinion & Welford Findings
 
@@ -2953,168 +3121,3 @@ items before declaring the raw-LREG mechanism generally safe or the branch repro
 Items 1-4 are required to promote the raw-LREG work from a successful Welford fix to an integrated,
 reproducible compiler solution. Item 5 is a separate scheduler-performance gate and does not affect
 the validity of the existing Welford device-cycle measurement.
-
----
-
-## 19. Strategic Assessment: Evidence, Corrections, and the Next Compiler Sprints
-
-*Evidence-bounded synthesis of what the GCC-extension results prove, what they do not prove, and
-which compiler mechanisms have falsifiable silicon gates.*
-
-> **[CURRENCY NOTE 2026-08-17.]** This assessment predates the planner/WP8/recalibration landings
-> and the p150 re-measurements. Its stale figures (Min/Max +41%, Typecast +19.6%, Where +96.2%,
-> SigmoidAppx +100.5%) and its `fd8ed6f`-era sim framing are SUPERSEDED by **§18.8.0.4** (current
-> loss table, chip-class split) and **§18.8.0.5** (adversarial verification of the landed state).
-> Retained for the strategy reasoning, which stands.
-
-### 19.1 From Theoretical Debate to Measured Silicon Viability
-
-Physical Blackhole results establish that compiler-generated SFPI can match or narrowly beat
-hand-tuned Tensix assembly in several correctness-gated profiler zones
-(`validation/welford-bh-20260815/`, `REDUCE_SDPA_SILICON_AB.md`):
-
-```
-                       EMPIRICAL SILICON VALIDATION RECORD
-┌────────────────────────────┬─────────────────────────────┬─────────────────────────────────────────────────┐
-│ Kernel Benchmark           │ Silicon Outcome (Blackhole) │ Technical Driver                                │
-├────────────────────────────┼─────────────────────────────┼─────────────────────────────────────────────────┤
-│ **Reduce-SDPA Body**       │ **834 vs 840 cycles (-0.7%)**│ Generic D1 preheader replay capture hoisting    │
-│ **Reciprocal BF16**        │ **459 vs 467 cycles (-1.7%)**│ 10-slot compiler replay capture + 7 playbacks   │
-│ **Welford Body**           │ **323 vs 326 cycles (-0.9%)**│ Raw-LREG ownership + literal coalescing         │
-│ **Binary Broadcast**       │ **608 vs 608 cycles (0.0%)** │ Exact cycle parity; 100% functional match       │
-│ **Addcmul**                │ **292.99 vs 292.93 (+0.02%)**│ Generic two-row fusion/interleave; parity, no win│
-└────────────────────────────┴─────────────────────────────┴─────────────────────────────────────────────────┘
-```
-
-These are meaningful proofs of viability, not corpus-wide dominance.  They are bounded body zones,
-not whole-kernel throughput; Welford is also not an identical-source scheduler A/B.  Wormhole and
-most of the 164-row corpus remain unmeasured against hand-tuned implementations on silicon.
-
-### 19.2 M2 Is Not the Measured Blocker; It Is Not Universally Obsolete
-
-The current measured silicon losses do not show allocator spilling as their cause.  The evidence
-supports keeping M2 on standby, with a concrete trigger rather than a rhetorical conclusion. A new
-compile-time adversarial result also sharpens that trigger: hoisting nine invariant SFPU constants
-without a pressure budget extends their simultaneous LREG lifetimes and ICEs in reload, while the
-option-off source compiles. This blocks that LICM prototype; it does not retroactively explain the
-measured kernel losses.
-
-1. **GCC IRA is sufficient for the tested regions.** The `x<N>` constraints, multi-result RTL, and
-   raw-LREG sentinels protect the live intervals exercised by the currently measured kernels.
-2. **The sentinel mechanism is real but its provenance must be stated correctly.**
-   `rtl-rvtt-lreg-livein.cc` models opaque LREG ownership; `8f943c2f8` is the predicate DEBUG-use
-   fix, not the sentinel-pass commit.
-3. **M2 remains a standby audit stub, but pressure accounting is immediately required.** The
-   invariant-hoist pass must conservatively budget existing loop-live values plus every proposed
-   hoist and refuse before mutation when the eight allocatable LREGs may be exceeded. Activate the
-   exact allocator only if a reviewed, semantically valid corpus region remains profitable after that
-   guard yet IRA cannot color it. The present data do not prove every future region spill-free.
-
-### 19.3 Correcting the Throughput Diagnoses
-
-The §18.8.0 scorecard contains six explicit loss rows (with Binary Min/Max combined), not five,
-and additional measured semantic lanes such as Exp still need to be folded into that table.  The
-current artifacts do not implicate allocation in these losses, but each proposed throughput fix
-still needs changed-binary silicon acceptance.
-
-```
-┌──────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
-│ Identified Bottleneck        │ Impacted Ops  │ Concrete Architectural Remediation                          │
-├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **1. Partial Latency-Hiding │ Addcmul       │ Landed: form/interleave a proven two-row group before IRA;  │
-│    Reorder Scheduling**      │ +21.9%→+0.02% │ now silicon parity. Generalize only from measured residuals │
-│                              │               │ and retain alias/SSA/byte-identity fallback proofs.         │
-├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **2. Missing SFPLOADMACRO    │ Min/Max (+41%)│ Use the audited CRAQ event model, then prove complete config │
-│    Formation**               │ Typecast      │ ownership, hidden effects, and byte-identical fallback in   │
-│                              │ (+19.6%)      │ active multi-op macro region emission.                      │
-│                              │ Where (+96.2%)│                                                             │
-├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **3. Loop-Invariant Constant │ SigmoidAppx   │ Hoist proven invariants only under an explicit peak-LREG    │
-│    Rematerialization (LICM)**│ (+100.5%)     │ budget; refuse transactionally before IRA spill/reload ICE. │
-├──────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
-│ **4. Cost Model Calibration**│ General       │ Model 1/cycle issue throughput separately from 2-cycle     │
-│                              │ Schedule      │ result latency; calibrate with Blackhole silicon A/B.        │
-└──────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘
-```
-
-### 19.4 Exact MILP as a Bounded Offline Oracle, Then a Candidate Engine
-
-The checked-in MILP is useful beyond emergency fallback: its exact issue-position and liveness
-model, bounded region size, node cap, and independently validated certificate make it a credible
-**offline oracle for that abstract pressure model**.  The 11-to-8 fixture proves that exact search
-can recover a legal pressure schedule outside the heuristic's reach.  It does not yet make the
-current model an oracle for physical makespan, replay throughput, macro calendars, Dst aliasing, or
-constant placement; those semantics and calibrated costs must be added and independently tested.
-
-The present objective is deliberately narrow: if the preferred list schedule already satisfies
-capacity, it becomes the unique zero-deviation optimum. That is a useful fast proof, but it leaves
-the engine's larger potential unused. Evolve the bounded model in stages:
-
-1. **Pressure feasibility and optimality:** retain the exact peak-at-most-eight constraint and
-   distinguish proven infeasibility, cap exhaustion, and optimal solutions.
-2. **Physical makespan:** with feasibility fixed, minimize the calibrated dependency schedule using
-   separate issue-throughput and result-latency inputs.
-3. **Reuse and movement:** with makespan fixed, minimize copies, destructive-reuse misses, and
-   harmful rematerialization.
-4. **Frontend opportunity:** score legal replay bodies, invariant placement, and macro-compatible
-   groups without weakening ownership or barrier constraints.
-5. **Deterministic tie-break:** only after the architectural objectives are fixed, minimize
-   deviation from the stable list/source order.
-
-After the corresponding architectural semantics are present, run this exact lane on bounded corpus
-regions in CI/oracle mode, including list hits, and publish heuristic-versus-optimal gaps plus solver
-node/time distributions.  Start with a sampled/size-capped lane rather than making every bounded
-region a blocking CI solve before compile-cost distributions exist.  The fast list scheduler remains
-valuable for low compile latency; production policy follows the measurements.
-
-The exact engine may later consume Sprint 1's pre-IRA two-row Addcmul groups, but it is not on the
-critical path to the first changed-binary silicon discriminator.  First prove the group legality and
-calibrated dependency model with the deterministic interleaver; then use that reviewed DAG as the
-MILP/list comparison input. M2 physical coloring remains a distinct downstream mechanism and must
-not be conflated with the scheduling MILP.
-
-### 19.5 GCC Is the Near-Term Path, with an Explicit Ceiling
-
-Replay hoisting and typed multi-result operations show that valuable single-stream SFPU work fits
-the GCC backend.  Continue GCC for Tracks A/D and the current interleave/LICM work.  This does not
-prove that GCC is the right representation for multi-TRISC async dataflow; retain the Track-C/Track-E
-ceiling trigger and reconsider MLIR when a concrete token schedule or scalar-to-vector lowering
-requires disproportionate backend surgery.
-
-### 19.6 Evidence-Gated Execution Directive
-
-1. **Keep the landed pre-IRA Dst-iteration interleaver evidence-bounded.** Addcmul is closed from
-   `+21.9%` to `+0.02%` parity with Dst non-aliasing, SSA/cache integrity, exact final-ELF order,
-   byte-identical fallback, CRAQ correctness, and repeated Blackhole samples. Generalize only when
-   another corpus row presents the same proven shape; do not call parity a win.
-2. **Finish the first sound macro-emission slice.** *[DONE 2026-08-17 — this directive is
-   executed: the generic planner at gcc `bb56f1d77` proves config-word ownership, hidden effects,
-   opaque-owner exclusion, and byte-identical refusals, and craq-sim `f80a8d6` replaced the
-   `fd8ed6f` admitted-shape model with generic descriptor decode; see §18.8.0.4.]*
-   ~~CRAQ `fd8ed6f` provides the admitted WH/BH transactional event model; compiler emission must
-   additionally prove all config words, function-scoped scratch/slot ownership, opaque-owner
-   exclusion, hidden effects, and ineligible identity.~~
-   Still good practice: pin the CRAQ repository commit and runner path in every result manifest so
-   the cited model is reproducible outside the author's checkout.
-3. **Silicon-score the landed invariant-placement + counted-replay pair.** Commits `2bfa165348` and
-   `6422dbd9e3` now include the conservative eight-LREG budget, live-through/live-out accounting,
-   opaque-owner refusal, counted-loop capture legality, and byte-identical fallback. Run the existing
-   semantic Sigmoid lane with both flags, require changed executable `.text` plus CRAQ correctness,
-   then accept or reject it from repeated scoped device cycles.
-4. **Execute the named durable compiler A/B lane.** TT-Metal `da3832b31d`,
-   `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py`, is the 164-row / 332-path authority with exact
-   pytest-node attribution, compiler capability/pin provenance, and identical-source flag-off/on
-   executable-`.text` classification. Use `--require-changed-binary` only on eligible rows, retain
-   byte identity as the expected ineligible fallback, use CRAQ for functional validation, and accept
-   performance only from scoped device rows.
-5. **Use MILP as a sampled bounded oracle.** Preserve exact-on-request behavior; after the latency,
-   Dst, replay, or macro semantics being scored are actually modeled, compare list versus MILP and
-   archive optimality plus compile-cost distributions before changing production invocation policy.
-6. **Close architecture coverage.** Retain Blackhole as the current performance authority and add
-   the corresponding Wormhole correctness and changed-binary silicon lane before making a
-   cross-architecture default-on or superiority claim.
-
-No transform is promoted on assembly aesthetics alone.  A sound but losing transform remains
-opt-in or unshipped until its missing mechanism is implemented; broad superiority is claimed only
-after the standing corpus and silicon gates demonstrate it.
