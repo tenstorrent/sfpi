@@ -207,11 +207,18 @@ constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = SFPCAST_MOD1_SM32_TO_FP3
 //__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNS instead")))
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = SFPCAST_MOD1_SM32_TO_FP32_RNS;
 #if __riscv_xtttensixbh
-// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
+// BH's mod1=2 encoding was intended to be a conversion, but due to a hardware
+// bug it computes 2's complement absolute value (prefer SFPABS).
 constexpr unsigned int SFPCAST_MOD1_INT32_ABS = 2; // 2's complement ABS
+// BH's int<->int cast (mod1=3) is a self-inverse sign-preserving conditional
+// negate: dst = sign | (sign ? -src : src).  The same encoding therefore
+// implements both the 2's-compl -> Sign-Mag and Sign-Mag -> 2's-compl
+// conversions.  Each format's unrepresentable value maps to the other:
+// sign-mag -0 converts to mostneg int32, and mostneg int32 converts to
+// sign-mag -0 (not zero).
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
+constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 3; // Sign-Mag to 2's compl (same op, self-inverse)
 #elif __riscv_xtttensixqsr
-// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 2; // Sign-Mag to 2's compl
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
 constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNE = 4; // Float to Sign-Mag
