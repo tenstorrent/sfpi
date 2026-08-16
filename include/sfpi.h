@@ -671,6 +671,15 @@ using ComputeSrcS = impl_::SrcSRegFile<1>;
 using PackSrcS = impl_::SrcSRegFile<2>;
 #endif
 
+// Compiler-visible architectural Dst face advance.  One face is two
+// architectural CR-mode Dst += 8 counter steps with no LREG, CC, or
+// configuration effect.  Keep the boundary typed so backend ownership
+// analyses can model the Dst/RWC effect without decoding an opaque
+// instruction word.  (Companion of lltt::setrwc; QSR refuses at expansion.)
+sfpi_inline void dst_face_advance () {
+  __builtin_rvtt_ttdstface ();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
 
