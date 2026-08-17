@@ -54,15 +54,15 @@ sfpi::vBool::vBool (Logic t, vBool a, vBool b)
     : result (__builtin_rvtt_sfpxbool (t, a.get (), b.get ())) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
-    : result (__builtin_rvtt_sfpxicmpv (a.get (), b.get (), c | t)) {}
+    : result (__builtin_rvtt_sfpxcmpv (a.get (), b.get (), c | t)) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, uint32_t s)
-    : result (__builtin_rvtt_sfpxicmps (a.get (), s, c | t)) {}
+    : result (__builtin_rvtt_sfpxcmps (a.get (), s, c | t)) {}
 
 sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
-    : result (__builtin_rvtt_sfpxfcmpv (a.get (), b.get (), c | Float)) {}
+    : vBool (c, Float, a, b) {}
 sfpi::vBool::vBool (Cond c, vFloat a, float s)
-    : result (__builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (s), c | Float)) {}
+    : vBool (c, Float, a, impl_::float_as_uint (s)) {}
 sfpi::vBool::vBool (Cond c, vInt a, vInt b) : vBool (c, Int, a, b) {}
 sfpi::vBool::vBool (Cond c, vInt a, int32_t s) : vBool (c, Int, a, s) {}
 sfpi::vBool::vBool (Cond c, vUInt a, vUInt b) : vBool (c, UInt, a, b) {}
@@ -512,7 +512,7 @@ auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, a, 
 auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, a, b); }
 auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vFloat a, float b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vFloat a, float b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vFloat a, float b)-> vBool { return vBool (vBool::LT, a, b); }
@@ -595,7 +595,7 @@ auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, a, b); 
 auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, a, b); }
 auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vInt a, int32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vInt a, int32_t b)-> vBool { return vBool (vBool::LT, a, b); }
@@ -679,7 +679,7 @@ auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, a, b)
 auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, a, b); }
 auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LT, a, b); }

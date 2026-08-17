@@ -499,7 +499,7 @@ sfpi_inline vBool operator> (vFloat, vFloat);
 sfpi_inline vBool operator<= (vFloat, vFloat);
 sfpi_inline vBool operator>= (vFloat, vFloat);
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 sfpi_inline vBool operator== (vFloat, float);
 sfpi_inline vBool operator!= (vFloat, float);
 sfpi_inline vBool operator< (vFloat, float);
@@ -523,7 +523,7 @@ sfpi_inline  vBool operator> (vInt, vInt);
 sfpi_inline  vBool operator<= (vInt, vInt);
 sfpi_inline  vBool operator>= (vInt, vInt);
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 sfpi_inline  vBool operator== (vInt, int32_t);
 sfpi_inline  vBool operator!= (vInt, int32_t);
 sfpi_inline  vBool operator< (vInt, int32_t);
@@ -604,7 +604,7 @@ sfpi_inline  vBool operator> (vUInt, vUInt);
 sfpi_inline  vBool operator<= (vUInt, vUInt);
 sfpi_inline  vBool operator>= (vUInt, vUInt);
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 sfpi_inline  vBool operator== (vUInt, uint32_t);
 sfpi_inline  vBool operator!= (vUInt, uint32_t);
 sfpi_inline  vBool operator< (vUInt, uint32_t);
