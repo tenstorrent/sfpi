@@ -160,6 +160,12 @@ constexpr unsigned int SFPSETCC_MOD1_LREG_GTE0 = 4;
 constexpr unsigned int SFPSETCC_MOD1_LREG_EQ0 = 6;
 constexpr unsigned int SFPSETCC_MOD1_COMP = 8;
 
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPSETCC_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPSETCC_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPSETCC_IMM_TYPE_SMAG = 1;
+#endif
+
 // EU: enable unmodified, EC: complement, EI: immediate
 // R1: result set, RI: immediate
 constexpr unsigned int SFPENCC_IMM12_NEITHER = 0;   // Imm value to clear both enable/result
