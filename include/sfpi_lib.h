@@ -424,6 +424,9 @@ sfpi_inline vInt fractional_mul (vInt a, vInt b, FractionalHalf half = Fractiona
 
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+#if __riscv_xtttensixqsr
+                                                     std::is_base_of<vInt, Type>,
+#endif
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
   // mask has 0 for min res and 1 for max res
@@ -466,7 +469,14 @@ sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
       (mask ^ swap) == 0xeu ? SFPSWAP_MOD1_SUBVEC_MIN0_MAX123 :
       ~0; // Bad value, compilation error
   auto res = __builtin_rvtt_sfpswap (swap ? b.get () : a.get (),
-                                     swap ? a.get () : b.get (), mod);
+                                     swap ? a.get () : b.get (), mod
+#if __riscv_xtttensixqsr
+                                     , std::is_base_of_v<vFloat, Type> ? SFPSWAP_IMM_TYPE_FLOAT :
+                                     std::is_base_of_v<vInt, Type> ? SFPSWAP_IMM_TYPE_INT :
+                                     std::is_base_of_v<vSMag, Type> ? SFPSWAP_IMM_TYPE_SMAG :
+                                     ~0
+#endif
+                                     );
   auto r0 = Type (__builtin_rvtt_sfpselect2 (res, swap != 0));
   auto r1 = Type (__builtin_rvtt_sfpselect2 (res, swap == 0));
   return std::pair (r0, r1);
@@ -474,6 +484,9 @@ sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
 
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+#if __riscv_xtttensixqsr
+                                                     std::is_base_of<vInt, Type>,
+#endif
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type min (Type a, Type b) {
   return min_max (a, b).first;
@@ -483,8 +496,17 @@ sfpi_inline vFloat min (vFloat a, float b) {
   return min (a, vFloat (b));
 }
 
+#if __riscv_xtttensixqsr
+sfpi_inline vInt min (vInt a, int b) {
+  return min (a, vInt (b));
+}
+#endif
+
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+#if __riscv_xtttensixqsr
+                                                     std::is_base_of<vInt, Type>,
+#endif
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type max (Type a, Type b) {
   return min_max (a, b, 0xf).first;
@@ -493,6 +515,12 @@ sfpi_inline Type max (Type a, Type b) {
 sfpi_inline vFloat max (vFloat a, float b) {
   return max (a, vFloat (b));
 }
+
+#if __riscv_xtttensixqsr
+sfpi_inline vInt max (vInt a, int b) {
+  return max (a, vInt (b));
+}
+#endif
 
 // Due to hardware limitations, ordering compares of unsigned do not work when
 // MSB is one. Sadly the compiler doesn't (yet) compensate
@@ -518,6 +546,9 @@ sfpi_inline vUInt clamp (vUInt x, unsigned lower, unsigned upper) {
 
 template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
+#if __riscv_xtttensixqsr
+                                                     std::is_base_of<vInt, Type>,
+#endif
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type clamp (Type val, Type lower, Type upper) {
   return min (max (val, lower), upper);
@@ -527,6 +558,12 @@ sfpi_inline vFloat clamp (vFloat val, float lower, float upper) {
   return clamp (val, vFloat (lower), vFloat (upper));
 }
 
+#if __riscv_xtttensixqsr
+sfpi_inline vInt clamp (vInt val, int lower, int upper) {
+  return clamp (val, vInt (lower), vInt (upper));
+}
+#endif
+
 sfpi_inline vFloat symmetric_clamp (vFloat val, float bound) {
   return copysgn (min (abs (val), bound), val);
 }
@@ -534,7 +571,11 @@ sfpi_inline vFloat symmetric_clamp (vFloat val, float bound) {
 template <typename Type,
           typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
 sfpi_inline void swap (Type &a, Type &b) {
-  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP);
+  auto r = __builtin_rvtt_sfpswap (a.get(), b.get (), SFPSWAP_MOD1_SWAP
+#if __riscv_xtttensixqsr
+                                   , SFPSWAP_IMM_TYPE_INT
+#endif 
+                                  );
   a = Type (__builtin_rvtt_sfpselect2 (r, 0));
   b = Type (__builtin_rvtt_sfpselect2 (r, 1));
 }
@@ -577,7 +618,11 @@ sfpi_inline void vec_min_max (vFloat &a, vFloat &b) {
 }
 __SFPI_DEPRECATED("Use min_max with vSMag type")
 sfpi_inline void vec_min_max (vInt &a, vInt &b) {
-  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX
+#if __riscv_xtttensixqsr
+                                   , SFPSWAP_IMM_TYPE_SMAG
+#endif
+                                   );
   a = __builtin_rvtt_sfpselect2 (r, 0);
   b = __builtin_rvtt_sfpselect2 (r, 1);
 }
