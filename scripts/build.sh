@@ -238,6 +238,7 @@ eval $($BIN/sfpi-info.sh DIST <$BUILD/version)
 
 if $test_binutils; then
     testing=true
+    rm -f $BUILD/stamps/check-binutils-newlib
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
     mkdir -p $tests
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')

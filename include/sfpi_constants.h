@@ -266,6 +266,17 @@ constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
 constexpr unsigned int SFPSWAP_MOD1_VEC_MAX_MIN = 9;
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPSWAP_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPSWAP_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPSWAP_IMM_TYPE_SMAG = 1;
+#endif
+
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPGTLE_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPGTLE_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPGTLE_IMM_TYPE_SMAG = 1;
+#endif
 
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST0 = 0;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST1 = 1;
