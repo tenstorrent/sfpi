@@ -9,6 +9,7 @@ import subprocess
 targets={"":["wh", "bh", "qsr"],
          "wh":["wh"],
          "bh":["bh"],
+         "wh_bh":["wh", "bh"],
          "qsr":["qsr"],
          "bh_qsr":["bh", "qsr"]}
 num_archs = len (targets[""])
