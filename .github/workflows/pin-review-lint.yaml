@@ -1,0 +1,33 @@
+name: pin-review-lint
+
+# Enforcement for HANDOFF §1(4): a commit that advances the gcc submodule
+# pin must carry docs/handoff-20260817/review_records/PIN_REVIEW-<sha12>.md
+# in the same commit (see scripts/pin-review-lint.sh).  Mechanizes the rule
+# the review waves flagged as prose-only through five consecutive waves.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pin-review-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: self-test the linter first (a broken linter must never bless a push)
+        run: bash scripts/pin-review-lint.sh --selftest
+      - name: lint every pushed/PR commit that moves the gcc pin
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ] \
+               && git rev-parse -q --verify "${{ github.event.before }}" >/dev/null 2>&1; then
+            RANGE="${{ github.event.before }}..${{ github.sha }}"
+          else
+            # New branch / unknown base: lint the tip commit only.
+            RANGE="${{ github.sha }}^..${{ github.sha }}"
+          fi
+          echo "linting $RANGE"
+          bash scripts/pin-review-lint.sh "$RANGE"
