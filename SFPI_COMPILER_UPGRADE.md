@@ -1477,6 +1477,8 @@ the GCC/sfpi backend; defer MLIR (§8) to an optional later layer.***
 > | **tt-metal** | `69d61d66` | sweep_2x2 automation + weekly/nightly scripts; p150 chip-class baselines; Min/Max perf-harness fixes; Reduce-SDPA 834/840 p150 baseline pair; typed-LLK migration |
 > | **craq-sim** | `f80a8d6` | recognizer deletion (machine-local HANDOFF §6a worklist) complete — generic descriptor-driven macro execution only |
 >
+> **SUPERSEDED (2026-08-19, lane CP) — craq-sim row only:** `f80a8d6` was silicon-refuted as an ORACLE at review wave 7 (launch-latch store-predicate blindness passed the known-wrong 0x706-class race shapes); the recognizer-deletion claim above stands. The pinned oracle is craq-sim `9f324140` (origin `nkapre/sfpi`), binary sha256 pins in tt-metal `corpus/sweep_2x2.conf` (bh `32489dda4fd6…`, wh `8f0079a9a16c…`). Never build f80a8d6 for validation.
+>
 > Bootstrap knowledge that used to live only in the machine-local HANDOFF now lives in-repo: this §18
 > (track statuses; the reconciled state in §18.8.0.4 and the pull-analysis in §18.8.0.5),
 > `docs/MACRO_PLANNER.md` in sfpi-gcc, and the sweep/harness scripts under tt-metal
