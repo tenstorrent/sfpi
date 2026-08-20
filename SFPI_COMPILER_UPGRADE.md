@@ -775,48 +775,98 @@ unsigned int execute_rvtt_pre_ira_alloc(function *fn) {
 
 ---
 
-## 5. Latency Scheduling & Hazard Elimination (The 40% Issue Win)
+## 5. Latency Scheduling & Hazard Elimination
 
-### 5.1 Separation of Modes
+### 5.1 Separation of Modes (as shipped)
+
+The two scheduling concerns live in two different pipeline positions:
 
 ```
-                          CANDIDATE BASIC BLOCK
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
-         Peak Register Pressure > 8       Peak Register Pressure <= 8
-                    │                               │
-                    ▼                               ▼
-          FEASIBILITY SCHEDULER             LATENCY SCHEDULER
-       (Minimize Register Pressure)      (Minimize Exposed Stalls)
-                    │                               │
-                    ├── Prioritize operand kills     ├── Interleave independent chains
-                    ├── Minimize active live ranges  ├── Fill 2-cycle MAD RAW gaps
-                    └── Target: Fit in 8 LREGs       └── Target: Minimize makespan
+              PRE-ALLOCATION (pseudos)              POST-ALLOCATION (hard LREGs)
+                        |                                       |
+                        v                                       v
+              FEASIBILITY / PRESSURE                  LATENCY SCHEDULING
+        gimple pass_rvtt_lp_schedule            rtl pass_rvtt_schedule phases:
+        (-mtt-tensix-optimize-                  1. DAG LIST SCHEDULER
+         pressure-schedule):                       (-mtt-tensix-optimize-list-schedule)
+        allowlisted straight-line               2. single-move fill phases
+        SFPU regions, minimize                     (latency-schedule bubble/shadow fill,
+        pseudo pressure toward the                  interlock fill, capture rotation)
+        8-LREG budget                           3. required-NOP inserter (always on)
 ```
+
+Post-allocation there is no separate "pressure mode": the eight hard
+LREGs and the WAR/WAW dependence edges register reuse creates are
+themselves the pressure bound -- no order the latency scheduler can
+emit needs a ninth name.  Pressure-aware dispatch over virtual
+registers is the pre-allocation half's contract.
 
 ### 5.2 Latency Hiding & Independent Chain Interleaving
 
-Wormhole B0 hardware requires a **2-cycle result latency** for SFPU floating-point operations (`SFPADD`, `SFPMUL`, `SFPMAD`). If a consumer immediately follows its producer, software must insert `SFPNOP`.
+Wormhole B0 hardware requires a result latency for SFPU floating-point
+operations (`SFPADD`, `SFPMUL`, `SFPMAD`): a consumer immediately
+following its producer costs a required `SFPNOP` word on Wormhole and a
+transparent scoreboard stall slot on Blackhole.  The audited
+`xtt_result_latency` fact family (rvtt-cost.md) prices both.
 
-#### The Dual-Horner Polynomial Benchmark:
-Evaluating rational approximations $P(x)/Q(x)$ presents two independent arithmetic chains.
-- **Serial Baseline (Wormhole):** 8 MADs + 7 exposed hazard NOPs = **15 issue slots**.
-- **Interleaved Latency Schedule:** 8 MADs + 1 trailing NOP = **9 issue slots** (**40% reduction in static issue slots**).
+The shipped mechanism is a deterministic **list scheduler over the
+typed-effect dependence DAG** (`-mtt-tensix-optimize-list-schedule`,
+default off), running inside `pass_rvtt_schedule` ahead of the
+single-move fill phases and of replay/MOP formation:
+
+- **Regions, fail-closed:** maximal straight-line runs of issued,
+  pure-LREG, effect-audited instructions with audited result latency
+  within the proven window (<= 1 slot).  Everything else -- CC writes
+  (`SFPSETCC`/`SFPENCC`), Dst/RWC/config traffic, memory, unaudited or
+  beyond-window latency, replay owners -- is a named barrier that
+  bounds the region and never moves.
+- **Objective:** modeled makespan on the issue timeline (RAW/WAW edges
+  weighted words+latency, WAR words; entry/exit boundary terms; an
+  entry producer with unknown latency pins its readers to their
+  baseline slots).  Commit only on a strict modeled decrease,
+  re-verified against the NOP inserter's own pad probe; any failure
+  restores the original chain exactly.
+- **Formation interaction:** self-loop rows and repeated (unrolled)
+  region shapes defer by name to replay capture formation -- captured
+  rows are cycles and sibling copies must stay isomorphic.
+
+#### The Dual-Horner Rational Case (fire twins, in-tree)
+
+Evaluating $P(x)/Q(x)$ presents two independent arithmetic chains.
+Serial source order carries one modeled stall per dependent adjacency;
+the list scheduler interleaves the chains so each chain's next term
+fills the other's latency shadow:
 
 ```
-Serial Issue Stream (15 Slots):
-Slot:  0      1      2      3      4      5      6      7      8      9     10     11     12     13     14
-Op:   P0 ──► NOP ──► P1 ──► NOP ──► P2 ──► NOP ──► P3 ──► Q0 ──► NOP ──► Q1 ──► NOP ──► Q2 ──► NOP ──► Q3
-
-Interleaved Issue Stream (9 Slots):
-Slot:  0      1      2      3      4      5      6      7      8
-Op:   P0 ──► Q0 ──► P1 ──► Q1 ──► P2 ──► Q2 ──► P3 ──► Q3 ──► NOP
+Serial Issue Stream:
+Op:   P0 ──► (stall) ──► P1 ──► (stall) ──► P2 ──► Q0 ──► (stall) ──► Q1 ──► (stall) ──► Q2
+Interleaved Issue Stream:
+Op:   P0 ──► Q0 ──► P1 ──► Q1 ──► P2 ──► Q2
 ```
+
+Measured by the in-tree twins
+(`gcc/testsuite/g++.target/riscv/tt/tensix/list-schedule-*.C`):
+
+| Twin | Result |
+| :--- | :--- |
+| `list-schedule-horner-bh.C` | two 3+3-MAD chains, modeled makespan **11 -> 7** (fires twice: renamed/opcode-varied twin), zero `SFPNOP` |
+| `list-schedule-horner-wh.C` | same shape on WH: makespan **11 -> 7**, required NOPs **5 -> 1** (only the trailing writeback pad survives) |
+| `list-schedule-cc-barrier-bh.C` | CC writes bound regions by name; single chains refuse ("no modeled makespan decrease") byte-identically |
+| `list-schedule-unaudited-bh.C` | unaudited result latency (SFPTRANSP8) refuses by name -- never guessed |
+| `list-schedule-scalar-gap-bh.C` | the entry latency floor reaches across a scalar-insn gap (the pad probe's own adjacency vocabulary) |
+| `list-schedule-formation-defer-bh.C` | replay ON: self-loop rows and repeated row shapes defer by name to capture formation |
+| `list-schedule-off-bh.C` | flag off: no engagement, stream byte-identical |
+
+The earlier single-move phases (`-mtt-tensix-optimize-latency-schedule`
+bubble/shadow fill, `-mtt-tensix-optimize-interlock-schedule`,
+`-mtt-tensix-optimize-capture-rotation`) remain as shipped: each closes
+one exposed slot with one proven-independent instruction, and capture
+rotation alone owns the cyclic row-boundary seam.
 
 ---
 
 ## 6. Tensix Coprocessor Lowering (Replay & `SFPLOADMACRO`)
+
 
 ```
                                   TENSIX COPACCEL FRONTEND
@@ -875,7 +925,7 @@ Rather than premature public macros, `SFPLOADMACRO` is governed by a compiler-in
 | Kernel | Architecture Challenge | Existing Manual Workaround | Demonstrated vs. Candidate Opportunity |
 | :--- | :--- | :--- | :--- |
 | **Welford (LayerNorm)** | Raw LLK produces L0–L3; generated SFPI consumes them across the recurrence. | Explicit raw-LREG ownership metadata plus late full-literal coalescing; no global LREG reservation. | **Demonstrated on Blackhole silicon:** 323/323/323 `WELFORD_BODY` device cycles versus replay LLK 326/326/326; N=1/2/32 correctness passes all five selectors. |
-| **Dual-Horner Rational** | 7 exposed NOP stalls in serial $P(x)/Q(x)$ evaluation. | Manual instruction interleaving in TTI. | **Candidate Opportunity:** 40% static issue-slot reduction; silicon verification required. |
+| **Dual-Horner Rational** | Exposed per-adjacency stalls in serial $P(x)/Q(x)$ evaluation. | Manual instruction interleaving in TTI. | **Mechanism shipped (default-off):** DAG list scheduler interleaves the chains (`-mtt-tensix-optimize-list-schedule`; in-tree twins: BH modeled makespan 11 -> 7, WH required NOPs 5 -> 1). Silicon verification pending (books via the on-plus knob). |
 | **Piecewise Generic / LUT** | Interleaved MADs, pinned coefficients, D-RWC updates. | 3 distinct hand-written polynomial replay bodies. | **Candidate Opportunity:** Compiler-managed coefficient pinning + exact replay packing. |
 | **Log (`ckernel_sfpu_log.h`)** | Peak pressure 9 during polynomial + exponent correction. | Explicit reload from $Dst$ at line 62. | **Candidate Opportunity:** Pressure scheduling keeps inputs resident; eliminates $Dst$ cuts once demonstrated on compiler diffs. |
 | **GELU / Erfinv** | High register pressure across nested inlined tanh/log/sqrt. | Intermediate state dumped to $Dst$. | **Candidate Opportunity:** Continuous 8-LREG allocation eliminates $Dst$ round-trip overhead. |
