@@ -1,0 +1,34 @@
+# Independent pin-14 audit (agent swarm, 2026-08-20)
+
+*Not a wave verdict — an independent re-derivation at gcc pin `3ca94518817a` (Claude Opus 4.8 swarm, source-grounded). Persisted for the owner/auditor.*
+
+## Independent pin-14 verification (pin `3ca94518817a`)
+
+Grounded in source re-derived at the pin via `git show 3ca94518817a:` and gate/grep/lint re-execution — not the wave-verdict prose.
+
+### Verdicts
+
+- **Census fix — real: CONFIRMED.** At the pin, `compute_executable_closure` (gimple-rvtt-crosscall.cc:1468–1541) discovers `anchor_start` (`_start`) and `anchor_main` (`MAIN_NAME_P && TREE_PUBLIC`), sets `externally_visible = TREE_PUBLIC && !DECL_COMDAT` (:1519) and roots `entry = node==anchor || (!anchor && externally_visible) || forced` (:1531–1533), so main-entered and renamed extern-"C"-entered production TUs are no longer skipped as unreachable. Empty-closure fail-close emits `census_slot_refusal("crosscall-census-unrooted")` when defined gimple bodies exist (:1560–1573). Pre-fix at `8dee5e84029^` rooted ONLY name==`_start` + ctors/dtors/preserve/forced/address-taken — **zero** occurrences of `anchor_main`/`externally_visible`, no empty-closure guard (re-read and grep-confirmed). Fix commit `8dee5e84029` is an ancestor of the pin (`merge-base --is-ancestor` = true). Renamed-probe non-test-keying is exact per the `TREE_PUBLIC && !DECL_COMDAT` rooting predicate.
+
+- **Quarantine integrity — held: CONFIRMED.** All three hoist flags are `Init(0)` at the pin (riscv.opt:606/693/697) with no assignments anywhere (grep-confirmed — the only writes are the Init defaults). Every gate fail-closes at 0: crosscall gate `TARGET_XTT_TENSIX && riscv_tt_opt_crosscall_hoist` (:2703); crossloop `... && riscv_tt_opt_crossloop_hoist > 0` (crossloop.cc:488); init-hoist `if (riscv_tt_opt_init_hoist && ...)` (macro-planner.cc:1615). `compute_tu_facts` has exactly the 3 stated callers (:2717 gated, :2744, :3561). Init-hoist census rooting returns `closure_why("caller-unrooted")` not an ICE (:3567–3569); census-unrooted folds closed with `return false` (:824–828). No re-enable.
+
+- **Lint bypass — BREACHED: CONFIRMED.** `scripts/pin-review-lint.sh '7e0ffd8~1..7e0ffd8'` re-executed → **exit 1**, "PIN_REVIEW-3ca94518817a.md ... does not quote the full new gcc sha 3ca94518817a2558474fe9d0d09cedbb296f32cb". The full 40-hex sha is **absent from the entire tree** (grep -rl returns nothing). Pin-14 shipped through a RED required-shaped structural gate; the promised amendment is still not applied.
+
+- **Cross-pin / frozen-canonical reuse exposure — BREACHED: CONFIRMED.** Canonical `origin/nkapre/sfpi` = `e0754714a5b` and does **NOT** contain the pin (`merge-base --is-ancestor 3ca94518817a nkapre/sfpi` = false). The pin lives only on `origin/staging/pin14` (tip == `3ca94518817a...`). The pinned toolchain is branch-orphaned relative to canonical — any consumer building from canonical does not get pin-14.
+
+- **Union integrity — MIXED / partially UNVERIFIED.** Structural core CONFIRMED: exactly 9 lane merges in `8ae4a2d6b01..3ca94518817a` (CT/CI/CU/CP/CK/CN/CV/CY/CZ); exactly 4 new flags added in the range, all `Init(0)` (replay_loop_unroll, lut_select_leaf_ext, repr_prop, int_abs), no Init(1) flip; leaf-ext triple-gated (lut-select.cc:360/648/1048); default-off witness tests present (replay-loop-unroll-default-off-bh.C, reprprop-default-off-bh.C, crosscall-hoist-default-off-bh.C). **UNVERIFIED:** corpus byte-identity (3211/3211 .text, rvtt 4540/16) — evidence dir `~/sfpi-uplift/pin14-evidence-20260820/` and parent are ABSENT; neither installed build nor worktree HEAD (`8f943c2f84a`) contains the pin, so no pin-13-vs-pin-14 -O2 byte-diff is runnable in-window. Lanes **CI, CZ, CK are NOT flag-gated** — they extend the default macro-planner vocabulary (firing-direction non-identity class); their default byte-identity rests entirely on the unreproduced corpus gate. FAIL-set is booked as 16 (frozen-9+7), not "the frozen 15" — an env-row accounting delta resolvable only against the missing .sum artifacts.
+
+### Owner decisions
+
+1. **Frozen-canonical divergence** — `nkapre/sfpi` (e0754714a) does not contain pin-14; the pin is only on `staging/pin14`. Owner must either **fast-forward `nkapre/sfpi` → `3ca94518817a`** or **explicitly bless `staging/pin14`** as the pinned line. *Recommended:* fast-forward canonical to `3ca94518817a` (staging/pin14 tip already equals it) so consumers building from canonical get the audited pin; otherwise the pin stays orphaned.
+2. **Make `pin-review-lint.sh` a REQUIRED branch-protection check** — it currently FAILs on the actual bump (exit 1) yet the pin shipped, proving the gate is advisory. *Recommended:* wire it as a required status check on the pin-bump branch so a RED lint blocks merge.
+3. **Amend PIN_REVIEW-3ca94518817a.md with the full 40-hex sha** `3ca94518817a2558474fe9d0d09cedbb296f32cb` — promised (HANDOFF.md:79) but still not applied; this is what makes the lint go green. *Recommended:* apply the amendment and re-run the lint to green before the next bump.
+4. **Ratify the over-approximation rooting policy** — rooting every externally-visible non-comdat def when no anchor exists is a safety/precision trade-off, correct-but-conservative. *Recommended:* owner confirms this is the intended policy for all production link shapes (not a correctness defect, an explicit design call).
+5. **Ratify the un-flag-gated firing-direction lanes (CI/CZ/CK)** — these change default macro-planner codegen and cannot be inert by construction. *Recommended:* owner accepts them only on the strength of a reproduced byte-identical corpus gate (see residual risk 1); until reproduced, treat their default-inertness as asserted-not-proven.
+
+### Residual risks
+
+- **Corpus byte-identity is the load-bearing unverified claim.** The evidence dir is absent and no pin-14 binary exists on this machine, so the "3211/3211 .text identical, flags-off" result and the rvtt FAIL-set identity (16 vs frozen-15) could not be reproduced. Lanes CI/CZ/CK are exactly the firing-direction non-identity class this gate must catch.
+- All static verdicts (census fix, quarantine, gates) are by source re-derivation and by the presence of dg-final refuse-by-name / default-off regression assertions in the tests — the DejaGnu suite was **not built or run** at the pin in this session; the assertions are shown WRITTEN to demand refuse-by-name and no over-refusal, not observed passing here.
+- Renamed-probe non-test-keying is exact per the code, but that extern-"C" test entries actually present as `TREE_PUBLIC && !DECL_COMDAT` cgraph definitions at census time was not dumped-and-inspected (standard for extern-"C" free functions, but unconfirmed on this machine).
+- Worktree HEAD (`8f943c2f84a`) is later than the pin; any assessment of post-pin-14 commits is out of scope.
