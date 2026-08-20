@@ -148,12 +148,37 @@ sfpi_hashtype=sha256
 EOF
     if [[ -n $sfpi_base ]]; then
 	eval $($BIN/sfpi-info.sh BASE <$BUILD/version)
-	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
+	# Local base store first: dev boxes carry versions that were never
+	# published as releases, so the download 404s — which used to fall
+	# back to a FULL rebuild silently.  Stage the base txz once:
+	#   cp sfpi_<base>_<arch>_<dist>.txz $SFPI_BASE_STORE/
+	sfpi_base_store="${SFPI_BASE_STORE:-$HOME/sfpi-uplift/build-base}"
+	if [[ -r $sfpi_base_store/$sfpi_filename.txz ]]; then
+	    echo "INFO: incremental base from local store: $sfpi_base_store/$sfpi_filename.txz"
+	    cp "$sfpi_base_store/$sfpi_filename.txz" $BUILD/
+	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
+	    # Make sure we renew the sfpi headers
+	    rm -rf $BUILD/sfpi/include
+	elif wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
 	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
 	    # Make sure we renew the sfpi headers
 	    rm -rf $BUILD/sfpi/include
 	else
-	    # No such base available
+	    # No such base available.  This downgrade used to be SILENT —
+	    # the only trace was the missing "Incremental build using"
+	    # line, and the build quietly took an hour instead of minutes.
+	    cat >&2 <<WARNEOF
+**********************************************************************
+WARNING: incremental base $sfpi_filename.txz NOT FOUND
+  looked in: $sfpi_base_store/
+  and at:    $sfpi_url/
+  FALLING BACK TO A FULL REBUILD (binutils+gcc+newlib+multilibs).
+  To restore incremental builds, stage the base txz:
+      cp sfpi_${sfpi_base}_*.txz $sfpi_base_store/
+**********************************************************************
+WARNEOF
+	    echo "base $sfpi_filename.txz missing from $sfpi_base_store and $sfpi_url; full rebuild forced at $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+		 >$BUILD/BASE_FALLBACK_FULL_BUILD
 	    sfpi_base=
 	    sed -i '/sfpi_base=/s/=.*/=/' $BUILD/version
 	fi
