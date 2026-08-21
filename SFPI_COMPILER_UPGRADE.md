@@ -62,7 +62,7 @@ A source-order GIMPLE peak above eight does not guarantee that baseline GCC will
 | **GIMPLE Pressure Scheduler** | **Real** (`gimple-rvtt-lp-schedule.cc`, 1025 lines) | Fast-path list + independent schedule validator |
 | **Exact MILP Engine** | **Real** and intentionally available whenever explicitly requested for an over-pressure region, including when list scheduling succeeds (`rvtt-lpsolve.cc`, 482 lines via `lp_solve`) | First-class bounded exact lane: pressure rescue, optimality oracle, and multi-objective latency/reuse/replay optimization under deterministic node/time caps |
 | **Driver Flags** | `Init(0)` (Explicit opt-in required) | `Init(1)` default-on for WH/BH allowlist + rollback option |
-| **Pre-IRA Physical Allocator** | Dump-only stub (`rtl-rvtt-lp-alloc.cc`, 133 lines) | **Conditional M2:** build exact transactional coloring only when corpus evidence demonstrates recurring baseline-IRA failures after ownership modeling |
+| **Pre-IRA Physical Allocator** | **Real** (2026-08-20, sfpi-gcc `agent/lreg-allocator`): DSATUR build/color/spill loop under default-off `-mtt-tensix-optimize-lreg-alloc` — colorability certificate + transactional Dst scratch-row spills (SFPSTORE/SFPLOAD mod0-4 bit-exact round trip), assignment delegated to IRA, fail-closed named-refusal surface. Authoritative doc: sfpi-gcc `docs/LREG_ALLOCATOR.md` (records where it diverges from this file's §4 pseudocode). | Default-on promotion after silicon-era corpus evidence |
 | **Corpus Scorer / Differential Driver** | **Two real layers:** this repository's `scripts/run-corpus-score.sh` has one Welford entry; TT-Metal `da3832b31d` provides `tt_metal/tt-llk/tests/corpus/sfpu_corpus.py` with 164 logical implementations / 332 architecture paths, exact pytest-node attribution, compiler capability/pin provenance, CRAQ and serialized-silicon modes, plus identical-source flag-off/flag-on executable-`.text` classification in isolated build roots. | **P0:** run that changed-binary lane on selected scheduler rows, then require paired scoped silicon A/B; structure alone is not performance evidence |
 | **Hardware Silicon Baseline** | **GO-BH-ONLY** (Blackhole **p100a**-era record, pre-planner compiler lineage — per the §18 reading discipline every number carries chip class + compiler era): 3 generated wins (Welford 323 vs 326, Reduce-SDPA 834 vs 840, Reciprocal 459 vs 467), 1 tie (Binary broadcast 608), 1 parity (Addcmul +0.02%), and understood throughput gaps. Authoritative current scoreboard: **§18.8.0.4** (p150). Primary archive in `validation/welford-bh-20260815/`. | **Open:** Wormhole silicon and an identical-source, changed-binary pressure-scheduler A/B (§14). |
 
@@ -97,8 +97,10 @@ What is implemented and credible today:
 - The scheduler commits only a strictly lower independently recomputed peak that is at most eight;
   otherwise it preserves the original GIMPLE order.
 - The raw-LREG ownership pass is a separate, enforcing pre-IRA mechanism: it emits sentinel
-  definitions/uses so IRA sees annotated raw-LREG lifetimes. It must not be confused with the
-  dump-only `rtl-rvtt-lp-alloc.cc` pressure auditor.
+  definitions/uses so IRA sees annotated raw-LREG lifetimes. It must not be confused with
+  `rtl-rvtt-lp-alloc.cc`, which since 2026-08-20 is the real M2 allocator (its historical
+  dump-only audit lines are preserved byte-identically under the pressure-schedule flag; the
+  livein sentinels participate in its interference graph as precolored reservation nodes).
 
 What prevents default-on promotion:
 
@@ -120,12 +122,13 @@ What prevents default-on promotion:
    for pressure, physical makespan, copies/reuse, constant placement, and replay opportunity. Use
    measured solver distributions—not a blanket list-miss rule—to choose the eventual production
    invocation policy.
-4. **Physical colorability is not enforced by M2.** `rtl-rvtt-lp-alloc.cc` still reports
-   `colorability=unchecked`. This does not automatically block a scheduler win—baseline IRA has
-   allocated several real cases—but any corpus case that reaches peak eight and then spills must
-   be classified, not dismissed. Build M2 only if the corpus demonstrates that pressure rescue
-   repeatedly fails at physical coloring; until then, treat M2 as an independent P1 gap rather
-   than a prerequisite invented for already-safe cases.
+4. **Physical colorability is enforced by M2 only under its own opt-in flag.** *[Updated
+   2026-08-20: M2 is built — `rtl-rvtt-lp-alloc.cc` proves colorability by DSATUR and spills
+   through Dst scratch rows under default-off `-mtt-tensix-optimize-lreg-alloc`; the suite's
+   nine-live shapes (`lreg-alloc-fire-*.C`) now compile under the flag.]* At default flags the
+   named `lreg-pressure-exceeded` error remains the behavior, so any corpus case that reaches
+   peak eight and then spills must still be classified, not dismissed; default-on promotion of
+   the allocator follows the standard silicon-era evidence bar.
 
 **Promotion gate:** switch the WH/BH allowlist to `Init(1)` only after (a) the differential driver
 classifies every changed eligible binary, (b) all correctness suites are green, (c) at least one
@@ -219,6 +222,22 @@ While greedy list heuristics work for simple expressions, register-constrained D
 ---
 
 ## 4. Milestone M2: Physical Register Allocation Enforcement (Authoritative Architecture)
+
+> **STATUS 2026-08-20: M2 is BUILT** (sfpi-gcc branch `agent/lreg-allocator`,
+> lane DP). The shipped implementation is a Chaitin-style build/color/spill
+> loop with DSATUR as the coloring engine, transactional Dst scratch-row
+> spilling (SFPSTORE/SFPLOAD mod0-4, the bit-exact 32-bit round trip), a
+> fail-closed named-refusal surface, and register **assignment deliberately
+> delegated to IRA** — it certifies colorability rather than substituting
+> hard registers.  It therefore **diverges from the pipeline and pseudocode
+> below by design**: steps 1-3 (closed-island discovery) are replaced by
+> whole-function web analysis, steps 6-7 (destructive-tie certification) are
+> subsumed by IRA's own constraint handling, and steps 10-14 (in-place
+> `validate_change` hard-register substitution) were rejected because
+> pre-IRA substitution forfeits IRA coalescing and cannot be byte-identical
+> below the pressure wall.  The authoritative description of what exists is
+> sfpi-gcc `docs/LREG_ALLOCATOR.md`; everything below this banner is the
+> ORIGINAL DESIGN, retained as a historical record only.
 
 ### 4.1 The Final-RTL Constraint Architecture
 
@@ -990,8 +1009,8 @@ The multi-quarter MLIR roadmap separates mathematical semantics at the high leve
 │ **P1**│ **Raw-LREG Ownership & Liveness**│ Partial   │ Annotated sentinel enforcement shipped;  │
 │       │                                  │           │ post-IRA verifier remains open.           │
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
-│ **P2**│ **Exact Closed-Island M2 Alloc** │Conditional│ M2 remains a dump-only audit stub; build │
-│       │                                  │           │ if corpus exposes recurring IRA failures.│
+│ **P2**│ **M2 LREG Allocator (DSATUR)**   │ **Built** │ 2026-08-20: real allocator, default-off  │
+│       │                                  │           │ flag; see sfpi-gcc docs/LREG_ALLOCATOR.md│
 ├───────┼──────────────────────────────────┼───────────┼───────────────────────────────────────────┤
 │ **P3**│ **Silicon Flow Scorecard**       │ Partial   │ **GO-BH-ONLY**: 3 generated-vs-handwritten│
 │       │                                  │           │ wins, 1 tie, 1 parity (Addcmul; §18.8.0.2)│
@@ -1021,7 +1040,7 @@ whole-LLK corpus nor an identical-source flag differential. Renaming that scorer
 Differential Driver” does not satisfy §2.1 item 4 or §10.2.
 
 **P1 is delivered only for its annotated boundary.** `pass_rvtt_lreg_livein` already mutates RTL to
-enforce sentinel lifetimes before IRA; it is not the dump-only `pass_rvtt_lp_alloc` audit stub.
+enforce sentinel lifetimes before IRA; it is distinct from `pass_rvtt_lp_alloc` (the M2 allocator since 2026-08-20, formerly a dump-only audit stub), which consumes its sentinels as precolored reservation nodes.
 That is real progress. The remaining hardening item is a discriminating post-IRA verifier and
 continued CFG/loop/partial-mask coverage. Arbitrary unannotated opaque asm remains outside the
 contract by design.
@@ -1571,8 +1590,9 @@ the MLIR stack do not exist — do not depend on them without a corpus-demonstra
 - `rtl-rvtt-replay.cc` — **existing** replay codegen; Track D (§18.8) extends this, it is not a blank
   slate.
 - `include/sfpi_classes.h` (superproject) — how `l_reg[Lx]` / `vFloat` lower to builtins.
-- ⚠️ `rtl-rvtt-lp-alloc.cc` — a 133-line **dump-only stub** (`colorability=unchecked`). **Do NOT build
-  on it or assume the M2 allocator exists.**
+- `rtl-rvtt-lp-alloc.cc` — *[updated 2026-08-20]* the real M2 DSATUR allocator (default-off
+  `-mtt-tensix-optimize-lreg-alloc`; the historical audit dump is preserved). Contract and
+  refusal surface: sfpi-gcc `docs/LREG_ALLOCATOR.md`.
 
 **2. The machine model / cost oracle** (your `craq-sim` checkout at the §18 current-coordinates tip; paths below are repo-relative):
 - `src/tensix.cpp` — issue gaps + `busy_until` timers (`tensix_sfpu_issue_gap`, `math_busy_until`,
@@ -1617,8 +1637,9 @@ the MLIR stack do not exist — do not depend on them without a corpus-demonstra
 >   but no scheduler-specific whole-corpus A/B exists to "wire".
 >
 > **Hard constraints:**
-> - Do **NOT** touch or depend on `rtl-rvtt-lp-alloc.cc` (dump-only stub, `colorability=unchecked`).
->   No MLIR. Leave both scheduler flags at `Init(0)`.
+> - Do **NOT** touch `rtl-rvtt-lp-alloc.cc` *[2026-08-20: now the real M2 allocator, own lane
+>   territory; depending on its default-off flag from another lane still requires its owner's
+>   review]*. No MLIR. Leave both scheduler flags at `Init(0)`.
 > - Preserve **byte-identical** output for ineligible / already-≤8-peak regions
 >   (`validate-sfpu-pressure-scheduler.sh`).
 > - F1.2 must reproduce **identical NOP placement on the Welford body** before you trust the new cost
@@ -2765,9 +2786,10 @@ what it validates:
   measuring the *superproject*, which by design only tracks docs + the submodule pointer. Real,
   substantial compiler code **does** exist and is committed — in the `gcc` submodule. The accurate
   statement is: the code landed *before* the doc window and has been frozen through it.
-- **The win is scheduler-only; M2 is still a stub.** `rtl-rvtt-lp-alloc.cc` in `8bea8aba49` still
+- **The win is scheduler-only; M2 is still a stub.** *[Historical record at `8bea8aba49`; M2 was
+  subsequently built 2026-08-20 — see §4 banner.]* `rtl-rvtt-lp-alloc.cc` in `8bea8aba49` still
   prints `colorability=unchecked`. Silicon-green is produced entirely by the GIMPLE pressure
-  scheduler with baseline IRA — **not** by the §4 M2 DSATUR allocator, which remains unbuilt. This
+  scheduler with baseline IRA — **not** by the §4 M2 DSATUR allocator, which remained unbuilt. This
   confirms §13.3–13.4: the pure-`vFloat`/`l_reg[]` path is IRA-safe on real silicon, and the
   earlier correctness concern was resolved by expressing Welford fully in `vFloat` (sidestepping the
   raw-LLK-interop path that §13.3 identified as the actual clobber risk).
