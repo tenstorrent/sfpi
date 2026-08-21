@@ -480,8 +480,8 @@ public:
   sfpi_inline vBool (vSMag);
 
 public:
-  __SFPI_DEPRECATED ("vBool conversion to vInt deprecated, use vBool, or v_if ... v_endif")   // This will removed
-  sfpi_inline operator vInt () const;
+  __SFPI_DEPRECATED ("vBool conversion to vInt deprecated, use vBool, or v_if ... v_endif")
+  sfpi_inline operator vInt () const = delete;
 
 private:
   sfpi_inline int get () const { return result; }

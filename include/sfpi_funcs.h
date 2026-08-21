@@ -29,9 +29,9 @@ sfpi::sFloat16b::sFloat16b (float v)
 // vBool definitions
 
 enum sfpi::vBool::Logic : unsigned char {
-     And = SFPXBOOL_MOD1_AND,
-      Or = SFPXBOOL_MOD1_OR,
-     Not = SFPXBOOL_MOD1_NOT,
+     And = SFPXLOGIC_MOD1_AND,
+      Or = SFPXLOGIC_MOD1_OR,
+     Not = SFPXLOGIC_MOD1_NOT,
 };
 
 enum sfpi::vBool::Cond : unsigned char {
@@ -51,7 +51,7 @@ enum sfpi::vBool::Type : unsigned char {
 };
 
 sfpi::vBool::vBool (Logic t, vBool a, vBool b)
-    : result (__builtin_rvtt_sfpxbool (t, a.get (), b.get ())) {}
+    : result (__builtin_rvtt_sfpxlogic (t, a.get (), b.get ())) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
     : result (__builtin_rvtt_sfpxcmp (a.get (), b.get (), c | t)) {}
@@ -75,10 +75,6 @@ sfpi::vBool::vBool (vInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
 
-sfpi::vBool::operator vInt () const {
-  return vInt (__builtin_rvtt_sfpxcondi (get ()));
-}
-
 sfpi::impl_::CC::CC (CC &&src)
     : dep (src.dep), depth (src.depth) {
   src.dep = 0;
@@ -95,7 +91,7 @@ auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
 }
 
 auto sfpi::impl_::CC::if_()-> CC & {
-  dep = __builtin_rvtt_sfpxvif ();
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
   return *this;
 }
 auto sfpi::impl_::CC::else_()-> CC & {
@@ -104,13 +100,13 @@ auto sfpi::impl_::CC::else_()-> CC & {
 }
 
 auto sfpi::impl_::CC::cond (vBool op)-> void {
-  __builtin_rvtt_sfpxcondb (op.get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, op.get ());
 }
 auto sfpi::impl_::CC::cond (vInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0).get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
 }
 auto sfpi::impl_::CC::cond (vUInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0).get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
 }
 
 auto sfpi::impl_::CC::push ()-> CC & {
