@@ -33,6 +33,10 @@ class sFloat8 {
   uint8_t val;
 
 public:
+  sfpi_inline sFloat8 (sFloat8 const &) = default;
+  sfpi_inline sFloat8 &operator= (sFloat8 const &) = default;
+
+public:
   sfpi_inline sFloat8 (uint8_t v)
       : val (v) {}
   sfpi_inline sFloat8 (float v) {
@@ -40,12 +44,25 @@ public:
     auto bits = impl_::float_as_uint (v);
     unsigned sgn = bits >> 31;
     int exp = 127 - ((bits >> 23) & 0xff);
+    unsigned man = (bits >> (23 - 5)) & 0x1f;
+
+    // Round to nearest even
+    if ((man & 2) || (bits & ((1 << (23 - 5)) - 1)))
+      man += man & 1;
+    man >>= 1;
+    if (man >= 0x10)
+      {
+        // Overflowed
+        man = 0;
+        exp -= 1;
+      }
+
     // Even though representations [0xf0,0xff) are valid non-zero numbers,
     // there is a hole for 0xff, which is treated as zero. Oh well.
     val = (sgn << 7)
               | (exp < 0 ? 0x0f // overflow -> 2.0f - epsilon
                  : exp >= 8 ? 0xff // underflow -> 0.0f
-                 : (exp << 4) | ((bits >> (23 - 4)) & 0xf));
+                 : (exp << 4) | man);
   }
 
 public:
@@ -56,6 +73,10 @@ public:
 
 class sFloat8Pair {
   uint16_t val;
+
+public:
+  sfpi_inline sFloat8Pair (sFloat8Pair const &) = default;
+  sfpi_inline sFloat8Pair &operator= (sFloat8Pair const &) = default;
 
 public:
   sfpi_inline sFloat8Pair (uint8_t a, uint8_t b)
@@ -75,6 +96,10 @@ public:
 
 class vFloat8Pair : public impl_::vVal {
 public:
+  sfpi_inline vFloat8Pair (vFloat8Pair const &) = default;
+  sfpi_inline vFloat8Pair &operator= (vFloat8Pair const &) = default;
+
+public:
   sfpi_inline vFloat8Pair (uint16_t v)
       : vVal (__builtin_rvtt_sfpxloadi (v, -16)) {}
   sfpi_inline vFloat8Pair (sFloat8Pair v)
@@ -90,6 +115,10 @@ class sFloat16bPair {
   uint32_t val;
 
 public:
+  sfpi_inline sFloat16bPair (sFloat16bPair const &) = default;
+  sfpi_inline sFloat16bPair &operator= (sFloat16bPair const &) = default;
+
+public:
   sfpi_inline sFloat16bPair (sFloat16b a, sFloat16b b)
       : val (uint32_t (a.get ()) << 16 | uint32_t (b.get ())) {}
   sfpi_inline sFloat16bPair (float a, float b)
@@ -102,6 +131,10 @@ public:
 };
 
 class vFloat16bPair : public impl_::vVal {
+public:
+  sfpi_inline vFloat16bPair (vFloat16bPair const &) = default;
+  sfpi_inline vFloat16bPair &operator= (vFloat16bPair const &) = default;
+
 public:
   sfpi_inline vFloat16bPair (sFloat16bPair v)
       : vVal (__builtin_rvtt_sfpxloadi (v.get (), -32)) {}
