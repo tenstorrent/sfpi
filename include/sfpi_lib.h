@@ -43,19 +43,18 @@ public:
     // Float must be in range +/-[0,2.0f)
     auto bits = impl_::float_as_uint (v);
     unsigned sgn = bits >> 31;
-    int exp = 127 - ((bits >> 23) & 0xff);
-    unsigned man = (bits >> (23 - 5)) & 0x1f;
+    int exp = (bits >> 23) & 0xff;
+    unsigned man = bits & ((1 << 23) - 1);
 
-    // Round to nearest even
-    if ((man & 2) || (bits & ((1 << (23 - 5)) - 1)))
-      man += man & 1;
-    man >>= 1;
-    if (man >= 0x10)
+    // Round to nearest, not handling nearest-even case
+    man += (1 << (23 - 5));
+    if (man >> 23)
       {
-        // Overflowed
+        exp++;
         man = 0;
-        exp -= 1;
       }
+    man >>= 23 - 4;
+    exp = 127 - exp;
 
     // Even though representations [0xf0,0xff) are valid non-zero numbers,
     // there is a hole for 0xff, which is treated as zero. Oh well.
