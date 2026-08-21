@@ -22,10 +22,15 @@
   __builtin_rvtt_sfploadsrcs(ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
 #define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
   __builtin_rvtt_sfpstoresrcs(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
+#define __builtin_rvtt_sfpwriteconfig_i(imm, mod1)          \
+  __builtin_rvtt_sfpwriteconfig_i(ckernel::instrn_buffer, imm, 0, 0, mod1e)
 
-#define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpsetman_i(src, imm, mod1) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetman_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 
 #define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
@@ -237,7 +242,7 @@ public:
   public:
     sfpi_inline constexpr explicit vCReg (int r) : lreg (r) {}
     sfpi_inline void operator= (Type t) const {
-      __builtin_rvtt_sfpwriteconfig_v (t.get (), lreg.get ());
+      __builtin_rvtt_sfpwriteconfig_v (t.get (), 0, lreg.get ());
     }
 
     // Assign from constructable scalar
