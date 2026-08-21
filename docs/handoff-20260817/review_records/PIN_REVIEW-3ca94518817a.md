@@ -26,3 +26,10 @@ default compile verified; pin-13 binaries backed up in-install.
 crosscall/crossloop/init-hoist return to the ON set at this pin per wave-9 lift conditions:
 census fix (CG) + coverage twins (CJ, adversarially audited SUFFICIENT) + wave-10 clean
 verification. Conf-side lift in tt-metal 0d2a35a4ca + ceremony commit.
+
+
+## Amendment (2026-08-21, auditor side — ledger 18(a)/wave-13/14 mandate)
+
+Full gcc sha of the pinned submodule commit: 3ca94518817a2558474fe9d0d09cedbb296f32cb
+(Amendment only; the original record's content is unchanged. Mandated by both the
+external audit (master ledger 18(a)) and the independent pin-14 audit, decision 3.)
