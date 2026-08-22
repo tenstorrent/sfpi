@@ -453,6 +453,16 @@ sfpi_inline V subvec_broadcast (const V &v)
 // (same rule as sfpi::min_max; two's-complement vInt/vUInt order
 // incorrectly under sign-magnitude comparison).
 //
+// TIE CONTRACT CAVEAT (lane FB finding, 2026-08-21): the documented
+// equal-value swap rule above DISAGREES with the pinned simulator's
+// behavior, observably via ENABLE_DEST_INDEX argmin/argmax (which of two
+// equal keys' companions is selected).  Tie behavior is UNADJUDICATED
+// pending a silicon probe: the value results of sort2/sort2_rows are
+// unaffected (equal values swap to equal values), but sort2_kv's
+// companion selection between EQUAL keys must not be relied on --
+// keep fixtures tie-free (the FB arsenal oracle carries tie="doc"|"sim"
+// dual models until silicon decides).
+//
 // Cost: 2 issue slots each (next-slot stall).
 
 enum class SortOrder
@@ -817,6 +827,14 @@ sfpi_inline vFloat broadcast_lane (const vFloat &v)
 // the stale register value, exactly as the hand kernels' first load into
 // a stale LREG does; the second (HI16_ONLY) load defines it.
 // TEN-2932: SFPLOAD/SFPLOADI are window-exempt opcodes.
+//
+// LOW-HALF CONTRACT CAVEAT (lane FB finding, 2026-08-21): for 16b Dst
+// datums the PAIRED LOW HALF diverges three ways -- the ISA doc says
+// preserve, the pinned sim zeroes, and silicon canonicalizes BF16 on
+// FP16B RMW stores (tt-blaze #2475).  These helpers are verified only in
+// FB's Adj16 fp32-accumulate Dst configuration (32-bit datums, no paired
+// half); do not lower onto 16b partial Dst modes outside that config
+// without adjudicating the low-half behavior.
 
 sfpi_inline vUInt dst_load_packed (unsigned lo16_addr, unsigned hi16_addr)
 {
