@@ -34,6 +34,12 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_INT16 = 8;
 constexpr unsigned int SFPLOAD_MOD0_FMT_LO16 = 9;
 // Only in HW on WH, but useful for BH & QSR semantics
 constexpr unsigned int SFPLOAD_MOD0_FMT_SM32 = 12;
+// Merging partial-register loads (SFPLOAD.md, WH+BH): LO16_ONLY writes the
+// low 16 bits preserving the high 16 (LReg = (old & 0xffff0000) | Dst16b);
+// HI16_ONLY writes the high 16 preserving the low.  The store-side twins
+// below carry the same names/values.
+constexpr unsigned int SFPLOAD_MOD0_FMT_LO16_ONLY = 14;
+constexpr unsigned int SFPLOAD_MOD0_FMT_HI16_ONLY = 15;
 #if __riscv_xtttensixwh
 __attribute__((__deprecated__("use SFPLOAD_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = SFPLOAD_MOD0_FMT_SM32;

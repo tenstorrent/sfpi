@@ -709,3 +709,6 @@ constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 //////////////////////////////////////////////////////////////////////////////
 #include "sfpi_funcs.h"
 #include "sfpi_lib.h"
+#define SFPI_CROSSLANE_FROM_SFPI_H 1
+#include "sfpi_crosslane.h"
+#undef SFPI_CROSSLANE_FROM_SFPI_H
