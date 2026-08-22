@@ -25,7 +25,7 @@ die_rollback() {
   echo "FAIL: $1" >&2
   if [ -n "${BK:-}" ] && [ -d "$BK" ] && [ "${DRY:-0}" = 0 ]; then
     echo "ROLLING BACK from $BK" >&2
-    for f in "$BK"/*; do b=$(basename "$f"); cp -f "$f" "${RESTORE[$b]}"; done
+    for f in "$BK"/*; do b=$(basename "$f"); rm -f "${RESTORE[$b]}" && cp "$f" "${RESTORE[$b]}"; done
     echo "rollback complete — install unchanged" >&2
   fi
   exit 1
@@ -34,8 +34,21 @@ die_rollback() {
 BUILD=${1:?gcc-build-dir}; INSTALL=${2:?install-root}; shift 2
 EXPECT=""; FLAGS=""; DRY=0
 while [ $# -gt 0 ]; do case "$1" in
-  --expect-cc1plus) EXPECT=$2; shift 2;;
-  --flags) FLAGS=$2; shift 2;;
+  --expect-cc1plus)
+    # A missing/empty/malformed sha must ERROR LOUDLY: an empty value used
+    # to silently disable the verify gate ([ -n "$EXPECT" ] below), and a
+    # missing value shifted the NEXT option into EXPECT (arg-shift misparse).
+    if [ $# -lt 2 ] || ! printf '%s' "$2" | grep -qE '^[0-9a-f]{64}$'; then
+      echo "--expect-cc1plus needs a full 64-hex lowercase sha256 (got: '${2:-<missing>}') — refusing (an empty/malformed sha would skip the verify gate)" >&2
+      exit 2
+    fi
+    EXPECT=$2; shift 2;;
+  --flags)
+    if [ $# -lt 2 ] || [ -z "$2" ] || [ "${2#--}" != "$2" ]; then
+      echo "--flags needs a non-empty comma-list value (got: '${2:-<missing>}')" >&2
+      exit 2
+    fi
+    FLAGS=$2; shift 2;;
   --dry-run) DRY=1; shift;;
   *) echo "unknown arg $1" >&2; exit 2;;
 esac; done
@@ -61,7 +74,11 @@ declare -A RESTORE
 backup_install() { # src dst name
   RESTORE[$3]=$2
   cp -f "$2" "$BK/$3" || die_rollback "backup of $3 failed"
-  cp -f "$1" "$2" || die_rollback "install of $3 failed"
+  # rm-then-cp, NEVER cp -f in place: cp -f opens the dest for write, so a
+  # dest hardlinked into cp -al hybrid toolchains would be corrupted THROUGH
+  # the link (the 2026-08-17 laneBH shared-cc1plus incident class).  rm
+  # breaks the link first; the hybrids keep their old inode.
+  { rm -f "$2" && cp "$1" "$2"; } || die_rollback "install of $3 failed"
 }
 backup_install "$G/cc1plus" "$LIBEXEC/cc1plus" cc1plus
 backup_install "$G/cc1"     "$LIBEXEC/cc1"     cc1
