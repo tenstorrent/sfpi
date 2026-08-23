@@ -910,6 +910,13 @@ sfpi_inline void dst_store_uint16 (const vUInt &v, unsigned addr)
 // ~1/256 of bit patterns without it.  DISABLE_IMPLIED_SRCA_FMT MUST be 1:
 // on Blackhole the implied-format path reads ImpliedSrcBFmt of a
 // never-unpacked bank, NonContractualBehavior per MOVD2B.md.
+// SRCB-FORMAT EDGE (host-proven, X6 oracle theorem): MOVB2D's masking
+// arm keys on the effective SrcBFmt, which this block does NOT own; the
+// composition is exact for every 8b-exponent-class SrcBFmt (the &0x7F8FF
+// mask only drops bits pass 3 rewrites) but an FP16-class SrcBFmt would
+// mask the relocated exponent bits and corrupt Dst bits 31..16.  The
+// hand kernels carry the same reliance on the ambient non-FP16 ALU
+// state; kernels running FP16-class ALU B formats must not call this.
 //
 // NAMED REFUSALS:
 //   crosslane-facetranspose-unsupported-target: only the Blackhole
