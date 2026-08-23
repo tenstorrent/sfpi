@@ -862,4 +862,356 @@ sfpi_inline void dst_store_uint16 (const vUInt &v, unsigned addr)
 			   SFPSTORE_ADDR_MODE_NOINC);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// X6: FPU FACE TRANSPOSE (Dst 16x16 faces, 32-bit datums) -- Blackhole.
+//
+// The SFPU shuffle vocabulary above (X1..X5) permutes LANES within the
+// 4x8 vector geometry; transposing a 16x16 FACE of Dst rows is Matrix-Unit
+// (FPU) territory: MOVD2B parks Dst rows in SrcB[16:32), TRNSPSRCB
+// transposes that 16x16 block in place, MOVB2A/MOVB2D/MOVA2D move the
+// transposed rows back.  This section is the typed spelling of the hand
+// choreography in blaze ckernel_sfpu_topk_xl.h transpose_dest_face_32b<>
+// (straight-line, MOP-free, replay-free; the in-tree LLK
+// llk_math_transpose_dest.h is the same instruction algebra driven by
+// MOP + replay + its own ADDR_MOD program -- an LLK-API shape, NOT safe
+// inside an SFPU kernel; this surface is).
+//
+// Semantics source: tt-isa-documentation WormholeB0
+// {MOVD2B,MOVB2A,MOVB2D,MOVA2D,TRNSPSRCB,RMWCIB}.md functional models
+// (they carry the Blackhole arms; the BlackholeA0 tree is a doc gap and
+// the pinned sim is the BH oracle -- lane FV X6-RESEARCH.md).
+//
+// CONTRACT (all bit-exact for arbitrary 32-bit Dst datums -- fp32 values
+// and int32/packed indices alike):
+//   face_transpose_dst_32b<FaceRow>():
+//     Dst32b[FaceRow + i][j] <- Dst32b[FaceRow + j][i]   (i, j in 0..15)
+// under a caller-opened face_transpose_cfg_enter()/_leave() block, in a
+// 32-bit Dst configuration (ALU_ACC_CTRL_Fp32_enabled == 1 on entry --
+// the dest-accumulate SFPU kernel state), under the standard SFPU LLK
+// math state where instruction address-mod 7 applies ZERO increments
+// (cmath_common SFPU program; every move below rides mod 7 so no RWC
+// drifts), with the SrcA AND SrcB banks owned by the math thread
+// (AllowedClient == MatrixUnit).  Bank ownership is CROSS-THREAD state:
+// the unpack thread grants it once per math epoch
+// (_llk_unpack_set_srcb_dummy_valid_ after its SrcA feeds -- the
+// transpose_dest_test.cpp protocol), and the math thread returns the
+// banks when its section completes (ttsetrwc CLR_AB; see
+// face_transpose_release_banks()).  The KV-window precedent: the caller
+// owns the window; this surface owns the words inside it.
+//
+// WHY THE THREE-PASS FORMAT DANCE IS EXACT (X6-RESEARCH.md section 4):
+// lo16 halves ride ShuffleBF16 (injective, inverted by the Float32-format
+// MOVA2D write-back into Dst bits 15..0); hi16 halves ride ShuffleTF32
+// (bits 31..13 preserved; MOVB2D under SrcA-format Tf32 reconstructs bits
+// 31..16 and zeroes 15..0, which the lo16 pass then rewrites).
+// ALU_ACC_CTRL_Zero_Flag_disabled_src MUST be 1 across the block: the
+// SrcB->SrcA and SrcB->Dst moves flush any datum whose shuffled image has
+// a zero low byte (MOVB2A.md FlushDenormals) -- silent data loss on
+// ~1/256 of bit patterns without it.  DISABLE_IMPLIED_SRCA_FMT MUST be 1:
+// on Blackhole the implied-format path reads ImpliedSrcBFmt of a
+// never-unpacked bank, NonContractualBehavior per MOVD2B.md.
+// SRCB-FORMAT EDGE (host-proven, X6 oracle theorem): MOVB2D's masking
+// arm keys on the effective SrcBFmt, which this block does NOT own; the
+// composition is exact for every 8b-exponent-class SrcBFmt (the &0x7F8FF
+// mask only drops bits pass 3 rewrites) but an FP16-class SrcBFmt would
+// mask the relocated exponent bits and corrupt Dst bits 31..16.  The
+// hand kernels carry the same reliance on the ambient non-FP16 ALU
+// state; kernels running FP16-class ALU B formats must not call this.
+//
+// NAMED REFUSALS:
+//   crosslane-facetranspose-unsupported-target: only the Blackhole
+//     choreography is proven (WH lacks the implied-format contract audit
+//     and a hand vehicle; QSR encodes the family differently -- the
+//     builtins themselves refuse there too).
+//   crosslane-facetranspose-row-unaligned: FaceRow must be a multiple of
+//     16 (faces), within Dst (FaceRow + 16 <= 1024).
+//   crosslane-facetranspose-16b-unproven: 16-bit Dst datum faces (the
+//     deepseek single-face MOP variants) are NOT provided -- their MOP/
+//     replay scheduling and even/odd Dst16b row interleave are a separate
+//     audit.  32-bit only.
+//
+// HAZARD LEDGER (X6-RESEARCH.md section 6): enter() issues
+// TTSTALLWAIT(STALL_CFG, WAIT_SFPU|SRCA_VLD|SRCB_VLD) so the first config
+// write -- and everything after it in the in-order math stream -- waits
+// for SFPU drain and bank ownership.  The FPU's own read-after-MOV
+// windows are hardware-interlocked between FPU instructions (MOVD2B.md /
+// MOVB2D.md scheduling notes); SFPU loads issued right after the
+// choreography follow the hand kernels' proven pattern (topk_xl phase 6+)
+// and are re-proven by the X6 sim gate.
+
+namespace facetranspose_impl_ {
+
+template <unsigned> struct dependent_false_u : public std::false_type {};
+
+// Blackhole backend-config field constants (hw/inc .../blackhole/
+// cfg_defines.h; the X6 arsenal probe static_asserts every one of these
+// against the production headers -- the drift belt).  ADDR32 values index
+// 32-bit config words; RMWCIB rewrites one byte of such a word.
+constexpr unsigned bh_alu_format_srca_addr32 = 1;   // ALU_FORMAT_SPEC_REG0_SrcA
+constexpr unsigned bh_alu_format_srca_shamt = 17;
+constexpr unsigned bh_alu_format_srca_mask = 0x1e0000;
+constexpr unsigned bh_alu_fp32_enabled_addr32 = 1;  // ALU_ACC_CTRL_Fp32_enabled
+constexpr unsigned bh_alu_fp32_enabled_shamt = 29;
+constexpr unsigned bh_alu_fp32_enabled_mask = 0x20000000;
+constexpr unsigned bh_alu_zero_flag_dis_src_addr32 = 2; // ..Zero_Flag_disabled_src
+constexpr unsigned bh_alu_zero_flag_dis_src_shamt = 0;
+constexpr unsigned bh_alu_zero_flag_dis_src_mask = 0x1;
+constexpr unsigned bh_disable_implied_srca_fmt_setc16 = 2; // SETC16 space
+// DataFormat codes (blackhole tensix_types.h).
+constexpr unsigned bh_fmt_float32 = 0;
+constexpr unsigned bh_fmt_tf32 = 4;
+constexpr unsigned bh_fmt_float16_b = 5;
+// STALLWAIT resources (blackhole ckernel_instr_params.h p_stall).
+constexpr unsigned bh_stall_cfg = 0x80;
+constexpr unsigned bh_wait_sfpu = 0x800;
+constexpr unsigned bh_srca_vld = 0x80;
+constexpr unsigned bh_srcb_vld = 0x100;
+// MOV instruction-mod fields (blackhole ckernel_instr_params.h p_mov*).
+constexpr unsigned bh_mov_dest_norm = 0;
+constexpr unsigned bh_mov_dest_32b_low = 1;
+constexpr unsigned bh_movd2b_mov_4_rows = 2;
+constexpr unsigned bh_movb2a_mov_4_rows = 2;
+constexpr unsigned bh_movb2d_mov_4_rows = 4;
+constexpr unsigned bh_mova2d_mov_8_rows = 2;
+// The SFPU-invariant instruction address-mod (zero increments under the
+// SFPU LLK math program; rvtt-effects no_increment_address_mode is the
+// same capability fact for SFPLOAD/SFPSTORE).
+constexpr unsigned bh_addr_mod_sfpu = 7;
+// TRNSPSRCB operates on SrcB rows [16, 32).
+constexpr unsigned bh_srcb_transpose_row_base = 16;
+
+} // namespace facetranspose_impl_
+
+// TOOLCHAIN DEGRADATION (the lane FA __has_builtin discipline): on a
+// toolchain without the X6 builtin family the surface parses cleanly and
+// every USE refuses by name at instantiation -- required so sfpi.h keeps
+// compiling at earlier compiler pins (merge coordination owns the
+// submodule bump).  The guard keys on ONE family member; the family lands
+// atomically.
+#if defined (__has_builtin) && __has_builtin (__builtin_rvtt_ttmovd2b)
+
+namespace facetranspose_impl_ {
+
+// Byte-granular config RMW of one field: the constexpr mirror of
+// ckernel::cfg_reg_rmw_tensix<> (ckernel.h), emitting one TTRMWCIBk per
+// mask-covered byte.
+template <unsigned Addr32, unsigned Shamt, unsigned Mask, unsigned Val>
+sfpi_inline void cfg_field_rmw ()
+{
+  constexpr unsigned wrdata = Val << Shamt;
+  static_assert ((wrdata & ~Mask) == 0,
+		 "facetranspose cfg_field_rmw: value exceeds field mask");
+  if constexpr ((Mask & 0xffu) != 0)
+    __builtin_rvtt_ttrmwcib (0, Mask & 0xffu, wrdata & 0xffu, Addr32);
+  if constexpr ((Mask & 0xff00u) != 0)
+    __builtin_rvtt_ttrmwcib (1, (Mask >> 8) & 0xffu, (wrdata >> 8) & 0xffu,
+			     Addr32);
+  if constexpr ((Mask & 0xff0000u) != 0)
+    __builtin_rvtt_ttrmwcib (2, (Mask >> 16) & 0xffu, (wrdata >> 16) & 0xffu,
+			     Addr32);
+  if constexpr ((Mask & 0xff000000u) != 0)
+    __builtin_rvtt_ttrmwcib (3, (Mask >> 24) & 0xffu, (wrdata >> 24) & 0xffu,
+			     Addr32);
+}
+
+template <unsigned Fmt>
+sfpi_inline void set_srca_format ()
+{
+  cfg_field_rmw<bh_alu_format_srca_addr32, bh_alu_format_srca_shamt,
+		bh_alu_format_srca_mask, Fmt> ();
+}
+
+template <unsigned En>
+sfpi_inline void set_fp32_enabled ()
+{
+  cfg_field_rmw<bh_alu_fp32_enabled_addr32, bh_alu_fp32_enabled_shamt,
+		bh_alu_fp32_enabled_mask, En> ();
+}
+
+} // namespace facetranspose_impl_
+
+// Open the face-transpose configuration block: implied-SrcA-format
+// inference OFF, source zero-flag (denormal flush) OFF, then stall the
+// following stream until the SFPU has drained and both Src banks are
+// owned.  Mirrors blaze enter_transpose_cfg_block() + the phase-entry
+// TTI_STALLWAIT.  Entry invariant: ALU_ACC_CTRL_Fp32_enabled == 1 (the
+// 32-bit dest-accumulate kernel state); the block leaves it 1.
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_enter ()
+{
+#if __riscv_xtttensixbh
+  namespace fi = facetranspose_impl_;
+  __builtin_rvtt_ttsetc16 (fi::bh_disable_implied_srca_fmt_setc16, 1);
+  fi::cfg_field_rmw<fi::bh_alu_zero_flag_dis_src_addr32,
+		    fi::bh_alu_zero_flag_dis_src_shamt,
+		    fi::bh_alu_zero_flag_dis_src_mask, 1> ();
+  __builtin_rvtt_ttstallwait (fi::bh_stall_cfg,
+			      fi::bh_wait_sfpu | fi::bh_srca_vld
+			      | fi::bh_srcb_vld);
+#else
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-unsupported-target: the FPU face "
+		 "transpose choreography is Blackhole-proven only");
+#endif
+}
+
+// Close the block: restore implied-format inference and the source
+// zero-flag.  Mirrors blaze leave_transpose_cfg_block().
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_leave ()
+{
+#if __riscv_xtttensixbh
+  namespace fi = facetranspose_impl_;
+  __builtin_rvtt_ttsetc16 (fi::bh_disable_implied_srca_fmt_setc16, 0);
+  fi::cfg_field_rmw<fi::bh_alu_zero_flag_dis_src_addr32,
+		    fi::bh_alu_zero_flag_dis_src_shamt,
+		    fi::bh_alu_zero_flag_dis_src_mask, 0> ();
+#else
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-unsupported-target: the FPU face "
+		 "transpose choreography is Blackhole-proven only");
+#endif
+}
+
+// Return the Src banks to the unpacker at the end of the math epoch
+// (TTSETRWC CLR_AB + counter reset -- the hand kernels' section exit).
+// Call after the LAST face_transpose of the epoch, not per face.
+sfpi_inline void face_transpose_release_banks ()
+{
+  // p_setrwc::CLR_AB = 3, SET_ABD = 7 (blackhole ckernel_instr_params.h);
+  // operand order = TTI_SETRWC (clear_ab_vld, cr, d, b, a, mask).
+  __builtin_rvtt_ttsetrwc (3, 0, 0, 0, 0, 7);
+}
+
+// Transpose one 16x16 face of 32-bit Dst datums in place at Dst row
+// FaceRow.  Caller holds a face_transpose_cfg block open.  18 FPU words +
+// 10 config-byte words, straight-line; bit-exact for every 32-bit datum.
+template <unsigned FaceRow>
+sfpi_inline void face_transpose_dst_32b ()
+{
+#if __riscv_xtttensixbh
+  namespace fi = facetranspose_impl_;
+  static_assert (FaceRow % 16 == 0 && FaceRow + 16 <= 1024,
+		 "crosslane-facetranspose-row-unaligned: FaceRow must be a "
+		 "16-aligned Dst face row below 1024");
+  constexpr unsigned b = fi::bh_srcb_transpose_row_base;
+  constexpr unsigned am = fi::bh_addr_mod_sfpu;
+
+  // Pass 1: lo16 halves -> SrcB (BF16-shuffled), transpose, park in SrcA.
+  fi::set_srca_format<fi::bh_fmt_float16_b> ();
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 0, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 4, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 8, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 12, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 12);
+  __builtin_rvtt_tttrnspsrcb ();
+  __builtin_rvtt_ttmovb2a (0, am, fi::bh_movb2a_mov_4_rows, b + 0);
+  __builtin_rvtt_ttmovb2a (4, am, fi::bh_movb2a_mov_4_rows, b + 4);
+  __builtin_rvtt_ttmovb2a (8, am, fi::bh_movb2a_mov_4_rows, b + 8);
+  __builtin_rvtt_ttmovb2a (12, am, fi::bh_movb2a_mov_4_rows, b + 12);
+
+  // Pass 2: hi16 halves -> SrcB (TF32-shuffled), transpose, write back to
+  // Dst bits 31..16 (bits 15..0 zeroed, rewritten by pass 3).
+  fi::set_srca_format<fi::bh_fmt_tf32> ();
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 0, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 4, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 8, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 12, am,
+			   fi::bh_movd2b_mov_4_rows, FaceRow + 12);
+  __builtin_rvtt_tttrnspsrcb ();
+  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 0, am,
+			   fi::bh_movb2d_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 4, am,
+			   fi::bh_movb2d_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 8, am,
+			   fi::bh_movb2d_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 12, am,
+			   fi::bh_movb2d_mov_4_rows, FaceRow + 12);
+
+  // Pass 3: parked lo16 halves from SrcA -> Dst bits 15..0 (hi16
+  // preserved).  Fp32_enabled must be 0 across these two words (the
+  // UseDst32bLo write path) and back to 1 after -- the entry invariant.
+  fi::set_fp32_enabled<0> ();
+  fi::set_srca_format<fi::bh_fmt_float32> ();
+  __builtin_rvtt_ttmova2d (fi::bh_mov_dest_32b_low, 0, am,
+			   fi::bh_mova2d_mov_8_rows, FaceRow + 0);
+  __builtin_rvtt_ttmova2d (fi::bh_mov_dest_32b_low, 8, am,
+			   fi::bh_mova2d_mov_8_rows, FaceRow + 8);
+  fi::set_fp32_enabled<1> ();
+#else
+  static_assert (facetranspose_impl_::dependent_false_u<FaceRow>::value,
+		 "crosslane-facetranspose-unsupported-target: the FPU face "
+		 "transpose choreography is Blackhole-proven only");
+#endif
+}
+
+// Batched form: N consecutive faces starting at Dst row Base (the topk_xl
+// transpose_N_faces shape), one cfg block around the whole batch.  The
+// caller still owns bank grant/release (epoch scope, not batch scope).
+template <unsigned N, unsigned Base = 0, bool OuterCfg = true>
+sfpi_inline void face_transpose_dst_32b_batch ()
+{
+  static_assert (N >= 1 && Base % 16 == 0 && Base + 16 * N <= 1024,
+		 "crosslane-facetranspose-row-unaligned: batch must be "
+		 "16-aligned consecutive Dst faces below 1024");
+  if constexpr (OuterCfg)
+    face_transpose_cfg_enter ();
+  face_transpose_dst_32b<Base> ();
+  if constexpr (N > 1)
+    face_transpose_dst_32b_batch<N - 1, Base + 16, false> ();
+  if constexpr (OuterCfg)
+    face_transpose_cfg_leave ();
+}
+
+#else // !__has_builtin (__builtin_rvtt_ttmovd2b)
+
+// Degradation stubs: parse everywhere, refuse by name on USE.
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_enter ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_leave ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <bool Proven = true>
+sfpi_inline void face_transpose_release_banks ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <unsigned FaceRow>
+sfpi_inline void face_transpose_dst_32b ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<FaceRow>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <unsigned N, unsigned Base = 0, bool OuterCfg = true>
+sfpi_inline void face_transpose_dst_32b_batch ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<N>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+#endif // __has_builtin (__builtin_rvtt_ttmovd2b)
+
 } // namespace sfpi
