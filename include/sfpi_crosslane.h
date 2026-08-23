@@ -980,6 +980,18 @@ constexpr unsigned bh_addr_mod_sfpu = 7;
 // TRNSPSRCB operates on SrcB rows [16, 32).
 constexpr unsigned bh_srcb_transpose_row_base = 16;
 
+} // namespace facetranspose_impl_
+
+// TOOLCHAIN DEGRADATION (the lane FA __has_builtin discipline): on a
+// toolchain without the X6 builtin family the surface parses cleanly and
+// every USE refuses by name at instantiation -- required so sfpi.h keeps
+// compiling at earlier compiler pins (merge coordination owns the
+// submodule bump).  The guard keys on ONE family member; the family lands
+// atomically.
+#if defined (__has_builtin) && __has_builtin (__builtin_rvtt_ttmovd2b)
+
+namespace facetranspose_impl_ {
+
 // Byte-granular config RMW of one field: the constexpr mirror of
 // ckernel::cfg_reg_rmw_tensix<> (ckernel.h), emitting one TTRMWCIBk per
 // mask-covered byte.
@@ -1156,5 +1168,50 @@ sfpi_inline void face_transpose_dst_32b_batch ()
   if constexpr (OuterCfg)
     face_transpose_cfg_leave ();
 }
+
+#else // !__has_builtin (__builtin_rvtt_ttmovd2b)
+
+// Degradation stubs: parse everywhere, refuse by name on USE.
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_enter ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <bool Proven = true>
+sfpi_inline void face_transpose_cfg_leave ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <bool Proven = true>
+sfpi_inline void face_transpose_release_banks ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<Proven ? 1u : 0u>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <unsigned FaceRow>
+sfpi_inline void face_transpose_dst_32b ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<FaceRow>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+template <unsigned N, unsigned Base = 0, bool OuterCfg = true>
+sfpi_inline void face_transpose_dst_32b_batch ()
+{
+  static_assert (facetranspose_impl_::dependent_false_u<N>::value,
+		 "crosslane-facetranspose-toolchain-missing-builtins: this "
+		 "toolchain lacks the X6 FPU face-transpose builtin family");
+}
+
+#endif // __has_builtin (__builtin_rvtt_ttmovd2b)
 
 } // namespace sfpi
