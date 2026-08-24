@@ -29,101 +29,87 @@ sfpi_inline Type as (impl_::vVal v) {
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
 
-class sLut8 {
-  uint16_t val;
+namespace impl_ {
+template<typename Single, typename Pair>
+class sLut {
+  Pair val;
 
 public:
-  sfpi_inline sLut8 (sLut8 const &) = default;
-  sfpi_inline sLut8 &operator= (sLut8 const &) = default;
+  using scalar_t = Pair;
 
 public:
-  sfpi_inline explicit sLut8 (uint8_t a, uint8_t b)
-      : val (a << 8 | b) {}
-  sfpi_inline explicit sLut8 (uint16_t v)
+  sfpi_inline sLut (sLut const &) = default;
+  sfpi_inline sLut &operator= (sLut const &) = default;
+
+public:
+  sfpi_inline explicit sLut (Single a, Single b)
+      : val (a << sizeof (Single) * 8 | b) {}
+  sfpi_inline explicit sLut (Pair v)
       : val (v) {}
-  sfpi_inline explicit sLut8 (float a, float b)
-      : sLut8 (convert (a), convert (b)) {}
+  sfpi_inline explicit sLut (float a, float b)
+      : sLut (convert (a), convert (b)) {}
 
 private:
-  static uint8_t convert (float v) {
-    // Float must be in range +/-[0,2.0f)
-    auto bits = impl_::float_as_uint (v);
-    unsigned sgn = bits >> 31;
-    int exp = (bits >> 23) & 0xff;
-    unsigned man = bits & ((1 << 23) - 1);
-
-    // Round to nearest, not handling nearest-even case
-    man += (1 << (23 - 5));
-    if (man >> 23)
+  static Single convert (float v) {
+    if constexpr (sizeof (Pair) == 2)
       {
-        exp++;
-        man = 0;
-      }
-    man >>= 23 - 4;
-    exp = 127 - exp;
+        // Float must be in range +/-[0,2.0f)
+        auto bits = impl_::float_as_uint (v);
+        unsigned sgn = bits >> 31;
+        int exp = (bits >> 23) & 0xff;
+        unsigned man = bits & ((1 << 23) - 1);
 
-    // Even though representations [0xf0,0xff) are valid non-zero numbers,
-    // there is a hole for 0xff, which is treated as zero. Oh well.
-    return (sgn << 7)
-        | (exp < 0 ? 0x0f // overflow -> 2.0f - epsilon
-           : exp >= 8 ? 0xff // underflow -> 0.0f
-           : (exp << 4) | man);
-  }
+        // Round to nearest, not handling nearest-even case
+        man += (1 << (23 - 5));
+        if (man >> 23)
+          {
+            exp++;
+            man = 0;
+          }
+        man >>= 23 - 4;
+        exp = 127 - exp;
+
+        // Even though representations [0xf0,0xff) are valid non-zero numbers,
+        // there is a hole for 0xff, which is treated as zero. Oh well.
+        return (sgn << 7)
+            | (exp < 0 ? 0x0f // overflow -> 2.0f - epsilon
+               : exp >= 8 ? 0xff // underflow -> 0.0f
+               : (exp << 4) | man);
+      }
+    else
+      {
+        static_assert (sizeof (Pair) == 4);
+        return sFloat16b (v).get ();
+      }
+  }  
   
 public:
-  sfpi_inline uint16_t get () const {
+  sfpi_inline Pair get () const {
     return val;
   }
 };
 
-class vLut8 : public impl_::vVal {
+template<typename Scalar>
+class vLut : public impl_::vVal {
 public:
-  sfpi_inline vLut8 (vLut8 const &) = default;
-  sfpi_inline vLut8 &operator= (vLut8 const &) = default;
+  sfpi_inline vLut (vLut const &) = default;
+  sfpi_inline vLut &operator= (vLut const &) = default;
 
 public:
-  sfpi_inline explicit vLut8 (uint16_t v)
-      : vVal (__builtin_rvtt_sfpxloadi (v, -16)) {}
-  sfpi_inline explicit vLut8 (sLut8 v)
-      : vLut8 (v.get ()) {}
-  sfpi_inline explicit vLut8 (float a, float b)
-      : vLut8 (sLut8 (a, b)) {}
-  sfpi_inline explicit vLut8 (impl_::sfpu_t vec) : vVal (vec) {}
+  sfpi_inline explicit vLut (typename Scalar::scalar_t v)
+      : vVal (__builtin_rvtt_sfpxloadi (v, -int (sizeof (typename Scalar::scalar_t)) * 8)) {}
+  sfpi_inline explicit vLut (Scalar v)
+      : vLut (v.get ()) {}
+  sfpi_inline explicit vLut (float a, float b)
+      : vLut (Scalar (a, b)) {}
+  sfpi_inline explicit vLut (impl_::sfpu_t vec) : vVal (vec) {}
 };
+}
 
-class sLut16 {
-  uint32_t val;
-
-public:
-  sfpi_inline sLut16 (sLut16 const &) = default;
-  sfpi_inline sLut16 &operator= (sLut16 const &) = default;
-
-public:
-  sfpi_inline explicit sLut16 (sFloat16b a, sFloat16b b)
-      : val (uint32_t (a.get ()) << 16 | uint32_t (b.get ())) {}
-  sfpi_inline explicit sLut16 (float a, float b)
-      : sLut16 (sFloat16b (a), sFloat16b (b)) {}
-
-public:
-  sfpi_inline uint32_t get () const {
-    return val;
-  }
-};
-
-class vLut16 : public impl_::vVal {
-public:
-  sfpi_inline vLut16 (vLut16 const &) = default;
-  sfpi_inline vLut16 &operator= (vLut16 const &) = default;
-
-public:
-  sfpi_inline explicit vLut16 (sLut16 v)
-      : vVal (__builtin_rvtt_sfpxloadi (v.get (), -32)) {}
-  sfpi_inline explicit vLut16 (sFloat16b a, sFloat16b b)
-      : vLut16 (sLut16 (a, b)) {}
-  sfpi_inline explicit vLut16 (float a, float b)
-      : vLut16 (sLut16 (a, b)) {}
-  sfpi_inline explicit vLut16 (impl_::sfpu_t vec) : vVal (vec) {}
-};
+using sLut8 = impl_::sLut<uint8_t, uint16_t>;
+using vLut8 = impl_::vLut<sLut8>;
+using sLut16 = impl_::sLut<uint16_t, uint32_t>;
+using vLut16 = impl_::vLut<sLut16>;
 
 enum class LutSign {
   Retain,
