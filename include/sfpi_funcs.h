@@ -54,10 +54,10 @@ sfpi::vBool::vBool (Logic t, vBool a, vBool b)
     : result (__builtin_rvtt_sfpxbool (t, a.get (), b.get ())) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
-    : result (__builtin_rvtt_sfpxcmpv (a.get (), b.get (), c | t)) {}
+    : result (__builtin_rvtt_sfpxcmp (a.get (), b.get (), c | t)) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, uint32_t s)
-    : result (__builtin_rvtt_sfpxcmps (a.get (), s, c | t)) {}
+    : result (__builtin_rvtt_sfpxcmp (a.get (), __builtin_rvtt_sfpxloadi (s, -32), c | t)) {}
 
 sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
     : vBool (c, Float, a, b) {}
