@@ -51,35 +51,47 @@ public:
 
 private:
   static Single convert (float v) {
-    if constexpr (sizeof (Pair) == 2)
+    constexpr bool fp16 = sizeof (Single) == 2;
+
+    // FP8 = S:1, E:3, M:4, exp is unbiased, negated
+    // FP16 = S:1, E:5, M:10, exp is biased by 16
+    constexpr unsigned man_bits = fp16 ? 10 : 4;
+
+    // Extract
+    auto bits = impl_::float_as_uint (v);
+    unsigned sgn = bits >> 31;
+    int exp = (bits >> 23) & 0xff;
+    unsigned man = bits & ((1 << 23) - 1);
+
+    // Round to nearest, not handling nearest-even case
+    man += (1 << (23 - man_bits - 1));
+    if (man >> 23)
+      {
+        exp++;
+        man = 0;
+      }
+
+    man >>= 23 - man_bits;
+    if constexpr (fp16)
+      {
+        // Float must be in range +/-[0,16.0f)
+        exp -= 128 - 16;
+        return (sgn << 15)
+            | (exp < 0 ? 0x7c00 // underflow -> 0.0f
+               : exp >= 31 ? 0x7bff // overflow -> 16.0f - epsilon
+               : (exp << 10) | man);
+      }
+    else
       {
         // Float must be in range +/-[0,2.0f)
-        auto bits = impl_::float_as_uint (v);
-        unsigned sgn = bits >> 31;
-        int exp = (bits >> 23) & 0xff;
-        unsigned man = bits & ((1 << 23) - 1);
-
-        // Round to nearest, not handling nearest-even case
-        man += (1 << (23 - 5));
-        if (man >> 23)
-          {
-            exp++;
-            man = 0;
-          }
-        man >>= 23 - 4;
-        exp = 127 - exp;
+        exp -= 128;
 
         // Even though representations [0xf0,0xff) are valid non-zero numbers,
         // there is a hole for 0xff, which is treated as zero. Oh well.
         return (sgn << 7)
-            | (exp < 0 ? 0x0f // overflow -> 2.0f - epsilon
-               : exp >= 8 ? 0xff // underflow -> 0.0f
-               : (exp << 4) | man);
-      }
-    else
-      {
-        static_assert (sizeof (Pair) == 4);
-        return sFloat16b (v).get ();
+            | (exp + 7 < 0 ? 0xff // underflow -> 0.0f
+               : exp >= 0 ? 0x0f // overflow -> 2.0f - epsilon
+               : ((-1 - exp) << 4) | man);
       }
   }  
   
