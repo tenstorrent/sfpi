@@ -1,6 +1,15 @@
 # SFPI Compiler Uplift Handoff — CLEAN-MACHINE PICKUP (single self-contained file)
 
-Last updated: 2026-08-17 (post-pull adversarial review — see /home/nkapre/PULL_ANALYSIS-20260817.md for the full 4-review synthesis; 6 CONFIRMED defects, fixes ranked there). Previous wrap 2026-08-17 ~14:15 UTC (merged staging branches deleted from remotes; 7 archive/* branches pushed; local box cleaned 354→~180GB). Assume ZERO local state: no home dir, no worktrees, no toolchains, no evidence dirs. Everything you need is (a) inlined here or (b) on the GitHub remotes at the SHAs in §2. Sections §A (local-only appendix) describe artifacts that exist ONLY on the original machine (nkapre's localdev) — useful if you have it, ignorable if you don't.
+Last updated: **2026-08-24 (pin 28)** on tt-quietbox-0. The live working machine
+is tt-quietbox-0 (~/sfpi-uplift); this file remains written for a ZERO-state
+pickup — everything needed is (a) inlined here, (b) on the GitHub remotes at
+the SHAs in §2/§2b, or (c) reproducible from them. §2b + §3b + §8b are the
+CURRENT state (pins 15→28 era, 2026-08-20→24); older sections below them are
+kept as protocol + lineage and remain binding where marked. The session
+ledger with every lane closure since 2026-08-16 lives in the orchestrator's
+memory dir on tt-quietbox-0
+(~/.claude/projects/-home-ttuser/memory/sfpi-uplift-swarm.md + per-lane
+files) — not required for pickup, invaluable if you have the box.
 
 ## 0. Mission and standing user directives
 
@@ -31,7 +40,92 @@ Last updated: 2026-08-17 (post-pull adversarial review — see /home/nkapre/PULL
 
 **Branch contents.** sfpi-gcc `agent/generic-macro-planner`: the 7-layer generic SFPLOADMACRO planner (typed effect attributes w/ refusing defaults → rvtt-effects API → shared path-sensitive ownership → dataflow region discovery → DAG scheduler → capability tables (rvtt-macro-tables*, raw words' legitimate home) → descriptor synthesis + emission-gating verifier), Min/Max exact calendar DELETED and re-derived byte-identically (incl. real in-place-store kernel via a generic store-demoted scheduling fallback), BH launch addr-mode <<13 fix (three-source proven), 0x37120004 magic word deleted (typed `rvtt_ttdstface` insn assembles byte-identically → 0xdc480010). All flags default-off; default codegen proven byte-identical vs e4b974208. sfpi-gcc `agent/sdpa-partial-invariant` (3 independent reviews, APPROVE_WITH_NOTES): partial invariant hoist under LREG pressure → replay-aware complete unroll (+pragma + NULL-latch guards) → region-scoped structural ownership with deferred entry-edge split → dst-autoincr (owned SETC16 + store-mode-6 implicit advance) → M1 final-row→launch conversion → M2a dominating SETC16 placement + distance guard → multi-block (face-loop-scope) hoist + ttdstface port. sfpi-gcc profitability gate (RECALIBRATED at bb56f1d77 from 4 silicon points — the old formula ordered the silicon winner below both losers): benefit = trips×(deliver − max(123, execute)) − deliver, in CENTISLOTS (deliver = (1+len)×123, execute = 100×len), MIN_BENEFIT=60; `-mtt-tensix-replay-hoist-min-benefit=` CHANGED UNITS slots→centislots and default 64→60; proven trips only; Log/Log1p still byte-identical refusals, ReduceSDPA (4,8)=121 and SDPA-exp (8,24)=2325 fire. Verified not-a-curve-fit: 76 unseen probe points match the plane exactly, no notch.
 
-## 3. Silicon scoreboard
+## 2b. CURRENT STATE — pin 28 (2026-08-24)
+
+**Canonical branch everywhere: `nkapre/sfpi`** across sfpi-gcc, tt-metal,
+sfpi, tt-blaze, craq-sim. Current tips (all pushed):
+
+| repo | tip | contents since §2's era |
+|---|---|---|
+| sfpi-gcc | `fd2bb4a481d` | pins 15–28: crown-jewel wave (DSATUR lreg-alloc, list-sched, MILP, delivery-shape, prera, round-interleave, licensed reassoc, cc-restore-loadi, store-folds, int-not), EB/EQ dst-autoincr pricing + W_drain=7, ES/FJ/FL hang guards, EV planner inter-row drain fix, crosslane vocabulary X1–X7 (gimple+rtl fusion, TEN-2932 window checker w/ full replay vision, X6 face-transpose builtins), FS replay-persistence model + domination obligations, FP-1 use-exclusivity, FW record-hoist tile-loop generalization + FZ downstream-composition pricing, FU IRA dual-bank pinned-chain binding, GA const-residency MAD-PAIR class, FT window-pairing drain tuner + GJ stride-phase generalization |
+| tt-metal | `50ded7659c` | sweep_2x2 harness hardened (FM/FO/FQ/FY/FZ/GA-era + GF's 4 injection-proven fixes: schema-aware batching + empty-samples FATAL, class-map op-prefix keying, knob pregate, leg-store build-env keying), reviewed ON set = **28 flags**, KNOB_MODES current, PIN HISTORY entries 14–28 append-only, baseline v1+v2 anchors current, review_records/ incl. OWNER-RATIFICATION-{cast-golden-respec, finite-math-license, arm-preference-lut-license}.md, blaze vendored lifts + multitile rows, X6 oracle/battery/vehicles, deepseek_top32 vehicle, fitter-winner refreshed fitted arms |
+| sfpi | `fb2465c` | sfpi_crosslane.h (X1–X5 + X6 face-transpose surface w/ load-bearing __has_builtin guard), sfpi_sortnet.h; **installer gotcha: pin installs must stage include/ (rm-then-cp) — see §8b rules** |
+| tt-blaze | `5e352909b`-era + lifts | census + semantic lifts; OWED: GK-F1 rebuild-pass twin fix + FU-F2 transp8 qualification (both fixed on tt-metal vendored copies, tt-blaze source fixes pending) |
+| craq-sim | `9f324140` (unchanged) | pinned oracle shas as §2 |
+
+**Installed toolchain (pin 28)**: cc1plus
+`2a71feada1d944b4c5b8c114495a8e084c722dd1dbb4cea3ac617f0ae25d69af`, driver
+`5811b9eb1ad2db68bb825c5059ef93e3c4ec6d9b55f3311257662be0edf437be`
+(~/sfpi-uplift/sfpi/build/sfpi/compiler; PIN-INSTALL-MANIFEST.txt is the
+authority — **the driver rebuilds whenever cc1plus changes; always read its
+sha from the CURRENT manifest entry, never assert "unchanged"**). Full
+per-pin lineage: PIN HISTORY in tt-metal
+tests/corpus/sweep_2x2.conf (entries 14–28, each with gates +
+REVIEW_RECORD-<sha12>.md in review_records/).
+
+**Verdict metric (owner-ratified 2026-08-21)**: end-to-end device KERNEL
+time decides WIN/PARITY/LOSS (±0.5% parity band); body zones are
+diagnostics. Owner ratifications in force: -fassociative-math licensed
+reassoc; finite-math/LUT-class accuracy licensing at hand-matched-or-better
+error; fitted-arm preference (best sound measured arm books the family).
+
+## 3b. CURRENT BOARD — 2026-08-24, pin 28, ON-28
+
+**FINAL BOARD: 69 WIN / 33 PARITY / 55 LOSS** over ~280 rows (+86
+causal-only, 14 refusals, 4 SUPERSEDED, ~21 skips; 1 unmeasured).
+Authoritative file: tt-quietbox-0
+`~/sfpi-uplift/laneFM-evidence-20260822/FINAL-BOARD.tsv` (per-row
+provenance); live dashboard artifact "craq-sfpi". Wins outnumber losses.
+
+Highlight arcs (KERNEL vs hand): mulint32 +72.3 → **WIN −4.65** (FT drain
+recovery → GG radix-23 domain-contract rewrite → GJ stride-phase pairing);
+shift +43.0 → **WIN −21.6** (BH-native arithmetic-shift mode, hand carries a
+WH-era manual sign-fill — upstream note filed); leftshift → **WIN −18.95**
+(Option R raw-2c contract adjudication); exp → WIN −0.86; unarybitwise →
+WIN −2.32 (knob); binaryfmod/-remainder first-ever WINs; tanhlut +343 →
+PARITY +0.48 (licensed arm 3.5× MORE accurate than hand); gelu-licensed NEW
+WIN −21.16 at hand's real 255-ulp contract; hardsigmoid +14.6 → +0.89 (GA
+MAD-PAIR); roundingops +74.5 → +7.92; lgamma-fitted +233 → +74 (fitter s4);
+topk_xl deep phases on typed X6 = exact hand parity; deepseek_top32 first
+cells, sem-favoring; blaze multi-tile: "more data = more wins" holds on
+every kernel (record-hoist killed the one widening class). Remaining losses
+are dominated by named ceilings (sigmoidappx LUT slot floor, geluappx
+3-entry-LUT surface gap → FP16_6ENTRY = named unlock, lcm RecMII floor,
+atan2 bivariate, at-floor rows).
+
+## 8b. CURRENT NEXT ACTIONS (2026-08-24, ordered)
+
+1. **FI-3c cross-row pairing build** (roundingops +7.92 unlock; full spec +
+   cycle arithmetic in laneGJ-evidence AUTOPSY.md): rename + interleave +
+   CC-state-equality placement + Dst re-planning in the planner.
+2. **record-hoist crosscall class** (recip +1.01; EC v1 scope-out).
+3. **DP-Dst-spill of round-phase invariants** (lcm +6.61 RecMII unlock).
+4. **window-pairing-lreg-overlap** VD-alternation via descriptor synthesis
+   (mulint32's last bound).
+5. tt-blaze source fixes owed (GK-F1, FU-F2); FP16_6ENTRY LUT capability
+   (geluappx unlock); weekly at the GF-fixed harness tip (clears the GE-F2
+   adoption-green prev-chain scrub note); org tail (65 untested refusal
+   names, helper dedup, silent no-op -mno-* flag, installer include/
+   staging automation).
+6. Owner-open: EM solo booking landed via GI; nothing blocks on owner
+   except future arm-preference calls.
+
+**Key operational rules learned since §1 (all binding)**: check
+`pgrep -f 'sweep_2x2\.py'` (filter zsh wrappers — bare pgrep matches its own
+shell) + flocks before any pin install; hybrids cp -al the toolchain but
+REAL-COPY include/ trees; rm-then-cp binaries onto hardlinks, never cp -f;
+hybrid corpus legs MUST pass --compiler with the hybrid driver (the store
+refuses caller/build divergence since GF); LOGURU_LEVEL=TRACE changes
+codegen (strip print defines in dump recompiles); never git stash in
+worktrees; never edit a farm mid-corpus-leg (source-change discard); keep
+leg flag files out of /tmp (crash wipes them silently); park-and-notify is
+BANNED for lanes — foreground block-wait everything; union merges of .opt
+files need build-level OPTCHECK (textual no-conflict proves nothing);
+append-only PIN HISTORY with scoped sha replaces (conf_lint R3b enforces);
+REVIEW_RECORD template requires literal "## Reviewed"/"## Gates" headings +
+Reviewer line, in review_records/ AND ~/sfpi-uplift/sweep-2x2/.
+
+## 3. Silicon scoreboard (HISTORICAL — superseded by §3b; kept for lineage)
 
 **AUTHORITATIVE CLASS IS NOW p150** (tt-metal 69d61d66 baselines, chip-class-separated files, p100a file immutable). p150 re-measurements at 69d61d66: SDPA sem 1289→1036 (**−19.63%** KERNEL) / hand 1009; Min/Max **−30.72%** / +8.26% vs hand; Signbit planner-fired **−22.98%** causal, beats hand −5.81% (the old "must be reproduced by the planner" condition is DISCHARGED); Expm1 −2.49%; Lerp −13.43%; ReduceSDPA generated 834 vs hand 840 (gate-fix promotion pair, bb56f1d77 compiler); open losses persist: Exp +37.61%, SigmoidAppx +63.68%, Typecast WORSENED to +22.64% — attribution RESOLVED by real-node planner dump (2026-08-17 delta review): the ON leg measured a REFUSED replay-fallback build; the planner PLANS the full descriptor (rows=8, verify ok) then refuses emission with config-ownership-unproven; real blocker = blocker-doc spec point 3 (config ownership vs the shared unary init in run_kernel), NOT step-4 absence (closes PULL_ANALYSIS §4 item 7). CAVEATS: Min/Max p150 cells are NOT same-source with the p100a records (65d2c873/4ff5c848 changed the measured kernel's .text — ratio-level reproduction only); whether the p150 SDPA ON bytes equal b0d9e72e is not recorded in-repo; typecast ON leg used a BODY-family marker on a macro-launch shape with no lower-bound check recorded. Raw evidence lives on tt-quietbox-0 (~/sfpi-uplift), not in-repo.
 
@@ -151,7 +245,7 @@ PENDING FIXES from the review: (a) P0 all-lanes proof (§5 item 7); (b) the WP7 
 **(b) Exp semantic (+70.7%, biggest loss).** Locate the semantic Exp kernel + its test nodes in tt-metal; compile OFF/ON with the full sdpa-branch flag set (§10); diagnose per-mechanism fired/refused from dumps; payload analysis vs hand Exp (falsifiable-target method: slots, SFPLOADI-in-capture, TTINCRWC, backedges, per-face vs per-tile placement); paired CRAQ; sober 1.23:1 prediction; report ordered generic next steps. This op HAS a hand variant → full 2x2 on silicon after review.
 **(c) SigmoidAppx (+62.3%).** Hand code uses SFPLUT/SFPLUTFP32; the semantic source's range-dispatch tree compiles poorly. Generic mechanism: LUT instruction selection keyed to DATAFLOW SHAPE (select-tree/switch over range-partitioned coefficients feeding MAD) + target capability tables — NEVER coefficient values (renamed tests with DIFFERENT coefficients must prove value-independence); possibly + unroll/constant-register allocation. Implement first increment on a branch off the sdpa stack; changed-binary + CRAQ; no silicon without review.
 
-## 8. Next actions (ordered; full ranked list with anchors in PULL_ANALYSIS-20260817.md §4)
+## 8. Next actions (HISTORICAL 2026-08-17 — superseded by §8b)
 
 1. **P0:** wire the all-lanes-enable proof (rtl-rvtt-macro-planner.cc:216-266; consume sfpencc_all_lanes_word() or CRAQ-prove the partial-lane envelope; tests both directions) BEFORE lane-predicated shapes reach silicon.
 2. **P1 (before the next scheduled sweep is trusted):** fix weekly_bh_sweep.sh FAIL counting (grep -c RED-on-clean bug); move knob_silicon() behind the BH CRAQ gate + paired correctness; make win→refusal RED in report(); promote sweep_2x2.conf PINNED_COMPILER_SHA256 to the bb56f1d77-built compiler and add per-row compiler_sha to baseline/scoreboard schema.
