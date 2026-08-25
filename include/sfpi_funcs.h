@@ -120,7 +120,25 @@ auto sfpi::impl_::CC::push ()-> CC & {
 }
 
 auto sfpi::impl_::CC::pop ()-> CC & {
-  for (unsigned ix = depth; ix--;)
+  // The pop count is always a compile-time constant after inlining (the
+  // push()/else_() chain is textual), but the natural rolled loop stops
+  // being completely peeled at depth >= 5 (-O2 cunroll refuses on size
+  // growth), leaving a popc CFG self-loop that no rvtt CC analysis
+  // accepts: a five-region v_if/v_elseif chain ICEs the compiler
+  // (gimple-rvtt-live.cc process_block stack-depth assert; laneGU
+  // 2026-08-25).  A constant-foldable compare chain never forms a loop
+  // in the first place; the residual loop only exists for depth > 8
+  // (beyond any architectural CC-stack use) and keeps the old shape.
+  const unsigned int n = depth;
+  if (n >= 1) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 2) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 3) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 4) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 5) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 6) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 7) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  if (n >= 8) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+  for (unsigned ix = 8; ix < n; ix++)
     __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
   return *this;
 }
