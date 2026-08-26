@@ -216,8 +216,7 @@ constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
-// WH/BH do round-nearest-away
-constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Evne
+constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Even
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNS = 1; // Round Nearest Stochastic
 //__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNE instead")))
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = SFPCAST_MOD1_SM32_TO_FP32_RNE;
@@ -235,7 +234,10 @@ constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNE = 4; // Float to Sign-Mag
 constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNS = 5; // Float to Sign-Mag
 #endif
 
-constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
+// WH/BH break ties away from zero, Quasar to even; cf RoundMode::Nearest
+constexpr unsigned int SFPSTOCHRND_RND_NEAREST = 0;
+//__attribute__((__deprecated__("use SFPSTOCHRND_RND_NEAREST instead")))
+constexpr unsigned int SFPSTOCHRND_RND_EVEN = SFPSTOCHRND_RND_NEAREST;
 constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;
 constexpr unsigned int SFPSTOCHRND_RND_ZERO = 2;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16A = 0;

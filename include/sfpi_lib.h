@@ -722,7 +722,7 @@ class RoundMode {
 
 namespace impl_ {
 sfpi_inline constexpr unsigned stochrnd_rnd (RoundMode mode) {
-  return mode == RoundMode::Nearest ? SFPSTOCHRND_RND_EVEN :
+  return mode == RoundMode::Nearest ? SFPSTOCHRND_RND_NEAREST :
       mode == RoundMode::NearestStochastic ? SFPSTOCHRND_RND_STOCH :
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
       mode == RoundMode::Zero ? SFPSTOCHRND_RND_ZERO :
