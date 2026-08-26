@@ -209,31 +209,25 @@ sfpi_inline void lut_init (unsigned ix, sLut32si si) {
 template <LutMode>
 struct LutCookie {};
 
-template <LutMode Mode = LutMode::Fp8x3>
-sfpi_inline LutCookie<Mode> lut_init (sLut8si si0, sLut8si si1, sLut8si si2) {
-  static_assert (Mode == LutMode::Fp8x3, "Unsupported LutMode");
+sfpi_inline LutCookie<LutMode::Fp8x3> lut_init (sLut8si si0, sLut8si si1, sLut8si si2) {
   lut_init (0, si0);
   lut_init (1, si1);
   lut_init (2, si2);
-  return LutCookie<LutMode::Fp8x3> ();
+  return {};
 }
 
-template <LutMode Mode = LutMode::Fp16x3>
-sfpi_inline LutCookie<Mode> lut_init (sLut16si si0, sLut16si si1, sLut16si si2) {
-  static_assert (Mode == LutMode::Fp16x3, "Unsupported LutMode");
+sfpi_inline LutCookie<LutMode::Fp16x3> lut_init (sLut16si si0, sLut16si si1, sLut16si si2) {
   lut_init (0, si0);
   lut_init (1, si1);
   lut_init (2, si2);
-  return LutCookie<LutMode::Fp16x3> ();
+  return {};
 }
 
-template <LutMode Mode = LutMode::Fp32x3>
-sfpi_inline LutCookie<Mode> lut_init (sLut32si si0, sLut32si si1, sLut32si si2) {
-  static_assert (Mode == LutMode::Fp32x3, "Unsupported LutMode");
+sfpi_inline LutCookie<LutMode::Fp32x3> lut_init (sLut32si si0, sLut32si si1, sLut32si si2) {
   lut_init (0, si0);
   lut_init (1, si1);
   lut_init (2, si2);
-  return LutCookie<LutMode::Fp32x3> ();
+  return {};
 }
 
 template <LutMode Mode = LutMode::Fp16x6_HWM3>
@@ -282,10 +276,9 @@ sfpi_inline vFloat lut (vFloat v, LutCookie<Mode>, LutSign signedness = LutSign:
 }
 #else
 
-template <LutMode Mode = LutMode::Fp8x3>
 sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
                         LutSign signedness = LutSign::Retain) {
-  unsigned mod = (Mode == LutMode::Fp8x3 ? 0 : ~0)
+  unsigned mod = 0
       | (signedness == LutSign::Retain ? SFPLUT_MOD0_SGN_RETAIN :
          signedness == LutSign::Update ? SFPLUT_MOD0_SGN_UPDATE :
          ~0);
@@ -294,18 +287,17 @@ sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
 
 __SFPI_DEPRECATED("Pass float or vFloat coefficients")
 sfpi_inline vFloat lut (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
-  return lut<LutMode::Fp8x3> (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2));
+  return lut (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2));
 }
 
 __SFPI_DEPRECATED("Pass float or vFloat coefficients, pass sfpi::LutSign::Update")
 sfpi_inline vFloat lut_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
-  return lut<LutMode::Fp8x3> (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2), LutSign::Update);
+  return lut (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2), LutSign::Update);
 }
 
-template <LutMode Mode = LutMode::Fp16x3>
 sfpi_inline vFloat lut (vFloat v, vLut16si si0, vLut16si si1, vLut16si si2,
                         LutSign signedness = LutSign::Retain) {
-  unsigned mod = (Mode == LutMode::Fp16x3 ? SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE : ~0)
+  unsigned mod = SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE
       | (signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
          signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
          ~0);
@@ -314,20 +306,17 @@ sfpi_inline vFloat lut (vFloat v, vLut16si si0, vLut16si si1, vLut16si si2,
 
 __SFPI_DEPRECATED("Use sfpi::lut, pass float or vFloat coefficients")
 sfpi_inline vFloat lut2 (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
-  return lut<LutMode::Fp16x3> (v, as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2));
+  return lut (v, as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2));
 }
 
 __SFPI_DEPRECATED("Use sfpi::lut, pass float or vFloat coefficients, pass sfpi::LutSign::Update")
 sfpi_inline vFloat lut2_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
-  return lut<LutMode::Fp16x3> (v,
-                               as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2),
-                               LutSign::Update);
+  return lut (v, as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2), LutSign::Update);
 }
 
-template <LutMode Mode = LutMode::Fp32x3>
 sfpi_inline vFloat lut (vFloat v, vLut32si si0, vLut32si si1, vLut32si si2,
                         LutSign signedness = LutSign::Retain) {
-  unsigned mod = (Mode == LutMode::Fp32x3 ? SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE : ~0)
+  unsigned mod = SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE
       | (signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
          signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
          ~0);
@@ -340,14 +329,14 @@ __SFPI_DEPRECATED("Use sfpi::lut")
 sfpi_inline vFloat lut2 (vFloat v,
                          vFloat s0, vFloat s1, vFloat s2,
                          vFloat i0, vFloat i1, vFloat i2) {
-  return lut<LutMode::Fp32x3> (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2));
+  return lut (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2));
 }
 
 __SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::LutSign::Update")
 sfpi_inline vFloat lut2_sign (vFloat v,
                               vFloat s0, vFloat s1, vFloat s2,
                               vFloat i0, vFloat i1, vFloat i2) {
-  return lut<LutMode::Fp32x3> (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2), LutSign::Update);
+  return lut (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2), LutSign::Update);
 }
 
 template <LutMode Mode = LutMode::Fp16x6_HWM3>
