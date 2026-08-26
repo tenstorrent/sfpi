@@ -679,17 +679,22 @@ constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
 __SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
 constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
 __SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
+#if __riscv_xtttensixwh || __riscv_xtttensixbh
 constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
 __SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
+#endif
 constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
 
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
-
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+#if !(__riscv_xtttensixwh || __riscv_xtttensixbh)
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm3 (CREG_IDX_PRGM0);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm3 (CREG_IDX_PRGM0);
+#endif
 
 constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 
