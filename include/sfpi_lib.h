@@ -28,65 +28,365 @@ sfpi_inline Type as (impl_::vVal v) {
 //////////////////////////////////////////////////////////////////////////////
 // Functional math library
 //////////////////////////////////////////////////////////////////////////////
-sfpi_inline vFloat lut(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
-{
-    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_RETAIN);
+
+namespace impl_ {
+
+template <bool FP16, unsigned Disc>
+class sLut : public impl_::vVal {
+public:
+  using scalar_t = typename std::conditional<FP16, uint32_t, uint16_t>::type;
+  using single_t = typename std::conditional<FP16, uint16_t, uint8_t>::type;
+
+private:
+  scalar_t val;
+
+public:
+  sfpi_inline sLut (sLut const &) = default;
+  sfpi_inline sLut &operator= (sLut const &) = default;
+
+public:
+  // For pairs we want the first arg at the low (right) sigde and the second
+  // arg at the high (left) side. For Slope&Intercept we want them the otherway
+  // round.  Ugh.
+  sfpi_inline explicit sLut (single_t a0, single_t a1)
+      : val ((a0 << (Disc == 2 ? sizeof (single_t) * 8 : 0))
+              | (a1 << (Disc != 2 ? sizeof (single_t) * 8 : 0))) {}
+  sfpi_inline explicit sLut (int a0, int a1)
+      : sLut (single_t (a0), single_t (a1)) {}
+  sfpi_inline sLut (float a0, float a1)
+      : sLut (convert (a0), convert (a1)) {}
+
+  template<unsigned From, typename std::enable_if_t<From == 2 && Disc == 3>* = nullptr>
+  sfpi_inline sLut (sLut<FP16, From> a0, sLut<FP16, From> a1)
+      : sLut (single_t (a0.get () >> sizeof (single_t) * 8),
+              single_t (a1.get () >> sizeof (single_t) * 8)) {}
+  
+  template<unsigned From, typename std::enable_if_t<From == 2 && Disc == 0>* = nullptr>
+  sfpi_inline sLut (sLut<FP16, From> a0, sLut<FP16, From> a1)
+      : sLut (single_t (a0.get ()), single_t (a1.get ())) {}
+
+public:
+  scalar_t get () const { return val; }
+
+private:
+  static single_t convert (float v) {
+    // FP8 = S:1, E:3, M:4, exp is unbiased, negated
+    // FP16 = S:1, E:5, M:10, exp is biased by 16
+    constexpr unsigned man_bits = FP16 ? 10 : 4;
+
+    // Extract
+    auto bits = impl_::float_as_uint (v);
+    unsigned sgn = bits >> 31;
+    int exp = (bits >> 23) & 0xff;
+    unsigned man = bits & ((1 << 23) - 1);
+
+    // Round to nearest, not handling nearest-even case
+    man += (1 << (23 - man_bits - 1));
+    if (man >> 23)
+      {
+        exp++;
+        man = 0;
+      }
+
+    man >>= 23 - man_bits;
+    if constexpr (FP16)
+      {
+        // Float must be in range +/-[0,16.0f)
+        exp -= 128 - 16;
+        return (sgn << 15)
+            | (exp < 0 ? 0x7c00 // underflow -> 0.0f
+               : exp >= 31 ? 0x7bff // overflow -> 16.0f - epsilon
+               : (exp << 10) | man);
+      }
+    else
+      {
+        // Float must be in range +/-[0,2.0f)
+        exp -= 128;
+
+        // Even though representations [0xf0,0xff) are valid non-zero numbers,
+        // there is a hole for 0xff, which is treated as zero. Oh well.
+        return (sgn << 7)
+            | (exp + 7 < 0 ? 0xff // underflow -> 0.0f
+               : exp >= 0 ? 0x0f // overflow -> 2.0f - epsilon
+               : ((-1 - exp) << 4) | man);
+      }
+  }  
+};
+
+template <bool FP16, unsigned Disc>
+class vLut : public impl_::vVal {
+  using sLut = impl_::sLut<FP16, Disc>;
+
+public:
+  sfpi_inline vLut (vLut const &) = default;
+  sfpi_inline vLut &operator= (vLut const &) = default;
+
+public:
+  sfpi_inline explicit vLut (sLut v)
+      : vVal (__builtin_rvtt_sfpxloadi (v.get (), -int (sizeof (typename sLut::scalar_t)) * 8)) {}
+  sfpi_inline explicit vLut (impl_::sfpu_t vec) : vVal (vec) {}
+  sfpi_inline explicit vLut (typename sLut::single_t a0, typename sLut::single_t a1)
+      : vLut (sLut (a0, a1)) {}
+  sfpi_inline vLut (float a0, float a1)
+      : vLut (sLut (a0, a1)) {}
+};
 }
 
-sfpi_inline vFloat lut_sign(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
-{
-    return __builtin_rvtt_sfplut(l0.get(), l1.get(), l2.get(), v.get(), SFPLUT_MOD0_SGN_UPDATE);
+using sLut8si = impl_::sLut<false, 2>;
+using sLut16si = impl_::sLut<true, 2>;
+using sLut16ss = impl_::sLut<true, 3>;
+using sLut16ii = impl_::sLut<true, 0>;
+class sLut32si {
+private:
+  float slope;
+  float intercept;
+
+public:
+  sfpi_inline sLut32si (float s, float i)
+      : slope (s), intercept (i) {}
+
+public:
+  vFloat s () const { return vFloat (slope); }
+  vFloat i () const { return vFloat (intercept); }
+};
+using vLut8si = impl_::vLut<false, 2>;
+using vLut16si = impl_::vLut<true, 2>;
+using vLut16ss = impl_::vLut<true, 3>;
+using vLut16ii = impl_::vLut<true, 0>;
+class vLut32si {
+  using sLut = sLut32si;
+
+private:
+  vFloat slope;
+  vFloat intercept;
+
+public:
+  sfpi_inline vLut32si (sLut v)
+      : slope (v.s ()), intercept (v.i ()) {}
+  sfpi_inline vLut32si (vFloat s, vFloat i)
+      : slope (s), intercept (i) {}
+  sfpi_inline vLut32si (float s, float i)
+      : vLut32si (vFloat (s), vFloat (i)) {}
+
+public:
+  impl_::sfpu_t s_get () const { return slope.get (); }
+  impl_::sfpu_t i_get () const { return intercept.get (); }
+};
+
+enum class LutSign {
+  Retain,
+  Update
+};
+
+enum class LutMode {
+  Fp8x3,       // sfplut
+  Fp16x3,      // sfplutfp32 FP16 3Entry
+  Fp32x3,      // sfplutfp32 FP32 3Entry
+  Fp16x6_HWM3, // sfplutfp32 FP16 6Entry Table1
+  Fp16x6_HWM4, // sfplutfp32 FP16 6Entry Table2
+};
+
+#if __riscv_xtttensixqsr
+sfpi_inline void lut_init (unsigned ix, sLut8si v) {
+  __builtin_rvtt_sfpwriteconfig_v (vLut8si (v).get (), 0, ix + CREG_IDX_LUT_SLOPES);
+}
+sfpi_inline void lut_init (unsigned ix, sLut16si v) {
+  __builtin_rvtt_sfpwriteconfig_v (vLut16si (v).get (), 0, ix + CREG_IDX_LUT_SLOPES);
+}
+sfpi_inline void lut_init (unsigned ix, sLut16ss s, sLut16ii i) {
+  __builtin_rvtt_sfpwriteconfig_v (vLut16ss (s).get (), 0, ix + CREG_IDX_LUT_SLOPES);
+  __builtin_rvtt_sfpwriteconfig_v (vLut16ii (i).get (), 0, ix + CREG_IDX_LUT_INTERCEPTS);
+}
+sfpi_inline void lut_init (unsigned ix, sLut16si si0, sLut16si si1) {
+  __builtin_rvtt_sfpwriteconfig_v (vLut16ss (sLut16ss (si0, si1)).get (), 0, ix + CREG_IDX_LUT_SLOPES);
+  __builtin_rvtt_sfpwriteconfig_v (vLut16ii (sLut16ii (si0, si1)).get (), 0, ix + CREG_IDX_LUT_INTERCEPTS);
+}
+sfpi_inline void lut_init (unsigned ix, sLut32si si) {
+  __builtin_rvtt_sfpwriteconfig_v (si.s ().get (), 0, ix + CREG_IDX_LUT_SLOPES);
+  __builtin_rvtt_sfpwriteconfig_v (si.i ().get (), 0, ix + CREG_IDX_LUT_INTERCEPTS);
 }
 
-sfpi_inline vFloat lut2(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
-{
-    return __builtin_rvtt_sfplutfp32_3r(l0.get(), l1.get(), l2.get(),
-                                        v.get(), SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE | SFPLUTFP32_MOD0_SGN_RETAIN);
+template <LutMode>
+struct LutCookie {};
+
+sfpi_inline LutCookie<LutMode::Fp8x3> lut_init (sLut8si si0, sLut8si si1, sLut8si si2) {
+  lut_init (0, si0);
+  lut_init (1, si1);
+  lut_init (2, si2);
+  return {};
 }
 
-sfpi_inline vFloat lut2_sign(const vFloat v, const vUInt l0, const vUInt l1, const vUInt l2)
-{
-    return __builtin_rvtt_sfplutfp32_3r(l0.get(), l1.get(), l2.get(),
-                                        v.get(), SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE | SFPLUTFP32_MOD0_SGN_UPDATE);
+sfpi_inline LutCookie<LutMode::Fp16x3> lut_init (sLut16si si0, sLut16si si1, sLut16si si2) {
+  lut_init (0, si0);
+  lut_init (1, si1);
+  lut_init (2, si2);
+  return {};
 }
 
-sfpi_inline vFloat lut2(const vFloat v,
-                        const vFloat a0, const vFloat a1, const vFloat a2,
-                        const vFloat b0, const vFloat b1, const vFloat b2)
-{
-    return __builtin_rvtt_sfplutfp32_6r(a0.get(), a1.get(), a2.get(),
-                                        b0.get(), b1.get(), b2.get(),
-                                        v.get(), SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE | SFPLUTFP32_MOD0_SGN_RETAIN);
+sfpi_inline LutCookie<LutMode::Fp32x3> lut_init (sLut32si si0, sLut32si si1, sLut32si si2) {
+  lut_init (0, si0);
+  lut_init (1, si1);
+  lut_init (2, si2);
+  return {};
 }
 
-sfpi_inline vFloat lut2_sign(const vFloat v,
-                             const vFloat a0, const vFloat a1, const vFloat a2,
-                             const vFloat b0, const vFloat b1, const vFloat b2)
-{
-    return __builtin_rvtt_sfplutfp32_6r(a0.get(), a1.get(), a2.get(),
-                                        b0.get(), b1.get(), b2.get(),
-                                        v.get(), SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE | SFPLUTFP32_MOD0_SGN_UPDATE);
+template <LutMode Mode = LutMode::Fp16x6_HWM3>
+sfpi_inline LutCookie<Mode> lut_init (sLut16ss s01, sLut16ii i01,
+                                      sLut16ss s23, sLut16ii i23,
+                                      sLut16ss s45, sLut16ii i45) {
+  static_assert (Mode == LutMode::Fp16x6_HWM3 || Mode == LutMode::Fp16x6_HWM4, "Unsupported LutMode");
+  lut_init (0, s01, i01);
+  lut_init (1, s23, i23);
+  lut_init (2, s45, i45);
+  return {};
 }
 
-sfpi_inline vFloat lut2(const vFloat v,
-                        const vUInt a01, const vUInt a23, const vUInt a45,
-                        const vUInt b01, const vUInt b23, const vUInt b45, const int mode = 1)
-{
-    unsigned int mod = (mode == 1) ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1 : SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2;
-    return __builtin_rvtt_sfplutfp32_6r(a01.get(), a23.get(), a45.get(),
-                                        b01.get(), b23.get(), b45.get(),
-                                        v.get(), mod | SFPLUTFP32_MOD0_SGN_RETAIN);
+template <LutMode Mode = LutMode::Fp16x6_HWM3>
+sfpi_inline LutCookie<Mode> lut_init (sLut16si si0, sLut16si si1,
+                                      sLut16si si2, sLut16si si3,
+                                      sLut16si si4, sLut16si si5) {
+  return lut_init<Mode> (sLut16ss (si0, si1), sLut16ii (si0, si1),
+                         sLut16ss (si2, si3), sLut16ii (si2, si3),
+                         sLut16ss (si4, si5), sLut16ii (si4, si5));
 }
 
-sfpi_inline vFloat lut2_sign(const vFloat v,
-                             const vUInt a01, const vUInt a23, const vUInt a45,
-                             const vUInt b01, const vUInt b23, const vUInt b45, const int mode = 1)
-{
-    unsigned int mod = (mode == 1) ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1 : SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2;
-    return __builtin_rvtt_sfplutfp32_6r(a01.get(), a23.get(), a45.get(),
-                                        b01.get(), b23.get(), b45.get(),
-                                        v.get(), mod | SFPLUTFP32_MOD0_SGN_UPDATE);
+template <LutMode Mode>
+sfpi_inline vFloat lut (vFloat v, LutSign signedness = LutSign::Retain) {
+  unsigned mod =
+      signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
+      signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
+      ~0;
+  if constexpr (Mode == LutMode::Fp8x3)
+    return __builtin_rvtt_sfplut (v.get (), mod);
+  else
+    {
+      mod |=
+          Mode == LutMode::Fp16x3 ? SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE :
+          Mode == LutMode::Fp32x3 ? SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE :
+          Mode == LutMode::Fp16x6_HWM3 ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1 :
+          Mode == LutMode::Fp16x6_HWM4 ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2 :
+          ~0;
+      return __builtin_rvtt_sfplutfp32 (v.get (), mod);
+    }
 }
+
+template <LutMode Mode>
+sfpi_inline vFloat lut (vFloat v, LutCookie<Mode>, LutSign signedness = LutSign::Retain) {
+  return lut<Mode> (v, signedness);
+}
+#else
+
+sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
+                        LutSign signedness = LutSign::Retain) {
+  unsigned mod = 0
+      | (signedness == LutSign::Retain ? SFPLUT_MOD0_SGN_RETAIN :
+         signedness == LutSign::Update ? SFPLUT_MOD0_SGN_UPDATE :
+         ~0);
+  return __builtin_rvtt_sfplut (si0.get (), si1.get (), si2.get (), v.get (), mod);
+}
+
+//__SFPI_DEPRECATED("Pass sfpi::vLut8si coefficients")
+sfpi_inline vFloat lut (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
+  return lut (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2));
+}
+
+//__SFPI_DEPRECATED("Pass sfpi::vLut8si coefficients and pass sfpi::LutSign::Update")
+sfpi_inline vFloat lut_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
+  return lut (v, as<vLut8si> (si0), as<vLut8si> (si1), as<vLut8si> (si2), LutSign::Update);
+}
+
+sfpi_inline vFloat lut (vFloat v, vLut16si si0, vLut16si si1, vLut16si si2,
+                        LutSign signedness = LutSign::Retain) {
+  unsigned mod = SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE
+      | (signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
+         signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
+         ~0);
+  return __builtin_rvtt_sfplutfp32_3r (si0.get (), si1.get (), si2.get (), v.get (), mod);
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut16si coefficients")
+sfpi_inline vFloat lut2 (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
+  return lut (v, as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2));
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut16si coefficients and pass sfpi::LutSign::Update")
+sfpi_inline vFloat lut2_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) {
+  return lut (v, as<vLut16si> (si0), as<vLut16si> (si1), as<vLut16si> (si2), LutSign::Update);
+}
+
+sfpi_inline vFloat lut (vFloat v, vLut32si si0, vLut32si si1, vLut32si si2,
+                        LutSign signedness = LutSign::Retain) {
+  unsigned mod = SFPLUTFP32_MOD0_FP32_3ENTRY_TABLE
+      | (signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
+         signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
+         ~0);
+  return __builtin_rvtt_sfplutfp32_6r (si0.s_get (), si1.s_get (), si2.s_get (),
+                                       si0.i_get (), si1.i_get (), si2.i_get (),
+                                       v.get (), mod);
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut32si coefficients")
+sfpi_inline vFloat lut2 (vFloat v,
+                         vFloat s0, vFloat s1, vFloat s2,
+                         vFloat i0, vFloat i1, vFloat i2) {
+  return lut (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2));
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut32si coefficients and pass sfpi::LutSign::Update")
+sfpi_inline vFloat lut2_sign (vFloat v,
+                              vFloat s0, vFloat s1, vFloat s2,
+                              vFloat i0, vFloat i1, vFloat i2) {
+  return lut (v, vLut32si (s0, i0), vLut32si (s1, i1), vLut32si (s2, i2), LutSign::Update);
+}
+
+template <LutMode Mode = LutMode::Fp16x6_HWM3>
+sfpi_inline vFloat lut (vFloat v,
+                        vLut16ss s01, vLut16ii i01,
+                        vLut16ss s23, vLut16ii i23,
+                        vLut16ss s45, vLut16ii i45,
+                        LutSign signedness = LutSign::Retain) {
+  unsigned mod =
+      (Mode == LutMode::Fp16x6_HWM3 ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE1 :
+       Mode == LutMode::Fp16x6_HWM4 ? SFPLUTFP32_MOD0_FP16_6ENTRY_TABLE2 :
+       ~0)
+      | (signedness == LutSign::Retain ? SFPLUTFP32_MOD0_SGN_RETAIN :
+         signedness == LutSign::Update ? SFPLUTFP32_MOD0_SGN_UPDATE :
+         ~0);
+  return __builtin_rvtt_sfplutfp32_6r (s01.get (), s23.get (), s45.get (),
+                                       i01.get (), i23.get (), i45.get (),
+                                       v.get (), mod);
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut specialized on LutMode::Fp16x6_HWM3 or LutMode::Fp16x6_HWM4, pass sfpi::vLut16ss & sfpi::vLut16ii coefficient pairs")
+sfpi_inline vFloat lut2 (vFloat v,
+                         vUInt s01, vUInt s23, vUInt s45,
+                         vUInt i01, vUInt i23, vUInt i45, int mode = 1) {
+  if (mode == 1)
+    return lut<LutMode::Fp16x6_HWM3> (v, as<vLut16ss> (s01), as<vLut16ii> (i01),
+                                      as<vLut16ss> (s23), as<vLut16ii> (i23),
+                                      as<vLut16ss> (s45), as<vLut16ii> (i45));
+  else
+    return lut<LutMode::Fp16x6_HWM4> (v, as<vLut16ss> (s01), as<vLut16ii> (i01),
+                                      as<vLut16ss> (s23), as<vLut16ii> (i23),
+                                      as<vLut16ss> (s45), as<vLut16ii> (i45));
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut specialized on LutMode::Fp16x6_HWM3 or LutMode::Fp16x6_HWM4, pass sfpi::vLut16ss & sfpi::vLut16ii coefficient pairs and pass sfpi::LutSign::Update")
+sfpi_inline vFloat lut2_sign (vFloat v,
+                              vUInt s01, vUInt s23, vUInt s45,
+                              vUInt i01, vUInt i23, vUInt i45, int mode = 1) {
+  if (mode == 1)
+    return lut<LutMode::Fp16x6_HWM3> (v, as<vLut16ss> (s01), as<vLut16ii> (i01),
+                                      as<vLut16ss> (s23), as<vLut16ii> (i23),
+                                      as<vLut16ss> (s45), as<vLut16ii> (i45),
+                                      LutSign::Update);
+  else
+    return lut<LutMode::Fp16x6_HWM4> (v, as<vLut16ss> (s01), as<vLut16ii> (i01),
+                                      as<vLut16ss> (s23), as<vLut16ii> (i23),
+                                      as<vLut16ss> (s45), as<vLut16ii> (i45),
+                                      LutSign::Update);
+}
+#endif
 
 #if 0
 enum
