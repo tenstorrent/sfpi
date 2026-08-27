@@ -578,12 +578,14 @@ sfpi_inline vFloat ldexp (vFloat in, vInt scale, LdexpMode mode = LdexpMode::Cor
 }
 
 sfpi_inline vFloat abs (vFloat v) {
-  return __builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_FLOAT);
+  // Use setsgn so that NaNs change too -- our comparison operators have a
+  // complete ordering and not IEEE NaN behavior
+  return setsgn (v, 0);
 }
 
 // Even though mostneg returns unchanged bit pattern, this returns vMag, not vUInt
 sfpi_inline vMag abs (vInt v) {
-  return vMag (__builtin_rvtt_sfpabs (v.get (), SFPABS_MOD1_INT));
+  return vMag (__builtin_rvtt_sfpsetsgn_i (v.get (), 0, 0));
 }
 
 sfpi_inline vMag abs (vSMag v) {
