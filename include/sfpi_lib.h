@@ -274,6 +274,27 @@ template <LutMode Mode>
 sfpi_inline vFloat lut (vFloat v, LutCookie<Mode>, LutSign signedness = LutSign::Retain) {
   return lut<Mode> (v, signedness);
 }
+
+//__SFPI_DEPRECATED("Use sfpi::lut_init ... sfpi::lut")
+sfpi_inline vFloat lut2 (vFloat v,
+                         vUInt, vUInt, vUInt,
+                         vUInt, vUInt, vUInt, int mode = 1) {
+  if (mode == 1)
+    return lut<LutMode::Fp16x6_HWM3> (v);
+  else
+    return lut<LutMode::Fp16x6_HWM4> (v);
+}
+
+//__SFPI_DEPRECATED("Use sfpi::lut_init ... sfpi::lut")
+sfpi_inline vFloat lut2_sign (vFloat v,
+                              vUInt, vUInt, vUInt,
+                              vUInt, vUInt, vUInt, int mode = 1) {
+  if (mode == 1)
+    return lut<LutMode::Fp16x6_HWM3> (v, LutSign::Update);
+  else
+    return lut<LutMode::Fp16x6_HWM4> (v, LutSign::Update);
+}
+
 #else
 
 sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
