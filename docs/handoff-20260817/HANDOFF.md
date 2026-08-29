@@ -1,10 +1,10 @@
 # SFPI Compiler Uplift Handoff — CLEAN-MACHINE PICKUP (single self-contained file)
 
-Last updated: **2026-08-24 (pin 28)** on tt-quietbox-0. The live working machine
+Last updated: **2026-08-29 (pin 45)** on tt-quietbox-0. The live working machine
 is tt-quietbox-0 (~/sfpi-uplift); this file remains written for a ZERO-state
 pickup — everything needed is (a) inlined here, (b) on the GitHub remotes at
-the SHAs in §2/§2b, or (c) reproducible from them. §2b + §3b + §8b are the
-CURRENT state (pins 15→28 era, 2026-08-20→24); older sections below them are
+the SHAs in §2c/§2b/§2, or (c) reproducible from them. §2c + §3c + §8c are the
+CURRENT state (pins 29→45 era, 2026-08-25→29); §2b/§3b/§8b (pins 15→28) and older sections below them are
 kept as protocol + lineage and remain binding where marked. The session
 ledger with every lane closure since 2026-08-16 lives in the orchestrator's
 memory dir on tt-quietbox-0
@@ -40,7 +40,71 @@ files) — not required for pickup, invaluable if you have the box.
 
 **Branch contents.** sfpi-gcc `agent/generic-macro-planner`: the 7-layer generic SFPLOADMACRO planner (typed effect attributes w/ refusing defaults → rvtt-effects API → shared path-sensitive ownership → dataflow region discovery → DAG scheduler → capability tables (rvtt-macro-tables*, raw words' legitimate home) → descriptor synthesis + emission-gating verifier), Min/Max exact calendar DELETED and re-derived byte-identically (incl. real in-place-store kernel via a generic store-demoted scheduling fallback), BH launch addr-mode <<13 fix (three-source proven), 0x37120004 magic word deleted (typed `rvtt_ttdstface` insn assembles byte-identically → 0xdc480010). All flags default-off; default codegen proven byte-identical vs e4b974208. sfpi-gcc `agent/sdpa-partial-invariant` (3 independent reviews, APPROVE_WITH_NOTES): partial invariant hoist under LREG pressure → replay-aware complete unroll (+pragma + NULL-latch guards) → region-scoped structural ownership with deferred entry-edge split → dst-autoincr (owned SETC16 + store-mode-6 implicit advance) → M1 final-row→launch conversion → M2a dominating SETC16 placement + distance guard → multi-block (face-loop-scope) hoist + ttdstface port. sfpi-gcc profitability gate (RECALIBRATED at bb56f1d77 from 4 silicon points — the old formula ordered the silicon winner below both losers): benefit = trips×(deliver − max(123, execute)) − deliver, in CENTISLOTS (deliver = (1+len)×123, execute = 100×len), MIN_BENEFIT=60; `-mtt-tensix-replay-hoist-min-benefit=` CHANGED UNITS slots→centislots and default 64→60; proven trips only; Log/Log1p still byte-identical refusals, ReduceSDPA (4,8)=121 and SDPA-exp (8,24)=2325 fire. Verified not-a-curve-fit: 76 unseen probe points match the plane exactly, no notch.
 
-## 2b. CURRENT STATE — pin 28 (2026-08-24)
+## 2c. CURRENT STATE — pin 45 (2026-08-29)
+
+**Canonical branch everywhere: `nkapre/sfpi`** (sfpi-gcc, tt-metal, sfpi,
+tt-blaze, craq-sim). Tips (all pushed): sfpi-gcc `18318a7b5e4`, tt-metal
+`b4e5b742a4` (pin-45 ceremony), craq-sim `1c47e9cd` (the HU sim re-pin:
+bh `1d162f0adf67…` / wh `f22bc917a4ef…` — RISCV debug-interface model +
+the GW ApproxExp fix, validated 439/439 verdict-identical). Installed pin
+45: cc1plus `1f2b3baf48b4…` / driver `cc2123de74…` (PIN-INSTALL-MANIFEST
+is the driver-sha authority, always read the CURRENT entry). ON set = 36
+flags; KNOB_MODES carries ~25 on-plus booking knobs incl THREE LICENSED
+(reassoc, store-sink, stochrnd-store-fold — EJ discipline; owner
+ratifications in tt-metal review_records/). Pins 29→45 contents:
+five-lane win wave (GP/GQ/GU/GW/GV) + ON 28→34 (HE) + composition wave
+(HB Rule-B seed, HF EL-phantom fix, HC crosscall config-prefix, HH
+launch-flatten) + the march-to-zero (HM counted-row lockstep wrong-code
+fix, HL store-sink license, HJ madpair vocabulary, HN park-ordering, HO
+store-source-tier, ON→36 (HQ), HR crossloop-cc-peel, HT lut 4-word slot
+fix, HS opaque-replay-record, HY park keep-gates, HZ stochrnd fold, IA
+dst-autoincr per-execution pricing, IC 2-datum pairing + stall words +
+hoisted-PRGM reuse, ID loop-PRGM reclaim + counted-row final-lockstep
+audit (2nd ungated wrong-code fix), II shared-reload epoch merge, IJ
+cyclic-region scheduler, IK crosscall ADDR_MOD contract, IL record-hoist
+lift, IM replay window-sizing, IN pre-peel placement, IO counted-capture
+peel). Full per-pin provenance: the conf PIN HISTORY entries 29–45 +
+review_records/REVIEW_RECORD-<sha12>.md each.
+
+## 3c. CURRENT BOARD — 2026-08-29, pin 45, ON-36: ZERO-LOSS-OR-CERT
+
+**FINAL BOARD: 83 WIN / 36 PARITY / 15 LOSS** (+87 causal-only, 13
+refusals, 27 superseded, 20 skips, 1 unmeasured; 282 rows). **Every LOSS
+carries a floor certificate or accuracy bar** — the owner-ratified
+zero-loss accounting state (flip everything flippable + prove the bound):
+i0/lgamma (HG bars), intsum/rdiv/sqrt-class/ceil/rops/softsign
+(word-parity + exhaustion floors), blaze trio + lcm + addrsqrt
+(envelope-law all-shapes-measured certs — the law: matching hand's
+delivery shape measures WORSE, confirmed ×5), trig (region-local model
+floor), tanh-fitted folded (owner-ratified twin fold). Authoritative
+file: `~/sfpi-uplift/laneFM-evidence-20260822/FINAL-BOARD.tsv`; live
+dashboard artifact "craq-sfpi" (regenerate ONLY via
+~/sfpi-uplift/dashboard/gen_v2.py — all headline numbers computed from
+the TSV+conf at render time). Key conventions ratified since §3b:
+SAME-LEG booking (HE; violations masquerade as wins/drift — the IG/IO
+lesson), arm-preference one-arm-per-family, licensed-cell discipline.
+
+## 8c. CURRENT NEXT ACTIONS (2026-08-29, ordered)
+
+1. **Adversarial audit trio IP/IQ/IR in flight** (pass generality +
+   anti-cheat; semantic-C++ hygiene; lineage + single-source-of-truth
+   incl clean-rebuild reproducibility) — charter at
+   ~/sfpi-uplift/review_records-local/ADVERSARIAL-AUDIT-CHARTER-20260829.md.
+2. Same-leg audit of laneIN's lgamma/erfinv "drift" re-books (the IO
+   lesson applied to the remaining two).
+3. Polish: IJ walk candidate-ranking last word; HN production last word;
+   KNOB_MODES lut-select-fp16 duplicate cleanup; SrcA dvalid long-perf
+   sim gap (HU-named; long-perf CRAQ corr-gated meanwhile); tt-metal
+   local hub missing object b4651bda442ea654 (gc fails; pushes fine).
+4. Beyond-floor options (owner calls): licensed CC-dance restructures
+   (addrsqrt <24w, trig muli+add→mad), 8-LREG rename mechanism, ISA
+   evolution asks (free LUT breakpoints — the lgamma path).
+5. Standing gates unchanged: pin ceremony discipline (§2), fail-closed
+   guards, twins per charter §0.3, park-and-notify BAN, KNOB_MODES
+   dup-grep after any union-resolve, post-merge push verification
+   (ls-remote — two false-push incidents banked).
+
+## 2b. CURRENT STATE — pin 28 (2026-08-24) — superseded by §2c, kept as lineage
 
 **Canonical branch everywhere: `nkapre/sfpi`** across sfpi-gcc, tt-metal,
 sfpi, tt-blaze, craq-sim. Current tips (all pushed):
@@ -69,7 +133,7 @@ diagnostics. Owner ratifications in force: -fassociative-math licensed
 reassoc; finite-math/LUT-class accuracy licensing at hand-matched-or-better
 error; fitted-arm preference (best sound measured arm books the family).
 
-## 3b. CURRENT BOARD — 2026-08-24, pin 28, ON-28
+## 3b. BOARD @ pin 28 (2026-08-24) — superseded by §3c, kept as lineage
 
 **FINAL BOARD: 69 WIN / 33 PARITY / 55 LOSS** over ~280 rows (+86
 causal-only, 14 refusals, 4 SUPERSEDED, ~21 skips; 1 unmeasured).
@@ -93,7 +157,7 @@ are dominated by named ceilings (sigmoidappx LUT slot floor, geluappx
 3-entry-LUT surface gap → FP16_6ENTRY = named unlock, lcm RecMII floor,
 atan2 bivariate, at-floor rows).
 
-## 8b. CURRENT NEXT ACTIONS (2026-08-24, ordered)
+## 8b. NEXT ACTIONS @ pin 28 (2026-08-24) — superseded by §8c, kept as lineage
 
 1. **FI-3c cross-row pairing build** (roundingops +7.92 unlock; full spec +
    cycle arithmetic in laneGJ-evidence AUTOPSY.md): rename + interleave +
