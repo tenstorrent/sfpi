@@ -700,6 +700,17 @@ constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 
 //////////////////////////////////////////////////////////////////////////////
 
+class lreg_pressure {
+  bool up;
+public:
+  sfpi_inline lreg_pressure (bool up = true) : up (up) {
+    __builtin_rvtt_lreg_pressure (up);
+  }
+  sfpi_inline ~lreg_pressure () {
+    __builtin_rvtt_lreg_pressure (!up);
+  }
+};
+  
 } // namespace sfpi
 
 //////////////////////////////////////////////////////////////////////////////
