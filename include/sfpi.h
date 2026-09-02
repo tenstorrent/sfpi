@@ -700,6 +700,12 @@ constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
 
 //////////////////////////////////////////////////////////////////////////////
 
+class hrp {
+public:
+  sfpi_inline hrp () { __builtin_rvtt_register_pressure (1); }
+  sfpi_inline ~hrp () { __builtin_rvtt_register_pressure (0); }
+};
+  
 } // namespace sfpi
 
 //////////////////////////////////////////////////////////////////////////////
