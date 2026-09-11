@@ -233,6 +233,9 @@ public:
     sfpi_inline void operator= (vCReg &) = delete;
 
   public:
+    // Remove for deprecated constants so you get a compile error
+    template<bool Nonce = true,
+             typename std::enable_if<Nonce && !Deprecated>* = nullptr>
     sfpi_inline operator Type () const {
       return lreg;
     }

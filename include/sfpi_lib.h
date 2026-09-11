@@ -407,27 +407,9 @@ sfpi_inline vFloat lut2_sign (vFloat v,
 }
 #endif
 
-#if 1
-enum
-#endif
-class ExponentMode {
-#if 0
- public: enum Values {
-#endif
+enum class ExponentMode {
   Unbiased,
   Biased,
-#if 0
-  };
- __SFPI_DEPRECATED("Use sfpi::ExponentMode::Unbiased")
- static constexpr Values Debias = Unbiased;
- __SFPI_DEPRECATED("Use sfpi::ExponentMode::Biased")
- static constexpr Values NoDebias = Biased;
-
- private: Values v;
-
- public: constexpr ExponentMode (Values v) : v (v) {}
- public: constexpr operator Values () const { return v; }
-#endif
 };
 
 sfpi_inline vInt exexp (const vFloat v, ExponentMode mode = ExponentMode::Unbiased) {
@@ -964,13 +946,7 @@ sfpi_inline vFloat approx_tanh (vFloat src) {
 
 // Unfortunately one cannot deprecate individual enumerations, so use a
 // class and explicit values for the moment
-#if 1
-enum
-#endif
-class RoundMode {
-#if 0
- public: enum Values {
-#endif
+enum class RoundMode {
 #if __riscv_xtttensixwh || __riscv_xtttensixbh
    NearestAway,
    Nearest = NearestAway,
@@ -981,20 +957,6 @@ class RoundMode {
    NearestStochastic,
 #if !__riscv_xtttensixwh
    Zero,
-#endif
-#if 0
- };
-#if __riscv_xtttensixwh || __riscv_xtttensixbh
- __SFPI_DEPRECATED("Use RoundMode::Nearest or RoundMode::NearestAway")
- static constexpr Values NearestEven = NearestAway;
-#endif
- __SFPI_DEPRECATED("Use RoundMode::NearestStochastic")
- static constexpr Values Stochastic = NearestStochastic;
-
- private: Values v;
-
- public: constexpr RoundMode (Values v) : v (v) {}
- public: constexpr operator Values () const { return v; }
 #endif
 };
 
