@@ -698,7 +698,9 @@ auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vSMag::vSMag (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vSMag (__builtin_rvtt_sfpxloadi (val, 31)) {}
+sfpi::vSMag::vSMag (impl_::vMag val)
+    : vSMag (val.get ()) {}
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
 

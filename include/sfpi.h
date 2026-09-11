@@ -416,6 +416,8 @@ public:
 public:
   sfpi_inline explicit vSMag (impl_::sfpu_t);
   sfpi_inline explicit vSMag (uint32_t);
+  sfpi_inline vSMag (impl_::vMag);
+
 };
 using vSMag16 = impl_::vSMag16;
 using vSMag8 = impl_::vSMag8;
