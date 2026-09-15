@@ -292,21 +292,19 @@ private:
 
 public:
   sfpi_inline CC () = default;
-  sfpi_inline ~CC ();
+  sfpi_inline ~CC () = default;
 
-  // Moveable, not copyable
-  sfpi_inline CC (CC &&);
-  sfpi_inline CC &operator= (CC &&);
+  // Not copyable, not moveable
+  sfpi_inline CC (CC const  &) = delete;
+  sfpi_inline CC &operator= (CC const &) = delete;
+  sfpi_inline CC (CC &&) = delete;
+  sfpi_inline CC &operator= (CC &&) = delete;
 
-  sfpi_inline CC &if_();
-  sfpi_inline CC &else_();
+  sfpi_inline CC &pred (unsigned);
 
   sfpi_inline void cond (vBool);
   sfpi_inline void cond (vInt);
   sfpi_inline void cond (vUInt);
-
-  sfpi_inline CC &push ();
-  sfpi_inline CC &pop ();
 };
 
 //////////////////////////////////////////////////////////////////////////////

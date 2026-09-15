@@ -621,28 +621,32 @@ sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
 // is sequenced before every argument expression and every default argument. [expr.pre]
 
 #define v_if(x)                                 \
-  { sfpi::impl_::CC __cc;                \
-  __cc.push ().if_().cond (x);                  \
+  { sfpi::impl_::CC __cc;                       \
+  __cc.pred (SFPXPRED_MOD1_IF                    \
+             | SFPXPRED_MOD1_PUSH).cond (x);     \
   {
 
 #define v_elseif(x)                             \
-  } __cc.else_().push().if_().cond (x); {
+  } __cc.pred (SFPXPRED_MOD1_ELSE               \
+               | SFPXPRED_MOD1_IF               \
+               | SFPXPRED_MOD1_PUSH).cond (x); {
 
 #define v_else                                  \
-  } __cc.else_(); {
+  } __cc.pred (SFPXPRED_MOD1_ELSE); {
 
 #define v_endif                                 \
-  }                                             \
+  } __cc.pred (SFPXPRED_MOD1_ENDIF);            \
   }
 
 #define v_block                                 \
-  { sfpi::impl_::CC __cc;                \
-  __cc.push ();
+  { sfpi::impl_::CC __cc;                       \
+  __cc.pred (SFPXPRED_MOD1_PUSH);
 
 #define v_and(x)                                \
-  __cc.if_().cond (x)
+  __cc.pred(SFPXPRED_MOD1_IF).cond (x);
 
 #define v_endblock                              \
+  __cc.pred(SFPXPRED_MOD1_ENDIF);               \
   }
 
 //////////////////////////////////////////////////////////////////////////////

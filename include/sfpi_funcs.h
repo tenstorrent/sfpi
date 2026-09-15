@@ -75,50 +75,32 @@ sfpi::vBool::vBool (vInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
 
-sfpi::impl_::CC::CC (CC &&src)
-    : dep (src.dep), depth (src.depth) {
-  src.dep = 0;
-  src.depth = 0;
-}
+auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
+  if (mod & SFPXPRED_MOD1_ELSE)
+    __builtin_rvtt_sfpcompc ();
 
-sfpi::impl_::CC::~CC () { pop (); }
+  if (mod & SFPXPRED_MOD1_PUSH) {
+    depth++;
+    __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
+  }
 
-auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
-  pop ();
-  dep = src.dep, depth = src.depth;
-  src.dep = 0, src.depth = 0;
+  dep = __builtin_rvtt_sfpxpred (mod | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+
+  if (mod == SFPXPRED_MOD1_ENDIF)
+    for (; depth; depth--)
+      __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+
   return *this;
-}
-
-auto sfpi::impl_::CC::if_()-> CC & {
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  return *this;
-}
-auto sfpi::impl_::CC::else_()-> CC & {
-  __builtin_rvtt_sfpcompc ();
-  return *this;    
 }
 
 auto sfpi::impl_::CC::cond (vBool op)-> void {
   dep = __builtin_rvtt_sfpxcond (0, dep, op.get ());
 }
 auto sfpi::impl_::CC::cond (vInt v)-> void {
-  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
+  cond (vBool (vBool::NE, v, 0));
 }
 auto sfpi::impl_::CC::cond (vUInt v)-> void {
-  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
-}
-
-auto sfpi::impl_::CC::push ()-> CC & {
-  depth++;
-  __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
-  return *this;
-}
-
-auto sfpi::impl_::CC::pop ()-> CC & {
-  for (unsigned ix = depth; ix--;)
-    __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  return *this;
+  cond (vBool (vBool::NE, v, 0));
 }
 
 auto sfpi::operator&& (vBool a, vBool b)-> vBool { return vBool (vBool::And, a, b); }
