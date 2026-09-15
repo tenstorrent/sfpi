@@ -155,8 +155,8 @@ constexpr unsigned int SFPXCMP_MOD1_TYPE_FLOAT = 3;
 constexpr unsigned int SFPXCMP_MOD1_TYPE_SHIFT = 4;
 constexpr unsigned int SFPXCMP_MOD1_TYPE_MASK = 3;
 
-constexpr unsigned int SFPXPRED_MOD1_ENDIF = 0;
-constexpr unsigned int SFPXPRED_MOD1_IF = 1;
+constexpr unsigned int SFPXPRED_MOD1_END  = 0;
+constexpr unsigned int SFPXPRED_MOD1_IF   = 1;
 constexpr unsigned int SFPXPRED_MOD1_ELSE = 2;
 constexpr unsigned int SFPXPRED_MOD1_PUSH = 4;
 constexpr unsigned int SFPXPRED_MOD1_DEPTH_SHIFT = 4;
