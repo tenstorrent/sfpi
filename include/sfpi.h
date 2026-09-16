@@ -620,33 +620,33 @@ sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
 // C++17: In a function-call expression, the expression that names the function
 // is sequenced before every argument expression and every default argument. [expr.pre]
 
-#define v_if(x)                                 \
-  { sfpi::impl_::CC __cc;                       \
-  __cc.pred (SFPXPRED_MOD1_IF                    \
-             | SFPXPRED_MOD1_PUSH).cond (x);     \
+#define v_if(x)                                         \
+  { sfpi::impl_::CC __cc;                               \
+  __cc.pred (sfpi::SFPXPRED_MOD1_IF                     \
+             | sfpi::SFPXPRED_MOD1_PUSH).cond (x);      \
   {
 
-#define v_elseif(x)                             \
-  } __cc.pred (SFPXPRED_MOD1_ELSE               \
-               | SFPXPRED_MOD1_IF               \
-               | SFPXPRED_MOD1_PUSH).cond (x); {
+#define v_elseif(x)                                     \
+  } __cc.pred (sfpi::SFPXPRED_MOD1_ELSE                 \
+               | sfpi::SFPXPRED_MOD1_IF                 \
+               | sfpi::SFPXPRED_MOD1_PUSH).cond (x); {
 
 #define v_else                                  \
-  } __cc.pred (SFPXPRED_MOD1_ELSE); {
+  } __cc.pred (sfpi::SFPXPRED_MOD1_ELSE); {
 
 #define v_endif                                 \
-  } __cc.pred (SFPXPRED_MOD1_ENDIF);            \
+  } __cc.pred (sfpi::SFPXPRED_MOD1_ENDIF);      \
   }
 
 #define v_block                                 \
   { sfpi::impl_::CC __cc;                       \
-  __cc.pred (SFPXPRED_MOD1_PUSH);
+  __cc.pred (sfpi::SFPXPRED_MOD1_PUSH);
 
 #define v_and(x)                                \
-  __cc.pred(SFPXPRED_MOD1_IF).cond (x);
+  __cc.pred(sfpi::SFPXPRED_MOD1_IF).cond (x);
 
 #define v_endblock                              \
-  __cc.pred(SFPXPRED_MOD1_ENDIF);               \
+  __cc.pred(sfpi::SFPXPRED_MOD1_ENDIF);         \
   }
 
 //////////////////////////////////////////////////////////////////////////////
