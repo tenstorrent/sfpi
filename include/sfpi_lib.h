@@ -861,13 +861,15 @@ sfpi_inline void swap (Type &a, Type &b) {
 }
 
 namespace impl_ {
-class FloatInt : public std::pair<vFloat, vInt> {
+class FloatInt : public std::pair<vFloat, vMag> {
 public:
   using pair::pair;
 
 public:
   operator vFloat () const { return first; }
-  operator vInt () const { return second; }
+  operator vMag () const { return second; }
+  operator vInt () const { return vInt (second); }
+  operator vUInt () const { return second; }
 };
 }
 
@@ -882,7 +884,7 @@ sfpi_inline impl_::FloatInt round (vFloat x, RoundIntMode mode = RoundIntMode::U
   auto i = as<vInt> (f);
   if (mode == RoundIntMode::Unbiased)
     i -= as<vInt> (magic);
-  return {f - magic, i};
+  return {f - magic, as<vMag> (i)};
 }
 
 __SFPI_DEPRECATED("Use sfpi::swap")
