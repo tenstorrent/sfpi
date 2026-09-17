@@ -635,7 +635,7 @@ sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
   } __cc.pred (sfpi::SFPXPRED_MOD1_ELSE); {
 
 #define v_endif                                 \
-  } __cc.pred (sfpi::SFPXPRED_MOD1_ENDIF);      \
+  } __cc.pred (sfpi::SFPXPRED_MOD1_END);      \
   }
 
 #define v_block                                 \
@@ -646,7 +646,7 @@ sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
   __cc.pred(sfpi::SFPXPRED_MOD1_IF).cond (x);
 
 #define v_endblock                              \
-  __cc.pred(sfpi::SFPXPRED_MOD1_ENDIF);         \
+  __cc.pred(sfpi::SFPXPRED_MOD1_END);         \
   }
 
 //////////////////////////////////////////////////////////////////////////////

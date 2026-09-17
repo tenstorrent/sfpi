@@ -86,7 +86,7 @@ auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
 
   dep = __builtin_rvtt_sfpxpred (mod | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
 
-  if (mod == SFPXPRED_MOD1_ENDIF)
+  if (mod == SFPXPRED_MOD1_END)
     for (; depth; depth--)
       __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
 
