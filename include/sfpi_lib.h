@@ -871,11 +871,19 @@ public:
 };
 }
 
-sfpi_inline impl_::FloatInt round (vFloat x) {
-  vFloat magic = 0x1.8p23f, f = x + magic;
-  return {f - magic, as<vInt> (f) - as<vInt> (magic)};
-}
+enum class RoundIntMode {
+  Unbiased,
+  Biased,
+};
 
+sfpi_inline impl_::FloatInt round (vFloat x, RoundIntMode mode = RoundIntMode::Unbiased) {
+  vFloat magic = 0x1.8p23f;
+  auto f = x + magic;
+  auto i = as<vInt> (f);
+  if (mode == RoundIntMode::Unbiased)
+    i -= as<vInt> (magic);
+  return {f - magic, i};
+}
 
 __SFPI_DEPRECATED("Use sfpi::swap")
 sfpi_inline void vec_swap (vFloat & a, vFloat &b) = delete;
