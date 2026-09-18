@@ -56,7 +56,7 @@ class Decl:
       arg, type = extract_type (type)
       print(f"{arg}", end="")
       comma = True
-    print(f") noexcept;");
+    print(f") __attribute__((nothrow));");
 
 class Builtin:
   def __init__ (self, name):
