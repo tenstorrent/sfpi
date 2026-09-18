@@ -1,4 +1,4 @@
-# PIN_REVIEW — gcc submodule → 7c04488e6 (pin 59 + legibility)
+# PIN_REVIEW — gcc submodule → d987ba4899e8 (pin 59 + legibility + audit fixes)
 
 CATCH-UP RECORD: this bump advances the superproject gitlink across 40 pin cycles
 (pins 20–59) in one step. The gate evidence below was produced by the per-pin
@@ -11,7 +11,7 @@ Date: 2026-09-17. Reviewed-by: superproject-side reconciliation against the
 tt-metal PIN HISTORY (authoritative) and the sfpi-gcc branch tip.
 
 Full gcc sha of the pinned submodule commit:
-7c04488e61b74c136742ec48b82b341b268018c8; the pin-59 compiler commit it sits on is
+d987ba4899e8dc4e023bca74d236be917875ed56; the pin-59 compiler commit it sits on is
 ebeac6bb71b74205832158b3c958cae00ef02f52
 
 ## Why this bump exists
@@ -92,3 +92,15 @@ four largest passes) are comment- and file-move-only: no .cc logic, .h, .def,
 .opt, machine description or Makefile fragment is touched, so generated code
 is byte-identical to ebeac6bb71b by construction and every gate recorded above
 applies to this gitlink unchanged.  No re-measurement is owed.
+
+## Addendum 2 — d987ba4899e8
+
+Advances past 7c04488e61b7 by one further commit, d987ba489 ("tt: correct a
+false soundness-allowlist claim; unshare a dump name").  That commit changes
+one comment and two pass dump-name strings; no transform logic, no option, no
+machine description.  Codegen is byte-identical to the reviewed pin-59
+compiler ebeac6bb71b, so every gate recorded above carries over unchanged and
+no re-measurement is owed.
+
+The dump-name change (rvtt_unspec_prop -> rvtt_unspec_prop_ssa / _rtl) was
+checked against the testsuite first: no test scans the bare name.
