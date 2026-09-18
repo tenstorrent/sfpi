@@ -1,4 +1,4 @@
-# PIN_REVIEW — gcc submodule → e30e84079c95 (pin 59 + documentation)
+# PIN_REVIEW — gcc submodule → 5b2d540396c0 (pin 59 + cleanup)
 
 CATCH-UP RECORD: this bump advances the superproject gitlink across 40 pin cycles
 (pins 20–59) in one step. The gate evidence below was produced by the per-pin
@@ -11,7 +11,7 @@ Date: 2026-09-17. Reviewed-by: superproject-side reconciliation against the
 tt-metal PIN HISTORY (authoritative) and the sfpi-gcc branch tip.
 
 Full gcc sha of the pinned submodule commit:
-e30e84079c95a16b81fbe5a043a7ba1d168c5454; the pin-59 compiler commit it sits on is
+5b2d540396c09c3f3b4e888ed49e2f8054bc7972; the pin-59 compiler commit it sits on is
 ebeac6bb71b74205832158b3c958cae00ef02f52
 
 ## Why this bump exists
@@ -117,3 +117,14 @@ move the branch head, and keeping the gitlink exactly on the head therefore
 costs a pin bump per doc commit.  If that churn is unwanted, the alternative
 is to let the pin lag deliberately and say so in the conf, rather than
 letting it drift silently as it did for 28 pins.
+
+## Addendum 4 — 5b2d540396c0
+
+Adds 5b2d54039: deletes crf_move_ok, a 25-line static helper in
+rtl-rvtt-replay-crf.cc with no caller anywhere in the tree, and adds
+provenance comments to sfpu-ops-{bh,wh}.h.
+
+Codegen impact: none.  The deleted function was never called, so it
+contributed no code; the header changes are comments.  Brace balance across
+the edited file was verified symmetric (208/208 -> 206/206).  Every gate
+recorded above therefore still applies and no re-measurement is owed.
