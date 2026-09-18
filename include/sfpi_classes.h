@@ -69,9 +69,11 @@ enum class DataLayout {
 
   U32,
   U16,
+  U8,
 
   SM32,
   SM16,
+  SM8,
 
   M32,
 
