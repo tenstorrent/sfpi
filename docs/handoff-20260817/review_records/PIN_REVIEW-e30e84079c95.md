@@ -1,4 +1,4 @@
-# PIN_REVIEW — gcc submodule → d987ba4899e8 (pin 59 + legibility + audit fixes)
+# PIN_REVIEW — gcc submodule → e30e84079c95 (pin 59 + documentation)
 
 CATCH-UP RECORD: this bump advances the superproject gitlink across 40 pin cycles
 (pins 20–59) in one step. The gate evidence below was produced by the per-pin
@@ -11,7 +11,7 @@ Date: 2026-09-17. Reviewed-by: superproject-side reconciliation against the
 tt-metal PIN HISTORY (authoritative) and the sfpi-gcc branch tip.
 
 Full gcc sha of the pinned submodule commit:
-d987ba4899e8dc4e023bca74d236be917875ed56; the pin-59 compiler commit it sits on is
+e30e84079c95a16b81fbe5a043a7ba1d168c5454; the pin-59 compiler commit it sits on is
 ebeac6bb71b74205832158b3c958cae00ef02f52
 
 ## Why this bump exists
@@ -104,3 +104,16 @@ no re-measurement is owed.
 
 The dump-name change (rvtt_unspec_prop -> rvtt_unspec_prop_ssa / _rtl) was
 checked against the testsuite first: no test scans the bare name.
+
+## Addendum 3 — e30e84079c95
+
+Adds e30e84079 ("tt: correct the flag counts in README and say how to enable
+a pass").  README text only; no source, option, or machine description is
+touched.  Codegen remains byte-identical to the reviewed pin-59 compiler
+ebeac6bb71b and no gate is re-owed.
+
+Note for future pins: documentation-only commits on the gcc branch still
+move the branch head, and keeping the gitlink exactly on the head therefore
+costs a pin bump per doc commit.  If that churn is unwanted, the alternative
+is to let the pin lag deliberately and say so in the conf, rather than
+letting it drift silently as it did for 28 pins.
