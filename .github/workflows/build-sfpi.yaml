@@ -78,7 +78,7 @@ jobs:
         run: >
           scripts/build.sh --gdb --tt-built --small
           ${{inputs.full && '--full' || null}}
-          ${{inputs.checking && '--checking' || null}}
+          ${{inputs.checking && '--checking' || '--no-checking'}}
           ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
       - name: Build Test harness
         run: scripts/build.sh --dejagnu --small

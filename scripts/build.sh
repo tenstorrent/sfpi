@@ -10,7 +10,7 @@ fi
 
 NCPUS=$(nproc)
 
-gcc_checking=release
+gcc_checking=all
 dejagnu=false
 enable_gdb=--disable-gdb
 sim=false
@@ -25,19 +25,20 @@ sfpi_version=
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
-	--checking) gcc_checking=all ;;
-	--checking=*) gcc_checking="${1#*=}" ;;
-	--dir=*) BUILD="${1#*=}" ;;
-	--dejagnu) dejagnu=true ;;
-	--full) sfpi_base= ;;
-	--gdb) enable_gdb=--enable-gdb ;;
-	--infra) dejagnu=true sim=true ;;
 	--build-id=*) sfpi_build="${1#*=}"
 		      if ! [[ $sfpi_build =~ ^[0-9]+$ ]]; then
 			  echo "$1 is not a decimal number" >&2
 			  exit 1
 		      fi
 		      ;;
+	--checking) gcc_checking="all" ;;
+	--checking=*) gcc_checking="${1#*=}" ;;
+	--dejagnu) dejagnu=true ;;
+	--dir=*) BUILD="${1#*=}" ;;
+	--full) sfpi_base= ;;
+	--gdb) enable_gdb=--enable-gdb ;;
+	--infra) dejagnu=true sim=true ;;
+	--no-checking) gcc_checking=release ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
