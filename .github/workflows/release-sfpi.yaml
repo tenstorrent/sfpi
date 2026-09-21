@@ -25,7 +25,7 @@ run-name: ${{inputs.tag && 'Release' || 'Development'}} ${{inputs.tag || github.
 jobs:
   plan:
     name: Plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       archs: ${{steps.plan.outputs.archs}}
       full: ${{steps.plan.outputs.full}}
@@ -76,7 +76,7 @@ jobs:
 
   release:
     name: Artifacts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build
     steps:
       - name: Checkout repo
