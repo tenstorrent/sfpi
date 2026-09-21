@@ -13,34 +13,34 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.42, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.39, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.37, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.37, corpus p20=0.52)"
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.63/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.49/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.40/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.26/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.44/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.47/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.01/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 6.4399999999999995,
+      "weight": 6.36,
       "population": "ships"
     },
     {
@@ -56,30 +56,30 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.51, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.54, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.38, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.41, corpus p20=0.52)"
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.58/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.60/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.42/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.22/3, corpus p80=1.88)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.02/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 5.31,
+      "weight": 5.17,
       "population": "ships"
     },
     {
@@ -91,26 +91,26 @@
       "reasons": [
         [
           "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.51, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.51, corpus p20=0.52)"
         ],
         [
           "ALARM",
-          "may mutate IR before validation completes (2.29/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (2.11/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.80/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.81/3, corpus p80=2.40)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 5.15,
+      "weight": 5.05,
       "population": "ships"
     },
     {
@@ -126,26 +126,61 @@
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.54/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.61/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.00/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.88/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.67/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.74/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.8100000000000005,
+      "weight": 4.970000000000001,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_synth_split",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-synth.cc",
+      "always_on": true,
+      "tier": "gimple",
+      "loc": 844,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
+        ],
+        [
+          "ALARM",
+          "failed checks may be silently dropped (2.02/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.52/3, corpus p80=2.40)"
+        ],
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.04/3, p20=0.04)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 4.7700000000000005,
       "population": "ships"
     },
     {
@@ -157,61 +192,26 @@
       "reasons": [
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.63/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.67/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.04/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.01/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.58/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.58/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 4.34,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_fix_raw",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-fix-raw.cc",
-      "always_on": true,
-      "tier": "rtl",
-      "loc": 249,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.06, corpus p20=0.11)"
-        ],
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.55, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.37, corpus p20=0.53)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.51/3, corpus p80=2.44)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.3,
+      "weight": 4.49,
       "population": "ships"
     },
     {
@@ -227,49 +227,22 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.42, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.43, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.46, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.43, corpus p20=0.52)"
         ],
         [
           "ALARM",
-          "rewrites IR with equivalence merely asserted \u2014 no argument, no proof artifact (conf 0.72)"
+          "rewrites IR with equivalence merely asserted \u2014 no argument, no proof artifact (conf 0.77)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.22,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_synth_split",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-synth.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 844,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (2.05/3, corpus p80=1.93)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.56/3, corpus p80=2.44)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.76,
+      "weight": 4.24,
       "population": "ships"
     },
     {
@@ -280,58 +253,27 @@
       "loc": 844,
       "reasons": [
         [
-          "ALARM",
-          "failed checks may be silently dropped (2.02/3, corpus p80=1.93)"
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.45/3, corpus p80=2.44)"
+          "failed checks may be silently dropped (2.05/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.40/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 3.6000000000000005,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_immvar_expand",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-immvar.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 948,
-      "reasons": [
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.56, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "may mutate IR before validation completes (1.58/3, corpus p80=1.54)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (1.97/3, corpus p80=1.93)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.38) \u2014 treat as unresolved"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.59,
+      "weight": 4.17,
       "population": "ships"
     },
     {
@@ -343,107 +285,26 @@
       "reasons": [
         [
           "ALARM",
-          "failed checks may be silently dropped (1.98/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.94/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.44/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.42/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.37) \u2014 treat as unresolved"
+          "possibly asserted-without-argument, but the model did not settle (conf 0.42) \u2014 treat as unresolved"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 3.55,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_lreg_livein",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-lreg-livein.cc",
-      "always_on": true,
-      "tier": "rtl",
-      "loc": 350,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.07, corpus p20=0.11)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.71/3, corpus p80=2.44)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.31,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_attrib",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-attrib.cc",
-      "always_on": null,
-      "tier": "gimple",
-      "loc": 266,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.08, corpus p20=0.11)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (2.02/3, corpus p80=1.93)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.47/3, corpus p80=2.44)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.00/3, p20=0.02)"
-        ]
-      ],
-      "weight": 3.1500000000000004,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_live",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-live.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 714,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
-        ],
-        [
-          "CONCERN",
-          "may mutate IR before validation completes (1.59/3, corpus p80=1.54)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (1.93/3, corpus p80=1.93)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.06,
+      "weight": 3.58,
       "population": "ships"
     },
     {
@@ -458,42 +319,185 @@
           "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
         ],
         [
+          "CONCERN",
+          "WH/BH gating least established (p=0.51, corpus p20=0.52)"
+        ],
+        [
           "ALARM",
-          "most fragile to pass reordering (2.80/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.80/3, corpus p80=2.40)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 2.87,
+      "weight": 3.42,
       "population": "ships"
     },
     {
-      "pass": "pass_rvtt_immload_combine",
+      "pass": "pass_rvtt_live",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-live.cc",
+      "always_on": true,
+      "tier": "gimple",
+      "loc": 714,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.11, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "may mutate IR before validation completes (1.62/3, corpus p80=1.49)"
+        ],
+        [
+          "ALARM",
+          "failed checks may be silently dropped (2.06/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 3.3100000000000005,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_fix_raw",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-fix-raw.cc",
+      "always_on": true,
+      "tier": "rtl",
+      "loc": 249,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.08, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.56, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.38, corpus p20=0.52)"
+        ],
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 3.19,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_attrib",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-attrib.cc",
+      "always_on": null,
+      "tier": "gimple",
+      "loc": 266,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
+        ],
+        [
+          "ALARM",
+          "failed checks may be silently dropped (1.96/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.41/3, corpus p80=2.40)"
+        ],
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.00/3, p20=0.04)"
+        ]
+      ],
+      "weight": 3.1100000000000003,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_cc",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-cc.cc",
+      "always_on": true,
+      "tier": "gimple",
+      "loc": 390,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.52, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "may mutate IR before validation completes (1.51/3, corpus p80=1.49)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.41/3, corpus p80=2.40)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 3.0900000000000003,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_immvar_expand",
       "file": "gcc/config/riscv/tt/gimple-rvtt-immvar.cc",
       "always_on": true,
       "tier": "gimple",
       "loc": 948,
       "reasons": [
         [
+          "CONCERN",
+          "may mutate IR before validation completes (1.53/3, corpus p80=1.49)"
+        ],
+        [
           "ALARM",
-          "failed checks may be silently dropped (2.00/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.89/3, corpus p80=1.88)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.37) \u2014 treat as unresolved"
+          "possibly asserted-without-argument, but the model did not settle (conf 0.42) \u2014 treat as unresolved"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 2.5700000000000003,
+      "weight": 3.05,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-lreg-livein.cc",
+      "always_on": true,
+      "tier": "rtl",
+      "loc": 350,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.08, corpus p20=0.11)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.69/3, corpus p80=2.40)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 2.8200000000000003,
       "population": "ships"
     },
     {
@@ -505,41 +509,64 @@
       "reasons": [
         [
           "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.11, corpus p20=0.11)"
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.51/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.54/3, corpus p80=2.40)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 2.57,
+      "weight": 2.6500000000000004,
       "population": "ships"
     },
     {
-      "pass": "pass_rvtt_cc",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-cc.cc",
+      "pass": "pass_rvtt_immload_combine",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-immvar.cc",
       "always_on": true,
       "tier": "gimple",
-      "loc": 390,
+      "loc": 948,
       "reasons": [
         [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.45, corpus p20=0.57)"
+          "ALARM",
+          "failed checks may be silently dropped (1.97/3, corpus p80=1.88)"
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.62/3, corpus p80=1.54)"
+          "thinnest test coverage in the corpus (0.04/3, p20=0.04)"
+        ],
+        [
+          "NOTE",
+          "possibly asserted-without-argument, but the model did not settle (conf 0.40) \u2014 treat as unresolved"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 2.2,
+      "weight": 2.59,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_rtl",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-unspec.cc",
+      "always_on": true,
+      "tier": "rtl",
+      "loc": 303,
+      "reasons": [
+        [
+          "ALARM",
+          "rewrites IR with equivalence merely asserted \u2014 no argument, no proof artifact (conf 0.50)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 2.5,
       "population": "ships"
     },
     {
@@ -551,83 +578,14 @@
       "reasons": [
         [
           "ALARM",
-          "failed checks may be silently dropped (1.97/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.97/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 2.04,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_noval_elide",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-noval.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 154,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.52, corpus p20=0.53)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 2.01,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_spill_diag",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-spill-diag.cc",
-      "always_on": true,
-      "tier": "rtl",
-      "loc": 213,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.11, corpus p20=0.11)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.01/3, p20=0.02)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 2.0,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_unspec_prop_rtl",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-unspec.cc",
-      "always_on": true,
-      "tier": "rtl",
-      "loc": 303,
-      "reasons": [
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.49) \u2014 treat as unresolved"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 1.5,
+      "weight": 2.09,
       "population": "ships"
     },
     {
@@ -639,11 +597,30 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.93/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (2.00/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.39,
+      "weight": 1.51,
       "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_spill_diag",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-spill-diag.cc",
+      "always_on": true,
+      "tier": "rtl",
+      "loc": 213,
+      "reasons": [
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.01/3, p20=0.04)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 1.5,
+      "population": "ships"
     },
     {
       "pass": "pass_rvtt_lreg_rename_chains",
@@ -654,10 +631,10 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.86/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.93/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.32,
+      "weight": 1.44,
       "population": "opt_in"
     },
     {
@@ -669,29 +646,10 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.80/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.82/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.26,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-delivery-shape.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 597,
-      "reasons": [
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.53, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.50, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 1.0699999999999998,
+      "weight": 1.33,
       "population": "opt_in"
     },
     {
@@ -703,130 +661,33 @@
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.39, corpus p20=0.57)"
-        ]
-      ],
-      "weight": 0.6799999999999999,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_mop_form",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-mop-form.cc",
-      "always_on": false,
-      "tier": "rtl",
-      "loc": 1353,
-      "reasons": [
+          "largest apparent gap between contract and code (p=0.43, corpus p20=0.58)"
+        ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.47, corpus p20=0.57)"
+          "WH/BH gating least established (p=0.52, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.6,
+      "weight": 1.15,
       "population": "opt_in"
     },
     {
-      "pass": "pass_rvtt_macro_planner",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-macro-planner.cc",
-      "always_on": false,
-      "tier": "rtl",
-      "loc": 1913,
-      "reasons": [
-        [
-          "CONCERN",
-          "may mutate IR before validation completes (1.64/3, corpus p80=1.54)"
-        ]
-      ],
-      "weight": 0.5999999999999999,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-lp-schedule.cc",
+      "pass": "pass_rvtt_delivery_shape",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-delivery-shape.cc",
       "always_on": false,
       "tier": "gimple",
-      "loc": 1111,
+      "loc": 597,
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.49, corpus p20=0.57)"
-        ]
-      ],
-      "weight": 0.58,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_int_abs",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-int-abs.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 578,
-      "reasons": [
+          "largest apparent gap between contract and code (p=0.56, corpus p20=0.58)"
+        ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.50, corpus p20=0.57)"
+          "WH/BH gating least established (p=0.52, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.57,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_crossloop",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-crossloop.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 533,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.47, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 0.56,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_dst_interleave",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-dst-iteration.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 955,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.52, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 0.51,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_invariant",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-invariant.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 1829,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.52, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 0.51,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_prgm_const",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-prgm-const.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 949,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.52, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 0.51,
+      "weight": 1.02,
       "population": "opt_in"
     },
     {
@@ -838,25 +699,119 @@
       "reasons": [
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.53, corpus p20=0.53)"
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.50, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.5,
+      "weight": 1.02,
       "population": "opt_in"
     },
     {
-      "pass": "pass_rvtt_replay_unroll",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-replay-unroll.cc",
+      "pass": "pass_rvtt_macro_planner",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-macro-planner.cc",
       "always_on": false,
-      "tier": "gimple",
-      "loc": 1782,
+      "tier": "rtl",
+      "loc": 1913,
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.57, corpus p20=0.57)"
+          "may mutate IR before validation completes (1.65/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 0.5,
+      "weight": 0.6599999999999999,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_lp_schedule",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-lp-schedule.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 1111,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.48, corpus p20=0.58)"
+        ]
+      ],
+      "weight": 0.6,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_mop_form",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-mop-form.cc",
+      "always_on": false,
+      "tier": "rtl",
+      "loc": 1353,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.48, corpus p20=0.58)"
+        ]
+      ],
+      "weight": 0.6,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_int_abs",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-int-abs.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 578,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.53, corpus p20=0.58)"
+        ]
+      ],
+      "weight": 0.5499999999999999,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_crossloop",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-crossloop.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 533,
+      "reasons": [
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.48, corpus p20=0.52)"
+        ]
+      ],
+      "weight": 0.54,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_dst_interleave",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-dst-iteration.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 955,
+      "reasons": [
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.50, corpus p20=0.52)"
+        ]
+      ],
+      "weight": 0.52,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_prgm_const",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-prgm-const.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 949,
+      "reasons": [
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.50, corpus p20=0.52)"
+        ]
+      ],
+      "weight": 0.52,
       "population": "opt_in"
     },
     {
@@ -868,10 +823,10 @@
       "reasons": [
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.53, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.51, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.5,
+      "weight": 0.51,
       "population": "opt_in"
     }
   ],
@@ -885,22 +840,22 @@
       "reasons": [
         [
           "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.08, corpus p20=0.11)"
+          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.02/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.96/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.47/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.41/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.00/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.00/3, p20=0.04)"
         ]
       ],
-      "weight": 3.1500000000000004,
+      "weight": 3.1100000000000003,
       "population": "opt_in"
     },
     {
@@ -912,10 +867,10 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.93/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (2.00/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.39,
+      "weight": 1.51,
       "population": "opt_in"
     },
     {
@@ -927,10 +882,10 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.86/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.93/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.32,
+      "weight": 1.44,
       "population": "opt_in"
     },
     {
@@ -942,29 +897,10 @@
       "reasons": [
         [
           "ALARM",
-          "may mutate IR before validation completes (1.80/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.82/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 1.26,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-delivery-shape.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 597,
-      "reasons": [
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.53, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.50, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 1.0699999999999998,
+      "weight": 1.33,
       "population": "opt_in"
     },
     {
@@ -976,25 +912,52 @@
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.39, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.43, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.52, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.6799999999999999,
+      "weight": 1.15,
       "population": "opt_in"
     },
     {
-      "pass": "pass_rvtt_mop_form",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-mop-form.cc",
+      "pass": "pass_rvtt_delivery_shape",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-delivery-shape.cc",
       "always_on": false,
-      "tier": "rtl",
-      "loc": 1353,
+      "tier": "gimple",
+      "loc": 597,
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.47, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.56, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.52, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.6,
+      "weight": 1.02,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_dst_iteration",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-dst-iteration.cc",
+      "always_on": false,
+      "tier": "gimple",
+      "loc": 955,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.50, corpus p20=0.52)"
+        ]
+      ],
+      "weight": 1.02,
       "population": "opt_in"
     },
     {
@@ -1006,10 +969,10 @@
       "reasons": [
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.64/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.65/3, corpus p80=1.49)"
         ]
       ],
-      "weight": 0.5999999999999999,
+      "weight": 0.6599999999999999,
       "population": "opt_in"
     },
     {
@@ -1021,10 +984,25 @@
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.49, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.48, corpus p20=0.58)"
         ]
       ],
-      "weight": 0.58,
+      "weight": 0.6,
+      "population": "opt_in"
+    },
+    {
+      "pass": "pass_rvtt_mop_form",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-mop-form.cc",
+      "always_on": false,
+      "tier": "rtl",
+      "loc": 1353,
+      "reasons": [
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.48, corpus p20=0.58)"
+        ]
+      ],
+      "weight": 0.6,
       "population": "opt_in"
     },
     {
@@ -1036,10 +1014,10 @@
       "reasons": [
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.50, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.53, corpus p20=0.58)"
         ]
       ],
-      "weight": 0.57,
+      "weight": 0.5499999999999999,
       "population": "opt_in"
     },
     {
@@ -1051,25 +1029,10 @@
       "reasons": [
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.47, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.48, corpus p20=0.52)"
         ]
       ],
-      "weight": 0.56,
-      "population": "opt_in"
-    },
-    {
-      "pass": "pass_rvtt_dst_interleave",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-dst-iteration.cc",
-      "always_on": false,
-      "tier": "gimple",
-      "loc": 955,
-      "reasons": [
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.52, corpus p20=0.53)"
-        ]
-      ],
-      "weight": 0.51,
+      "weight": 0.54,
       "population": "opt_in"
     }
   ],
@@ -1087,34 +1050,34 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.42, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.39, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.37, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.37, corpus p20=0.52)"
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.63/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.49/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.40/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.26/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.44/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.47/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.01/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 6.4399999999999995,
+      "weight": 6.36,
       "population": "ships"
     },
     {
@@ -1130,30 +1093,30 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.51, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.54, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.38, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.41, corpus p20=0.52)"
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.58/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.60/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.42/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.22/3, corpus p80=1.88)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.02/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 5.31,
+      "weight": 5.17,
       "population": "ships"
     },
     {
@@ -1165,26 +1128,26 @@
       "reasons": [
         [
           "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.51, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.51, corpus p20=0.52)"
         ],
         [
           "ALARM",
-          "may mutate IR before validation completes (2.29/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (2.11/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.80/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.81/3, corpus p80=2.40)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 5.15,
+      "weight": 5.05,
       "population": "ships"
     },
     {
@@ -1200,26 +1163,61 @@
         ],
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.54/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.61/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.00/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.88/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.67/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.74/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.8100000000000005,
+      "weight": 4.970000000000001,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_synth_split",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-synth.cc",
+      "always_on": true,
+      "tier": "gimple",
+      "loc": 844,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
+        ],
+        [
+          "ALARM",
+          "failed checks may be silently dropped (2.02/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.52/3, corpus p80=2.40)"
+        ],
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.04/3, p20=0.04)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 4.7700000000000005,
       "population": "ships"
     },
     {
@@ -1231,61 +1229,26 @@
       "reasons": [
         [
           "CONCERN",
-          "may mutate IR before validation completes (1.63/3, corpus p80=1.54)"
+          "may mutate IR before validation completes (1.67/3, corpus p80=1.49)"
         ],
         [
           "ALARM",
-          "failed checks may be silently dropped (2.04/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (2.01/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.58/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.58/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 4.34,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_fix_raw",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-fix-raw.cc",
-      "always_on": true,
-      "tier": "rtl",
-      "loc": 249,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.06, corpus p20=0.11)"
-        ],
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.55, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "WH/BH gating least established (p=0.37, corpus p20=0.53)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.51/3, corpus p80=2.44)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.3,
+      "weight": 4.49,
       "population": "ships"
     },
     {
@@ -1301,49 +1264,22 @@
         ],
         [
           "CONCERN",
-          "largest apparent gap between contract and code (p=0.42, corpus p20=0.57)"
+          "largest apparent gap between contract and code (p=0.43, corpus p20=0.58)"
         ],
         [
           "CONCERN",
-          "WH/BH gating least established (p=0.46, corpus p20=0.53)"
+          "WH/BH gating least established (p=0.43, corpus p20=0.52)"
         ],
         [
           "ALARM",
-          "rewrites IR with equivalence merely asserted \u2014 no argument, no proof artifact (conf 0.72)"
+          "rewrites IR with equivalence merely asserted \u2014 no argument, no proof artifact (conf 0.77)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 4.22,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_synth_split",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-synth.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 844,
-      "reasons": [
-        [
-          "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.09, corpus p20=0.11)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (2.05/3, corpus p80=1.93)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.56/3, corpus p80=2.44)"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.76,
+      "weight": 4.24,
       "population": "ships"
     },
     {
@@ -1354,58 +1290,27 @@
       "loc": 844,
       "reasons": [
         [
-          "ALARM",
-          "failed checks may be silently dropped (2.02/3, corpus p80=1.93)"
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.58, corpus p20=0.58)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.45/3, corpus p80=2.44)"
+          "failed checks may be silently dropped (2.05/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.40/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 3.6000000000000005,
-      "population": "ships"
-    },
-    {
-      "pass": "pass_rvtt_immvar_expand",
-      "file": "gcc/config/riscv/tt/gimple-rvtt-immvar.cc",
-      "always_on": true,
-      "tier": "gimple",
-      "loc": 948,
-      "reasons": [
-        [
-          "CONCERN",
-          "largest apparent gap between contract and code (p=0.56, corpus p20=0.57)"
-        ],
-        [
-          "CONCERN",
-          "may mutate IR before validation completes (1.58/3, corpus p80=1.54)"
-        ],
-        [
-          "ALARM",
-          "failed checks may be silently dropped (1.97/3, corpus p80=1.93)"
-        ],
-        [
-          "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
-        ],
-        [
-          "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.38) \u2014 treat as unresolved"
-        ],
-        [
-          "ALARM",
-          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
-        ]
-      ],
-      "weight": 3.59,
+      "weight": 4.17,
       "population": "ships"
     },
     {
@@ -1417,730 +1322,788 @@
       "reasons": [
         [
           "ALARM",
-          "failed checks may be silently dropped (1.98/3, corpus p80=1.93)"
+          "failed checks may be silently dropped (1.94/3, corpus p80=1.88)"
         ],
         [
           "ALARM",
-          "most fragile to pass reordering (2.44/3, corpus p80=2.44)"
+          "most fragile to pass reordering (2.42/3, corpus p80=2.40)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
         ],
         [
           "NOTE",
-          "possibly asserted-without-argument, but the model did not settle (conf 0.37) \u2014 treat as unresolved"
+          "possibly asserted-without-argument, but the model did not settle (conf 0.42) \u2014 treat as unresolved"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 3.55,
+      "weight": 3.58,
       "population": "ships"
     },
     {
-      "pass": "pass_rvtt_lreg_livein",
-      "file": "gcc/config/riscv/tt/rtl-rvtt-lreg-livein.cc",
+      "pass": "pass_rvtt_synth_opcode",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-synth.cc",
       "always_on": true,
       "tier": "rtl",
-      "loc": 350,
+      "loc": 284,
       "reasons": [
         [
           "CONCERN",
-          "fail-closed discipline weakest in the corpus (p=0.07, corpus p20=0.11)"
-        ],
-        [
-          "ALARM",
-          "most fragile to pass reordering (2.71/3, corpus p80=2.44)"
+          "fail-closed discipline weakest in the corpus (p=0.10, corpus p20=0.11)"
         ],
         [
           "CONCERN",
-          "thinnest test coverage in the corpus (0.02/3, p20=0.02)"
+          "WH/BH gating least established (p=0.51, corpus p20=0.52)"
+        ],
+        [
+          "ALARM",
+          "most fragile to pass reordering (2.80/3, corpus p80=2.40)"
         ],
         [
           "ALARM",
           "the above ships on every compile: this pass is NOT behind an off-by-default flag"
         ]
       ],
-      "weight": 3.31,
+      "weight": 3.42,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_live",
+      "file": "gcc/config/riscv/tt/gimple-rvtt-live.cc",
+      "always_on": true,
+      "tier": "gimple",
+      "loc": 714,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.11, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "may mutate IR before validation completes (1.62/3, corpus p80=1.49)"
+        ],
+        [
+          "ALARM",
+          "failed checks may be silently dropped (2.06/3, corpus p80=1.88)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 3.3100000000000005,
+      "population": "ships"
+    },
+    {
+      "pass": "pass_rvtt_fix_raw",
+      "file": "gcc/config/riscv/tt/rtl-rvtt-fix-raw.cc",
+      "always_on": true,
+      "tier": "rtl",
+      "loc": 249,
+      "reasons": [
+        [
+          "CONCERN",
+          "fail-closed discipline weakest in the corpus (p=0.08, corpus p20=0.11)"
+        ],
+        [
+          "CONCERN",
+          "largest apparent gap between contract and code (p=0.56, corpus p20=0.58)"
+        ],
+        [
+          "CONCERN",
+          "WH/BH gating least established (p=0.38, corpus p20=0.52)"
+        ],
+        [
+          "CONCERN",
+          "thinnest test coverage in the corpus (0.03/3, p20=0.04)"
+        ],
+        [
+          "ALARM",
+          "the above ships on every compile: this pass is NOT behind an off-by-default flag"
+        ]
+      ],
+      "weight": 3.19,
       "population": "ships"
     }
   ],
   "opportunity": [
     {
       "pass": "pass_rvtt_replay",
-      "upside": 2.91,
-      "breadth": 2.15,
+      "upside": 2.93,
+      "breadth": 2.09,
       "mechanism": "replay_compression",
-      "mechanism_conf": 0.72,
+      "mechanism_conf": 0.7,
       "evidence": "structural",
-      "evidence_conf": 0.3,
-      "readiness": 2.04,
+      "evidence_conf": 0.37,
+      "readiness": 2.03,
       "always_on": true,
-      "opportunity": 5.63
+      "opportunity": 5.51
     },
     {
       "pass": "pass_rvtt_immload_shorten",
-      "upside": 1.85,
-      "breadth": 2.69,
+      "upside": 1.84,
+      "breadth": 2.73,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 1.0,
       "evidence": "none",
-      "evidence_conf": 0.65,
-      "readiness": 1.39,
+      "evidence_conf": 0.6,
+      "readiness": 1.29,
       "always_on": true,
-      "opportunity": 4.98
+      "opportunity": 5.02
     },
     {
       "pass": "pass_rvtt_live",
-      "upside": 1.77,
-      "breadth": 2.76,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.99,
-      "evidence": "none",
-      "evidence_conf": 0.62,
-      "readiness": 1.23,
-      "always_on": true,
-      "opportunity": 4.89
-    },
-    {
-      "pass": "pass_rvtt_replay_reform",
-      "upside": 2.92,
-      "breadth": 1.73,
-      "mechanism": "replay_compression",
-      "mechanism_conf": 0.72,
-      "evidence": "structural",
-      "evidence_conf": 0.36,
-      "readiness": 1.82,
-      "always_on": true,
-      "opportunity": 4.55
-    },
-    {
-      "pass": "pass_rvtt_immvar_expand",
-      "upside": 1.62,
-      "breadth": 2.62,
-      "mechanism": "enables_downstream",
-      "mechanism_conf": 0.42,
-      "evidence": "none",
-      "evidence_conf": 0.74,
-      "readiness": 1.19,
-      "always_on": true,
-      "opportunity": 4.24
-    },
-    {
-      "pass": "pass_rvtt_synth_split",
-      "upside": 1.62,
-      "breadth": 2.6,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.47,
-      "evidence": "none",
-      "evidence_conf": 0.86,
-      "readiness": 1.12,
-      "always_on": true,
-      "opportunity": 4.21
-    },
-    {
-      "pass": "pass_rvtt_synth_cse",
-      "upside": 1.83,
-      "breadth": 2.19,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.97,
-      "evidence": "none",
-      "evidence_conf": 0.91,
-      "readiness": 1.14,
-      "always_on": true,
-      "opportunity": 4.01
-    },
-    {
-      "pass": "pass_rvtt_expand",
-      "upside": 1.53,
-      "breadth": 2.61,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.52,
-      "evidence": "none",
-      "evidence_conf": 0.92,
-      "readiness": 1.19,
-      "always_on": true,
-      "opportunity": 3.99
-    },
-    {
-      "pass": "pass_rvtt_dce",
-      "upside": 1.83,
-      "breadth": 2.12,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.99,
-      "evidence": "none",
-      "evidence_conf": 0.83,
-      "readiness": 0.92,
-      "always_on": true,
-      "opportunity": 3.88
-    },
-    {
-      "pass": "pass_rvtt_schedule",
-      "upside": 2.39,
-      "breadth": 2.67,
-      "mechanism": "latency_hiding",
-      "mechanism_conf": 0.43,
-      "evidence": "simulator",
-      "evidence_conf": 0.73,
-      "readiness": 1.7,
-      "always_on": true,
-      "opportunity": 3.83
-    },
-    {
-      "pass": "pass_rvtt_synth_opcode",
-      "upside": 1.51,
-      "breadth": 2.42,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.55,
-      "evidence": "none",
-      "evidence_conf": 0.79,
-      "readiness": 1.04,
-      "always_on": true,
-      "opportunity": 3.65
-    },
-    {
-      "pass": "pass_rvtt_cc",
-      "upside": 1.29,
-      "breadth": 2.71,
+      "upside": 1.78,
+      "breadth": 2.79,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 0.98,
       "evidence": "none",
-      "evidence_conf": 0.47,
-      "readiness": 1.09,
+      "evidence_conf": 0.64,
+      "readiness": 1.25,
       "always_on": true,
-      "opportunity": 3.5
+      "opportunity": 4.97
     },
     {
-      "pass": "pass_rvtt_synth_renumber",
-      "upside": 1.25,
-      "breadth": 2.43,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.34,
+      "pass": "pass_rvtt_replay_reform",
+      "upside": 2.94,
+      "breadth": 1.83,
+      "mechanism": "replay_compression",
+      "mechanism_conf": 0.73,
+      "evidence": "structural",
+      "evidence_conf": 0.33,
+      "readiness": 1.8,
+      "always_on": true,
+      "opportunity": 4.84
+    },
+    {
+      "pass": "pass_rvtt_immvar_expand",
+      "upside": 1.76,
+      "breadth": 2.65,
+      "mechanism": "enables_downstream",
+      "mechanism_conf": 0.42,
       "evidence": "none",
-      "evidence_conf": 0.92,
-      "readiness": 1.03,
+      "evidence_conf": 0.64,
+      "readiness": 1.19,
       "always_on": true,
-      "opportunity": 3.04
+      "opportunity": 4.66
     },
     {
-      "pass": "pass_rvtt_unspec_prop_rtl",
-      "upside": 1.28,
-      "breadth": 2.23,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.87,
-      "evidence": "none",
-      "evidence_conf": 0.82,
-      "readiness": 1.28,
-      "always_on": true,
-      "opportunity": 2.85
-    },
-    {
-      "pass": "pass_rvtt_combine",
-      "upside": 1.62,
-      "breadth": 1.94,
+      "pass": "pass_rvtt_dce",
+      "upside": 1.85,
+      "breadth": 2.26,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 1.0,
-      "evidence": "structural",
-      "evidence_conf": 0.43,
-      "readiness": 1.53,
+      "evidence": "none",
+      "evidence_conf": 0.85,
+      "readiness": 0.94,
       "always_on": true,
-      "opportunity": 2.83
+      "opportunity": 4.18
+    },
+    {
+      "pass": "pass_rvtt_synth_split",
+      "upside": 1.6,
+      "breadth": 2.57,
+      "mechanism": "enables_downstream",
+      "mechanism_conf": 0.5,
+      "evidence": "none",
+      "evidence_conf": 0.86,
+      "readiness": 1.06,
+      "always_on": true,
+      "opportunity": 4.11
+    },
+    {
+      "pass": "pass_rvtt_synth_cse",
+      "upside": 1.86,
+      "breadth": 2.2,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.98,
+      "evidence": "none",
+      "evidence_conf": 0.89,
+      "readiness": 1.07,
+      "always_on": true,
+      "opportunity": 4.09
+    },
+    {
+      "pass": "pass_rvtt_synth_opcode",
+      "upside": 1.58,
+      "breadth": 2.52,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.63,
+      "evidence": "none",
+      "evidence_conf": 0.75,
+      "readiness": 1.12,
+      "always_on": true,
+      "opportunity": 3.98
+    },
+    {
+      "pass": "pass_rvtt_schedule",
+      "upside": 2.42,
+      "breadth": 2.66,
+      "mechanism": "latency_hiding",
+      "mechanism_conf": 0.42,
+      "evidence": "simulator",
+      "evidence_conf": 0.68,
+      "readiness": 1.69,
+      "always_on": true,
+      "opportunity": 3.86
+    },
+    {
+      "pass": "pass_rvtt_expand",
+      "upside": 1.49,
+      "breadth": 2.5,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.46,
+      "evidence": "none",
+      "evidence_conf": 0.88,
+      "readiness": 1.02,
+      "always_on": true,
+      "opportunity": 3.73
+    },
+    {
+      "pass": "pass_rvtt_cc",
+      "upside": 1.3,
+      "breadth": 2.7,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.98,
+      "evidence": "none",
+      "evidence_conf": 0.48,
+      "readiness": 1.09,
+      "always_on": true,
+      "opportunity": 3.51
     },
     {
       "pass": "pass_rvtt_lp_alloc",
-      "upside": 2.17,
-      "breadth": 1.3,
+      "upside": 2.15,
+      "breadth": 1.42,
       "mechanism": "register_pressure",
-      "mechanism_conf": 0.35,
+      "mechanism_conf": 0.41,
       "evidence": "none",
-      "evidence_conf": 0.47,
-      "readiness": 1.83,
+      "evidence_conf": 0.5,
+      "readiness": 1.84,
       "always_on": false,
-      "opportunity": 2.82
+      "opportunity": 3.05
+    },
+    {
+      "pass": "pass_rvtt_combine",
+      "upside": 1.68,
+      "breadth": 1.99,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "structural",
+      "evidence_conf": 0.49,
+      "readiness": 1.49,
+      "always_on": true,
+      "opportunity": 3.01
+    },
+    {
+      "pass": "pass_rvtt_synth_renumber",
+      "upside": 1.16,
+      "breadth": 2.54,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.34,
+      "evidence": "none",
+      "evidence_conf": 0.94,
+      "readiness": 1.05,
+      "always_on": true,
+      "opportunity": 2.95
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_rtl",
+      "upside": 1.29,
+      "breadth": 2.27,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.86,
+      "evidence": "none",
+      "evidence_conf": 0.88,
+      "readiness": 1.23,
+      "always_on": true,
+      "opportunity": 2.93
     },
     {
       "pass": "pass_rvtt_replay_unroll",
-      "upside": 2.93,
-      "breadth": 1.04,
+      "upside": 2.92,
+      "breadth": 1.05,
       "mechanism": "enables_downstream",
-      "mechanism_conf": 0.36,
+      "mechanism_conf": 0.39,
       "evidence": "structural",
-      "evidence_conf": 0.33,
-      "readiness": 1.44,
+      "evidence_conf": 0.38,
+      "readiness": 1.42,
       "always_on": false,
-      "opportunity": 2.74
+      "opportunity": 2.76
     },
     {
       "pass": "pass_rvtt_launch_flatten",
-      "upside": 2.84,
-      "breadth": 1.06,
+      "upside": 2.83,
+      "breadth": 1.04,
       "mechanism": "enables_downstream",
-      "mechanism_conf": 0.61,
+      "mechanism_conf": 0.63,
       "evidence": "structural",
       "evidence_conf": 0.42,
-      "readiness": 1.45,
+      "readiness": 1.48,
       "always_on": false,
-      "opportunity": 2.71
+      "opportunity": 2.65
     },
     {
       "pass": "pass_rvtt_immload_combine",
-      "upside": 1.36,
-      "breadth": 1.94,
+      "upside": 1.33,
+      "breadth": 1.93,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 1.0,
       "evidence": "none",
-      "evidence_conf": 0.63,
-      "readiness": 1.3,
+      "evidence_conf": 0.62,
+      "readiness": 1.15,
       "always_on": true,
-      "opportunity": 2.64
-    },
-    {
-      "pass": "pass_rvtt_macro_planner",
-      "upside": 2.43,
-      "breadth": 1.69,
-      "mechanism": "replay_compression",
-      "mechanism_conf": 0.42,
-      "evidence": "simulator",
-      "evidence_conf": 0.77,
-      "readiness": 1.76,
-      "always_on": false,
-      "opportunity": 2.46
-    },
-    {
-      "pass": "pass_rvtt_rmext",
-      "upside": 1.31,
-      "breadth": 1.74,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "none",
-      "evidence_conf": 0.53,
-      "readiness": 0.77,
-      "always_on": true,
-      "opportunity": 2.28
+      "opportunity": 2.57
     },
     {
       "pass": "pass_rvtt_noval_elide",
-      "upside": 1.12,
-      "breadth": 2.01,
+      "upside": 1.15,
+      "breadth": 2.15,
       "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.89,
+      "mechanism_conf": 0.88,
       "evidence": "none",
-      "evidence_conf": 0.62,
-      "readiness": 0.81,
+      "evidence_conf": 0.69,
+      "readiness": 0.91,
       "always_on": true,
-      "opportunity": 2.25
+      "opportunity": 2.47
+    },
+    {
+      "pass": "pass_rvtt_rmext",
+      "upside": 1.38,
+      "breadth": 1.76,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 0.4,
+      "readiness": 0.91,
+      "always_on": true,
+      "opportunity": 2.43
     },
     {
       "pass": "pass_rvtt_lp_schedule_prera",
-      "upside": 1.95,
-      "breadth": 1.27,
+      "upside": 1.92,
+      "breadth": 1.23,
       "mechanism": "register_pressure",
-      "mechanism_conf": 0.37,
-      "evidence": "structural",
-      "evidence_conf": 0.28,
-      "readiness": 1.63,
+      "mechanism_conf": 0.39,
+      "evidence": "none",
+      "evidence_conf": 0.26,
+      "readiness": 1.66,
       "always_on": false,
-      "opportunity": 2.23
+      "opportunity": 2.36
     },
     {
-      "pass": "pass_rvtt_check_early",
-      "upside": 0.84,
-      "breadth": 2.61,
-      "mechanism": "correctness_only",
-      "mechanism_conf": 0.72,
+      "pass": "pass_rvtt_macro_planner",
+      "upside": 2.37,
+      "breadth": 1.61,
+      "mechanism": "replay_compression",
+      "mechanism_conf": 0.56,
+      "evidence": "simulator",
+      "evidence_conf": 0.78,
+      "readiness": 1.77,
+      "always_on": false,
+      "opportunity": 2.29
+    },
+    {
+      "pass": "pass_rvtt_attrib",
+      "upside": 1.02,
+      "breadth": 2.17,
+      "mechanism": "enables_downstream",
+      "mechanism_conf": 0.93,
       "evidence": "none",
       "evidence_conf": 0.99,
-      "readiness": 0.74,
-      "always_on": true,
-      "opportunity": 2.19
+      "readiness": 0.36,
+      "always_on": null,
+      "opportunity": 2.21
+    },
+    {
+      "pass": "pass_rvtt_dst_interleave",
+      "upside": 2.01,
+      "breadth": 1.08,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.72,
+      "evidence": "none",
+      "evidence_conf": 0.7,
+      "readiness": 1.24,
+      "always_on": false,
+      "opportunity": 2.17
     },
     {
       "pass": "pass_rvtt_dst_iteration",
       "upside": 1.95,
-      "breadth": 1.09,
+      "breadth": 1.11,
       "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.93,
-      "evidence": "none",
-      "evidence_conf": 0.63,
-      "readiness": 1.3,
-      "always_on": false,
-      "opportunity": 2.13
-    },
-    {
-      "pass": "pass_rvtt_dst_interleave",
-      "upside": 1.98,
-      "breadth": 1.05,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.66,
+      "mechanism_conf": 0.9,
       "evidence": "none",
       "evidence_conf": 0.66,
       "readiness": 1.28,
       "always_on": false,
-      "opportunity": 2.08
+      "opportunity": 2.16
     },
     {
-      "pass": "pass_rvtt_attrib",
-      "upside": 1.0,
-      "breadth": 2.05,
-      "mechanism": "enables_downstream",
-      "mechanism_conf": 0.93,
-      "evidence": "none",
-      "evidence_conf": 0.99,
-      "readiness": 0.35,
-      "always_on": null,
-      "opportunity": 2.05
-    },
-    {
-      "pass": "pass_rvtt_check_late",
+      "pass": "pass_rvtt_check_early",
       "upside": 0.79,
-      "breadth": 2.51,
+      "breadth": 2.61,
       "mechanism": "correctness_only",
-      "mechanism_conf": 0.8,
+      "mechanism_conf": 0.76,
       "evidence": "none",
       "evidence_conf": 0.99,
-      "readiness": 0.75,
+      "readiness": 0.82,
       "always_on": true,
-      "opportunity": 1.98
-    },
-    {
-      "pass": "pass_rvtt_dst_ownership",
-      "upside": 1.48,
-      "breadth": 1.23,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.99,
-      "evidence": "none",
-      "evidence_conf": 0.51,
-      "readiness": 1.79,
-      "always_on": true,
-      "opportunity": 1.82
-    },
-    {
-      "pass": "pass_rvtt_crosslane",
-      "upside": 1.98,
-      "breadth": 0.96,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "structural",
-      "evidence_conf": 0.53,
-      "readiness": 1.67,
-      "always_on": false,
-      "opportunity": 1.71
-    },
-    {
-      "pass": "pass_rvtt_crossloop",
-      "upside": 1.89,
-      "breadth": 0.89,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "none",
-      "evidence_conf": 0.81,
-      "readiness": 1.41,
-      "always_on": false,
-      "opportunity": 1.68
-    },
-    {
-      "pass": "pass_rvtt_reprprop",
-      "upside": 1.73,
-      "breadth": 0.9,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "none",
-      "evidence_conf": 0.34,
-      "readiness": 1.35,
-      "always_on": false,
-      "opportunity": 1.56
-    },
-    {
-      "pass": "pass_rvtt_prgm_const",
-      "upside": 1.75,
-      "breadth": 0.97,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.61,
-      "evidence": "structural",
-      "evidence_conf": 0.48,
-      "readiness": 1.58,
-      "always_on": false,
-      "opportunity": 1.53
-    },
-    {
-      "pass": "pass_rvtt_round_interleave",
-      "upside": 2.3,
-      "breadth": 0.74,
-      "mechanism": "latency_hiding",
-      "mechanism_conf": 0.84,
-      "evidence": "structural",
-      "evidence_conf": 0.41,
-      "readiness": 1.36,
-      "always_on": false,
-      "opportunity": 1.53
-    },
-    {
-      "pass": "pass_rvtt_int_abs",
-      "upside": 1.86,
-      "breadth": 0.85,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "structural",
-      "evidence_conf": 0.92,
-      "readiness": 1.69,
-      "always_on": false,
-      "opportunity": 1.42
-    },
-    {
-      "pass": "pass_rvtt_reassoc",
-      "upside": 2.08,
-      "breadth": 1.13,
-      "mechanism": "latency_hiding",
-      "mechanism_conf": 0.83,
-      "evidence": "simulator",
-      "evidence_conf": 0.41,
-      "readiness": 1.33,
-      "always_on": false,
-      "opportunity": 1.41
-    },
-    {
-      "pass": "pass_rvtt_crosscall",
-      "upside": 1.92,
-      "breadth": 0.7,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "none",
-      "evidence_conf": 0.72,
-      "readiness": 1.44,
-      "always_on": false,
-      "opportunity": 1.34
-    },
-    {
-      "pass": "pass_rvtt_unspec_prop_ssa",
-      "upside": 0.66,
-      "breadth": 1.75,
-      "mechanism": "enables_downstream",
-      "mechanism_conf": 0.67,
-      "evidence": "none",
-      "evidence_conf": 0.97,
-      "readiness": 1.06,
-      "always_on": true,
-      "opportunity": 1.16
-    },
-    {
-      "pass": "pass_rvtt_mop_form",
-      "upside": 2.73,
-      "breadth": 0.69,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.73,
-      "evidence": "simulator",
-      "evidence_conf": 0.35,
-      "readiness": 1.79,
-      "always_on": false,
-      "opportunity": 1.13
-    },
-    {
-      "pass": "pass_rvtt_invariant",
-      "upside": 2.48,
-      "breadth": 1.71,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.95,
-      "evidence": "silicon_ab",
-      "evidence_conf": 0.19,
-      "readiness": 2.01,
-      "always_on": false,
-      "opportunity": 1.06
-    },
-    {
-      "pass": "pass_rvtt_dst_autoincr",
-      "upside": 2.02,
-      "breadth": 2.0,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "silicon_ab",
-      "evidence_conf": 0.96,
-      "readiness": 2.02,
-      "always_on": false,
-      "opportunity": 1.01
-    },
-    {
-      "pass": "pass_rvtt_int_not",
-      "upside": 1.21,
-      "breadth": 0.92,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "structural",
-      "evidence_conf": 0.89,
-      "readiness": 1.75,
-      "always_on": false,
-      "opportunity": 1.0
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule",
-      "upside": 1.79,
-      "breadth": 0.53,
-      "mechanism": "register_pressure",
-      "mechanism_conf": 0.66,
-      "evidence": "structural",
-      "evidence_conf": 0.49,
-      "readiness": 1.4,
-      "always_on": false,
-      "opportunity": 0.85
+      "opportunity": 2.06
     },
     {
       "pass": "pass_rvtt_delivery_shape",
-      "upside": 2.49,
-      "breadth": 1.22,
+      "upside": 2.5,
+      "breadth": 1.32,
       "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.96,
-      "evidence": "silicon_ab",
-      "evidence_conf": 0.29,
-      "readiness": 1.73,
+      "mechanism_conf": 0.94,
+      "evidence": "simulator",
+      "evidence_conf": 0.32,
+      "readiness": 1.74,
       "always_on": false,
-      "opportunity": 0.76
-    },
-    {
-      "pass": "pass_rvtt_lreg_livein",
-      "upside": 0.31,
-      "breadth": 2.2,
-      "mechanism": "enables_downstream",
-      "mechanism_conf": 0.35,
-      "evidence": "none",
-      "evidence_conf": 0.97,
-      "readiness": 0.88,
-      "always_on": true,
-      "opportunity": 0.68
-    },
-    {
-      "pass": "pass_rvtt_transp_involution",
-      "upside": 2.02,
-      "breadth": 0.32,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 0.96,
-      "evidence": "none",
-      "evidence_conf": 0.49,
-      "readiness": 1.5,
-      "always_on": false,
-      "opportunity": 0.65
-    },
-    {
-      "pass": "pass_rvtt_ccmask",
-      "upside": 1.97,
-      "breadth": 1.14,
-      "mechanism": "fewer_delivered_words",
-      "mechanism_conf": 1.0,
-      "evidence": "silicon_ab",
-      "evidence_conf": 0.19,
-      "readiness": 1.87,
-      "always_on": false,
-      "opportunity": 0.56
+      "opportunity": 1.98
     },
     {
       "pass": "pass_rvtt_lut_select",
       "upside": 2.22,
-      "breadth": 0.84,
+      "breadth": 0.88,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 0.12,
+      "readiness": 1.96,
+      "always_on": true,
+      "opportunity": 1.95
+    },
+    {
+      "pass": "pass_rvtt_check_late",
+      "upside": 0.73,
+      "breadth": 2.53,
+      "mechanism": "correctness_only",
+      "mechanism_conf": 0.8,
+      "evidence": "none",
+      "evidence_conf": 0.99,
+      "readiness": 0.79,
+      "always_on": true,
+      "opportunity": 1.85
+    },
+    {
+      "pass": "pass_rvtt_crossloop",
+      "upside": 1.86,
+      "breadth": 0.95,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 0.73,
+      "readiness": 1.43,
+      "always_on": false,
+      "opportunity": 1.77
+    },
+    {
+      "pass": "pass_rvtt_crosslane",
+      "upside": 1.96,
+      "breadth": 1.0,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "structural",
+      "evidence_conf": 0.51,
+      "readiness": 1.67,
+      "always_on": false,
+      "opportunity": 1.76
+    },
+    {
+      "pass": "pass_rvtt_dst_ownership",
+      "upside": 1.49,
+      "breadth": 1.15,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.99,
+      "evidence": "none",
+      "evidence_conf": 0.46,
+      "readiness": 1.8,
+      "always_on": true,
+      "opportunity": 1.71
+    },
+    {
+      "pass": "pass_rvtt_reprprop",
+      "upside": 1.71,
+      "breadth": 0.93,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 0.36,
+      "readiness": 1.37,
+      "always_on": false,
+      "opportunity": 1.59
+    },
+    {
+      "pass": "pass_rvtt_prgm_const",
+      "upside": 1.76,
+      "breadth": 1.0,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.63,
+      "evidence": "structural",
+      "evidence_conf": 0.49,
+      "readiness": 1.46,
+      "always_on": false,
+      "opportunity": 1.58
+    },
+    {
+      "pass": "pass_rvtt_reassoc",
+      "upside": 2.11,
+      "breadth": 1.22,
+      "mechanism": "latency_hiding",
+      "mechanism_conf": 0.85,
+      "evidence": "simulator",
+      "evidence_conf": 0.41,
+      "readiness": 1.31,
+      "always_on": false,
+      "opportunity": 1.54
+    },
+    {
+      "pass": "pass_rvtt_round_interleave",
+      "upside": 2.27,
+      "breadth": 0.73,
+      "mechanism": "latency_hiding",
+      "mechanism_conf": 0.84,
+      "evidence": "structural",
+      "evidence_conf": 0.39,
+      "readiness": 1.37,
+      "always_on": false,
+      "opportunity": 1.49
+    },
+    {
+      "pass": "pass_rvtt_int_abs",
+      "upside": 1.85,
+      "breadth": 0.86,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "structural",
+      "evidence_conf": 0.92,
+      "readiness": 1.6,
+      "always_on": false,
+      "opportunity": 1.43
+    },
+    {
+      "pass": "pass_rvtt_crosscall",
+      "upside": 1.88,
+      "breadth": 0.73,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 0.78,
+      "readiness": 1.44,
+      "always_on": false,
+      "opportunity": 1.37
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_ssa",
+      "upside": 0.72,
+      "breadth": 1.85,
+      "mechanism": "enables_downstream",
+      "mechanism_conf": 0.64,
+      "evidence": "none",
+      "evidence_conf": 0.97,
+      "readiness": 0.93,
+      "always_on": true,
+      "opportunity": 1.33
+    },
+    {
+      "pass": "pass_rvtt_mop_form",
+      "upside": 2.74,
+      "breadth": 0.7,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.77,
+      "evidence": "simulator",
+      "evidence_conf": 0.31,
+      "readiness": 1.79,
+      "always_on": false,
+      "opportunity": 1.15
+    },
+    {
+      "pass": "pass_rvtt_invariant",
+      "upside": 2.43,
+      "breadth": 1.69,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.97,
+      "evidence": "silicon_ab",
+      "evidence_conf": 0.23,
+      "readiness": 2.04,
+      "always_on": false,
+      "opportunity": 1.03
+    },
+    {
+      "pass": "pass_rvtt_dst_autoincr",
+      "upside": 2.0,
+      "breadth": 1.98,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 1.0,
       "evidence": "silicon_ab",
-      "evidence_conf": 0.23,
-      "readiness": 1.89,
+      "evidence_conf": 0.97,
+      "readiness": 2.04,
+      "always_on": false,
+      "opportunity": 0.99
+    },
+    {
+      "pass": "pass_rvtt_int_not",
+      "upside": 1.18,
+      "breadth": 0.93,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "structural",
+      "evidence_conf": 0.94,
+      "readiness": 1.75,
+      "always_on": false,
+      "opportunity": 0.99
+    },
+    {
+      "pass": "pass_rvtt_lp_schedule",
+      "upside": 1.8,
+      "breadth": 0.58,
+      "mechanism": "register_pressure",
+      "mechanism_conf": 0.63,
+      "evidence": "structural",
+      "evidence_conf": 0.35,
+      "readiness": 1.45,
+      "always_on": false,
+      "opportunity": 0.94
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "upside": 0.39,
+      "breadth": 2.29,
+      "mechanism": "enables_downstream",
+      "mechanism_conf": 0.37,
+      "evidence": "none",
+      "evidence_conf": 0.98,
+      "readiness": 0.85,
       "always_on": true,
-      "opportunity": 0.47
+      "opportunity": 0.89
+    },
+    {
+      "pass": "pass_rvtt_transp_involution",
+      "upside": 2.05,
+      "breadth": 0.34,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 0.96,
+      "evidence": "none",
+      "evidence_conf": 0.52,
+      "readiness": 1.51,
+      "always_on": false,
+      "opportunity": 0.7
+    },
+    {
+      "pass": "pass_rvtt_ccmask",
+      "upside": 1.95,
+      "breadth": 1.14,
+      "mechanism": "fewer_delivered_words",
+      "mechanism_conf": 1.0,
+      "evidence": "silicon_ab",
+      "evidence_conf": 0.25,
+      "readiness": 1.98,
+      "always_on": false,
+      "opportunity": 0.56
     },
     {
       "pass": "pass_rvtt_lreg_rename_chains",
-      "upside": 1.2,
-      "breadth": 1.41,
+      "upside": 1.06,
+      "breadth": 1.45,
       "mechanism": "enables_downstream",
-      "mechanism_conf": 0.69,
+      "mechanism_conf": 0.67,
       "evidence": "silicon_ab",
-      "evidence_conf": 0.71,
-      "readiness": 1.9,
+      "evidence_conf": 0.74,
+      "readiness": 1.95,
       "always_on": false,
-      "opportunity": 0.42
-    },
-    {
-      "pass": "pass_rvtt_fix_raw",
-      "upside": 0.21,
-      "breadth": 1.89,
-      "mechanism": "correctness_only",
-      "mechanism_conf": 1.0,
-      "evidence": "none",
-      "evidence_conf": 1.0,
-      "readiness": 1.16,
-      "always_on": true,
-      "opportunity": 0.4
+      "opportunity": 0.38
     },
     {
       "pass": "pass_rvtt_store_fold",
-      "upside": 1.47,
+      "upside": 1.45,
       "breadth": 1.01,
       "mechanism": "fewer_delivered_words",
       "mechanism_conf": 1.0,
       "evidence": "silicon_ab",
-      "evidence_conf": 0.89,
-      "readiness": 1.74,
+      "evidence_conf": 0.9,
+      "readiness": 1.78,
       "always_on": false,
       "opportunity": 0.37
     },
     {
+      "pass": "pass_rvtt_fix_raw",
+      "upside": 0.17,
+      "breadth": 1.91,
+      "mechanism": "correctness_only",
+      "mechanism_conf": 1.0,
+      "evidence": "none",
+      "evidence_conf": 1.0,
+      "readiness": 1.2,
+      "always_on": true,
+      "opportunity": 0.32
+    },
+    {
       "pass": "pass_rvtt_spill_diag",
-      "upside": 0.18,
-      "breadth": 1.19,
+      "upside": 0.16,
+      "breadth": 1.13,
       "mechanism": "correctness_only",
       "mechanism_conf": 0.95,
       "evidence": "none",
       "evidence_conf": 0.97,
-      "readiness": 1.62,
+      "readiness": 1.65,
       "always_on": true,
-      "opportunity": 0.21
+      "opportunity": 0.18
     },
     {
       "pass": "pass_rvtt_fix_ebreak",
       "upside": 0.24,
-      "breadth": 0.51,
+      "breadth": 0.55,
       "mechanism": "correctness_only",
       "mechanism_conf": 0.96,
       "evidence": "none",
       "evidence_conf": 1.0,
-      "readiness": 0.4,
+      "readiness": 0.38,
       "always_on": true,
-      "opportunity": 0.12
+      "opportunity": 0.13
     },
     {
       "pass": "pass_rvtt_crosslane_window",
-      "upside": 0.08,
-      "breadth": 1.21,
+      "upside": 0.06,
+      "breadth": 1.27,
       "mechanism": "correctness_only",
-      "mechanism_conf": 0.91,
+      "mechanism_conf": 0.93,
       "evidence": "none",
       "evidence_conf": 0.99,
-      "readiness": 1.39,
+      "readiness": 1.38,
       "always_on": false,
-      "opportunity": 0.1
+      "opportunity": 0.08
     }
   ],
   "priority": [
     "pass_rvtt_check_early",
     "pass_rvtt_check_late",
-    "pass_rvtt_rmext",
     "pass_rvtt_fix_ebreak",
     "pass_rvtt_live",
+    "pass_rvtt_rmext",
+    "pass_rvtt_unspec_prop_ssa",
     "pass_rvtt_synth_renumber",
     "pass_rvtt_expand",
-    "pass_rvtt_unspec_prop_ssa",
-    "pass_rvtt_synth_split",
-    "pass_rvtt_cc",
     "pass_rvtt_fix_raw",
     "pass_rvtt_noval_elide",
+    "pass_rvtt_synth_split",
     "pass_rvtt_synth_cse",
+    "pass_rvtt_cc",
     "pass_rvtt_synth_opcode",
     "pass_rvtt_unspec_prop_rtl",
     "pass_rvtt_immvar_expand",
-    "pass_rvtt_dce",
     "pass_rvtt_combine",
-    "pass_rvtt_immload_combine",
     "pass_rvtt_immload_shorten",
-    "pass_rvtt_lreg_livein",
-    "pass_rvtt_attrib",
+    "pass_rvtt_dce",
+    "pass_rvtt_immload_combine",
     "pass_rvtt_replay",
+    "pass_rvtt_attrib",
+    "pass_rvtt_lreg_livein",
     "pass_rvtt_lut_select",
     "pass_rvtt_schedule",
     "pass_rvtt_dst_ownership",
@@ -2149,195 +2112,213 @@
     "pass_rvtt_dst_iteration",
     "pass_rvtt_reassoc",
     "pass_rvtt_round_interleave",
-    "pass_rvtt_lp_schedule",
+    "pass_rvtt_int_abs",
     "pass_rvtt_mop_form",
     "pass_rvtt_transp_involution",
-    "pass_rvtt_int_abs",
-    "pass_rvtt_invariant",
     "pass_rvtt_dst_autoincr",
-    "pass_rvtt_launch_flatten",
+    "pass_rvtt_invariant",
+    "pass_rvtt_lp_schedule",
     "pass_rvtt_lreg_rename_chains",
+    "pass_rvtt_macro_planner",
     "pass_rvtt_prgm_const",
     "pass_rvtt_replay_reform",
-    "pass_rvtt_replay_unroll",
     "pass_rvtt_reprprop",
     "pass_rvtt_store_fold",
     "pass_rvtt_crosscall",
     "pass_rvtt_crosslane",
     "pass_rvtt_crossloop",
     "pass_rvtt_lp_alloc",
-    "pass_rvtt_macro_planner",
+    "pass_rvtt_replay_unroll",
     "pass_rvtt_ccmask",
     "pass_rvtt_int_not",
+    "pass_rvtt_launch_flatten",
     "pass_rvtt_lp_schedule_prera",
     "pass_rvtt_delivery_shape",
     "pass_rvtt_crosslane_window"
   ],
   "unresolved": [
     {
-      "pass": "pass_rvtt_attrib",
-      "question": "mutation_before_validation",
-      "confidence": 0.0,
-      "answer": 1.02
-    },
-    {
       "pass": "pass_rvtt_cc",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.62
+      "answer": 1.51
     },
     {
       "pass": "pass_rvtt_check_early",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.63
+      "answer": 1.49
     },
     {
       "pass": "pass_rvtt_check_late",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.58
+      "answer": 1.6
     },
     {
       "pass": "pass_rvtt_crosslane",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.0
+      "answer": 1.1
     },
     {
       "pass": "pass_rvtt_crosslane_window",
       "question": "contract_precision",
       "confidence": 0.0,
-      "answer": 1.2
+      "answer": 1.26
     },
     {
       "pass": "pass_rvtt_dce",
       "question": "silent_drop_risk",
       "confidence": 0.0,
-      "answer": 1.25
+      "answer": 1.34
+    },
+    {
+      "pass": "pass_rvtt_dst_interleave",
+      "question": "mutation_before_validation",
+      "confidence": 0.0,
+      "answer": 1.13
     },
     {
       "pass": "pass_rvtt_fix_ebreak",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.41
+      "answer": 1.32
     },
     {
       "pass": "pass_rvtt_fix_ebreak",
       "question": "ordering_fragility",
       "confidence": 0.0,
-      "answer": 1.87
-    },
-    {
-      "pass": "pass_rvtt_fix_raw",
-      "question": "mutation_before_validation",
-      "confidence": 0.0,
-      "answer": 1.16
+      "answer": 1.74
     },
     {
       "pass": "pass_rvtt_fix_raw",
       "question": "silent_drop_risk",
       "confidence": 0.0,
-      "answer": 1.16
+      "answer": 1.22
     },
     {
-      "pass": "pass_rvtt_immload_shorten",
+      "pass": "pass_rvtt_immload_combine",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.47
+      "answer": 1.18
     },
     {
       "pass": "pass_rvtt_immvar_expand",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.58
+      "answer": 1.53
     },
     {
       "pass": "pass_rvtt_live",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.59
+      "answer": 1.62
     },
     {
       "pass": "pass_rvtt_lp_schedule",
       "question": "perf_upside",
       "confidence": 0.0,
-      "answer": 1.79
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule_prera",
-      "question": "silent_drop_risk",
-      "confidence": 0.0,
-      "answer": 1.05
-    },
-    {
-      "pass": "pass_rvtt_lreg_livein",
-      "question": "mutation_before_validation",
-      "confidence": 0.0,
-      "answer": 1.01
+      "answer": 1.8
     },
     {
       "pass": "pass_rvtt_noval_elide",
       "question": "silent_drop_risk",
       "confidence": 0.0,
-      "answer": 1.32
+      "answer": 1.29
     },
     {
-      "pass": "pass_rvtt_replay_unroll",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_replay_reform",
+      "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.06
+      "answer": 1.24
+    },
+    {
+      "pass": "pass_rvtt_schedule",
+      "question": "mutation_before_validation",
+      "confidence": 0.0,
+      "answer": 1.19
     },
     {
       "pass": "pass_rvtt_synth_cse",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.36
+      "answer": 1.44
     },
     {
       "pass": "pass_rvtt_synth_opcode",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.14
+      "answer": 1.07
     },
     {
       "pass": "pass_rvtt_synth_opcode",
       "question": "silent_drop_risk",
       "confidence": 0.0,
-      "answer": 1.12
+      "answer": 1.08
     },
     {
       "pass": "pass_rvtt_synth_renumber",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.63
+      "answer": 1.67
     },
     {
       "pass": "pass_rvtt_synth_split",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.43
-    },
-    {
-      "pass": "pass_rvtt_unspec_prop_rtl",
-      "question": "mutation_before_validation",
-      "confidence": 0.0,
-      "answer": 1.02
+      "answer": 1.4
     },
     {
       "pass": "pass_rvtt_unspec_prop_ssa",
       "question": "mutation_before_validation",
       "confidence": 0.0,
-      "answer": 1.54
+      "answer": 1.61
     },
     {
-      "pass": "pass_rvtt_replay_reform",
+      "pass": "pass_rvtt_fix_raw",
+      "question": "mutation_before_validation",
+      "confidence": 0.01,
+      "answer": 0.99
+    },
+    {
+      "pass": "pass_rvtt_immload_shorten",
+      "question": "mutation_before_validation",
+      "confidence": 0.01,
+      "answer": 1.45
+    },
+    {
+      "pass": "pass_rvtt_live",
+      "question": "ordering_fragility",
+      "confidence": 0.01,
+      "answer": 2.01
+    },
+    {
+      "pass": "pass_rvtt_attrib",
       "question": "mutation_before_validation",
       "confidence": 0.02,
-      "answer": 1.29
+      "answer": 0.98
     },
     {
-      "pass": "pass_rvtt_dst_interleave",
+      "pass": "pass_rvtt_replay_unroll",
+      "question": "silent_drop_risk",
+      "confidence": 0.02,
+      "answer": 0.98
+    },
+    {
+      "pass": "pass_rvtt_int_abs",
+      "question": "silent_drop_risk",
+      "confidence": 0.03,
+      "answer": 0.97
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "question": "mutation_before_validation",
+      "confidence": 0.03,
+      "answer": 0.97
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_rtl",
       "question": "mutation_before_validation",
       "confidence": 0.03,
       "answer": 0.97
@@ -2349,106 +2330,118 @@
       "answer": 0.96
     },
     {
-      "pass": "pass_rvtt_immload_combine",
-      "question": "mutation_before_validation",
-      "confidence": 0.04,
-      "answer": 1.29
-    },
-    {
-      "pass": "pass_rvtt_transp_involution",
+      "pass": "pass_rvtt_dce",
       "question": "mutation_before_validation",
       "confidence": 0.04,
       "answer": 0.96
     },
     {
-      "pass": "pass_rvtt_unspec_prop_ssa",
-      "question": "default_on_readiness",
-      "confidence": 0.05,
-      "answer": 1.06
+      "pass": "pass_rvtt_launch_flatten",
+      "question": "silent_drop_risk",
+      "confidence": 0.04,
+      "answer": 0.96
     },
     {
-      "pass": "pass_rvtt_store_fold",
+      "pass": "pass_rvtt_macro_planner",
+      "question": "test_adequacy",
+      "confidence": 0.05,
+      "answer": 2.05
+    },
+    {
+      "pass": "pass_rvtt_transp_involution",
+      "question": "mutation_before_validation",
+      "confidence": 0.05,
+      "answer": 0.95
+    },
+    {
+      "pass": "pass_rvtt_dst_autoincr",
       "question": "silent_drop_risk",
       "confidence": 0.06,
       "answer": 0.94
     },
     {
-      "pass": "pass_rvtt_int_abs",
+      "pass": "pass_rvtt_lp_schedule_prera",
       "question": "silent_drop_risk",
-      "confidence": 0.08,
-      "answer": 0.92
+      "confidence": 0.06,
+      "answer": 1.11
     },
     {
-      "pass": "pass_rvtt_lp_schedule",
-      "question": "ordering_fragility",
-      "confidence": 0.08,
-      "answer": 1.42
-    },
-    {
-      "pass": "pass_rvtt_dce",
+      "pass": "pass_rvtt_rmext",
       "question": "mutation_before_validation",
+      "confidence": 0.06,
+      "answer": 0.94
+    },
+    {
+      "pass": "pass_rvtt_store_fold",
+      "question": "silent_drop_risk",
+      "confidence": 0.07,
+      "answer": 0.93
+    },
+    {
+      "pass": "pass_rvtt_rmext",
+      "question": "default_on_readiness",
       "confidence": 0.09,
       "answer": 0.91
     },
     {
+      "pass": "pass_rvtt_expand",
+      "question": "mutation_before_validation",
+      "confidence": 0.11,
+      "answer": 2.11
+    },
+    {
+      "pass": "pass_rvtt_lut_select",
+      "question": "silent_drop_risk",
+      "confidence": 0.11,
+      "answer": 1.18
+    },
+    {
       "pass": "pass_rvtt_replay",
-      "question": "silent_drop_risk",
-      "confidence": 0.09,
-      "answer": 1.29
-    },
-    {
-      "pass": "pass_rvtt_cc",
-      "question": "silent_drop_risk",
-      "confidence": 0.1,
-      "answer": 0.9
-    },
-    {
-      "pass": "pass_rvtt_fix_raw",
-      "question": "default_on_readiness",
-      "confidence": 0.1,
-      "answer": 1.16
-    },
-    {
-      "pass": "pass_rvtt_launch_flatten",
-      "question": "silent_drop_risk",
+      "question": "mutation_before_validation",
       "confidence": 0.11,
-      "answer": 0.89
+      "answer": 1.4
     },
     {
-      "pass": "pass_rvtt_round_interleave",
-      "question": "silent_drop_risk",
-      "confidence": 0.11,
-      "answer": 0.89
-    },
-    {
-      "pass": "pass_rvtt_ccmask",
-      "question": "silent_drop_risk",
-      "confidence": 0.12,
-      "answer": 1.15
-    },
-    {
-      "pass": "pass_rvtt_dst_autoincr",
+      "pass": "pass_rvtt_delivery_shape",
       "question": "silent_drop_risk",
       "confidence": 0.12,
       "answer": 0.88
     },
     {
-      "pass": "pass_rvtt_delivery_shape",
+      "pass": "pass_rvtt_lut_select",
+      "question": "measurement_evidence",
+      "confidence": 0.12,
+      "answer": "none"
+    },
+    {
+      "pass": "pass_rvtt_mop_form",
+      "question": "mutation_before_validation",
+      "confidence": 0.12,
+      "answer": 0.88
+    },
+    {
+      "pass": "pass_rvtt_replay_reform",
       "question": "silent_drop_risk",
+      "confidence": 0.12,
+      "answer": 1.32
+    },
+    {
+      "pass": "pass_rvtt_delivery_shape",
+      "question": "contract_precision",
       "confidence": 0.13,
       "answer": 0.87
     },
     {
-      "pass": "pass_rvtt_dst_iteration",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_lp_schedule",
+      "question": "ordering_fragility",
       "confidence": 0.13,
-      "answer": 0.87
+      "answer": 1.41
     },
     {
-      "pass": "pass_rvtt_schedule",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_spill_diag",
+      "question": "review_priority",
       "confidence": 0.13,
-      "answer": 0.87
+      "answer": 1.36
     },
     {
       "pass": "pass_rvtt_store_fold",
@@ -2457,388 +2450,382 @@
       "answer": 0.87
     },
     {
-      "pass": "pass_rvtt_lut_select",
+      "pass": "pass_rvtt_cc",
       "question": "silent_drop_risk",
       "confidence": 0.14,
-      "answer": 1.19
-    },
-    {
-      "pass": "pass_rvtt_replay_reform",
-      "question": "silent_drop_risk",
-      "confidence": 0.14,
-      "answer": 1.37
-    },
-    {
-      "pass": "pass_rvtt_prgm_const",
-      "question": "silent_drop_risk",
-      "confidence": 0.15,
-      "answer": 0.85
-    },
-    {
-      "pass": "pass_rvtt_check_early",
-      "question": "perf_upside",
-      "confidence": 0.16,
-      "answer": 0.84
-    },
-    {
-      "pass": "pass_rvtt_replay",
-      "question": "mutation_before_validation",
-      "confidence": 0.16,
-      "answer": 1.42
+      "answer": 0.86
     },
     {
       "pass": "pass_rvtt_lp_alloc",
       "question": "perf_upside",
+      "confidence": 0.15,
+      "answer": 2.15
+    },
+    {
+      "pass": "pass_rvtt_replay",
+      "question": "silent_drop_risk",
+      "confidence": 0.15,
+      "answer": 1.37
+    },
+    {
+      "pass": "pass_rvtt_fix_raw",
+      "question": "default_on_readiness",
       "confidence": 0.17,
-      "answer": 2.17
-    },
-    {
-      "pass": "pass_rvtt_crosslane_window",
-      "question": "ordering_fragility",
-      "confidence": 0.18,
-      "answer": 1.64
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "question": "transactional_commit",
-      "confidence": 0.18,
-      "answer": "transactional"
-    },
-    {
-      "pass": "pass_rvtt_ccmask",
-      "question": "measurement_evidence",
-      "confidence": 0.19,
-      "answer": "silicon_ab"
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "question": "contract_precision",
-      "confidence": 0.19,
       "answer": 1.2
     },
     {
-      "pass": "pass_rvtt_invariant",
-      "question": "measurement_evidence",
-      "confidence": 0.19,
-      "answer": "silicon_ab"
+      "pass": "pass_rvtt_round_interleave",
+      "question": "silent_drop_risk",
+      "confidence": 0.17,
+      "answer": 0.83
     },
     {
-      "pass": "pass_rvtt_macro_planner",
-      "question": "test_adequacy",
-      "confidence": 0.19,
-      "answer": 2.19
+      "pass": "pass_rvtt_check_early",
+      "question": "default_on_readiness",
+      "confidence": 0.18,
+      "answer": 0.82
     },
     {
-      "pass": "pass_rvtt_lreg_livein",
-      "question": "applicability_breadth",
+      "pass": "pass_rvtt_dst_autoincr",
+      "question": "mutation_before_validation",
+      "confidence": 0.18,
+      "answer": 0.82
+    },
+    {
+      "pass": "pass_rvtt_dst_ownership",
+      "question": "silent_drop_risk",
       "confidence": 0.2,
-      "answer": 2.2
+      "answer": 0.8
     },
     {
-      "pass": "pass_rvtt_rmext",
+      "pass": "pass_rvtt_reassoc",
       "question": "mutation_before_validation",
       "confidence": 0.2,
       "answer": 0.8
     },
     {
-      "pass": "pass_rvtt_unspec_prop_ssa",
+      "pass": "pass_rvtt_synth_cse",
       "question": "applicability_breadth",
       "confidence": 0.2,
-      "answer": 1.75
+      "answer": 2.2
     },
     {
-      "pass": "pass_rvtt_check_late",
+      "pass": "pass_rvtt_check_early",
       "question": "perf_upside",
       "confidence": 0.21,
       "answer": 0.79
     },
     {
-      "pass": "pass_rvtt_dst_ownership",
-      "question": "ordering_fragility",
-      "confidence": 0.21,
-      "answer": 1.51
-    },
-    {
-      "pass": "pass_rvtt_live",
-      "question": "ordering_fragility",
-      "confidence": 0.21,
-      "answer": 2.21
-    },
-    {
-      "pass": "pass_rvtt_schedule",
-      "question": "test_adequacy",
-      "confidence": 0.21,
-      "answer": 2.21
-    },
-    {
-      "pass": "pass_rvtt_expand",
-      "question": "silent_drop_risk",
-      "confidence": 0.22,
-      "answer": 1.46
-    },
-    {
-      "pass": "pass_rvtt_reassoc",
-      "question": "mutation_before_validation",
-      "confidence": 0.22,
-      "answer": 0.78
-    },
-    {
-      "pass": "pass_rvtt_lut_select",
-      "question": "measurement_evidence",
-      "confidence": 0.23,
-      "answer": "silicon_ab"
-    },
-    {
-      "pass": "pass_rvtt_replay_reform",
-      "question": "ordering_fragility",
-      "confidence": 0.23,
-      "answer": 1.73
-    },
-    {
-      "pass": "pass_rvtt_rmext",
-      "question": "default_on_readiness",
-      "confidence": 0.23,
-      "answer": 0.77
-    },
-    {
-      "pass": "pass_rvtt_unspec_prop_rtl",
-      "question": "applicability_breadth",
-      "confidence": 0.23,
-      "answer": 2.23
-    },
-    {
       "pass": "pass_rvtt_check_late",
       "question": "default_on_readiness",
-      "confidence": 0.25,
-      "answer": 0.75
-    },
-    {
-      "pass": "pass_rvtt_dst_ownership",
-      "question": "silent_drop_risk",
-      "confidence": 0.25,
-      "answer": 0.75
-    },
-    {
-      "pass": "pass_rvtt_int_not",
-      "question": "silent_drop_risk",
-      "confidence": 0.25,
-      "answer": 1.3
-    },
-    {
-      "pass": "pass_rvtt_lreg_rename_chains",
-      "question": "silent_drop_risk",
-      "confidence": 0.25,
-      "answer": 0.75
-    },
-    {
-      "pass": "pass_rvtt_rmext",
-      "question": "ordering_fragility",
-      "confidence": 0.25,
-      "answer": 1.81
-    },
-    {
-      "pass": "pass_rvtt_check_early",
-      "question": "default_on_readiness",
-      "confidence": 0.26,
-      "answer": 0.74
-    },
-    {
-      "pass": "pass_rvtt_fix_ebreak",
-      "question": "silent_drop_risk",
-      "confidence": 0.26,
-      "answer": 1.68
-    },
-    {
-      "pass": "pass_rvtt_mop_form",
-      "question": "mutation_before_validation",
-      "confidence": 0.26,
-      "answer": 0.74
-    },
-    {
-      "pass": "pass_rvtt_spill_diag",
-      "question": "review_priority",
-      "confidence": 0.26,
-      "answer": 1.51
-    },
-    {
-      "pass": "pass_rvtt_dst_autoincr",
-      "question": "transactional_commit",
-      "confidence": 0.27,
-      "answer": "transactional"
-    },
-    {
-      "pass": "pass_rvtt_live",
-      "question": "silent_drop_risk",
-      "confidence": 0.27,
-      "answer": 1.93
-    },
-    {
-      "pass": "pass_rvtt_crossloop",
-      "question": "transactional_commit",
-      "confidence": 0.28,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule_prera",
-      "question": "measurement_evidence",
-      "confidence": 0.28,
-      "answer": "structural"
-    },
-    {
-      "pass": "pass_rvtt_spill_diag",
-      "question": "mutation_before_validation",
-      "confidence": 0.28,
-      "answer": 0.72
-    },
-    {
-      "pass": "pass_rvtt_crossloop",
-      "question": "ordering_fragility",
-      "confidence": 0.29,
-      "answer": 1.61
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "question": "measurement_evidence",
-      "confidence": 0.29,
-      "answer": "silicon_ab"
-    },
-    {
-      "pass": "pass_rvtt_expand",
-      "question": "mutation_before_validation",
-      "confidence": 0.29,
-      "answer": 2.29
+      "confidence": 0.21,
+      "answer": 0.79
     },
     {
       "pass": "pass_rvtt_immload_shorten",
       "question": "contract_precision",
-      "confidence": 0.29,
-      "answer": 0.71
+      "confidence": 0.21,
+      "answer": 0.79
     },
     {
-      "pass": "pass_rvtt_store_fold",
-      "question": "transactional_commit",
-      "confidence": 0.29,
-      "answer": "partial_possible"
+      "pass": "pass_rvtt_replay_reform",
+      "question": "ordering_fragility",
+      "confidence": 0.21,
+      "answer": 1.76
     },
     {
-      "pass": "pass_rvtt_synth_cse",
-      "question": "evidence_strength",
-      "confidence": 0.29,
-      "answer": "analytic_argument"
+      "pass": "pass_rvtt_check_late",
+      "question": "silent_drop_risk",
+      "confidence": 0.22,
+      "answer": 2.22
     },
     {
       "pass": "pass_rvtt_combine",
       "question": "ordering_fragility",
-      "confidence": 0.3,
-      "answer": 1.9
+      "confidence": 0.22,
+      "answer": 1.77
     },
     {
-      "pass": "pass_rvtt_dst_autoincr",
+      "pass": "pass_rvtt_expand",
+      "question": "silent_drop_risk",
+      "confidence": 0.23,
+      "answer": 1.5
+    },
+    {
+      "pass": "pass_rvtt_invariant",
+      "question": "measurement_evidence",
+      "confidence": 0.23,
+      "answer": "silicon_ab"
+    },
+    {
+      "pass": "pass_rvtt_crosslane_window",
+      "question": "ordering_fragility",
+      "confidence": 0.24,
+      "answer": 1.5
+    },
+    {
+      "pass": "pass_rvtt_lreg_rename_chains",
+      "question": "silent_drop_risk",
+      "confidence": 0.24,
+      "answer": 0.76
+    },
+    {
+      "pass": "pass_rvtt_noval_elide",
       "question": "mutation_before_validation",
-      "confidence": 0.3,
-      "answer": 0.7
+      "confidence": 0.24,
+      "answer": 0.76
+    },
+    {
+      "pass": "pass_rvtt_replay",
+      "question": "test_adequacy",
+      "confidence": 0.24,
+      "answer": 2.24
+    },
+    {
+      "pass": "pass_rvtt_schedule",
+      "question": "test_adequacy",
+      "confidence": 0.24,
+      "answer": 2.24
+    },
+    {
+      "pass": "pass_rvtt_ccmask",
+      "question": "measurement_evidence",
+      "confidence": 0.25,
+      "answer": "silicon_ab"
+    },
+    {
+      "pass": "pass_rvtt_dst_iteration",
+      "question": "mutation_before_validation",
+      "confidence": 0.25,
+      "answer": 0.75
+    },
+    {
+      "pass": "pass_rvtt_check_early",
+      "question": "silent_drop_risk",
+      "confidence": 0.26,
+      "answer": 2.26
+    },
+    {
+      "pass": "pass_rvtt_fix_raw",
+      "question": "ordering_fragility",
+      "confidence": 0.26,
+      "answer": 2.26
+    },
+    {
+      "pass": "pass_rvtt_lp_schedule_prera",
+      "question": "measurement_evidence",
+      "confidence": 0.26,
+      "answer": "none"
+    },
+    {
+      "pass": "pass_rvtt_schedule",
+      "question": "silent_drop_risk",
+      "confidence": 0.26,
+      "answer": 0.74
+    },
+    {
+      "pass": "pass_rvtt_ccmask",
+      "question": "silent_drop_risk",
+      "confidence": 0.27,
+      "answer": 1.3
+    },
+    {
+      "pass": "pass_rvtt_check_late",
+      "question": "perf_upside",
+      "confidence": 0.27,
+      "answer": 0.73
+    },
+    {
+      "pass": "pass_rvtt_fix_ebreak",
+      "question": "silent_drop_risk",
+      "confidence": 0.27,
+      "answer": 1.69
+    },
+    {
+      "pass": "pass_rvtt_transp_involution",
+      "question": "silent_drop_risk",
+      "confidence": 0.27,
+      "answer": 1.4
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_rtl",
+      "question": "applicability_breadth",
+      "confidence": 0.27,
+      "answer": 2.27
+    },
+    {
+      "pass": "pass_rvtt_crossloop",
+      "question": "transactional_commit",
+      "confidence": 0.28,
+      "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_dst_ownership",
+      "question": "ordering_fragility",
+      "confidence": 0.28,
+      "answer": 1.46
+    },
+    {
+      "pass": "pass_rvtt_dst_ownership",
+      "question": "transactional_commit",
+      "confidence": 0.28,
+      "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_immload_combine",
+      "question": "transactional_commit",
+      "confidence": 0.28,
+      "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_ssa",
+      "question": "perf_upside",
+      "confidence": 0.28,
+      "answer": 0.72
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "question": "applicability_breadth",
+      "confidence": 0.29,
+      "answer": 2.29
+    },
+    {
+      "pass": "pass_rvtt_replay",
+      "question": "transactional_commit",
+      "confidence": 0.29,
+      "answer": "partial_possible"
     },
     {
       "pass": "pass_rvtt_fix_raw",
       "question": "applicability_breadth",
       "confidence": 0.3,
-      "answer": 1.89
+      "answer": 1.91
     },
     {
-      "pass": "pass_rvtt_lut_select",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_immload_combine",
+      "question": "contract_precision",
       "confidence": 0.3,
       "answer": 0.7
     },
     {
-      "pass": "pass_rvtt_replay",
-      "question": "measurement_evidence",
+      "pass": "pass_rvtt_replay_reform",
+      "question": "transactional_commit",
       "confidence": 0.3,
-      "answer": "structural"
+      "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_transp_involution",
+      "pass": "pass_rvtt_int_not",
       "question": "silent_drop_risk",
-      "confidence": 0.3,
-      "answer": 1.38
-    },
-    {
-      "pass": "pass_rvtt_noval_elide",
-      "question": "mutation_before_validation",
       "confidence": 0.31,
-      "answer": 0.69
+      "answer": 1.39
     },
     {
-      "pass": "pass_rvtt_replay",
+      "pass": "pass_rvtt_lut_select",
       "question": "test_adequacy",
       "confidence": 0.31,
       "answer": 2.31
     },
     {
-      "pass": "pass_rvtt_schedule",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_mop_form",
+      "question": "measurement_evidence",
       "confidence": 0.31,
-      "answer": 0.69
+      "answer": "simulator"
     },
     {
-      "pass": "pass_rvtt_synth_split",
-      "question": "perf_upside",
+      "pass": "pass_rvtt_noval_elide",
+      "question": "ordering_fragility",
       "confidence": 0.31,
-      "answer": 1.62
+      "answer": 2.31
+    },
+    {
+      "pass": "pass_rvtt_check_late",
+      "question": "ordering_fragility",
+      "confidence": 0.32,
+      "answer": 2.32
+    },
+    {
+      "pass": "pass_rvtt_delivery_shape",
+      "question": "transactional_commit",
+      "confidence": 0.32,
+      "answer": "no_ir_rewrite"
+    },
+    {
+      "pass": "pass_rvtt_delivery_shape",
+      "question": "measurement_evidence",
+      "confidence": 0.32,
+      "answer": "simulator"
+    },
+    {
+      "pass": "pass_rvtt_dst_autoincr",
+      "question": "transactional_commit",
+      "confidence": 0.32,
+      "answer": "transactional"
     },
     {
       "pass": "pass_rvtt_immvar_expand",
       "question": "ordering_fragility",
-      "confidence": 0.33,
-      "answer": 2.2
+      "confidence": 0.32,
+      "answer": 2.18
     },
     {
-      "pass": "pass_rvtt_macro_planner",
-      "question": "silent_drop_risk",
-      "confidence": 0.33,
-      "answer": 1.42
-    },
-    {
-      "pass": "pass_rvtt_replay",
+      "pass": "pass_rvtt_int_abs",
       "question": "transactional_commit",
-      "confidence": 0.33,
+      "confidence": 0.32,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_replay_unroll",
+      "pass": "pass_rvtt_live",
+      "question": "silent_drop_risk",
+      "confidence": 0.32,
+      "answer": 2.06
+    },
+    {
+      "pass": "pass_rvtt_store_fold",
+      "question": "transactional_commit",
+      "confidence": 0.32,
+      "answer": "transactional"
+    },
+    {
+      "pass": "pass_rvtt_unspec_prop_ssa",
+      "question": "silent_drop_risk",
+      "confidence": 0.32,
+      "answer": 1.88
+    },
+    {
+      "pass": "pass_rvtt_prgm_const",
+      "question": "silent_drop_risk",
+      "confidence": 0.33,
+      "answer": 0.98
+    },
+    {
+      "pass": "pass_rvtt_replay_reform",
       "question": "measurement_evidence",
       "confidence": 0.33,
       "answer": "structural"
     },
     {
-      "pass": "pass_rvtt_attrib",
-      "question": "transactional_commit",
-      "confidence": 0.34,
-      "answer": "transactional"
+      "pass": "pass_rvtt_round_interleave",
+      "question": "test_adequacy",
+      "confidence": 0.33,
+      "answer": 2.33
     },
     {
-      "pass": "pass_rvtt_dst_ownership",
-      "question": "transactional_commit",
-      "confidence": 0.34,
-      "answer": "partial_possible"
+      "pass": "pass_rvtt_synth_split",
+      "question": "evidence_strength",
+      "confidence": 0.33,
+      "answer": "analytic_argument"
     },
     {
-      "pass": "pass_rvtt_int_abs",
-      "question": "transactional_commit",
+      "pass": "pass_rvtt_crossloop",
+      "question": "ordering_fragility",
       "confidence": 0.34,
-      "answer": "partial_possible"
+      "answer": 1.59
     },
     {
-      "pass": "pass_rvtt_mop_form",
-      "question": "transactional_commit",
+      "pass": "pass_rvtt_lp_schedule_prera",
+      "question": "perf_upside",
       "confidence": 0.34,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_reprprop",
-      "question": "measurement_evidence",
-      "confidence": 0.34,
-      "answer": "none"
+      "answer": 1.92
     },
     {
       "pass": "pass_rvtt_synth_renumber",
@@ -2847,106 +2834,40 @@
       "answer": "fewer_delivered_words"
     },
     {
-      "pass": "pass_rvtt_unspec_prop_ssa",
+      "pass": "pass_rvtt_synth_split",
       "question": "perf_upside",
       "confidence": 0.34,
-      "answer": 0.66
+      "answer": 1.6
     },
     {
-      "pass": "pass_rvtt_ccmask",
-      "question": "transactional_commit",
-      "confidence": 0.35,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_lp_alloc",
-      "question": "contract_precision",
-      "confidence": 0.35,
-      "answer": 0.65
-    },
-    {
-      "pass": "pass_rvtt_lp_alloc",
-      "question": "perf_mechanism",
-      "confidence": 0.35,
-      "answer": "register_pressure"
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule_prera",
-      "question": "perf_upside",
-      "confidence": 0.35,
-      "answer": 1.95
-    },
-    {
-      "pass": "pass_rvtt_lreg_livein",
-      "question": "perf_mechanism",
-      "confidence": 0.35,
-      "answer": "enables_downstream"
-    },
-    {
-      "pass": "pass_rvtt_mop_form",
+      "pass": "pass_rvtt_lp_schedule",
       "question": "measurement_evidence",
       "confidence": 0.35,
-      "answer": "simulator"
-    },
-    {
-      "pass": "pass_rvtt_prgm_const",
-      "question": "mutation_before_validation",
-      "confidence": 0.35,
-      "answer": 0.65
-    },
-    {
-      "pass": "pass_rvtt_replay_reform",
-      "question": "transactional_commit",
-      "confidence": 0.35,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_immload_shorten",
-      "question": "default_on_readiness",
-      "confidence": 0.36,
-      "answer": 1.39
-    },
-    {
-      "pass": "pass_rvtt_lut_select",
-      "question": "transactional_commit",
-      "confidence": 0.36,
-      "answer": "transactional"
-    },
-    {
-      "pass": "pass_rvtt_noval_elide",
-      "question": "ordering_fragility",
-      "confidence": 0.36,
-      "answer": 2.36
-    },
-    {
-      "pass": "pass_rvtt_reassoc",
-      "question": "silent_drop_risk",
-      "confidence": 0.36,
-      "answer": 1.48
-    },
-    {
-      "pass": "pass_rvtt_replay_reform",
-      "question": "measurement_evidence",
-      "confidence": 0.36,
       "answer": "structural"
     },
     {
-      "pass": "pass_rvtt_replay_unroll",
-      "question": "perf_mechanism",
-      "confidence": 0.36,
-      "answer": "enables_downstream"
-    },
-    {
-      "pass": "pass_rvtt_synth_renumber",
-      "question": "perf_upside",
-      "confidence": 0.36,
-      "answer": 1.25
-    },
-    {
-      "pass": "pass_rvtt_dst_interleave",
+      "pass": "pass_rvtt_mop_form",
       "question": "transactional_commit",
-      "confidence": 0.37,
+      "confidence": 0.35,
       "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_noval_elide",
+      "question": "transactional_commit",
+      "confidence": 0.36,
+      "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_reprprop",
+      "question": "measurement_evidence",
+      "confidence": 0.36,
+      "answer": "none"
+    },
+    {
+      "pass": "pass_rvtt_rmext",
+      "question": "ordering_fragility",
+      "confidence": 0.36,
+      "answer": 1.88
     },
     {
       "pass": "pass_rvtt_fix_raw",
@@ -2955,58 +2876,52 @@
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_immload_combine",
-      "question": "evidence_strength",
-      "confidence": 0.37,
-      "answer": "asserted"
-    },
-    {
-      "pass": "pass_rvtt_immload_shorten",
-      "question": "evidence_strength",
-      "confidence": 0.37,
-      "answer": "asserted"
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule_prera",
-      "question": "perf_mechanism",
-      "confidence": 0.37,
-      "answer": "register_pressure"
-    },
-    {
-      "pass": "pass_rvtt_rmext",
-      "question": "evidence_strength",
-      "confidence": 0.37,
-      "answer": "analytic_argument"
-    },
-    {
-      "pass": "pass_rvtt_attrib",
-      "question": "evidence_strength",
-      "confidence": 0.38,
-      "answer": "analytic_argument"
-    },
-    {
-      "pass": "pass_rvtt_cc",
-      "question": "ordering_fragility",
-      "confidence": 0.38,
-      "answer": 2.38
-    },
-    {
-      "pass": "pass_rvtt_check_late",
-      "question": "ordering_fragility",
-      "confidence": 0.38,
-      "answer": 2.38
-    },
-    {
-      "pass": "pass_rvtt_immload_combine",
+      "pass": "pass_rvtt_immvar_expand",
       "question": "transactional_commit",
-      "confidence": 0.38,
+      "confidence": 0.37,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_immvar_expand",
-      "question": "evidence_strength",
+      "pass": "pass_rvtt_lp_alloc",
+      "question": "contract_precision",
+      "confidence": 0.37,
+      "answer": 0.63
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "question": "contract_precision",
+      "confidence": 0.37,
+      "answer": 1.07
+    },
+    {
+      "pass": "pass_rvtt_lreg_livein",
+      "question": "perf_mechanism",
+      "confidence": 0.37,
+      "answer": "enables_downstream"
+    },
+    {
+      "pass": "pass_rvtt_reassoc",
+      "question": "silent_drop_risk",
+      "confidence": 0.37,
+      "answer": 1.48
+    },
+    {
+      "pass": "pass_rvtt_replay",
+      "question": "measurement_evidence",
+      "confidence": 0.37,
+      "answer": "structural"
+    },
+    {
+      "pass": "pass_rvtt_synth_renumber",
+      "question": "perf_upside",
+      "confidence": 0.37,
+      "answer": 1.16
+    },
+    {
+      "pass": "pass_rvtt_crosslane",
+      "question": "ordering_fragility",
       "confidence": 0.38,
-      "answer": "asserted"
+      "answer": 1.56
     },
     {
       "pass": "pass_rvtt_lp_alloc",
@@ -3015,76 +2930,136 @@
       "answer": 0.62
     },
     {
-      "pass": "pass_rvtt_synth_split",
-      "question": "evidence_strength",
-      "confidence": 0.38,
-      "answer": "analytic_argument"
-    },
-    {
-      "pass": "pass_rvtt_dst_ownership",
+      "pass": "pass_rvtt_lut_select",
       "question": "mutation_before_validation",
-      "confidence": 0.39,
-      "answer": 0.61
+      "confidence": 0.38,
+      "answer": 0.62
     },
     {
-      "pass": "pass_rvtt_lreg_livein",
+      "pass": "pass_rvtt_lut_select",
+      "question": "transactional_commit",
+      "confidence": 0.38,
+      "answer": "transactional"
+    },
+    {
+      "pass": "pass_rvtt_macro_planner",
       "question": "silent_drop_risk",
+      "confidence": 0.38,
+      "answer": 1.47
+    },
+    {
+      "pass": "pass_rvtt_replay_unroll",
+      "question": "measurement_evidence",
+      "confidence": 0.38,
+      "answer": "structural"
+    },
+    {
+      "pass": "pass_rvtt_int_not",
+      "question": "transactional_commit",
       "confidence": 0.39,
-      "answer": 0.61
+      "answer": "partial_possible"
+    },
+    {
+      "pass": "pass_rvtt_lp_schedule_prera",
+      "question": "perf_mechanism",
+      "confidence": 0.39,
+      "answer": "register_pressure"
+    },
+    {
+      "pass": "pass_rvtt_replay_unroll",
+      "question": "perf_mechanism",
+      "confidence": 0.39,
+      "answer": "enables_downstream"
     },
     {
       "pass": "pass_rvtt_round_interleave",
-      "question": "test_adequacy",
+      "question": "measurement_evidence",
       "confidence": 0.39,
-      "answer": 2.39
-    },
-    {
-      "pass": "pass_rvtt_synth_cse",
-      "question": "applicability_breadth",
-      "confidence": 0.39,
-      "answer": 2.19
+      "answer": "structural"
     },
     {
       "pass": "pass_rvtt_unspec_prop_ssa",
-      "question": "silent_drop_risk",
+      "question": "default_on_readiness",
       "confidence": 0.39,
-      "answer": 2.0
+      "answer": 0.93
     },
     {
-      "pass": "pass_rvtt_check_early",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_ccmask",
+      "question": "transactional_commit",
       "confidence": 0.4,
-      "answer": 2.4
+      "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_delivery_shape",
+      "pass": "pass_rvtt_immload_combine",
+      "question": "evidence_strength",
+      "confidence": 0.4,
+      "answer": "asserted"
+    },
+    {
+      "pass": "pass_rvtt_launch_flatten",
       "question": "test_adequacy",
       "confidence": 0.4,
       "answer": 2.4
     },
     {
-      "pass": "pass_rvtt_synth_opcode",
-      "question": "perf_upside",
+      "pass": "pass_rvtt_rmext",
+      "question": "measurement_evidence",
       "confidence": 0.4,
-      "answer": 1.51
+      "answer": "none"
     },
     {
-      "pass": "pass_rvtt_crosslane_window",
-      "question": "test_adequacy",
+      "pass": "pass_rvtt_synth_cse",
+      "question": "ordering_fragility",
+      "confidence": 0.4,
+      "answer": 2.4
+    },
+    {
+      "pass": "pass_rvtt_synth_renumber",
+      "question": "evidence_strength",
+      "confidence": 0.4,
+      "answer": "analytic_argument"
+    },
+    {
+      "pass": "pass_rvtt_attrib",
+      "question": "ordering_fragility",
       "confidence": 0.41,
       "answer": 2.41
     },
     {
-      "pass": "pass_rvtt_int_not",
+      "pass": "pass_rvtt_attrib",
+      "question": "transactional_commit",
+      "confidence": 0.41,
+      "answer": "transactional"
+    },
+    {
+      "pass": "pass_rvtt_cc",
+      "question": "ordering_fragility",
+      "confidence": 0.41,
+      "answer": 2.41
+    },
+    {
+      "pass": "pass_rvtt_dst_interleave",
       "question": "transactional_commit",
       "confidence": 0.41,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_lreg_livein",
-      "question": "contract_precision",
+      "pass": "pass_rvtt_dst_ownership",
+      "question": "mutation_before_validation",
       "confidence": 0.41,
-      "answer": 1.18
+      "answer": 0.59
+    },
+    {
+      "pass": "pass_rvtt_lp_alloc",
+      "question": "perf_mechanism",
+      "confidence": 0.41,
+      "answer": "register_pressure"
+    },
+    {
+      "pass": "pass_rvtt_prgm_const",
+      "question": "mutation_before_validation",
+      "confidence": 0.41,
+      "answer": 0.59
     },
     {
       "pass": "pass_rvtt_reassoc",
@@ -3093,16 +3068,28 @@
       "answer": "simulator"
     },
     {
-      "pass": "pass_rvtt_round_interleave",
-      "question": "measurement_evidence",
+      "pass": "pass_rvtt_rmext",
+      "question": "silent_drop_risk",
       "confidence": 0.41,
-      "answer": "structural"
+      "answer": 1.2
     },
     {
-      "pass": "pass_rvtt_check_late",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_crosslane",
+      "question": "test_adequacy",
       "confidence": 0.42,
       "answer": 2.42
+    },
+    {
+      "pass": "pass_rvtt_immload_shorten",
+      "question": "evidence_strength",
+      "confidence": 0.42,
+      "answer": "asserted"
+    },
+    {
+      "pass": "pass_rvtt_immvar_expand",
+      "question": "evidence_strength",
+      "confidence": 0.42,
+      "answer": "asserted"
     },
     {
       "pass": "pass_rvtt_immvar_expand",
@@ -3118,279 +3105,231 @@
     },
     {
       "pass": "pass_rvtt_macro_planner",
-      "question": "perf_mechanism",
+      "question": "mutation_before_validation",
       "confidence": 0.42,
-      "answer": "replay_compression"
-    },
-    {
-      "pass": "pass_rvtt_replay",
-      "question": "ordering_fragility",
-      "confidence": 0.42,
-      "answer": 1.5
-    },
-    {
-      "pass": "pass_rvtt_synth_opcode",
-      "question": "applicability_breadth",
-      "confidence": 0.42,
-      "answer": 2.42
-    },
-    {
-      "pass": "pass_rvtt_synth_renumber",
-      "question": "evidence_strength",
-      "confidence": 0.42,
-      "answer": "analytic_argument"
-    },
-    {
-      "pass": "pass_rvtt_combine",
-      "question": "measurement_evidence",
-      "confidence": 0.43,
-      "answer": "structural"
-    },
-    {
-      "pass": "pass_rvtt_crosscall",
-      "question": "default_on_readiness",
-      "confidence": 0.43,
-      "answer": 1.44
-    },
-    {
-      "pass": "pass_rvtt_immload_combine",
-      "question": "default_on_readiness",
-      "confidence": 0.43,
-      "answer": 1.3
-    },
-    {
-      "pass": "pass_rvtt_immvar_expand",
-      "question": "transactional_commit",
-      "confidence": 0.43,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule",
-      "question": "silent_drop_risk",
-      "confidence": 0.43,
-      "answer": 1.55
-    },
-    {
-      "pass": "pass_rvtt_noval_elide",
-      "question": "transactional_commit",
-      "confidence": 0.43,
-      "answer": "partial_possible"
-    },
-    {
-      "pass": "pass_rvtt_replay_unroll",
-      "question": "default_on_readiness",
-      "confidence": 0.43,
-      "answer": 1.44
+      "answer": 1.65
     },
     {
       "pass": "pass_rvtt_schedule",
       "question": "perf_mechanism",
-      "confidence": 0.43,
+      "confidence": 0.42,
       "answer": "latency_hiding"
     },
     {
-      "pass": "pass_rvtt_spill_diag",
+      "pass": "pass_rvtt_unspec_prop_ssa",
+      "question": "applicability_breadth",
+      "confidence": 0.42,
+      "answer": 1.85
+    },
+    {
+      "pass": "pass_rvtt_invariant",
+      "question": "perf_upside",
+      "confidence": 0.43,
+      "answer": 2.43
+    },
+    {
+      "pass": "pass_rvtt_lp_alloc",
+      "question": "applicability_breadth",
+      "confidence": 0.43,
+      "answer": 1.42
+    },
+    {
+      "pass": "pass_rvtt_lreg_rename_chains",
+      "question": "applicability_breadth",
+      "confidence": 0.43,
+      "answer": 1.45
+    },
+    {
+      "pass": "pass_rvtt_mop_form",
+      "question": "ordering_fragility",
+      "confidence": 0.43,
+      "answer": 1.53
+    },
+    {
+      "pass": "pass_rvtt_transp_involution",
       "question": "transactional_commit",
       "confidence": 0.43,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_synth_opcode",
-      "question": "evidence_strength",
+      "pass": "pass_rvtt_unspec_prop_rtl",
+      "question": "transactional_commit",
       "confidence": 0.43,
-      "answer": "test_only"
+      "answer": "transactional"
     },
     {
-      "pass": "pass_rvtt_synth_renumber",
+      "pass": "pass_rvtt_noval_elide",
       "question": "applicability_breadth",
-      "confidence": 0.43,
-      "answer": 2.43
+      "confidence": 0.44,
+      "answer": 2.15
     },
     {
-      "pass": "pass_rvtt_check_early",
-      "question": "ordering_fragility",
+      "pass": "pass_rvtt_rmext",
+      "question": "evidence_strength",
       "confidence": 0.44,
-      "answer": 2.44
+      "answer": "analytic_argument"
     },
     {
-      "pass": "pass_rvtt_expand",
-      "question": "default_on_readiness",
+      "pass": "pass_rvtt_spill_diag",
+      "question": "mutation_before_validation",
       "confidence": 0.44,
-      "answer": 1.19
-    },
-    {
-      "pass": "pass_rvtt_immload_shorten",
-      "question": "ordering_fragility",
-      "confidence": 0.44,
-      "answer": 2.44
-    },
-    {
-      "pass": "pass_rvtt_lut_select",
-      "question": "test_adequacy",
-      "confidence": 0.44,
-      "answer": 2.44
+      "answer": 0.56
     },
     {
       "pass": "pass_rvtt_synth_cse",
-      "question": "default_on_readiness",
+      "question": "evidence_strength",
       "confidence": 0.44,
-      "answer": 1.14
+      "answer": "analytic_argument"
     },
     {
-      "pass": "pass_rvtt_synth_split",
-      "question": "default_on_readiness",
-      "confidence": 0.44,
-      "answer": 1.12
-    },
-    {
-      "pass": "pass_rvtt_crosscall",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_attrib",
+      "question": "evidence_strength",
       "confidence": 0.45,
-      "answer": 0.55
+      "answer": "analytic_argument"
+    },
+    {
+      "pass": "pass_rvtt_combine",
+      "question": "default_on_readiness",
+      "confidence": 0.45,
+      "answer": 1.49
     },
     {
       "pass": "pass_rvtt_crossloop",
       "question": "silent_drop_risk",
       "confidence": 0.45,
-      "answer": 1.53
+      "answer": 1.52
     },
     {
-      "pass": "pass_rvtt_immvar_expand",
+      "pass": "pass_rvtt_delivery_shape",
+      "question": "test_adequacy",
+      "confidence": 0.45,
+      "answer": 2.45
+    },
+    {
+      "pass": "pass_rvtt_expand",
       "question": "perf_upside",
       "confidence": 0.45,
-      "answer": 1.62
+      "answer": 1.49
+    },
+    {
+      "pass": "pass_rvtt_fix_ebreak",
+      "question": "applicability_breadth",
+      "confidence": 0.45,
+      "answer": 0.55
     },
     {
       "pass": "pass_rvtt_live",
       "question": "default_on_readiness",
       "confidence": 0.45,
-      "answer": 1.23
+      "answer": 1.25
     },
     {
-      "pass": "pass_rvtt_macro_planner",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_lp_schedule",
+      "question": "default_on_readiness",
       "confidence": 0.45,
-      "answer": 1.64
+      "answer": 1.45
     },
     {
-      "pass": "pass_rvtt_rmext",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_lreg_livein",
+      "question": "default_on_readiness",
       "confidence": 0.45,
-      "answer": 1.15
+      "answer": 0.85
     },
     {
-      "pass": "pass_rvtt_spill_diag",
-      "question": "silent_drop_risk",
+      "pass": "pass_rvtt_synth_opcode",
+      "question": "evidence_strength",
       "confidence": 0.45,
-      "answer": 0.55
+      "answer": "test_only"
     },
     {
-      "pass": "pass_rvtt_synth_cse",
-      "question": "ordering_fragility",
+      "pass": "pass_rvtt_synth_opcode",
+      "question": "default_on_readiness",
       "confidence": 0.45,
-      "answer": 2.45
-    },
-    {
-      "pass": "pass_rvtt_unspec_prop_rtl",
-      "question": "transactional_commit",
-      "confidence": 0.45,
-      "answer": "transactional"
+      "answer": 1.12
     },
     {
       "pass": "pass_rvtt_ccmask",
+      "question": "test_adequacy",
+      "confidence": 0.46,
+      "answer": 2.32
+    },
+    {
+      "pass": "pass_rvtt_crosscall",
       "question": "mutation_before_validation",
       "confidence": 0.46,
       "answer": 0.54
     },
     {
-      "pass": "pass_rvtt_crosslane",
-      "question": "transactional_commit",
+      "pass": "pass_rvtt_crosslane_window",
+      "question": "silent_drop_risk",
       "confidence": 0.46,
-      "answer": "partial_possible"
+      "answer": 1.31
     },
     {
-      "pass": "pass_rvtt_immload_shorten",
-      "question": "transactional_commit",
+      "pass": "pass_rvtt_dst_ownership",
+      "question": "measurement_evidence",
       "confidence": 0.46,
-      "answer": "partial_possible"
+      "answer": "none"
     },
     {
-      "pass": "pass_rvtt_lreg_rename_chains",
-      "question": "applicability_breadth",
+      "pass": "pass_rvtt_expand",
+      "question": "perf_mechanism",
       "confidence": 0.46,
-      "answer": 1.41
+      "answer": "fewer_delivered_words"
     },
     {
-      "pass": "pass_rvtt_prgm_const",
-      "question": "ordering_fragility",
+      "pass": "pass_rvtt_int_abs",
+      "question": "mutation_before_validation",
       "confidence": 0.46,
-      "answer": 1.42
+      "answer": 0.54
     },
     {
-      "pass": "pass_rvtt_replay_reform",
-      "question": "test_adequacy",
+      "pass": "pass_rvtt_synth_opcode",
+      "question": "contract_precision",
       "confidence": 0.46,
-      "answer": 2.46
-    },
-    {
-      "pass": "pass_rvtt_schedule",
-      "question": "ordering_fragility",
-      "confidence": 0.46,
-      "answer": 1.44
+      "answer": 1.46
     },
     {
       "pass": "pass_rvtt_attrib",
+      "question": "applicability_breadth",
+      "confidence": 0.47,
+      "answer": 2.17
+    },
+    {
+      "pass": "pass_rvtt_check_early",
       "question": "ordering_fragility",
       "confidence": 0.47,
       "answer": 2.47
     },
     {
-      "pass": "pass_rvtt_cc",
-      "question": "measurement_evidence",
+      "pass": "pass_rvtt_crosslane",
+      "question": "silent_drop_risk",
       "confidence": 0.47,
-      "answer": "none"
+      "answer": 1.68
     },
     {
-      "pass": "pass_rvtt_combine",
+      "pass": "pass_rvtt_crosslane",
       "question": "transactional_commit",
       "confidence": 0.47,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_crosscall",
-      "question": "silent_drop_risk",
-      "confidence": 0.47,
-      "answer": 1.51
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "question": "evidence_strength",
-      "confidence": 0.47,
-      "answer": "not_a_transform"
-    },
-    {
-      "pass": "pass_rvtt_invariant",
-      "question": "test_adequacy",
-      "confidence": 0.47,
-      "answer": 2.47
-    },
-    {
-      "pass": "pass_rvtt_lp_alloc",
-      "question": "measurement_evidence",
-      "confidence": 0.47,
-      "answer": "none"
-    },
-    {
-      "pass": "pass_rvtt_lreg_livein",
-      "question": "default_on_readiness",
-      "confidence": 0.47,
-      "answer": 0.88
-    },
-    {
-      "pass": "pass_rvtt_noval_elide",
+      "pass": "pass_rvtt_crosslane_window",
       "question": "applicability_breadth",
       "confidence": 0.47,
-      "answer": 2.01
+      "answer": 1.27
+    },
+    {
+      "pass": "pass_rvtt_launch_flatten",
+      "question": "default_on_readiness",
+      "confidence": 0.47,
+      "answer": 1.48
+    },
+    {
+      "pass": "pass_rvtt_reassoc",
+      "question": "transactional_commit",
+      "confidence": 0.47,
+      "answer": "partial_possible"
     },
     {
       "pass": "pass_rvtt_replay_unroll",
@@ -3399,160 +3338,166 @@
       "answer": 2.47
     },
     {
-      "pass": "pass_rvtt_synth_split",
-      "question": "perf_mechanism",
-      "confidence": 0.47,
-      "answer": "fewer_delivered_words"
-    },
-    {
-      "pass": "pass_rvtt_crosscall",
-      "question": "transactional_commit",
-      "confidence": 0.48,
-      "answer": "transactional"
-    },
-    {
-      "pass": "pass_rvtt_crosslane",
+      "pass": "pass_rvtt_schedule",
       "question": "ordering_fragility",
-      "confidence": 0.48,
-      "answer": 1.47
+      "confidence": 0.47,
+      "answer": 1.41
     },
     {
-      "pass": "pass_rvtt_crosslane",
-      "question": "silent_drop_risk",
-      "confidence": 0.48,
-      "answer": 1.7
+      "pass": "pass_rvtt_synth_cse",
+      "question": "default_on_readiness",
+      "confidence": 0.47,
+      "answer": 1.07
     },
     {
-      "pass": "pass_rvtt_fix_ebreak",
+      "pass": "pass_rvtt_cc",
+      "question": "test_adequacy",
+      "confidence": 0.48,
+      "answer": 2.16
+    },
+    {
+      "pass": "pass_rvtt_cc",
+      "question": "measurement_evidence",
+      "confidence": 0.48,
+      "answer": "none"
+    },
+    {
+      "pass": "pass_rvtt_check_early",
       "question": "transactional_commit",
       "confidence": 0.48,
       "answer": "partial_possible"
     },
     {
-      "pass": "pass_rvtt_int_abs",
-      "question": "mutation_before_validation",
+      "pass": "pass_rvtt_crosscall",
+      "question": "default_on_readiness",
       "confidence": 0.48,
-      "answer": 0.52
+      "answer": 1.44
     },
     {
-      "pass": "pass_rvtt_invariant",
+      "pass": "pass_rvtt_immload_shorten",
       "question": "ordering_fragility",
       "confidence": 0.48,
-      "answer": 1.42
+      "answer": 2.42
     },
     {
       "pass": "pass_rvtt_invariant",
-      "question": "perf_upside",
+      "question": "contract_precision",
+      "confidence": 0.48,
+      "answer": 1.48
+    },
+    {
+      "pass": "pass_rvtt_invariant",
+      "question": "transactional_commit",
+      "confidence": 0.48,
+      "answer": "transactional"
+    },
+    {
+      "pass": "pass_rvtt_invariant",
+      "question": "test_adequacy",
       "confidence": 0.48,
       "answer": 2.48
     },
     {
-      "pass": "pass_rvtt_mop_form",
-      "question": "ordering_fragility",
+      "pass": "pass_rvtt_prgm_const",
+      "question": "transactional_commit",
       "confidence": 0.48,
-      "answer": 1.47
+      "answer": "partial_possible"
     },
     {
       "pass": "pass_rvtt_prgm_const",
-      "question": "measurement_evidence",
+      "question": "default_on_readiness",
       "confidence": 0.48,
-      "answer": "structural"
+      "answer": 1.46
     },
     {
-      "pass": "pass_rvtt_attrib",
-      "question": "applicability_breadth",
+      "pass": "pass_rvtt_replay_reform",
+      "question": "test_adequacy",
+      "confidence": 0.48,
+      "answer": 2.48
+    },
+    {
+      "pass": "pass_rvtt_ccmask",
+      "question": "mutation_before_validation",
       "confidence": 0.49,
-      "answer": 2.05
+      "answer": 0.51
+    },
+    {
+      "pass": "pass_rvtt_check_late",
+      "question": "contract_precision",
+      "confidence": 0.49,
+      "answer": 0.51
     },
     {
       "pass": "pass_rvtt_check_late",
       "question": "review_priority",
       "confidence": 0.49,
-      "answer": 2.49
+      "answer": 2.47
     },
     {
       "pass": "pass_rvtt_combine",
-      "question": "default_on_readiness",
-      "confidence": 0.49,
-      "answer": 1.53
-    },
-    {
-      "pass": "pass_rvtt_delivery_shape",
-      "question": "perf_upside",
-      "confidence": 0.49,
-      "answer": 2.49
-    },
-    {
-      "pass": "pass_rvtt_dst_autoincr",
-      "question": "default_on_readiness",
-      "confidence": 0.49,
-      "answer": 2.02
-    },
-    {
-      "pass": "pass_rvtt_expand",
-      "question": "perf_upside",
-      "confidence": 0.49,
-      "answer": 1.53
-    },
-    {
-      "pass": "pass_rvtt_fix_ebreak",
-      "question": "applicability_breadth",
-      "confidence": 0.49,
-      "answer": 0.51
-    },
-    {
-      "pass": "pass_rvtt_immload_combine",
-      "question": "contract_precision",
-      "confidence": 0.49,
-      "answer": 0.88
-    },
-    {
-      "pass": "pass_rvtt_invariant",
-      "question": "contract_precision",
-      "confidence": 0.49,
-      "answer": 1.5
-    },
-    {
-      "pass": "pass_rvtt_launch_flatten",
-      "question": "default_on_readiness",
-      "confidence": 0.49,
-      "answer": 1.45
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule",
-      "question": "applicability_breadth",
-      "confidence": 0.49,
-      "answer": 0.53
-    },
-    {
-      "pass": "pass_rvtt_lp_schedule",
       "question": "measurement_evidence",
       "confidence": 0.49,
       "answer": "structural"
     },
     {
-      "pass": "pass_rvtt_macro_planner",
-      "question": "perf_upside",
+      "pass": "pass_rvtt_crosscall",
+      "question": "silent_drop_risk",
       "confidence": 0.49,
-      "answer": 2.43
+      "answer": 1.53
     },
     {
-      "pass": "pass_rvtt_synth_renumber",
+      "pass": "pass_rvtt_crosslane_window",
+      "question": "test_adequacy",
+      "confidence": 0.49,
+      "answer": 2.49
+    },
+    {
+      "pass": "pass_rvtt_immload_shorten",
       "question": "default_on_readiness",
       "confidence": 0.49,
-      "answer": 1.03
+      "answer": 1.29
     },
     {
-      "pass": "pass_rvtt_transp_involution",
+      "pass": "pass_rvtt_int_not",
+      "question": "ordering_fragility",
+      "confidence": 0.49,
+      "answer": 1.25
+    },
+    {
+      "pass": "pass_rvtt_noval_elide",
+      "question": "default_on_readiness",
+      "confidence": 0.49,
+      "answer": 0.91
+    },
+    {
+      "pass": "pass_rvtt_prgm_const",
       "question": "measurement_evidence",
       "confidence": 0.49,
-      "answer": "none"
+      "answer": "structural"
+    },
+    {
+      "pass": "pass_rvtt_replay",
+      "question": "ordering_fragility",
+      "confidence": 0.49,
+      "answer": 1.43
+    },
+    {
+      "pass": "pass_rvtt_synth_opcode",
+      "question": "perf_upside",
+      "confidence": 0.49,
+      "answer": 1.58
+    },
+    {
+      "pass": "pass_rvtt_synth_split",
+      "question": "default_on_readiness",
+      "confidence": 0.49,
+      "answer": 1.06
     },
     {
       "pass": "pass_rvtt_unspec_prop_rtl",
-      "question": "evidence_strength",
+      "question": "ordering_fragility",
       "confidence": 0.49,
-      "answer": "asserted"
+      "answer": 2.14
     }
   ]
 }

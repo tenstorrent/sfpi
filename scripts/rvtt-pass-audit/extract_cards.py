@@ -329,6 +329,29 @@ def classify_gating(gate: str | None, options: list[dict]) -> dict:
     }
 
 
+def emits_dump(text: str) -> bool:
+    """Can this pass produce dump output at all?
+
+    Any mention of `dump_file` counts, not just a local fprintf: several
+    passes hand the FILE* to a shared helper that does the printing
+    (rtl-rvtt-macro-planner.cc passes it to rvtt_macro_regions_discover),
+    so looking only for local write sites reports a pass with 230
+    dump-scanning tests as producing no dump.
+    """
+    return "dump_file" in text
+
+
+def extract_diagnostics(text: str) -> list[str]:
+    """Literal diagnostic strings this pass can emit (error/warning)."""
+    out = set()
+    for m in re.finditer(r"\b(?:error|warning|error_at|warning_at)\s*\([^;]{0,400}?\"([^\"]{8,})\"",
+                         text, re.S):
+        s = re.sub(r"%[-+ #0-9.]*[a-zA-Z<>]+", "", m.group(1)).strip()
+        if len(s) >= 12:
+            out.add(s)
+    return sorted(out)
+
+
 def find_tests(
     testsuite: Path,
     dump_name: str | None,
@@ -336,15 +359,27 @@ def find_tests(
     refusals_cited: list[str],
     gating: dict,
     total_tests: int,
+    diagnostics: list[str] | None = None,
 ) -> dict:
     """Testcases that exercise this pass.
 
-    Three signals, strongest first:
-      direct   -- the test names this pass's dump or one of its flags
-      refusal  -- the test scans a dump for a refusal name only this pass
-                  emits (the registry is frozen and dump-stable, so this
-                  precisely identifies tests of this pass's decisions)
-      implicit -- an unconditional pass is exercised by the whole suite
+    CAUTION, and the reason this function has the shape it does: counting
+    only tests that NAME a pass's dump measures one testing modality out
+    of several, and this suite's dominant modality is a different one --
+    873 testcases use scan-assembler against emitted instructions, against
+    84 that scan a tree dump.  A pass validated by assembly scanning or by
+    a dg-error diagnostic therefore scores zero on dump-name counting no
+    matter how well covered it is, and two passes here (rvtt_check, and
+    very nearly rvtt_spill_diag) write nothing to dump_file at all, so the
+    metric cannot reach them even in principle.  `emits_dump` on the card
+    exists so a zero is interpretable rather than damning.
+
+    Signals recorded separately, never summed into one "coverage" number:
+      direct      -- names this pass's dump or one of its flags
+      by_refusal  -- scans for a refusal name this pass emits (the
+                     registry is frozen and dump-stable, so this is precise)
+      by_diagnostic -- a dg-error test citing a diagnostic this pass emits
+      implicit    -- an unconditional pass runs in every test in the suite
     """
     empty = {"direct": [], "by_refusal": [], "implicit_whole_suite": 0, "total": 0}
     if not testsuite.exists():
@@ -364,14 +399,20 @@ def find_tests(
         return sorted({Path(p).name for p in out.split() if p})
 
     direct = grep_l(([dump_name] if dump_name else []) + [o["option"] for o in options])
-    by_refusal = [t for t in grep_l(refusals_cited) if t not in set(direct)]
+    by_refusal = [x for x in grep_l(refusals_cited) if x not in set(direct)]
+    seen = set(direct) | set(by_refusal)
+    by_diag = [x for x in grep_l(diagnostics or []) if x not in seen]
     implicit = total_tests if gating.get("always_on") and gating["mode"] == "unconditional" else 0
 
     return {
         "direct": direct,
         "by_refusal": by_refusal,
+        "by_diagnostic": by_diag,
         "implicit_whole_suite": implicit,
-        "total": len(direct) + len(by_refusal),
+        "targeted_total": len(direct) + len(by_refusal) + len(by_diag),
+        "caveat": ("a zero here means no test NAMES this pass's dump/flag/refusal; "
+                   "this suite validates most passes by scan-assembler instead, "
+                   "so it is not a coverage measure on its own"),
     }
 
 
@@ -431,6 +472,7 @@ def main() -> int:
         options = extract_flags(text, opts)
         dump_name = extract_dump_name(text, name)
         gate = extract_gate(text, name)
+        diags = extract_diagnostics(text)
         gating = classify_gating(gate, options)
         cited_refusals = extract_refusals(text, refusal_names)
 
@@ -450,10 +492,15 @@ def main() -> int:
                 "gate": gate,
                 "contract_comment": leading_block_comment(text),
                 "refusals_cited": cited_refusals,
+                "emits_dump": emits_dump(text) or any(
+                    emits_dump(s.read_text(errors="replace")) for s in siblings
+                ),
+                "diagnostics_emitted": diags,
                 "proofs_cited": extract_proof_citations(text, known_proofs),
                 "ir_mutation_census": count_ir_mutations(text),
                 "tests": find_tests(
-                    testsuite, dump_name, options, cited_refusals, gating, total_tests
+                    testsuite, dump_name, options, cited_refusals, gating,
+                    total_tests, diags
                 ),
                 "resolution": "ok",
             }

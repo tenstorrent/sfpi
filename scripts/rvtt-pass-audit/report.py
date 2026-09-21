@@ -279,22 +279,39 @@ def render(doc: dict, an: dict, meas: dict | None) -> str:
     # ------------------------------------------------------------------
     # 3. TEST COVERAGE — the verified structural finding
     # ------------------------------------------------------------------
-    w("## 3. Test-coverage inversion (verified independently of the model)")
+    w("## 3. WITHDRAWN — the \"test-coverage inversion\"")
     w("")
-    w("This one was confirmed by grep over the testsuite, not taken from a probability. "
-      "Counting testcases that name a pass's dump:")
+    w("**An earlier version of this report claimed the always-on passes are the least tested, "
+      "on the strength of `rvtt_expand`, `rvtt_live`, `rvtt_check` and `rvtt_synth_cse` having "
+      "zero tests naming their dump. That finding is withdrawn. It was an artifact of the "
+      "metric.**")
     w("")
-    w("| pass | ships on every compile | tests naming its dump |")
-    w("|---|---|---|")
-    for name, ships, n in [("rvtt_macro_planner", "no", 186), ("rvtt_replay", "yes", 160),
-                           ("rvtt_prgm_const", "no", 142), ("rvtt_dst_autoincr", "no", 103),
-                           ("rvtt_expand", "**yes**", 0), ("rvtt_live", "**yes**", 0),
-                           ("rvtt_check", "**yes**", 0), ("rvtt_synth_cse", "**yes**", 0)]:
-        w(f"| `{name}` | {ships} | {n} |")
+    w("Counting tests by dump name measures one testing modality. It is not the one this suite "
+      "mostly uses:")
     w("")
-    w("The passes that run on **every** Tensix compilation are the ones with no targeted tests, "
-      "while the optional, off-by-default optimizations carry hundreds. That is exactly inverted "
-      "from where coverage does the most good, and it stands on its own evidence.")
+    w("| validation modality | testcases |")
+    w("|---|---|")
+    w("| `scan-assembler` against emitted instructions | 873 |")
+    w("| `dg-error` diagnostics | 68 |")
+    w("| `scan-tree-dump` / `scan-rtl-dump` naming a pass | 84 |")
+    w("")
+    w("A pass validated by assembly scanning scores zero on dump-name counting however well it "
+      "is covered. 206 testcases scan the CC instruction sequences `rvtt_expand` emits, and 35 "
+      "`dg-error` tests cover the spill diagnostic — none of which the metric could see. Three "
+      "passes (`check_early`, `check_late`, `lreg_livein`) never touch `dump_file` at all, so the "
+      "metric cannot reach them even in principle.")
+    w("")
+    w("**The instructive part is how this got through.** It was published as \"verified "
+      "independently of the model\", and grep did verify it — the counts were accurate. What grep "
+      "could not verify is that the counts measured what the sentence claimed. That is construct "
+      "validity, not measurement error, and labelling it \"verified\" gave a bad metric more "
+      "standing than any model output in this report has. A hand-check confirms a number; it does "
+      "not confirm that the number means what you say it means.")
+    w("")
+    w("The extractor now records `emits_dump` per pass and splits targeted tests into `direct`, "
+      "`by_refusal` and `by_diagnostic`, each carrying a caveat that none of them is a coverage "
+      "measure on its own. Whether the always-on passes are in fact under-tested is **open**: "
+      "answering it needs assembly-scan attribution, which nothing here does yet.")
     w("")
 
     # ------------------------------------------------------------------

@@ -90,6 +90,18 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Two diagnostic passes over SFPU intrinsic usage, sharing one set of\ncheckers.  Both repair what they diagnose (substituting an in-range\nvalue, the constant-zero register, or deleting the offending\nstatement) so that a single bad kernel produces one clear error\nrather than a cascade of RTL-expansion failures or assembler barf.\n\nrvtt_check_early (right after inlining):\n- function signatures may not pass or return SFPU vector values\n(they live in SFPU registers, outside the RISC-V ABI; functions\ntaking them must be inlined, hence the sfpi_inline hint);\n- compile-time-constant (\"early\") integer operands must be in range\nfor their instruction fields, and mod operands in each op's\nlegal-mod mask;\n- reads of uninitialized SFPU values are diagnosed once, here, where\nSSA undefinedness is still exact;\n- target-specific usage errors: the Quasar replay erratum\n(exec-while-load unsupported, under -mtt-fix-qsrreplay) and the\nimmediate-form SFPCONFIG destination envelope (only LaneConfig,\ndestination 15, is audited for direct programming).\n\nrvtt_check_late (end of the GIMPLE pipeline): re-checks integer\noperands whose constancy is only required by expand time (\"late\"\noperands, now possibly constant-propagated), and rejects\nreads/writes of SFPU objects from/to memory -- SFPU values cannot\nlive in memory, and by this point no further optimization could\nhave eliminated the access.",
       "refusals_cited": [],
+      "emits_dump": false,
+      "diagnostics_emitted": [
+        "Quasar replay instruction cannot exec-while-load,",
+        "argument   is invalid mod1 value (mask is 0x)",
+        "argument   is out of range [, ]",
+        "argument  is not a constant",
+        "argument  of  is not initialized",
+        "cannot  sfpu type (missing _inline?)",
+        "cannot write SFPU object to memory",
+        "reading uninitialized",
+        "sfpconfig-imm-dest-unaudited: immediate-form"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -99,8 +111,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -161,6 +175,8 @@
         "ccmask-zero-not-writable",
         "ccmask-zero-shared"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [
         "ccmask-direction-complete",
         "ccmask-eqne-zero"
@@ -207,8 +223,10 @@
           "reassoc-refuse-ambient-cc-general-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 32
+        "targeted_total": 32,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -261,6 +279,8 @@
         "int-abs-region-open-cfg",
         "int-abs-region-shape"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [
         "int-abs-negate-select"
       ],
@@ -285,8 +305,10 @@
           "intabs-renamed-varied-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 12
+        "targeted_total": 12,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -330,6 +352,8 @@
         "int-not-cc-mode-unsupported",
         "int-not-operand-form"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [
         "int-not-allones-subtract"
       ],
@@ -350,8 +374,10 @@
           "intnot-renamed-varied-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 8
+        "targeted_total": 8,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -429,6 +455,8 @@
         "store-fold-source-form",
         "store-fold-source-not-storable"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [
         "stochrnd-store-round",
         "store-sink-roundtrip"
@@ -475,8 +503,10 @@
           "storesink-license-refuse-multiuse-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 32
+        "targeted_total": 32,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -577,6 +607,8 @@
         "tail-not-all-lanes-encc",
         "unduplicable-statement"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [
         "cc-narrowing-writers"
       ],
@@ -918,8 +950,10 @@
           "xrow-tanh-2datum-fire-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 330
+        "targeted_total": 330,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -947,6 +981,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Three passes managing SFPU immediate operands as their constancy\nevolves through the GIMPLE pipeline:\n\n- rvtt_immvar_expand (early): an intrinsic whose immediate operand\nis variable, or constant but too wide for the instruction's\nimmediate field, is rewritten -- the value is materialized into a\nvector register (one or two SFPLOADI halves, or the extended-form\nSFPXLOADI split) and the intrinsic is replaced by its\nvector-operand variant.  Comparisons against a variable scalar\nbecome vector comparisons the same way.\n\n- rvtt_immload_shorten (late): constant propagation has by now fixed\nmany previously-variable immediates.  First the now-dead synthesis\nbookkeeping operands are cleared; then SFPLOADI/SFPLOADI_LV(upper)\npairs are shrunk: known constants become reads of the hardware\nconstant registers (0.0, +/-1.0, 0.8373), 32-bit patterns that fit\na 16-bit form (fp16a/fp16b/u16/i16) collapse to one load, values\nnear a hardware constant become constant-register reads plus a\nsmall IADD_I (or, on Blackhole/Quasar, a SHFT_I), and an\nunsimplifiable pair with no other uses recombines into one\nSFPXLOADI for the late expansion to assemble in a single result\nregister.  Care is taken never to fold a load that initializes a\nconstant register into a read of that same register.\n\n- rvtt_immload_combine (late): an operation with a scalar-immediate\nvariant whose vector operand comes from a SFPLOADI of a fitting\nconstant (or a read of constant-zero) absorbs the constant into\nthe scalar form, deleting the load when it has no other uses.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 6,
@@ -957,8 +993,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -986,6 +1024,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Most SFPU instructions encode a small immediate operand directly in\nthe instruction word.  When the source operand is not a compile-time\nconstant the instruction word itself must be synthesized at run time:\na prologue masks and shifts the variable value into the immediate\nfield and adds it to a base opcode produced by a SYNTH_OPCODE marker\nbuiltin; the consuming builtin then carries the synthesized word as\nan extra operand.  This file implements the GIMPLE half of that\nscheme as three passes (the RTL half is rtl-rvtt-synth.cc, which\npicks the final base opcode values):\n\n- rvtt_synth_split (early, after inlining): finds intrinsic calls\nwhose immediate argument is (still) non-constant and emits the\nmask/shift/synth_opcode/add prologue, linking prologue and use\nthrough a unique id.  The id also stops generic CSE from merging\nunrelated SYNTH_OPCODEs.  Running after inlining lets later code\nmotion separate the prologue from the use.\n\n- rvtt_synth_cse (late): duplication optimizations (unrolling,\nunswitching, jump threading) clone the prologue; when every value\nreaching a use's synthesized-word operand through PHI webs traces\nback to identically-numbered SYNTH_OPCODEs with one common addend,\nthe web collapses back to a single synth_opcode(+add).\n\n- rvtt_synth_renumber (last): the remaining duplicates get distinct\nids re-established so the RTL pass sees a 1:1 mapping between each\nadd chain and its SYNTH_OPCODE (clones that generic CSE chose to\nkeep separate are renumbered apart; constant-folded uses release\ntheir prologue to DCE).  Ids reached through PHIs are left alone.\n\nThe nonimm_pos field of rvtt_insn_data locates the permissible\nnon-constant argument of a builtin; argument nonimm_pos+1 receives\nthe synthesized instruction word and nonimm_pos+2 the SYNTH_OPCODE\ndependency id.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_insert": 8,
@@ -995,8 +1035,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1024,6 +1066,18 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Two diagnostic passes over SFPU intrinsic usage, sharing one set of\ncheckers.  Both repair what they diagnose (substituting an in-range\nvalue, the constant-zero register, or deleting the offending\nstatement) so that a single bad kernel produces one clear error\nrather than a cascade of RTL-expansion failures or assembler barf.\n\nrvtt_check_early (right after inlining):\n- function signatures may not pass or return SFPU vector values\n(they live in SFPU registers, outside the RISC-V ABI; functions\ntaking them must be inlined, hence the sfpi_inline hint);\n- compile-time-constant (\"early\") integer operands must be in range\nfor their instruction fields, and mod operands in each op's\nlegal-mod mask;\n- reads of uninitialized SFPU values are diagnosed once, here, where\nSSA undefinedness is still exact;\n- target-specific usage errors: the Quasar replay erratum\n(exec-while-load unsupported, under -mtt-fix-qsrreplay) and the\nimmediate-form SFPCONFIG destination envelope (only LaneConfig,\ndestination 15, is audited for direct programming).\n\nrvtt_check_late (end of the GIMPLE pipeline): re-checks integer\noperands whose constancy is only required by expand time (\"late\"\noperands, now possibly constant-propagated), and rejects\nreads/writes of SFPU objects from/to memory -- SFPU values cannot\nlive in memory, and by this point no further optimization could\nhave eliminated the access.",
       "refusals_cited": [],
+      "emits_dump": false,
+      "diagnostics_emitted": [
+        "Quasar replay instruction cannot exec-while-load,",
+        "argument   is invalid mod1 value (mask is 0x)",
+        "argument   is out of range [, ]",
+        "argument  is not a constant",
+        "argument  of  is not initialized",
+        "cannot  sfpu type (missing _inline?)",
+        "cannot write SFPU object to memory",
+        "reading uninitialized",
+        "sfpconfig-imm-dest-unaudited: immediate-form"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -1033,8 +1087,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1075,6 +1131,8 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_dst_iteration_fusion;",
       "contract_comment": "Fusion and interleaving of adjacent Dst-register iterations.\n\nLLK kernels iterate over rows of the Tensix Dst register file with a\nfixed pattern: a body of SFPU loads/computes/stores addressed\nrelative to the row-write counter (RWC), closed by a TTINCRWC that\nadvances the counter.  Two passes here widen that iteration grain\nfrom one row-pair to two, which halves the TTINCRWC overhead and\ndoubles the straight-line body available to the RTL schedulers.\n\nrvtt_dst_iteration (fusion): scan each block for two consecutive\niterations -- body, TTINCRWC(+2), identical body, TTINCRWC(+2) --\nwhose calls match pairwise (same operations, same scalar operands,\nvector operands isomorphic under the value map established by the\npair, same Dst addresses).  Legality requires: every typed Dst\naccess uses the no-auto-increment addressing mode with a provable\nin-range address (VRP-backed) even after +2 rewriting; each body's\nvector values are consumed only inside its own iteration; and at\nleast two loads and a store are present (the shapes worth fusing).\nThe fusion rewrites the second body's Dst addresses to base+2 and\nmerges the two TTINCRWC(+2)s into one TTINCRWC(+4), deleting the\nfirst.\n\nrvtt_dst_interleave: runs late, after lowering has exposed the final\ntyped SFPU operations but before RTL expansion.  A fused group\n(recognized by its TTINCRWC(+4) marker) whose two halves still match\npairwise is rescheduled load/load/compute/compute/drain/drain so the\ntwo rows' independent chains overlap; legality further requires the\nloads-computes-drains shape, one store per half placed last, 4-byte\nalignment of the first row's typed addresses (making the +2 row's\naccesses provably disjoint from the first row's store under the\ninterleaved order), all scalar operand definitions to dominate the\ngroup, and closed vector def-use within the group.  Rescheduling\ndrops the group-internal virtual operands (the accesses were proven\ndisjoint) and lengthens independent live ranges before IRA assigns\nphysical LREGs.\n\nBoth passes only reorder/rewrite proven-identical bodies; any\nunrecognized statement inside a candidate window rejects the whole\ncandidate (with a TDF_DETAILS reason line).  On Quasar\n(TARGET_XTT_TENSIX_QSR) the analysis runs and dumps its verdicts,\nbut the rewrite itself is suppressed (emit=no).\n\nRuns under -mtt-tensix-optimize-dst-iteration-fusion.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -1094,8 +1152,10 @@
           "dst-iteration-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 8
+        "targeted_total": 8,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1123,6 +1183,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Three passes managing SFPU immediate operands as their constancy\nevolves through the GIMPLE pipeline:\n\n- rvtt_immvar_expand (early): an intrinsic whose immediate operand\nis variable, or constant but too wide for the instruction's\nimmediate field, is rewritten -- the value is materialized into a\nvector register (one or two SFPLOADI halves, or the extended-form\nSFPXLOADI split) and the intrinsic is replaced by its\nvector-operand variant.  Comparisons against a variable scalar\nbecome vector comparisons the same way.\n\n- rvtt_immload_shorten (late): constant propagation has by now fixed\nmany previously-variable immediates.  First the now-dead synthesis\nbookkeeping operands are cleared; then SFPLOADI/SFPLOADI_LV(upper)\npairs are shrunk: known constants become reads of the hardware\nconstant registers (0.0, +/-1.0, 0.8373), 32-bit patterns that fit\na 16-bit form (fp16a/fp16b/u16/i16) collapse to one load, values\nnear a hardware constant become constant-register reads plus a\nsmall IADD_I (or, on Blackhole/Quasar, a SHFT_I), and an\nunsimplifiable pair with no other uses recombines into one\nSFPXLOADI for the late expansion to assemble in a single result\nregister.  Care is taken never to fold a load that initializes a\nconstant register into a read of that same register.\n\n- rvtt_immload_combine (late): an operation with a scalar-immediate\nvariant whose vector operand comes from a SFPLOADI of a fitting\nconstant (or a read of constant-zero) absorbs the constant into\nthe scalar form, deleting the load when it has no other uses.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 6,
@@ -1133,8 +1195,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1162,6 +1226,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "The SFPU's predicated-execution model expresses conditional lane\nassignment as an ASSIGN_LV intrinsic: within a lane-condition region\nthe destination vector receives the new value in enabled lanes and\nkeeps its prior (\"live\") value in disabled lanes.  The front end\nseeds the live input of a not-yet-initialized vector with a NOVALUE\nmarker intrinsic.\n\nWhen the live input is NOVALUE there is nothing to preserve: the\nassignment is unconditional as far as the disabled lanes are\nconcerned, so the ASSIGN_LV wrapper is redundant.  This pass removes\nsuch wrappers by substituting the assigned value for the wrapper's\nresult and deleting the call.  Removing the wrapper early both\nshrinks the IL and unblocks later passes (combine, DCE) that do not\nlook through ASSIGN_LV.\n\nAlgorithm: a single linear scan over all statements collects\nASSIGN_LV calls whose live operand is defined by NOVALUE; each is\nthen elided via rvtt_substitute_value.  No control-flow or dominance\ninformation is needed because the NOVALUE marker dominates its use\nby SSA construction.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -1170,8 +1236,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1199,6 +1267,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Most SFPU instructions encode a small immediate operand directly in\nthe instruction word.  When the source operand is not a compile-time\nconstant the instruction word itself must be synthesized at run time:\na prologue masks and shifts the variable value into the immediate\nfield and adds it to a base opcode produced by a SYNTH_OPCODE marker\nbuiltin; the consuming builtin then carries the synthesized word as\nan extra operand.  This file implements the GIMPLE half of that\nscheme as three passes (the RTL half is rtl-rvtt-synth.cc, which\npicks the final base opcode values):\n\n- rvtt_synth_split (early, after inlining): finds intrinsic calls\nwhose immediate argument is (still) non-constant and emits the\nmask/shift/synth_opcode/add prologue, linking prologue and use\nthrough a unique id.  The id also stops generic CSE from merging\nunrelated SYNTH_OPCODEs.  Running after inlining lets later code\nmotion separate the prologue from the use.\n\n- rvtt_synth_cse (late): duplication optimizations (unrolling,\nunswitching, jump threading) clone the prologue; when every value\nreaching a use's synthesized-word operand through PHI webs traces\nback to identically-numbered SYNTH_OPCODEs with one common addend,\nthe web collapses back to a single synth_opcode(+add).\n\n- rvtt_synth_renumber (last): the remaining duplicates get distinct\nids re-established so the RTL pass sees a 1:1 mapping between each\nadd chain and its SYNTH_OPCODE (clones that generic CSE chose to\nkeep separate are renumbered apart; constant-folded uses release\ntheir prologue to DCE).  Ids reached through PHIs are left alone.\n\nThe nonimm_pos field of rvtt_insn_data locates the permissible\nnon-constant argument of a builtin; argument nonimm_pos+1 receives\nthe synthesized instruction word and nonimm_pos+2 the SYNTH_OPCODE\ndependency id.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_insert": 8,
@@ -1208,8 +1278,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1250,6 +1322,8 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_dce;",
       "contract_comment": "SFPU intrinsic calls carry virtual operands (the intrinsics are\ndeclared with side effects so that generic optimizers do not reorder\nthem), which hides genuinely dead intrinsic computations from the\ngeneric tree-ssa DCE.  This pass performs mark-and-sweep dead-code\nelimination specialized to SFPU intrinsic calls:\n\n1. Collect every SFPU intrinsic call in the function.  Calls whose\nsemantics really are effectful (stores, config writes, ...) per\nrvtt_insn_data::has_side_effects seed the live worklist; all\nothers start out presumed dead.\n2. Propagate liveness backwards: for each live call, every SSA\ninput's defining intrinsic call becomes live, walking through\nPHI nodes (with a visited set to terminate on cycles).\n3. Delete the calls that were never marked live, first unlinking\nany PHI nodes that use their results (such PHIs are themselves\ndead, or step 2 would have reached the call through them).\n\nThe propagation is complete because SFPU vector values flow only\nbetween intrinsic calls and PHI nodes -- the vector types have no\nother consumers in the IL -- so walking those two statement kinds\nreaches every use-def chain that could keep a call alive.\n\nRuns under -mtt-tensix-optimize-dce (default on).",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -1260,8 +1334,10 @@
           "rvttdce-dead-chain-fire-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 1
+        "targeted_total": 1,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1300,6 +1376,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Most SFPU instructions encode a small immediate operand directly in\nthe instruction word.  When the source operand is not a compile-time\nconstant the instruction word itself must be synthesized at run time:\na prologue masks and shifts the variable value into the immediate\nfield and adds it to a base opcode produced by a SYNTH_OPCODE marker\nbuiltin; the consuming builtin then carries the synthesized word as\nan extra operand.  This file implements the GIMPLE half of that\nscheme as three passes (the RTL half is rtl-rvtt-synth.cc, which\npicks the final base opcode values):\n\n- rvtt_synth_split (early, after inlining): finds intrinsic calls\nwhose immediate argument is (still) non-constant and emits the\nmask/shift/synth_opcode/add prologue, linking prologue and use\nthrough a unique id.  The id also stops generic CSE from merging\nunrelated SYNTH_OPCODEs.  Running after inlining lets later code\nmotion separate the prologue from the use.\n\n- rvtt_synth_cse (late): duplication optimizations (unrolling,\nunswitching, jump threading) clone the prologue; when every value\nreaching a use's synthesized-word operand through PHI webs traces\nback to identically-numbered SYNTH_OPCODEs with one common addend,\nthe web collapses back to a single synth_opcode(+add).\n\n- rvtt_synth_renumber (last): the remaining duplicates get distinct\nids re-established so the RTL pass sees a 1:1 mapping between each\nadd chain and its SYNTH_OPCODE (clones that generic CSE chose to\nkeep separate are renumbered apart; constant-folded uses release\ntheir prologue to DCE).  Ids reached through PHIs are left alone.\n\nThe nonimm_pos field of rvtt_insn_data locates the permissible\nnon-constant argument of a builtin; argument nonimm_pos+1 receives\nthe synthesized instruction word and nonimm_pos+2 the SYNTH_OPCODE\ndependency id.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_insert": 8,
@@ -1309,8 +1387,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1380,6 +1460,8 @@
         "lut-structure-mismatch",
         "lut-wh-negative-nan-divergent"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_replace": 1,
@@ -1445,8 +1527,10 @@
           "lut-select-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 53
+        "targeted_total": 53,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1542,6 +1626,8 @@
         "crossloop-word-unproven",
         "mop-template-config-word-unproven"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_replace": 1,
@@ -1609,8 +1695,10 @@
           "crossloop-hoist-word-nearmiss-bh.C",
           "crossloop-hoist-word-refuse-bh.C"
         ],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 55
+        "targeted_total": 55,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1654,6 +1742,8 @@
         "crossloop-preheader-unproven",
         "crossloop-speculation-unproven"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "update_stmt": 1,
@@ -1706,8 +1796,10 @@
           "pressure-engine-crossloop-checking-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 43
+        "targeted_total": 43,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1750,6 +1842,8 @@
       "refusals_cited": [
         "repr-conversion-unaudited"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 2,
@@ -1768,8 +1862,10 @@
           "reprprop-unaudited-refuse-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 9
+        "targeted_total": 9,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1797,6 +1893,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Lowering of SFPI boolean condition trees (v_if / v_elseif\nconditions) into SFPU condition-code operations.\n\nThe front end represents a lane condition as an SSA tree of marker\nbuiltins: comparisons (SFPXFCMPS/SFPXFCMPV for float,\nSFPXICMPS/SFPXICMPV for integer), boolean combiners (SFPXBOOL:\nAND/OR/NOT), an integer-condition escape (SFPXCONDI, a boolean used\nas an ordinary integer value), all anchored by an SFPXCONDB at the\nregion head.  The hardware has no boolean registers: a comparison\nnarrows the lane-enable mask as a side effect, an AND is simply two\ncomparisons in sequence, and there is no OR at all.  Some comparison\nsenses (LE, GT) are themselves synthesized from the complement\noperation (COMPC).\n\nThis pass deletes each tree and re-emits it in hardware terms:\n\n- ORs become ANDs of negated children by De Morgan's laws; the\nNEGATE flag toggles down the tree so double negations cancel, and\ncomparison senses flip instead of emitting complements wherever\npossible.\n\n- An AND's right-hand side that ends \"negated\" (its result exists\nonly as a complemented mask) is bracketed: the incoming enables\nare saved to a temporary (LOADI 1 under the old mask, LOADI_LV 0\nunder the new), the region is closed with POPC, and SETCC_V\nrestores the computed mask -- see process_bool_tree.\n\n- SFPXCONDI outside a lane-condition region expands to the integer\nmaterialization LOADI 0 / PUSHC / cmp-tree / LOADI_LV 1 / POPC;\ninside one, when its comparison result feeds the region's own\nSFPXCONDB and nothing else, the tree is grafted directly into the\nSFPXCONDB and the materialization is skipped (see the vif_stmts\nmarking in transform).\n\nThe scalar SSA results of the deleted markers cease to exist --\ntheir value now lives in the CC state -- so lhs links are cleared\n(with DEBUG_BIND uses reset) rather than replaced.\n\nThe emitted PUSHC/POPC/COMPC structure is exactly what the\ndownstream passes (gimple-rvtt-live.cc, gimple-rvtt-cc.cc) analyze;\nthis pass runs before both.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 2,
@@ -1807,8 +1905,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1836,6 +1936,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Three passes managing SFPU immediate operands as their constancy\nevolves through the GIMPLE pipeline:\n\n- rvtt_immvar_expand (early): an intrinsic whose immediate operand\nis variable, or constant but too wide for the instruction's\nimmediate field, is rewritten -- the value is materialized into a\nvector register (one or two SFPLOADI halves, or the extended-form\nSFPXLOADI split) and the intrinsic is replaced by its\nvector-operand variant.  Comparisons against a variable scalar\nbecome vector comparisons the same way.\n\n- rvtt_immload_shorten (late): constant propagation has by now fixed\nmany previously-variable immediates.  First the now-dead synthesis\nbookkeeping operands are cleared; then SFPLOADI/SFPLOADI_LV(upper)\npairs are shrunk: known constants become reads of the hardware\nconstant registers (0.0, +/-1.0, 0.8373), 32-bit patterns that fit\na 16-bit form (fp16a/fp16b/u16/i16) collapse to one load, values\nnear a hardware constant become constant-register reads plus a\nsmall IADD_I (or, on Blackhole/Quasar, a SHFT_I), and an\nunsimplifiable pair with no other uses recombines into one\nSFPXLOADI for the late expansion to assemble in a single result\nregister.  Care is taken never to fold a load that initializes a\nconstant register into a read of that same register.\n\n- rvtt_immload_combine (late): an operation with a scalar-immediate\nvariant whose vector operand comes from a SFPLOADI of a fitting\nconstant (or a read of constant-zero) absorbs the constant into\nthe scalar form, deleting the load when it has no other uses.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 6,
@@ -1846,8 +1948,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1875,6 +1979,12 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "The SFPU executes every instruction in all 32 lanes; the\ncondition-code (CC) stack only masks which lanes commit results.  A\ndestination register written under a narrowed CC therefore KEEPS its\nold value in the disabled lanes -- SFPI models this with an explicit\nASSIGN_LV (assign-live-value) intrinsic pairing the new value with\nthe previous (\"live\") one.  Keeping every ASSIGN_LV would be\ndreadful code, and most are unnecessary: if the destination's\nprevious value was defined under the SAME or a NARROWER lane mask,\nthe disabled lanes cannot hold values the program could observe, so\nthe plain (non-live) instruction form suffices.\n\nThis pass decides which ASSIGN_LVs are removable and folds the\nkeepers into \"_lv\" instruction forms:\n\n1. CC-context analysis (process_block): depth-first CFG walk from\nthe entry block tracking, per statement, the CC nesting LEVEL and\na GENERATION counter (bumped when a new PUSHC opens after a POPC\nlowered the level, so sibling regions at equal depth are not\nconfused with the defining region).  A block reached twice at\ndifferent levels forces all its statements live (its stack depth\nmust nevertheless agree -- asserted, and relied on by\ngimple-rvtt-cc.cc).\n\n2. break_liveness: for every _lv intrinsic, chase the live-input\nchain to its defining non-live statement (through PHIs, one\narbitrary acyclic path suffices; an undefined input means the\nvalue is uninitialized and is left for the check pass).  If the\nuse's context is no deeper and no newer than the definition's --\nand the use was not forced -- delete the ASSIGN_LV, rewiring its\nuses to the assigned value.\n\n3. fold_live_assign: a surviving ASSIGN_LV whose assigned value is\nproduced by the immediately preceding intrinsic folds into that\nintrinsic's _lv form (e.g. SFPMAD -> SFPMAD_LV), including the\ntwo-instruction non-immediate SFPLOADI pair.\n\nRuns before the CC-elimination pass (which destroys the PUSHC/POPC\nstructure this analysis reads).  Malformed region structure is a\nhard error.  always_inline wrappers are skipped.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [
+        "malformed program,  outside of pushc/popc",
+        "malformed program, popc without matching pushc",
+        "malformed program, pushc without matching popc"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 4,
@@ -1885,8 +1995,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -1927,6 +2039,12 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_cc > 0;",
       "contract_comment": "The SFPU's lane-enable (condition-code) state is managed as a stack:\nPUSHC saves the current lane mask on entry to a predicated (v_if)\nregion, the comparison ops narrow it, COMPC complements it for the\nelse-arm, and POPC restores the saved mask on exit.  ENCC simply\nre-enables all lanes.  The SFPI front end emits fully general\nPUSHC/POPC pairs; this pass removes the pairs that the stack\ndiscipline makes redundant:\n\n1. The outermost pair of a kernel: at depth zero there is no outer\nmask worth saving, so the PUSHC is deleted and the matching POPC\nbecomes an ENCC (enable all lanes).\n\n2. Tail pops: when a POPC is immediately followed (no intervening\nSFPU ops or calls) by the enclosing region's POPC, and the inner\nregion used no COMPC, the inner PUSHC/POPC pair collapses into\nthe outer one.  All three statements must sit in one basic block\n-- across blocks, different paths may disagree about intervening\ninstructions.\n\nThe walk is a depth-first traversal of the CFG from the entry block\ncarrying the open-PUSHC stack; each block is processed once (the\nregion-nesting depth at a block is path-invariant -- the liveness\npass asserts this).  PUSHC-with-replace-mod pops before it pushes\nand is treated accordingly.  A malformed region structure (POPC or\nCOMPC outside any region, replace at depth zero) is a hard error.\n\nRuns under -mtt-tensix-optimize-cc (default on).  The RTL-level CC\nregion machinery (tt/rvtt-cc-region.*) later rebuilds the region\ntree from the surviving markers; this pass must stay conservative\nprecisely so that that reconstruction is exact.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [
+        "malformed program, popc without matching pushc - exiting!",
+        "malformed program, pushc replace at outer level\\n",
+        "malformed program, sfpcompc outside of pushc/popc - exiting!"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 4,
@@ -1970,8 +2088,10 @@
           "reassoc-refuse-ambient-cc-general-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 34
+        "targeted_total": 34,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2053,6 +2173,8 @@
         "mop-scan-recursion-unproven",
         "tu-audit-not-run"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {},
       "tests": {
@@ -2222,8 +2344,10 @@
         "by_refusal": [
           "macro-planner-ambient-walk-word-bh.C"
         ],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 162
+        "targeted_total": 162,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2284,6 +2408,8 @@
         "reassoc-fpu-choreography-boundary",
         "reassoc-replay-playback-boundary"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -2346,8 +2472,10 @@
           "reassoc-refuse-target-flag-absent-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 51
+        "targeted_total": 51,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2390,6 +2518,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "A pattern-driven combiner over SFPU intrinsic calls.\n\nThe patterns are described in a GimpleCombine (.gc) file (rvtt.gc),\nprocessed by genrvtt-combine, whose generated tables are #included\nbelow.  Each combiner rule is a list of call shapes to match, a list\nof replacement templates, optional bespoke predicates and init/fini\nhooks, and flags.  Rules can be gated (per architecture or per\noption); a fired rule is identified in the dump by its stable tag.\n\nMatching: the matcher is deliberately simple -- it records possible\nstarting points and orders its checks cheapest-first.  A match is\nanchored at the LAST pattern of a sequence and searched backwards\nthrough the calls producing that pattern's inputs.  Iteration\ncontinues until no rule fires, so one rule's output can enable\nanother's match.\n\nOverlap resolution: rules anchored on one statement are tried in\npriority (.gc line) order and the first match is applied\nimmediately; a rule whose input was consumed by an earlier rewrite\nsimply re-matches against the rewritten output on a later\niteration.\n\nCC-region model: deliberately coarse -- every CC-setting builtin\nseparates two regions, and block boundaries separate regions too.\nAll non-SetAnywhere patterns are treated as SameRegion.  (The RTL\nengines have an exact region tree; refining this remains open.)",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 4,
@@ -2423,8 +2553,10 @@
           "setexp-fold-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 22
+        "targeted_total": 22,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2452,6 +2584,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "A few SFPU builtins must sit in the same basic block as their uses\nor their defs, because the RTL passes that consume them perform only\nintra-block value propagation.  This pass restores that locality\ninvariant late in the GIMPLE pipeline, after CSE/PRE and code motion\nmay have broken it.  Two transformations are performed:\n\n1. Sinking constant-register reads (SFPREADLREG of a constant LREG,\nindex >= 8) and NOVALUE markers to their use blocks.  SFPREADLREG\nserves both variable and constant registers; for constant\nregisters the early RTL combine-like pass (rtl-rvtt-unspec.cc)\nfolds the read directly into the consuming instruction, but --\nlike the generic combiner it is modeled on -- it works only\nwithin a block.  So each cross-block use gets its own clone of\nthe read inserted immediately before it; the original becomes\ndead and RTL DCE sweeps it up.\n\n2. Hoisting multi-result selectors (SFPSELECT2/SFPSELECT4) to their\ndefinition blocks.  A builtin returning multiple vector values\nmodels the result as one wide vector, and a selector call picks\nout one element (the underlying instruction is a parallel set;\nVEC_CONCAT-style modeling did not work out).  Expansion of the\nwide def and its selector must see each other, so a clone of the\nselector is placed immediately after the defining call and all\nthe selector's uses are redirected to the clone.\n\nBoth transforms only clone/move calls -- values are never changed --\nso the pass is idempotent, and cloned calls are excluded from\nrescanning within the run.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_insert": 2,
@@ -2461,8 +2595,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2489,6 +2625,8 @@
       "gate": null,
       "contract_comment": "The SFPI intrinsic headers tag pointer types with the memory-space\nattributes \"rvtt_l1_ptr\" (L1 scratch memory) and \"rvtt_reg_ptr\"\n(memory-mapped configuration registers).  Several consumers key off\nthese tags: the pipeline description assigns per-space load\nlatencies (rvtt-tune.md, via rvtt_l1_load_p/rvtt_reg_load_p), and\nthe Wormhole read-after-write hazard workaround exempts\nregister-space stores (rtl-rvtt-fix-raw.cc).\n\nGeneric middle-end passes freely rebuild pointer SSA names (copy\npropagation, PRE, forwprop) using the bare pointer type, so by the\nend of the GIMPLE pipeline many pointer-typed SSA names have lost\nthe attribute even though every value that can reach them derives\nfrom a tagged pointer.  Recovering the tags later, from RTL, proved\nunreliable -- the tree structures reachable from MEM_EXPRs are no\nlonger maintained at that point -- so this pass runs as the last\nGIMPLE pass, immediately before expand, while the SSA web is still\nintact.\n\nAlgorithm: for every pointer-typed SSA definition lacking both\nattributes, walk backwards through the defining statements (assigns\nthrough their operands, PHIs through all arguments) with a\nmemoization map until a tagged source pointer is found; if one is,\nrebuild the definition's type with the source's attribute list.  The\nwalk is a heuristic: a first-found tag wins, calls terminate the\nwalk, and failure to find a tag simply leaves the type bare --\nuntagged pointers are correct, just conservatively scheduled.\n\nFIXME: whether the attribute loss could instead be prevented at its\nsources (the intrinsic type machinery mishandling the attribute\nvariants) has not been established; if it were, this pass could be\nretired.\n\nThe transform is applied only for Wormhole Tensix\n(TARGET_XTT_TENSIX_WH), the only architecture whose downstream\nconsumers currently depend on recovered tags.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "set_ssa_def": 2
@@ -2496,8 +2634,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2538,6 +2678,8 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_dst_iteration_fusion;",
       "contract_comment": "Fusion and interleaving of adjacent Dst-register iterations.\n\nLLK kernels iterate over rows of the Tensix Dst register file with a\nfixed pattern: a body of SFPU loads/computes/stores addressed\nrelative to the row-write counter (RWC), closed by a TTINCRWC that\nadvances the counter.  Two passes here widen that iteration grain\nfrom one row-pair to two, which halves the TTINCRWC overhead and\ndoubles the straight-line body available to the RTL schedulers.\n\nrvtt_dst_iteration (fusion): scan each block for two consecutive\niterations -- body, TTINCRWC(+2), identical body, TTINCRWC(+2) --\nwhose calls match pairwise (same operations, same scalar operands,\nvector operands isomorphic under the value map established by the\npair, same Dst addresses).  Legality requires: every typed Dst\naccess uses the no-auto-increment addressing mode with a provable\nin-range address (VRP-backed) even after +2 rewriting; each body's\nvector values are consumed only inside its own iteration; and at\nleast two loads and a store are present (the shapes worth fusing).\nThe fusion rewrites the second body's Dst addresses to base+2 and\nmerges the two TTINCRWC(+2)s into one TTINCRWC(+4), deleting the\nfirst.\n\nrvtt_dst_interleave: runs late, after lowering has exposed the final\ntyped SFPU operations but before RTL expansion.  A fused group\n(recognized by its TTINCRWC(+4) marker) whose two halves still match\npairwise is rescheduled load/load/compute/compute/drain/drain so the\ntwo rows' independent chains overlap; legality further requires the\nloads-computes-drains shape, one store per half placed last, 4-byte\nalignment of the first row's typed addresses (making the +2 row's\naccesses provably disjoint from the first row's store under the\ninterleaved order), all scalar operand definitions to dominate the\ngroup, and closed vector def-use within the group.  Rescheduling\ndrops the group-internal virtual operands (the accesses were proven\ndisjoint) and lengthens independent live ranges before IRA assigns\nphysical LREGs.\n\nBoth passes only reorder/rewrite proven-identical bodies; any\nunrecognized statement inside a candidate window rejects the whole\ncandidate (with a TDF_DETAILS reason line).  On Quasar\n(TARGET_XTT_TENSIX_QSR) the analysis runs and dumps its verdicts,\nbut the rewrite itself is suppressed (emit=no).\n\nRuns under -mtt-tensix-optimize-dst-iteration-fusion.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -2557,8 +2699,10 @@
           "dst-iteration-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 8
+        "targeted_total": 8,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2616,6 +2760,8 @@
         "old-peak",
         "source-availability"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "update_stmt": 1,
@@ -2664,8 +2810,10 @@
           "welford-pressure-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 39
+        "targeted_total": 39,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2706,6 +2854,8 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_crosslane > 0;",
       "contract_comment": "-mtt-tensix-optimize-crosslane (default off).\n\nTHE PROBLEM.  The typed cross-lane vocabulary (sfpi_crosslane.h)\nlowers its composite\nprimitives as PINNED canonical inline frames -- rotate chains of\nSFPSHFT2 SUBVEC_SHFLROR1, SFPSWAP compare-exchange stages, dual-bank\nSFPTRANSP frames, and the zip frame (staged dual-bank transpose plus\na row-predicated pair swap).  Composition of these primitives at the\ncall level (rotate of rotate, sort of sorted, zip round trips, the\nper-arch slide spelling) leaves algebraically redundant instruction\nchains that no generic pass understands: the ops are opaque builtin\ncalls.\n\nTHE MECHANISM (recognizer chain over canonical forms).  Exactly the\narchitecture every production backend uses for constant-pattern\nshuffles (GCC VEC_PERM_EXPR: per-target recognizer chain, dual\ntest/emit, cheapest first -- aarch64.cc evpc chain, riscv-v.cc\nshuffle chain; LLVM's is*Mask recognizers over a small canonical\nform): this pass recognizes the canonical frames the surface pins\n(the documented \"X4 seam\" of every sfpi_crosslane.h op) and applies\nthe proven algebra of the underlying permutations:\n\nR1 rotate-chain collapse    ror1^n == ror1^(n mod 8)   [ror1^8 = id]\nR2 slide re-lowering        rotr<K> + predicated-zero(cols < K)\n== K x SUBVEC_SHFLSHR1     [per-arch]\nR3 swap refold              min/max o min/max == min/max (values);\nmod0 swap o mod0 swap == identity\nR4 transpose involution     transp8 o transp8 == identity\nR5 zip-chain collapse       zip^3 == identity (the 8-row riffle has\norder 3; zip^2 == unzip is canonical)\n\nEach identity is host-proven in an independent acceptance battery\n(rotate/transpose/zip inverses, swap mask table and tie-model\nwitnesses) -- that battery is the specification of the algebra used\nhere, derived only from the tt-isa-documentation functional models\n(SFPSHFT2.md, SFPSWAP.md, SFPTRANSP.md, SFPCONFIG.md).\n\nLANE-STATE OBLIGATION.  Every rewritten instruction is lanewise\npredicated (VectorUnit.md LaneEnabled), and rotation/transposition\nalgebra composes only when every lane participates: under a partial\nenable state a fresh-destination rotate leaves stale values in\ndisabled columns which the NEXT rotate reads back into enabled ones,\nso ror1^8 is NOT the identity there.  Following the transp-involution\nprecedent this pass takes NO reaching-state axiom: rewrites R1, R2,\nR4 and R5 require a PROVEN all-lanes state -- a dominating word-exact\nall-lanes SFPENCC (rvtt_macro::sfpencc_all_lanes_word) with only\nproven lane-state-preserving statements between -- and refuse\notherwise (crosslane-lane-state-unproven).  R3 is the exception with\na weaker obligation: min/max refolding is per-lane idempotent\nwhatever the enable state, PROVIDED the state cannot change between\nthe two exchanges (a lane enabled only for the second exchange would\nreally sort); it requires only an unchanged-CC window\n(crosslane-cc-window on failure).\n\nKEY-VALUE REFUSAL (tie divergence).  The indexed (ENABLE_DEST_INDEX)\ncompare-exchange moves companion payloads on the swap decision, and\nthe swap decision on EQUAL keys is an UNRESOLVED doc-vs-sim\ndivergence (SFPSWAP.md keys tie-swaps on sign; the reference\nsimulator uses min c<d / max c>=d).  Under the doc model a\nsecond identical exchange moves companions AGAIN on ties, so indexed\nrefolding is not provable until hardware resolves it: refused by name\n(crosslane-kv-refold-tie-unadjudicated).  The mod-0 indexed pair\n(unconditional swap, no comparison) has no tie arm and cancels\nexactly like the value form.\n\nPER-ARCH CAPABILITY TABLE.  Following the surface's own per-arch\nsplit (subvec_slideup: Wormhole's SUBVEC_SHFLSHR1 gives lane 0 an\nUnpredictableValue -- WormholeB0 SFPSHFT2.md -- so WH lowers slides\nvia rotate+mask), the R2 rotate re-lowering into SHFLSHR1 consults the table\nand refuses by name on targets without the fixed shift\n(crosslane-shflshr1-unsupported).  Quasar is not covered by the\npinned-simulator proof battery yet: the whole pass refuses there\n(crosslane-unsupported-target).\n\nPRICING.  Every rewrite is priced in issue slots from the audited\nhazard facts before it fires: SFPSWAP and the SFPSHFT2 shuffle modes\naccept only SFPNOP on the next cycle (SFPSWAP.md / SFPSHFT2.md; the\nrvtt.md xtt_next_slot_stall attribute carries the same audit), so\neach costs 2 slots; SFPTRANSP costs 1.  A rewrite fires only when\nthe priced after-cost does not exceed the before-cost; the dump\nrecords both sides of every decision.\n\nREFUSAL NAMES (dump-visible, append-only):\ncrosslane-unsupported-target, crosslane-lane-state-unproven,\ncrosslane-cc-window, crosslane-kv-refold-tie-unadjudicated,\ncrosslane-shflshr1-unsupported, crosslane-companion-escape,\ncrosslane-priced-no-gain, crosslane-frame-value-escape.\n\nAll refusals leave the function byte-identical.  The\nENABLE_DEST_INDEX window model (the dest-index write restriction) is\nenforced on the FINAL RTL stream by the companion pass\nrtl-rvtt-crosslane-window.cc, behind the same flag.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_remove": 1,
@@ -2746,8 +2896,10 @@
           "crosslane-zip3-identity-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 30
+        "targeted_total": 30,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2792,6 +2944,8 @@
         "transp-involution-unsupported-target",
         "transp-involution-window"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "gsi_replace": 1,
@@ -2813,8 +2967,10 @@
           "transp-involution-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 9
+        "targeted_total": 9,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -2904,6 +3060,8 @@
         "rolled-hoisted",
         "unrolled-explicit"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {},
       "tests": {
@@ -3190,8 +3348,10 @@
           "xrow-seed-capture-compose-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 280
+        "targeted_total": 280,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3276,6 +3436,8 @@
         "round-interleave-trips-not-divisible",
         "round-interleave-word-budget"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "set_ssa_def": 9
@@ -3328,8 +3490,10 @@
           "round-interleave-rmw-web-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 44
+        "targeted_total": 44,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3414,6 +3578,8 @@
         "round-interleave-trips-not-divisible",
         "round-interleave-word-budget"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "set_ssa_def": 9
@@ -3466,8 +3632,10 @@
           "round-interleave-rmw-web-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 44
+        "targeted_total": 44,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3552,6 +3720,8 @@
         "round-interleave-trips-not-divisible",
         "round-interleave-word-budget"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "set_ssa_def": 9
@@ -3604,8 +3774,10 @@
           "round-interleave-rmw-web-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 44
+        "targeted_total": 44,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3633,6 +3805,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "A combine-like pass over Tensix instructions that:\n\n1. copies constant-LREG-read unspecs (UNSPEC_SFPCSTLREG) and NOVALUE\nmarkers (UNSPEC_SFPNOVAL) into the instructions that use them, so\nthe constant register is encoded directly rather than routed\nthrough a temporary.  As described in the companion GIMPLE pass\n(gimple-rvtt-unspec.cc), the generic combine/late-combine/IRA\nmachinery does not reliably perform this fold for these unspecs;\nthe GIMPLE pass guarantees def and use share a block, and this\npass performs the actual substitution.\n\n2. resolves multi-register builtin results: a constant-index select\nfrom a cleave-together unspec (UNSPEC_SFPCLEAVE) is replaced by\nthe selected input directly.\n\nValue tracking is strictly intra-block: a simple regno -> unspec\nmap is maintained while scanning each block, invalidated at\nredefinitions, and consulted when a Tensix instruction reads a\ntracked register.  match_dup operands reading the same register are\nsubstituted as one change group.  Failed validations simply leave\nthe instruction unchanged (the register-routed form remains\ncorrect).",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "validate_change": 2
@@ -3640,8 +3814,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3669,6 +3845,8 @@
       "gate": "return riscv_tt_fix_whbh_ebreak > 0;",
       "contract_comment": "After an ebreak, insert 8 nops.  It is unclear whether one can emit a loop\nwith similar timing charactaristics.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 1
@@ -3676,8 +3854,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3705,6 +3885,8 @@
       "gate": "return riscv_tt_opt_extend > 0;",
       "contract_comment": "SFPI kernels access device memory heavily through volatile pointers,\nand GCC declines to merge zero/sign extensions into loads and stores\nof volatile memory.  The resulting redundant extension instructions\nare pure overhead on RV32.  This early RTL pass removes the common\nshapes:\n\n1. load + extend: a narrow load whose (sole-use, dying) result feeds\nan extension merges into an extending load.\n\n2. extend + stores: an extension of a subreg whose every use is a\nnarrow store of the matching mode is bypassed -- the stores read\nthe unextended register directly and the extension is deleted.\n\n3. extend + left-shift: a 16-bit extension followed by a left shift\nof its (dying) result becomes shift-left-16 + logical/arithmetic\nshift-right of (16 - amount), saving one instruction.\n\nTwo rarer shapes (one extension feeding several stores plus another\nsafe use; extension chains) are recognized as future work.\n\nDef-use information comes from two purpose-built maps: single-block\nLOG_LINKS (the classic combine structure -- create_log_links below\nis copied from combine.cc) for the load/extend and shift cases, and\na def -> all-uses map (create_links) for the store case.\n\nEnabled by -mtt-optimize-extend; defaulted on at -O1+ for\n-mcpu=tt-wh* and tt-bh* (not Quasar, where it has an unresolved\nICE -- see riscv_override_options_internal).",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "validate_change": 6
@@ -3714,8 +3896,10 @@
           "rmext-shift-extend-fire-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 1
+        "targeted_total": 1,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3759,6 +3943,8 @@
         "rwc-boundary",
         "value-clobbered"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 1,
@@ -3811,8 +3997,10 @@
           "macro-planner-swap-cst-row-varied-wh.C",
           "macro-planner-unary-lz-comp-refuse-bh.C"
         ],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 42
+        "targeted_total": 42,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3899,6 +4087,8 @@
         "static-delay",
         "zero-length"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {},
       "tests": {
@@ -3939,8 +4129,10 @@
           "round-interleave-barrier-class-bh.C",
           "round-interleave-owner-refusal-bh.C"
         ],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 33
+        "targeted_total": 33,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -3968,6 +4160,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Metadata builtins name raw architectural L-register accesses.  Raw .ttinsn\notherwise has no RTL def/use, so IRA is free to reuse a future input (for\nexample L1 after a raw SFPLOAD) as a vFloat temporary.  A zero-length,\nfixed-register read creates a normal IRA interval.  The artificial value is\nused at each local endpoint; joins get a fresh local token, deliberately\navoiding a cross-CFG pseudo/phi while conservatively reserving the LREG.",
       "refusals_cited": [],
+      "emits_dump": false,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 4
@@ -3975,8 +4169,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4048,6 +4244,8 @@
         "lreg-spill-no-free-dst",
         "lreg-spill-rewrite-refused"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 2,
@@ -4126,8 +4324,10 @@
           "raw-nofree9-rwc-bh.C",
           "raw-nofree9-rwc-twin-bh.C"
         ],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 67
+        "targeted_total": 67,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4155,6 +4355,10 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "The SFPU register file has eight allocatable LREGs (riscv.h\nSFPU_REG_NUM) and no memory spill path: the rvtt_sfpassign memory\nalternatives exist only so that LRA's constraint matching succeeds\n(rvtt.md: \"the simple set must accept reg-movs, loads and stores...\notherwise reload blows up\"), and emitting one is impossible.  Until\nnow the impossibility surfaced as an internal compiler error at\nassembly output (rvtt.cc rvtt_mov_error) -- an ICE is a compiler bug\nunconditionally, and over-pressure source is a user-capacity fact,\nnot a compiler bug.\n\nThis pass runs directly after register allocation, before any other\nTensix RTL pass consumes the stream.  Every allocated SFPU-mode\nmemory move (detected by MODE, not by insn code, so a wrapped or\nre-patterned reload cannot slip past) becomes a named user error\n(lreg-pressure-exceeded) at the offending statement's location,\npointing at the two relief mechanisms\n(-mtt-tensix-optimize-const-residency /\n-mtt-tensix-optimize-const-remat).  The offending moves are then\nDELETED so the remaining Tensix RTL passes -- which assume vector\noperands are registers -- never see them: after a hard error no\nobject file is produced, and crash-freedom of the doomed compilation\nis what matters.  rvtt_mov_error stays as the backstop for streams\nthis pass has not diagnosed (rvtt_spill_diag_reported), so a genuine\ncompiler bug still ICEs loudly.\n\nThe pass changes nothing on spill-free streams: flag-off and clean\ncompilations are byte-identical.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [
+        "SFPU vector register pressure exceeds the"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {
         "delete_insn": 2
@@ -4162,8 +4366,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4191,6 +4397,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "Final phase of variable-immediate (\"synth\") processing; the GIMPLE\nphases live in gimple-rvtt-synth.cc.  By this point every SFPU\ninstruction with a run-time-synthesized instruction word carries the\nsynthesized value as an operand, and the SYNTH_OPCODE marker that\nanchors its prologue carries the matching id.\n\nThe base opcode folded into each prologue is chosen here: for each\nid, scan all the instructions using that id's synthesized word and\ncompute the instruction encoding each use would need (opcode field\nplus destination/source register fields).  The most frequent\nencoding (ties broken toward the numerically smallest) becomes the\nbase value added into the SYNTH_OPCODE; every use records the same\nbase so the run-time add produces exactly the intended word for the\nmodal uses, and the RTL templates emit fix-up arithmetic only for\nthe outliers.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {},
       "tests": {
@@ -4199,8 +4407,10 @@
           "synth-1-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 2
+        "targeted_total": 2,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4299,6 +4509,8 @@
         "ims-carrier-row-divergent",
         "ims-carrier-web-unsplittable"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 6,
@@ -4539,8 +4751,10 @@
           "window-pairing-stride-limb2-off-identity-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 230
+        "targeted_total": 230,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4619,6 +4833,8 @@
         "rename-member-effects-unaudited",
         "rename-span-opaque"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "validate_change": 5,
@@ -4669,8 +4885,10 @@
           "rename-temporal-service-nogain-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 41
+        "targeted_total": 41,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4784,6 +5002,8 @@
       "gate": "return TARGET_XTT_TENSIX;",
       "contract_comment": "ALGORITHM OVERVIEW\n\nPipeline position\n-----------------\npass_rvtt_schedule is registered in tt/rvtt-passes.def immediately\nbefore pass_postreload: register allocation has assigned hard LREGs,\nand the Tensix passes queued ahead of it there have already run --\nspill diagnosis, opcode synthesis, the generic macro planner (formed\nmacro calendars appear here as effect-opaque barrier words), and the\ndu-chain LREG rename (a broken storage collision widens this pass's\nfill candidate sets).  The replay former, the Dst auto-increment\nfold, and MOP formation run AFTER this pass and consume the\nscheduled stream, so every transform below preserves the shapes they\nrecognize: unrolled row copies stay textually isomorphic, counted\nreplay-capture shapes stay intact, and nothing reorders across an\nexplicit replay owner.  The pass gates on TARGET_XTT_TENSIX, uses DF\n(hard-register reference sets, complete for allocatable registers\nafter allocation), and never changes per-iteration semantics: every\ntransform is a reorder, a proven register rename, or a NOP insertion\nrequired by a delay contract.\n\nWhat runs, in execute () order.  Each optimization is off by default\nbehind its own -mtt-tensix-optimize-* flag; only the final NOP\ninserter is unconditional.\n\n1. Cross-row pairing (crossrow-pairing; sub-flags -stall-words,\n-seed, crossrow-shared-reload, mve-expand): pairs two consecutive\niterations of an admitted capturable single-row Dst loop into one\ndoubled row -- textual copy, Dst rebase by the typed row stride,\ndoubled separator advance, halved countdown -- then interleaves\nthe halves (CC atoms indivisible) so modeled dependency stalls\nfill while the counted replay-capture delivery shape survives.\nAcceptance: strict modeled steady-state II decrease plus pad-site\nand capture-budget belts; one transaction, exact restore.\n2. Region list scheduling (list_schedule_regions), four flags:\n. list-schedule: straight-line regions.  Maximal runs of audited\npure-LREG words are collected between named barriers, a\ndependence DAG is built over DF hard-register references (RAW\nand WAW edges weighted by audited result latency, WAR by issue\ndistance), and a deterministic critical-path list order is\nadopted only on a strict modeled makespan decrease with\nboundary terms from the entry producer and exit consumer.\n. round-interleave: lifts the self-loop and repeated-shape\ndeferrals for two proven shapes -- a one-region self-loop row\njudged on the wrapped steady-state initiation interval, after a\nregion-scoped storage-collision rename; and exactly two\ndataflow-isomorphic region copies scheduled under one shared\npermutation, transactionally as a pair.\n. cyclic-region-schedule: a self-loop row chopped into several\nregions by barrier words has each INTERIOR region rescheduled,\njudged on the whole row's cyclic II; rename-temporal routes\ncollision roots through the shared rename service first.\n. ims: adds a Rau iterative-modulo-scheduling candidate order on\nboth cyclic paths.  The engine is rvtt-timing.h's modulo tier:\nMII = max (ResMII, exact RecMII) over a dependence-distance\ngraph produced by the same marshaller the acceptance simulator\nconsumes, then budgeted-eviction placement in a single-issue\nmodulo reservation table (-mtt-tensix-ims-budget=).  Modulo\nvariable expansion is priced, never assumed (Lam, PLDI 1988):\na kmin > 1 placement offers only its flat order unless the\nmve-expand arm inside the cross-row pairing realizes the\nkernel unroll with rotation renames.\n3. Latency scheduling (latency-schedule): fill_latency_bubbles\nmoves the one instruction immediately behind an exposed one-slot\nresult-latency bubble; fill_nop_shadows searches a bounded\nwindow for an independent filler for exactly the bubbles the NOP\ninserter would pad -- delay_nop_needed_p, the same probe,\ndecides before and after, and the move is undone unless the\nbubble closed and no new pad site appeared.\n4. Interlock scheduling (interlock-schedule): fill_interlock_shadows\nfills the transparent scoreboard stalls modeled by the audited\nresult-latency facts (no NOP word exists to remove), committing\nonly on a strict modeled stall decrease over every adjacency the\nmove changes; unaudited producers and targets refuse by name.\n5. Capture rotation (capture-rotation): a capturable self-loop row\nreplays back-to-back, so its last word is issue-adjacent to the\nnext playback's first.  Three movers close modeled stalls in that\ncycle: seam fill (plain reorder to the row tail or head),\nprologue rotation (an invariant-input filler moves forward past\nits own consumers, one prologue copy in the dedicated preheader\ncovering the first trip), and interior gap fill.  The two\nplain-reorder movers use a widened filler pool (audited\nDst-touching words, the typed row-step word) over provably inert\ncrossings; the prologue mover keeps the pure-LREG pool.\n6. transform (): the always-on NOP inserter.  For every insn with a\nSTATIC or DYNAMIC delay contract it walks the CFG forward to the\nnext issued Tensix word and emits an SFPNOP when that word is\ndependent (DYNAMIC) or is not already a NOP (STATIC).\nEverything above exists to make this insert less often, or to\nhide the stalls it cannot express.\n\nThe tail of the file is not part of execute (): it exports three\nemission services the macro planner calls.  Under drain-schedule,\nrvtt_macro_drain_boundary_elidable and\nrvtt_macro_drain_backedge_elidable prove a formed run's derived\ndrain NOPs redundant at an intra-region run boundary or across a\nloop backedge; under window-pairing (with the -stride extension),\nrvtt_macro_interrow_drain_tuned derives the minimal inter-row drain\nfrom the descriptor's own decoded sequence delays with register-,\nDst-row-, and sub-unit-exact conflict checks.\n\nCore data structures\n--------------------\ninsn_regs\t    DF-derived SFPU hard-register use/def sets.\nls_node\t    one schedulable word: insn, register sets, audited\nlatency, word count, original index, entry pin.\nls_region\t    a collected straight-line region: nodes, anchor,\nentry producer, unaudited entry defs, signature.\nls_rename\t    one committed register-web rename, for exact undo.\nls_ims_candidate an IMS order with its ResMII/RecMII/place-II/kmin.\ncrp_loop\t    an admitted pairable loop: row nodes, CC atoms,\nload/store/separator/counter/jump, trip count, Dst\naddress and stride.\ncrp_item\t    an indivisible scheduling item (one CC atom or one\nword) with aggregated register sets and latency.\ncrp_shared_reload_info  the dedupe's value oracle: the shared\nregister and per-insn definition/consumer epochs.\nrotation_row     a capturable row: its issued words in order.\ndrain_horizon    a run's decoded pending-event horizon: per-macro\ncarrier positions, event kinds and delays.\nwp_event\t    one staged or follower event with its realized\nfootprint (LREGs, CC, config, typed Dst rows).\n\nInvariants and refusal discipline\n---------------------------------\nEverything is fail-closed.  Unproven shapes refuse BY NAME through\nrvtt-refuse.h (rvtt_refuse, rvtt_refuse_by_name, and the composed\nform), leaving the stream byte-identical.  Commits are transactional\nagainst an exact-restore record (debug insns included) and are\nre-verified after the move: the NOP inserter's own pad-site probe\nmust not count more sites, the entry producer's pad state must not\nflip on, pairing orders re-verify every dependence direction, and\nthe shared-reload dedupe re-walks its value oracle independently.\nEvery timing fact has one spelling: rvtt-timing.h owns\naudited_latency, adjacent_stall, classify_dependence, the makespan\nsimulator, the cyclic-II model, and the modulo tier.  Register-file\ncapacity is rvtt-pressure.h's rvtt_pressure_capacity; the capture\nand row-size budgets (XTT_DELIVERY_CAPTURE_SLOTS,\nXTT_CROSSROW_MIN_ROW_WORDS) come from the delivery-cost model\n(rvtt-cost.md); renames beyond the local region-scoped form route\nthrough the shared du-chain service (rvtt_lreg_rename_chain); and\nthe drain services decode macro timing exclusively from the\ndescriptor's own sequence words (rvtt-macro-sched.h,\nrvtt-macro-desc.h), never from hand constants.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 1
@@ -4901,8 +5121,10 @@
           "xrow-tanh-2datum-fire-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 109
+        "targeted_total": 109,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -4957,6 +5179,8 @@
       "gate": "/* QSR hard-refuses: its MOP encoding and expander semantics are not\n       in the capability table (rvtt-mop-tables.h).  */\n    return (TARGET_XTT_TENSIX_WH || TARGET_XTT_TENSIX_BH)\n      && riscv_tt_opt_mop_form > 0;",
       "contract_comment": "MOP-driven loop delivery (rvtt_mop_form), first increment.\n\nAfter replay formation (and its hoist/unroll/conversion family) and\nthe Dst auto-increment ownership pass have produced the final\ndelivery stream, a repeated payload frequently arrives as N identical\nREPLAY playback launches: either a straight-line contiguous run (the\nimage of a counted launch loop after the launch-loop unroll, or of a\nrepeated static sequence) or a still-rolled counted loop around a\nsingle launch.  Every one of those N launch words is pushed by the\nRISC.  The Tensix MOP expander can issue them instead: one MOP\ninstruction whose template's A0 slot holds the launch word replays it\nloop_count+1 times through the same replay expander, with no RISC\ninvolvement per iteration.\n\nThis increment implements exactly one template class,\n\nmop0-lA-replay: mop_type 0, flags 0, zmask 0, A0 = fixed REPLAY\nplayback word -- the production ckernel_unpack_template::lA\n(REPLAY, NOP) shape (topk_xl merge loops),\n\nover two delivery forms of the same fixed-iteration loop:\n\nRUN:  a maximal run of >= 2 identical fixed-encoding playback\nlaunches with no delivered word between them; and\nLOOP: a single-block counted loop whose body is exactly one such\nlaunch plus its counter step, with a provable constant trip\ncount (the replay-hoist trip discipline: estimated or\nprofile counts refuse).\n\nEmission is the production programming protocol (table facts with\nprovenance in rvtt-mop-tables.h): mop_sync guard store, MMIO writes\nof the template's flags and A0 words, MOP_CFG 0 (proving the zmask\nhigh half), then TTMOP 0, N-1, 0.  The replay buffer is co-owned\nwith REPLAY: the template's launch word references the same 32-slot\nbuffer, so the pass re-verifies start + len <= buffer size at emit\nand refuses the overflow near-miss (the simulator models that\noverflow as UndefinedBehavior).\n\nProfitability follows the corrected concurrent-delivery accounting\n(rvtt-cost.md, MOP section): a launch row costs\nmax (len * SLOT, delivered_words * PUSH), a MOP row costs\nlen * SLOT, and the configuration block is serial delivery.  Only\ndelivery-bound rows benefit; execution-bound rows model <= 0 and\nrefuse byte-identically.  -mtt-tensix-mop-form-min-benefit= overrides\nthe cost-table threshold in the same centislot units.\n\nEvery decision here keys on loop/run structure, operand constancy,\nand cost-table constants -- no operation identity, opcode calendar,\ncoefficient value, or instruction-word fingerprint participates.\n\n---- Outward ownership (caller-side template liveness) ----\n\nThe MOP template registers are thread-shared mutable state that\nSURVIVES this function's return, and they are write-only from the\nRISC (rvtt-mop-tables.h, readback fact), so a formation can neither\nsnapshot nor restore a caller's template.  The inward proof\n(mop-config-unowned below) only shows that nothing INSIDE the\nfunction disturbs the formed template; it says nothing about a\ncaller that programmed its own template, calls this function inside\na loop, and launches that template again after we return.  Hardware\nevidence: a perf harness that hoists a type-1 template program out of\nits tile loop\nand issues MOP per tile around a call into the formed function hangs\nthe Tensix deterministically -- the caller's post-return launch\nexpands OUR template words.\n\nSo formation additionally requires an OUTWARD ownership proof:\neither the function is provably the outermost Tensix owner, or every\ncaller provably re-arms the template between any call to this\nfunction and its next MOP launch.  Concretely (refusing whenever any\nstep cannot be discharged):\n\n- the kernel entry (`main') is outermost by the kernel link model:\nits only caller is crt0, which delivers no Tensix work (AXIOM\ncrt0-benign; same startup model the raw-word census audits);\n- otherwise the whole thread program is this TU plus crt0 (AXIOM\nkernel-single-TU: one translation unit per TRISC image, the\nharness build convention), so every call site is a cgraph edge.\nThe pass walks the transitive caller closure -- refusing on\naddress-taken members, recursion, or a caller body no longer in\ngimple form -- and runs a must-dataflow over each caller root:\na call to the forming function clobbers the template-word set\nthe formation writes (flags, A0, the step slots, and the\nMOP_CFG zmask high half); a subsequent MOP launch is a hazard\nunless every word it consumes was rewritten on every path in\nbetween (type-1 launches consume the nine config words but not\nthe zmask; rvtt-mop-tables.h).  Caller events are classified\nfrom gimple: canonical `.ttinsn' words by their frontend opcode,\nMMIO stores to the MOP config block by constant address (a\nrewrite = re-arm credit), and computed instruction-FIFO pushes\nby the constant opcode base of their composed word (AXIOM\ntt-op-field-discipline: runtime operands of a TT_OP composition\nstay inside their bit fields, the discipline the TT_OP macro\nfamily itself encodes).  Anything unclassifiable -- opaque asm,\nindirect calls, a computed delivery with no constant base --\ncounts as a potential MOP launch consuming everything, so the\nproof fails closed.\n\nRefusal taxonomy (all refusals leave the function byte-identical):\nmop-replay-window-overflow  launch range start + len exceeds the\nreplay buffer (S+L > 32 near-miss);\nmop-loop-count-range        iterations outside [2, 128] (the MOP\nloop_count field proves <= 127);\nmop-trips-unproved          counted-loop trip count not provably\nconstant;\nmop-body-not-invariant      the loop's launch word is synthesized\nat run time (RISC-computed operand);\nmop-body-extra-delivery     the loop body delivers words beyond\nthe launch + counter step;\nmop-config-unowned          a call or opaque asm in the function\ncould own or clobber MOP config state;\nmop-caller-template-live-unproven\nthe function may be called while a\ncaller-programmed MOP template is\nlive, and no caller-side re-arm is\nproven before the caller's next MOP\nlaunch (the outward ownership proof\nabove could not be discharged);\nmop-config-epoch            a MOP was already formed in this\nfunction (single-epoch conservatism of\nthis increment; ownership epochs are a\nlater stage);\nmop-profitability           modeled benefit below the threshold;\nmop-no-scratch-gpr          no dead temporaries for the MMIO\nconfiguration block.\nQSR refuses by pass gate: its MOP encoding and expander semantics\nare not in the capability table.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 5,
@@ -4985,8 +5209,10 @@
           "replay-buffer-size-truncate-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 19
+        "targeted_total": 19,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -5084,6 +5310,8 @@
       "gate": "return TARGET_XTT_TENSIX && riscv_tt_opt_replay > 0\n      && riscv_tt_opt_post_autoincr_window > 0;",
       "contract_comment": "ALGORITHM ESSAY\n\nHardware and problem.  Each Tensix thread owns a REPLAY buffer of\ninstruction slots (riscv_tt_replay_size of them).  One TTREPLAY word\nwith load=1 (a \"capture\" or \"record\") stores the next LEN delivered\nwords into slots [IDX, IDX+LEN), either executing them as they\nrecord (exec=1) or swallowing them un-executed (exec=0); one\nTTREPLAY word with load=0 (a \"launch\" or \"playback\") re-emits the\nstored words through the normal downstream pipeline at its own\nstream position.  Replacing an N-word repeat with a 1-word launch\nthus saves N-1 delivered words per site, bought at one recording\npass and N buffer slots.  Profit is word/issue-slot economics\nthroughout: every priced decision goes through the shared\ndelivery-cost engine (rvtt-delivery-cost.h; constants and their\nderivations in rvtt-cost.md) and, where reissue stalls matter, the\nshared interlock timing engine (rvtt-timing.h).\n\nPass placement (tt/rvtt-passes.def).  This file registers two\npasses over the same transform ().  pass_rvtt_replay runs after\nreload -- on the final explicit or macro issue stream, with hard\nregisters and recognizable patterns -- and BEFORE both Dst\nauto-increment ownership (which absorbs typed TTINCRWC separators\naround the launches this pass emits) and MOP loop-delivery\nformation (which re-rolls runs of those launches).\npass_rvtt_replay_reform is the alternative placement selected by\n-mtt-tensix-optimize-post-autoincr-window: the first invocation\ngates itself off and the SAME transform () runs once, after the Dst\nauto-increment fold, with the file-static reform_mode flag raised.\nThe fold absorbs the per-row separator words that break repeated\nrow bodies, so those bodies become word-uniform only after it, and\na single post-fold allocation prices every candidate against the\none buffer.  reform_mode adds launch-arithmetic audits for\n\"carried\" Dst accesses (fold-retargeted positional-walk accesses;\nsee the reform_mode block comment below).  Both passes keep the CFG\nintact except for the complete unroll of launch loops, which\nremoves a backedge and requests loop fixup.\n\nData structures.  scan_insns digests one basic block into a\nreplay_block: a vector of replay_info entries carrying the insn, a\nstructural hash, a register-age GENERATION (see invariants below),\na MUST_END barrier flag, and an EMPTY flag for zero-length words.\nreplay_span is a half-open [begin, end) interval of block indices.\nreplay_sequence is a candidate window: length, hash, and the\nascending clone spans that deliver the same words; replay_list,\nreplay_map and replay_active are the sequence store, the hash index\nused during growth, and the picker's surviving-candidate set.\nAround these: replay_sa::state/automaton/view (the shadow suffix\nautomaton), peel_plan and hoist_lift_plan (the hoist variants),\nconv_capture/conv_launch under a conv_map register value map (the\nlaunch conversion), and crf_block/crf_position/crf_value with\ncrf_seq/crf_clone families committed as a verified crf_plan (the\ncounted-row canonicalization).\n\nAlgorithm, in transform () order:\n\n1. Slot census.  Typed user captures subtract their declared slot\nranges from the free spans; a variable-length user capture\nclaims the rest of the buffer; a raw asm word carrying the\nREPLAY opcode refuses all formation in the function (its slot\nrange is unknowable).  Under the hoist flag, recording-epoch\nscoping excludes only the blocks where a user recording may\nstill be open (up to the next explicit replay owner on each\npath) instead of refusing the whole function.\n\n2. Counted-loop hoisting (hoist_counted_loops).  A single-block\ncounted loop whose body is one uninterrupted fixed-encoding SFPU\nrun becomes a single-clone payload: a no-exec capture of the\nbody in the dedicated preheader and one launch per trip, when\nthe trip count is provable (rvtt-trips.h) and the priced benefit\nclears the audited minimum.  A benefit-refused candidate may\nstill admit as an exec-while-record first-trip peel.\n\n3. Counted-row canonicalization (canonicalize_counted_rows, the\ncrf_* machinery; docs/COUNTED_ROW_FORMATION.md).  Row families\nthat repeat modulo per-row immediate materializations and\nregister rotation are REWRITTEN into word-exact form -- excluded\nmembers moved to clone heads or tails, registers renamed under a\nverified occupancy simulation, live-in divergence bridged with\nall-lanes moves -- so the ordinary discovery below records one\nparameterized row program per family.\n\n4. Discovery (build_sequences), one basic block at a time.\nCandidates grow one instruction per round from length-1 seeds;\nequal (hash, generation, word) prefixes merge, so the clone\nlists of every repeated run emerge together.  This is O(N^2) by\nconstruction.  active_triage drops overlapping clones and\nsingle-instance sequences.  A suffix-automaton shadow\n(replay_sa) enumerates every maximal repeat of the same symbol\nstring as a census; under checking builds it asserts that each\nlegacy candidate is enumerable with the identical clone set, and\nit never feeds the picker.\n\n5. Allocation and replacement.  The knapsack aspect is greedy:\npick_replay selects the candidate with the greatest modeled word\nsaving that fits the largest free span, the tightest-fitting\nspan hosts it, and active_invalidate retires candidates\noverlapping the consumed positions before the next pick.\nIn-block commits (replace_sequence) record the first clone\nexec-while-record and launch the rest; when the full hoist\nadmission holds (hoist_preheader) the record moves to the\npreheader as a no-exec capture (replace_hoisted_sequence),\npossibly peeled, lifted to an outer preheader, or re-sized to a\nwider same-anchor window plus one partial prefix launch (the\nwindow_sizing_* helpers).\n\n6. Delivery cleanups on the formed stream.  unroll_launch_loops\ncompletely unrolls a proven-trip loop whose body is nothing but\nplayback launches, typed Dst steps and its own control, removing\ntwo loop-control words per trip.  convert_isomorphic_runs turns\na run that matches a recorded payload under a register value map\n(conv_match_insn) into one more launch, provided every register\nwhose final contents differ is dead after the run and the\ntrailing Dst-advance context matches the payload's other sites.\n\n7. Fail-closed sweep (unhoist_hazard_rerecords).  A pass-hoisted\nno-exec capture left in a hazardous placement -- inside a loop\nwith a Dst-store payload, within the audited drained-frontend\nwindow of a mod-write, or not dominating every launch of its\nspan -- is un-hoisted by name: its launches become inline\npayload copies again (the identity the capture was formed from).\n\nInvariants and refusal discipline.  Clones must be word-exact under\nthe one comparator (rvtt_dcost_replay_word_equal_p) and of the same\nGENERATION: the hash folds a per-GPR write counter, so two\ntextually equal synthesized-word insns whose scalar inputs may\ndiffer never merge.  Sequences never cross a MUST_END word (asm,\nnon-Tensix, replay owner, variable capture) and never span a replay\nowner's recorded shadow.  User-reserved slots are never allocated;\nslots consumed by hoisted or canonicalized records are marked\npersistent against later formation.  On targets that cannot execute\nwhile recording, the capture swallows its payload and the first\nclone launches too.  Every transformation either fires with its\nstated proof or refuses BY NAME through the refusal registry\n(rvtt-refuse.h), leaving the emitted bytes identical to the\nuntransformed stream -- an unpriceable or unproven candidate is a\nnamed refusal, never a guess.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 1,
@@ -5290,8 +5518,10 @@
           "xrow-seed-capture-compose-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 197
+        "targeted_total": 197,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -5350,6 +5580,8 @@
         "replay-delivered-row",
         "stride-plural"
       ],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 5,
@@ -5477,8 +5709,10 @@
           "replay-hoist-saturated-siblings-wh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 117
+        "targeted_total": 117,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -5576,6 +5810,8 @@
       "gate": "/* Lane IH: under -mtt-tensix-optimize-post-autoincr-window the\n       formation DEFERS wholesale to the post-auto-increment invocation\n       below (pass_rvtt_replay_reform).  Deferral loses no opportunity:\n       the fold only REMOVES window-excluded barrier words (explicit\n       TTINCRWC separators) and retargets modifier operands of the rows\n       those barriers separated -- runs the pre-fold formation could\n       capture contain no such rows, so every pre-fold-capturable run is\n       post-fold-capturable verbatim, and the single post-fold\n       allocation prices ALL candidates (the folded carried bodies\n       included) against the one replay buffer instead of letting the\n       pre-fold run starve the fold's windows of slots.  */\n    return TARGET_XTT_TENSIX && riscv_tt_opt_replay > 0\n      && !(riscv_tt_opt_post_autoincr_window > 0);",
       "contract_comment": "ALGORITHM ESSAY\n\nHardware and problem.  Each Tensix thread owns a REPLAY buffer of\ninstruction slots (riscv_tt_replay_size of them).  One TTREPLAY word\nwith load=1 (a \"capture\" or \"record\") stores the next LEN delivered\nwords into slots [IDX, IDX+LEN), either executing them as they\nrecord (exec=1) or swallowing them un-executed (exec=0); one\nTTREPLAY word with load=0 (a \"launch\" or \"playback\") re-emits the\nstored words through the normal downstream pipeline at its own\nstream position.  Replacing an N-word repeat with a 1-word launch\nthus saves N-1 delivered words per site, bought at one recording\npass and N buffer slots.  Profit is word/issue-slot economics\nthroughout: every priced decision goes through the shared\ndelivery-cost engine (rvtt-delivery-cost.h; constants and their\nderivations in rvtt-cost.md) and, where reissue stalls matter, the\nshared interlock timing engine (rvtt-timing.h).\n\nPass placement (tt/rvtt-passes.def).  This file registers two\npasses over the same transform ().  pass_rvtt_replay runs after\nreload -- on the final explicit or macro issue stream, with hard\nregisters and recognizable patterns -- and BEFORE both Dst\nauto-increment ownership (which absorbs typed TTINCRWC separators\naround the launches this pass emits) and MOP loop-delivery\nformation (which re-rolls runs of those launches).\npass_rvtt_replay_reform is the alternative placement selected by\n-mtt-tensix-optimize-post-autoincr-window: the first invocation\ngates itself off and the SAME transform () runs once, after the Dst\nauto-increment fold, with the file-static reform_mode flag raised.\nThe fold absorbs the per-row separator words that break repeated\nrow bodies, so those bodies become word-uniform only after it, and\na single post-fold allocation prices every candidate against the\none buffer.  reform_mode adds launch-arithmetic audits for\n\"carried\" Dst accesses (fold-retargeted positional-walk accesses;\nsee the reform_mode block comment below).  Both passes keep the CFG\nintact except for the complete unroll of launch loops, which\nremoves a backedge and requests loop fixup.\n\nData structures.  scan_insns digests one basic block into a\nreplay_block: a vector of replay_info entries carrying the insn, a\nstructural hash, a register-age GENERATION (see invariants below),\na MUST_END barrier flag, and an EMPTY flag for zero-length words.\nreplay_span is a half-open [begin, end) interval of block indices.\nreplay_sequence is a candidate window: length, hash, and the\nascending clone spans that deliver the same words; replay_list,\nreplay_map and replay_active are the sequence store, the hash index\nused during growth, and the picker's surviving-candidate set.\nAround these: replay_sa::state/automaton/view (the shadow suffix\nautomaton), peel_plan and hoist_lift_plan (the hoist variants),\nconv_capture/conv_launch under a conv_map register value map (the\nlaunch conversion), and crf_block/crf_position/crf_value with\ncrf_seq/crf_clone families committed as a verified crf_plan (the\ncounted-row canonicalization).\n\nAlgorithm, in transform () order:\n\n1. Slot census.  Typed user captures subtract their declared slot\nranges from the free spans; a variable-length user capture\nclaims the rest of the buffer; a raw asm word carrying the\nREPLAY opcode refuses all formation in the function (its slot\nrange is unknowable).  Under the hoist flag, recording-epoch\nscoping excludes only the blocks where a user recording may\nstill be open (up to the next explicit replay owner on each\npath) instead of refusing the whole function.\n\n2. Counted-loop hoisting (hoist_counted_loops).  A single-block\ncounted loop whose body is one uninterrupted fixed-encoding SFPU\nrun becomes a single-clone payload: a no-exec capture of the\nbody in the dedicated preheader and one launch per trip, when\nthe trip count is provable (rvtt-trips.h) and the priced benefit\nclears the audited minimum.  A benefit-refused candidate may\nstill admit as an exec-while-record first-trip peel.\n\n3. Counted-row canonicalization (canonicalize_counted_rows, the\ncrf_* machinery; docs/COUNTED_ROW_FORMATION.md).  Row families\nthat repeat modulo per-row immediate materializations and\nregister rotation are REWRITTEN into word-exact form -- excluded\nmembers moved to clone heads or tails, registers renamed under a\nverified occupancy simulation, live-in divergence bridged with\nall-lanes moves -- so the ordinary discovery below records one\nparameterized row program per family.\n\n4. Discovery (build_sequences), one basic block at a time.\nCandidates grow one instruction per round from length-1 seeds;\nequal (hash, generation, word) prefixes merge, so the clone\nlists of every repeated run emerge together.  This is O(N^2) by\nconstruction.  active_triage drops overlapping clones and\nsingle-instance sequences.  A suffix-automaton shadow\n(replay_sa) enumerates every maximal repeat of the same symbol\nstring as a census; under checking builds it asserts that each\nlegacy candidate is enumerable with the identical clone set, and\nit never feeds the picker.\n\n5. Allocation and replacement.  The knapsack aspect is greedy:\npick_replay selects the candidate with the greatest modeled word\nsaving that fits the largest free span, the tightest-fitting\nspan hosts it, and active_invalidate retires candidates\noverlapping the consumed positions before the next pick.\nIn-block commits (replace_sequence) record the first clone\nexec-while-record and launch the rest; when the full hoist\nadmission holds (hoist_preheader) the record moves to the\npreheader as a no-exec capture (replace_hoisted_sequence),\npossibly peeled, lifted to an outer preheader, or re-sized to a\nwider same-anchor window plus one partial prefix launch (the\nwindow_sizing_* helpers).\n\n6. Delivery cleanups on the formed stream.  unroll_launch_loops\ncompletely unrolls a proven-trip loop whose body is nothing but\nplayback launches, typed Dst steps and its own control, removing\ntwo loop-control words per trip.  convert_isomorphic_runs turns\na run that matches a recorded payload under a register value map\n(conv_match_insn) into one more launch, provided every register\nwhose final contents differ is dead after the run and the\ntrailing Dst-advance context matches the payload's other sites.\n\n7. Fail-closed sweep (unhoist_hazard_rerecords).  A pass-hoisted\nno-exec capture left in a hazardous placement -- inside a loop\nwith a Dst-store payload, within the audited drained-frontend\nwindow of a mod-write, or not dominating every launch of its\nspan -- is un-hoisted by name: its launches become inline\npayload copies again (the identity the capture was formed from).\n\nInvariants and refusal discipline.  Clones must be word-exact under\nthe one comparator (rvtt_dcost_replay_word_equal_p) and of the same\nGENERATION: the hash folds a per-GPR write counter, so two\ntextually equal synthesized-word insns whose scalar inputs may\ndiffer never merge.  Sequences never cross a MUST_END word (asm,\nnon-Tensix, replay owner, variable capture) and never span a replay\nowner's recorded shadow.  User-reserved slots are never allocated;\nslots consumed by hoisted or canonicalized records are marked\npersistent against later formation.  On targets that cannot execute\nwhile recording, the capture swallows its payload and the first\nclone launches too.  Every transformation either fires with its\nstated proof or refuses BY NAME through the refusal registry\n(rvtt-refuse.h), leaving the emitted bytes identical to the\nuntransformed stream -- an unpriceable or unproven candidate is a\nnamed refusal, never a guess.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 1,
@@ -5790,8 +6026,10 @@
           "xrow-seed-capture-compose-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 205
+        "targeted_total": 205,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -5819,6 +6057,8 @@
       "gate": "return riscv_tt_fix_wh_raw > 0;",
       "contract_comment": "Wormhole has a read-after-write hazard: a word-sized load issued\nafter a byte or half store can be issued before the store retires.\nThe hardware's address comparator is 32 bits wide, so when the\naddresses MATCH exactly the hazard is detected and handled; the\nproblem arises for a narrow store followed by a load of a different\nwidth/alignment over the same bytes (a word-aligned narrow store is\nin fact safe, but we do not exploit that).  Memory logic prioritizes\nloads over stores, and although there is no reorder buffer, two\nloads can issue before a store drains.  Whether an intervening\nunrelated store resolves the hazard is not established.\n\nBecause the failure is so sensitive, the workaround annuls it in all\ncases: after every narrow (QI/HI) store to a plausible hazard target\n(register-space stores are exempt, see rvtt_reg_store_p), a dummy\nvolatile load of the stored location is placed as LATE as possible\n-- at the first control-flow change, write to the store's pointer\nregister, any load, another narrow store, or the end of the block --\nforcing the store to drain before any subsequent real load can pass\nit.\n\nEnabled by -mtt-fix-whraw, defaulted on for -mcpu=tt-wh*; a\ncorrectness workaround, not an optimization.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [],
       "proofs_cited": [],
       "ir_mutation_census": {
         "emit_insn": 2
@@ -5826,8 +6066,10 @@
       "tests": {
         "direct": [],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 1542,
-        "total": 0
+        "targeted_total": 0,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     },
@@ -5868,6 +6110,15 @@
       "gate": "return TARGET_XTT_TENSIX\n\t   && (TARGET_XTT_TENSIX_BH || TARGET_XTT_TENSIX_WH)\n\t   && riscv_tt_opt_crosslane > 0;",
       "contract_comment": "-mtt-tensix-optimize-crosslane (default off; shared with the gimple\nfusion pass gimple-rvtt-crosslane.cc).\n\nTHE PROBLEM (the documented Wormhole/Blackhole dest-index write\nrestriction; SFPCONFIG.md LaneConfig table).  While\nLaneConfig.ENABLE_DEST_INDEX is set, an instruction other than\nSFPLOAD / SFPLOADI / SFPSWAP / SFPTRANSP that writes LReg[4..7] is\nUnsupportedFunctionality.  The compiler had no model of this window:\na REAL allocator-inserted `SFPMOV L5, L4` was caught inside an open\nwindow, and every kernel using the window had to gate its emitted\ncontent by disassembly inspection (sfpu_bridge.hpp discipline) --\nmaking the window a compiler-ownership obligation.\n\nTHE MECHANISM.  The typed window toggles lower to the imm-form\nSFPCONFIG builtin (surface: sfpi_crosslane.h set_dest_index_window;\nhand kernels: TTI_SFPCONFIG(0x4|0x0, 0xF, 1)) -- DISTINGUISHABLE\nmarker words this pass scopes windows by, on the FINAL RTL stream\n(after allocation, the hazard scheduler, and replay/MOP formation,\nso allocator copies and scheduled motion are all visible).  A\nthree-state forward dataflow (CLOSED / OPEN / UNKNOWN, entry CLOSED,\njoin of unequal states = UNKNOWN) tracks the bit:\n\nrvtt_sfpconfig_i to LaneConfig (dest 15):\nmod1 1 (write)      state = imm16 bit 2\nmod1 3 (OR)         imm16 bit 2 set   -> OPEN, else unchanged\nmod1 5 (AND)        imm16 bit 2 clear -> CLOSED, else unchanged\nmod1 7 (XOR)        imm16 bit 2 set   -> toggle (UNKNOWN stays)\nvalue-form SFPCONFIG to dest 15 (rvtt_sfpwriteconfig_v): UNKNOWN\n(the staged LReg[0] value is not tracked here; LaneConfig also\ncarries ROW_MASK writes whose users never touch the window bit,\nso UNKNOWN only notes, never errors -- see below).\n\nInside a proven-OPEN window, an insn that sets or clobbers a hard\nLReg in [4..7] and is not one of the four exempt opcode families is\na hard, named USER ERROR (dest-index-window-violation) -- the\ncompile-time spelling of the erratum, replacing the per-kernel\ndisassembly gate.  Raw content (asm statements, synthesized opcode\nwords) inside a proven-OPEN window cannot be audited and errors by\nname too (crosslane-window-raw-unproven), as do calls\n(crosslane-window-call-unproven).  SFPLOADMACRO is deliberately NOT\nexempt: the restriction lists exactly four opcodes.\n\nUNKNOWN-state writes only DUMP a note (crosslane-window-state-\nunproven): the value form legitimately serves LaneConfig.ROW_MASK\ntraffic whose imm never touches bit 2, and erroring there would\npunish kernels that never open a window.  A window left open at\nfunction exit is a NOTE as well, not an error: the packed-index\nkernels demonstrably inherit an open window across phases\ndeliberately (ENABLE_DEST_INDEX is store-visible state).\n\nREPLAY / MOP DELIVERY VISION.  The positional walk alone is blind\nto DELIVERED words: a TTREPLAY playback launch carries no LReg SET\nof its own, and the payload words sit at their record site -- where\nthe state may be CLOSED -- so the default-ON replay former could\nconvert a program with three hard window violations into a\nsilently-accepted binary that still executes the violating LReg\nwrites in-window at playback (a demonstrated witness).  The fix\nmodels the Replay Expander exactly (WormholeB0 REPLAY.md functional\nmodel):\n\n- a fixed capture (load=1) claims slots (Index+i)%32, i<Count,\nand its payload words are the next Count slot-occupying words\nin the stream (TYPE_TENSIX with nonzero length; the same shadow\nwalk the replay former's own un-hoist sweep uses);\n- with Exec=0 the recorded words are SWALLOWED -- never issued --\nso they are exempt from diagnosis AND from marker state\ntransfer AT THE RECORD SITE (the expander model: ingest, emit\nnothing);\n- a playback launch (load=0) EMITS the recorded slot words at the\nlaunch position, so the checker expands the resolved payload\nthere: delivered non-exempt LReg4-7 writes inside a proven-OPEN\nwindow are the same hard dest-index-window-violation as inline\nwords, and a delivered SFPCONFIG marker transfers the window\nstate at the launch site (a captured OPEN/CLOSE re-scopes the\nwindow exactly where it plays back).\n\nLaunch resolution is FAIL-CLOSED.  A launch resolves only when\nevery slot it plays is covered by EXACTLY ONE record in the\nfunction, that record's span equals or covers the launch's span,\nthe record's payload walk completed (single BB, no raw asm, no\ncall, no nested REPLAY/MOP owner word, no volatile-memory delivery\nword before the count completes), and the record DOMINATES the\nlaunch (device-persistent slot state: a launch nothing dominates\nplays a previous invocation's -- unknowable -- content).  Any raw\n`.ttinsn' word carrying the architectural REPLAY opcode poisons all\nresolution (the replay former's own raw-capture census discipline),\nas does a capture with a non-constant or wrapping span (Count 0\nmeans 64: double-write wrap, refused).  An UNRESOLVED launch inside\na proven-OPEN window is a named error\n(crosslane-window-replay-unproven); under CLOSED or UNKNOWN it\ndegrades the state to UNKNOWN (delivered markers may have re-scoped\nthe window) which notes, never errors -- the same honesty contract\nas the value-form marker.\n\nA TTMOP inside a proven-OPEN window errors by name\n(crosslane-window-mop-unproven): the MOP expander re-delivers\nreplay playback words from a template this pass cannot audit\npositionally; after any TTMOP the state degrades to UNKNOWN.\nMOP-form and record-hoist deliveries are thereby the same covered\nclass as the straight replay former.\n\nAll diagnostics are gated behind the default-off crosslane flag;\ncode that never uses the typed markers is never diagnosed.",
       "refusals_cited": [],
+      "emits_dump": true,
+      "diagnostics_emitted": [
+        "crosslane-window-call-unproven: call inside an",
+        "crosslane-window-mop-unproven: MOP inside an",
+        "crosslane-window-raw-unproven: raw assembly inside an",
+        "crosslane-window-replay-unproven: replay launch",
+        "dest-index-window-violation: instruction writes",
+        "dest-index-window-violation: replay launch delivers a"
+      ],
       "proofs_cited": [],
       "ir_mutation_census": {},
       "tests": {
@@ -5904,8 +6155,10 @@
           "crosslane-zip3-identity-bh.C"
         ],
         "by_refusal": [],
+        "by_diagnostic": [],
         "implicit_whole_suite": 0,
-        "total": 30
+        "targeted_total": 30,
+        "caveat": "a zero here means no test NAMES this pass's dump/flag/refusal; this suite validates most passes by scan-assembler instead, so it is not a coverage measure on its own"
       },
       "resolution": "ok"
     }

@@ -66,59 +66,60 @@ Sign convention is the board's: **negative is a win** (fewer cycles vs hand). Va
 
 | pass | upside | breadth | mechanism | ships | est. opportunity |
 |---|---|---|---|---|---|
-| `immload_shorten` | 1.85 | 2.69 | fewer_delivered_words | yes | **4.98** |
-| `live` | 1.77 | 2.76 | fewer_delivered_words | yes | **4.89** |
-| `immvar_expand` | 1.62 | 2.62 | enables_downstream | yes | **4.24** |
-| `synth_split` | 1.62 | 2.60 | fewer_delivered_words | yes | **4.21** |
-| `synth_cse` | 1.83 | 2.19 | fewer_delivered_words | yes | **4.01** |
-| `expand` | 1.53 | 2.61 | fewer_delivered_words | yes | **3.99** |
-| `dce` | 1.83 | 2.12 | fewer_delivered_words | yes | **3.88** |
-| `synth_opcode` | 1.51 | 2.42 | fewer_delivered_words | yes | **3.65** |
-| `cc` | 1.29 | 2.71 | fewer_delivered_words | yes | **3.50** |
-| `synth_renumber` | 1.25 | 2.43 | fewer_delivered_words | yes | **3.04** |
-| `unspec_prop_rtl` | 1.28 | 2.23 | fewer_delivered_words | yes | **2.85** |
-| `lp_alloc` | 2.17 | 1.30 | register_pressure | no | **2.82** |
-| `immload_combine` | 1.36 | 1.94 | fewer_delivered_words | yes | **2.64** |
-| `macro_planner` | 2.43 | 1.69 | replay_compression | no | **2.46** |
-| `rmext` | 1.31 | 1.74 | fewer_delivered_words | yes | **2.28** |
+| `immload_shorten` | 1.84 | 2.73 | fewer_delivered_words | yes | **5.02** |
+| `live` | 1.78 | 2.79 | fewer_delivered_words | yes | **4.97** |
+| `immvar_expand` | 1.76 | 2.65 | enables_downstream | yes | **4.66** |
+| `dce` | 1.85 | 2.26 | fewer_delivered_words | yes | **4.18** |
+| `synth_split` | 1.60 | 2.57 | enables_downstream | yes | **4.11** |
+| `synth_cse` | 1.86 | 2.20 | fewer_delivered_words | yes | **4.09** |
+| `synth_opcode` | 1.58 | 2.52 | fewer_delivered_words | yes | **3.98** |
+| `expand` | 1.49 | 2.50 | fewer_delivered_words | yes | **3.73** |
+| `cc` | 1.30 | 2.70 | fewer_delivered_words | yes | **3.51** |
+| `lp_alloc` | 2.15 | 1.42 | register_pressure | no | **3.05** |
+| `synth_renumber` | 1.16 | 2.54 | fewer_delivered_words | yes | **2.95** |
+| `unspec_prop_rtl` | 1.29 | 2.27 | fewer_delivered_words | yes | **2.93** |
+| `immload_combine` | 1.33 | 1.93 | fewer_delivered_words | yes | **2.57** |
+| `noval_elide` | 1.15 | 2.15 | fewer_delivered_words | yes | **2.47** |
+| `rmext` | 1.38 | 1.76 | fewer_delivered_words | yes | **2.43** |
 
-## 3. Test-coverage inversion (verified independently of the model)
+## 3. WITHDRAWN — the "test-coverage inversion"
 
-This one was confirmed by grep over the testsuite, not taken from a probability. Counting testcases that name a pass's dump:
+**An earlier version of this report claimed the always-on passes are the least tested, on the strength of `rvtt_expand`, `rvtt_live`, `rvtt_check` and `rvtt_synth_cse` having zero tests naming their dump. That finding is withdrawn. It was an artifact of the metric.**
 
-| pass | ships on every compile | tests naming its dump |
-|---|---|---|
-| `rvtt_macro_planner` | no | 186 |
-| `rvtt_replay` | yes | 160 |
-| `rvtt_prgm_const` | no | 142 |
-| `rvtt_dst_autoincr` | no | 103 |
-| `rvtt_expand` | **yes** | 0 |
-| `rvtt_live` | **yes** | 0 |
-| `rvtt_check` | **yes** | 0 |
-| `rvtt_synth_cse` | **yes** | 0 |
+Counting tests by dump name measures one testing modality. It is not the one this suite mostly uses:
 
-The passes that run on **every** Tensix compilation are the ones with no targeted tests, while the optional, off-by-default optimizations carry hundreds. That is exactly inverted from where coverage does the most good, and it stands on its own evidence.
+| validation modality | testcases |
+|---|---|
+| `scan-assembler` against emitted instructions | 873 |
+| `dg-error` diagnostics | 68 |
+| `scan-tree-dump` / `scan-rtl-dump` naming a pass | 84 |
+
+A pass validated by assembly scanning scores zero on dump-name counting however well it is covered. 206 testcases scan the CC instruction sequences `rvtt_expand` emits, and 35 `dg-error` tests cover the spill diagnostic — none of which the metric could see. Three passes (`check_early`, `check_late`, `lreg_livein`) never touch `dump_file` at all, so the metric cannot reach them even in principle.
+
+**The instructive part is how this got through.** It was published as "verified independently of the model", and grep did verify it — the counts were accurate. What grep could not verify is that the counts measured what the sentence claimed. That is construct validity, not measurement error, and labelling it "verified" gave a bad metric more standing than any model output in this report has. A hand-check confirms a number; it does not confirm that the number means what you say it means.
+
+The extractor now records `emits_dump` per pass and splits targeted tests into `direct`, `by_refusal` and `by_diagnostic`, each carrying a caveat that none of them is a coverage measure on its own. Whether the always-on passes are in fact under-tested is **open**: answering it needs assembly-scan attribution, which nothing here does yet.
 
 ## 4. Evidence census
 
 Counted two ways. *Settled* counts only answers the model committed to (confidence >= 0.50); *unsettled* are shown separately rather than folded into a headline number, so a 0.18-confidence coin flip is not reported as a fact.
 
-**Strongest equivalence evidence** — 43 settled, 11 unsettled
+**Strongest equivalence evidence** — 45 settled, 9 unsettled
 
 - `analytic_argument`: 30
+- `not_a_transform`: 5
 - `exhaustive_proof_artifact`: 4
-- `not_a_transform`: 4
 - `deliberate_repair`: 3
+- `asserted`: 2
 - `test_only`: 1
-- `asserted`: 1
 
-**Primary performance mechanism** — 45 settled, 9 unsettled
+**Primary performance mechanism** — 46 settled, 8 unsettled
 
-- `fewer_delivered_words`: 30
+- `fewer_delivered_words`: 29
 - `correctness_only`: 6
-- `enables_downstream`: 4
+- `enables_downstream`: 5
+- `replay_compression`: 3
 - `latency_hiding`: 2
-- `replay_compression`: 2
 - `register_pressure`: 1
 
 The model's own `measurement_evidence` judgment is deliberately **not** reported here. Section 1 supersedes it: guessing from source comments whether a pass was ever measured is a proxy, and the board rows are the fact.
@@ -138,7 +139,7 @@ That is the same class of error as two flags already caught and fixed during dev
 - **Source coverage.** A pass split across translation units behind a private `-int.h` is sent with all its siblings. 9 of 54 passes exceeded the model's 32k-token state limit and had siblings reduced to a structural digest (contract comment, signatures, and every IR-mutating call site with context). Those passes' judgments saw less code; `source_status` in `scores.json` records which.
 - **Unowned source.** ~25.5k lines of `tt/*.cc` belong to no single registered pass (shared tables, cost models, generators) and are scored by nobody.
 - **Run-to-run variance.** Scoring is not deterministic; the sub-0.50-confidence count moved between 222 and 230 across repeated full runs. Do not read a 0.05 difference between two passes as meaningful.
-- **Unsettled answers.** 230 of 864 answers came back below 0.50 confidence and are excluded from every count above.
+- **Unsettled answers.** 227 of 864 answers came back below 0.50 confidence and are excluded from every count above.
 
 ---
 
@@ -153,4 +154,4 @@ cd scripts/rvtt-pass-audit
 ./.venv/bin/python report.py              # all     -> results/SCOREBOARD.md
 ```
 
-Fresh run cost: 871,589 input / 25,092 output tokens across 54 requests. Scoring caches on a hash of (state, questions, model).
+Fresh run cost: 874,937 input / 25,092 output tokens across 54 requests. Scoring caches on a hash of (state, questions, model).
