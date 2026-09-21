@@ -1,0 +1,917 @@
+{
+  "provenance": {
+    "board": "<craq-board>",
+    "knob_file": "KNOB-SILICON-20260920.tsv",
+    "composition_file": "COMPOSITION-SILICON-20260921.tsv",
+    "knob_rows": 43,
+    "knobs_seen": 17,
+    "knobs_resolved": 17,
+    "knobs_unmapped": 0,
+    "passes_with_measurement": 15,
+    "sign_convention": "negative is a win (fewer cycles vs hand)",
+    "value_used": "composition best where present, else single-knob knob_vs_hand"
+  },
+  "unmapped": [],
+  "per_knob": {
+    "counted-capture-peel": {
+      "knob": "counted-capture-peel",
+      "option": "mtt-tensix-optimize-counted-capture-peel",
+      "var": "riscv_tt_opt_counted_capture_peel",
+      "files": [
+        "rtl-rvtt-replay-hoist.cc"
+      ],
+      "passes": [
+        "pass_rvtt_replay",
+        "pass_rvtt_replay_reform"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": 1.98,
+      "best_vs_hand": 1.98,
+      "worst_vs_hand": 1.98,
+      "n_wins": 0,
+      "n_regressions": 1,
+      "rows": [
+        {
+          "op": "relu",
+          "knob_vs_hand": 1.98,
+          "composition_best": 1.98,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "promoted leg",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "crosscall-addrmod": {
+      "knob": "crosscall-addrmod",
+      "option": "mtt-tensix-optimize-crosscall-addrmod",
+      "var": "riscv_tt_opt_crosscall_addrmod",
+      "files": [
+        "gimple-rvtt-crosscall-hoist.cc",
+        "rtl-rvtt-dst-autoincr.cc"
+      ],
+      "passes": [
+        "pass_rvtt_crosscall",
+        "pass_rvtt_dst_autoincr"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": 0.08,
+      "best_vs_hand": 0.08,
+      "worst_vs_hand": 0.08,
+      "n_wins": 0,
+      "n_regressions": 1,
+      "rows": [
+        {
+          "op": "binopscalar",
+          "knob_vs_hand": 0.08,
+          "composition_best": 0.08,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "crosscall-config-prefix": {
+      "knob": "crosscall-config-prefix",
+      "option": "mtt-tensix-optimize-crosscall-config-prefix",
+      "var": "riscv_tt_opt_crosscall_config_prefix",
+      "files": [
+        "gimple-rvtt-crosscall.cc"
+      ],
+      "passes": [
+        "pass_rvtt_crosscall"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": -0.86,
+      "best_vs_hand": -0.86,
+      "worst_vs_hand": -0.86,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "geluappx-fresh",
+          "knob_vs_hand": -0.85,
+          "composition_best": -0.86,
+          "best_shape": "composition",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "crossloop-cc-peel": {
+      "knob": "crossloop-cc-peel",
+      "option": "mtt-tensix-optimize-crossloop-cc-peel",
+      "var": "riscv_tt_opt_crossloop_cc_peel",
+      "files": [
+        "gimple-rvtt-prgm-residency.cc"
+      ],
+      "passes": [
+        "pass_rvtt_prgm_const"
+      ],
+      "n_rows": 2,
+      "median_vs_hand": -17.77,
+      "best_vs_hand": -17.77,
+      "worst_vs_hand": -17.77,
+      "n_wins": 2,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "atan2",
+          "knob_vs_hand": -17.77,
+          "composition_best": -17.77,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "hand-drift under license",
+          "confirms": "NO"
+        },
+        {
+          "op": "atan2-fitted",
+          "knob_vs_hand": -17.77,
+          "composition_best": -17.77,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "hand-drift under license",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "crossrow-2datum": {
+      "knob": "crossrow-2datum",
+      "option": "mtt-tensix-optimize-crossrow-pairing",
+      "var": "riscv_tt_opt_crossrow_pairing",
+      "files": [
+        "rtl-rvtt-schedule.cc"
+      ],
+      "passes": [
+        "pass_rvtt_lp_schedule_prera",
+        "pass_rvtt_schedule"
+      ],
+      "n_rows": 5,
+      "median_vs_hand": -9.64,
+      "best_vs_hand": -27.15,
+      "worst_vs_hand": 12.55,
+      "n_wins": 3,
+      "n_regressions": 2,
+      "rows": [
+        {
+          "op": "hardsigmoid-fresh",
+          "knob_vs_hand": -13.79,
+          "composition_best": -13.79,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "sigmoidappx",
+          "knob_vs_hand": -9.64,
+          "composition_best": -9.64,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "smoothstep-fresh",
+          "knob_vs_hand": -27.15,
+          "composition_best": -27.15,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "softsign-fresh",
+          "knob_vs_hand": 1.48,
+          "composition_best": 1.48,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "tanh-fresh",
+          "knob_vs_hand": 12.55,
+          "composition_best": 12.55,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "composition (run pending)",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "crossrow-pairing-seed": {
+      "knob": "crossrow-pairing-seed",
+      "option": "mtt-tensix-optimize-crossrow-pairing-seed",
+      "var": "riscv_tt_opt_crossrow_pairing_seed",
+      "files": [
+        "rtl-rvtt-sched-pairing.cc"
+      ],
+      "passes": [
+        "pass_rvtt_lp_schedule_prera",
+        "pass_rvtt_schedule"
+      ],
+      "n_rows": 2,
+      "median_vs_hand": 1.26,
+      "best_vs_hand": 1.26,
+      "worst_vs_hand": 1.26,
+      "n_wins": 0,
+      "n_regressions": 2,
+      "rows": [
+        {
+          "op": "ceil-fresh",
+          "knob_vs_hand": 1.26,
+          "composition_best": 1.26,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "roundingops",
+          "knob_vs_hand": 1.26,
+          "composition_best": 1.26,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "delivery-shape": {
+      "knob": "delivery-shape",
+      "option": "mtt-tensix-optimize-delivery-shape",
+      "var": "riscv_tt_opt_delivery_shape",
+      "files": [
+        "gimple-rvtt-delivery-shape.cc"
+      ],
+      "passes": [
+        "pass_rvtt_delivery_shape"
+      ],
+      "n_rows": 6,
+      "median_vs_hand": -1.14,
+      "best_vs_hand": -25.05,
+      "worst_vs_hand": 1.3,
+      "n_wins": 3,
+      "n_regressions": 3,
+      "rows": [
+        {
+          "op": "bitwisenot",
+          "knob_vs_hand": -20.04,
+          "composition_best": -22.8,
+          "best_shape": "composition",
+          "board_class": "PARITY",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "castfp32tofp16a",
+          "knob_vs_hand": 0.04,
+          "composition_best": 0.04,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "fill-fresh",
+          "knob_vs_hand": -25.05,
+          "composition_best": -25.05,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "rdiv",
+          "knob_vs_hand": 1.3,
+          "composition_best": 1.3,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "unarybitwise-fresh",
+          "knob_vs_hand": -2.32,
+          "composition_best": -2.32,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "unaryshift-fresh",
+          "knob_vs_hand": 0.35,
+          "composition_best": 0.35,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "dst-autoincr-load-carrier": {
+      "knob": "dst-autoincr-load-carrier",
+      "option": "mtt-tensix-optimize-dst-autoincr-load-carrier",
+      "var": "riscv_tt_opt_dst_autoincr_load_carrier",
+      "files": [
+        "rtl-rvtt-dst-autoincr-scan.cc"
+      ],
+      "passes": [
+        "pass_rvtt_dst_autoincr"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": -13.07,
+      "best_vs_hand": -13.07,
+      "worst_vs_hand": -13.07,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "copydest-fresh",
+          "knob_vs_hand": -13.07,
+          "composition_best": -13.07,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "int-abs": {
+      "knob": "int-abs",
+      "option": "mtt-tensix-optimize-int-abs",
+      "var": "riscv_tt_opt_int_abs",
+      "files": [
+        "gimple-rvtt-int-abs.cc"
+      ],
+      "passes": [
+        "pass_rvtt_int_abs"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": -5.31,
+      "best_vs_hand": -5.31,
+      "worst_vs_hand": -5.31,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "absint32",
+          "knob_vs_hand": -5.31,
+          "composition_best": -5.31,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "launch-flatten": {
+      "knob": "launch-flatten",
+      "option": "mtt-tensix-optimize-launch-flatten",
+      "var": "riscv_tt_opt_launch_flatten",
+      "files": [
+        "gimple-rvtt-replay-unroll.cc"
+      ],
+      "passes": [
+        "pass_rvtt_launch_flatten",
+        "pass_rvtt_replay_unroll",
+        "pass_rvtt_round_interleave"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": -0.82,
+      "best_vs_hand": -0.82,
+      "worst_vs_hand": -0.82,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "topk-perf",
+          "knob_vs_hand": -0.82,
+          "composition_best": -0.82,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "list-schedule": {
+      "knob": "list-schedule",
+      "option": "mtt-tensix-optimize-list-schedule",
+      "var": "riscv_tt_opt_list_schedule",
+      "files": [
+        "rtl-rvtt-sched-region.cc",
+        "rtl-rvtt-schedule.cc"
+      ],
+      "passes": [
+        "pass_rvtt_lp_schedule_prera",
+        "pass_rvtt_schedule"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": -2.95,
+      "best_vs_hand": -2.95,
+      "worst_vs_hand": -2.95,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "softplus-fresh",
+          "knob_vs_hand": -2.95,
+          "composition_best": -2.95,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "loop-prgm-reclaim": {
+      "knob": "loop-prgm-reclaim",
+      "option": "mtt-tensix-optimize-loop-prgm-reclaim",
+      "var": "riscv_tt_opt_loop_prgm_reclaim",
+      "files": [
+        "gimple-rvtt-prgm-residency.cc"
+      ],
+      "passes": [
+        "pass_rvtt_prgm_const"
+      ],
+      "n_rows": 2,
+      "median_vs_hand": -26.9,
+      "best_vs_hand": -48.51,
+      "worst_vs_hand": -5.29,
+      "n_wins": 2,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "erfinv-fresh",
+          "knob_vs_hand": -48.51,
+          "composition_best": -48.51,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "xielu-fresh",
+          "knob_vs_hand": -4.18,
+          "composition_best": -5.29,
+          "best_shape": "composition",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "lut-select-leaf-ext": {
+      "knob": "lut-select-leaf-ext",
+      "option": "mtt-tensix-optimize-lut-select-leaf-ext",
+      "var": "riscv_tt_opt_lut_select_leaf_ext",
+      "files": [
+        "gimple-rvtt-lut-select.cc"
+      ],
+      "passes": [
+        "pass_rvtt_lut_select"
+      ],
+      "n_rows": 1,
+      "median_vs_hand": 2.69,
+      "best_vs_hand": 2.69,
+      "worst_vs_hand": 2.69,
+      "n_wins": 0,
+      "n_regressions": 1,
+      "rows": [
+        {
+          "op": "tanhderivlut-fresh",
+          "knob_vs_hand": 2.69,
+          "composition_best": 2.69,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "composition (run pending)",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "post-autoincr-window": {
+      "knob": "post-autoincr-window",
+      "option": "mtt-tensix-optimize-post-autoincr-window",
+      "var": "riscv_tt_opt_post_autoincr_window",
+      "files": [
+        "rtl-rvtt-replay.cc"
+      ],
+      "passes": [
+        "pass_rvtt_replay",
+        "pass_rvtt_replay_reform"
+      ],
+      "n_rows": 2,
+      "median_vs_hand": -2.18,
+      "best_vs_hand": -20.92,
+      "worst_vs_hand": 16.57,
+      "n_wins": 1,
+      "n_regressions": 1,
+      "rows": [
+        {
+          "op": "recip",
+          "knob_vs_hand": 16.57,
+          "composition_best": 16.57,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "source-twin booking; plain row has no knob surface",
+          "confirms": "NO"
+        },
+        {
+          "op": "shift",
+          "knob_vs_hand": -20.92,
+          "composition_best": -20.92,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "reassoc-mad-restructure": {
+      "knob": "reassoc-mad-restructure",
+      "option": "mtt-tensix-optimize-reassoc-mad-restructure",
+      "var": "riscv_tt_opt_reassoc_mad_restructure",
+      "files": [
+        "gimple-rvtt-combine.cc"
+      ],
+      "passes": [
+        "pass_rvtt_combine"
+      ],
+      "n_rows": 5,
+      "median_vs_hand": -9.93,
+      "best_vs_hand": -47.87,
+      "worst_vs_hand": 3.51,
+      "n_wins": 4,
+      "n_regressions": 1,
+      "rows": [
+        {
+          "op": "divint32floor-fresh",
+          "knob_vs_hand": -46.06,
+          "composition_best": -47.87,
+          "best_shape": "composition",
+          "board_class": "WIN",
+          "classification": "re-verify single leg at pin 59",
+          "confirms": "NO"
+        },
+        {
+          "op": "gelu-fresh",
+          "knob_vs_hand": -9.93,
+          "composition_best": -9.93,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "lcm-fresh",
+          "knob_vs_hand": 4.08,
+          "composition_best": 3.51,
+          "best_shape": "composition",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "silu-fresh",
+          "knob_vs_hand": -24.47,
+          "composition_best": -24.47,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "trigonometry-fresh",
+          "knob_vs_hand": 1.36,
+          "composition_best": -0.36,
+          "best_shape": "composition",
+          "board_class": "WIN",
+          "classification": "composition (run pending)",
+          "confirms": "NO"
+        }
+      ]
+    },
+    "stochrnd-store-fold": {
+      "knob": "stochrnd-store-fold",
+      "option": "mtt-tensix-optimize-stochrnd-store-fold",
+      "var": "riscv_tt_opt_stochrnd_store_fold",
+      "files": [
+        "gimple-rvtt-store-fold.cc"
+      ],
+      "passes": [
+        "pass_rvtt_store_fold"
+      ],
+      "n_rows": 9,
+      "median_vs_hand": -2.76,
+      "best_vs_hand": -17.37,
+      "worst_vs_hand": 63.59,
+      "n_wins": 6,
+      "n_regressions": 3,
+      "rows": [
+        {
+          "op": "addrsqrt-fresh",
+          "knob_vs_hand": -2.36,
+          "composition_best": -2.36,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "hand-drift under license",
+          "confirms": "NO"
+        },
+        {
+          "op": "binary-float",
+          "knob_vs_hand": -17.37,
+          "composition_best": -17.37,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "binaryfmod",
+          "knob_vs_hand": -13.62,
+          "composition_best": -13.62,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "binaryremainder",
+          "knob_vs_hand": -2.79,
+          "composition_best": -2.79,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "better than booked",
+          "confirms": "NO"
+        },
+        {
+          "op": "customadd-fresh",
+          "knob_vs_hand": -13.45,
+          "composition_best": -13.45,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "i0-fitted",
+          "knob_vs_hand": 13.03,
+          "composition_best": 13.03,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "lgamma-fitted",
+          "knob_vs_hand": 63.59,
+          "composition_best": 63.59,
+          "best_shape": "single",
+          "board_class": "LOSS",
+          "classification": "hand-drift under license",
+          "confirms": "NO"
+        },
+        {
+          "op": "sqrt-fresh",
+          "knob_vs_hand": -2.76,
+          "composition_best": -2.76,
+          "best_shape": "single",
+          "board_class": "WIN",
+          "classification": "composition (pair, confirmed 0.50)",
+          "confirms": "YES"
+        },
+        {
+          "op": "tiledprod-fresh",
+          "knob_vs_hand": 0.15,
+          "composition_best": 0.15,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    },
+    "store-sink": {
+      "knob": "store-sink",
+      "option": "mtt-tensix-optimize-store-sink",
+      "var": "riscv_tt_opt_store_sink",
+      "files": [
+        "gimple-rvtt-prgm-residency.cc",
+        "gimple-rvtt-store-fold.cc"
+      ],
+      "passes": [
+        "pass_rvtt_prgm_const",
+        "pass_rvtt_store_fold"
+      ],
+      "n_rows": 2,
+      "median_vs_hand": -0.38,
+      "best_vs_hand": -0.4,
+      "worst_vs_hand": -0.35,
+      "n_wins": 2,
+      "n_regressions": 0,
+      "rows": [
+        {
+          "op": "hardshrink-fresh",
+          "knob_vs_hand": -0.35,
+          "composition_best": -0.35,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        },
+        {
+          "op": "threshold-fresh",
+          "knob_vs_hand": -0.4,
+          "composition_best": -0.4,
+          "best_shape": "single",
+          "board_class": "PARITY",
+          "classification": "confirms",
+          "confirms": "YES"
+        }
+      ]
+    }
+  },
+  "per_pass": {
+    "pass_rvtt_replay": {
+      "pass": "pass_rvtt_replay",
+      "knobs": [
+        "counted-capture-peel",
+        "post-autoincr-window"
+      ],
+      "n_rows": 3,
+      "n_wins": 1,
+      "n_regressions": 2,
+      "median_vs_hand": 1.98,
+      "best_vs_hand": -20.92
+    },
+    "pass_rvtt_replay_reform": {
+      "pass": "pass_rvtt_replay_reform",
+      "knobs": [
+        "counted-capture-peel",
+        "post-autoincr-window"
+      ],
+      "n_rows": 3,
+      "n_wins": 1,
+      "n_regressions": 2,
+      "median_vs_hand": 1.98,
+      "best_vs_hand": -20.92
+    },
+    "pass_rvtt_crosscall": {
+      "pass": "pass_rvtt_crosscall",
+      "knobs": [
+        "crosscall-addrmod",
+        "crosscall-config-prefix"
+      ],
+      "n_rows": 2,
+      "n_wins": 1,
+      "n_regressions": 1,
+      "median_vs_hand": -0.39,
+      "best_vs_hand": -0.86
+    },
+    "pass_rvtt_dst_autoincr": {
+      "pass": "pass_rvtt_dst_autoincr",
+      "knobs": [
+        "crosscall-addrmod",
+        "dst-autoincr-load-carrier"
+      ],
+      "n_rows": 2,
+      "n_wins": 1,
+      "n_regressions": 1,
+      "median_vs_hand": -6.5,
+      "best_vs_hand": -13.07
+    },
+    "pass_rvtt_prgm_const": {
+      "pass": "pass_rvtt_prgm_const",
+      "knobs": [
+        "crossloop-cc-peel",
+        "loop-prgm-reclaim",
+        "store-sink"
+      ],
+      "n_rows": 6,
+      "n_wins": 6,
+      "n_regressions": 0,
+      "median_vs_hand": -11.53,
+      "best_vs_hand": -48.51
+    },
+    "pass_rvtt_lp_schedule_prera": {
+      "pass": "pass_rvtt_lp_schedule_prera",
+      "knobs": [
+        "crossrow-2datum",
+        "crossrow-pairing-seed",
+        "list-schedule"
+      ],
+      "n_rows": 8,
+      "n_wins": 4,
+      "n_regressions": 4,
+      "median_vs_hand": -0.85,
+      "best_vs_hand": -27.15
+    },
+    "pass_rvtt_schedule": {
+      "pass": "pass_rvtt_schedule",
+      "knobs": [
+        "crossrow-2datum",
+        "crossrow-pairing-seed",
+        "list-schedule"
+      ],
+      "n_rows": 8,
+      "n_wins": 4,
+      "n_regressions": 4,
+      "median_vs_hand": -0.85,
+      "best_vs_hand": -27.15
+    },
+    "pass_rvtt_delivery_shape": {
+      "pass": "pass_rvtt_delivery_shape",
+      "knobs": [
+        "delivery-shape"
+      ],
+      "n_rows": 6,
+      "n_wins": 3,
+      "n_regressions": 3,
+      "median_vs_hand": -1.14,
+      "best_vs_hand": -25.05
+    },
+    "pass_rvtt_int_abs": {
+      "pass": "pass_rvtt_int_abs",
+      "knobs": [
+        "int-abs"
+      ],
+      "n_rows": 1,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "median_vs_hand": -5.31,
+      "best_vs_hand": -5.31
+    },
+    "pass_rvtt_launch_flatten": {
+      "pass": "pass_rvtt_launch_flatten",
+      "knobs": [
+        "launch-flatten"
+      ],
+      "n_rows": 1,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "median_vs_hand": -0.82,
+      "best_vs_hand": -0.82
+    },
+    "pass_rvtt_replay_unroll": {
+      "pass": "pass_rvtt_replay_unroll",
+      "knobs": [
+        "launch-flatten"
+      ],
+      "n_rows": 1,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "median_vs_hand": -0.82,
+      "best_vs_hand": -0.82
+    },
+    "pass_rvtt_round_interleave": {
+      "pass": "pass_rvtt_round_interleave",
+      "knobs": [
+        "launch-flatten"
+      ],
+      "n_rows": 1,
+      "n_wins": 1,
+      "n_regressions": 0,
+      "median_vs_hand": -0.82,
+      "best_vs_hand": -0.82
+    },
+    "pass_rvtt_lut_select": {
+      "pass": "pass_rvtt_lut_select",
+      "knobs": [
+        "lut-select-leaf-ext"
+      ],
+      "n_rows": 1,
+      "n_wins": 0,
+      "n_regressions": 1,
+      "median_vs_hand": 2.69,
+      "best_vs_hand": 2.69
+    },
+    "pass_rvtt_combine": {
+      "pass": "pass_rvtt_combine",
+      "knobs": [
+        "reassoc-mad-restructure"
+      ],
+      "n_rows": 5,
+      "n_wins": 4,
+      "n_regressions": 1,
+      "median_vs_hand": -9.93,
+      "best_vs_hand": -47.87
+    },
+    "pass_rvtt_store_fold": {
+      "pass": "pass_rvtt_store_fold",
+      "knobs": [
+        "stochrnd-store-fold",
+        "store-sink"
+      ],
+      "n_rows": 11,
+      "n_wins": 8,
+      "n_regressions": 3,
+      "median_vs_hand": -2.36,
+      "best_vs_hand": -17.37
+    }
+  }
+}

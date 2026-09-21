@@ -20,6 +20,7 @@ import concurrent.futures as cf
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -29,28 +30,103 @@ from typesafe_sdk import constants as ts_constants
 
 from questions import ALL_QUESTIONS, GROUPS, build_state
 
-# Keep a pass's source inside a sane per-request budget.  Nothing in the
-# tree is close to this today (largest is ~77 KB); the guard exists so an
-# oversized future pass degrades transparently instead of failing.
-MAX_SOURCE_CHARS = 200_000
+# jev-1.13.0 allows 64k tokens per request and, the binding one, 32k for
+# `state` plus the longest question.  Largest request that actually landed
+# was 34,901 total input tokens, so the source has to fit in roughly 95 KB
+# once the card metadata and sixteen questions are accounted for.
+MAX_SOURCE_CHARS = 82_000
+
+
+def digest_file(text: str, name: str) -> str:
+    """A structural digest of a sibling too large to send whole.
+
+    Keeps what the judgments actually read -- the contract comment, the
+    shape of the interface, and every IR-mutating call site with a little
+    context -- and drops the bodies in between.  Blind truncation would be
+    worse: the risky code is as likely to sit at the end of a 2700-line
+    file as at the start.
+    """
+    lines = text.splitlines()
+    keep: set[int] = set()
+
+    # Leading contract comment: everything up to the first #include.
+    for i, l in enumerate(lines[:400]):
+        if l.startswith("#include"):
+            break
+        keep.add(i)
+
+    sig = re.compile(r"^(static\s+|const\s+)?[\w:<>,\s\*&]+\s+[\w:]+\s*\([^;]*$|^(class|struct|namespace)\s+\w+")
+    mutate = re.compile(
+        r"\b(gsi_replace|gsi_remove|gsi_insert_\w+|emit_insn\w*|delete_insn\w*|"
+        r"validate_change\w*|df_insn_rescan|update_stmt|unlink_stmt_vdef|"
+        r"rvtt_refuse\w*|gcc_assert|gcc_unreachable)\s*\(")
+
+    for i, l in enumerate(lines):
+        if sig.match(l):
+            keep.add(i)
+        if mutate.search(l):
+            keep |= {j for j in range(max(0, i - 3), min(len(lines), i + 4))}
+
+    out, prev = [f"/* ===== {name} — STRUCTURAL DIGEST ({len(lines)} lines) ===== */"], None
+    for i in sorted(keep):
+        if prev is not None and i > prev + 1:
+            out.append(f"    /* ... {i - prev - 1} lines elided ... */")
+        out.append(lines[i])
+        prev = i
+    return "\n".join(out) + "\n"
 
 
 def load_source(gcc_root: Path, card: dict) -> tuple[str, str]:
-    """Return (source_text, status).  Status is recorded in the state."""
+    """Return (source_text, status).
+
+    A split pass lives in several translation units behind a private
+    `-int.h` (rvtt_schedule is 309 lines of primary and 9871 more across
+    seven siblings).  Sending only the primary file would ask the model to
+    judge a transform whose implementation it cannot see, so every sibling
+    is concatenated in, each under its own banner.
+    """
     if not card.get("file"):
         return "", "absent"
-    p = gcc_root / card["file"]
-    if not p.exists():
+    primary = gcc_root / card["file"]
+    if not primary.exists():
         return "", "absent"
-    text = p.read_text(errors="replace")
-    if len(text) <= MAX_SOURCE_CHARS:
-        return text, "complete"
-    head = text[: MAX_SOURCE_CHARS // 2]
-    tail = text[-MAX_SOURCE_CHARS // 2 :]
-    return (
-        head + "\n\n/* ... TRUNCATED FOR LENGTH ... */\n\n" + tail,
-        "truncated",
-    )
+    sibs = [gcc_root / s["file"] for s in (card.get("split_siblings") or [])]
+    sibs = [p for p in sibs if p.exists()]
+
+    ptext = primary.read_text(errors="replace")
+    texts = {p: p.read_text(errors="replace") for p in sibs}
+
+    # Everything whole, if it fits.
+    if len(ptext) + sum(len(t) for t in texts.values()) <= MAX_SOURCE_CHARS:
+        parts = [f"\n/* ========== {primary.name} ========== */\n" + ptext]
+        parts += [f"\n/* ========== {p.name} ========== */\n" + t for p, t in texts.items()]
+        return "".join(parts), ("complete" if not sibs
+                                else f"complete ({1 + len(sibs)} files)")
+
+    # Otherwise: primary whole, siblings digested.  The primary defines the
+    # pass, so it is the last thing to give up.
+    # A primary that alone blows the budget gets digested too; nothing else
+    # would fit beside it anyway.
+    pstatus = "complete"
+    if len(ptext) > MAX_SOURCE_CHARS:
+        ptext = digest_file(ptext, primary.name)
+        pstatus = "digested"
+    parts = [f"\n/* ========== {primary.name} ========== */\n" + ptext]
+    budget = MAX_SOURCE_CHARS - len(ptext)
+    digested, dropped = 0, 0
+    for p, t in sorted(texts.items(), key=lambda kv: len(kv[1])):
+        d = digest_file(t, p.name)
+        if len(d) <= budget:
+            parts.append("\n" + d)
+            budget -= len(d)
+            digested += 1
+        else:
+            dropped += 1
+
+    status = f"primary {pstatus}; {digested} of {len(sibs)} siblings digested"
+    if dropped:
+        status += f"; {dropped} omitted for length"
+    return "".join(parts), status
 
 
 def state_digest(state: dict, model: str) -> str:

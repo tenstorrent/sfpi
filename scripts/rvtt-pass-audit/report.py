@@ -169,9 +169,12 @@ def build(scores: list[dict]) -> dict:
             "unresolved": unresolved, "by": by, "meta": meta}
 
 
-def render(doc: dict, an: dict) -> str:
+def render(doc: dict, an: dict, meas: dict | None) -> str:
     prov = doc["provenance"]
     by, meta = an["by"], an["meta"]
+    mpass = (meas or {}).get("per_pass", {})
+    mknob = (meas or {}).get("per_knob", {})
+    mprov = (meas or {}).get("provenance", {})
     L: list[str] = []
     w = L.append
 
@@ -180,135 +183,130 @@ def render(doc: dict, an: dict) -> str:
     w(f"- **Tree**: `sfpi-gcc` @ `{prov['gcc_head'][:12]}`")
     w(f"- **Passes scored**: {prov['scored']} of {prov['registered_passes']} registered "
       f"(`pass_dce` is generic GCC DCE, not an rvtt pass)")
-    w(f"- **Model**: `{prov['model_served']}` — {prov['question_count']} independent judgments per pass, "
-      f"one batched request each")
+    w(f"- **Model**: `{prov['model_served']}` — {prov['question_count']} independent judgments "
+      f"per pass, one batched request each")
     w(f"- **Corpus context**: {prov['refusal_registry_size']} named refusals, "
-      f"{len(prov['proof_artifacts'])} proof artifacts, {prov['tt_options']} `-mtt-tensix-*` options")
+      f"{len(prov['proof_artifacts'])} proof artifacts, {prov['tt_options']} "
+      f"`-mtt-tensix-*` options, {prov.get('testsuite_size', '?')} TT testcases")
+    if mprov:
+        w(f"- **Silicon**: `{mprov['knob_file']}` + `{mprov['composition_file']}` — "
+          f"{mprov['knob_rows']} measured rows, {mprov['knobs_resolved']}/"
+          f"{mprov['knobs_seen']} knobs attributed to {mprov['passes_with_measurement']} passes")
     w("")
-    w("> **What this is.** A calibrated triage ranking, not a verifier. System One returns "
-      "probabilities over a rubric; it does not prove soundness. Soundness here is established by "
-      "`tt/proofs/`, the testsuite, and silicon A/B. Read every number below as *where to spend "
-      "review time*, and confirm each flag against the source before acting on it.")
-    w("")
-
-    # ---- flags
-    w("## 1. Review queue")
-    w("")
-    w("Flags are **relative to this corpus**, not absolute verdicts. A pass appears because it "
-      "sits in the worst fifth of the 54 on some dimension. Percentile cuts are quoted inline so "
-      "you can see how far from its peers it actually is.")
-    w("")
-    w("**Read the two queues differently.** The risk questions assume an *optional transform with "
-      "a precondition to check before acting*. That frame fits the flag-gated optimizations. It "
-      "does not fit mandatory lowering: `expand`'s job is to rewrite every condition tree it sees, "
-      "so \"mutates before validating\" is tautological for it, not a defect. Hand-checking "
-      "confirmed this — `expand` carries zero named refusals and three asserts by design. The two "
-      "populations are therefore ranked separately, and 1b should be read as *where the backend "
-      "carries unevidenced risk by construction*, not as a defect list.")
+    w("> **How to read this.** Section 1 is *measurement* — real QB2 silicon, and the only part "
+      "here that is evidence. Sections 2 onward are *model judgment*: calibrated probabilities "
+      "over a rubric, which prove nothing and exist to rank where review time goes. Where the "
+      "two disagree, the silicon wins. The ranked risk queue is **held** — see section 5.")
     w("")
 
-    for title, rows, note in [
-        ("### 1a. Opt-in optimizations (off by default) — the risk questions apply directly",
-         an["flags_gated"],
-         "These opt in to a transform under a precondition, so a flag here means the precondition "
-         "handling looks weaker than its peers. **This is the queue to work first**: these are "
-         "the passes whose promotion is still a live decision."),
-        ("### 1b. Passes that ship today — unconditional, or flag-gated with `Init(1)`",
-         an["flags_uncond"],
-         "Mandatory lowering, diagnosis, and enforcement, plus the few flags that default on "
-         "(`dce`, `cc`). Discount `mutation_before_validation` and `ordering_fragility` here — "
-         "they restate the pass's job. The transferable signals are **missing targeted tests** "
-         "and **an absent named-refusal surface**."),
-    ]:
-        alarms = [f for f in rows if any(s == "ALARM" for s, _ in f["reasons"])]
-        w(f"{title} — {len(rows)} flagged, {len(alarms)} with an ALARM")
+    # ------------------------------------------------------------------
+    # 1. MEASURED
+    # ------------------------------------------------------------------
+    w("## 1. Measured silicon — the authoritative perf column")
+    w("")
+    if not mpass:
+        w("_No measured data joined. Run `./measured.py` first._")
         w("")
-        w(note)
+    else:
+        w(f"Sign convention is the board's: **negative is a win** (fewer cycles vs hand). "
+          f"Values are {mprov['value_used']}. A knob is attributed to a pass by "
+          f"`knob → -mtt-tensix-* option → option Var → file reading it → pass owning that file`; "
+          f"every link is mechanical.")
         w("")
-        for f in rows:
-            on = "**RUNS UNCONDITIONALLY**" if f["always_on"] else "flag-gated, default-off"
-            w(f"#### `{fmt_pass(f['pass'])}` — {on}, {f['loc']} loc, {f['tier']}")
-            w(f"`{f['file']}`")
-            w("")
-            for sev, why in f["reasons"]:
-                w(f"- **{sev}** — {why}")
-            w("")
+        w("### 1a. Per knob")
+        w("")
+        w("| knob | rows | median | best | wins | regressions | pass |")
+        w("|---|---|---|---|---|---|---|")
+        for k in sorted(mknob.values(), key=lambda d: (d["median_vs_hand"] is None,
+                                                       d["median_vs_hand"])):
+            passes = ", ".join(f"`{fmt_pass(p)}`" for p in k["passes"])
+            w(f"| `{k['knob']}` | {k['n_rows']} | **{k['median_vs_hand']:+.2f}** | "
+              f"{k['best_vs_hand']:+.2f} | {k['n_wins']} | {k['n_regressions']} | {passes} |")
+        w("")
+        w("**Two caveats on attribution.** The chain resolves *which pass reads the flag*, which "
+          "is not always *which pass implements the win*: `reassoc-mad-restructure` resolves to "
+          "`combine`, because its Var is consulted in `gimple-rvtt-combine.cc` where the "
+          "`mul+add -> mad` rule actually fires, not in `gimple-rvtt-reassoc.cc` which does the "
+          "rebalancing that feeds it. Likewise `crossloop-cc-peel` resolves to `prgm_const` via "
+          "`gimple-rvtt-prgm-residency.cc`, not to `pass_rvtt_crossloop`. Separately, "
+          "`crossrow-2datum` is the one knob with **no option of that name** — it is hand-aliased "
+          "to `-mtt-tensix-optimize-crossrow-pairing` in `measured.py`, so its 5 rows rest on my "
+          "inference, not on a mechanical match. Check that alias before acting on its −9.64.")
+        w("")
+        w("**Row count and yield pull in opposite directions.** The two most widely attributed "
+          "knobs — `stochrnd-store-fold` (9 rows) and `delivery-shape` (6) — have the weakest "
+          "medians in the set. The strongest medians sit on knobs with two to five rows: "
+          "`loop-prgm-reclaim`, `crossloop-cc-peel`, `reassoc-mad-restructure`, `crossrow-2datum`. "
+          "Breadth of firing is not the same as size of win, and a median over two rows is a "
+          "thin basis for a promotion decision either way.")
+        w("")
+        w("### 1b. Per pass")
+        w("")
+        w("| pass | knobs | rows | median | best | ships today |")
+        w("|---|---|---|---|---|---|")
+        for p in sorted(mpass.values(), key=lambda d: (d["median_vs_hand"] is None,
+                                                       d["median_vs_hand"])):
+            m = meta.get(p["pass"], {})
+            w(f"| `{fmt_pass(p['pass'])}` | {', '.join(p['knobs'])} | {p['n_rows']} | "
+              f"**{p['median_vs_hand']:+.2f}** | {p['best_vs_hand']:+.2f} | "
+              f"{'yes' if m.get('always_on') else 'no'} |")
+        w("")
+        unmeasured = [p for p in by if p not in mpass]
+        w(f"**{len(unmeasured)} of {prov['scored']} passes have no measured row at all.** "
+          "For those, everything below is estimate, not evidence.")
+        w("")
 
-    # ---- perf
-    w("## 2. Performance opportunity")
+    # ------------------------------------------------------------------
+    # 2. MODEL ESTIMATE, only where measurement is absent
+    # ------------------------------------------------------------------
+    w("## 2. Estimated opportunity where no measurement exists")
     w("")
-    w("`opportunity = upside x breadth x evidence_discount` — a pass already backed by silicon A/B "
-      "is not an opportunity, it is done. Both factors are 0–3.")
+    w("`upside x breadth`, both 0–3, from the model reading the source. This is a **prior for "
+      "choosing what to measure next**, not a result. Passes with silicon rows are excluded — "
+      "for those, section 1 is the answer.")
     w("")
-    w("| pass | upside | breadth | mechanism | evidence | default | opportunity |")
-    w("|---|---|---|---|---|---|---|")
-    for o in an["opportunity"][:20]:
-        ec = f" ({o['evidence_conf']:.2f})" if o["evidence_conf"] is not None else ""
+    w("| pass | upside | breadth | mechanism | ships | est. opportunity |")
+    w("|---|---|---|---|---|---|")
+    shown = 0
+    for o in an["opportunity"]:
+        if o["pass"] in mpass or shown >= 15:
+            continue
+        shown += 1
         w(f"| `{fmt_pass(o['pass'])}` | {o['upside']:.2f} | {o['breadth']:.2f} | "
-          f"{o['mechanism']} | {o['evidence']}{ec} | {'UNCOND' if o['always_on'] else 'off'} | "
-          f"**{o['opportunity']:.2f}** |")
+          f"{o['mechanism']} | {'yes' if o['always_on'] else 'no'} | **{o['opportunity']:.2f}** |")
     w("")
 
-    # ---- readiness
-    w("## 3. Evidence against the Rescue Contract")
+    # ------------------------------------------------------------------
+    # 3. TEST COVERAGE — the verified structural finding
+    # ------------------------------------------------------------------
+    w("## 3. Test-coverage inversion (verified independently of the model)")
     w("")
-    w("`default_on_readiness` scores a pass against the Evidence-Based Rescue Contract: "
-      "`0` = envelope unsettled, `3` = proven, differentialed, and measured. It means two "
-      "different things depending on how the pass is gated, so the two populations are split.")
+    w("This one was confirmed by grep over the testsuite, not taken from a probability. "
+      "Counting testcases that name a pass's dump:")
     w("")
-
-    gated = [p for p in by if meta[p]["gating_mode"] == "flag_gated"]
-    uncond = [p for p in by if meta[p]["gating_mode"] == "unconditional"]
-
-    w("### 3a. Promotion candidates (flag-gated)")
+    w("| pass | ships on every compile | tests naming its dump |")
+    w("|---|---|---|")
+    for name, ships, n in [("rvtt_macro_planner", "no", 186), ("rvtt_replay", "yes", 160),
+                           ("rvtt_prgm_const", "no", 142), ("rvtt_dst_autoincr", "no", 103),
+                           ("rvtt_expand", "**yes**", 0), ("rvtt_live", "**yes**", 0),
+                           ("rvtt_check", "**yes**", 0), ("rvtt_synth_cse", "**yes**", 0)]:
+        w(f"| `{name}` | {ships} | {n} |")
     w("")
-    w("For these, readiness is the actual promotion question: should the flag flip?")
-    w("")
-    w("| pass | readiness | evidence | equivalence argument |")
-    w("|---|---|---|---|")
-    for p in sorted(gated, key=lambda p: -score(by[p]["default_on_readiness"]))[:12]:
-        a = by[p]
-        w(f"| `{fmt_pass(p)}` | {score(a['default_on_readiness']):.2f} | "
-          f"{a['measurement_evidence']['choice']} | {a['evidence_strength']['choice']} |")
+    w("The passes that run on **every** Tensix compilation are the ones with no targeted tests, "
+      "while the optional, off-by-default optimizations carry hundreds. That is exactly inverted "
+      "from where coverage does the most good, and it stands on its own evidence.")
     w("")
 
-    w("### 3b. Already shipping, evidence short of the contract (unconditional)")
+    # ------------------------------------------------------------------
+    # 4. EVIDENCE CENSUS
+    # ------------------------------------------------------------------
+    w("## 4. Evidence census")
     w("")
-    w("These are not promotion candidates — they are mandatory lowering and enforcement that "
-      "already run on **every** Tensix compilation. For them a low readiness score is the "
-      "*inverse* observation: the contract's evidence bar is not met, and the code ships anyway. "
-      "That is expected for mandatory lowering, which cannot be gated behind evidence. It is "
-      "listed because it locates where the backend carries unevidenced risk by construction.")
-    w("")
-    w("| pass | readiness | evidence | equivalence argument | targeted tests |")
-    w("|---|---|---|---|---|")
-    for p in sorted(uncond, key=lambda p: score(by[p]["default_on_readiness"]))[:12]:
-        a = by[p]
-        w(f"| `{fmt_pass(p)}` | {score(a['default_on_readiness']):.2f} | "
-          f"{a['measurement_evidence']['choice']} | {a['evidence_strength']['choice']} | "
-          f"{score(a['test_adequacy']):.2f}/3 |")
-    w("")
-
-    # ---- review order
-    w("## 4. Suggested review order")
-    w("")
-    w("| # | pass | priority | default | loc |")
-    w("|---|---|---|---|---|")
-    for i, p in enumerate(an["priority"][:15], 1):
-        w(f"| {i} | `{fmt_pass(p)}` | {score(by[p]['review_priority']):.2f} | "
-          f"{'UNCOND' if meta[p]['always_on'] else 'off'} | {meta[p]['loc']} |")
-    w("")
-
-    # ---- evidence census
-    w("## 5. Evidence census")
-    w("")
-    w("Counted two ways. *Settled* counts only answers the model actually committed to "
-      f"(confidence >= {LOW_CONFIDENCE:.2f}); *unsettled* answers are shown separately rather than "
-      "folded into a headline number. A raw count alone would report a 0.18-confidence coin flip "
-      "as a fact.")
+    w("Counted two ways. *Settled* counts only answers the model committed to "
+      f"(confidence >= {LOW_CONFIDENCE:.2f}); *unsettled* are shown separately rather than folded "
+      "into a headline number, so a 0.18-confidence coin flip is not reported as a fact.")
     w("")
     for q, label in [("evidence_strength", "Strongest equivalence evidence"),
-                     ("measurement_evidence", "Performance evidence"),
                      ("perf_mechanism", "Primary performance mechanism")]:
         settled: dict[str, int] = {}
         unsettled = 0
@@ -323,18 +321,55 @@ def render(doc: dict, an: dict) -> str:
         for k, v in sorted(settled.items(), key=lambda kv: -kv[1]):
             w(f"- `{k}`: {v}")
         w("")
+    w("The model's own `measurement_evidence` judgment is deliberately **not** reported here. "
+      "Section 1 supersedes it: guessing from source comments whether a pass was ever measured "
+      "is a proxy, and the board rows are the fact.")
+    w("")
 
-    # ---- honesty section
-    w("## 6. Low-confidence answers (do not treat as findings)")
+    # ------------------------------------------------------------------
+    # 5. RISK QUEUE — HELD
+    # ------------------------------------------------------------------
+    w("## 5. Ranked risk queue — HELD, not published")
     w("")
-    w(f"{len(an['unresolved'])} of {prov['scored'] * prov['question_count']} answers came back below "
-      f"{LOW_CONFIDENCE:.2f} confidence. The model is reporting that the state did not settle the "
-      "question — usually because the evidence genuinely is not in the source.")
+    w("The soundness/correctness ranking is **withheld from this report on purpose.**")
     w("")
-    w("| pass | question | answer | conf |")
-    w("|---|---|---|---|")
-    for u in an["unresolved"][:25]:
-        w(f"| `{fmt_pass(u['pass'])}` | {u['question']} | {u['answer']} | {u['confidence']:.2f} |")
+    w("Its risk questions assume an *optional transform with a precondition to check before "
+      "acting*. That frame fits the opt-in optimizations and does not fit mandatory lowering: "
+      "`rvtt_expand`'s job is to rewrite every condition tree it sees, so \"mutates IR before "
+      "validation completes\" scores high for it as a restatement of its purpose, not as a "
+      "defect. Hand-checking confirmed that reading — `expand` carries zero named refusals and "
+      "three asserts, by design.")
+    w("")
+    w("That is the same class of error as two flags already caught and fixed during development "
+      "(22 passes mislabeled default-off; `check_early/late` forced into an \"asserted "
+      "equivalence\" bucket that had no outcome for deliberate error-recovery). Three instances "
+      "of one failure mode is a reason to fix the instrument, not to ship its ranking.")
+    w("")
+    w("**Unblocking it needs a second question set written for lowering and enforcement passes** "
+      "— one that asks about assert density, refusal-surface absence, and diagnostic reachability "
+      "instead of precondition handling. The raw per-pass answers are in `results/scores.json` "
+      "for anyone who wants them; they should not be read as a ranked defect list.")
+    w("")
+
+    # ------------------------------------------------------------------
+    # 6. LIMITS
+    # ------------------------------------------------------------------
+    w("## 6. Limits of this run")
+    w("")
+    digested = [s for s in doc["scores"] if "digest" in (s.get("source_status") or "")]
+    w(f"- **Source coverage.** A pass split across translation units behind a private `-int.h` "
+      f"is sent with all its siblings. {len(digested)} of {prov['scored']} passes exceeded the "
+      f"model's 32k-token state limit and had siblings reduced to a structural digest "
+      f"(contract comment, signatures, and every IR-mutating call site with context). Those "
+      f"passes' judgments saw less code; `source_status` in `scores.json` records which.")
+    w(f"- **Unowned source.** ~25.5k lines of `tt/*.cc` belong to no single registered pass "
+      f"(shared tables, cost models, generators) and are scored by nobody.")
+    w(f"- **Run-to-run variance.** Scoring is not deterministic; the sub-0.50-confidence count "
+      f"moved between 222 and 230 across repeated full runs. Do not read a 0.05 difference "
+      f"between two passes as meaningful.")
+    w(f"- **Unsettled answers.** {len(an['unresolved'])} of "
+      f"{prov['scored'] * prov['question_count']} answers came back below "
+      f"{LOW_CONFIDENCE:.2f} confidence and are excluded from every count above.")
     w("")
 
     w("---")
@@ -344,21 +379,22 @@ def render(doc: dict, an: dict) -> str:
     w("```sh")
     w("source <your-secrets-file>   # TYPESAFE_API_KEY")
     w("cd scripts/rvtt-pass-audit")
-    w("./.venv/bin/python extract_cards.py        # tree -> results/cards.json")
-    w("./.venv/bin/python score_passes.py         # cards -> results/scores.json")
-    w("./.venv/bin/python report.py               # scores -> results/SCOREBOARD.md")
+    w("./.venv/bin/python extract_cards.py       # tree    -> results/cards.json")
+    w("./.venv/bin/python measured.py            # board   -> results/measured.json")
+    w("./.venv/bin/python score_passes.py        # cards   -> results/scores.json")
+    w("./.venv/bin/python report.py              # all     -> results/SCOREBOARD.md")
     w("```")
     w("")
-    w(f"Scoring is cached on a hash of (state, questions, model), so a re-run after editing one "
-      f"pass re-scores only that pass. Fresh run cost: "
-      f"{prov['usage_totals_fresh']['input_tokens']:,} input / "
-      f"{prov['usage_totals_fresh']['output_tokens']:,} output tokens.")
+    w(f"Fresh run cost: {prov['usage_totals_fresh']['input_tokens']:,} input / "
+      f"{prov['usage_totals_fresh']['output_tokens']:,} output tokens across "
+      f"{prov['scored']} requests. Scoring caches on a hash of (state, questions, model).")
     return "\n".join(L)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--scores", default="results/scores.json")
+    ap.add_argument("--measured", default="results/measured.json")
     ap.add_argument("--out", default="results/SCOREBOARD.md")
     ap.add_argument("--json-out", default="results/analysis.json")
     args = ap.parse_args()
@@ -366,12 +402,17 @@ def main() -> int:
     doc = json.loads(Path(args.scores).read_text())
     an = build(doc["scores"])
 
-    Path(args.out).write_text(render(doc, an))
+    mp = Path(args.measured)
+    meas = json.loads(mp.read_text()) if mp.exists() else None
+    if meas is None:
+        print(f"warning: {mp} not found — section 1 will be empty; run ./measured.py")
+
+    Path(args.out).write_text(render(doc, an, meas))
     Path(args.json_out).write_text(json.dumps(
         {k: v for k, v in an.items() if k not in ("by", "meta")}, indent=2))
 
-    print(f"opt-in flagged : {len(an['flags_gated'])} passes")
-    print(f"shipping flagged: {len(an['flags_uncond'])} passes")
+    print(f"measured passes : {len((meas or {}).get('per_pass', {}))}")
+    print(f"risk queue      : HELD (computed, not rendered)")
     print(f"low-conf answers: {len(an['unresolved'])}")
     print(f"wrote {args.out} and {args.json_out}")
     return 0

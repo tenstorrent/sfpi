@@ -124,25 +124,37 @@ def build_pass_file_index(tt_dir: Path) -> dict[str, Path]:
     return index
 
 
-def find_split_siblings(primary: Path, tt_dir: Path) -> list[Path]:
-    """Files that are part of the same split pass (shared -int.h interface).
+def build_split_groups(tt_dir: Path) -> dict[str, set[str]]:
+    """Group translation units that share a private `-int.h` interface.
 
-    Several passes were split into multiple translation units behind a
-    private `-int.h` header (see the 2026-09 split commits).  The judgment
-    should know those exist even when only the primary file is sent.
+    Several passes are split across several .cc files behind a private
+    header (the 2026-09 split commits).  The header is NOT named after the
+    primary file -- `rtl-rvtt-schedule.cc` shares `rtl-rvtt-sched-int.h`
+    with sched-pairing/region/drain/... -- so deriving the header name from
+    the file stem silently drops most of a pass's implementation.  Group by
+    actual inclusion instead.
+
+    Returns {header name: {cc basenames including it}}.
     """
-    stem = primary.stem
-    # rtl-rvtt-lp-alloc.cc -> rtl-rvtt-lp-alloc-int.h -> siblings
-    int_h = tt_dir / f"{stem}-int.h"
-    if not int_h.exists():
-        return []
-    siblings = []
-    for cc in sorted(tt_dir.glob("*.cc")):
-        if cc == primary:
-            continue
-        if f'"{int_h.name}"' in cc.read_text(errors="replace"):
-            siblings.append(cc)
-    return siblings
+    groups: dict[str, set[str]] = {}
+    headers = sorted(tt_dir.glob("*-int.h"))
+    texts = {cc.name: cc.read_text(errors="replace") for cc in tt_dir.glob("*.cc")}
+    for h in headers:
+        members = {name for name, t in texts.items() if f'"{h.name}"' in t}
+        if members:
+            groups[h.name] = members
+    return groups
+
+
+def find_split_siblings(primary: Path, tt_dir: Path,
+                        groups: dict[str, set[str]]) -> list[Path]:
+    """The other translation units implementing the same split pass."""
+    siblings: set[str] = set()
+    for members in groups.values():
+        if primary.name in members:
+            siblings |= members
+    siblings.discard(primary.name)
+    return [tt_dir / n for n in sorted(siblings)]
 
 
 # --------------------------------------------------------------------------
@@ -392,6 +404,7 @@ def main() -> int:
 
     registered = parse_passes_def(passes_def)
     file_index = build_pass_file_index(tt)
+    split_groups = build_split_groups(tt)
 
     head = subprocess.run(
         ["git", "-C", str(gcc), "rev-parse", "HEAD"], capture_output=True, text=True
@@ -414,7 +427,7 @@ def main() -> int:
             continue
 
         text = src.read_text(errors="replace")
-        siblings = find_split_siblings(src, tt)
+        siblings = find_split_siblings(src, tt, split_groups)
         options = extract_flags(text, opts)
         dump_name = extract_dump_name(text, name)
         gate = extract_gate(text, name)
@@ -462,6 +475,7 @@ def main() -> int:
                     "proof_artifacts": sorted(known_proofs),
                     "tt_options": len(opts),
                     "testsuite_size": total_tests,
+                    "split_groups": {h: sorted(m) for h, m in split_groups.items()},
                     "unconditional_passes": sum(
                         1 for c in cards if c.get("gating", {}).get("mode") == "unconditional"
                     ),

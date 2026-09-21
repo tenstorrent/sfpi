@@ -21,6 +21,48 @@
     ],
     "tt_options": 97,
     "testsuite_size": 1542,
+    "split_groups": {
+      "gimple-rvtt-crosscall-int.h": [
+        "gimple-rvtt-crosscall-census.cc",
+        "gimple-rvtt-crosscall-hoist.cc",
+        "gimple-rvtt-crosscall-scan.cc",
+        "gimple-rvtt-crosscall.cc"
+      ],
+      "gimple-rvtt-prgm-int.h": [
+        "gimple-rvtt-prgm-const.cc",
+        "gimple-rvtt-prgm-fuse.cc",
+        "gimple-rvtt-prgm-remat.cc",
+        "gimple-rvtt-prgm-residency.cc"
+      ],
+      "rtl-rvtt-dst-autoincr-int.h": [
+        "rtl-rvtt-dst-autoincr-scan.cc",
+        "rtl-rvtt-dst-autoincr.cc"
+      ],
+      "rtl-rvtt-lp-alloc-int.h": [
+        "rtl-rvtt-lp-alloc-color.cc",
+        "rtl-rvtt-lp-alloc.cc"
+      ],
+      "rtl-rvtt-macro-planner-int.h": [
+        "rtl-rvtt-macro-planner-cost.cc",
+        "rtl-rvtt-macro-planner.cc"
+      ],
+      "rtl-rvtt-replay-int.h": [
+        "rtl-rvtt-replay-crf.cc",
+        "rtl-rvtt-replay-discover.cc",
+        "rtl-rvtt-replay-hoist.cc",
+        "rtl-rvtt-replay.cc"
+      ],
+      "rtl-rvtt-sched-int.h": [
+        "rtl-rvtt-lp-schedule-prera.cc",
+        "rtl-rvtt-sched-drain.cc",
+        "rtl-rvtt-sched-fill.cc",
+        "rtl-rvtt-sched-interlock.cc",
+        "rtl-rvtt-sched-pairing.cc",
+        "rtl-rvtt-sched-region.cc",
+        "rtl-rvtt-sched-rotation.cc",
+        "rtl-rvtt-schedule.cc"
+      ]
+    },
     "unconditional_passes": 22
   },
   "cards": [
@@ -1945,7 +1987,20 @@
       "loc": 949,
       "pass_kind": "GIMPLE_PASS",
       "dump_name": "rvtt_prgm_const",
-      "split_siblings": [],
+      "split_siblings": [
+        {
+          "file": "gcc/config/riscv/tt/gimple-rvtt-prgm-fuse.cc",
+          "loc": 830
+        },
+        {
+          "file": "gcc/config/riscv/tt/gimple-rvtt-prgm-remat.cc",
+          "loc": 635
+        },
+        {
+          "file": "gcc/config/riscv/tt/gimple-rvtt-prgm-residency.cc",
+          "loc": 2951
+        }
+      ],
       "options": [
         {
           "option": "mtt-tensix-optimize-const-remat",
@@ -3773,7 +3828,36 @@
       "loc": 1350,
       "pass_kind": "RTL_PASS",
       "dump_name": "rvtt_lp_schedule_prera",
-      "split_siblings": [],
+      "split_siblings": [
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-drain.cc",
+          "loc": 1496
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-fill.cc",
+          "loc": 701
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-interlock.cc",
+          "loc": 379
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-pairing.cc",
+          "loc": 2700
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-region.cc",
+          "loc": 2173
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-rotation.cc",
+          "loc": 1072
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-schedule.cc",
+          "loc": 309
+        }
+      ],
       "options": [
         {
           "option": "mtt-tensix-optimize-pressure-schedule-prera",
@@ -4602,7 +4686,36 @@
       "loc": 309,
       "pass_kind": "RTL_PASS",
       "dump_name": "rvtt_schedule",
-      "split_siblings": [],
+      "split_siblings": [
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-lp-schedule-prera.cc",
+          "loc": 1350
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-drain.cc",
+          "loc": 1496
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-fill.cc",
+          "loc": 701
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-interlock.cc",
+          "loc": 379
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-pairing.cc",
+          "loc": 2700
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-region.cc",
+          "loc": 2173
+        },
+        {
+          "file": "gcc/config/riscv/tt/rtl-rvtt-sched-rotation.cc",
+          "loc": 1072
+        }
+      ],
       "options": [
         {
           "option": "mtt-tensix-optimize-capture-rotation",
