@@ -17,7 +17,7 @@ num_archs = len (targets[""])
 types={"USI":"unsigned",
        "SI":"signed",
        "VOID":"void",
-       "XTT_IPTR":"volatile void *",
+       "XTT_IPTR":"volatile unsigned long *",
        "XTT_VEC":"__xtt_vector",
        "XTT_VEC2":"__xtt_vector2",
        "XTT_VEC4":"__xtt_vector4",
