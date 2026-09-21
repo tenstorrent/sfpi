@@ -237,23 +237,34 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vInt val) const {
                                  ;
   static_assert (false
                  || fmt == DataLayout::I32
+                 || fmt == DataLayout::U16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
                  || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vInt");
   auto tmp =
+      fmt == DataLayout::SM16 || fmt == DataLayout::SM8
 #if !__riscv_xtttensixwh
-      fmt == DataLayout::SM32 || fmt == DataLayout::SM8 ? int_to_smag (val).get () :
+      || fmt == DataLayout::SM32
 #endif
-      val.get ();
+      ? int_to_smag (val).get () : val.get ();
 
   write (tmp,
          fmt == DataLayout::I32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+#if __riscv_xtttensixqsr
+         fmt == DataLayout::U8 ? SFPSTORE_MOD0_FMT_UINT8 :
+#endif
          fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
          SFPLOAD_MOD0_FMT_INT32 :
 #else
          SFPLOAD_MOD0_FMT_SM32 :
 #endif
+         fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
          fmt == DataLayout::SM8 ? SFPSTORE_MOD0_FMT_INT8 :
          ~0);
 }
@@ -270,29 +281,35 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vInt () const {
                                  ;
   static_assert (false
                  || fmt == DataLayout::I32
-                 || fmt == DataLayout::SM32
-                 || fmt == DataLayout::SM8
+                 || fmt == DataLayout::U16
 #if __riscv_xtttensixqsr
                  || fmt == DataLayout::U8
 #endif
+                 || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vInt");
   auto tmp = read (fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
+#if __riscv_xtttensixqsr
+                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                    fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
                    SFPLOAD_MOD0_FMT_INT32 :
 #else
                    SFPLOAD_MOD0_FMT_SM32 :
 #endif
+                   fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
                    fmt == DataLayout::SM8 ? SFPLOAD_MOD0_FMT_INT8 :
-#if __riscv_xtttensixqsr
-                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
-#endif
                    ~0);
 
+  if (fmt == DataLayout::SM16 || fmt == DataLayout::SM8
 #if !__riscv_xtttensixwh
-  if (fmt == DataLayout::SM32 || fmt == DataLayout::SM8)
-    tmp = smag_to_int (vSMag (tmp)).get ();
+      || fmt == DataLayout::SM32
 #endif
+      )
+    tmp = smag_to_int (vSMag (tmp)).get ();
   return vInt (tmp);
 }
 
