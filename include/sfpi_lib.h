@@ -707,6 +707,7 @@ template <typename Type,
 #if __riscv_xtttensixqsr
                                                      std::is_base_of<vInt, Type>,
 #endif
+                                                     std::is_base_of<vMag, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
   // mask has 0 for min res and 1 for max res
@@ -754,6 +755,7 @@ sfpi_inline std::pair<Type, Type> min_max (Type a, Type b, uint32_t mask = 0) {
                                      , std::is_base_of_v<vFloat, Type> ? SFPSWAP_IMM_TYPE_FLOAT :
                                      std::is_base_of_v<vInt, Type> ? SFPSWAP_IMM_TYPE_INT :
                                      std::is_base_of_v<vSMag, Type> ? SFPSWAP_IMM_TYPE_SMAG :
+                                     std::is_base_of_v<vMag, Type> ? SFPSWAP_IMM_TYPE_SMAG :
                                      ~0
 #endif
                                      );
@@ -767,6 +769,7 @@ template <typename Type,
 #if __riscv_xtttensixqsr
                                                      std::is_base_of<vInt, Type>,
 #endif
+                                                     std::is_base_of<vMag, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type min (Type a, Type b) {
   return min_max (a, b).first;
@@ -787,6 +790,7 @@ template <typename Type,
 #if __riscv_xtttensixqsr
                                                      std::is_base_of<vInt, Type>,
 #endif
+                                                     std::is_base_of<vMag, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type max (Type a, Type b) {
   return min_max (a, b, 0xf).first;
@@ -803,10 +807,10 @@ sfpi_inline vInt max (vInt a, int b) {
 #endif
 
 // Due to hardware limitations, ordering compares of unsigned do not work when
-// MSB is one. Sadly the compiler doesn't (yet) compensate
+// MSB is one. Sadly the compiler doesn't (yet) compensate (#14598)
 sfpi_inline vUInt min (vUInt x, unsigned c) {
   vUInt cv = c;
-  if (reinterpret_cast<int const &> (c) >= 0)
+  if (int (c) >= 0)
     return ~as<vUInt> (min (as<vSMag> (~x), as<vSMag> (~cv)));
 
   return as<vUInt> (max (as<vSMag> (x), as<vSMag> (cv)));  
@@ -814,7 +818,7 @@ sfpi_inline vUInt min (vUInt x, unsigned c) {
 
 sfpi_inline vUInt max (vUInt x, unsigned c) {
   vUInt cv = c;
-  if (reinterpret_cast<int const &> (c) >= 0)
+  if (int (c) >= 0)
     return ~as<vUInt> (max (as<vSMag> (~x), as<vSMag> (~cv)));
 
   return as<vUInt> (min (as<vSMag> (x), as<vSMag> (cv)));  
@@ -829,6 +833,7 @@ template <typename Type,
 #if __riscv_xtttensixqsr
                                                      std::is_base_of<vInt, Type>,
 #endif
+                                                     std::is_base_of<vMag, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type clamp (Type val, Type lower, Type upper) {
   return min (max (val, lower), upper);
