@@ -17,7 +17,7 @@ on:
         type: boolean
         default: false
       checking:
-        description: Enable internal checking
+        description: Enable checking
         type: boolean
         default: false
 

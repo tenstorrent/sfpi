@@ -10,7 +10,7 @@ fi
 
 NCPUS=$(nproc)
 
-gcc_checking=all
+gcc_checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree
 dejagnu=false
 enable_gdb=--disable-gdb
 sim=false
@@ -31,14 +31,12 @@ while [ "$#" -ne 0 ] ; do
 			  exit 1
 		      fi
 		      ;;
-	--checking) gcc_checking="all" ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--full) sfpi_base= ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
-	--no-checking) gcc_checking=release ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
