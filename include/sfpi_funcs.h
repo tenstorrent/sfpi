@@ -121,6 +121,9 @@ auto sfpi::impl_::CC::pop ()-> CC & {
   return *this;
 }
 
+// For the moment this is always presumed (that's a bug), so we don't need any annotation
+auto sfpi::nearby (vBool a)-> vBool { return a; }
+
 auto sfpi::operator&& (vBool a, vBool b)-> vBool { return vBool (vBool::And, a, b); }
 auto sfpi::operator|| (vBool a, vBool b)-> vBool { return vBool (vBool::Or, a, b); }
 auto sfpi::operator! (vBool a)-> vBool { return vBool (vBool::Not, a, a); }
