@@ -645,6 +645,10 @@ sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
 #define v_endblock                              \
   }
 
+// Mark an ordering compare as 'close', specifically the compared values are
+// known to be within <2^31 of each other
+sfpi_inline vBool nearby (vBool);
+
 //////////////////////////////////////////////////////////////////////////////
 // LRegs
 
