@@ -642,17 +642,17 @@ sfpi_inline vInt shft(vInt v, int amt, ShiftMode mode =
 }
 
 sfpi_inline vBool is_nan (vFloat v) {
-  return exexp (v, ExponentMode::Biased) >= 255
+  return nearby (exexp (v, ExponentMode::Biased) >= 255)
       && exman (v) != 0;
 }
 
 sfpi_inline vBool is_finite (vFloat v) {
-  return exexp (v, ExponentMode::Biased) < 255;
+  return nearby (exexp (v, ExponentMode::Biased) < 255);
 }
 
 sfpi_inline vBool is_normal (vFloat v) {
   auto exp = exexp (v, ExponentMode::Biased);
-  return exp < 255 && exp != 0;
+  return nearby (exp < 255) && exp != 0;
 }
 
 sfpi_inline vBool is_subnormal (vFloat v) {
@@ -665,7 +665,7 @@ sfpi_inline vBool is_zero (vFloat v) {
 }
 
 sfpi_inline vBool is_inf (vFloat v) {
-  return exexp (v, ExponentMode::Biased) >= 255
+  return nearby (exexp (v, ExponentMode::Biased) >= 255)
       && exman (v) == 0;
 }
 
