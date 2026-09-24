@@ -32,6 +32,7 @@ enum sfpi::vBool::Logic : unsigned char {
      And = SFPXLOGIC_MOD1_AND,
       Or = SFPXLOGIC_MOD1_OR,
      Not = SFPXLOGIC_MOD1_NOT,
+  Nearby = SFPXLOGIC_MOD1_NEARBY,
 };
 
 enum sfpi::vBool::Cond : unsigned char {
@@ -122,7 +123,7 @@ auto sfpi::impl_::CC::pop ()-> CC & {
 }
 
 // For the moment this is always presumed (that's a bug), so we don't need any annotation
-auto sfpi::nearby (vBool a)-> vBool { return a; }
+auto sfpi::nearby (vBool a)-> vBool { return vBool (vBool::Nearby, a, a); }
 
 auto sfpi::operator&& (vBool a, vBool b)-> vBool { return vBool (vBool::And, a, b); }
 auto sfpi::operator|| (vBool a, vBool b)-> vBool { return vBool (vBool::Or, a, b); }
