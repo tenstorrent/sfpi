@@ -693,7 +693,9 @@ constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
 __SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
 constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
 __SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
+#if __riscv_xtttensixwh || __riscv_xtttensixbh
 constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
+#endif
 __SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
 constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
 
