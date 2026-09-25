@@ -32,14 +32,11 @@ constexpr unsigned int SFPLOAD_MOD0_FMT_UINT16 = 6;
 constexpr unsigned int SFPLOAD_MOD0_FMT_HI16 = 7;
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT16 = 8;
 constexpr unsigned int SFPLOAD_MOD0_FMT_LO16 = 9;
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPLOAD_MOD0_FMT_UINT8 = 11;
+#endif
 // Only in HW on WH, but useful for BH & QSR semantics
 constexpr unsigned int SFPLOAD_MOD0_FMT_SM32 = 12;
-// Merging partial-register loads (SFPLOAD.md, WH+BH): LO16_ONLY writes the
-// low 16 bits preserving the high 16 (LReg = (old & 0xffff0000) | Dst16b);
-// HI16_ONLY writes the high 16 preserving the low.  The store-side twins
-// below carry the same names/values.
-constexpr unsigned int SFPLOAD_MOD0_FMT_LO16_ONLY = 14;
-constexpr unsigned int SFPLOAD_MOD0_FMT_HI16_ONLY = 15;
 #if __riscv_xtttensixwh
 __attribute__((__deprecated__("use SFPLOAD_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPLOAD_MOD0_FMT_INT32_TO_SM = SFPLOAD_MOD0_FMT_SM32;
@@ -60,10 +57,13 @@ constexpr unsigned int SFPSTORE_MOD0_FMT_UINT16 = 6;
 constexpr unsigned int SFPSTORE_MOD0_FMT_HI16 = 7;
 constexpr unsigned int SFPSTORE_MOD0_FMT_INT16 = 8;
 constexpr unsigned int SFPSTORE_MOD0_FMT_LO16 = 9;
-constexpr unsigned int SFPSTORE_MOD0_FMT_LO16_ONLY = 14;
-constexpr unsigned int SFPSTORE_MOD0_FMT_HI16_ONLY= 15;
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPSTORE_MOD0_FMT_UINT8 = 11;
+#endif
 // Only in HW on WH, but useful for BH & QSR semantics
 constexpr unsigned int SFPSTORE_MOD0_FMT_SM32 = 12;
+constexpr unsigned int SFPSTORE_MOD0_FMT_LO16_ONLY = 14;
+constexpr unsigned int SFPSTORE_MOD0_FMT_HI16_ONLY= 15;
 #if __riscv_xtttensixwh
 __attribute__((__deprecated__("use SFPSTORE_MOD0_FMT_SM32 instead")))
 constexpr unsigned int SFPSTORE_MOD0_FMT_INT32_TO_SM = SFPSTORE_MOD0_FMT_SM32;
@@ -155,9 +155,16 @@ constexpr unsigned int SFPXCMP_MOD1_TYPE_FLOAT = 3;
 constexpr unsigned int SFPXCMP_MOD1_TYPE_SHIFT = 4;
 constexpr unsigned int SFPXCMP_MOD1_TYPE_MASK = 3;
 
-constexpr unsigned int SFPXBOOL_MOD1_AND = 0;
-constexpr unsigned int SFPXBOOL_MOD1_OR = 1;
-constexpr unsigned int SFPXBOOL_MOD1_NOT = 2;
+constexpr unsigned int SFPXPRED_MOD1_ENDIF = 0;
+constexpr unsigned int SFPXPRED_MOD1_IF = 1;
+constexpr unsigned int SFPXPRED_MOD1_ELSE = 2;
+constexpr unsigned int SFPXPRED_MOD1_PUSH = 4;
+constexpr unsigned int SFPXPRED_MOD1_DEPTH_SHIFT = 4;
+
+constexpr unsigned int SFPXLOGIC_MOD1_AND = 0;
+constexpr unsigned int SFPXLOGIC_MOD1_OR = 1;
+constexpr unsigned int SFPXLOGIC_MOD1_NOT = 2;
+constexpr unsigned int SFPXLOGIC_MOD1_NEARBY = 3;
 
 constexpr unsigned int SFPSETCC_MOD1_LREG_LT0 = 0;
 constexpr unsigned int SFPSETCC_MOD1_IMM_BIT0 = 1;
@@ -165,6 +172,12 @@ constexpr unsigned int SFPSETCC_MOD1_LREG_NE0 = 2;
 constexpr unsigned int SFPSETCC_MOD1_LREG_GTE0 = 4;
 constexpr unsigned int SFPSETCC_MOD1_LREG_EQ0 = 6;
 constexpr unsigned int SFPSETCC_MOD1_COMP = 8;
+
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPSETCC_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPSETCC_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPSETCC_IMM_TYPE_SMAG = 1;
+#endif
 
 // EU: enable unmodified, EC: complement, EI: immediate
 // R1: result set, RI: immediate
@@ -182,6 +195,11 @@ constexpr unsigned int SFPPUSHC_MOD1_PUSH = 0;
 constexpr unsigned int SFPPUSHC_MOD1_REPLACE = 1;
 
 constexpr unsigned int SFPPOPC_MOD1_POP = 0;
+
+constexpr unsigned int SFPCONFIG_MOD1_ARG_IMM = 1;
+constexpr unsigned int SFPCONFIG_MOD1_AND = 2;
+constexpr unsigned int SFPCONFIG_MOD1_OR = 4;
+constexpr unsigned int SFPCONFIG_MOD1_XOR = 6;
 
 constexpr unsigned int SFPLZ_MOD1_CC_NONE = 0;
 constexpr unsigned int SFPLZ_MOD1_CC_NE0 = 2;
@@ -205,33 +223,28 @@ constexpr unsigned int SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE = 10;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_UPDATE = 0;
 constexpr unsigned int SFPLUTFP32_MOD0_SGN_RETAIN = 4;
 
-// WH/BH do round-nearest-away
-constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Evne
+constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNE = 0; // Round Nearest Even
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_FP32_RNS = 1; // Round Nearest Stochastic
 //__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNE instead")))
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNE = SFPCAST_MOD1_SM32_TO_FP32_RNE;
 //__attribute__((__deprecated__("use SFPCAST_MOD1_SM32_TO_FP32_RNS instead")))
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_FP32_RNS = SFPCAST_MOD1_SM32_TO_FP32_RNS;
 #if __riscv_xtttensixbh
-// BH's mod1=2 encoding was intended to be a conversion, but due to a hardware
-// bug it computes 2's complement absolute value (prefer SFPABS).
+// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_INT32_ABS = 2; // 2's complement ABS
-// BH's int<->int cast (mod1=3) is a self-inverse sign-preserving conditional
-// negate: dst = sign | (sign ? -src : src).  The same encoding therefore
-// implements both the 2's-compl -> Sign-Mag and Sign-Mag -> 2's-compl
-// conversions.  Each format's unrepresentable value maps to the other:
-// sign-mag -0 converts to mostneg int32, and mostneg int32 converts to
-// sign-mag -0 (not zero).
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
-constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 3; // Sign-Mag to 2's compl (same op, self-inverse)
 #elif __riscv_xtttensixqsr
+// This conversion on BH has a bug, sign-mag -0 converts to mostneg int32, not zero
 constexpr unsigned int SFPCAST_MOD1_SM32_TO_INT32 = 2; // Sign-Mag to 2's compl
 constexpr unsigned int SFPCAST_MOD1_INT32_TO_SM32 = 3; // 2's compl to Sign-Mag
 constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNE = 4; // Float to Sign-Mag
 constexpr unsigned int SFPCAST_MOD1_FP32_TO_SM32_RNS = 5; // Float to Sign-Mag
 #endif
 
-constexpr unsigned int SFPSTOCHRND_RND_EVEN = 0;
+// WH/BH break ties away from zero, Quasar to even; cf RoundMode::Nearest
+constexpr unsigned int SFPSTOCHRND_RND_NEAREST = 0;
+//__attribute__((__deprecated__("use SFPSTOCHRND_RND_NEAREST instead")))
+constexpr unsigned int SFPSTOCHRND_RND_EVEN = SFPSTOCHRND_RND_NEAREST;
 constexpr unsigned int SFPSTOCHRND_RND_STOCH = 1;
 constexpr unsigned int SFPSTOCHRND_RND_ZERO = 2;
 constexpr unsigned int SFPSTOCHRND_MOD1_FP32_TO_FP16A = 0;
@@ -279,6 +292,17 @@ constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN1_MAX023 = 6;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN2_MAX013 = 7;
 constexpr unsigned int SFPSWAP_MOD1_SUBVEC_MIN3_MAX012 = 8;
 constexpr unsigned int SFPSWAP_MOD1_VEC_MAX_MIN = 9;
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPSWAP_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPSWAP_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPSWAP_IMM_TYPE_SMAG = 1;
+#endif
+
+#if __riscv_xtttensixqsr
+constexpr unsigned int SFPGTLE_IMM_TYPE_INT = 0;
+constexpr unsigned int SFPGTLE_IMM_TYPE_FLOAT = 1;
+constexpr unsigned int SFPGTLE_IMM_TYPE_SMAG = 1;
+#endif
 
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST0 = 0;
 constexpr unsigned int SFPCONFIG_DEST_MACRO_INST1 = 1;
@@ -307,7 +331,22 @@ constexpr unsigned int CREG_IDX_PRGM0 = 11;
 constexpr unsigned int CREG_IDX_PRGM1 = 12;
 constexpr unsigned int CREG_IDX_PRGM2 = 13;
 constexpr unsigned int CREG_IDX_PRGM3 = 14;
+#if __riscv_xtttensixwh || __riscv_xtttensixbh
 constexpr unsigned int CREG_IDX_NEG_1 = CREG_IDX_PRGM0;
+#endif
 constexpr unsigned int CREG_IDX_TILEID = 15;
 
+#if __riscv_xtttensixqsr
+constexpr unsigned int CREG_IDX_LUT_SLOPES = 9;
+constexpr unsigned int CREG_IDX_LUT_INTERCEPTS = 12;
+#endif
+
 } // namespace sfpi
+
+/* ---- carried from this branch: constants sfpi main does not define ---- */
+// Merging partial-register loads (SFPLOAD.md, WH+BH): LO16_ONLY writes the
+// low 16 bits preserving the high 16 (LReg = (old & 0xffff0000) | Dst16b);
+// HI16_ONLY writes the high 16 preserving the low.  The store-side twins
+// below carry the same names/values.
+constexpr unsigned int SFPLOAD_MOD0_FMT_LO16_ONLY = 14;
+constexpr unsigned int SFPLOAD_MOD0_FMT_HI16_ONLY = 15;
