@@ -491,6 +491,10 @@ sfpi_inline vBool operator&& (vBool, vBool);
 sfpi_inline vBool operator|| (vBool, vBool);
 sfpi_inline vBool operator! (vBool);
 
+// Mark an ordering compare as 'close', specifically the compared values are
+// known to be within <2^31 of each other
+sfpi_inline vBool nearby (vBool);
+
 // Comparisons
 sfpi_inline vBool operator== (vFloat, vFloat);
 sfpi_inline vBool operator!= (vFloat, vFloat);
