@@ -29,9 +29,10 @@ sfpi::sFloat16b::sFloat16b (float v)
 // vBool definitions
 
 enum sfpi::vBool::Logic : unsigned char {
-     And = SFPXBOOL_MOD1_AND,
-      Or = SFPXBOOL_MOD1_OR,
-     Not = SFPXBOOL_MOD1_NOT,
+     And = SFPXLOGIC_MOD1_AND,
+      Or = SFPXLOGIC_MOD1_OR,
+     Not = SFPXLOGIC_MOD1_NOT,
+  Nearby = SFPXLOGIC_MOD1_NEARBY,
 };
 
 enum sfpi::vBool::Cond : unsigned char {
@@ -51,18 +52,18 @@ enum sfpi::vBool::Type : unsigned char {
 };
 
 sfpi::vBool::vBool (Logic t, vBool a, vBool b)
-    : result (__builtin_rvtt_sfpxbool (t, a.get (), b.get ())) {}
+    : result (__builtin_rvtt_sfpxlogic (t, a.get (), b.get ())) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
-    : result (__builtin_rvtt_sfpxicmpv (a.get (), b.get (), c | t)) {}
+    : result (__builtin_rvtt_sfpxcmp (a.get (), b.get (), c | t)) {}
 
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, uint32_t s)
-    : result (__builtin_rvtt_sfpxicmps (a.get (), s, c | t)) {}
+    : result (__builtin_rvtt_sfpxcmp (a.get (), __builtin_rvtt_sfpxloadi (s, -32), c | t)) {}
 
 sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
-    : result (__builtin_rvtt_sfpxfcmpv (a.get (), b.get (), c | Float)) {}
+    : vBool (c, Float, a, b) {}
 sfpi::vBool::vBool (Cond c, vFloat a, float s)
-    : result (__builtin_rvtt_sfpxfcmps (a.get (), impl_::float_as_uint (s), c | Float)) {}
+    : vBool (c, Float, a, impl_::float_as_uint (s)) {}
 sfpi::vBool::vBool (Cond c, vInt a, vInt b) : vBool (c, Int, a, b) {}
 sfpi::vBool::vBool (Cond c, vInt a, int32_t s) : vBool (c, Int, a, s) {}
 sfpi::vBool::vBool (Cond c, vUInt a, vUInt b) : vBool (c, UInt, a, b) {}
@@ -74,10 +75,6 @@ sfpi::vBool::vBool (Cond c, vSMag a, int s)
 sfpi::vBool::vBool (vInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
-
-sfpi::vBool::operator vInt () const {
-  return vInt (__builtin_rvtt_sfpxcondi (get ()));
-}
 
 sfpi::impl_::CC::CC (CC &&src)
     : dep (src.dep), depth (src.depth) {
@@ -95,7 +92,7 @@ auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
 }
 
 auto sfpi::impl_::CC::if_()-> CC & {
-  dep = __builtin_rvtt_sfpxvif ();
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
   return *this;
 }
 auto sfpi::impl_::CC::else_()-> CC & {
@@ -104,13 +101,13 @@ auto sfpi::impl_::CC::else_()-> CC & {
 }
 
 auto sfpi::impl_::CC::cond (vBool op)-> void {
-  __builtin_rvtt_sfpxcondb (op.get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, op.get ());
 }
 auto sfpi::impl_::CC::cond (vInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0).get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
 }
 auto sfpi::impl_::CC::cond (vUInt v)-> void {
-  __builtin_rvtt_sfpxcondb (vBool (vBool::NE, v, 0).get (), dep);
+  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
 }
 
 auto sfpi::impl_::CC::push ()-> CC & {
@@ -142,6 +139,9 @@ auto sfpi::impl_::CC::pop ()-> CC & {
     __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
   return *this;
 }
+
+// For the moment this is always presumed (that's a bug), so we don't need any annotation
+auto sfpi::nearby (vBool a)-> vBool { return vBool (vBool::Nearby, a, a); }
 
 auto sfpi::operator&& (vBool a, vBool b)-> vBool { return vBool (vBool::And, a, b); }
 auto sfpi::operator|| (vBool a, vBool b)-> vBool { return vBool (vBool::Or, a, b); }
@@ -259,22 +259,35 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vInt val) const {
                                  ;
   static_assert (false
                  || fmt == DataLayout::I32
+                 || fmt == DataLayout::U16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vInt");
   auto tmp =
+      fmt == DataLayout::SM16 || fmt == DataLayout::SM8
 #if !__riscv_xtttensixwh
-      fmt == DataLayout::SM32 ? int_to_smag (val).get () :
+      || fmt == DataLayout::SM32
 #endif
-      val.get ();
+      ? int_to_smag (val).get () : val.get ();
 
   write (tmp,
-         fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+         fmt == DataLayout::I32 ? SFPSTORE_MOD0_FMT_INT32 :
+         fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
+#if __riscv_xtttensixqsr
+         fmt == DataLayout::U8 ? SFPSTORE_MOD0_FMT_UINT8 :
+#endif
          fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
          SFPLOAD_MOD0_FMT_INT32 :
 #else
          SFPLOAD_MOD0_FMT_SM32 :
 #endif
+         fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
+         fmt == DataLayout::SM8 ? SFPSTORE_MOD0_FMT_INT8 :
          ~0);
 }
 
@@ -290,21 +303,35 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vInt () const {
                                  ;
   static_assert (false
                  || fmt == DataLayout::I32
+                 || fmt == DataLayout::U16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  || fmt == DataLayout::SM32
+                 || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vInt");
   auto tmp = read (fmt == DataLayout::I32 ? SFPLOAD_MOD0_FMT_INT32 :
+                   fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
+#if __riscv_xtttensixqsr
+                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                    fmt == DataLayout::SM32 ?
 #if !__riscv_xtttensixwh
                    SFPLOAD_MOD0_FMT_INT32 :
 #else
                    SFPLOAD_MOD0_FMT_SM32 :
 #endif
+                   fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
+                   fmt == DataLayout::SM8 ? SFPLOAD_MOD0_FMT_INT8 :
                    ~0);
 
+  if (fmt == DataLayout::SM16 || fmt == DataLayout::SM8
 #if !__riscv_xtttensixwh
-  if (fmt == DataLayout::SM32)
-    tmp = smag_to_int (vSMag (tmp)).get ();
+      || fmt == DataLayout::SM32
 #endif
+      )
+    tmp = smag_to_int (vSMag (tmp)).get ();
   return vInt (tmp);
 }
 
@@ -316,12 +343,18 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt val) const {
                  || fmt == DataLayout::U16
                  || fmt == DataLayout::LO16
                  || fmt == DataLayout::HI16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with storing vUInt");
   write (val.get (),
          fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
          fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
          fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
+#if __riscv_xtttensixqsr
+         fmt == DataLayout::U8 ? SFPSTORE_MOD0_FMT_UINT8 :
+#endif
          ~0);
 }
 
@@ -332,11 +365,17 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vMag val) const {
                  || fmt == DataLayout::M32
                  || fmt == DataLayout::LO16
                  || fmt == DataLayout::HI16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with storing vMag");
   write (val.get (),
          fmt == DataLayout::M32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
          fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
+#if __riscv_xtttensixqsr
+         fmt == DataLayout::U8 ? SFPSTORE_MOD0_FMT_UINT8 :
+#endif
          ~0);
 }
 
@@ -348,12 +387,18 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vUInt16 val) const {
                  || fmt == DataLayout::U16
                  || fmt == DataLayout::LO16
                  || fmt == DataLayout::HI16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with storing vUInt16");
   write (val.get (),
          fmt == DataLayout::U32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::U16 ? SFPSTORE_MOD0_FMT_UINT16 :
          fmt == DataLayout::LO16 ? SFPSTORE_MOD0_FMT_LO16 :
          fmt == DataLayout::HI16 ? SFPSTORE_MOD0_FMT_HI16 :
+#if __riscv_xtttensixqsr
+         fmt == DataLayout::U8 ? SFPSTORE_MOD0_FMT_UINT8 :
+#endif
          ~0);
 }
 
@@ -365,11 +410,17 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt () const {
                  || fmt == DataLayout::U16
                  || fmt == DataLayout::LO16
                  || fmt == DataLayout::HI16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with loading vUInt");
   auto tmp = read (fmt == DataLayout::U32 ? SFPLOAD_MOD0_FMT_INT32 :
                    fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
                    fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
                    fmt == DataLayout::HI16 ? SFPLOAD_MOD0_FMT_HI16 :
+#if __riscv_xtttensixqsr
+                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                    ~0);
   return vUInt (tmp);
 }
@@ -380,9 +431,15 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vMag () const {
   static_assert (false
                  || fmt == DataLayout::M32
                  || fmt == DataLayout::LO16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with loading vMag");
   auto tmp = read (fmt == DataLayout::M32 ? SFPLOAD_MOD0_FMT_INT32 :
                    fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
+#if __riscv_xtttensixqsr
+                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                    ~0);
   return vMag (tmp);
 }
@@ -393,10 +450,16 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vUInt16 () const {
   static_assert (false
                  || fmt == DataLayout::U16
                  || fmt == DataLayout::LO16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with loading vUInt16");
   return vUInt16 (read (
                       fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
                       fmt == DataLayout::LO16 ? SFPLOAD_MOD0_FMT_LO16 :
+#if __riscv_xtttensixqsr
+                      fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                       ~0));
 }
 
@@ -407,6 +470,7 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag val) const {
                  || fmt == DataLayout::I32
                  || fmt == DataLayout::SM32
                  || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vSMag");
   auto tmp = val.get ();
 #if !__riscv_xtttensixwh
@@ -422,6 +486,7 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag val) const {
 #endif
          fmt == DataLayout::SM32 ? SFPSTORE_MOD0_FMT_INT32 :
          fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
+         fmt == DataLayout::SM8 ? SFPSTORE_MOD0_FMT_INT8 :
          ~0);
 }
 
@@ -430,9 +495,11 @@ void sfpi::impl_::vReg_<Derived, Fmt>::operator= (vSMag16 val) const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM16;
   static_assert (false
                  || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with storing vSMag16");
   write (val.get (),
          fmt == DataLayout::SM16 ? SFPSTORE_MOD0_FMT_INT16 :
+         fmt == DataLayout::SM8 ? SFPSTORE_MOD0_FMT_INT8 :
          ~0);
 }
 
@@ -443,6 +510,11 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag () const {
                  || fmt == DataLayout::I32
                  || fmt == DataLayout::SM32
                  || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
+                 || fmt == DataLayout::U16
+#if __riscv_xtttensixqsr
+                 || fmt == DataLayout::U8
+#endif
                  , "Fmt value not compatible with loading vSMag");
   auto val = read (fmt == DataLayout::I32 ?
 #if !__riscv_xtttensixwh
@@ -452,6 +524,11 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag () const {
 #endif
                    fmt == DataLayout::SM32 ? SFPLOAD_MOD0_FMT_INT32 :
                    fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
+                   fmt == DataLayout::SM8 ? SFPLOAD_MOD0_FMT_INT8 :
+                   fmt == DataLayout::U16 ? SFPLOAD_MOD0_FMT_UINT16 :
+#if __riscv_xtttensixqsr
+                   fmt == DataLayout::U8 ? SFPLOAD_MOD0_FMT_UINT8 :
+#endif
                    ~0);
 #if !__riscv_xtttensixwh
   if (fmt == DataLayout::I32)
@@ -465,19 +542,12 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag16 () const {
   constexpr DataLayout fmt = Fmt != DataLayout::Default ? Fmt : DataLayout::SM16;
   static_assert (false
                  || fmt == DataLayout::SM16
+                 || fmt == DataLayout::SM8
                  , "Fmt value not compatible with loading vSMag16");
   auto val = read (fmt == DataLayout::SM16 ? SFPLOAD_MOD0_FMT_INT16 :
+                   fmt == DataLayout::SM8 ? SFPLOAD_MOD0_FMT_INT8 :
                    ~0);
   return vSMag16 (val);
-}
-
-template<sfpi::DataLayout Fmt>
-auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator= (vReg<Fmt> const &reg) const-> void {
-  *this = vFloat (*reg);
-}
-template<sfpi::DataLayout Fmt>
-auto sfpi::impl_::DstRegFile::vReg<Fmt>::operator- () const-> vFloat {
-  return -vFloat (*this);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -530,7 +600,7 @@ auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, a, 
 auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, a, b); }
 auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vFloat a, float b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vFloat a, float b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vFloat a, float b)-> vBool { return vBool (vBool::LT, a, b); }
@@ -554,10 +624,6 @@ sfpi::vInt::vInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
-
-sfpi::vInt::operator sfpi::vUInt () const {
-  return vUInt (*this);
-}
 
 auto sfpi::vInt::operator+= (vInt a)-> vInt & { return *this = *this + a; }
 auto sfpi::vInt::operator-= (vInt a)-> vInt & { return *this = *this - a; }
@@ -606,14 +672,14 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
-auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, b, a); }
-auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, b, a); }
-auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, b, a); }
-auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, b, a); }
-auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, b, a); }
-auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, b, a); }
+auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, a, b); }
+auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vInt a, int32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vInt a, int32_t b)-> vBool { return vBool (vBool::LT, a, b); }
@@ -635,10 +701,6 @@ sfpi::vUInt::vUInt (uint32_t val)
     : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
-
-sfpi::vUInt::operator sfpi::vInt () const {
-  return vInt (*this);
-}
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }
@@ -690,14 +752,14 @@ auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
-auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, b, a); }
-auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, b, a); }
-auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, b, a); }
-auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, b, a); }
-auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, b, a); }
-auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, b, a); }
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, a, b); }
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, a, b); }
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, a, b); }
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, a, b); }
 
-// FIXME: Until we get sfpxloadi optimization into sfpxfcmp, special case these compares
+// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
 auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
 auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::NE, a, b); }
 auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LT, a, b); }
@@ -720,7 +782,9 @@ auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vSMag::vSMag (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vSMag (__builtin_rvtt_sfpxloadi (val, 31)) {}
+sfpi::vSMag::vSMag (impl_::vMag val)
+    : vSMag (val.get ()) {}
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
 
