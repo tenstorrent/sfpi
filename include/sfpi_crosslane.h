@@ -548,7 +548,7 @@ sfpi_inline void set_dest_index_window ()
   __builtin_rvtt_sfpconfig_i (Enable ? 0x4 : 0x0, SFPCONFIG_DEST_SFPU_CTRL, 1);
 #else
   vInt cfg = Enable ? 4 : 0;
-  __builtin_rvtt_sfpwriteconfig_v (cfg.get (), SFPCONFIG_DEST_SFPU_CTRL);
+  __builtin_rvtt_sfpwriteconfig_v (cfg.get (), 0, SFPCONFIG_DEST_SFPU_CTRL);
 #endif
 }
 
