@@ -89,6 +89,20 @@ void sfpi_header_abi()
     // SFPCONFIG builtin: value, modifier, destination.
     vConstIntPrgm0 = converted;
     dst_reg[0] = converted;
+
+    // Exercise the compiler/assembler contract for SFPGT constant registers.
+    // The compiler may use L10 for 1.0f here; assemblers predating the paired
+    // SFPGT/SFPLE update incorrectly reject first operands above L7.
+    vFloat val = l_reg[LRegs::LReg3];
+    vFloat result = 0.0f;
+    v_if (val < 1.0f) {
+        result = 1.0f;
+    }
+    v_elseif (val <= 2.0f) {
+        result = 2.0f;
+    }
+    v_endif;
+    l_reg[LRegs::LReg3] = result;
 }
 EOF
 
@@ -109,6 +123,17 @@ if grep -q '__builtin_rvtt_' "$output/header-abi.S"; then
     echo "header ABI smoke left an rvtt builtin unresolved" >&2
     exit 1
 fi
+if ! grep -Eq '(^|[[:space:]])SFPGT[[:space:]]+L10,[[:space:]]*L3,' "$output/header-abi.S"; then
+    echo "header ABI smoke did not exercise SFPGT with constant register L10" >&2
+    exit 1
+fi
+
+# Unlike the assembly inspection above, this invokes the paired assembler and
+# rejects compiler/binutils combinations that disagree about SFPU operands.
+"$cxx" -mcpu=tt-bh-tensix -DARCH_BLACKHOLE -O2 \
+    -I"$install/include" -fno-exceptions -fno-rtti -Werror \
+    -Wno-error=deprecated-declarations \
+    -c "$output/header-abi.C" -o "$output/header-abi.o"
 
 compiler_version=$("$cxx" --version)
 compiler_version=${compiler_version%%$'\n'*}
@@ -116,4 +141,5 @@ echo "PASS: SFPI header/compiler ABI ($compiler_version)"
 echo "cc1plus: $cc1plus"
 if [[ $temporary -eq 0 ]]; then
     echo "assembly: $output/header-abi.S"
+    echo "object: $output/header-abi.o"
 fi
