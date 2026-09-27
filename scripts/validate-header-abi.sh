@@ -93,7 +93,8 @@ void sfpi_header_abi()
 EOF
 
 "$cxx" -mcpu=tt-bh-tensix -DARCH_BLACKHOLE -O2 \
-    -I"$install/include" -fno-exceptions -fno-rtti \
+    -I"$install/include" -fno-exceptions -fno-rtti -Werror \
+    -Wno-error=deprecated-declarations \
     -S "$output/header-abi.C" -o "$output/header-abi.S"
 
 if ! grep -Eq '(^|[[:space:]])SFPCONFIG([[:space:]]|$)' "$output/header-abi.S"; then
