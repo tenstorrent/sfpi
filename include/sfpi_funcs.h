@@ -702,6 +702,16 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
+// sfpi.h declares this deprecated conversion always_inline but never defines
+// it -- unlike vBool's, which is explicitly = delete'd.  An always_inline
+// declaration with no body is not a soft delete: it compiles until something
+// calls it, then fails with "function body not available" pointing at the
+// declaration rather than the call.  main added the vSMag(vMag) converting
+// constructor, which is what tips exman()/shft() overload resolution to the
+// vUInt-returning shft and makes LLK kernels trip this.  Define it; the bit
+// pattern is unchanged, so the explicit vInt(vUInt) constructor is the body.
+sfpi::vUInt::operator sfpi::vInt () const { return vInt (*this); }
+
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
 auto sfpi::vUInt::operator-= (vUInt a)-> vUInt & { return *this = *this - a; }
 auto sfpi::vUInt::operator<<= (unsigned a)-> vUInt & { return *this = *this << a; }

@@ -238,7 +238,7 @@ public:
   public:
     sfpi_inline constexpr explicit vCReg (int r) : lreg (r) {}
     sfpi_inline void operator= (Type t) const {
-      __builtin_rvtt_sfpwriteconfig_v (t.get (), lreg.get ());
+      __builtin_rvtt_sfpwriteconfig_v (t.get (), 0, lreg.get ());
     }
 
     // Assign from constructable scalar
