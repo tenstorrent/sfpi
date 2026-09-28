@@ -1,9 +1,22 @@
 # Worklog
 
+## 2026-09-28 — consolidate operator commands into HANDOFF
+
+Moved the fresh-machine recipe into HANDOFF.md and removed the duplicate
+reproduction README. HANDOFF now includes exact-profile replay, targeted knob
+A/Bs, compiler/header diagnosis, failure-log inspection, compiler tests and
+the restricted multiply proof command. README is an entry point; workflow
+and evidence READMEs link to the same command guide. No new device results
+are claimed by this documentation-only consolidation.
+Removed the obsolete pin-47 operator handoff at
+`docs/handoff-20260817/HANDOFF.md`; its historical contents remain recoverable
+from Git at `639baeb:docs/handoff-20260817/HANDOFF.md`. Root HANDOFF.md is the
+only current operator handoff.
+
 ## 2026-09-28 — close the fresh-machine handoff gap
 
 The earlier handoff explained auditing better than bootstrapping. Added a
-[fresh-clone reproduction path](docs/reproduction/README.md) with explicit WORK,
+[fresh-clone reproduction path](HANDOFF.md#reproducing-a-recorded-run) with explicit WORK,
 portable four-repository pins, the `tests/sfpi` selector, setup-state scope,
 and exact-profile smoke/full commands. Corrected the source-bundle generator
 to omit WORK and tested sourcing a relocated pin file with two chosen roots.

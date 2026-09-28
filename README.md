@@ -5,7 +5,7 @@ This repo contains SFPI.
 
 ### Compiler campaign checkpoint — 2026-09-28
 
-For a fresh machine, start with **[Reproducing a recorded run](docs/reproduction/README.md)**:
+For a fresh machine, start with **[HANDOFF: setup, replay and diagnosis](HANDOFF.md#reproducing-a-recorded-run)**:
 clone, choose WORK, load portable pins, build, verify the `tests/sfpi` link,
 then run the exact manifest profile. No existing source bundle is required.
 
@@ -14,15 +14,9 @@ evidence links and remaining tasks; [WORKLOG.md](WORKLOG.md) records the repair
 sequence, measured results and corrected hypotheses. These documents describe
 the downstream `nkapre/sfpi` campaign, not a release-wide certification.
 
-The final Blackhole sweep completed 284 rows: **263 bounded-correctness PASS,
-21 declared SKIP, zero failures**. At a 1% band, semantic ON versus OFF was
-189 faster / 74 parity / zero slower; versus handwritten ON it was
-66 faster / 35 parity / 63 slower among 164 comparable rows. PASS is not a win.
-
-A fresh published-pin Linux rebuild passed 8,023 compiler checks with two
-expected XFAILs and zero unexpected results; WH/BH/QSR header ABI probes passed.
-Full formal/Galaxy/ULP certification and optimization-PR extraction remain
-outstanding. No hardware job is left running.
+Current validation totals and remaining gates are in the
+[handoff status](HANDOFF.md#verified-results-and-limits), with raw evidence
+linked there. Correctness PASS is not a performance win or formal certificate.
 
 The source mirrors in public SFPI and craq-sfpi use `nkapre/sfpi`.
 Campaign scripts and raw evidence live in the separate

@@ -6,6 +6,12 @@ neither edited nor committed/pushed.
 
 Completed checks:
 
+- Consolidated command guide is root `HANDOFF.md`; duplicate reproduction
+  README and obsolete pin-47 handoff removed (recoverable in Git history).
+- Executed the handoff's flag-construction snippet, without hardware, for all
+  nine documented OP choices against the actual recorded manifest: each
+  changes exactly the intended single option. Shell and Python syntax pass.
+
 - `git apply --check workflow-portability.patch` against the untouched base: PASS.
 - `python3 -m unittest discover -s scripts -p 'test_*.py'` on patched tree:
   57 tests, PASS.

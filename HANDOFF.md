@@ -2,10 +2,9 @@
 
 ## State at handoff
 
-**Fresh-machine entry point:** [Reproducing a recorded run](docs/reproduction/README.md).
-It includes the source-branch-carried workflow patch, portable pin file,
-explicit WORK, setup, harness symlink verification and smoke/full commands.
-Use this before the resume steps below; archived paths are not runnable paths.
+**Start here:** [setup and replay](#reproducing-a-recorded-run), then
+[focused problem reproduction](#reproduce-and-diagnose-a-specific-problem).
+All runnable campaign commands live here; archived paths are not local paths.
 
 The compiler-repair, drift-diagnosis, and reproducibility round is complete.
 The final Blackhole sweep completed all 284 rows: **263 bounded-correctness
@@ -15,6 +14,263 @@ the entire upstreaming or formal/numeric certification program.
 No hardware test is running. Allocations `122075` (sweep) and `122098`
 (fresh build) were released. Evidence is preserved in the pinned workflow repository linked below; do not depend on a
 compute node or an old terminal session remaining available.
+
+## Reproducing a recorded run
+
+This is the first-mile recipe, not merely an evidence-auditing recipe. Use a
+Linux build host with GitHub access, Git, a C/C++ toolchain, SFPI's build
+prerequisites, Python 3.11+ with venv/pip and sufficient local disk. Measuring
+requires an allocated Blackhole device with its driver/runtime already
+installed. Setup does not allocate a device or install its driver. Build and
+run on the same node; node-local home directories are not shared.
+
+### 1. Obtain the source docs and the exact workflow
+
+Use new destination directories. No preexisting four-repository checkout and
+no `source_bundle.py export` are needed:
+
+```sh
+git clone --branch nkapre/sfpi git@github.com:tenstorrent/sfpi.git sfpi-handoff
+export SFPI_HANDOFF="$(cd sfpi-handoff && pwd)"
+git clone git@github.com:tenstorrent/craq-sfpi.git craq-workflow
+cd craq-workflow
+git checkout --detach 15ec9e7e92a92258d12956a75a802a1b705fe7f3
+git apply --check "$SFPI_HANDOFF/docs/reproduction/workflow-portability.patch"
+git apply "$SFPI_HANDOFF/docs/reproduction/workflow-portability.patch"
+```
+
+Why a patch: this campaign's workflow is a different tree from the SFPI-source
+`nkapre/sfpi` mirror. The owner requested changes only on the source branch,
+not workflow `main`. The patch fixes the original generator and its tests,
+adds portable recorded-run pins and updates the workflow README and headline
+run README. It does not duplicate the runner or modify any archived result.
+Keep this applied patch when sharing the reproduction workspace; its paths are
+relative and its base is the immutable workflow revision above.
+
+### 2. Choose local storage, load pins, build and wire the harness
+
+```sh
+export WORK="$HOME/craq-repro-20260928"
+source board/evidence/compiler-tuning-repairs-20260928/full-sweep/reproduce.env
+bash scripts/setup.sh --work "$WORK"
+export CRAQ_SETUP_STATE="$WORK/SETUP-STATE.env"
+bash scripts/setup.sh --work "$WORK" --check
+bash scripts/setup.sh --work "$WORK" --stage verify
+```
+
+The new `reproduce.env` exports only `SFPI_REF`, `METAL_REF`, `BLAZE_REF` and
+`GCC_REF`: b375545 / b06bb841 / 50b341b / 566071b, respectively, as full SHAs.
+The SFPI source docs commit is newer; b375545 is the measured source pin.
+The generator no longer writes an absolute WORK. If using an **old** archived
+environment file, override/export WORK **after** sourcing it; setting it before
+sourcing does not protect it from that old assignment.
+
+Setup clones the source repositories and GCC submodule, builds dependencies
+and the toolchain, verifies it, creates the LLK Python environment, and wires:
+
+```text
+$WORK/tt-metal/tt_metal/tt-llk/tests/sfpi
+    -> $WORK/sfpi/build/sfpi
+```
+
+That symlink, not the shell PATH, selects the headers and compiler used by the
+LLK harness. Skipping the harness stage can select its stock SFPI release.
+Check the actual path before any measurement:
+
+```sh
+TESTS="$WORK/tt-metal/tt_metal/tt-llk/tests"
+test "$(readlink -f "$TESTS/sfpi")" = "$(readlink -f "$WORK/sfpi/build/sfpi")"
+"$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" --version
+"$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" -print-prog-name=cc1plus
+```
+
+The expected target assumes default `--build-dir build`. The generated setup
+state belongs to this machine; do not copy an old machine's SETUP-STATE.env.
+`corpus/sweep.sh` checks `CRAQ_SETUP_STATE`; the lightweight `sweep_llks.py`
+records tool identity but does not use that variable as a state gate.
+
+For an unpinned development setup only, omit sourcing the pin file and run
+`bash scripts/setup.sh`: WORK defaults to `$HOME/craq-build` and source refs
+default to moving `nkapre/sfpi` branches. That is not historical reproduction.
+
+### 3. Smoke, then full manifest-profile sweep
+
+From this same patched workflow checkout and allocated node:
+
+```sh
+python3 - "$TESTS" "$WORK/final-profile-smoke" exp <<'PY'
+import json
+from pathlib import Path
+import subprocess
+import sys
+manifest = Path("board/evidence/compiler-tuning-repairs-20260928/full-sweep/manifest.json")
+flags = json.loads(manifest.read_text())["flags"]
+argv = [sys.executable, "scripts/sweep_llks.py", "--tests-root", sys.argv[1],
+        "--out", sys.argv[2], "--repeats", "3",
+        "--off-flags=" + flags["OFF_FLAGS"], "--on-flags=" + flags["ON_FLAGS"]]
+if len(sys.argv) > 3:
+    argv += ["--ops", sys.argv[3]]
+subprocess.run(argv, check=True)
+PY
+```
+
+For the full run, repeat that block with first line
+`python3 - "$TESTS" "$WORK/final-profile-full" <<'PY'` (no `exp` argument).
+Both output directories must be new. This uses the recorded record-hoist-OFF
+profile, not corpus defaults. Then report the completed full run:
+
+```sh
+python3 scripts/report_llk_sweep.py \
+  --current "$WORK/final-profile-full" --out "$WORK/final-profile-report.json"
+```
+
+The prior measured acceptance was 284 completed, 263 bounded PASS, 21 declared
+SKIP; at ±1%, ON/hand was 66/35/63 and ON/OFF 189/74/0. A rerun produces new
+evidence tied to its compiler and device, not a guarantee of identical cycle
+counts or binary hashes. Formal, exhaustive and ULP admission are separate.
+Never execute the archived command.json's absolute node paths verbatim.
+
+Copy new results off disposable nodes. Check setup logs, the resolved symlink,
+manifest hashes and actual correctness results before claiming reproduction.
+The workflow patch was validated with host tests and a relocated pin-file test;
+this documentation update does not claim a new fresh-node hardware sweep.
+
+## Reproduce and diagnose a specific problem
+
+Run the setup above first. The following commands run from `craq-workflow`,
+with WORK and TESTS set as above. Each output directory must be new. These
+reproduce the test or comparison on the repaired compiler; they do not claim
+to reproduce an old wrong-code witness merely by rerunning its row name.
+
+### Header/compiler ABI failure or wrong compiler selected
+
+```sh
+readlink -f "$TESTS/sfpi"
+CXX="$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++"
+"$CXX" -print-prog-name=cc1plus
+"$CXX" -print-prog-name=as
+sha256sum "$("$CXX" -print-prog-name=cc1plus)"
+bash "$WORK/sfpi/scripts/validate-header-abi.sh" \
+  "$WORK/sfpi/build/sfpi" "$WORK/header-abi-repro-new"
+```
+
+The probe instantiates dependent templates for WH/BH/QSR; it should pass on
+the pinned pair. Too-few-builtin-arguments or target-specific overload failures
+are compiler/header pairing failures, not reasons to loosen a numeric test.
+If experimenting with a different `-B` prefix, add `-###` to the **exact failing
+compile argv** and inspect its actual cc1plus path. A wrapper's earlier prefix
+can override the compiler you intended to test. `--version` alone is insufficient.
+
+### One LLK correctness/performance regression or tuning option
+
+Choose one OP in the case statement. This freezes the final common profile
+as OFF and changes only the named candidate option for ON:
+
+```sh
+export OP=geluappx-fresh
+FROZEN_FLAGS=$(python3 - <<'PY'
+import json
+from pathlib import Path
+p = Path("board/evidence/compiler-tuning-repairs-20260928/full-sweep/manifest.json")
+print(json.loads(p.read_text())["flags"]["ON_FLAGS"])
+PY
+)
+case "$OP" in
+  geluappx-fresh)
+    CANDIDATE_FLAGS="$FROZEN_FLAGS -mtt-tensix-optimize-crosscall-config-prefix" ;;
+  mulint32-fresh)
+    CANDIDATE_FLAGS="${FROZEN_FLAGS/-mtt-tensix-macro-planner /-mno-tt-tensix-macro-planner }" ;;
+  absint32)
+    CANDIDATE_FLAGS="$FROZEN_FLAGS -mtt-tensix-optimize-int-abs" ;;
+  abs|tanhderivative-fitted|typecast|blaze-sdpareducerow-sum|blaze-sdpareducerow-sum-cl|blaze-sdpareducerow-sum-t8)
+    CANDIDATE_FLAGS="${FROZEN_FLAGS/-mno-tt-tensix-optimize-replay-record-hoist/-mtt-tensix-optimize-replay-record-hoist}" ;;
+  *) printf 'Choose an OP listed in this recipe\n' >&2; exit 2 ;;
+esac
+REPRO_OUT="$WORK/repro-$OP-new"
+python3 scripts/sweep_llks.py --tests-root "$TESTS" --ops "$OP" \
+  --repeats 3 --timeout 120 --out "$REPRO_OUT" \
+  "--off-flags=$FROZEN_FLAGS" "--on-flags=$CANDIDATE_FLAGS"
+python3 scripts/report_llk_sweep.py \
+  --current "$REPRO_OUT" --out "$WORK/repro-$OP-report-new.json"
+```
+
+The final manifest already contains the LUT prerequisites for GELU. Retain
+macro-planner child options for the multiply A/B; the disabled parent gates
+them. Do not disable the SFPABS safety quarantine for these measurements.
+
+Reference outcomes, not guaranteed cycle counts on another build/device:
+
+| OP / option | Frozen → candidate cycles | What to inspect |
+|---|---:|---|
+| GELU / crosscall-config-prefix | 31033 → 28857 | Licensed source unchanged; hand parity, not a new ULP license |
+| restricted multiply / macro-planner OFF | 38702 → 35117 | Operand domain below 2^23; unchanged output conversion |
+| AbsInt32 / int-abs | 21815 → 17720 | Explicit safe SFPABS; old 16740 macro result not restored |
+| float abs / record-hoist ON | 20538 → 20538 | Negative control: no recovered macro win |
+| fitted tanh derivative / record-hoist ON | 578362 → 565331 | Must finish without timeout; still slower than hand |
+
+For another failing row, repeat the full-profile Python block above with its
+name in place of `exp`, rather than inventing new flags or changing tolerances.
+For an old/new compiler comparison, prepare two separate roots from matching
+source/header pins, inspect the real executable paths, and run the same row,
+flags, seed and domain. Do not replace GCC inside an existing validated install.
+
+### Inspect a failure without destroying the evidence
+
+```sh
+python3 - "$REPRO_OUT" "$OP" <<'PY'
+import json
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+print((root / "summary.json").read_text())
+row = root / "rows" / sys.argv[2]
+if (row / "result.json").exists():
+    print((row / "result.json").read_text())
+for name in ("command.json", "status.json", "pytest.log", "pytest.xml"):
+    for path in sorted(row.rglob(name)):
+        print(path)
+PY
+```
+
+Read the failed cell's command, status and pytest log together. Compile failure,
+device timeout, assertion failure and a slower correct result are different
+outcomes. A timeout stops the sweep: recover the device through the normal
+cluster procedure, then rerun the pinned exp smoke before retrying the affected
+row into a new directory. Do not continue timing on an unhealthy device, erase
+the first failure, or count unrun rows as passes. The report requires a completed
+run; use raw summary/row records for interrupted runs.
+
+### Compiler tests and restricted-domain proof
+
+```sh
+python3 scripts/run_compiler_tests.py \
+  --source "$WORK/sfpi/gcc" \
+  --object-dir "$WORK/sfpi/build/build-gcc-newlib-stage2" \
+  --sfpi-install "$WORK/sfpi/build/sfpi" \
+  --out "$WORK/compiler-tests-repro-new" --timeout 3600
+python3 -m venv "$WORK/limb2-proof-venv"
+"$WORK/limb2-proof-venv/bin/python" -m pip install \
+  -r "$TESTS/corpus/tools/requirements-formal.txt"
+"$WORK/limb2-proof-venv/bin/python" \
+  "$TESTS/corpus/selftest_mul_int32_limb2_contract.py"
+```
+
+The object path assumes the default full build. DejaGNU must be installed/on
+PATH. Inspect the runner's result JSON, not merely make's exit code. For a
+focused compiler regression, add for example
+`--selector=rvtt.exp=macro-planner-derived-intmul-row-bh.C` with a new output
+directory. The pinned full suite expectation is 8023 PASS / 2 XFAIL / zero
+unexpected results. The Z3 script checks the restricted source model, not the
+compiler's generated machine code. Full formal/Galaxy/ULP reproduction is
+blocked as recorded under the remaining tasks; there is no honest substitute
+command that turns the existing bounded sweep into those certificates.
+
+Host-only checks, without allocating hardware:
+
+```sh
+python3 -m unittest discover -s scripts -p 'test_*.py'
+bash scripts/test_toolchain_provenance.sh
+```
 
 ## Published source checkpoint
 
@@ -86,8 +342,7 @@ and a hardware rerun using the second binary are not claimed.
 
 ## Resume in this order
 
-1. Read the [workflow README](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/README.md) for setup and reporting,
-   and the exact-profile replay command below. The local [README.md](README.md)
+1. Run the [setup and replay steps](#reproducing-a-recorded-run) in this handoff. The local [README.md](README.md)
    retains the SFPI source build instructions.
    Use new output directories and verify the actual installed toolchain.
 2. Extend [per-LLK tuning](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/docs/LLK-TUNING.md) from known candidates, with the
@@ -117,39 +372,3 @@ and a hardware rerun using the second binary are not claimed.
 Historical `board/FINAL-BOARD.tsv` remains a historical per-operation booking,
 not the latest common-profile report. Prefer links to preserved evidence over
 duplicate board snapshots or new parallel runners.
-
-## Replay the measured profile
-
-Run this from the separate craq-sfpi **workflow checkout** at `15ec9e7e92a92258d12956a75a802a1b705fe7f3`,
-not from this SFPI source checkout. Set `WORK` to the prepared source/build
-root and use a newly allocated Blackhole device. Verify the installed chain
-first using the linked workflow instructions. Corpus defaults are not the
-recorded final profile.
-Apply the [portability patch and first-mile setup](docs/reproduction/README.md)
-before this command. The patch updates the workflow instructions at that base
-without any commit or push to workflow `main`.
-
-```sh
-python3 - "$WORK/tt-metal/tt_metal/tt-llk/tests" "$WORK/llk-final-profile-new" <<'PY'
-import json
-import subprocess
-import sys
-from pathlib import Path
-
-manifest = Path("board/evidence/compiler-tuning-repairs-20260928/full-sweep/manifest.json")
-flags = json.loads(manifest.read_text())["flags"]
-subprocess.run([
-    sys.executable, "scripts/sweep_llks.py", "--tests-root", sys.argv[1],
-    "--out", sys.argv[2], "--repeats", "3",
-    "--off-flags=" + flags["OFF_FLAGS"],
-    "--on-flags=" + flags["ON_FLAGS"],
-], check=True)
-PY
-```
-
-This preserves record-hoist OFF. A rebuilt compiler has its own binary identity
-and needs new evidence; it does not inherit the archived binary's measurement.
-For a completed run, use `scripts/report_llk_sweep.py --current RUN --out NEW_JSON`
-from that same workflow checkout. Use `scripts/select_llk_tuning.py` for
-measured per-operation proposals; it neither launches a search nor changes
-production defaults.
