@@ -119,6 +119,16 @@ template <typename V>
 constexpr bool is_sortable_vec_v
   = std::disjunction<std::is_base_of<vFloat, V>, std::is_base_of<vSMag, V>>::value;
 
+#if __riscv_xtttensixqsr
+// QSR's SFPSWAP carries a fourth operand naming the element type; WH/BH's
+// does not (rvtt-insn.def RVTT_OVR sfpswap qsr).  sort2/sort2_rows admit
+// vFloat and vSMag only, so this is the two-way case of the mapping
+// sfpi_lib.h's min_max/swap already spell out in full.
+template <typename V>
+constexpr unsigned sortable_swap_type_imm
+  = std::is_base_of_v<vFloat, V> ? SFPSWAP_IMM_TYPE_FLOAT : SFPSWAP_IMM_TYPE_SMAG;
+#endif
+
 // Bit-pattern zero of any element type (slide fill value; 0.0f and integer
 // 0 share the all-zero pattern).
 template <typename V>
@@ -479,13 +489,21 @@ sfpi_inline void sort2 (V &a, V &b)
 		 "only (wrap vInt via sfpi::as<vSMag> conversions)");
   if constexpr (Order == SortOrder::Ascending)
     {
-      auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+      auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), SFPSWAP_MOD1_VEC_MIN_MAX
+#if __riscv_xtttensixqsr
+				       , impl_::sortable_swap_type_imm<V>
+#endif
+				       );
       a = V (__builtin_rvtt_sfpselect2 (r, 0));
       b = V (__builtin_rvtt_sfpselect2 (r, 1));
     }
   else
     {
-      auto r = __builtin_rvtt_sfpswap (b.get (), a.get (), SFPSWAP_MOD1_VEC_MIN_MAX);
+      auto r = __builtin_rvtt_sfpswap (b.get (), a.get (), SFPSWAP_MOD1_VEC_MIN_MAX
+#if __riscv_xtttensixqsr
+				       , impl_::sortable_swap_type_imm<V>
+#endif
+				       );
       b = V (__builtin_rvtt_sfpselect2 (r, 0));
       a = V (__builtin_rvtt_sfpselect2 (r, 1));
     }
@@ -513,7 +531,11 @@ sfpi_inline void sort2_rows (V &a, V &b)
   static_assert (impl_::is_sortable_vec_v<V>,
 		 "sort2_rows: SFPSWAP's sign-magnitude total order sorts "
 		 "vFloat/vSMag only");
-  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), (unsigned) Pattern);
+  auto r = __builtin_rvtt_sfpswap (a.get (), b.get (), (unsigned) Pattern
+#if __riscv_xtttensixqsr
+				       , impl_::sortable_swap_type_imm<V>
+#endif
+				       );
   a = V (__builtin_rvtt_sfpselect2 (r, 0));
   b = V (__builtin_rvtt_sfpselect2 (r, 1));
 }
