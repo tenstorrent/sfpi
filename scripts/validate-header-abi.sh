@@ -135,9 +135,84 @@ fi
     -Wno-error=deprecated-declarations \
     -c "$output/header-abi.C" -o "$output/header-abi.o"
 
+# ---------------------------------------------------------------------------
+# Templates, on every target.
+#
+# The TU above catches an arity break only where the call site is NOT inside a
+# template: a builtin called with type-dependent arguments is not checked until
+# something instantiates it.  Re-injecting the two-argument sfpwriteconfig_v
+# bug proves the gap -- it fires at sfpi_crosslane.h (non-template) but passes
+# silently at sfpi_classes.h vCReg::operator=, which is a class template.
+#
+# It also compiled Blackhole only, while the per-ISA RVTT_OVR rows in
+# rvtt-insn.def give Quasar different arities for the same builtin.  That is a
+# real break: sfpswap takes three operands on WH/BH and four on QSR.
+#
+# So: instantiate the dependent-argument templates, and build them for every
+# target this compiler supports.  Compilation is the whole assertion here --
+# the encoding contract stays with the Blackhole TU above.
+cat >"$output/header-abi-templates.C" <<'EOF'
+namespace ckernel {
+volatile unsigned long *instrn_buffer;
+}
+
+#include <sfpi.h>
+#include <sfpi_crosslane.h>
+
+using namespace sfpi;
+
+__attribute__((noinline))
+void sfpi_header_abi_templates()
+{
+    // vCReg::operator= -- a class template; the original sfpwriteconfig_v
+    // arity break lived here and was invisible until instantiated.
+    vInt seed = 1;
+    vConstIntPrgm1 = seed;
+
+    // sort2 / sort2_rows -- sfpswap with a type-dependent V, four operands on
+    // QSR and three elsewhere.
+    vFloat fa = 0.0f, fb = 1.0f;
+    sort2<SortOrder::Ascending>(fa, fb);
+    sort2<SortOrder::Descending>(fa, fb);
+    sort2_rows<RowPattern::MinAll>(fa, fb);
+    sort2_rows<RowPattern::Min01Max23>(fa, fb);
+
+    vSMag sa = as<vSMag>(fa), sb = as<vSMag>(fb);
+    sort2<SortOrder::Ascending>(sa, sb);
+    sort2_rows<RowPattern::Min02Max13>(sa, sb);
+
+    dst_reg[0] = fa + as<vFloat>(sa);
+}
+EOF
+
+template_targets=()
+for probe in "-mcpu=tt-wh-tensix -DARCH_WORMHOLE"              "-mcpu=tt-bh-tensix -DARCH_BLACKHOLE"              "-march=rv32im_xtttensixqsr -mabi=ilp32 -DARCH_QUASAR"; do
+    # shellcheck disable=SC2086
+    if "$cxx" $probe -E -x c++ /dev/null -o /dev/null 2>/dev/null; then
+        template_targets+=("$probe")
+    fi
+done
+if [[ ${#template_targets[@]} -eq 0 ]]; then
+    echo "no tensix target accepted by this compiler" >&2
+    exit 1
+fi
+for target in "${template_targets[@]}"; do
+    # shellcheck disable=SC2086
+    "$cxx" $target -O2 \
+        -I"$install/include" -fno-exceptions -fno-rtti -Werror \
+        -Wno-error=deprecated-declarations \
+        -S "$output/header-abi-templates.C" -o "$output/header-abi-templates.S" \
+        || { echo "template ABI probe failed for: $target" >&2; exit 1; }
+    if grep -q '__builtin_rvtt_' "$output/header-abi-templates.S"; then
+        echo "template ABI probe left an rvtt builtin unresolved: $target" >&2
+        exit 1
+    fi
+done
+
 compiler_version=$("$cxx" --version)
 compiler_version=${compiler_version%%$'\n'*}
 echo "PASS: SFPI header/compiler ABI ($compiler_version)"
+echo "targets: ${#template_targets[@]} (templates instantiated)"
 echo "cc1plus: $cc1plus"
 if [[ $temporary -eq 0 ]]; then
     echo "assembly: $output/header-abi.S"
