@@ -3,6 +3,31 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+### Compiler campaign checkpoint — 2026-09-28
+
+See [HANDOFF.md](HANDOFF.md) for tested source pins, exact-profile replay,
+evidence links and remaining tasks; [WORKLOG.md](WORKLOG.md) records the repair
+sequence, measured results and corrected hypotheses. These documents describe
+the downstream `nkapre/sfpi` campaign, not a release-wide certification.
+
+The final Blackhole sweep completed 284 rows: **263 bounded-correctness PASS,
+21 declared SKIP, zero failures**. At a 1% band, semantic ON versus OFF was
+189 faster / 74 parity / zero slower; versus handwritten ON it was
+66 faster / 35 parity / 63 slower among 164 comparable rows. PASS is not a win.
+
+A fresh published-pin Linux rebuild passed 8,023 compiler checks with two
+expected XFAILs and zero unexpected results; WH/BH/QSR header ABI probes passed.
+Full formal/Galaxy/ULP certification and optimization-PR extraction remain
+outstanding. No hardware job is left running.
+
+The source mirrors in public SFPI and craq-sfpi use `nkapre/sfpi`.
+Campaign scripts and raw evidence live in the separate
+[pinned workflow tree](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/README.md);
+do not run its campaign commands from this source checkout. This documentation
+update does not change compiler pins, headers, or measured configurations.
+
+### Repository contents
+
 * sfpi header files in `include`
 * TT-enhanced RISC-V `binutils` in binutils submodule
 * TT-enhanced RISC-V `gcc` in gcc submodule
