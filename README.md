@@ -5,6 +5,10 @@ This repo contains SFPI.
 
 ### Compiler campaign checkpoint — 2026-09-28
 
+For a fresh machine, start with **[Reproducing a recorded run](docs/reproduction/README.md)**:
+clone, choose WORK, load portable pins, build, verify the `tests/sfpi` link,
+then run the exact manifest profile. No existing source bundle is required.
+
 See [HANDOFF.md](HANDOFF.md) for tested source pins, exact-profile replay,
 evidence links and remaining tasks; [WORKLOG.md](WORKLOG.md) records the repair
 sequence, measured results and corrected hypotheses. These documents describe

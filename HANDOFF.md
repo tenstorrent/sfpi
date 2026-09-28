@@ -2,6 +2,11 @@
 
 ## State at handoff
 
+**Fresh-machine entry point:** [Reproducing a recorded run](docs/reproduction/README.md).
+It includes the source-branch-carried workflow patch, portable pin file,
+explicit WORK, setup, harness symlink verification and smoke/full commands.
+Use this before the resume steps below; archived paths are not runnable paths.
+
 The compiler-repair, drift-diagnosis, and reproducibility round is complete.
 The final Blackhole sweep completed all 284 rows: **263 bounded-correctness
 PASS, 21 declared SKIP, zero failures or timeouts**. This is not completion of
@@ -120,6 +125,9 @@ not from this SFPI source checkout. Set `WORK` to the prepared source/build
 root and use a newly allocated Blackhole device. Verify the installed chain
 first using the linked workflow instructions. Corpus defaults are not the
 recorded final profile.
+Apply the [portability patch and first-mile setup](docs/reproduction/README.md)
+before this command. The patch updates the workflow instructions at that base
+without any commit or push to workflow `main`.
 
 ```sh
 python3 - "$WORK/tt-metal/tt_metal/tt-llk/tests" "$WORK/llk-final-profile-new" <<'PY'

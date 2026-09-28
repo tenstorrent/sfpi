@@ -1,5 +1,16 @@
 # Worklog
 
+## 2026-09-28 — close the fresh-machine handoff gap
+
+The earlier handoff explained auditing better than bootstrapping. Added a
+[fresh-clone reproduction path](docs/reproduction/README.md) with explicit WORK,
+portable four-repository pins, the `tests/sfpi` selector, setup-state scope,
+and exact-profile smoke/full commands. Corrected the source-bundle generator
+to omit WORK and tested sourcing a relocated pin file with two chosen roots.
+Because workflow main is out of scope, the tested fix is carried as an
+applicable patch on source `nkapre/sfpi`, not as a duplicate runner or a main
+branch commit. No new silicon run is claimed for this documentation change.
+
 This log records completed work and corrections, not a release certificate.
 See [HANDOFF.md](HANDOFF.md) for current source pins and remaining tasks,
 the [workflow README](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/README.md) for campaign commands, and the linked evidence for raw results.

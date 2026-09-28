@@ -1,0 +1,188 @@
+diff --git a/README.md b/README.md
+index 6fd17fc..48273f2 100644
+--- a/README.md
++++ b/README.md
+@@ -69,6 +69,88 @@ automatically replaced by the new sweep. See [board inputs](board/README.md).
+ 
+ ## Reproduce the sources
+ 
++### From a fresh machine
++
++Run on the Linux machine that will hold the build and, for measurements, the
++allocated Blackhole device. You need GitHub access to the private workflow and
++tt-blaze repositories, a C/C++ build toolchain and SFPI build prerequisites,
++Python 3.11+ with venv/pip, and the device driver/runtime for silicon. Setup
++builds local dependencies and the compiler; it does not allocate hardware or
++install the host driver. Node-local home directories are not shared storage.
++
++```sh
++git clone git@github.com:tenstorrent/craq-sfpi.git craq-workflow
++cd craq-workflow
++export WORK="$HOME/craq-build"
++bash scripts/setup.sh --work "$WORK"
++```
++
++This moving-branch route clones SFPI, its GCC submodule, tt-metal and tt-blaze,
++builds and verifies the compiler, creates the LLK environment, and wires the
++compiler symlink. It is not a replay of a historical source/profile pair.
++
++### Reproducing a recorded run
++
++Use the pinned workflow revision plus the source-branch portability patch
++specified in SFPI's `docs/reproduction/README.md`, rather than silently using a
++new workflow revision. From that prepared workflow checkout:
++
++```sh
++export WORK="$HOME/craq-repro-20260928"
++source board/evidence/compiler-tuning-repairs-20260928/full-sweep/reproduce.env
++bash scripts/setup.sh --work "$WORK"
++export CRAQ_SETUP_STATE="$WORK/SETUP-STATE.env"
++bash scripts/setup.sh --work "$WORK" --check
++bash scripts/setup.sh --work "$WORK" --stage verify
++```
++
++Use a new build root for a new source pin. The portable environment exports
++only the four source pins; it never changes WORK. Old archived environment
++files can contain WORK: if you use one, override/export WORK **after** sourcing
++it, not before. Never execute archived machine-specific argv verbatim.
++
++Check the actual compiler selector before measuring:
++
++```sh
++TESTS="$WORK/tt-metal/tt_metal/tt-llk/tests"
++test "$(readlink -f "$TESTS/sfpi")" = "$(readlink -f "$WORK/sfpi/build/sfpi")"
++"$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" --version
++"$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" -print-prog-name=cc1plus
++```
++
++The LLK harness uses `tests/sfpi/compiler/bin` and `tests/sfpi/include`; setting
++PATH is not a replacement. Without the harness-stage link, its stock SFPI
++release can be selected instead. The expected target above assumes the default
++build directory; adjust it if you explicitly selected another build directory.
++`CRAQ_SETUP_STATE` points to the new machine's setup record: corpus `sweep.sh`
++checks it. The lightweight `sweep_llks.py` records tool identity but does not
++consume that variable as a setup-state gate.
++
++Run the exact recorded flag profile, with new output and three repetitions:
++
++```sh
++python3 - "$TESTS" "$WORK/final-profile-rerun" <<'PY'
++import json
++from pathlib import Path
++import subprocess
++import sys
++manifest = Path("board/evidence/compiler-tuning-repairs-20260928/full-sweep/manifest.json")
++flags = json.loads(manifest.read_text())["flags"]
++subprocess.run([sys.executable, "scripts/sweep_llks.py",
++    "--tests-root", sys.argv[1], "--out", sys.argv[2], "--repeats", "3",
++    "--off-flags=" + flags["OFF_FLAGS"], "--on-flags=" + flags["ON_FLAGS"]], check=True)
++PY
++python3 scripts/report_llk_sweep.py \
++  --current "$WORK/final-profile-rerun" --out "$WORK/final-profile-report.json"
++```
++
++For a smoke first, add `"--ops", "exp"` to the argument list and choose a
++different output directory. The final profile explicitly disables record-hoist;
++the corpus defaults are not a substitute. New results bind the newly built
++compiler; exact old cycle counts or binary hashes are not guaranteed.
++
++### Optional source bundles
++
+ An unpushed local commit cannot be recovered by cloning a moving branch.
+ Export the clean source checkouts as a small, hash-checked delta package:
+ 
+@@ -87,6 +169,7 @@ are listed but excluded. Copy the package to the build node, then:
+ python3 scripts/source_bundle.py restore /path/to/source-package \
+   --out "$HOME/craq-build-new"
+ source "$HOME/craq-build-new/reproduce.env"
++export WORK="$HOME/craq-build-new"
+ cd "$WORK/craq-sfpi"
+ bash scripts/setup.sh --work "$WORK"
+ ```
+diff --git a/board/evidence/compiler-tuning-repairs-20260928/full-sweep/FILES.sha256 b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/FILES.sha256
+index a424ce3..a25a013 100644
+--- a/board/evidence/compiler-tuning-repairs-20260928/full-sweep/FILES.sha256
++++ b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/FILES.sha256
+@@ -1,7 +1,8 @@
+-2b4791a3adba864d23ec5f1e30ebd1846b4d0a7bd77d2439258301da9d706b5d  README.md
++afe29c6b2f3af4fe0108edac1cf778adef2701a84d7594937ba3daa5dcf5c935  README.md
+ d85b7a75d9c254070bba7b03f0f38fd26a0717860b9bd98bf888ade5c60b1ee3  RUN-FILES.sha256
+ e00205046fb65b918327e6abe45a2fbcfeaa44ce07e86b9937360ae20e0fdb3f  manifest.json
+ e63101ada668c27d6e580bbe11c22403a79e8070d2f3fd1174e007421f337a36  performance-report.json
+ d126ef21aeace069cc8c67aa8923892238039ac22c94ca90550ad55066c89fe1  results.tsv
+ 5da9463b17fa353899596234db30fa732711f7dd934c3c8b09ff7c3775ca2914  run-evidence.tgz
+ 15cc69f9f4597a17723f217fc487e1ac2edfbfc9390ad009f063783351cbd774  summary.json
++730aa51d67e12fcf93d1011995c7bb501ed6da5ce574e04528b92744f0f68259  reproduce.env
+diff --git a/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md
+index 0deab8a..669f3dc 100644
+--- a/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md
++++ b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md
+@@ -62,6 +62,16 @@ not isolate a compiler or knob effect.
+ The run explicitly records `formal=NOT_RUN`, `exhaustive=NOT_RUN`, and
+ `ulp_admission=NOT_RUN`.
+ 
++## Re-run on a new machine
++
++Follow [Reproducing a recorded run](../../../../README.md#reproducing-a-recorded-run)
++for the fresh-clone/setup path, portable `reproduce.env`, harness symlink
++check, setup-state location and manifest-derived OFF/ON command. No prior
++source-bundle export or original node directory is required. The archived
++absolute paths below are historical evidence, not runnable paths on your host.
++This recipe is supplied by the portability patch carried on SFPI's source
++branch; it changes no archived manifest, timing, ELF inventory or measurement.
++
+ ## Files and verification
+ 
+ - `manifest.json`, `summary.json`, and `results.tsv` are exact copies from the
+diff --git a/board/evidence/compiler-tuning-repairs-20260928/full-sweep/reproduce.env b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/reproduce.env
+new file mode 100644
+index 0000000..3106f45
+--- /dev/null
++++ b/board/evidence/compiler-tuning-repairs-20260928/full-sweep/reproduce.env
+@@ -0,0 +1,6 @@
++# Portable source pins for the recorded final sweep. Set WORK separately.
++# This file describes sources, not the archived prebuilt compiler binary.
++export SFPI_REF=b375545acf82d28029636b373ef35f61d23b5f23
++export METAL_REF=b06bb8410144eed620c95e8db2fe0c31802ae593
++export BLAZE_REF=50b341b95ea3a717e4e2a8501e021138c40b0237
++export GCC_REF=566071bf728e07e56fba9a6eedcfb68a59213ed4
+diff --git a/scripts/source_bundle.py b/scripts/source_bundle.py
+index cf791ee..e023dd0 100644
+--- a/scripts/source_bundle.py
++++ b/scripts/source_bundle.py
+@@ -175,10 +175,10 @@ def restore_sources(package: Path, out: Path) -> None:
+         if git(out / "sfpi", "rev-parse", f"HEAD:{name}") != expected:
+             raise ValueError(f"restored SFPI {name} gitlink mismatch")
+     settings = {
+-        "WORK": str(out), "SFPI_REF": refs["sfpi"], "METAL_REF": refs["tt-metal"],
++        "SFPI_REF": refs["sfpi"], "METAL_REF": refs["tt-metal"],
+         "BLAZE_REF": refs["tt-blaze"], "GCC_REF": manifest["sfpi_submodules"]["gcc"]["commit"],
+     }
+-    (out / "reproduce.env").write_text("# Generated source pins; inspect before sourcing.\n" +
++    (out / "reproduce.env").write_text("# Portable source pins; choose/export WORK separately before setup.\n" +
+         "".join(f"export {key}={shlex.quote(value)}\n" for key, value in settings.items()))
+ 
+ 
+diff --git a/scripts/test_source_bundle.py b/scripts/test_source_bundle.py
+index 4229dc5..7f93bd6 100644
+--- a/scripts/test_source_bundle.py
++++ b/scripts/test_source_bundle.py
+@@ -93,6 +93,18 @@ class SourceBundleTests(unittest.TestCase):
+                              (restored / name / "source.txt").read_bytes())
+         self.assertFalse((restored / "craq-sfpi/user-untracked.txt").exists())
+         self.assertIn("export SFPI_REF=", (restored / "reproduce.env").read_text())
++        pins = (restored / "reproduce.env").read_text()
++        self.assertNotIn("export WORK=", pins)
++        self.assertNotIn(str(restored), pins)
++        # Moving the pin file must not redirect a caller to the old build root.
++        relocated = self.root / "portable.env"
++        relocated.write_text(pins)
++        for chosen in ("/tmp/repro-one", "/tmp/repro root two"):
++            actual = subprocess.check_output([
++                "bash", "-c", 'export WORK="$1"; source "$2"; printf "%s" "$WORK"',
++                "fixture", chosen, str(relocated),
++            ], text=True)
++            self.assertEqual(actual, chosen)
+ 
+     def test_dirty_source_refused_before_creating_package(self):
+         (self.roots["sfpi"] / "source.txt").write_text("uncommitted")
