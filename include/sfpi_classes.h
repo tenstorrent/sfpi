@@ -58,6 +58,7 @@ class sFloat16b;
 enum class LRegs : uint8_t;
 
 enum class DataLayout {
+  None = -1, // Always an error
   Default = 0,
 
   FSrcB,
