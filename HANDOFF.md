@@ -18,34 +18,31 @@ compute node or an old terminal session remaining available.
 ## Reproducing a recorded run
 
 This is the first-mile recipe, not merely an evidence-auditing recipe. Use a
-Linux build host with GitHub access, Git, a C/C++ toolchain, SFPI's build
-prerequisites, Python 3.11+ with venv/pip and sufficient local disk. Measuring
+Linux build host with GitHub SSH access, Git, a C/C++ toolchain, `wget`, `xz`,
+Python 3.11+ with venv/pip, outbound HTTPS to ftp.gnu.org and github.com, and
+about 20 GB of local disk. Setup builds its own bison and flex, so a host
+without them is fine. Texinfo is not needed (setup passes `MAKEINFO=true`), and
+neither are system GMP/MPFR/MPC (GCC builds its in-tree copies). Measuring
 requires an allocated Blackhole device with its driver/runtime already
 installed. Setup does not allocate a device or install its driver. Build and
 run on the same node; node-local home directories are not shared.
 
-### 1. Obtain the source docs and the exact workflow
+### 1. Obtain the workflow
 
-Use new destination directories. No preexisting four-repository checkout and
-no `source_bundle.py export` are needed:
+Use a new destination directory. No preexisting four-repository checkout, no
+`source_bundle.py export` and no patch step are needed: the portability fixes
+that used to live in `docs/reproduction/workflow-portability.patch` are now on
+workflow `main`.
 
 ```sh
-git clone --branch nkapre/sfpi git@github.com:tenstorrent/sfpi.git sfpi-handoff
-export SFPI_HANDOFF="$(cd sfpi-handoff && pwd)"
 git clone git@github.com:tenstorrent/craq-sfpi.git craq-workflow
 cd craq-workflow
-git checkout --detach 15ec9e7e92a92258d12956a75a802a1b705fe7f3
-git apply --check "$SFPI_HANDOFF/docs/reproduction/workflow-portability.patch"
-git apply "$SFPI_HANDOFF/docs/reproduction/workflow-portability.patch"
+git checkout --detach 5144c7e   # optional: the revision these steps were run on
 ```
 
-Why a patch: this campaign's workflow is a different tree from the SFPI-source
-`nkapre/sfpi` mirror. The owner requested changes only on the source branch,
-not workflow `main`. The patch fixes the original generator and its tests,
-adds portable recorded-run pins and updates the workflow README and headline
-run README. It does not duplicate the runner or modify any archived result.
-Keep this applied patch when sharing the reproduction workspace; its paths are
-relative and its base is the immutable workflow revision above.
+Workflow `main` and this SFPI-source branch intentionally hold different trees;
+you do not need an SFPI checkout to follow this recipe, because setup clones
+SFPI itself.
 
 ### 2. Choose local storage, load pins, build and wire the harness
 
@@ -84,7 +81,10 @@ test "$(readlink -f "$TESTS/sfpi")" = "$(readlink -f "$WORK/sfpi/build/sfpi")"
 "$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" -print-prog-name=cc1plus
 ```
 
-The expected target assumes default `--build-dir build`. The generated setup
+The expected target assumes default `--build-dir build`. The published
+incremental base is not downloadable today, so a clean host always does the full
+binutils+gcc+newlib rebuild: measured at 12 minutes and 18 GB under `$WORK` on
+an idle 16-core node. The generated setup
 state belongs to this machine; do not copy an old machine's SETUP-STATE.env.
 `corpus/sweep.sh` checks `CRAQ_SETUP_STATE`; the lightweight `sweep_llks.py`
 records tool identity but does not use that variable as a state gate.
@@ -95,7 +95,7 @@ default to moving `nkapre/sfpi` branches. That is not historical reproduction.
 
 ### 3. Smoke, then full manifest-profile sweep
 
-From this same patched workflow checkout and allocated node:
+From this same workflow checkout and allocated node:
 
 ```sh
 python3 - "$TESTS" "$WORK/final-profile-smoke" exp <<'PY'
@@ -265,7 +265,8 @@ compiler's generated machine code. Full formal/Galaxy/ULP reproduction is
 blocked as recorded under the remaining tasks; there is no honest substitute
 command that turns the existing bounded sweep into those certificates.
 
-Host-only checks, without allocating hardware:
+Host-only checks, without allocating hardware. These need Python 3.11+: on
+3.10 four source-bundle tests error on the missing `hashlib.file_digest`.
 
 ```sh
 python3 -m unittest discover -s scripts -p 'test_*.py'
@@ -284,6 +285,7 @@ that moving remote branches will remain there forever.
 | tt-metal, `nkapre/sfpi` | `b06bb8410144eed620c95e8db2fe0c31802ae593` |
 | tt-blaze, `nkapre/sfpi` (unchanged) | `50b341b95ea3a717e4e2a8501e021138c40b0237` |
 | craq-sfpi workflow, `main`, completed implementation/evidence checkpoint | `15ec9e7e92a92258d12956a75a802a1b705fe7f3` |
+| craq-sfpi workflow, `main`, revision these steps were last run end to end on | `5144c7e` |
 
 This document is a subsequent documentation-only update on the SFPI source
 branch; the table preserves the previously validated source checkpoint. Workflow `main` and the
