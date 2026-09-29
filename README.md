@@ -33,6 +33,21 @@ update does not change compiler pins, headers, or measured configurations.
 * standard qemu cloned on demand
 * build and release scripts in `scripts`
 
+The Tensix backend that this fork exists for is `gcc/gcc/config/riscv/tt` --
+the target passes and the `-mtt-` options that drive them. Read
+`gcc/gcc/config/riscv/tt/README` first; it is the map of that directory. The
+options themselves are declared in `gcc/gcc/config/riscv/riscv.opt` (113
+`-mtt-` options, 107 of them `-mtt-tensix-*`); list them with:
+```
+  grep '^mtt-' gcc/gcc/config/riscv/riscv.opt
+```
+or, from a built compiler:
+```
+  path/to/install/sfpi/compiler/bin/riscv-tt-elf-g++ --help=target | grep mtt-
+```
+Only the two pressure-scheduler options are described in this README, under
+`Building`; the rest are documented in the backend sources.
+
 GCC, Binutils, Newlib and Qemu are (naturally) released under their
 own licenses.
 
@@ -141,14 +156,6 @@ the submodules, their locations and hashes.
   Solver-linked `cc1`/`cc1plus` binaries may depend on host `libcolamd` and
   `libsuitesparseconfig`, so release packaging must either provide those
   dependencies or keep `SFPI_WITH_LP_SOLVE=no`.
-
-  The dedicated Linux gate is
-  `.github/workflows/sfpu-pressure-scheduler.yaml`.  Private SFPI forks whose
-  GCC submodule is also private must define `SFPI_GCC_DEPLOY_KEY` as a
-  read-only deploy key from the sibling `sfpi-gcc` repository; public and
-  upstream runs need no extra credential. A private-fork run is reproducibility
-  evidence only; authoritative product CI must run in the Tenstorrent
-  organization.
 
   A built compiler can be checked directly with
   `scripts/validate-sfpu-pressure-scheduler.sh build`.  The validation compiles
