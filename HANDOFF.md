@@ -1,4 +1,4 @@
-# Handoff — 2026-09-28
+# Handoff — 2026-09-29
 
 ## State at handoff
 
@@ -6,14 +6,50 @@
 [focused problem reproduction](#reproduce-and-diagnose-a-specific-problem).
 All runnable campaign commands live here; archived paths are not local paths.
 
-The compiler-repair, drift-diagnosis, and reproducibility round is complete.
-The final Blackhole sweep completed all 284 rows: **263 bounded-correctness
-PASS, 21 declared SKIP, zero failures or timeouts**. This is not completion of
-the entire upstreaming or formal/numeric certification program.
+**Where the compiler work is.** The 177,787-line `nkapre/sfpi` branch is
+partitioned into a **21-stage PR stack**: `nkapre/stack` in
+`tenstorrent/craq-sfpi-gcc`, tip `8477d32d6ff`, on upstream base
+`ba48edbef33`, cumulative diff 1,704 files / 166,106 insertions. Every stage
+built standalone with `make all-gcc -j16` (21/21 rc=0, 0 compiler errors);
+`rvtt.exp` was run at stage 21 only (6478/9 versus the source branch's 6478/8
+in the same objdir, the one difference being `rv/zbkb.C`, which exists only
+because the stack does not revert upstream `ba48edbef33`). Stage 22 of the
+original partition was dropped deliberately: dead source plus a deletion that
+would have reverted upstream. Per-stage commits, flags, coverage and
+"not verified" lists are in `board/pr-packs/` in the workflow repository.
+**One PR is open**: sfpi-gcc#22 (`nkapre/pr-lreg-livein`), mergeable, checks
+green; the rest of the stack is not submitted.
 
-No hardware test is running. Allocations `122075` (sweep) and `122098`
-(fresh build) were released. Evidence is preserved in the pinned workflow repository linked below; do not depend on a
-compute node or an old terminal session remaining available.
+**What is measured.** The current runtime measurement is the 2026-09-29
+Blackhole sweep: 284 rows, **263 bounded-correctness PASS, 21 declared SKIP,
+0 correctness failures**. Its counts are banded at ±0.5% and must always be
+quoted with the band; see [verified results](#verified-results-and-limits).
+
+**What is not measured.** The sweep enabled **38 of the 92 options the stack
+defines**; **53 appear in neither arm** and a 54th is pinned OFF in both.
+**7 of 21 stages (03, 05, 12, 13, 15, 16, 18) have no runtime data at all.**
+`formal`, `exhaustive` and `ulp_admission` are NOT_RUN for want of a pinned
+`libttsim.so` host. Four of the unmeasured options (`-mtt-tensix-optimize-reassoc`,
+`-mtt-tensix-optimize-reassoc-mad-restructure`,
+`-mtt-tensix-optimize-stochrnd-store-fold`, `-mtt-tensix-optimize-store-sink`)
+are `LICENSED_TARGET_FLAGS` in the workflow repository's
+`scripts/select_llk_tuning.py`, which the ordinary per-op selector refuses and
+routes to the separate ULP admission flow — the likely reason they are outside
+the common profile.
+
+**What is queued.** A measurement campaign to close that knob-coverage gap is
+queued as a Slurm batch job: `board/evidence/incremental-knobs-20260929/` in
+the workflow repository holds its plan, its group table and the job. It
+measures each unmeasured option's **marginal** contribution on top of the
+existing 39-token profile, not its standalone effect; results land under
+`results/` there as each group completes. Read what is committed there rather
+than assuming a scope for it from this document, and do not start a duplicate
+run before checking.
+
+No hardware test from the previous round is running. Allocations `122075`
+(sweep) and `122098` (fresh build) were released. Evidence is preserved in the
+pinned workflow repository linked below; do not depend on a compute node or an
+old terminal session remaining available.
 
 ## Reproducing a recorded run
 
@@ -124,10 +160,18 @@ python3 scripts/report_llk_sweep.py \
   --current "$WORK/final-profile-full" --out "$WORK/final-profile-report.json"
 ```
 
-The prior measured acceptance was 284 completed, 263 bounded PASS, 21 declared
-SKIP; at ±1%, ON/hand was 66/35/63 and ON/OFF 189/74/0. A rerun produces new
-evidence tied to its compiler and device, not a guarantee of identical cycle
-counts or binary hashes. Formal, exhaustive and ULP admission are separate.
+The block above replays the **2026-09-28** manifest profile. To replay the
+**2026-09-29** run instead, take `OFF_FLAGS` and `ON_FLAGS` from
+`board/evidence/full-sweep-20260929/manifest.json` rather than retyping them;
+that run also used a later tt-metal commit (`6acf1685f172d16d`), so the two are
+not interchangeable.
+
+Measured acceptance was 284 completed, 263 bounded PASS, 21 declared SKIP in
+both runs. 2026-09-28 at ±1%: ON/hand 66/35/63, ON/OFF 189/74/0.
+2026-09-29 at ±0.5%: ON/hand 71/25/68, ON/OFF 192/69/2 — always quote the
+band. A rerun produces new evidence tied to its compiler and device, not a
+guarantee of identical cycle counts or binary hashes. Formal, exhaustive and
+ULP admission are separate.
 Never execute the archived command.json's absolute node paths verbatim.
 
 Copy new results off disposable nodes. Check setup logs, the resolved symlink,
@@ -286,9 +330,15 @@ that moving remote branches will remain there forever.
 | tt-blaze, `nkapre/sfpi` (unchanged) | `50b341b95ea3a717e4e2a8501e021138c40b0237` |
 | craq-sfpi workflow, `main`, completed implementation/evidence checkpoint | `15ec9e7e92a92258d12956a75a802a1b705fe7f3` |
 | craq-sfpi workflow, `main`, revision these steps were last run end to end on | `5144c7e` |
+| craq-sfpi-gcc, `nkapre/stack`, 21-stage PR stack tip | `8477d32d6ffcc53d7e9267d0d0428c37b1d08b65` |
+| craq-sfpi-gcc, upstream base the stack is partitioned onto | `ba48edbef3341846177dd2852f00366055740df1` |
+| tt-metal commit the 2026-09-29 sweep actually ran on | `6acf1685f172d16db110b412039f1645965a50b9` |
 
-This document is a subsequent documentation-only update on the SFPI source
-branch; the table preserves the previously validated source checkpoint. Workflow `main` and the
+The 2026-09-29 sweep ran on tt-metal `6acf1685f172d16d`, **eight commits after
+the pinned `b06bb841014`**, and its `manifest.json` records compiler binary
+hashes but **no compiler source commit** — so that run cannot be tied to a GCC
+revision from its own manifest. The `b06bb841014` row remains the validated
+source pin. The table preserves the previously validated source checkpoint. Workflow `main` and the
 SFPI-source `nkapre/sfpi` branch intentionally contain different trees. The
 source mirror pair must agree with each other, not with workflow `main`.
 SFPI pins binutils `7d192e0b6bb8e3bd3b7ec38d3316a59919051333` and newlib
@@ -306,9 +356,29 @@ tt-blaze hydration scripts. Recheck worktree status before editing or pushing.
 
 ## Verified results and limits
 
+Everything in the first block is from the **2026-09-29** sweep. Its
+performance counts are banded at **±0.5%**; quoting one without the band is an
+error, because the hand comparison changes verdict with the band.
+
 | Check | Result | Boundary |
 |---|---|---|
-| Full Blackhole sweep | 263 PASS / 21 SKIP | Existing bounded pytest contracts, not all-input proof |
+| Full Blackhole sweep, 2026-09-29 | 263 PASS / 21 SKIP / 0 correctness failures | Existing bounded pytest contracts, not all-input proof |
+| Semantic ON vs OFF | 192 faster / 69 flat / 2 slower | 263 rows, ±0.5% band. Robust: 202/56/5 at raw sign, 188/74/1 at ±1% |
+| Semantic ON vs hand ON | 71 beat / 25 tie / 68 hand wins | 164 rows with a hand arm, ±0.5% band. **Band-sensitive: 79/3/82 at raw sign, 66/35/63 at ±1%. A statistical tie, not a win.** |
+| Four rows first recorded FAIL | Infrastructure outage, all four re-ran green | Status 3 = pytest `INTERNAL_ERROR` before collection; a numeric mismatch exits 1 |
+| Option coverage in that sweep | 38 of 92 enabled | 53 options in neither arm, 1 pinned OFF in both; 7 of 21 stages have no runtime data |
+| OFF arm construction | Valid, but not a literal negation | 16 of 38 enabled flags have no `-mno-` counterpart; valid only because all 16 are `Init(0)` |
+| 21-stage PR stack build | 21 of 21 standalone `make all-gcc -j16` at rc=0, 0 errors | Build only; `rvtt.exp` run at stage 21 only, intermediate stages untested |
+| `rvtt.exp` at stack tip | 6478 expected passes / 9 unexpected failures | Versus source `566071bf728` at 6478 / 8 in the same objdir; the one difference is `rv/zbkb.C`, an `all-gcc`-only objdir artefact |
+| Upstream PR sfpi-gcc#22 | Open, mergeable, 683 added lines / 11 files, 4/4 Cycode green | Not merged, not reviewed; its builtin has no in-tree caller yet |
+| Formal / exhaustive / ULP | NOT_RUN | Needs a pinned `libttsim.so` host that was unavailable. Never infer these from correctness PASS |
+
+Preceding round, retained for comparison and **not interchangeable** with the
+above — different compiler binary, different tt-metal commit, ±1% band:
+
+| Check | Result | Boundary |
+|---|---|---|
+| Full Blackhole sweep, 2026-09-28 | 263 PASS / 21 SKIP | Existing bounded pytest contracts |
 | Semantic ON vs OFF | 189 faster / 74 parity / 0 slower | 263 rows, inclusive ±1% band |
 | Semantic ON vs hand ON | 66 faster / 35 parity / 63 slower | 164 comparable rows, same band |
 | Final vs preceding ON | 27 faster / 230 parity / 6 slower | Descriptive; source/compiler/profile differ |
@@ -316,12 +386,15 @@ tt-blaze hydration scripts. Recheck worktree status before editing or pushing.
 | Header ABI | WH/BH/QSR PASS | Template instantiation, not hardware coverage on all three |
 | Workflow tests | 57 PASS; setup/provenance regressions PASS | Host checks |
 | Restricted multiply Z3 model | 11 checks PASS in fresh pinned environment | Source model on operands below 2^23, not machine-code proof |
-| Formal / exhaustive / ULP in full sweep | NOT_RUN | Never infer these from correctness PASS |
+| Formal / exhaustive / ULP in that sweep | NOT_RUN | Also not run in 2026-09-28; never infer these from correctness PASS |
 
-The hardware compiler's `cc1plus` SHA-256 is
+The 2026-09-28 hardware compiler's `cc1plus` SHA-256 is
 `65dfa31b0d76894ed46531aeb4964914e22931857293370261bbc07af9ce12be`.
 The independent clean rebuild is
 `be582de222aef1e7fe29c398e3027d1d960e60e1ddc641d9ea8eefbe014f82d6`.
+The 2026-09-29 sweep's `cc1plus` is a third binary,
+`1ade419280a690c2b8cefb0ab94f07251323cb3d390b7ab87c4f534c9f80dad7`; its
+manifest records no source commit for it.
 Source/build/test reproducibility is demonstrated; byte-identical rebuilds
 and a hardware rerun using the second binary are not claimed.
 
@@ -341,6 +414,13 @@ and a hardware rerun using the second binary are not claimed.
   corpus defaults and historical board bookings are not interchangeable.
 - Use `-###` when switching compiler prefixes. An earlier wrapper-provided
   `-B` took precedence over a later experimental `-B`; that control was invalid.
+- Always state the band with a win/flat/loss count. Versus flags-off the result
+  holds at every threshold; versus hand it does not, and dropping the band turns
+  a tie into a claimed win.
+- Keep the OFF-arm caveat attached to the numbers. 16 of the 38 enabled flags
+  are absent from the OFF arm and off only because they are `Init(0)`. If any
+  of those defaults is flipped, the OFF baseline is silently wrong and nothing
+  in the harness will say so — recheck the list before reusing the profile.
 
 ## Resume in this order
 
@@ -352,10 +432,13 @@ and a hardware rerun using the second binary are not claimed.
    Existing proposals are not deployed defaults or an exhaustive knob search.
 3. Validate any selected dispatch configuration before promoting it. Do not
    relabel the fixed-profile sweep as a run of the combined tuned choices.
-4. Follow [readiness](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/docs/READINESS.md) for upstream work: maintainer alignment,
-   isolated raw-LREG correctness patch, infrastructure extraction, then small
-   independently tested pass PRs. No PR was opened by this round; all 31 passes
-   are not certified upstream-ready.
+4. Follow [readiness](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/docs/READINESS.md) for upstream work. The isolated raw-LREG
+   correctness patch is now open as
+   [sfpi-gcc#22](https://github.com/tenstorrent/sfpi-gcc/pull/22) — mergeable,
+   checks green, unreviewed, and dormant until the separate SFPI
+   header/call-site change emits a marker. The remaining 20 stages of
+   `nkapre/stack` are built but unsubmitted, and passing a build is not
+   certification of upstream readiness.
 5. Close formal/Galaxy/numeric gates separately. The required instrumented JO
    simulator and observation patch were not found; full exhaustive coverage is
    unmeasured. Licensed-sigmoid infinity classes currently fail admission.
@@ -363,7 +446,10 @@ and a hardware rerun using the second binary are not claimed.
 
 ## Evidence map
 
-- [Final sweep and generated report](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md): exact manifests, counts, raw archive and checksums.
+- [2026-09-29 sweep](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/full-sweep-20260929/README.md): the current runtime measurement, its ±0.5% banding table, the outage diagnosis, and the flag-profile limits. Its `rows/` tree (1.6 GB) is not committed; the README says where the two node-local copies are.
+- [Four-row re-run](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/full-sweep-20260929-rerun4/README.md): the four outage rows re-run green with the same compiler, tt-metal commit, seed and flags.
+- [PR stack index](https://github.com/tenstorrent/craq-sfpi/blob/main/board/pr-packs/INDEX.md) and [per-stage packs](https://github.com/tenstorrent/craq-sfpi/tree/main/board/pr-packs): per-stage commit, flags with `Init()` defaults, coverage, runtime where any exists, and the per-stage "not verified" list.
+- [Preceding 2026-09-28 sweep and generated report](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md): exact manifests, counts, raw archive and checksums.
 - [Fresh compiler build](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/fresh-build/README.md) and [network source restore](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/combined/SOURCE-RESTORE.md).
 - [Performance reconciliation](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/docs/PERFORMANCE-DRIFT-20260928.md): all six final/prior slowdowns explained.
 - [Five record-hoist A/Bs](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/performance-drift-20260928/final-hoist-controls.md): prior timings restored; proposals retained.

@@ -3,7 +3,7 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-### Compiler campaign checkpoint — 2026-09-28
+### Compiler campaign checkpoint — 2026-09-29
 
 For a fresh machine, start with **[HANDOFF: setup, replay and diagnosis](HANDOFF.md#reproducing-a-recorded-run)**:
 clone, choose WORK, load portable pins, build, verify the `tests/sfpi` link,
@@ -14,9 +14,18 @@ evidence links and remaining tasks; [WORKLOG.md](WORKLOG.md) records the repair
 sequence, measured results and corrected hypotheses. These documents describe
 the downstream `nkapre/sfpi` campaign, not a release-wide certification.
 
+This branch is now also partitioned into a 21-stage PR stack on
+`nkapre/stack` in `tenstorrent/craq-sfpi-gcc` (tip `8477d32d6ff`, upstream base
+`ba48edbef33`); one of its review units is open as
+[sfpi-gcc#22](https://github.com/tenstorrent/sfpi-gcc/pull/22). The rest is
+built but unsubmitted.
+
 Current validation totals and remaining gates are in the
 [handoff status](HANDOFF.md#verified-results-and-limits), with raw evidence
 linked there. Correctness PASS is not a performance win or formal certificate.
+Performance counts from the 2026-09-29 sweep are banded at ±0.5% and must be
+quoted with the band; versus hand-written LLKs the result is a statistical tie,
+and roughly half the stack's options were never exercised.
 
 The source mirrors in public SFPI and craq-sfpi use `nkapre/sfpi`.
 Campaign scripts and raw evidence live in the separate
