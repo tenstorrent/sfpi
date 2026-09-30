@@ -2,6 +2,33 @@
 
 This is a read-only audit of the current local/remote state, except for this file. It is **not** a compiler patch, a re-run of the device campaign, or a claim that the concurrent PR-prefix tests have finished. The workflow tree is `../craq-sfpi` (`main` at `ce4fbb3f95cb`); this SFPI source tree is `nkapre/sfpi` at `281d82b0968d`; its GCC submodule is `566071bf728e`. Numbers below are tied to those snapshots and to the named evidence packages, not to whatever a moving branch later contains.
 
+> **Dated snapshot, not a status page.** This audit is frozen at the state it names
+> above (`craq-sfpi` `ce4fbb3f95cb`, this tree `281d82b0968d`). Several of its blockers
+> have since been closed and its numbers correspondingly superseded. Read it as the
+> record of what was true on 2026-09-30, and take current status from `HANDOFF.md`.
+>
+> Closed since this snapshot:
+>
+> - **Per-prefix testsuite evidence.** `rvtt.exp` now runs at all 32 chain prefixes:
+>   **9 unexpected failures at every one, 0 extra** against the full stack. PR #23 alone
+>   scored 61 before 71 test-placement violations were fixed. The audit correctly
+>   declined to count this as PASS while it was in flight.
+> - **The chain is complete.** 33 PRs, #22 standalone and #23–#54 chained; #54 supplies
+>   `pass_rvtt_lreg_livein`, which no PR in #23–#53 delivered.
+> - **Derived aggregates.** `assemble_current_campaign.py` no longer pins 263/284/21, and
+>   `correctness_failures` is counted rather than asserted.
+> - **Mirror invariant.** `origin/nkapre/sfpi` and `craq/nkapre/sfpi` are equal again; the
+>   private side was a pure fast-forward behind, not divergent.
+> - **The strata count.** "20 defective strata / 10 kernels / 17 both-arms" is superseded by
+>   **18 / 9 / 15** at the corrected oracle; see `board/evidence/ulp-strata-regrade-20260930/`.
+> - **`castfp32tofp16a`.** Diagnosed as a real compiler bug, not the "FP16A edge_values"
+>   class: the `FP16A/FP16B -> SRCB` store-fold rows cite a proof that never swept `mod0=0`,
+>   so the fold emits the identity where a rounding conversion is required.
+>
+> Still open as the audit states: build/test CI (Cycode is security scanning, not
+> validation), the review size of #23 and the absent tests in #43, and a single pinned
+> source/compiler/profile tuple carrying runtime, formal, exhaustive and ULP gates together.
+
 ## Verdict
 
 The campaign has real compiler mechanisms, substantial tests, a plausible semantic-C++/knob search process, and credible measured **profile** results. It is **not yet an upstream-ready 31-PR series or a reproducible, unified LLK admission**. The central gaps are (1) no verified DejaGNU result for *each* PR prefix yet, (2) oversized and entangled review slices, (3) no single current source/compiler/profile tuple carrying runtime, formal, exhaustive and ULP gates, (4) one unresolved licensed-knob correctness failure, and (5) machine evidence and documents that lag their own later corrections. A green GitHub status currently means security scanning, not build/test CI.
