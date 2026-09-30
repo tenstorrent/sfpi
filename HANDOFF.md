@@ -28,8 +28,16 @@ quoted with the band; see [verified results](#verified-results-and-limits).
 **What is not measured.** The sweep enabled **38 of the 92 options the stack
 defines**; **53 appear in neither arm** and a 54th is pinned OFF in both.
 **7 of 21 stages (03, 05, 12, 13, 15, 16, 18) have no runtime data at all.**
-`formal`, `exhaustive` and `ulp_admission` are NOT_RUN for want of a pinned
-`libttsim.so` host. Four of the unmeasured options (`-mtt-tensix-optimize-reassoc`,
+That is the *runtime* gap and it is still open. The *compile-time* gap is closed:
+a 2026-09-29 compile-only census (263 rows x 27 knobs = 7,101 A/B verdicts,
+`full_registry_coverage: true`) gives all 92 options a firing record —
+**73 fire, 17 were measured and change no code on any of the 263 rows, 2 cannot
+be A/B'd at all**. Cite the census for those 17; they are measured, not
+unexamined. Firing means the option changes `.text`, never that it costs cycles.
+`formal`, `exhaustive` and `ulp_admission` are NOT_RUN **in this sweep**; two of
+the three were run separately the same day and the third cannot run at all — see
+[verified results](#verified-results-and-limits). Four of the options outside the
+profile (`-mtt-tensix-optimize-reassoc`,
 `-mtt-tensix-optimize-reassoc-mad-restructure`,
 `-mtt-tensix-optimize-stochrnd-store-fold`, `-mtt-tensix-optimize-store-sink`)
 are `LICENSED_TARGET_FLAGS` in the workflow repository's
@@ -37,8 +45,8 @@ are `LICENSED_TARGET_FLAGS` in the workflow repository's
 routes to the separate ULP admission flow — the likely reason they are outside
 the common profile.
 
-**What is queued.** A measurement campaign to close that knob-coverage gap is
-queued as a Slurm batch job: `board/evidence/incremental-knobs-20260929/` in
+**What is queued.** A measurement campaign to close the *runtime* half of that
+knob-coverage gap is queued as a Slurm batch job: `board/evidence/incremental-knobs-20260929/` in
 the workflow repository holds its plan, its group table and the job. It
 measures each unmeasured option's **marginal** contribution on top of the
 existing 39-token profile, not its standalone effect; results land under
@@ -258,6 +266,33 @@ For an old/new compiler comparison, prepare two separate roots from matching
 source/header pins, inspect the real executable paths, and run the same row,
 flags, seed and domain. Do not replace GCC inside an existing validated install.
 
+### Re-check one kernel's ULP contract on silicon
+
+The stratified leg from `tt_metal/tt-llk/tests/corpus/tools`. Produce the ELFs
+with the **same** `LANEMK_TILE_DIM` the consumer will use, or the consumer looks
+up a different source hash and refuses:
+
+```sh
+# producer, per op
+cd "$TESTS/python_tests" && RUNNER_TEMP=$RT LANEMK_TILE_DIM=256,256 \
+  TT_LLK_EXTRA_COMPILER_OPTIONS="$ON_FLAGS" CHIP_ARCH=blackhole SHORT_ARCH=bh \
+  LLK_HOME=$LLK .venv/bin/python -m pytest -o addopts= -q \
+  --compile-producer "$SEM" "$HAND"
+
+# consumer + ULP fold, per op and per stratum ($S = 0, 0x3F700000, 0x41300000,
+# 0xBF700000, 0x7F780000 — zero/subnormal, 0.9375, 11.0, -0.9375, near-overflow)
+python3 fp32_stream_sweep.py --op $OP --sem-node "$SEM" --hand-node "$HAND" \
+  --farm "$TESTS/python_tests" --venv "$TESTS/.venv/bin/python" --llk-home $LLK \
+  --runner-temp $RT --band-bits 16 --start-bit $S --total 65536 --chip 0 \
+  --golden $OP --out $OUT/$OP-$name
+```
+
+One band is not a check: `[0, 2^18)` is entirely positive subnormals and zero,
+and that is why the six out-of-contract strata went unseen for so long. The
+verdict will read `BIT-EXACT-PARTIAL-65536-OF-2^32`; that is correct and must
+not be reported as all-inputs. `selftest_threeway_golden.py` must run under
+`tests/.venv/bin/python`, not system python.
+
 ### Inspect a failure without destroying the evidence
 
 ```sh
@@ -367,11 +402,14 @@ error, because the hand comparison changes verdict with the band.
 | Semantic ON vs hand ON | 71 beat / 25 tie / 68 hand wins | 164 rows with a hand arm, ±0.5% band. **Band-sensitive: 79/3/82 at raw sign, 66/35/63 at ±1%. A statistical tie, not a win.** |
 | Four rows first recorded FAIL | Infrastructure outage, all four re-ran green | Status 3 = pytest `INTERNAL_ERROR` before collection; a numeric mismatch exits 1 |
 | Option coverage in that sweep | 38 of 92 enabled | 53 options in neither arm, 1 pinned OFF in both; 7 of 21 stages have no runtime data |
+| Compile-time option census, 2026-09-29 | 263 rows x 27 knobs = 7,101 A/B verdicts; all 92 options have a record — 73 fire, 17 measured and change no code, 2 unmeasurable | Compile-only, no device. A firing option has no cycle number; this does not reduce the runtime gap above |
 | OFF arm construction | Valid, but not a literal negation | 16 of 38 enabled flags have no `-mno-` counterpart; valid only because all 16 are `Init(0)` |
 | 21-stage PR stack build | 21 of 21 standalone `make all-gcc -j16` at rc=0, 0 errors | Build only; `rvtt.exp` run at stage 21 only, intermediate stages untested |
 | `rvtt.exp` at stack tip | 6478 expected passes / 9 unexpected failures | Versus source `566071bf728` at 6478 / 8 in the same objdir; the one difference is `rv/zbkb.C`, an `all-gcc`-only objdir artefact |
 | Upstream PR sfpi-gcc#22 | Open, mergeable, 683 added lines / 11 files, 4/4 Cycode green | Not merged, not reviewed; its builtin has no in-tree caller yet |
-| Formal / exhaustive / ULP | NOT_RUN | Needs a pinned `libttsim.so` host that was unavailable. Never infer these from correctness PASS |
+| Exhaustive bit-exactness, 2026-09-29 | Ran at 2^16 with silicon anchors: 32/32 rows, 16 BIT-EXACT-ALL-INPUTS, 13 DIVERGENT, 3 refused | 2^16 over 32 corpus rows, at cc1plus `d1f90de7`. Two refusals are device-anchor failures: craq-sim `1c47e9cd` is not bit-faithful to BH silicon on `mish-fitted` and `recip`. Full 2^32 is infeasible here (~36.4 h/op/chip; ~12 days of the box for 31 ops) and a reduced space is not a substitute |
+| Stratified ULP leg, 2026-09-29 | Ran on silicon, 31 ops x 5 exponent strata. **Six strata across four `fresh_cpp` kernels are outside the bf16 ULP contract where production is inside it** (`erf-fresh` S2/S4, `erfc-fresh` S2/S4, `hardshrink-fresh` S3, `sigmoidlut-fresh` S4), and `rpow` S4 is the opposite polarity | Open findings, **not fixed**. 0.24% of 2^32 at five hand-picked exponents; every verdict is `BIT-EXACT-PARTIAL-65536-OF-2^32`. Probes refute; they do not certify. `[0, 2^18)` is all positive subnormals, so an unstratified band sees none of this |
+| Formal equivalence | **NOT_RUN, and not runnable from committed source** | Needs a simulator emitting `SFPUJO I/V/M/C` under `TTSIM_TRACE_SFPU_STREAM`; no committed source builds it (four independent checks). All 40 formal-routed ops fail closed, `SMT-PROVEN-ALL-INPUTS = 0`; the prover itself selftests 204/204. The earlier reason given, "a pinned `libttsim.so` host that was unavailable", was wrong — that library builds fine. Never infer formal status from correctness PASS |
 
 Preceding round, retained for comparison and **not interchangeable** with the
 above — different compiler binary, different tt-metal commit, ±1% band:
@@ -414,6 +452,13 @@ and a hardware rerun using the second binary are not claimed.
   corpus defaults and historical board bookings are not interchangeable.
 - Use `-###` when switching compiler prefixes. An earlier wrapper-provided
   `-B` took precedence over a later experimental `-B`; that control was invalid.
+- Keep the coverage label attached to a bit-exactness verdict. A bounded sweep
+  is `BIT-EXACT-PARTIAL-<n>-OF-2^32`, never `BIT-EXACT-ALL-INPUTS`; a reduced
+  space refutes and never certifies. The tooling now says so itself.
+- Describe the 17 census-silent options as *measured, changes no code*, citing
+  the census — not as unmeasured gaps. The two genuinely unmeasurable ones are
+  `-mtt-tensix-optimize-lp-schedule` (removed; the compiler names its
+  replacement) and `-mtt-tensix-dst-layout-32b` (whole-TU declaration).
 - Always state the band with a win/flat/loss count. Versus flags-off the result
   holds at every threshold; versus hand it does not, and dropping the band turns
   a tie into a claimed win.
@@ -439,16 +484,26 @@ and a hardware rerun using the second binary are not claimed.
    header/call-site change emits a marker. The remaining 20 stages of
    `nkapre/stack` are built but unsubmitted, and passing a build is not
    certification of upstream readiness.
-5. Close formal/Galaxy/numeric gates separately. The required instrumented JO
-   simulator and observation patch were not found; full exhaustive coverage is
-   unmeasured. Licensed-sigmoid infinity classes currently fail admission.
-   Neither an override nor looser ordinary correctness tolerances closes this.
+5. Fix the four `fresh_cpp` kernels the stratified ULP leg found outside the
+   bf16 contract (`erf-fresh`, `erfc-fresh`, `hardshrink-fresh`,
+   `sigmoidlut-fresh`), and look at saturation / special-value handling first:
+   100% of a stratum out of contract at ~2^14-2^15 ULP is not accumulated
+   inaccuracy. Re-run the stratified leg per fixed op, not a single band at 0.
+6. Close formal/Galaxy/numeric gates separately. The formal leg's instrumented
+   simulator exists in **no committed source** — it is a simulator engineering
+   task, not a missing file, and its pinned sha can never be reproduced, so the
+   provenance gate would have to be re-pinned. The 2^16 exhaustive leg is done;
+   2^32 needs a Galaxy. Licensed-sigmoid infinity classes currently fail
+   admission. Neither an override nor looser ordinary correctness tolerances
+   closes any of this.
 
 ## Evidence map
 
 - [2026-09-29 sweep](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/full-sweep-20260929/README.md): the current runtime measurement, its ±0.5% banding table, the outage diagnosis, and the flag-profile limits. Its `rows/` tree (1.6 GB) is not committed; the README says where the two node-local copies are.
 - [Four-row re-run](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/full-sweep-20260929-rerun4/README.md): the four outage rows re-run green with the same compiler, tt-metal commit, seed and flags.
 - [PR stack index](https://github.com/tenstorrent/craq-sfpi/blob/main/board/pr-packs/INDEX.md) and [per-stage packs](https://github.com/tenstorrent/craq-sfpi/tree/main/board/pr-packs): per-stage commit, flags with `Init()` defaults, coverage, runtime where any exists, and the per-stage "not verified" list.
+- [Formal/ULP/exhaustive legs, 2026-09-29](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/formal-ulp-legs-20260929/NOTES.md): what ran, what cannot run and why, the six SEM-BUG strata, the four machinery defects, and the 2^32 feasibility numbers.
+- [Compile-time knob census, 2026-09-29](https://github.com/tenstorrent/craq-sfpi/blob/main/board/census/README-KNOB-CENSUS-20260929.md) and its [per-option table](https://github.com/tenstorrent/craq-sfpi/blob/main/board/census/OPTION-ATTRIBUTION-20260929.tsv): all 92 options, one row each, with the denominators kept apart.
 - [Preceding 2026-09-28 sweep and generated report](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/full-sweep/README.md): exact manifests, counts, raw archive and checksums.
 - [Fresh compiler build](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/fresh-build/README.md) and [network source restore](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/board/evidence/compiler-tuning-repairs-20260928/combined/SOURCE-RESTORE.md).
 - [Performance reconciliation](https://github.com/tenstorrent/craq-sfpi/blob/15ec9e7e92a92258d12956a75a802a1b705fe7f3/docs/PERFORMANCE-DRIFT-20260928.md): all six final/prior slowdowns explained.

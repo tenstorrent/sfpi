@@ -1,5 +1,103 @@
 # Worklog
 
+## 2026-09-29 — run the validation legs, and correct why the formal one cannot
+
+The reason this campaign gave for `formal`, `exhaustive` and `ulp_admission`
+being NOT_RUN — *"a pinned `libttsim.so` host that was unavailable"* — was
+**wrong**, and it had been propagated into the workflow README, this worklog,
+HANDOFF and all 21 per-stage evidence packs. `libttsim.so` builds from craq-sim
+exactly as that repository's README documents
+(`TT_VERSION=1 ./make.py src/_out/release_bh/libttsim.so`); all three targets
+rebuilt at craq-sim `6db1103a` with zero errors. Two of the three legs then ran.
+
+- **Exhaustive: ran**, at 2^16, 32/32 manifest rows, with real silicon anchors:
+  **16 BIT-EXACT-ALL-INPUTS, 13 DIVERGENT, 3 refused**, zero class
+  contradictions with the recorded silicon overlay, and produced at cc1plus
+  `d1f90de7` rather than pin-59 — so that equivalence partition holds across two
+  compiler builds. Two of the three refusals are a simulator-fidelity finding:
+  **craq-sim `1c47e9cd` is not bit-faithful to Blackhole silicon on
+  `mish-fitted` and `recip`**, their device anchors failed, and the machinery
+  fail-closed rather than counting the sim sweep.
+- **Full 2^32 is not feasible on this hardware.** Measured 65.5k
+  patterns/s/chip: one op is ~36.4 h on one chip, ~9.1 h on four, and the 31
+  single-2^32 ops are ~12 days of the whole box. A reduced space is a probe, not
+  a substitute — 2^20 is 0.024% of 2^32 — and must not be reported as one.
+- **ULP: ran, on silicon, and found real kernel bugs.** The claim that this leg
+  was "library only, no `--golden` wiring" was stale: `--golden` is wired
+  through the harness's `SFPU_GOLDEN` variable into `test_sfpu_unary.py:95`. The
+  leg ran 31 ops x 5 exponent strata. **Six strata across four `fresh_cpp`
+  kernels come back SEM-BUG** — the compiled kernel outside the documented bf16
+  ULP contract where the hand-written production kernel is inside it, and
+  bitwise divergent from it on silicon: `erf-fresh` S2 and S4 (32513 ULP, 100%
+  of the stratum out of contract, hand 0), `erfc-fresh` S2 and S4,
+  `hardshrink-fresh` S3, `sigmoidlut-fresh` S4. These are open findings;
+  **nothing is fixed here.** `rpow` S4 is the opposite polarity — production at
+  16384 ULP, compiled leg exact — so it is a finding against production.
+  None of it is visible from the standing unstratified probe, because
+  `[0, 2^18)` read as u32 bit patterns is entirely positive subnormals and zero.
+  The strata are themselves probes: 0.24% of 2^32 at five hand-picked exponents,
+  every verdict labelled `BIT-EXACT-PARTIAL-65536-OF-2^32`. They refute; they
+  certify nothing.
+- **Formal: did not run, for a different and more serious reason.** The leg does
+  not want a plain `libttsim.so`; it wants one emitting the `SFPUJO I/V/M/C`
+  stream under `TTSIM_TRACE_SFPU_STREAM`, and **that build exists in no
+  committed source.** Verified four ways: `strings` on all three `libttsim.so`
+  on the box including the fresh build; `git grep` over every craq-sim remote
+  branch; no saved diff anywhere; nothing hashing to the pinned `ba23c3f1`. The
+  fresh build is further away still, having lost `TTSIM_TRACE_LOADMACRO` that
+  the two pinned checkouts keep. Pin-59 cc1plus `b013967fffaa` is also gone and
+  there are no cached traces, so it cannot be re-proven offline either. All 40
+  formal-routed ops fail closed as UNSWEPT / LEG-FAILED with
+  **`SMT-PROVEN-ALL-INPUTS = 0`**, and the prover itself is sound
+  (`selftest_formal_equiv.py`, 204/204 golden vectors, device-free). **Formal
+  results have never been reproducible from committed source.**
+- **Four defects in the measuring machinery, all of which inflated confidence.**
+  (1) `fp32_stream_sweep.py` / `binary_stream_sweep.py` let a reduced sweep
+  certify itself: `covered == args.total` only proves the bands tile the range
+  *requested*, so a `--total` of 2^18 stamped `BIT-EXACT-ALL-INPUTS` while the
+  summary beside it recorded `full 2^32=False`. Fixed on tt-metal `nkapre/sfpi`
+  as `3f1979755f3` — partial runs now say `BIT-EXACT-PARTIAL-<n>-OF-2^32`, exit
+  status follows the comparison rather than the label, and consumers gate on a
+  `BIT-EXACT` prefix. (2) `prove_all.py` computed its certified count by
+  subtraction, counting `UNSWEPT`, `SCOPE-REFUSED`, `INFEASIBLE-2^32` and
+  `SIM-BIT-EXACT-16` as certified: a run with no successful proof printed
+  "certified-or-domain in fast set = 31". It now counts positively. (3) Two
+  knobs (`macro-planner-replay`, `optimize-mop-form`) were classified `solo`
+  while the pipelines they depend on were off in the solo baseline — a
+  structural A/A; `planner-replay`'s long-standing NO-FIRE measured the leg
+  shape, not the pass, and under drop-one it fires on 10 ops. (4) `classify()`
+  keyed its cache on the work directory, recompiling the identical baseline leg
+  once per knob per row; memoised. (3) and (4) landed as `ede53dea74f`, and
+  together they took the census from ~5 to ~150 verdicts a minute, which is what
+  made full-corpus coverage affordable rather than a sample.
+- **Every compile-time option is now accounted for.** A compile-only census —
+  263 rows x 27 knobs = 7,101 A/B verdicts, `full_registry_coverage: true` —
+  closes the firing-record gap for all 92 options the stack adds: **73 fire, 17
+  were measured and change no code on any of the 263 rows, and 2 are genuinely
+  unmeasurable** (`-mtt-tensix-optimize-lp-schedule`, which the compiler rejects
+  with *"was removed; use `-mtt-tensix-optimize-pressure-schedule`"*, and
+  `-mtt-tensix-dst-layout-32b`, a whole-TU declaration for which a knob would be
+  an A/A). Ten are newly measured as firing: `lreg-rename-chains` 74 ops,
+  `reassoc-loop-carried` 47, `hoisted-prgm-reuse` 26,
+  `delivery-shape-min-benefit=0` 24, `macro-planner-replay` 10,
+  `crossrow-pairing-stall-words` 8, `ims-budget=1` 6, `macro-ims` 4,
+  `replay-hoist-completion-guard` 3, `crosscall-addrmod` 1. `FIRE-BREADTH.tsv`
+  was regenerated (66 -> 91 rows, 50 `ops` counts corrected, 3 verdicts flipped,
+  `--self-check` 91/91). **The 17 silent options are "measured, changes no code",
+  not unmeasured gaps** — they should be cited to the census. Firing is a
+  compile-time fact and still not a cycle measurement, so the runtime gap below
+  stays open.
+- **33 phantom `COMPILE_FAIL`s were host exhaustion, not compilation.** Every
+  pytest session spawns 48 BLAS threads, so N concurrent workers exceed a
+  512-process cap and the losers die with
+  `posix_spawn: Operation not permitted`. Run with `ulimit -u 1024` and
+  `OPENBLAS_NUM_THREADS=1`.
+
+Evidence: [formal/ULP legs](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/formal-ulp-legs-20260929/NOTES.md),
+[knob census](https://github.com/tenstorrent/craq-sfpi/blob/main/board/census/README-KNOB-CENSUS-20260929.md),
+[per-option table](https://github.com/tenstorrent/craq-sfpi/blob/main/board/census/OPTION-ATTRIBUTION-20260929.tsv),
+[fire-breadth ledger](https://github.com/tenstorrent/craq-sfpi/blob/main/board/ledgers/FIRE-BREADTH.tsv).
+
 ## 2026-09-29 — partition the branch into a reviewable PR stack
 
 - Split the 177,787-line `nkapre/sfpi` compiler branch into **21
@@ -64,10 +162,14 @@ What the sweep does not cover, stated plainly:
 - It enabled **38 of the 92 options the stack defines**. **53 appear in neither
   arm**; a 54th, `-mtt-tensix-optimize-replay-record-hoist`, is named
   negatively and so is pinned OFF in both arms and not differentially measured.
+  That runtime gap is still open; the *compile-time* gap was closed later the
+  same day by the knob census in the entry above.
 - **7 of 21 stages have no runtime data at all**: 03, 05, 12, 13, 15, 16, 18.
-- `formal`, `exhaustive` and `ulp_admission` are all **NOT_RUN**; they need a
-  pinned `libttsim.so` host that was unavailable.
-- Four unmeasured options — `-mtt-tensix-optimize-reassoc`,
+- `formal`, `exhaustive` and `ulp_admission` are all **NOT_RUN** in this sweep.
+  The reason recorded here at the time — a pinned `libttsim.so` host that was
+  unavailable — was wrong; see the entry above for what actually ran and what
+  cannot.
+- Four options outside the measured profile — `-mtt-tensix-optimize-reassoc`,
   `-mtt-tensix-optimize-reassoc-mad-restructure`,
   `-mtt-tensix-optimize-stochrnd-store-fold`, `-mtt-tensix-optimize-store-sink`
   — are `LICENSED_TARGET_FLAGS` in the workflow repository's

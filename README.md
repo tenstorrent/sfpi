@@ -25,7 +25,11 @@ Current validation totals and remaining gates are in the
 linked there. Correctness PASS is not a performance win or formal certificate.
 Performance counts from the 2026-09-29 sweep are banded at ±0.5% and must be
 quoted with the band; versus hand-written LLKs the result is a statistical tie,
-and roughly half the stack's options were never exercised.
+and roughly half the stack's options have no runtime measurement — though every
+one of the 92 now has a compile-time firing record. Formal equivalence has never
+been reproducible from committed source, and a stratified ULP leg on silicon
+found four compiled kernels outside the bf16 ULP contract; both are recorded in
+[WORKLOG.md](WORKLOG.md).
 
 The source mirrors in public SFPI and craq-sfpi use `nkapre/sfpi`.
 Campaign scripts and raw evidence live in the separate
