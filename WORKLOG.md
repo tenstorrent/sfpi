@@ -1,5 +1,167 @@
 # Worklog
 
+## 2026-09-29 — finish all three legs, and fix what they found
+
+The formal instrument was rebuilt, the exhaustive leg ran over the whole 2^32,
+the stratified ULP leg went from 31 ops to 72, and one of the defects it found
+turned out to be in **production**, not in the compiled kernel. Several
+statements from earlier today are retracted below.
+
+- **Formal: reconstructed, and it runs.** The instrument was never in any
+  commit — the pinned simulator was an uncommitted patch on top of one, which
+  `prove_all_domain_overlay.tsv` records in its own header
+  (`# sim ba23c3f16912 = craq-sim 1c47e9cd + JO value-observation patch`). The
+  `SFPUJO I/V/M/C` hook was rewritten from that description onto pinned
+  craq-sim `1c47e9cd` as branch `agent/laneJO-sfpu-trace-stream`, tip
+  `6de51ce0`. **8 of 8 rows VALIDATED, zero contradictions** — 6
+  `PROVEN-EQUIV-ALL-INPUTS`, 2 `DIVERGENT` (`clamp-fresh`, `mulint32-fresh`).
+  `clamp-fresh`'s z3 witness independently rediscovered the region the domain
+  overlay had already recorded: bf16 `0x8000` upward, exactly **128 of 2^16**
+  inputs. State the boundary precisely — **the verdicts are re-derivable from
+  committed source, not reproduced from the recorded pin.** `prove_all.py` still
+  expects `ba23c3f1`, that binary is gone, and nothing will hash to it again, so
+  the provenance gate has to be re-pinned rather than satisfied. Only 7 of the 8
+  rows have an overlay row to agree with; `where` has none and is merely
+  consistent.
+- **Retract "the trace hooks were removed over time."** They were never on
+  `main`. `TTSIM_TRACE_LOADMACRO` was introduced by exactly one commit,
+  `6c072b57`, on the `nkapre/sfpi` line. The fresh build "losing" it was the
+  fresh build never having had it. Do not re-run that `git log -S` in a
+  main-only clone expecting confirmation: it returns zero hits either way.
+- **Full 2^32 ran on a galaxy, and yesterday's infeasibility claim was a bad
+  measurement.** On `bh-glx-120-b04u08`, 32 chips, `NPAR=32`, `BAND_BITS=23`:
+  **9 ops `BIT-EXACT-ALL-INPUTS` at `covered=4294967296`, 5 `DIVERGENT`, 2
+  undecided** on dead slices. Diverging slices out of 32: `erf-fresh` 32,
+  `erfinv-fresh` 31, `erfc-fresh` 27, `sigmoidlut-fresh` 18, `rpow` 2 — and
+  **`rpow` is now bounded** to `[0x70000000, 0x80000000)` and nowhere else in
+  2^32. Coverage arithmetic checked end to end at NPAR=4 and NPAR=32, with 8
+  device-free selftests. The 65.5k patterns/s figure was taken at a 2^18 band
+  where per-band process overhead dominates; at 2^23 it is **~740k/s/leg/chip**,
+  so ~1.6 h for one op on one chip and ~5-9 min observed on a galaxy. **The
+  throughput measurement, not the machine, was the error** — both figures are
+  Blackhole silicon. Two caveats to carry: `e75553f1c3f` changed the `erf`,
+  `erfc` and sigmoid-LUT sem headers mid-campaign, so those three verdicts are a
+  pre-fix baseline rather than a test of the fix; and **`hardshrink-fresh` must
+  not be reported as cleared** over the full space, because the stratified leg
+  called it SEM-BUG inside slice 23 the day before and that is unresolved.
+- **Three more machinery defects, all fixed on tt-metal `nkapre/sfpi`.**
+  (1) `7b8f32371c7`: the earlier self-certification fix reached the stream
+  sweepers but **not `galaxy_combine.py`**, which compared coverage to the run's
+  own `SPACE` — a 32-slice 2^18 shard printed
+  `BIT-EXACT-ALL-INPUTS covered=262144`. `SPACE` and `FULL_SPACE` are now
+  separate. (2) `f7440593391`: **the galaxy driver could not report `DIVERGENT`
+  at all.** Streamers exit 1 on divergence and the driver read any non-zero exit
+  as a dead chip, so the combiner's divergence branch was unreachable; it now
+  reads each slice's own verdict file. (3) `52fa68b6488`: a TOCTOU on
+  `pytest_errors.log` in `conftest.py` killed 3 of 32 slices (73 of 400 trials
+  before, 0 of 400 after). It is pushed, but **deliberately not applied to the
+  in-flight staged farm** — `conftest.py` sits under the directory hashed into
+  `farm_python_sha256`, so editing it invalidates every band cache and destroys
+  a running campaign's resume state.
+- **Stratified ULP over 41 more ops: 9 strata, 369 cells, 20 defective strata
+  across 10 op rows.** The headline is not the count. **17 of the 20 have BOTH
+  legs out of contract**, so 85% of these defects would read as *agreement*
+  under a sem-versus-hand equivalence sweep; only `digamma-fresh` splits (S3/S7
+  hand-only, S4 sem-only). Examples: `softsign` S4/S6 returns exactly `0.0` for
+  a function bounded in (-1, 1) — the reciprocal `3.0335e-39` flushes below the
+  16-bit DEST's `2^-126`; `lgamma` S3/S7 sign flip; `i1` returns one constant
+  `1.15477e37` at three unrelated inputs; `i0` S5 1.55e16x low; `sqrtcustom` S4
+  2.159x; plus `expm1cw`, `xielu`, `digamma`. **24 ops are clean across all nine
+  strata**, and `erf`/`erfc` PRODUCTION are among them — that defect was
+  `fresh_cpp`-only. Four strata were added because the inherited five held
+  exactly one negative value (`-0.9375`) and no large negative at all; S6 is
+  `-3.1901e38`, and three of the six defects above live in the new strata.
+  Coverage is **71 of 259 ops (27.4%)**; of the 188 uncovered, **173** are
+  blocked on harness work (75 `Float16_b` rows refused by
+  `StimuliConfig.write`, 98 with no `SFPU_STREAM` hook) and the remaining 15
+  binary rows need a two-operand stratification *design*, since a stratum is a
+  one-operand partition. The 16-bit band mode is named as future work and has
+  not been started.
+- **Correction to the "band choice" explanation.** The standing `[0, 2^18)`
+  probe covered the **same** 31 ops, not different ones; the other **228 had no
+  band probe at all**. And the 31-op limit was never device time — it was
+  `threeway_golden.REGISTRY`, which held exactly 31 entries, and `--golden <op>`
+  is inert without a spec. The registry now holds 72.
+- **A static boundary audit of every LLK: 31 ranked defects**, in three classes
+  (exponent-field writes that wrap, polynomials evaluated outside their fit
+  domain, unbounded final segments on analytically bounded functions). 12 defect
+  bodies over 13 of the 21 `*_fitted.h` files. The structural finding is a
+  **second overflow idiom**, `as<vFloat>((i << 23) + as<vInt>(w))`, in 15
+  production files across three arches and 7 `fresh_cpp` files, 5 of them
+  invisible to a `setexp|addexp` grep — and worse than a wrapped exponent,
+  because a shift whose field reaches 256 sets **bit 31**, the sign. Measured
+  instance: `quasar`'s `ckernel_sfpu_exp.h` gives `exp(90) = -1.175e-38`. Two
+  cautions: the audit's `sigmoid(-89)` NaN **did not reproduce** at
+  `dest_acc=No` — the 16-bit DEST flushes exactly as the golden does, so that
+  case needs a `dest_acc=Yes` row rather than a stratum — and the audit's
+  "9 cleared" figure is not reproducible from any tally in its own TSVs. Use the
+  TSVs.
+- **A production `pow` fix, tt-metal `f24d9515da4`.**
+  `_sfpu_binary_power_21f_` and `_sfpu_unary_power_21f_` clamped only the low
+  side of the exponent, in **both arches** (5 files, 4 of them the blackhole and
+  wormhole_b0 copies of two headers). The threshold `z_f32 >= 128` was derived
+  independently and then found to match the already-correct fp32 siblings.
+  **Clamping alone is insufficient**: at the ceiling `setexp` writes exponent
+  field 255 over the non-zero mantissa the Horner step leaves (`zif == 14447`),
+  which is a NaN — so the fix clamps *and* substitutes `+inf`, verified at bit
+  level as `0x7F800000`. `rpow` S4 went from 65535 ULP with 65536/65536 out of
+  contract, returning a constant `1.0` where the answer is `+inf`, to **0 ULP,
+  0 out of contract, bit-exact with sem**. **Two owner actions are outstanding
+  and were not self-approved:** six booked anchors move by a constant +40.00
+  (OFF) / +36.00 (ON) DIAGNOSTIC units, and two cross the 10% tripwire —
+  `unarypower:sem_off` and `unarypower-fresh:hand_off` at **+10.409%**, with
+  `rpow:hand_off` at +9.985%, 0.015 pp under — so they need re-booking at the
+  conf-pinned cc1plus before the next weekly; and `conf_lint` R7 (LLK-pristine)
+  needs a reviewed `_REVIEWED_LLK_API_EXCEPTIONS` entry for the four pow
+  headers.
+- **Sem sometimes beats production, and that is a deliverable.**
+  `threeway_golden` grades each arm independently against a host-computed
+  golden — the accumulator is one per leg and the other arm's output never
+  enters it — so three outcomes are separable: `SEM-TOLERANCE-FAIL` (compiled
+  kernel out of contract), `SEM-TOLERANCE-PASS(hand fails tolerance)`
+  (production out of contract, e.g. `rpow` S4), and `TOLERANCE-BOTH-PASS` with
+  `ulp_admission.candidate_not_worse` (both in contract, sem closer, e.g.
+  `erfc-fresh` at 0 ULP against production's in-contract 11343). Keep the last
+  two distinct: an in-contract production arm that sem beats is an accuracy
+  win, not a production defect.
+- **The honest perf denominator question is still open.** The idea that wins
+  should be counted only over rows whose two arms compile differently is sound,
+  but **this sweep commits no per-row `.text` identity fact** — the manifest
+  rows carry no ELF hash and the 1.6 GB `rows/` tree is not committed — so that
+  denominator cannot be reconstructed. The nearest measured proxy is the 20 ops
+  with no firing knob in either attribution set: **0 wins / 20 flat / 0
+  regressions** at ±0.5%, 19 of them at exactly 0.0000% and `softmaxk` at
+  0.458%. Quote **192 / 69 / 2 over 263 rows**, or 188 / 69 / 2 over this
+  file's 259; and quote the hand comparison at one denominator (164 rows:
+  79/3/82 raw, 71/25/68 at ±0.5%), never a raw count from one against a banded
+  count from another.
+- **Raw run trees are no longer committed.** Ten tarballs totalling 14.7 MB had
+  landed; removing them took the results tree from ~14.9 MB to 284 KB.
+  `results/RAW-RUNS.md` records each group's node-local path and its
+  `CRAQ_GROUPS_ONLY=<group>` regeneration command instead. No checksum
+  manifests, no guard files, no provenance hashes — a path and a command.
+- **`gen-flag-defaults.py` is currently inert.** It reads its reviewed-ON set
+  from `craq-sfpi/dashboard/sweep_2x2.py`, which does not exist, and a missing
+  harness returns an empty set — so it prints `reviewedON=0
+  promotion-backlog=0` and reports no gap, which is the exact failure its
+  docstring says it exists to catch. Repointing it at a real source (a sweep
+  manifest's `flags.ON_FLAGS`, or tt-metal's `tests/corpus/sweep_2x2.py`) is a
+  ~40-line change, verified to run: all three real sources agree at
+  `Init(1)=6 reviewedON=38 promotion-backlog=35 optin=60`. That also makes
+  `docs/TENSIX-FLAG-DEFAULTS.md` one out — its "reviewed ON 39 / backlog 36"
+  counts the ON arm's 39 *tokens* (38 positive plus one `-mno-`), not 38 flags.
+  The change is not landed here because the file lives in the `gcc` submodule
+  whose HEAD **is** the validated compiler pin `566071bf728`, and committing
+  there would move that pin as a side effect of a documentation change.
+
+Evidence: [reconstructed formal instrument](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/formal-jo-instrument-recovered-20260929/NOTES.md),
+[2^32 on a galaxy](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/exhaustive-2p32-galaxy-20260930/RESULTS.md),
+[stratified ULP corpus](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-corpus-20260930/NOTES.md),
+[ULP strata fixes](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-fixes-20260929/NOTES.md),
+[SFPU boundary audit](https://github.com/tenstorrent/craq-sfpi/blob/main/board/audit/sfpu-boundary-audit-20260929/README.md),
+[pow overflow clamp](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/binpow-overflow-clamp-20260929/NOTES.md),
+[raw-run policy](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/incremental-knobs-20260929/results/RAW-RUNS.md).
+
 ## 2026-09-29 — run the validation legs, and correct why the formal one cannot
 
 The reason this campaign gave for `formal`, `exhaustive` and `ulp_admission`
@@ -22,6 +184,9 @@ rebuilt at craq-sim `6db1103a` with zero errors. Two of the three legs then ran.
   patterns/s/chip: one op is ~36.4 h on one chip, ~9.1 h on four, and the 31
   single-2^32 ops are ~12 days of the whole box. A reduced space is a probe, not
   a substitute — 2^20 is 0.024% of 2^32 — and must not be reported as one.
+  **Wrong, and corrected in the entry above**: that rate was measured at a 2^18
+  band where per-band overhead dominates, and 2^32 subsequently ran on a
+  galaxy. The "a probe is not a substitute" half stands.
 - **ULP: ran, on silicon, and found real kernel bugs.** The claim that this leg
   was "library only, no `--golden` wiring" was stale: `--golden` is wired
   through the harness's `SFPU_GOLDEN` variable into `test_sfpu_unary.py:95`. The
@@ -51,6 +216,12 @@ rebuilt at craq-sim `6db1103a` with zero errors. Two of the three legs then ran.
   **`SMT-PROVEN-ALL-INPUTS = 0`**, and the prover itself is sound
   (`selftest_formal_equiv.py`, 204/204 golden vectors, device-free). **Formal
   results have never been reproducible from committed source.**
+  **Superseded by the entry above**: the instrument was reconstructed onto
+  pinned craq-sim `1c47e9cd` and the leg now runs 8/8 VALIDATED. The narrower
+  claim survives — the verdicts are re-derivable from committed source, not
+  reproduced from the recorded `ba23c3f1` pin, which stays unrecoverable. The
+  "further away, having lost `TTSIM_TRACE_LOADMACRO`" reasoning was wrong: that
+  string was never on `main` at all.
 - **Four defects in the measuring machinery, all of which inflated confidence.**
   (1) `fp32_stream_sweep.py` / `binary_stream_sweep.py` let a reduced sweep
   certify itself: `covered == args.total` only proves the bands tile the range

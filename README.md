@@ -26,10 +26,18 @@ linked there. Correctness PASS is not a performance win or formal certificate.
 Performance counts from the 2026-09-29 sweep are banded at ±0.5% and must be
 quoted with the band; versus hand-written LLKs the result is a statistical tie,
 and roughly half the stack's options have no runtime measurement — though every
-one of the 92 now has a compile-time firing record. Formal equivalence has never
-been reproducible from committed source, and a stratified ULP leg on silicon
-found four compiled kernels outside the bf16 ULP contract; both are recorded in
-[WORKLOG.md](WORKLOG.md).
+one of the 92 now has a compile-time firing record.
+
+All three per-kernel numeric legs have since run. Formal was reconstructed onto
+a re-pinned simulator and is 8/8 VALIDATED — re-derivable from committed source,
+**not** reproduced from the recorded pin, which is unrecoverable. The exhaustive
+leg covered the full 2^32 on a galaxy. The stratified ULP leg reached 72 ops and
+found 20 defective strata over 10 op rows, **17 of them with both the compiled
+and the hand-written arm out of contract** — so most of them would read as
+agreement under an equivalence-only sweep. One of those defects was in
+*production* and is fixed; two owner decisions from that fix are outstanding.
+All of it, with its boundaries, is in [WORKLOG.md](WORKLOG.md) and
+[HANDOFF.md](HANDOFF.md#verified-results-and-limits).
 
 The source mirrors in public SFPI and craq-sfpi use `nkapre/sfpi`.
 Campaign scripts and raw evidence live in the separate
@@ -60,6 +68,24 @@ or, from a built compiler:
 ```
 Only the two pressure-scheduler options are described in this README, under
 `Building`; the rest are documented in the backend sources.
+
+Which of them actually *ship* is a separate question, because tt-metal's
+`jit_build/build.cpp` passes no `-mtt-tensix-*` flag at all — a production
+kernel gets only the `Init(1)` options, of which there are six.
+`gcc/docs/TENSIX-FLAG-DEFAULTS.md` is meant to keep that gap visible, and
+`gcc/scripts/gen-flag-defaults.py` regenerates it. **That script is currently
+inert**: it reads its reviewed-ON set from `craq-sfpi/dashboard/sweep_2x2.py`,
+which does not exist, and a missing harness yields an empty set — so it prints
+`reviewedON=0 promotion-backlog=0` and reports no gap, which is precisely the
+failure its own docstring says it exists to catch. Point it at a real source
+instead: a campaign sweep manifest's `flags.ON_FLAGS`, or tt-metal's
+`tt_metal/tt-llk/tests/corpus/sweep_2x2.py`. Those sources agree at
+`Init(1)=6 reviewedON=38 promotion-backlog=35 optin=60`, so the committed
+table's "reviewed ON 39 / backlog 36" is one out — 39 is the ON arm's *token*
+count (38 positive plus one `-mno-`), not its flag count. The repoint is a small
+change and has been verified to run; it is not landed because the file lives in
+the `gcc` submodule whose HEAD is the validated compiler pin, and committing
+there would move that pin.
 
 GCC, Binutils, Newlib and Qemu are (naturally) released under their
 own licenses.
