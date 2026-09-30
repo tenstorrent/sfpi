@@ -1,5 +1,88 @@
 # Worklog
 
+## 2026-09-30 — re-grade the stratified ledger after the oracle itself was corrected
+
+Six modelling defects were found in the verification oracle, not in the kernels
+(`oracle-modelling-fixes-20260930`). That re-graded the exhaustive bf16 board —
+40 of 192 (op, leg) verdicts, 21 ops — but left the **stratified** ledger, whose
+"20 defective strata across 10 op rows, 17 of them with both arms out of
+contract" was still being published as current fact in three documents. It is
+now re-graded in full.
+
+- **The count, with its scope, because a bare count is what went stale.**
+  **18 defective strata over 9 op rows (7 base kernels), 15 of them with both
+  arms out of contract.** That is a count of `SEM-BUG` + `HAND-BUG` *cells* over
+  the 369 cells of `ulp-strata-corpus-20260930` (41 ops x 9 exponent strata,
+  one bf16 operand per stratum), graded by the leg's own `classify-board.py`,
+  unmodified, against `threeway_golden.py` at tt-metal `nkapre/sfpi`
+  **`2107a950747`**, on the device bytes the original leg measured. Composition
+  302 CLEAN / 16 SEM-BUG / 2 HAND-BUG / 11 OUT-OF-DOMAIN / 2 OUT-OF-CLAIM /
+  36 NO-GOLDEN, against 295 / 18 / 2 / 16 / 2 / 36 before. The old figure is
+  **superseded, not retracted**: it is the same cells at the pre-fix oracle.
+- **The re-grade is almost entirely analytic, and that is a property of the
+  change, not a shortcut.** The oracle change is deterministic and each stratum
+  is one bf16 operand, so recomputing all 369 goldens settles which cells can
+  move: **365 goldens are bit-identical**, 4 move (all `lgamma`), and the one
+  comparator change reaches 9 more. **13 cells reached, 7 verdicts changed, 356
+  unchanged by construction.** Four fixes reach nothing here — input FTZ needs a
+  subnormal operand, the SFPSWAP order and `SFPABS` changes need a NaN, and
+  `gelu(-inf)` needs `-inf`; no stratum is any of those.
+- **Withdrawn (2).** `lgamma` S3 and S7. The LLK node is
+  `calculate_lgamma_stirling`, which returns the documented intermediate
+  `lgamma(z)`, `z = (x < 0.5) ? 1-x : x`; the golden was grading a stage node
+  against the composite's semantics. Re-measured on silicon at the corrected
+  oracle: max ULP **2** at S3 and **bit-exact** at S7, 0/65536 out. `lgamma` is
+  now clean on all nine strata and leaves the defect list.
+- **Newly exposed (0) — and the reason is specific, not an omission.** The
+  correction's other direction is real: it deleted the `ORACLE fp32 OVERFLOW`
+  escape class, which scored two infinities as 0 ULP and so passed an
+  overflowing `i1` while failing the correct one. It moves no cell *here*
+  because this leg's golden already evaluated in fp64 — which is exactly why
+  `i0` S5 at `x = -89`, inside that band, was **already** booked SEM-BUG, and
+  `i1`/`i1-fresh` S5 already booked OUT-OF-CLAIM. The defect was hidden on the
+  harness's own `passed_test` reference and on the exhaustive path, never on
+  this one. On the exhaustive board all 40 changed verdicts also move downward.
+  Say that, rather than manufacture a symmetric table.
+- **What the ledger does gain in the strict direction is coverage.** Removing
+  `lgamma` from `GAMMA_POLE_OPS` makes the non-positive integers graded where
+  they were excluded as poles. Two strata sit there — S0 at `0.0` and S5 at
+  `-89.0` — and both **pass** (`314.0` bit-exact at S5). Five cells move from a
+  licensed category to in-contract: those two plus `erfinv` S5/S6/S7, where the
+  golden's infinity is a packer conversion of a NaN and the device returns the
+  same conversion with the other sign bit. No golden was weakened: D2 moves the
+  golden **toward the hardware** because the packer's sign behaviour is what it
+  should model, and it still refuses a computed overflow — `expm1cw` S4
+  returning `-inf` where `+inf` is correct remains a defect on the same board.
+- **Analytic vs re-measured vs ungraded: 367 / 2 / 0.** The two re-measured are
+  `lgamma` S3 and S7 (full 65536-pattern bands, chip 0). `lgamma` S0 and S5 are
+  re-graded from the band's recorded `.corr` witness; the re-measured siblings
+  bound the band spread at 2 bf16 ULP, which at S5 is `314.0 +- ~4` against a
+  tolerance of 15.75, so a re-measure would confirm rather than decide. No
+  silicon was run for this re-grade: tt-quietbox-0 carries no tt-metal checkout
+  or build, and another lane held the box with two toolchain builds. Recorded as
+  a choice.
+- **A correction to the correction.** `ulp-strata-fixes-20260930/RESULTS.tsv`
+  has **four** `lgamma` `STILL-OUT` rows, not two — S0 (83), S3 (86), S5 (88),
+  S7 (90). All four are in contract at the corrected oracle, so `STILL-OUT`
+  there is 12 -> 8. The oracle-fix notes named only 86 and 90; the pole
+  exclusion hid the other two.
+- **`hardshrink-fresh` reconciles, and the corrected oracle is not what settles
+  it.** `x = -0.9375` is a normal, non-NaN, non-integer operand through a
+  compare-and-passthrough body, so no fix reaches it and the S3 golden is
+  bit-identical before and after. The withdrawal stands on its own evidence: the
+  band hashes to 262144 bytes of the `0xA5` clear sentinel, so the dispatch
+  wrote nothing and 6602 ULP is `0xA5A5` read as data; eight stress repeats in
+  the same ELF are 0 ULP; the galaxy sweep is `BIT-EXACT-ALL-INPUTS` at
+  `covered=4294967296`. Independently, the production `hardshrink` arm is CLEAN
+  on all nine strata at the corrected oracle. **Not a kernel defect; do not
+  re-count it.**
+- **The oracle was not touched**, so its 193-check selftest is unchanged. No
+  parallel grader was written: the re-grade recomputes goldens and compares with
+  the oracle's own `numeric_comparison`, and attributes with the leg's own
+  `classify-board.py`. Record:
+  [ulp-strata-regrade-20260930](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-regrade-20260930/NOTES.md)
+  (`RESULTS.tsv` every changed verdict, `COUNTS.tsv` both revisions).
+
 ## 2026-09-29 — finish all three legs, and fix what they found
 
 The formal instrument was rebuilt, the exhaustive leg ran over the whole 2^32,
@@ -59,7 +142,10 @@ statements from earlier today are retracted below.
   `farm_python_sha256`, so editing it invalidates every band cache and destroys
   a running campaign's resume state.
 - **Stratified ULP over 41 more ops: 9 strata, 369 cells, 20 defective strata
-  across 10 op rows.** The headline is not the count. **17 of the 20 have BOTH
+  across 10 op rows.** [**SUPERSEDED 2026-09-30 — the count is now 18 across 9,
+  15 both-arms, and the `lgamma` S3/S7 rows below are withdrawn; see the
+  2026-09-30 entry.** Everything else in this bullet stands.] The headline is not
+  the count. **17 of the 20 have BOTH
   legs out of contract**, so 85% of these defects would read as *agreement*
   under a sem-versus-hand equivalence sweep; only `digamma-fresh` splits (S3/S7
   hand-only, S4 sem-only). Examples: `softsign` S4/S6 returns exactly `0.0` for

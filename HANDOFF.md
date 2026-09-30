@@ -32,9 +32,16 @@ from 164 rows with a banded count from 161 has already produced a wrong number.
 Numerically, all three per-kernel legs have now run. Formal is reconstructed
 and 8/8 VALIDATED; the exhaustive leg covered the **full 2^32** on a galaxy
 (9 bit-exact, 5 divergent, 2 undecided); the stratified ULP leg reached 72 ops
-and found **20 defective strata over 10 op rows, 17 of them with BOTH legs out
-of contract**. One of those defects was in production and is fixed
-(`f24d9515da4`). None of this is an admission — see the boundaries column.
+and found **18 defective strata over 9 op rows, 15 of them with BOTH legs out
+of contract** — `SEM-BUG` + `HAND-BUG` cells over the 369-cell corpus ledger,
+graded at the **corrected** oracle `threeway_golden.py` (tt-metal `nkapre/sfpi`
+`2107a950747`). That **supersedes "20 / 10 / 17"**, which was the same count
+before six modelling defects were found in the golden itself; the `lgamma` S3/S7
+"wrong sign" defects are withdrawn, the kernel was right
+([re-grade](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-regrade-20260930/NOTES.md)).
+Quote the oracle revision with the count or it goes stale the same way. One of
+the surviving defects was in production and is fixed (`f24d9515da4`). None of
+this is an admission — see the boundaries column.
 
 **What is not measured.** The sweep enabled **38 of the 92 options the stack
 defines**; **53 appear in neither arm** and a 54th is pinned OFF in both.
@@ -484,7 +491,7 @@ error, because the hand comparison changes verdict with the band.
 | Exhaustive bit-exactness, 2026-09-29 | Ran at 2^16 with silicon anchors: 32/32 rows, 16 BIT-EXACT-ALL-INPUTS, 13 DIVERGENT, 3 refused | 2^16 over 32 corpus rows, at cc1plus `d1f90de7`. Two refusals are device-anchor failures: craq-sim `1c47e9cd` is not bit-faithful to BH silicon on `mish-fitted` and `recip` |
 | **Full 2^32 exhaustive, on a galaxy** | Ran on `bh-glx-120-b04u08`, 32 chips, `NPAR=32`, `BAND_BITS=23`: **9 ops `BIT-EXACT-ALL-INPUTS` at `covered=4294967296`, 5 `DIVERGENT`, 2 undecided** (dead slices). `rpow` bounded to `[0x70000000, 0x80000000)` | Coverage arithmetic checked at NPAR=4 and NPAR=32; 8 device-free selftests pass. **The earlier infeasibility claim was a bad measurement**: 65.5k patterns/s was a 2^18 band where per-band overhead dominates; at 2^23 it is ~740k/s/leg/chip, ~1.6 h/op on one chip and ~5-9 min observed on a galaxy. `erf-fresh`/`erfc-fresh`/`sigmoidlut-fresh` verdicts are a **pre-fix baseline** — `e75553f1c3f` changed those sem headers mid-campaign. **Do not report `hardshrink-fresh` as cleared**: the stratified leg called it SEM-BUG inside slice 23 the day before, unresolved. Snapshot taken with the job still running |
 | Stratified ULP leg, 2026-09-29 | Ran on silicon, 31 ops x 5 exponent strata. **Six strata across four `fresh_cpp` kernels are outside the bf16 ULP contract where production is inside it** (`erf-fresh` S2/S4, `erfc-fresh` S2/S4, `hardshrink-fresh` S3, `sigmoidlut-fresh` S4), and `rpow` S4 is the opposite polarity | Open findings. 0.24% of 2^32 at five hand-picked exponents; every verdict is `BIT-EXACT-PARTIAL-65536-OF-2^32`. Probes refute; they do not certify. The `erf`/`erfc`/sigmoid-LUT sem side is fixed by `e75553f1c3f`; `rpow` by `f24d9515da4` |
-| **Stratified ULP, corpus extension** | 41 more ops x 9 strata = **369 cells**: 295 CLEAN, 18 SEM-BUG, 16 OUT-OF-DOMAIN, 2 HAND-BUG, 2 OUT-OF-CLAIM, 36 NO-GOLDEN. **20 defective strata over 10 op rows; 24 ops clean across all 9 strata** | **17 of the 20 have BOTH legs out of contract** — 85% would read as agreement under an equivalence-only sweep. Coverage **71 of 259 ops (27.4%)**; 173 of the 188 uncovered are harness-blocked, 15 need a two-operand stratification design. `erf`/`erfc` PRODUCTION are clean — that defect was `fresh_cpp`-only |
+| **Stratified ULP, corpus extension** (re-graded at the corrected oracle, `2107a950747`) | 41 more ops x 9 strata = **369 cells**: 302 CLEAN, 16 SEM-BUG, 11 OUT-OF-DOMAIN, 2 HAND-BUG, 2 OUT-OF-CLAIM, 36 NO-GOLDEN. **18 defective strata over 9 op rows; 26 ops clean across all 9 strata**. *Superseded:* 295/18/16/2/2/36 with 20 over 10 and 24 clean, at the pre-fix oracle | **15 of the 18 have BOTH legs out of contract** — 83% would read as agreement under an equivalence-only sweep. The `lgamma` S3/S7 rows are **withdrawn**: the node is `calculate_lgamma_stirling`, which returns the documented intermediate `lgamma((x<0.5)?1-x:x)`, and the golden graded a stage node against the composite's semantics; re-measured they are max ULP 2 and bit-exact. 7 of the 369 verdicts moved, all toward the kernel; **0 newly-exposed defects on this ledger** — that direction lands on the harness/exhaustive path, not here. Coverage **71 of 259 ops (27.4%)**; 173 of the 188 uncovered are harness-blocked, 15 need a two-operand stratification design. `erf`/`erfc` PRODUCTION are clean — that defect was `fresh_cpp`-only |
 | **Static SFPU boundary audit** | **31 ranked defects** in three classes; 12 defect bodies over 13 of 21 `*_fitted.h`. Second overflow idiom `as<vFloat>((i<<23)+as<vInt>(w))` in 15 production + 7 `fresh_cpp` files, 5 invisible to a `setexp\|addexp` grep, and it spills into the **sign** bit | Static reading, not silicon. Its `sigmoid(-89)` NaN **did not reproduce** at `dest_acc=No` (the 16-bit DEST flushes as the golden does) — that needs a `dest_acc=Yes` row. Its "9 cleared" figure is not reproducible from its own TSVs; use the TSVs |
 | **Production `pow` fix** | tt-metal `f24d9515da4`: one-sided clamp completed in both arches (5 files). Clamp **and** `+inf` substitution, verified as `0x7F800000`. `rpow` S4: 65535 ULP / 65536 out → **0 / 0, bit-exact with sem** | **Two owner actions outstanding** — six booked anchors drift +40.00 (OFF) / +36.00 (ON) DIAGNOSTIC units and two cross the 10% tripwire (`unarypower:sem_off`, `unarypower-fresh:hand_off`, both +10.409%; `rpow:hand_off` +9.985%, 0.015 pp under), needing re-booking at the conf-pinned cc1plus; and `conf_lint` R7 needs a reviewed `_REVIEWED_LLK_API_EXCEPTIONS` entry for the four pow headers |
 | Formal equivalence | **Reconstructed and RUN: 8 of 8 rows VALIDATED, zero contradictions** (6 `PROVEN-EQUIV-ALL-INPUTS`, 2 `DIVERGENT`) | The instrument was in no commit — the pin was an uncommitted patch on craq-sim `1c47e9cd`, rewritten as `agent/laneJO-sfpu-trace-stream` tip `6de51ce0`. **Re-derivable from committed source, NOT reproduced from the recorded pin**: `ba23c3f1` is unrecoverable, so the provenance gate must be re-pinned. Only 7 of 8 rows have an overlay row to agree with. `clamp-fresh`'s z3 witness independently found the recorded 128-of-2^16 region at bf16 `0x8000`. Never infer formal status from correctness PASS |
@@ -544,10 +551,19 @@ and a hardware rerun using the second binary are not claimed.
   are absent from the OFF arm and off only because they are `Init(0)`. If any
   of those defaults is flipped, the OFF baseline is silently wrong and nothing
   in the harness will say so — recheck the list before reusing the profile.
-- **Do not grade with an equivalence-only sweep.** 17 of the 20 defective
-  strata have both arms out of contract, so 85% of them read as *agreement*
+- **Do not grade with an equivalence-only sweep.** 15 of the 18 defective
+  strata have both arms out of contract, so 83% of them read as *agreement*
   when sem is compared to hand instead of to a golden. Grade each arm
-  independently, which is what `threeway_golden` does.
+  independently, which is what `threeway_golden` does. (Superseded phrasing:
+  17 of 20, 85% — same argument, pre-fix oracle.)
+- **Quote the oracle revision with any defect count.** The stratified ledger was
+  re-graded once already because six modelling defects were found in the golden,
+  and a bare "N defective strata" cannot be checked against anything. Say what it
+  counts, at which `threeway_golden` revision, over which rows.
+- **A wrong golden fails in both directions.** It fabricates defects (the `lgamma`
+  stage-vs-composite error) *and* it licenses them (the deleted `ORACLE fp32
+  OVERFLOW` class scored two infinities as 0 ULP, so an overflowing `i1` passed
+  and the correct one failed). Re-grade for both when an oracle moves.
 - **Keep "sem defect", "production defect" and "sem accuracy win" apart.** They
   are three different verdicts (`SEM-TOLERANCE-FAIL`,
   `SEM-TOLERANCE-PASS(hand fails tolerance)`, `TOLERANCE-BOTH-PASS` plus
@@ -588,9 +604,11 @@ and a hardware rerun using the second binary are not claimed.
    for reasons that have nothing to do with the compiler.
 6. Work the remaining kernel defects. The `fresh_cpp` `erf`/`erfc`/sigmoid-LUT
    side is fixed (`e75553f1c3f`) and `rpow` is fixed (`f24d9515da4`); still open
-   are the 20 defective strata over 10 op rows from the corpus extension
-   (`softsign`, `lgamma`, `i0`, `i1`, `sqrtcustom`, `expm1cw`, `xielu`,
-   `digamma`) and the 31 ranked defects from the static boundary audit. Look at
+   are the 18 defective strata over 9 op rows from the corpus extension
+   (`softsign`, `i0`, `i1`, `i1-fresh`, `sqrtcustom`, `expm1cw`, `xielu`,
+   `digamma`, `digamma-fresh`) and the 31 ranked defects from the static boundary
+   audit. `lgamma` has left that list — its two strata were an oracle error and
+   are withdrawn. Look at
    saturation and special-value handling first: 100% of a stratum out of
    contract at ~2^14-2^15 ULP is not accumulated inaccuracy, and the second
    overflow idiom `as<vFloat>((i<<23)+as<vInt>(w))` corrupts the **sign** bit.
@@ -617,7 +635,7 @@ and a hardware rerun using the second binary are not claimed.
 - [Formal/ULP/exhaustive legs, 2026-09-29](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/formal-ulp-legs-20260929/NOTES.md): the first pass — the six SEM-BUG strata, the four machinery defects, and the 2^32 feasibility numbers that later proved to be a bad measurement.
 - [Reconstructed formal instrument](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/formal-jo-instrument-recovered-20260929/NOTES.md): the rewritten `SFPUJO` hook, the 8 VALIDATED verdicts, the `clamp-fresh` z3 witness, and why re-derivable is not reproduced.
 - [Full 2^32 on a galaxy](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/exhaustive-2p32-galaxy-20260930/RESULTS.md): per-op verdicts, diverging slice ids, the coverage arithmetic at NPAR=4 and NPAR=32, the corrected throughput, and the pre-fix-baseline caveat. Read `NOTES.md` §3b before quoting any of it.
-- [Stratified ULP corpus extension](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-corpus-20260930/NOTES.md): 369 cells, the 20 defective strata, the both-legs-wrong argument, the four new strata and the coverage split.
+- [Stratified ULP corpus extension](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-corpus-20260930/NOTES.md): 369 cells, the both-legs-wrong argument, the four new strata and the coverage split. **Its counts are at the pre-fix oracle** — read it with [the re-grade](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-regrade-20260930/NOTES.md) (18 / 9 / 15 at oracle `2107a950747`, every changed verdict in `RESULTS.tsv`) and [the six oracle modelling fixes](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/oracle-modelling-fixes-20260930/NOTES.md) that caused it.
 - [ULP strata fixes](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/ulp-strata-fixes-20260929/NOTES.md): the `fresh_cpp/erf.h` diagnosis and before/after boards.
 - [SFPU boundary audit](https://github.com/tenstorrent/craq-sfpi/blob/main/board/audit/sfpu-boundary-audit-20260929/README.md): 31 ranked defects, three classes, the second overflow idiom. Prefer its TSVs to its summary counts.
 - [Production pow overflow clamp](https://github.com/tenstorrent/craq-sfpi/blob/main/board/evidence/binpow-overflow-clamp-20260929/NOTES.md): the fix, the `0x7F800000` bit-level check, and the two owner actions with their exact drift percentages.

@@ -32,10 +32,14 @@ All three per-kernel numeric legs have since run. Formal was reconstructed onto
 a re-pinned simulator and is 8/8 VALIDATED — re-derivable from committed source,
 **not** reproduced from the recorded pin, which is unrecoverable. The exhaustive
 leg covered the full 2^32 on a galaxy. The stratified ULP leg reached 72 ops and
-found 20 defective strata over 10 op rows, **17 of them with both the compiled
+found 18 defective strata over 9 op rows, **15 of them with both the compiled
 and the hand-written arm out of contract** — so most of them would read as
-agreement under an equivalence-only sweep. One of those defects was in
-*production* and is fixed; two owner decisions from that fix are outstanding.
+agreement under an equivalence-only sweep. That is a count of `SEM-BUG` +
+`HAND-BUG` cells over the 369-cell corpus ledger at the corrected oracle
+`threeway_golden.py` (tt-metal `nkapre/sfpi` `2107a950747`), and it
+**supersedes "20 / 10 / 17"**, the same count before six modelling defects were
+found in the golden itself. One of the surviving defects was in *production* and
+is fixed; two owner decisions from that fix are outstanding.
 All of it, with its boundaries, is in [WORKLOG.md](WORKLOG.md) and
 [HANDOFF.md](HANDOFF.md#verified-results-and-limits).
 
