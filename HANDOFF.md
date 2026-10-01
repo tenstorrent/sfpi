@@ -11,7 +11,7 @@ match the campaign tip except for the previously documented dead replay sources
 and upstream ZBKB difference. No post-restack build, `rvtt.exp`, LLK sweep,
 formal, exhaustive, or ULP admission has yet been claimed for that new tip.
 The current common-profile sweep's 68 hand-faster rows are not 68 regressions
-from the historical tuned board: see the explicit 14 + 29 + 24 + 1 join in
+from the historical tuned board: see the explicit 15 + 19 + 10 + 24 join in
 the [workflow README](https://github.com/tenstorrent/craq-sfpi/blob/main/README.md).
 
 **Start here:** [setup and replay](#reproducing-a-recorded-run), then
