@@ -2,6 +2,18 @@
 
 ## State at handoff
 
+**Current correction (2026-09-30).** The 21-stage/one-open-PR paragraph below
+is historical. The live stack is 32 chained slices, sfpi-gcc #23–#54, with
+standalone #22. On 2026-09-30 the chain was restacked through tip
+`3166dc1862e` to include the float-identity and SRCB store-sink correctness
+fixes from campaign compiler `b088074d77c`. The resulting compiler files
+match the campaign tip except for the previously documented dead replay sources
+and upstream ZBKB difference. No post-restack build, `rvtt.exp`, LLK sweep,
+formal, exhaustive, or ULP admission has yet been claimed for that new tip.
+The current common-profile sweep's 68 hand-faster rows are not 68 regressions
+from the historical tuned board: see the explicit 14 + 29 + 24 + 1 join in
+the [workflow README](https://github.com/tenstorrent/craq-sfpi/blob/main/README.md).
+
 **Start here:** [setup and replay](#reproducing-a-recorded-run), then
 [focused problem reproduction](#reproduce-and-diagnose-a-specific-problem).
 All runnable campaign commands live here; archived paths are not local paths.

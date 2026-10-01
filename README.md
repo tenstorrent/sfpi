@@ -14,11 +14,14 @@ evidence links and remaining tasks; [WORKLOG.md](WORKLOG.md) records the repair
 sequence, measured results and corrected hypotheses. These documents describe
 the downstream `nkapre/sfpi` campaign, not a release-wide certification.
 
-This branch is now also partitioned into a 21-stage PR stack on
-`nkapre/stack` in `tenstorrent/craq-sfpi-gcc` (tip `8477d32d6ff`, upstream base
-`ba48edbef33`); one of its review units is open as
-[sfpi-gcc#22](https://github.com/tenstorrent/sfpi-gcc/pull/22). The rest is
-built but unsubmitted.
+The compiler is partitioned into 32 chained review slices, open as
+[sfpi-gcc#23–#54](https://github.com/tenstorrent/sfpi-gcc/pulls), plus the
+standalone live-in fix [#22](https://github.com/tenstorrent/sfpi-gcc/pull/22).
+The chain was restacked on 2026-09-30 to include the SFPU float-identity and
+SRCB store-sink correctness fixes; its tip is `3166dc1862e` and the full
+campaign compiler is `b088074d77c`. The post-restack prefixes still need a
+fresh build and `rvtt.exp` run; Cycode checks do not supply either. The
+historical 21-stage description in HANDOFF is not current PR status.
 
 Current validation totals and remaining gates are in the
 [handoff status](HANDOFF.md#verified-results-and-limits), with raw evidence
