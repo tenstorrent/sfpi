@@ -1,4 +1,66 @@
-# Handoff — 2026-09-29
+# Handoff — 2026-10-02
+
+## 2026-10-02 live search handoff
+
+This section supersedes older statements below about what is queued or whether
+hardware is running. The active scripts are on `craq-sfpi` `main` at or after
+`acd3546`; source pins on the device are SFPI `9f89f13`, sfpi-gcc
+`80153da1594`, and tt-metal `1edfd7f8ede`. The prepared checkout is
+`/home/ttuser/craq-sfpi`; all build and run artifacts are under
+`/home/ttuser/craq-build`. No new Git worktrees or branches were made.
+
+The full compile-only census finished: 263 runnable LLKs × 91 knobs = 23,933
+verdicts, `complete: true`, `full_registry_coverage: true`, no missing or
+invalid verdicts. Counts: 1,278 CHANGED, 22,648 IDENTICAL, seven
+`KNOB_REFUSED_COMPILE`/NO_COMPARISON. Those seven are `reassoc` on seven Blaze
+reduction rows, refused for `lreg-pressure-exceeded`; the ordinary search
+excludes this licensed numeric knob. Firing is not a correctness or speed win.
+
+The silicon search is active in tmux session `craq-search-full`. At **2026-10-02
+05:59 EDT**, `search.json` recorded **13/263 completed LLKs**, 120 measured
+candidate configurations, no candidate failures; the run had status RUNNING.
+Only three completed LLKs selected an improvement against the *frozen compiler
+baseline*: `abs` −19.33%, `absint32` −37.52% (`int-abs` plus disabling
+`replay-loop-unroll`), and `acosh-fitted` −16.48%. In particular, `absint32`
+remained 0.32% slower than handwritten. Do not call these three handwritten
+wins, extrapolate them to the corpus, or call the run formally proved.
+Every candidate uses the existing bounded pytest correctness leg; formal,
+exhaustive, ULP admission and deployment validation are NOT_RUN in this search.
+
+From a machine with SSH access to the same device node, check progress without
+starting duplicate jobs:
+
+```sh
+ssh -n tt-quietbox-0.local 'tmux list-sessions | grep craq-'
+ssh -n tt-quietbox-0.local 'jq "{complete, full_registry_coverage, verdict_count, status_counts}" "$HOME/craq-build/results/knob-census-full-current-20261001/KNOB-CENSUS.json"'
+ssh -n tt-quietbox-0.local 'jq "{status, completed_ops:(.operations|length), total_ops:(.settings.ops|length), measured:([.operations[]|.measured|length]|add), failures:([.operations[]|.failures|length]|add)}" "$HOME/craq-build/results/search-full-current-20261001/search.json"'
+ssh -n tt-quietbox-0.local 'tail -20 "$HOME/craq-build/results/search-full-current-20261001.log"'
+```
+
+Evidence paths on `tt-quietbox-0.local`:
+
+- `~/craq-build/results/knob-census-full-current-20261001/KNOB-CENSUS.json`
+  and per-LLK `knob-attribution.json`: all 91 compile comparisons.
+- `~/craq-build/results/search-full-current-20261001/search.json` and
+  per-candidate `runs/`: incremental correctness and silicon timings.
+- `~/craq-build/results/matrix-full-current-20261001/knob-grid.tsv` (wide)
+  and `knob-matrix.tsv` (per cell). The grid was refreshed at the checkpoint;
+  refresh it as the search advances with:
+
+```sh
+ssh -n tt-quietbox-0.local 'cd "$HOME/craq-sfpi" && python3 scripts/render_search_matrix.py --census "$HOME/craq-build/results/knob-census-full-current-20261001" --search "$HOME/craq-build/results/search-full-current-20261001/search.json" --out "$HOME/craq-build/results/matrix-full-current-20261001"'
+```
+
+The search uses one device and can take longer than one night. Its exact
+configuration is in `search.json`: current-census attribution, all 263 ops,
+up to 16 singleton toggles and eight pairs per op, three repeats, frozen
+manifest ON flags. If it stops, preserve the partial `search.json` and run
+trees; `search.py` currently does **not** resume an existing output directory.
+Inspect the recorded completed ops and restart only the missing ops in a new
+results directory. Do not delete or silently overwrite evidence. The
+workflow's [tuning guide](https://github.com/tenstorrent/craq-sfpi/blob/main/docs/LLK-TUNING.md)
+documents the search and matrix commands. Do not switch compiler pins or
+baseline flags mid-campaign.
 
 ## State at handoff
 

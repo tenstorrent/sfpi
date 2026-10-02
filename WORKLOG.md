@@ -1,5 +1,31 @@
 # Worklog
 
+## 2026-10-02 — current-compiler all-LLK knob campaign in progress
+
+- Rebuilt and verified the SFPI/tt-metal harness on `tt-quietbox-0.local`
+  under one existing `~/craq-build` tree. Source pins: SFPI `9f89f13`,
+  sfpi-gcc `80153da1594`, tt-metal `1edfd7f8ede`.
+- A one-LLK current-compiler pilot (`absint32`) found an interaction:
+  `int-abs` alone −18.77% versus the frozen compiler baseline; paired with
+  `replay-loop-unroll` disabled, −37.52% (21,815 → 13,630 cycles, three
+  identical samples). That remains 0.32% slower than handwritten. Existing
+  bounded correctness passed; formal/exhaustive/ULP were NOT_RUN.
+- Completed the full compile-only 263 × 91 census: 23,933/23,933 verdicts,
+  1,278 changed, 22,648 identical, seven explicit `reassoc` compile refusals.
+  It is complete with no missing or invalid verdicts. These are firing
+  observations, not performance claims.
+- Started the full correctness-gated silicon search in persistent tmux. At
+  05:59 EDT, 13/263 LLKs and 120 candidates had finished with zero candidate
+  failures. Three LLKs selected improvements versus the frozen baseline:
+  `abs` −19.33%, `absint32` −37.52%, `acosh-fitted` −16.48%. The remaining
+  completed LLKs retained baseline; no corpus-wide winner count is available.
+- Added a deterministic wide grid and per-cell TSV renderer in workflow commit
+  `acd3546`; refreshed the live matrix. Fixed an unrelated pytest collection
+  mistake in `720d922`; workflow script suite was 73 passed, 11 subtests.
+  The jobs, evidence, exact status/recovery commands, and limits are in the
+  [handoff](HANDOFF.md#2026-10-02-live-search-handoff). No Git worktree or branch
+  clutter was created.
+
 ## 2026-09-30 — re-grade the stratified ledger after the oracle itself was corrected
 
 Six modelling defects were found in the verification oracle, not in the kernels

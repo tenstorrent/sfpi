@@ -3,7 +3,23 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-### Compiler campaign checkpoint — 2026-09-29
+### Live compiler-knob campaign — 2026-10-02
+
+The active workflow is in [craq-sfpi](https://github.com/tenstorrent/craq-sfpi),
+not this source checkout. On `tt-quietbox-0.local` the current compiler/LLK
+tuple completed a compile-only census of **263 runnable LLKs × 91 knobs =
+23,933 verdicts** (1,278 changed, 22,648 identical, seven recorded
+`reassoc` compile refusals). A correctness-gated, three-repeat silicon search
+is **still running** in tmux session `craq-search-full`; at the 2026-10-02
+05:59 EDT checkpoint it had completed **13/263 LLKs**, 120 candidate
+measurements, zero candidate failures. This is not an all-LLK performance
+result or a formal/exhaustive/ULP certificate. The live matrix is under
+`/home/ttuser/craq-build/results/matrix-full-current-20261001/` on that node.
+Use [HANDOFF.md](HANDOFF.md#2026-10-02-live-search-handoff) for exact status,
+reproduction and continuation commands; [WORKLOG.md](WORKLOG.md) records the
+dated result. No worktree or branch was created for this run.
+
+### Compiler campaign checkpoint — 2026-09-29 (historical)
 
 For a fresh machine, start with **[HANDOFF: setup, replay and diagnosis](HANDOFF.md#reproducing-a-recorded-run)**:
 clone, choose WORK, load portable pins, build, verify the `tests/sfpi` link,
