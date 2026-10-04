@@ -3,21 +3,21 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-### Live compiler-knob campaign — 2026-10-02
+### Completed compiler-knob campaign — 2026-10-04
 
-The active workflow is in [craq-sfpi](https://github.com/tenstorrent/craq-sfpi),
-not this source checkout. On `tt-quietbox-0.local` the current compiler/LLK
-tuple completed a compile-only census of **263 runnable LLKs × 91 knobs =
-23,933 verdicts** (1,278 changed, 22,648 identical, seven recorded
-`reassoc` compile refusals). A correctness-gated, three-repeat silicon search
-is **still running** in tmux session `craq-search-full`; at the 2026-10-02
-05:59 EDT checkpoint it had completed **13/263 LLKs**, 120 candidate
-measurements, zero candidate failures. This is not an all-LLK performance
-result or a formal/exhaustive/ULP certificate. The live matrix is under
-`/home/ttuser/craq-build/results/matrix-full-current-20261001/` on that node.
-Use [HANDOFF.md](HANDOFF.md#2026-10-02-live-search-handoff) for exact status,
-reproduction and continuation commands; [WORKLOG.md](WORKLOG.md) records the
-dated result. No worktree or branch was created for this run.
+The workflow is in [craq-sfpi](https://github.com/tenstorrent/craq-sfpi), not
+this source checkout. The current tuple completed the **263 runnable LLK × 91
+knob = 23,933 verdict** compile census and a bounded correctness-gated silicon
+search of **2,159 candidate configurations**. Of 263 LLKs, 77 select a
+candidate at least 1% faster than the frozen same-source compiler baseline,
+157 retain that baseline, 28 have no eligible ordinary candidate and one is
+quarantined after the same knob pair wedged two devices. The committed
+[evidence and matrices](https://github.com/tenstorrent/craq-sfpi/tree/be5e52da1d283cc6cd323f5584e1898a0501fb9d/board/evidence/llk-knob-search-20261004)
+are the complete tuning record. This is not a claim of 77 wins over hand and
+not a formal/exhaustive/ULP or deployment certificate. See
+[HANDOFF.md](HANDOFF.md#2026-10-04-completed-search-handoff) for exact scope
+and [WORKLOG.md](WORKLOG.md) for the completed chronology. No worktree or
+branch was created for the campaign.
 
 ### Compiler campaign checkpoint — 2026-09-29 (historical)
 

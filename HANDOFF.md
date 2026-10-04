@@ -1,10 +1,10 @@
-# Handoff — 2026-10-02
+# Handoff — 2026-10-04
 
-## 2026-10-02 live search handoff
+## 2026-10-04 completed search handoff
 
 This section supersedes older statements below about what is queued or whether
-hardware is running. The active scripts are on `craq-sfpi` `main` at or after
-`acd3546`; source pins on the device are SFPI `9f89f13`, sfpi-gcc
+hardware is running. The scripts and committed result are on `craq-sfpi`
+`main` at `be5e52d`; measured source pins are SFPI `9f89f13`, sfpi-gcc
 `80153da1594`, and tt-metal `1edfd7f8ede`. The prepared checkout is
 `/home/ttuser/craq-sfpi`; all build and run artifacts are under
 `/home/ttuser/craq-build`. No new Git worktrees or branches were made.
@@ -16,51 +16,39 @@ invalid verdicts. Counts: 1,278 CHANGED, 22,648 IDENTICAL, seven
 reduction rows, refused for `lreg-pressure-exceeded`; the ordinary search
 excludes this licensed numeric knob. Firing is not a correctness or speed win.
 
-The silicon search is active in tmux session `craq-search-full`. At **2026-10-02
-05:59 EDT**, `search.json` recorded **13/263 completed LLKs**, 120 measured
-candidate configurations, no candidate failures; the run had status RUNNING.
-Only three completed LLKs selected an improvement against the *frozen compiler
-baseline*: `abs` −19.33%, `absint32` −37.52% (`int-abs` plus disabling
-`replay-loop-unroll`), and `acosh-fitted` −16.48%. In particular, `absint32`
-remained 0.32% slower than handwritten. Do not call these three handwritten
-wins, extrapolate them to the corpus, or call the run formally proved.
-Every candidate uses the existing bounded pytest correctness leg; formal,
-exhaustive, ULP admission and deployment validation are NOT_RUN in this search.
+The bounded ordinary-knob silicon search is complete: **263/263 LLKs
+accounted for and 2,159 candidate configurations measured**. It used up to 16
+firing singleton changes and eight bounded pairs per LLK, three timing repeats,
+seed 42, a 1% selection threshold and correctness before timing. The merged
+record has 233 `COMPLETE`, 28 `NO_CANDIDATES`, one
+`COMPLETE_WITH_FAILURES`, and one `QUARANTINED_DEVICE_TIMEOUT` row. It selects
+77 candidates against the frozen same-source compiler baseline, retains that
+baseline for 157 and has no proposal for 29. Among only the 77 selected rows,
+the optional hand comparison is 29 faster by more than 1%, 12 within ±1%, 16
+slower by more than 1%, and 20 without a hand arm. Those are not corpus-wide
+hand counts.
 
-From a machine with SSH access to the same device node, check progress without
-starting duplicate jobs:
+Two rejected combinations remain visible. `gcd-fresh` with `dst-autoincr`
+disabled plus `replay-loop-unroll` enabled reproducibly wedged devices 0 and 1
+and is quarantined. `sigmoidlut-fresh` with `loop-prgm-reclaim` plus
+`replay-loop-unroll` failed compilation; its other candidates completed and a
+different passing candidate was selected. Neither rejected configuration can
+be promoted.
 
-```sh
-ssh -n tt-quietbox-0.local 'tmux list-sessions | grep craq-'
-ssh -n tt-quietbox-0.local 'jq "{complete, full_registry_coverage, verdict_count, status_counts}" "$HOME/craq-build/results/knob-census-full-current-20261001/KNOB-CENSUS.json"'
-ssh -n tt-quietbox-0.local 'jq "{status, completed_ops:(.operations|length), total_ops:(.settings.ops|length), measured:([.operations[]|.measured|length]|add), failures:([.operations[]|.failures|length]|add)}" "$HOME/craq-build/results/search-full-current-20261001/search.json"'
-ssh -n tt-quietbox-0.local 'tail -20 "$HOME/craq-build/results/search-full-current-20261001.log"'
-```
+Permanent evidence is committed at
+[`craq-sfpi@be5e52d/board/evidence/llk-knob-search-20261004`](https://github.com/tenstorrent/craq-sfpi/tree/be5e52da1d283cc6cd323f5584e1898a0501fb9d/board/evidence/llk-knob-search-20261004):
 
-Evidence paths on `tt-quietbox-0.local`:
+- `search.json`: merged proposals, identities, timings, failures and segments;
+- `selected.tsv`: the 77-row proposal roster;
+- `knob-grid.tsv` and `knob-matrix.tsv`: wide and long 263 × 91 views;
+- `KNOB-CENSUS.json`: the 23,933-verdict census completion record.
 
-- `~/craq-build/results/knob-census-full-current-20261001/KNOB-CENSUS.json`
-  and per-LLK `knob-attribution.json`: all 91 compile comparisons.
-- `~/craq-build/results/search-full-current-20261001/search.json` and
-  per-candidate `runs/`: incremental correctness and silicon timings.
-- `~/craq-build/results/matrix-full-current-20261001/knob-grid.tsv` (wide)
-  and `knob-matrix.tsv` (per cell). The grid was refreshed at the checkpoint;
-  refresh it as the search advances with:
-
-```sh
-ssh -n tt-quietbox-0.local 'cd "$HOME/craq-sfpi" && python3 scripts/render_search_matrix.py --census "$HOME/craq-build/results/knob-census-full-current-20261001" --search "$HOME/craq-build/results/search-full-current-20261001/search.json" --out "$HOME/craq-build/results/matrix-full-current-20261001"'
-```
-
-The search uses one device and can take longer than one night. Its exact
-configuration is in `search.json`: current-census attribution, all 263 ops,
-up to 16 singleton toggles and eight pairs per op, three repeats, frozen
-manifest ON flags. If it stops, preserve the partial `search.json` and run
-trees; `search.py` currently does **not** resume an existing output directory.
-Inspect the recorded completed ops and restart only the missing ops in a new
-results directory. Do not delete or silently overwrite evidence. The
-workflow's [tuning guide](https://github.com/tenstorrent/craq-sfpi/blob/main/docs/LLK-TUNING.md)
-documents the search and matrix commands. Do not switch compiler pins or
-baseline flags mid-campaign.
+Raw build trees, pytest XML/logs and profiler CSVs remain under
+`~/craq-build/results/search-full-current-*` on `tt-quietbox-0.local`. The
+workflow evidence README gives exact merge and regeneration commands. The
+search's bounded pytest contract passed for admitted measured candidates;
+formal, exhaustive, ULP admission and deployment validation are **NOT_RUN in
+this search** and remain separate gates. Numeric/licensed knobs were excluded.
 
 ## State at handoff
 

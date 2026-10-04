@@ -1,6 +1,27 @@
 # Worklog
 
-## 2026-10-02 — current-compiler all-LLK knob campaign in progress
+## 2026-10-04 — complete and archive the all-LLK knob search
+
+- Completed the current-compiler bounded search across all 263 runnable LLKs:
+  2,159 measured configurations, 77 candidate selections over the frozen
+  same-source baseline, 157 baseline retentions, 28 rows with no eligible
+  ordinary candidate, and one quarantined row.
+- The run stopped twice on the same `gcd-fresh` pair (`dst-autoincr` disabled,
+  `replay-loop-unroll` enabled), wedging two different Blackholes. That pair is
+  recorded as `QUARANTINED_DEVICE_TIMEOUT`, not retried on a third device and
+  not eligible for selection. A separate `sigmoidlut-fresh` pair failed
+  compilation; the row completed around it and selected a passing candidate.
+- Continued only missing rows on devices 1 and 2, preserving all three segment
+  records. Added a deterministic merger that rejects incompatible settings,
+  duplicate completed rows, coverage gaps and unnamed stopped rows. Added the
+  77-row selected roster to the matrix renderer. Workflow tests: 75 passed and
+  11 subtests passed.
+- Committed the complete merged `search.json`, 263 × 91 wide/long matrices,
+  selected roster, census completion record and human audit at workflow commit
+  [`be5e52d`](https://github.com/tenstorrent/craq-sfpi/tree/be5e52da1d283cc6cd323f5584e1898a0501fb9d/board/evidence/llk-knob-search-20261004).
+  The bounded search did not run formal, exhaustive, ULP or deployment gates.
+
+## 2026-10-02 — current-compiler all-LLK knob campaign started (historical checkpoint)
 
 - Rebuilt and verified the SFPI/tt-metal harness on `tt-quietbox-0.local`
   under one existing `~/craq-build` tree. Source pins: SFPI `9f89f13`,
