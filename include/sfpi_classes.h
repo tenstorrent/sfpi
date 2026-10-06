@@ -34,8 +34,8 @@
 #define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) \
-  __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
+#define __builtin_rvtt_sfpstochrnd_descale_i(src, imm, mod1, mode) \
+  __builtin_rvtt_sfpstochrnd_descale_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
