@@ -10,21 +10,24 @@ fi
 
 NCPUS=$(nproc)
 
-gcc_checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree
+binutils=false
 dejagnu=false
 enable_gdb=--disable-gdb
+gcc_checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree
+sfpi_base=*
+sfpi_build=
+sfpi_version=
 sim=false
 small_build=
 test_binutils=false
 test_gcc=false
 test_tt=false
 tt_built=false
-sfpi_base=*
-sfpi_build=
-sfpi_version=
+
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
+	--binutils) binutils=true ;;
 	--build-id=*) sfpi_build="${1#*=}"
 		      if ! [[ $sfpi_build =~ ^[0-9]+$ ]]; then
 			  echo "$1 is not a decimal number" >&2
@@ -199,7 +202,11 @@ if ! [[ -e $BUILD/Makefile ]]; then
 	(set -x; make -C $BUILD stamps/check-write-permission)
 	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
 	do
-	    if ! [[ $file =~ -stage2$ ]]; then
+	    if [[ -f $file ]] ; then
+		:
+	    elif $binutils && [[ $file =~ -binutils- ]]; then
+		(set -x; make -C $BUILD -j$NCPUS $small_build $file)
+	    elif ! [[ $file =~ -stage2$ ]]; then
 		mkdir -p $BUILD/$(dirname $file)
 		echo Inremental $file
 		echo Incremental >$BUILD/$file
