@@ -550,15 +550,21 @@ enum class LdexpMode {
   Fast,
 };
 
-sfpi_inline vFloat ldexp (vFloat in, int scale, LdexpMode = LdexpMode::Correct) {
-  return addexp (in, scale);
-}
-
+// Scaling by more than [-127,+127] is unspecified
 sfpi_inline vFloat ldexp (vFloat in, vInt scale, LdexpMode mode = LdexpMode::Correct) {
   if (mode == LdexpMode::Fast)
     return setexp (in, exexp (in, ExponentMode::Biased) + scale);
   else
     return in * setexp (vFloat (0), scale + 127);
+}
+
+sfpi_inline vFloat ldexp (vFloat in, int scale, LdexpMode mode [[gnu::unused]] = LdexpMode::Correct) {
+#if !__riscv_xtttensixqsr
+  if (mode != LdexpMode::Fast)
+    return ldexp (in, vInt (scale), mode);
+#endif
+  // Behaves correctly on quasar
+  return addexp (in, scale);
 }
 
 sfpi_inline vFloat abs (vFloat v) {
