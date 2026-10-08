@@ -1,4 +1,42 @@
-# Handoff — 2026-10-04
+# Handoff — 2026-10-08
+
+## 2026-10-08 targeted TopK compiler fix
+
+GCC pin `064ef4565ea` fixes launch-flatten eligibility for raw delivery with
+explicit LREG read/write lifetimes. Enable the existing option
+`-mtt-tensix-optimize-launch-flatten`; do NOT use the diagnostic global
+`max-completely-peeled-insns=300` setting. Other defaults are unchanged.
+
+Fresh patched full `rvtt.exp`: 8,085 PASS, 2 expected XFAIL, zero unexpected
+failures, including 1,537 SFPI checks. Focused `launch-flatten*.C`: 52 PASS;
+the new positive regression had two failing assertions on the baseline.
+
+Same-flags Blackhole TopK profiling: handwritten 5038 cycles, public-API
+threaded 4929, versus threaded 5186 with this option off or on the baseline
+compiler. All 72 exact BF16/FP16 cases pass at O3 scheduled and O2/default
+scheduling with the fix enabled. This is one region/workload, not a new corpus
+result. The test adaptation is not the production default; stable ties,
+special values, other K/widths/chips and general raw-wrapper replacement
+remain outside this validation.
+
+From a configured GCC build's `gcc/` directory, with SFPI pointing to matching
+installed headers:
+
+```sh
+SFPI=/path/to/installed-sfpi make -k check-g++ \
+  RUNTESTFLAGS='rvtt.exp=launch-flatten*.C'
+SFPI=/path/to/installed-sfpi make -k check-g++ RUNTESTFLAGS='rvtt.exp'
+```
+
+Read `g++.sum`, not just make's exit code. Silicon reproduction uses tt-metal
+`python_tests/test_topk.py::test_topk_threaded_merge_exact` and
+`::test_topk_device_profile`, selecting `handwritten or threaded_merge` for
+profiling, with the same compiler flags on both arms. Full commands and the
+before/after/control table live in `tt_metal/tt-llk/tests/corpus/RAW_LREG_EXPERIMENT.md`.
+Quietbox evidence remains under `/tmp/lreg-review.Y7HFRq/flatten-full-tests/`
+and `topk-flatten-*`; these temporary paths are not required by reproduction.
+
+The older all-LLK campaign below is historical and is not regraded by this fix.
 
 ## 2026-10-04 completed search handoff
 

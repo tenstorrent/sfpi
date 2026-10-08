@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-10-08 — fix explicit-LREG TopK unroll regression
+
+- GCC `064ef4565ea`: existing opt-in launch-flatten now admits raw delivery
+  with explicit LREG read/write lifetimes, retaining its structural and size
+  bounds. No new pass, global unroll-limit change, or kernel-specific rule.
+- Fresh Linux baseline/patched builds. Focused tests: baseline 50 PASS / 2
+  FAIL in the new positive regression; patched 52 PASS / 0 FAIL. Full patched
+  `rvtt.exp`: 8,085 PASS, 2 expected XFAIL, no unexpected failures; 1,537 SFPI
+  checks actually ran.
+- Fresh Blackhole public-LRegFile TopK: same flags on both arms, O3 scheduled,
+  live-in pass disabled. Baseline/on and patched/off: hand 5038/threaded 5186;
+  patched/on: hand 5038/threaded 4929 cycles, five runs/arm. No global unroll
+  threshold override. All 72 BF16/FP16 exact value/index cases pass in each
+  configuration; patched O2/on additionally passes all 72.
+- The option is `-mtt-tensix-optimize-launch-flatten`; default remains off.
+  The region remains a test adaptation, not a wholesale production rewrite.
+  See tt-metal `tests/corpus/RAW_LREG_EXPERIMENT.md` for scope and commands.
+
 ## 2026-10-04 — complete and archive the all-LLK knob search
 
 - Completed the current-compiler bounded search across all 263 runnable LLKs:
