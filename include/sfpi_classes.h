@@ -431,7 +431,7 @@ public:
 
 #if __riscv_xtttensixqsr
 // SrcS regs
-template<unsigned Slice>
+template <unsigned Slice, typename std::enable_if_t<(Slice < 3)>* = nullptr>
 class SrcSRegFile {
 public:
   template<DataLayout Fmt = DataLayout::Default>
