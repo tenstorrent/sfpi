@@ -47,7 +47,7 @@
 //
 // Quasar SrcS Register:
 //   Unlike dst_reg, you need a local variable, because it contains some state:
-//   UnpackSrcS src_reg; // or PackSrcS or ComputeSrcS
+//   SrcSView<N> src_reg; // N = 0, 1, 2
 //   src_reg[0] = vFloat(dst_reg[0]);
 //
 //   The same `mode` call can be used to modify mod and addr_mode operand.  You
@@ -664,9 +664,11 @@ enum class LRegs : uint8_t {
 constexpr impl_::LRegFile l_reg;
 constexpr impl_::DstRegFile dst_reg;
 #if __riscv_xtttensixqsr
-using UnpackSrcS = impl_::SrcSRegFile<0>;
-using ComputeSrcS = impl_::SrcSRegFile<1>;
-using PackSrcS = impl_::SrcSRegFile<2>;
+template<unsigned Slice> using SrcSView = impl_::SrcSRegFile<Slice>;
+
+using UnpackSrcS __SFPI_DEPRECATED ("Use SrcSView<0>") = impl_::SrcSRegFile<0>;
+using ComputeSrcS __SFPI_DEPRECATED ("Use SrcSView<1>") = impl_::SrcSRegFile<1>;
+using PackSrcS __SFPI_DEPRECATED ("Use SrcSView<2>") = impl_::SrcSRegFile<2>;
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
