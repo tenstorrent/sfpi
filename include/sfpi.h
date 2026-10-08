@@ -404,6 +404,9 @@ public:
 public:
   sfpi_inline explicit vSMag (impl_::sfpu_t);
   sfpi_inline explicit vSMag (uint32_t);
+  sfpi_inline explicit vSMag (int32_t);
+  sfpi_inline explicit vSMag (unsigned);
+  sfpi_inline explicit vSMag (int);
   sfpi_inline vSMag (impl_::vMag);
 
 };
@@ -450,8 +453,9 @@ public:
 public:
   sfpi_inline vBool (Logic, vBool, vBool);
 
-private:
+public:
   sfpi_inline vBool (Cond, Type, impl_::vVal, impl_::vVal);
+#if 0
   sfpi_inline vBool (Cond, Type, impl_::vVal, uint32_t);
 
 public:
@@ -459,8 +463,7 @@ public:
   sfpi_inline vBool (Cond, vInt, vInt);
   sfpi_inline vBool (Cond, vUInt, vUInt);
   sfpi_inline vBool (Cond, vSMag, vSMag);
-  sfpi_inline vBool (Cond, vSMag, int);
-
+#endif
 public:
   sfpi_inline vBool (vInt);
   sfpi_inline vBool (vUInt);

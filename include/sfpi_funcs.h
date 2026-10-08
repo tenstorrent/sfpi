@@ -57,6 +57,7 @@ sfpi::vBool::vBool (Logic t, vBool a, vBool b)
 sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
     : result (__builtin_rvtt_sfpxcmp (a.get (), b.get (), c | t)) {}
 
+#if 0
 sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
     : vBool (c, Float, a, b) {}
 sfpi::vBool::vBool (Cond c, vInt a, vInt b) : vBool (c, Int, a, b) {}
@@ -64,10 +65,11 @@ sfpi::vBool::vBool (Cond c, vUInt a, vUInt b) : vBool (c, UInt, a, b) {}
 sfpi::vBool::vBool (Cond c, vSMag a, vSMag b) : vBool (c, SMag, a, b) {}
 sfpi::vBool::vBool (Cond c, vSMag a, int s)
     : vBool (c, SMag, a, vSMag (uint32_t (s < 0 ? 0 - (unsigned (s) << 1 >> 1) : unsigned (s)))) {}
+#endif
 
-sfpi::vBool::vBool (vInt a) : vBool (NE, a, vInt (0)) {}
-sfpi::vBool::vBool (vUInt a) : vBool (NE, a, vUInt (0)) {}
-sfpi::vBool::vBool (vSMag a) : vBool (NE, a, vSMag (0)) {}
+sfpi::vBool::vBool (vInt a) : vBool (NE, Int, a, vInt (0)) {}
+sfpi::vBool::vBool (vUInt a) : vBool (NE, UInt, a, vUInt (0)) {}
+sfpi::vBool::vBool (vSMag a) : vBool (NE, SMag, a, vSMag (0)) {}
 
 auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
   if (mod & SFPXPRED_MOD1_ELSE)
@@ -550,12 +552,12 @@ auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
 // Comparisons
-auto sfpi::operator== (vFloat a, vFloat b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vFloat a, vFloat b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vFloat a, vFloat b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, a, b); }
+auto sfpi::operator== (vFloat a, vFloat b)-> vBool { return vBool (vBool::EQ, vBool::Float, a, b); }
+auto sfpi::operator!= (vFloat a, vFloat b)-> vBool { return vBool (vBool::NE, vBool::Float, a, b); }
+auto sfpi::operator< (vFloat a, vFloat b)-> vBool { return vBool (vBool::LT, vBool::Float, a, b); }
+auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, vBool::Float, a, b); }
+auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, vBool::Float, a, b); }
+auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, vBool::Float, a, b); }
 
 auto sfpi::operator== (vFloat a, float b)-> vBool { return a == vFloat (b); }
 auto sfpi::operator!= (vFloat a, float b)-> vBool { return a != vFloat (b); }
@@ -628,12 +630,12 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
-auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, a, b); }
+auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, vBool::Int, a, b); }
+auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, vBool::Int, a, b); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, vBool::Int, a, b); }
+auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, vBool::Int, a, b); }
+auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, vBool::Int, a, b); }
+auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, vBool::Int, a, b); }
 
 auto sfpi::operator== (vInt a, int32_t b)-> vBool { return a == vInt (b); }
 auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return a != vInt (b); }
@@ -707,12 +709,12 @@ auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
-auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, a, b); }
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, vBool::UInt, a, b); }
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, vBool::UInt, a, b); }
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, vBool::UInt, a, b); }
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, vBool::UInt, a, b); }
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, vBool::UInt, a, b); }
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, vBool::UInt, a, b); }
 
 auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return a == vUInt (b); }
 auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return a != vUInt (b); }
@@ -736,16 +738,23 @@ auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vSMag::vSMag (uint32_t val)
-    : vSMag (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vSMag (__builtin_rvtt_sfpxloadi (val, -32)) {}
+sfpi::vSMag::vSMag (int32_t val)
+    : vSMag (uint32_t (val < 0 ? 0 - (uint32_t (val) << 1 >> 1) : uint32_t (val))) {}
+sfpi::vSMag::vSMag (unsigned val)
+    : vSMag (uint32_t (val)) {}
+sfpi::vSMag::vSMag (int val)
+    : vSMag (int32_t (val)) {}
 sfpi::vSMag::vSMag (impl_::vMag val)
     : vSMag (val.get ()) {}
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
 
-auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator== (vSMag a, int b)-> vBool { return vBool (vBool::EQ, a, b); }
+auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vBool (vBool::EQ, vBool::SMag, a, b); }
+auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vBool (vBool::NE, vBool::SMag, a, b); }
 
-auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator!= (vSMag a, int b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return a == vSMag (b); }
+auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return a != vSMag (b); }
+
+auto sfpi::operator== (vSMag a, int b)-> vBool { return a == vSMag (b); }
+auto sfpi::operator!= (vSMag a, int b)-> vBool { return a != vSMag (b); }
