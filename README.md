@@ -3,6 +3,16 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+### Takeover — 2026-10-09
+
+Start with [machine-to-machine HANDOFF](HANDOFF.md#2026-10-09-machine-to-machine-takeover)
+for priorities, setup commands and charter constraints. The rollout remains
+incomplete. "Two new losses" was a partial audit observation, not the current
+corpus count; 39 weekly RED rows are not 39 performance losses. Recover costs
+with matched measurements, without removing correctness handling or treating
+anchor re-booking as a performance fix. See the corrected fix-round summary
+below; earlier measurements must retain their source/compiler scope.
+
 ### Latest — 2026-10-08 parallel fix round
 
 Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay

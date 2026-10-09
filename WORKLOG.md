@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-10-09 — reconcile audit and prepare another-machine takeover
+
+- Preserved the other agent's `19d401fd717` corrections: committed TopK tie,
+  two-knob Welford recovery, identified installed-compiler mismatch and the
+  reported 8,092/0/2 correctly configured rvtt.exp result. The preceding audit
+  described an earlier checkpoint; its stale findings are not current blockers.
+- Corrected the chat's loss-count interpretation: two identified historical
+  win-to-loss transitions are not an exact new corpus loss count. The broader
+  fix round has additional slowdowns; weekly RED includes non-performance
+  failures. A matched per-row loss roster remains required.
+- Carried forward scoped audit follow-ups: FP32 expm1 premature overflow
+  above 88.5, overly broad TopK infinity XFAIL and non-gating stable ordering.
+  These require checking against subsequent commits before changing anything.
+- Added portable setup/smoke commands, explicit checkpoint refs, evidence
+  preservation and performance-recovery priorities to HANDOFF. No new kernel,
+  compiler, hardware or proof run in this documentation task; no new worktrees,
+  branches or workflow-main writes.
+
 ## 2026-10-08 — parallel fix round across kernels, compiler and anchors
 
 - Eight lanes ran on QB0 with one device lock per run and private trees under

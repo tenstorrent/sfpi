@@ -1,4 +1,103 @@
-# Handoff — 2026-10-08
+# Handoff — 2026-10-09
+
+## 2026-10-09 machine-to-machine takeover
+
+Read this section, then the parallel fix round below. This is a documentation
+handoff, not a new hardware validation run. SFPI documentation commit
+`19d401fd717` already superseded parts of the preceding read-only audit:
+TopK is a committed-source tie, Welford has a two-knob recovery, the installed
+compiler mismatch was identified, and the correctly configured compiler suite
+is reported green. Do not carry the older five-failure or unexplained-build-skew
+findings forward as unresolved without checking that newer evidence.
+
+**Loss count:** the chat's "two new losses" was only two identified historical
+win-to-loss transitions (log1p-fitted and licensed sigmoid), NOT a current
+corpus total. The newer fix-round evidence lists additional regressions. The
+39 RED weekly rows are also not 39 performance losses: they include missing
+anchors, compile/correctness failures and unavailable metrics. Derive the exact
+new-loss roster from matched per-row old/new sem/hand measurements, using one
+timing scope and tolerance band. Re-booking an anchor acknowledges a change;
+it does not recover performance or accept a regression.
+
+### Next agent's priorities and constraints
+
+1. Reconcile source revisions and build identity before measuring. The prepared
+   node's source, stage1 backend and installed compiler have differed; a version
+   label alone is insufficient. Preserve dirty work and other agents' jobs.
+2. Reproduce the expm1 FP32 boundary finding: at FP32 x=88.5999984741211,
+   expm1 is about 3.00947e38 (finite), but the audited `88.5` cutoff returns
+   infinity. Test Float32 input/output with `dest_acc=Yes`, including the true
+   overflow boundary. BF16 exhaustive coverage cannot see this interval.
+   This was a source/math finding at metal `4970a6b803ab`, not a device rerun;
+   check whether subsequent commits already repair it.
+3. Recover performance without dropping required semantics. Start with the
+   largest costs in the parallel-round table/cause-h.tsv: i0, softplus,
+   sigmoid, then other boundary fixes. Separate compiler missed optimization,
+   per-LLK knob selection, and explicitly approved semantic/domain uplift.
+   Keep defaults unchanged unless the requested rollout authorizes adoption.
+4. Narrow TopK's FP16 infinity XFAIL to the known defect; stable tie tests
+   currently record rather than enforce stable ordering. K64 differential
+   agreement is not supported-output correctness. Recheck these at the new tip.
+5. Produce a fresh matched loss roster and four-arm table (sem OFF/ON, hand
+   OFF/ON), with separate correctness, performance, formal, exhaustive and ULP
+   statuses. Do not infer proof or all-chip coverage from bounded Blackhole tests.
+
+Use ordinary compiler transformations or reviewed semantic C++ changes, not
+kernel-name special cases or weaker correctness gates. No new worktree/branch
+clutter; reuse an appropriate checkout, never reset another agent's changes.
+Do not add speculative provenance/hash refusal layers. Record concrete source,
+compiler options, actual test commands and results. Commit scoped changes to
+`nkapre/sfpi`; SFPI and GCC mirror branches must agree. Do not push to `main`
+under this handoff. Coordinate separately for workflow-main changes.
+
+### Bring up another Linux Blackhole machine
+
+Use an existing workflow checkout if available. Otherwise clone it once into
+an unused destination; this is not a Git worktree. Build/runtime prerequisites
+and device allocation remain as described under "Reproducing a recorded run".
+
+```sh
+git clone git@github.com:tenstorrent/craq-sfpi.git craq-workflow
+cd craq-workflow
+git checkout --detach 035b07b872d3429afea0584840c9b9c58ae7f18f
+git log -1 --oneline
+export WORK="$HOME/craq-build"
+export SFPI_REF=19d401fd717be1ef5945af72761604dbb9a1efbb
+export GCC_REF=ba4b9b13a5215c2e0b2a51de75018e1a477a13d1
+export METAL_REF=7dd94d7d5346fd949de03da71d1134cfea3df7eb
+export BLAZE_REF=78920e48f24afc11cfd9b4be5c03e6004949b1aa
+bash scripts/setup.sh --help
+```
+
+The SFPI/GCC/metal refs above are the documented fix-round checkpoint. Blaze
+is the branch tip read on 2026-10-09, not an attested historical campaign pin.
+This is a new smoke-test setup; for historical campaign reproduction replace
+it with that campaign's recorded BLAZE_REF. Moving branch tips may differ.
+Then run:
+
+```sh
+bash scripts/setup.sh --work "$WORK"
+export CRAQ_SETUP_STATE="$WORK/SETUP-STATE.env"
+bash scripts/setup.sh --work "$WORK" --check
+TESTS="$WORK/tt-metal/tt_metal/tt-llk/tests"
+readlink -f "$TESTS/sfpi"
+"$TESTS/sfpi/compiler/bin/riscv-tt-elf-g++" -print-prog-name=cc1plus
+cd "$TESTS/python_tests"
+export CHIP_ARCH=blackhole
+export TT_LLK_EXTRA_COMPILER_OPTIONS="-O3 -fschedule-insns -fschedule-insns2 -fdisable-rtl-rvtt_lreg_livein -mtt-tensix-optimize-launch-flatten"
+RUNNER_TEMP=$(mktemp -d /tmp/explicit-state.XXXXXX)
+export RUNNER_TEMP
+../.venv/bin/python -m pytest -s -q test_sfpu_ema.py test_sfpu_welford_prefix_snapshot.py \
+  --junitxml="$RUNNER_TEMP/state.xml"
+```
+
+For a matched Welford recovery comparison, rerun both hand and typed arms
+with `-mtt-tensix-optimize-transp-involution` and
+`-mtt-tensix-optimize-interlock-schedule` appended to the same flags. This is
+a new measurement, not a promise of identical historical cycle counts. Copy
+logs/XML/profiler rows to durable storage; `/tmp` and old node paths are not
+portable evidence. Before using QB0, inspect active jobs/device ownership;
+the "no jobs" statement below is a past checkpoint, not a live reservation.
 
 ## 2026-10-08 parallel fix round (read first)
 
