@@ -1106,16 +1106,6 @@ sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = 
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 
-__SFPI_DEPRECATED("Use sfpi::subvec_transp(vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &)")
-sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
-                                     vFloat (0).get (), vFloat (0).get (), vFloat (0).get (), vFloat (0).get ());
-  a = __builtin_rvtt_sfpselect8 (r, 0);
-  b = __builtin_rvtt_sfpselect8 (r, 1);
-  c = __builtin_rvtt_sfpselect8 (r, 2);
-  d = __builtin_rvtt_sfpselect8 (r, 3);
-}
-
 sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d,
                                 vFloat &e, vFloat &f, vFloat &g, vFloat &h) {
   auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
@@ -1129,6 +1119,7 @@ sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d,
   g = __builtin_rvtt_sfpselect8 (r, 6);
   h = __builtin_rvtt_sfpselect8 (r, 7);
 }
+
 sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d,
                                 vInt &e, vInt &f, vInt &g, vInt &h) {
   auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
@@ -1142,6 +1133,7 @@ sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d,
   g = __builtin_rvtt_sfpselect8 (r, 6);
   h = __builtin_rvtt_sfpselect8 (r, 7);
 }
+
 sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d,
                                 vUInt &e, vUInt &f, vUInt &g, vUInt &h) {
   auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
@@ -1154,6 +1146,54 @@ sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d,
   f = __builtin_rvtt_sfpselect8 (r, 5);
   g = __builtin_rvtt_sfpselect8 (r, 6);
   h = __builtin_rvtt_sfpselect8 (r, 7);
+}
+
+__SFPI_DEPRECATED("Use sfpi::subvec_transp(vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &)")
+sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
+  // Yes, the old broken one smashed some register for you
+  vFloat e = l_reg[LRegs::LReg4];
+  vFloat f = l_reg[LRegs::LReg5];
+  vFloat g = l_reg[LRegs::LReg6];
+  vFloat h = l_reg[LRegs::LReg7];
+
+  subvec_transp(a, b, c, d, e, f, g, h);
+
+  l_reg[LRegs::LReg4] = e;
+  l_reg[LRegs::LReg5] = f;
+  l_reg[LRegs::LReg6] = g;
+  l_reg[LRegs::LReg7] = h;
+}
+
+__SFPI_DEPRECATED("Use sfpi::subvec_transp(vInt &,vInt &,vInt &,vInt &,vInt &,vInt &,vInt &,vInt &)")
+sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d) {
+  // Yes, the old broken one smashed some register for you
+  vInt e = l_reg[LRegs::LReg4];
+  vInt f = l_reg[LRegs::LReg5];
+  vInt g = l_reg[LRegs::LReg6];
+  vInt h = l_reg[LRegs::LReg7];
+
+  subvec_transp(a, b, c, d, e, f, g, h);
+
+  l_reg[LRegs::LReg4] = e;
+  l_reg[LRegs::LReg5] = f;
+  l_reg[LRegs::LReg6] = g;
+  l_reg[LRegs::LReg7] = h;
+}
+
+__SFPI_DEPRECATED("Use sfpi::subvec_transp(vUInt &,vUInt &,vUInt &,vUInt &,vUInt &,vUInt &,vUInt &,vUInt &)")
+sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d) {
+  // Yes, the old broken one smashed some register for you
+  vUInt e = l_reg[LRegs::LReg4];
+  vUInt f = l_reg[LRegs::LReg5];
+  vUInt g = l_reg[LRegs::LReg6];
+  vUInt h = l_reg[LRegs::LReg7];
+
+  subvec_transp(a, b, c, d, e, f, g, h);
+
+  l_reg[LRegs::LReg4] = e;
+  l_reg[LRegs::LReg5] = f;
+  l_reg[LRegs::LReg6] = g;
+  l_reg[LRegs::LReg7] = h;
 }
 
 sfpi_inline impl_::sfpu_t subvec_shflror1(const impl_::vVal& src)
