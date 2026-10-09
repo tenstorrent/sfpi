@@ -985,26 +985,44 @@ sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = 
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 
-sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d,
+                                vFloat &e, vFloat &f, vFloat &g, vFloat &h) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     e.get (), f.get (), g.get (), h.get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
+  e = __builtin_rvtt_sfpselect8 (r, 4);
+  f = __builtin_rvtt_sfpselect8 (r, 5);
+  g = __builtin_rvtt_sfpselect8 (r, 6);
+  h = __builtin_rvtt_sfpselect8 (r, 7);
 }
-sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d,
+                                vInt &e, vInt &f, vInt &g, vInt &h) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     e.get (), f.get (), g.get (), h.get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
+  e = __builtin_rvtt_sfpselect8 (r, 4);
+  f = __builtin_rvtt_sfpselect8 (r, 5);
+  g = __builtin_rvtt_sfpselect8 (r, 6);
+  h = __builtin_rvtt_sfpselect8 (r, 7);
 }
-sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d,
+                                vUInt &e, vUInt &f, vUInt &g, vUInt &h) {
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     e.get (), f.get (), g.get (), h.get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
+  e = __builtin_rvtt_sfpselect8 (r, 4);
+  f = __builtin_rvtt_sfpselect8 (r, 5);
+  g = __builtin_rvtt_sfpselect8 (r, 6);
+  h = __builtin_rvtt_sfpselect8 (r, 7);
 }
 
 sfpi_inline impl_::sfpu_t subvec_shflror1(const impl_::vVal& src)
