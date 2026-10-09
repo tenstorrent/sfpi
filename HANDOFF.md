@@ -62,9 +62,9 @@ cd craq-workflow
 git checkout --detach 035b07b872d3429afea0584840c9b9c58ae7f18f
 git log -1 --oneline
 export WORK="$HOME/craq-build"
-export SFPI_REF=19d401fd717be1ef5945af72761604dbb9a1efbb
+export SFPI_REF=8d8ad3911d79b90ed9204672d7b23b484d3c4825
 export GCC_REF=ba4b9b13a5215c2e0b2a51de75018e1a477a13d1
-export METAL_REF=7dd94d7d5346fd949de03da71d1134cfea3df7eb
+export METAL_REF=d9d7bdc4906cb1a54f5ed87f3ed727e31d28ffd4
 export BLAZE_REF=78920e48f24afc11cfd9b4be5c03e6004949b1aa
 bash scripts/setup.sh --help
 ```
@@ -98,6 +98,65 @@ a new measurement, not a promise of identical historical cycle counts. Copy
 logs/XML/profiler rows to durable storage; `/tmp` and old node paths are not
 portable evidence. Before using QB0, inspect active jobs/device ownership;
 the "no jobs" statement below is a past checkpoint, not a live reservation.
+
+## 2026-10-09 Exabox silicon recovery
+
+The first takeover pass is committed at tt-metal `d9d7bdc4906` and pushed to
+both `tenstorrent/tt-metal:nkapre/sfpi` and
+`nkapreTT/tt-metal:nkapre/sfpi`. It keeps GCC at `ba4b9b13a52`; the resolved
+compiler was checked by binary hash (`g++` `cc240736...`, `cc1plus`
+`5b78cd2...`). Blackhole node `bh-glx-120-b08u08` supplied the silicon below.
+
+### Correctness results
+
+- `expm1cw` now uses the adjacent-FP32 overflow boundary: `0x42b17217` is
+  finite and `0x42b17218` is infinity. A Float32-input/Float32-output,
+  32-bit-Dest test covers 88.5, 88.5999984741211, the last finite input and
+  the first overflowing input. Production and fresh arms both pass (2/2,
+  Slurm 129292); six broader production/fresh, bf16-input and Dest variants
+  also pass (6/6). This closes the handoff's 88.6 finding.
+- TopK still records rather than requires stable tie ordering because full
+  stable support was reverted at this checkpoint. It gates explicit versus
+  hand bit identity, golden value multiset and index/value association. The
+  FP16 infinity XFAIL now asserts that the only mismatch is exactly the
+  infinity/max-normal swap, with the expected per-row multiplicity. The
+  Blackhole rerun is 82 PASS / 2 narrowly scoped XFAIL (Slurm 129256).
+- The edited Wormhole production and fresh `expm1cw` configurations compile in
+  all six selected cases (Slurm 129294). No Wormhole silicon, formal,
+  exhaustive or ULP claim was produced.
+
+### Matched performance recovery
+
+The earlier corrected implementation required a k=128 special reconstruction.
+The committed implementation instead caps the reduction at k=127, where
+`2^k` remains finite; the existing polynomial stays within the operation's
+accuracy contract over the narrow remaining band. All results below use the
+same source tuple and timing scope, with three repetitions per cell:
+
+| arm | semantics | corrected baseline | k=127 | recovery |
+| --- | --- | ---: | ---: | ---: |
+| hand | OFF | 315439 | 262193 | 16.9% |
+| hand | ON | 303279 | 254130 | 16.2% |
+| generated | OFF | 299065 | 245817 | 17.8% |
+| generated | ON | 268986 | 203834 | 24.2% |
+
+Every cell repeated exactly except hand/OFF, whose three values were 262193,
+262194 and 262193. This is measured recovery with the corrected boundary, not
+an anchor re-book. The generated and hand arms remain distinct results; this
+table does not license unrelated generated bodies whose semantics differ from
+production.
+
+Durable evidence is under
+`/data/nkapre/sfpi-boundary-topk-20261009/`: `expm1-k127-129292.log`,
+`expm1-k127-perf-129292.tsv`, the boundary/regression JUnit XML files,
+`topk-recheck-129256.xml`, and `expm1-k127-wh-compile-129294.xml`. The broader
+four-op baseline is `perf-4arm-129268.tsv`; I0 has no distinct hand corpus arm,
+and the fast generated Softplus body is not correctness-admitted, so neither
+may be presented as recovered production performance.
+
+The remaining performance priorities are I0, Softplus and Sigmoid. Preserve
+their correctness branches, keep compiler defaults unchanged, and require
+matched correctness before accepting cycle movement.
 
 ## 2026-10-08 parallel fix round (read first)
 

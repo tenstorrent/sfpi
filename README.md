@@ -13,6 +13,14 @@ with matched measurements, without removing correctness handling or treating
 anchor re-booking as a performance fix. See the corrected fix-round summary
 below; earlier measurements must retain their source/compiler scope.
 
+The first Exabox follow-up is complete at tt-metal `d9d7bdc4906`: the FP32
+`expm1` boundary is repaired through the last finite input, the cheaper k=127
+reconstruction recovers 16.2–24.2% across the four matched timing arms, and
+the TopK infinity XFAIL is narrowed to the measured FP16 defect. Blackhole
+correctness and timing ran on silicon; the matching Wormhole headers passed a
+compile-only gate, not Wormhole silicon. Exact scope and evidence are in the
+[Exabox handoff update](HANDOFF.md#2026-10-09-exabox-silicon-recovery).
+
 ### Latest — 2026-10-08 parallel fix round
 
 Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay

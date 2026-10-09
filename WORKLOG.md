@@ -1,5 +1,27 @@
 # Worklog
 
+## 2026-10-09 — Exabox boundary validation and expm1 recovery
+
+- Reproduced the FP32 `expm1cw` defect on Blackhole and moved the cutoff from
+  the bf16-only 88.5 point to the actual adjacent-FP32 transition:
+  `0x42b17217` finite, `0x42b17218` infinity. Production and fresh boundary
+  tests pass 2/2; six broader configurations pass 6/6.
+- Replaced the initial correct but costly k=128 reconstruction with a k=127
+  cap. Three-repeat matched silicon improved hand OFF 315439 → 262193, hand ON
+  303279 → 254130, generated OFF 299065 → 245817 and generated ON 268986 →
+  203834 cycles (16.2–24.2%). Correctness preceded timing; no anchor was moved.
+- Tightened TopK validation without asserting reverted stable-order support:
+  explicit and hand outputs remain bit-identical, value multisets and
+  index/value association are gated, and the FP16 infinity XFAIL now admits
+  only the measured infinity/max-normal swap. Rerun: 82 PASS / 2 XFAIL.
+- Wormhole compile-only: six selected production/fresh `expm1cw` cases pass;
+  no Wormhole silicon, formal, exhaustive or ULP run was claimed.
+- Committed tt-metal `d9d7bdc4906` and pushed `nkapre/sfpi` to both the
+  Tenstorrent and nkapreTT mirrors. Evidence is under
+  `/data/nkapre/sfpi-boundary-topk-20261009/` (Slurm 129256, 129268, 129269,
+  129292 and 129294). The matched four-op baseline keeps I0's absent hand arm
+  as N/A and does not admit the semantically stale fast Softplus body.
+
 ## 2026-10-09 — reconcile audit and prepare another-machine takeover
 
 - Preserved the other agent's `19d401fd717` corrections: committed TopK tie,
