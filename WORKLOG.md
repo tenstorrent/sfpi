@@ -21,6 +21,13 @@
   `/data/nkapre/sfpi-boundary-topk-20261009/` (Slurm 129256, 129268, 129269,
   129292 and 129294). The matched four-op baseline keeps I0's absent hand arm
   as N/A and does not admit the semantically stale fast Softplus body.
+- Tested, but did not adopt, I0's licensed reassociation mode. Fast-math
+  preconditions alone are neutral at 463033 cycles; adding the existing
+  reassociation option gives 426169 cycles in three exact repeats (−8.0%).
+  Two ordinary correctness nodes pass, followed by nine 65536-pattern FP32
+  strata with zero out-of-tolerance results and max 1 bf16 ULP (Slurm 129302,
+  129306). The mode is value-changing and has no approved production per-LLK
+  rollout, so no defaults, source or compiler rules changed.
 
 ## 2026-10-09 — reconcile audit and prepare another-machine takeover
 

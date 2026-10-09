@@ -158,6 +158,31 @@ The remaining performance priorities are I0, Softplus and Sigmoid. Preserve
 their correctness branches, keep compiler defaults unchanged, and require
 matched correctness before accepting cycle movement.
 
+### I0 follow-up: bounded compiler candidate, not adopted
+
+The existing licensed reassociation mode remains promising on the repaired I0
+body but is not ready to ship. With current ON flags as the control, adding
+only `-fassociative-math -fno-signed-zeros -fno-trapping-math` is exactly
+cycle- and text-size-neutral at 463033 cycles. Adding the existing
+`-mtt-tensix-optimize-reassoc-mad-restructure` option changes the instruction
+stream and measures 426169 cycles in all three repetitions, an 8.0% recovery;
+all three arms have text size 3037.
+
+The candidate passes the standard Float32 and bf16-input/Float32-Dest I0 nodes
+and a nine-stratum sweep of 65536 FP32 patterns per stratum. All nine strata
+are `TOLERANCE-PASS-AND-EQUAL`, with zero out-of-tolerance results and at most
+1 bf16 ULP, including |x| near 89 and the overflow bands. Evidence is
+`i0-reassoc-129302.log`, `i0-reassoc-perf-129302.tsv`, the three JUnit files,
+and `i0-reassoc-strata-129306/BOARD.tsv` under the durable evidence root above.
+
+Do not present this as recovered production performance: the option is
+value-changing, needs fast-math preconditions and is not enabled by a
+production per-LLK policy. The stream diff shows multiply/add pairs becoming
+MAD forms throughout the series, split exponential and Hankel polynomial.
+No global fast-math default, source rewrite or I0-specific compiler rule was
+committed. A follow-up needs either a reviewed source-level formulation with
+its own full correctness admission or an authorized per-LLK flag rollout.
+
 ## 2026-10-08 parallel fix round (read first)
 
 **Resume here.** This section supersedes the TopK timing claim and the open
