@@ -1,5 +1,185 @@
 # Handoff — 2026-10-08
 
+## 2026-10-08 parallel fix round (read first)
+
+**Resume here.** This section supersedes the TopK timing claim and the open
+defect lists further down. Source checkpoint: SFPI `95dd2b3` (GCC
+`ba4b9b13a52`), tt-metal `nkapre/sfpi` `7dd94d7d534`, craq-sfpi `main`
+`035b07b`. No hardware job is running; all four QB0 device locks are free.
+
+### Corrections to earlier statements
+
+- **TopK is a tie at `ccff48c6363`, not a win.** At that commit hand and
+  explicit both measure 4918 cycles and compile to the same stream up to
+  register allocation. 5038/4929 reproduces only in the dirty prepared
+  checkout (`b8c16a2977d` plus uploads) whose `ckernel_ops.h` predates the
+  2026-10-07 effect-annotation macros. The compiler fix is still real.
+- **The installed QB0 toolchain was not `064ef4565ea`.** It was a 10-05
+  rebuild of `b6b32a51d1a` labelled `g80153da1594`. The 10-08 rollout and
+  lanes A–D used the stage1 build, which is exactly `064ef4565ea`. Lanes E/F
+  used the stale install, but their SFPU `.text` matches stage1 (428/428,
+  79/79, 10/10 ELFs). No conclusion changes. The install is now rebuilt at
+  `95dd2b3`/`ba4b9b13a52` (`cc1plus` `825aa723e9e4…`); the old one is kept at
+  `~/craq-build/sfpi/build/sfpi.b6b32a51d1a`. `~/craq-build/sfpi` sources and
+  stage1 are still `064ef4565ea`.
+- **`ba4b9b13a52` rvtt.exp is 8,092 PASS / 0 unexpected / 2 XFAIL** in a
+  correctly configured objdir. The pin commit message's "8,087 with
+  `rv/zaamo-18789.C` failures" came from an objdir configured without an
+  assembler. Configure comparison objdirs with `--with-as`/`--with-ld`.
+- **The "18 defective strata" list below is stale.** tt-metal `3260e8abf0a`
+  (2026-09-30) had already fixed softsign, sqrtcustom, xielu, i0, i1,
+  i1-fresh, expm1cw and digamma-fresh S4; all re-checked clean today.
+  HANDOFF item 7 is also resolved (below).
+- **A drift report with "no silicon cells this run" grades nothing.** An
+  earlier "GREEN 33/33 after re-book" was a report-only run; the real
+  re-grade is in the weekly result below.
+
+### What was fixed (all Blackhole silicon unless stated)
+
+| Item | Result | Commit / evidence |
+| --- | --- | --- |
+| Welford typed vs hand replay | 350 → **321** vs hand 325, 26/26 PASS, by enabling existing `-mtt-tensix-optimize-transp-involution` and `-mtt-tensix-optimize-interlock-schedule` (park traffic around `SFPTRANSP`, MAD interlocks). No source or compiler change; defaults unchanged | QB0 `~/craq-build/lanes/welford/` |
+| TopK test race, widths > 128 | Unpack read L1 before pack wrote it; now waits on a pack semaphore. 213 PASS / 34 XFAIL / 16 upstream SKIP / 0 FAIL; 156 new tie/special/width/fp32-Dest cases, explicit = hand bitwise in all | tt-metal `ae3b0c53` |
+| expm1cw(88.376–88.5) overflow, NaN propagation in i0/i1/expm1cw, i0/i1 ±inf golden | Bit-exact at 88.5; fp32-Dest legs 0 out | `211a4e8d1446`, `2188d7d30ec6` (+32.5% expm1cw) |
+| `fresh_cpp/expm1cw.h` | Had no upper bound (8,625/65,536 out); now production body, 0 out | `2188d7d30ec6` |
+| Golden models bf16-input NaN → ±inf at `dest_acc=Yes` | Measured on device first; sigmoid/i0/i1/expm1cw destacc rows 0 out | craq-sfpi `7ee7787` |
+| digamma negative x (reflection) | S3 1 ULP, S7 0, poles NaN; +25.7% (403.86 → 507.85 cycles/tile) | `d5afcd4065`, `9bf918280a` |
+| `fresh_cpp/log1p_fitted.h` domain guard | 16,639 → 0 bf16 inputs out; +27.1% on that row | `3c29e541f4` |
+| sigmoidlut-fresh NaN swallowed by `min` | NaN passes through; ±inf/NaN bands 0 out | `d38b0193843` |
+| Const-residency CC-canonical proof rejected `sfpxpred`/`sfpxcond` markers | sigmoidlut-fresh 114,872 → 104,247; ~60k is the floor for a correct guard | GCC `ba4b9b13a52` (pinned) |
+| hardshrink-fresh S3 SEM-BUG | Dropped dispatch (`0xA5` fill read as data); all 9 strata clean; cleared | craq-sfpi `199f93f` |
+| absint32 / geluappx-fresh 2^32 | BIT-EXACT-ALL-INPUTS / DIVERGENT only in (−4096, 1024) | galaxy job 123765, `199f93f` |
+| Cost recovery | tanhlut-fresh ON 74,554 → 37,140; i0 −4%; softsign −4.5%; outputs bit-identical | `c8dd8b8c183` |
+| R7 LLK-pristine | 30 reviewed exceptions (reviewer nkapre, 2026-10-08); GREEN. **`ckernel_ops.h` (`4764ee5a62`) adds raw-LREG markers to the library and is flagged to revisit before upstreaming** | `a23d19954e` |
+| Anchors at pin 59 | Re-booked only rows whose SFPU body changed since `ada5978f80b` | `4970a6b803`, `7dd94d7d534` |
+
+### Still open
+
+1. **Weekly drift at pin 59: 39 RED** (all 284 rows, after re-book). 17 rows
+   were never anchored and need a first booking; 18 fail compile or
+   correctness at pin 59 (Blaze 3-arg `sfpwriteconfig_v`, `sdpafw` register
+   overflow, `mulint32-fresh` ON correctness); `subint`/`negative` lack
+   `issue_slot_lb`; `sign` and `cbrt-fresh` are stale anchors with unchanged
+   bodies, deliberately left RED.
+2. **Correctness fixes made kernels slower, and those numbers are now the
+   booked anchors.** i0 +209%/+231% after recovery (Hankel branch runs for
+   every lane), softplus +113%/+127% (bf16 exp tail for every lane), expm1cw,
+   i1, sigmoid; from other commits relu +50% (win → 63.8% slower than hand),
+   threshold-fresh +58%, log-fresh and signbit win → loss, erf/erfc-fresh
+   +48% ON, elu-fresh +70% ON, sigmoidappx-tree +319% ON (same guard-hoist
+   gap fixed in `ba4b9b13a52`, after pin 59). Main suspect `a230473259a`; per
+   row in `cause-h.tsv`. tanhlut-fresh OFF is +8.7% from `c8dd8b8c183`.
+3. **softplus-destacc** still has 66 real out-of-contract cells at large
+   negative x (for example −8.78e6 → 0.966).
+4. **Not run:** Wormhole silicon for any edited header, formal, ULP
+   admission, fp32-input exhaustive, i1-fresh at 32-bit Dest, full-input
+   coverage of Welford/EMA/TopK. The explicit TopK entry exists only in the
+   Blackhole header; Wormhole fails to compile impl 2/3.
+5. Welford: decide whether to enable the two options for that region.
+
+Evidence (craq-sfpi `main`, `board/evidence/`):
+`resweep-stale-baselines-20261008`, `sigmoidlut-nan-fix-20261008`,
+`cc-canonical-cond-markers-20261008`,
+`ulp-strata-recheck-softsign-sqrtcustom-xielu-20261008`,
+`ulp-i0-i1-expm1-destacc-20261008`, `ulp-nan-unpack-expm1-fresh-20261008`,
+`digamma-reflection-shift-idiom-20261008`, `anchor-rebook-pin59-20261008`,
+`compiler-identity-20261008`, `perf-recover-boundary-fixes-20261008`.
+
+## 2026-10-08 explicit-state rollout
+
+**Resume here. The all-region rollout is not complete.** This section
+supersedes earlier descriptions of TopK as test-only. Older campaign/search
+totals below are historical and must not be presented as validation of this
+source tuple. No hardware job from the latest runs remains running.
+
+Source checkpoint: SFPI `b22dde0f8e1`, pinned GCC `064ef4565ea`, tt-metal
+`ccff48c6363` on `nkapre/sfpi`. The tt-metal commit is pushed to both
+`tenstorrent/tt-metal` and `nkapreTT/tt-metal`. These SFPI documentation updates
+do not change the compiler pin. The remote runtime checkout contains uploaded
+test/source changes, not a clean checkout of the tt-metal commit; preserve
+that state rather than resetting it. No new branches/worktrees were created.
+
+| Region | Correctness scope | Hand / explicit cycles | Adoption |
+| --- | --- | ---: | --- |
+| TopK merge | 72 exact BF16/FP16 cases per configuration | 5038 / 4929 in the dirty prepared checkout; **4918 / 4918 at `ccff48c6363`** (see correction above) | Production opt-in |
+| EMA, one tile | Part of 18-test module | 335 / 329 | Production opt-in, contract 1 |
+| EMA, 32 tiles | Exact outputs also checked at 1/2/4/32 tiles | 212.21875 / 209.125 per tile | Same opt-in |
+| Welford, 32 rows | 26 tests; six exact captured-output prefixes | 325 / 350 (325 / 321 with transp-involution + interlock-schedule) | Candidate only; 7.69% slower at base flags |
+
+Timings are five-execution MATH-zone means with matched flags. EMA init is
+outside the zone. Welford's exact comparisons cover captured BF16 mean/M2,
+not all internal FP32 bits. Both arms also pass independent tolerance oracles.
+EMA uses finite BF16 [-4,4], seed 0, alpha=.25/beta=.75; Welford uses seed
+20260814 and finite BF16 [-4,4]. These are bounded tests, not full-domain proof.
+TopK's narrower input contract is recorded in the section below and canonical
+report. No production default changed. EMA contract 2 is not admitted as an
+exact replacement. Formal, exhaustive and ULP admission were not run for this
+rollout, and the PR stack was not freshly revalidated or updated by this work.
+
+### Reproduce on the prepared Blackhole node
+
+Connect with `ssh ttuser@tt-quietbox-0.local`. The existing runtime and Python
+environment are under `/home/ttuser/craq-build/tt-metal`. Before a run, ensure
+the source files match the desired tt-metal revision; do not overwrite other
+work in that dirty checkout. The matching built backend and headers used for
+these measurements are explicitly selected below:
+
+```sh
+cd /home/ttuser/craq-build/tt-metal/tt_metal/tt-llk/tests/python_tests
+export CHIP_ARCH=blackhole
+export GCC_BUILD=/home/ttuser/craq-build/sfpi/build/build-gcc-newlib-stage1
+export SFPI=/tmp/sfpi-lreg-test.Mg1BuW/build/sfpi
+export TT_LLK_EXTRA_COMPILER_OPTIONS="-B$GCC_BUILD/gcc/ -I$SFPI/include -O3 -fschedule-insns -fschedule-insns2 -fdisable-rtl-rvtt_lreg_livein -mtt-tensix-optimize-launch-flatten"
+RUNNER_TEMP=$(mktemp -d /tmp/ema-state.XXXXXX)
+export RUNNER_TEMP
+../.venv/bin/python -m pytest -s -q test_sfpu_ema.py \
+  --junitxml="$RUNNER_TEMP/ema.xml"
+RUNNER_TEMP=$(mktemp -d /tmp/welford-state.XXXXXX)
+export RUNNER_TEMP
+../.venv/bin/python -m pytest -s -q test_sfpu_welford_prefix_snapshot.py \
+  --junitxml="$RUNNER_TEMP/welford.xml"
+```
+
+Those compiler/header paths are prepared-node locations, not portable build
+inputs. On another configured Linux Blackhole host, substitute its built
+`GCC_BUILD`, matching installed `SFPI`, and tests checkout. Setup instructions
+below cover the first mile; select the source revisions above rather than the
+older recorded campaign pins. Do not silently fall back to stock headers or
+compiler. No global unroll-threshold override is required.
+
+From `tests/`, reproduce the source census without hardware:
+
+```sh
+python3 corpus/inventory_raw_sfpu.py --self-test
+python3 corpus/inventory_raw_sfpu.py
+```
+
+It currently finds 39 headers (BH18/WH11/QSR10), 2004 raw source sites, after
+excluding comments and ordinary string literals. It includes inactive
+preprocessor branches and experimental headers, but not transitive helpers
+outside the architecture SFPU subtrees. Do not label this validated coverage.
+
+### Evidence and next work
+
+Canonical implementation report and full scope:
+[RAW_LREG_EXPERIMENT.md at the source checkpoint](https://github.com/tenstorrent/tt-metal/blob/ccff48c6363/tt_metal/tt-llk/tests/corpus/RAW_LREG_EXPERIMENT.md).
+Quietbox evidence root: `/tmp/lreg-review.Y7HFRq`. Latest logs/XML:
+`ema-production-state.{log,xml}`, `welford-state-all.{log,xml}`; build and
+profiler CSV artifacts are under their corresponding run directories.
+TopK: `topk-production-final`, `topk-production-enabled`, `topk-production-O2`.
+These node-local temporary artifacts are not durable archived evidence; copy
+them before node cleanup. The Welford Parquet writer drops two unsupported
+columns, so use the full CSV/log rows for implementation-specific timings.
+
+Next: recover Welford's replay advantage without changing its arithmetic;
+validate additional raw regions family-by-family, including configured
+LOADMACRO, fixed-length recorded streams, other TopK regions and non-Blackhole
+targets. Adding instructions inside replay recordings can break word counts;
+predicated destinations require preserving inactive lanes. Do not mechanically
+annotate all raw words or remove the live-in pass globally on this evidence.
+Keep the existing production defaults until each replacement meets both its
+correctness contract and the appropriate handwritten performance baseline.
+
 ## 2026-10-08 targeted TopK compiler fix
 
 GCC pin `064ef4565ea` fixes launch-flatten eligibility for raw delivery with
@@ -15,7 +195,8 @@ Same-flags Blackhole TopK profiling: handwritten 5038 cycles, public-API
 threaded 4929, versus threaded 5186 with this option off or on the baseline
 compiler. All 72 exact BF16/FP16 cases pass at O3 scheduled and O2/default
 scheduling with the fix enabled. This is one region/workload, not a new corpus
-result. The test adaptation is not the production default; stable ties,
+result. **Correction:** these timings were taken in the dirty prepared
+checkout; at the committed tt-metal source both arms measure 4918. The production opt-in entry is not the default; stable ties,
 special values, other K/widths/chips and general raw-wrapper replacement
 remain outside this validation.
 

@@ -1,5 +1,69 @@
 # Worklog
 
+## 2026-10-08 — parallel fix round across kernels, compiler and anchors
+
+- Eight lanes ran on QB0 with one device lock per run and private trees under
+  `~/craq-build/lanes/`. Full table and open items:
+  [handoff](HANDOFF.md#2026-10-08-parallel-fix-round-read-first).
+- Welford: typed 350 → 321 cycles versus hand replay 325 by enabling the
+  existing transp-involution and interlock-schedule options; 26/26 PASS.
+- TopK: fixed a pack/unpack race that corrupted every width above 128
+  (`ae3b0c53`), added 156 exactness cases. Corrected the recorded win: at
+  `ccff48c6363` hand and explicit tie at 4918 cycles.
+- Kernels: expm1cw overflow band and NaN handling, i0/i1 NaN and ±inf golden,
+  `fresh_cpp/expm1cw.h`, sigmoidlut-fresh NaN, `log1p_fitted` domain guard and
+  digamma negative-x reflection fixed and pushed; golden now models bf16 NaN →
+  ±inf at `dest_acc=Yes`. hardshrink-fresh cleared (dropped dispatch);
+  absint32/geluappx-fresh 2^32 records committed.
+- Compiler: GCC `ba4b9b13a52` admits structured condition markers in the
+  CC-canonical peel proof; pinned in SFPI `95dd2b3`. Its full rvtt.exp is
+  8,092 PASS / 0 unexpected / 2 XFAIL in a correctly configured objdir; the
+  8,087-with-zaamo-failures figure in the pin commit came from an objdir
+  without an assembler.
+- Toolchain identity: the installed QB0 compiler was `b6b32a51d1a`, not
+  `064ef4565ea`; no conclusion depended on it. Rebuilt and installed at
+  `95dd2b3`, old install kept alongside.
+- Owner actions: 30 reviewed R7 exceptions; anchors re-booked at pin 59 for
+  rows whose body changed. Full weekly afterwards: 39 RED (17 never anchored,
+  18 compile/correctness failures at pin 59, 2 missing `issue_slot_lb`,
+  2 stale anchors). Several correctness fixes carry large booked slowdowns
+  (i0, softplus, relu, sigmoidappx-tree); they are open, not accepted.
+
+## 2026-10-08 — extend explicit-state validation beyond TopK
+
+- tt-metal `0616c8eb300` exposed the tested TopK merge as an opt-in production
+  entry using public `sfpi::l_reg`; existing defaults remain unchanged.
+  Production-entry runs passed 72 exact cases each at O2/pass-disabled,
+  O3-scheduled/pass-disabled and O3-scheduled/pass-enabled. With the fixed
+  launch-flatten option, five-run timing was hand 5038 / explicit 4929 cycles.
+- tt-metal `ccff48c6363` moved the existing typed EMA tile body into shared
+  `common/ckernel_sfpu_ema_explicit.h`, with corpus compatibility forwarding
+  rather than a duplicate body. Caller-owned `EmaState` carries state across
+  calls. Contract 1 is tested; contract 2 is a different ordering, not admitted
+  as a bit-exact replacement. No default was switched.
+- Fresh Blackhole EMA module: 18 PASS, including exact hand/typed output
+  comparisons for 1/2/4/32 tiles. Seed 0, finite BF16 [-4,4], alpha=.25,
+  beta=.75. Five-run body timing: hand/typed 335/329 cycles for one tile;
+  212.21875/209.125 cycles per tile across 32 tiles. Initialization is untimed.
+- Fresh Welford module: 26 PASS, including exact captured BF16 mean/M2
+  comparisons at prefixes 1/2/4/8/16/32, plus independent tolerance checks.
+  Seed 20260814, finite BF16 [-4,4]. This is not internal FP32 equivalence.
+  Five-run timing: handwritten replay 325 / typed-direct 350 cycles (+7.69%).
+  Hand-direct is 464.8 but is not the appropriate winning baseline. The typed
+  candidate was NOT promoted.
+- Both modules used compiler `064ef4565ea`, O3 with scheduling, launch-flatten
+  on, and the raw-LREG live-in pass disabled. Fixed combined-run profiler row
+  selection and EMA parameter-schema mismatch; an initial profiling attempt
+  failed in the harness, and reported numbers come from successful reruns.
+- Added a source-only raw-SFPU inventory: 39 headers, 2004 sites in three
+  architecture SFPU trees. The preliminary 44-header grep included comments.
+  This is not instantiated coverage or a transitive all-helper audit.
+- Committed and pushed `ccff48c6363` to both tt-metal `nkapre/sfpi` mirrors;
+  no new branch/worktree. Documentation and evidence locations are in the
+  [current handoff](HANDOFF.md#2026-10-08-explicit-state-rollout). No hardware
+  job from these runs was left running. Remaining regions and non-Blackhole
+  validation are unfinished; no new formal/exhaustive/ULP run was performed.
+
 ## 2026-10-08 — fix explicit-LREG TopK unroll regression
 
 - GCC `064ef4565ea`: existing opt-in launch-flatten now admits raw delivery

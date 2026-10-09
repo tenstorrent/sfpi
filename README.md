@@ -3,6 +3,32 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+### Latest — 2026-10-08 parallel fix round
+
+Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay
+(321 vs 325 cycles) with two existing options; the TopK explicit merge
+ties hand at the committed source (4918/4918), correcting the earlier
+5038/4929 claim. Several boundary defects are fixed on silicon; the weekly
+drift check still has 39 RED rows and several correctness fixes carry large
+slowdowns. See the [handoff](HANDOFF.md#2026-10-08-parallel-fix-round-read-first).
+
+### Current explicit-state work — 2026-10-08
+
+The all-region rollout is **incomplete**. With compiler `064ef4565ea` and
+tt-metal `ccff48c6363`, Blackhole TopK has a tested opt-in production merge
+entry; EMA now has a shared caller-owned-state implementation. EMA passes
+18 tests and measures 1.46–1.79% faster in the two tested sizes. Welford passes
+26 tests, including exact captured BF16 mean/M2 comparisons, but its typed
+candidate is **7.69% slower than handwritten replay** at the base flags and is not promoted
+(with transp-involution and interlock-schedule enabled it measures 321 vs 325).
+Existing production defaults are unchanged.
+
+See [current handoff and reproduction commands](HANDOFF.md#2026-10-08-explicit-state-rollout)
+for source revisions, scope, evidence and next steps, and [WORKLOG.md](WORKLOG.md)
+for the implementation history. These targeted runs are not a fresh all-LLK
+sweep or formal/exhaustive/ULP certification. The older campaign below remains
+a separate historical result, not validation of the current source tuple.
+
 ### Completed compiler-knob campaign — 2026-10-04
 
 The workflow is in [craq-sfpi](https://github.com/tenstorrent/craq-sfpi), not
