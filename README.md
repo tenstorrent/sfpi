@@ -40,6 +40,15 @@ qNaN/sNaN payloads, infinities and boundary values. Wormhole OFF/ON compile-only
 passes 6/6; no Wormhole silicon is claimed. See the
 [second recovery update](HANDOFF.md#2026-10-10-second-source-recovery-wave).
 
+A third scoped recovery is committed at tt-metal `ea12310f173`. The shared
+fresh `sqrt`/`rsqrt` pole guard now tests the raw biased exponent, recovering
+2.3--3.0% in all four semantic OFF/ON cells while every handwritten anchor
+ties exactly. Exhaustive bf16 partitioning proves 65,409 encodings unchanged;
+the only output changes are the reviewed 127 negative-NaN encodings, and the
+registered sqrt golden counts do not regress. Blackhole silicon and selected
+Blackhole/Wormhole compile-only checks ran; no Wormhole silicon is claimed.
+See the [third recovery update](HANDOFF.md#2026-10-10-sqrtrsqrt-pole-guard-recovery).
+
 ### Latest — 2026-10-08 parallel fix round
 
 Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay

@@ -1,5 +1,29 @@
 # Worklog
 
+## 2026-10-10 — sqrt/rsqrt pole-guard recovery
+
+- Committed tt-metal `ea12310f173` and pushed identical `nkapre/sfpi` tips to
+  both tt-metal mirrors. No compiler default, anchor or `main` branch changed.
+- Replaced the shared fresh sqrt/rsqrt `abs(x) < FLT_MIN` pole predicate with
+  the raw biased-exponent-zero predicate. It still includes both signed zeros
+  and all signed subnormals, excludes normals/infinities/NaNs on Blackhole and
+  Wormhole, and avoids routing negative NaNs through the pole arm.
+- Matched three-repeat Blackhole silicon recovered sqrt semantic OFF 163897 →
+  159802 (-2.50%) and ON 137529 → 133434 (-2.98%); rsqrt semantic OFF 176185 →
+  172089 (-2.32%) and ON 141626 → 137529 (-2.89%). All four hand cells are
+  exact ties at 115123/111151 and 131503/115248.
+- Baseline/candidate ordinary tests pass 4/4 each. Exhaustive bf16 partitioning
+  keeps 65,409 inputs byte-identical and confines the expected output change
+  to 127 negative NaNs. Sqrt's golden debt is unchanged at 256 graded and 129
+  in-claim failures; rsqrt has no registered golden. This is not reported as
+  an accuracy improvement. Selected Blackhole/Wormhole OFF/ON compilation
+  passes; no Wormhole silicon ran.
+- Evidence: `/data/nkapre/sfpi-boundary-topk-20261009/`, Slurm 129607 and
+  corrected fail-closed postflight 129609.
+- Rejected without landing: byte-identical ELU and erf/erfc source rewrites, a
+  sigmoidappx form that worsened code generation, and a one-instruction-smaller
+  sigmoidappx form that passed exhaustive bf16 identity but tied silicon cycles.
+
 ## 2026-10-10 — ReLU, Threshold and Log fresh-body recovery
 
 - Committed tt-metal `56b492ea325` and pushed identical `nkapre/sfpi` tips to

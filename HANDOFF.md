@@ -1,5 +1,57 @@
 # Handoff — 2026-10-09
 
+## 2026-10-10 sqrt/rsqrt pole-guard recovery
+
+tt-metal `ea12310f173` is pushed identically to
+`tenstorrent/tt-metal:nkapre/sfpi` and `nkapreTT/tt-metal:nkapre/sfpi`. No
+compiler default, kernel-specific compiler rule, anchor or `main` branch
+changed.
+
+The shared fresh sqrt/rsqrt body now classifies signed zero and subnormals with
+`exexp(x, Biased) == 0` instead of `abs(x) < FLT_MIN`. The raw exponent test is
+the intended IEEE exponent-zero predicate on both Blackhole and Wormhole; it
+also prevents negative NaNs, whose sign survives float SFPABS, from entering
+the pole arm. Do not replace it with `is_subnormal`, which excludes exact zero.
+
+Matched three-repeat Blackhole timing on `bh-glx-120-b08u08`:
+
+| operation / arm | flags | corrected baseline | recovered source | change |
+| --- | --- | ---: | ---: | ---: |
+| Sqrt fresh semantic | OFF | 163897 | 159802 | -2.50% |
+| Sqrt fresh semantic | ON | 137529 | 133434 | -2.98% |
+| Sqrt production/hand | OFF | 115123 | 115123 | unchanged |
+| Sqrt production/hand | ON | 111151 | 111151 | unchanged |
+| Rsqrt fresh semantic | OFF | 176185 | 172089 | -2.32% |
+| Rsqrt fresh semantic | ON | 141626 | 137529 | -2.89% |
+| Rsqrt production/hand | OFF | 131503 | 131503 | unchanged |
+| Rsqrt production/hand | ON | 115248 | 115248 | unchanged |
+
+Correctness preceded timing. Baseline and candidate ordinary production/fresh
+tests pass 4/4 each. Exhaustive bf16 partitioning proves byte identity for
+inputs `0x0000..0xff80` (65,409 encodings). Exactly the reviewed 127 negative
+NaNs `0xff81..0xffff` change from the old pole result (`-inf`) to the existing
+positive-qNaN pack result (`+inf`); both operations have the exact expected
+witness hashes. This is a bounded special-value behavior change, not an
+accuracy-win claim. Sqrt's registered golden ledger is unchanged at 256 graded
+failures, including 127 FTZ-explained failures, and 129 in-claim failures.
+Rsqrt has no registered true-math golden in this harness, so its claim is
+limited to the exhaustive bit partition, ordinary tests and matched timing.
+Selected Blackhole and Wormhole OFF/ON compile-only builds also pass; no
+Wormhole silicon ran.
+
+Durable evidence is under `/data/nkapre/sfpi-boundary-topk-20261009/`.
+Slurm 129607 produced the complete ordinary, stream, golden and 48-row timing
+artifacts; its final wrapper exited only because the first post-parser assumed
+absolute golden success and then parsed TSV as CSV. Corrected fail-closed
+postflight job 129609 verifies restored source, both JUnit files, interval
+hashes, non-regressing sqrt ledger fields, all 48 timing rows and unchanged
+hand anchors, and prints `POSTFLIGHT_GATE PASS`.
+
+Rejected probes from the same wave did not land: ELU restore-region merging
+and erf/erfc magnitude-domain rewrites compiled byte-identically; a larger
+sigmoidappx form worsened code generation; a smaller masked-store form saved
+one instruction but tied silicon cycles exactly after exhaustive bf16 identity.
+
 ## 2026-10-10 second source recovery wave
 
 tt-metal `56b492ea325` is pushed identically to both
