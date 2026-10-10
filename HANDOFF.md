@@ -1,5 +1,61 @@
 # Handoff — 2026-10-09
 
+## 2026-10-10 second source recovery wave
+
+tt-metal `56b492ea325` is pushed identically to both
+`tenstorrent/tt-metal:nkapre/sfpi` and `nkapreTT/tt-metal:nkapre/sfpi`. The
+device compiler remains the pinned SFPI toolchain from the preceding wave.
+No compiler default, kernel-name rule, anchor or `main` branch changed.
+
+Three fresh semantic bodies now express the repaired boundary behavior more
+cheaply:
+
+- ReLU clears the input sign with `SFPSETSGN` before classifying encodings
+  above positive infinity, then restores the original NaN. An earlier
+  `SFPABS` proposal was rejected before adoption because float-mode SFPABS
+  preserves negative-NaN signs.
+- Threshold composes the NaN mask with `input <= threshold` and stores only on
+  selected lanes. Complement lanes, including signed NaNs and finite values
+  above the registered threshold, are not rewritten.
+- Log shares one biased-exponent extraction between range reduction and the
+  infinity/NaN guard, removing the duplicate bit-mask classification path.
+
+Matched three-repeat Blackhole timing on `bh-glx-120-b08u08`:
+
+| operation / arm | flags | corrected baseline | recovered source | change |
+| --- | --- | ---: | ---: | ---: |
+| ReLU fresh semantic | OFF | 73785 | 69689 | -5.55% |
+| ReLU fresh semantic | ON | 69818 | 65723 | -5.87% |
+| ReLU production/hand | OFF | 41136 | 41136 | unchanged |
+| ReLU production/hand | ON | 37550 | 37550 | unchanged |
+| Threshold fresh semantic | OFF | 61498 | 53179 | -13.53% |
+| Threshold fresh semantic | ON | 57529 | 45751 | -20.47% |
+| Threshold production/hand | OFF | 25140 | 25140 | unchanged |
+| Threshold production/hand | ON | 21680 | 21680 | unchanged |
+| Log fresh semantic | OFF | 131129 | 118841 | -9.37% |
+| Log fresh semantic | ON | 89146 | 80952 | -9.19% |
+| Log production/hand | OFF | 78256 | 78256 | unchanged |
+| Log production/hand | ON | 74287 | 74287 | unchanged |
+
+Correctness preceded timing. The ordinary production/fresh pairs pass for all
+three operations. Each candidate passes a full 65,536-encoding bf16 stream.
+ReLU and Threshold have max 0 bf16 ULP and no out-of-tolerance input. Log has
+no graded or in-claim failures; its 32,512 global out-of-tolerance inputs are
+the predeclared undefined negative domain and are not reported as repaired.
+The raw-FP32 Dest32 test rotates 32 patterns through every lane, including
+both-sign signaling/quiet NaNs with payload variants, infinities, signed zero,
+subnormals, the Threshold tie and adjacent FP32 values. Both candidates pass
+OFF and ON with zero raw-bit mismatches after modeling the existing ReLU
+exponent-zero-to-`+0` destination behavior. Wormhole_b0 OFF/ON compile-only
+passes all six ReLU/Threshold/Log builds; no Wormhole silicon ran.
+
+Durable evidence is under `/data/nkapre/sfpi-boundary-topk-20261009/`.
+Principal records are the repeated baseline job 129486, candidate/exhaustive
+job 129487, Log job 129498, raw-FP32 job 129499 and restored-tree postflight
+job 129500. Earlier jobs in 129485--129497 include rejected-source and harness
+bring-up attempts and must not be quoted as correctness failures. In
+particular, the rejected ReLU SFPABS form never landed.
+
 ## 2026-10-10 Exabox performance recovery
 
 The next recovery is committed at tt-metal `d33883d572f` and pushed to both

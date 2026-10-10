@@ -1,5 +1,29 @@
 # Worklog
 
+## 2026-10-10 — ReLU, Threshold and Log fresh-body recovery
+
+- Committed tt-metal `56b492ea325` and pushed identical `nkapre/sfpi` tips to
+  both tt-metal mirrors. No SFPI/compiler default or `main` branch changed.
+- ReLU uses explicit sign clearing before the `> +inf` NaN classification.
+  The first SFPABS idea was rejected because it misses negative NaNs. Matched
+  three-repeat silicon recovers OFF 73785 → 69689 (-5.55%) and ON 69818 →
+  65723 (-5.87%); hand remains 41136/37550.
+- Threshold uses a NaN-masked predicated store, leaving complement lanes
+  untouched. OFF recovers 61498 → 53179 (-13.53%) and ON 57529 → 45751
+  (-20.47%); hand remains 25140/21680.
+- Log reuses its biased exponent for both range reduction and special-value
+  classification. OFF recovers 131129 → 118841 (-9.37%) and ON 89146 → 80952
+  (-9.19%); hand remains 78256/74287.
+- All three ordinary candidate/hand pairs pass, followed by exhaustive
+  65,536-pattern bf16 candidate grading. ReLU and Threshold have zero ULP and
+  zero out-of-tolerance inputs. Log has zero graded/in-claim failures; its
+  undefined negative-domain misses remain explicitly outside the claim.
+- ReLU and Threshold pass a raw-FP32 Dest32 mixed-lane test at OFF and ON with
+  signed qNaN/sNaN payloads, infinities, zeros, subnormals and threshold
+  neighbors. Wormhole compile-only passes 6/6; no Wormhole silicon ran.
+- Evidence: `/data/nkapre/sfpi-boundary-topk-20261009/`, principally Slurm
+  129486, 129487, 129498, 129499 and postflight 129500.
+
 ## 2026-10-10 — source-level I0, Softplus and sigmoid recovery
 
 - Committed tt-metal `d33883d572f` and pushed the same `nkapre/sfpi` tip to

@@ -30,6 +30,16 @@ the pre-existing Exp-edge and generalized-MoE LREG-pressure failures are not
 claimed as fixed. Exact scope is in the
 [2026-10-10 handoff update](HANDOFF.md#2026-10-10-exabox-performance-recovery).
 
+A second source-recovery wave is committed at tt-metal `56b492ea325`.
+Correctness-preserving ReLU, Threshold and Log fresh-body rewrites recover
+5.6--5.9%, 13.5--20.5% and 9.2--9.4%, respectively, in matched three-repeat
+Blackhole OFF/ON measurements; every hand anchor is unchanged. All three pass
+their ordinary nodes and exhaustive 65,536-pattern bf16 grading. ReLU and
+Threshold additionally pass mixed-lane raw-FP32 OFF/ON checks with signed
+qNaN/sNaN payloads, infinities and boundary values. Wormhole OFF/ON compile-only
+passes 6/6; no Wormhole silicon is claimed. See the
+[second recovery update](HANDOFF.md#2026-10-10-second-source-recovery-wave).
+
 ### Latest — 2026-10-08 parallel fix round
 
 Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay
