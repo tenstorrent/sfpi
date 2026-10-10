@@ -49,6 +49,14 @@ registered sqrt golden counts do not regress. Blackhole silicon and selected
 Blackhole/Wormhole compile-only checks ran; no Wormhole silicon is claimed.
 See the [third recovery update](HANDOFF.md#2026-10-10-sqrtrsqrt-pole-guard-recovery).
 
+The current tt-metal tip `c66bd1275cf` adds two more bounded recoveries.
+Digamma simplifies its already-ordered `+inf` restore and improves matched
+OFF/ON silicon by 1.5%/2.4%. Signbit removes a redundant conversion of a
+proven `0/1` value and improves its semantic arm by 14.2%/15.6%, with exact
+hand ties. Targeted FP32 special-value, ordinary, sampled-stream and
+Blackhole/Wormhole compile gates are scoped in the
+[fourth recovery update](HANDOFF.md#2026-10-10-digamma-and-signbit-recovery).
+
 ### Latest — 2026-10-08 parallel fix round
 
 Compiler pin `ba4b9b13a52`. Welford's typed path now beats hand replay

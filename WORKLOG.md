@@ -1,5 +1,26 @@
 # Worklog
 
+## 2026-10-10 — digamma and signbit recovery
+
+- Committed digamma as tt-metal `1b12e1402ff`, signbit as `c66bd1275cf`, and
+  pushed the current tip identically to both tt-metal mirrors. No defaults,
+  anchors or `main` branch changed.
+- Digamma replaces a redundant exponent-plus-mantissa `+inf` check inside the
+  already-ordered `x > 102` region with the equivalent biased-exponent check.
+  Three-repeat Blackhole timing recovers OFF 536627 → 528434 (-1.53%) and ON
+  520370 → 508082 (-2.36%). Baseline/candidate ordinary tests pass 2/2 each,
+  a 65,536-pattern low FP32-bit band is byte-identical, and Wormhole OFF/ON
+  compile-only passes. This is sampled FP32 coverage, not exhaustive coverage;
+  the positive-only fresh body is not an admitted hand replacement.
+- Signbit reinterprets its proven 0/1 sign extraction as sign-magnitude before
+  conversion, removing a redundant cast. Semantic OFF recovers 28764 → 24670
+  (-14.23%) and ON 26333 → 22238 (-15.55%); both hand cells remain 24569.
+  Baseline/candidate ordinary matrices pass 10 with 6 skips, Wormhole OFF/ON
+  compiles, and a 32-pattern/1,024-lane raw-FP32 OFF/ON probe has zero mismatch
+  after modeling the pre-existing exponent-zero input canonicalization.
+- Evidence: `/data/nkapre/sfpi-boundary-topk-20261009/`, principally Slurm
+  129615, 129618, 129623 and restored-tree postflight 129625.
+
 ## 2026-10-10 — sqrt/rsqrt pole-guard recovery
 
 - Committed tt-metal `ea12310f173` and pushed identical `nkapre/sfpi` tips to

@@ -1,5 +1,51 @@
 # Handoff — 2026-10-09
 
+## 2026-10-10 digamma and signbit recovery
+
+tt-metal tip `c66bd1275cf` is pushed identically to both tt-metal mirrors. It
+contains digamma commit `1b12e1402ff` and signbit commit `c66bd1275cf`. No
+compiler default, kernel-specific compiler rule, anchor or `main` branch
+changed.
+
+Digamma's existing `x > 102` region restored `+inf` by testing both an
+unbiased exponent and zero mantissa. The ordered outer comparison already
+excludes NaNs and all negative values, so testing `exexp(x, Biased) == 255`
+is equivalent there and removes the mantissa extraction/second condition.
+The change is in both Blackhole and Wormhole production headers. Matched
+three-repeat Blackhole production timing is OFF 536627 → 528434 (-1.53%) and
+ON 520370 → 508082 (-2.36%). Baseline/candidate Float32 ordinary and causal
+production nodes pass 2/2 each; Wormhole OFF/ON compile-only passes. The
+sampled stream covers FP32 bit patterns `[0,65536)` and is byte-identical.
+This is not full FP32 or exhaustive bf16 coverage. There is no admitted hand
+comparison for this production recovery: the fresh digamma body is explicitly
+positive-domain-only and cannot replace reflection/pole semantics.
+
+Signbit's raw sign extraction produces only integer 0 or 1. Those values have
+identical two's-complement and sign-magnitude encodings, so the fresh body now
+casts the result as `vSMag` before float conversion, avoiding the redundant
+integer-to-sign-magnitude instruction. Matched three-repeat timing:
+
+| operation / arm | flags | corrected baseline | recovered source | change |
+| --- | --- | ---: | ---: | ---: |
+| Signbit fresh semantic | OFF | 28764 | 24670 | -14.23% |
+| Signbit fresh semantic | ON | 26333 | 22238 | -15.55% |
+| Signbit production/hand | OFF | 24569 | 24569 | unchanged |
+| Signbit production/hand | ON | 24569 | 24569 | unchanged |
+
+Baseline and candidate ordinary matrices each pass 10 with 6 architecture
+skips; Wormhole OFF/ON compile-only passes. A targeted raw-FP32 gate rotates
+32 distinct patterns through all 32 lanes (1,024 inputs) and passes OFF/ON
+with zero mismatches, including signed qNaNs/sNaNs, infinities and normals.
+The expected model retains the separately documented FP32 Dest input-path
+behavior that canonicalizes exponent-zero inputs, so `-0` and negative
+subnormals arrive as `+0`; this recovery does not claim to fix that defect.
+
+Durable evidence is under `/data/nkapre/sfpi-boundary-topk-20261009/`:
+signbit matched job 129615 and raw-FP32 job 129623; digamma matched/stream job
+129618; restored-tree postflight job 129625. Earlier 129612/129616/129617/
+129619 attempts are wrapper/source-identity bring-up failures and must not be
+reported as kernel correctness failures.
+
 ## 2026-10-10 sqrt/rsqrt pole-guard recovery
 
 tt-metal `ea12310f173` is pushed identically to
