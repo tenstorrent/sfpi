@@ -1,5 +1,32 @@
 # Worklog
 
+## 2026-10-10 — source-level I0, Softplus and sigmoid recovery
+
+- Committed tt-metal `d33883d572f` and pushed the same `nkapre/sfpi` tip to
+  both tt-metal mirrors. No compiler default, SFPI pin or `main` branch changed.
+- Replaced I0's admitted multiply/add sites with explicit source-level SFPMADs.
+  Matched three-repeat Blackhole timing recovered OFF 499768 → 458808 cycles
+  (-8.2%) and ON 463033 → 426169 (-8.0%); the ON result exactly reproduces the
+  earlier licensed compiler candidate without enabling global fast math.
+- Manually ported the reviewed Softplus u-domain/two-vector body from upstream
+  `fc04c50ebe64` rather than cherry-picking its divergent series. Production
+  OFF recovered 380851 → 180041 (-52.7%) and ON 334770 → 166724 (-50.2%).
+  The stale generated arm remains correctness-inadmissible, so this is not a
+  four-arm Softplus claim.
+- Replaced accurate-exp's saturation predicate with a Blackhole min/swap.
+  Sigmoid production OFF ties at 172466; ON improves 164399 → 160303 (-2.5%).
+  The matched fresh arm is unchanged at 163897 OFF / 117561 ON.
+- Blackhole gates: 6 selected I0/sigmoid/Exp/Mish ordinary cases pass; I0 and
+  sigmoid each pass nine 65536-pattern FP32 strata with zero out-of-tolerance
+  results; Softplus passes 16 ordinary/SDPA cases and three focused negative-
+  tail/threshold cases. Wormhole compile-only passes 9 selected producers and
+  15 Softplus SDPA configurations.
+- Kept failures scoped honestly: the Exp edge test fails identically before and
+  after the candidate, and generalized-MoE passes 1/19 while 18/19 baseline and
+  candidate configurations hit the same pre-existing LREG-pressure guard.
+  Neither is reported as cleared. Evidence is under
+  `/data/nkapre/sfpi-boundary-topk-20261009/` (Slurm 129463--129478).
+
 ## 2026-10-09 — Exabox boundary validation and expm1 recovery
 
 - Reproduced the FP32 `expm1cw` defect on Blackhole and moved the cutoff from

@@ -1,5 +1,64 @@
 # Handoff — 2026-10-09
 
+## 2026-10-10 Exabox performance recovery
+
+The next recovery is committed at tt-metal `d33883d572f` and pushed to both
+`tenstorrent/tt-metal:nkapre/sfpi` and `nkapreTT/tt-metal:nkapre/sfpi`.
+Compiler and SFPI remain pinned at `ba4b9b13a52` and `8d8ad3911d7` for the
+device runs. Blackhole node `bh-glx-120-b08u08` supplied the silicon.
+
+Three source-level changes retain the repaired contracts without a global
+fast-math policy or kernel-specific compiler rule:
+
+- I0 explicitly spells its admitted single-rounding MADs. This reproduces the
+  useful part of the licensed reassociation result locally in the LLK source.
+- Softplus manually ports the reviewed u-domain/two-vector implementation from
+  upstream review head `fc04c50ebe64`, retaining this pin's default template
+  argument. It keeps the negative tail rather than restoring the stale zero
+  clamp. The whole review series was not cherry-picked.
+- The shared accurate exp helper replaces its saturation predicate with the
+  equivalent Blackhole `min(y, +inf)` swap. This removes the saturation CC
+  region used by production sigmoid while preserving the finite clamp result.
+
+Matched three-repeat Blackhole timing (every cell repeated exactly):
+
+| operation / arm | flags | corrected baseline | recovered source | change |
+| --- | --- | ---: | ---: | ---: |
+| I0 semantic (no distinct hand arm) | OFF | 499768 | 458808 | -8.2% |
+| I0 semantic (no distinct hand arm) | ON | 463033 | 426169 | -8.0% |
+| Softplus production/hand | OFF | 380851 | 180041 | -52.7% |
+| Softplus production/hand | ON | 334770 | 166724 | -50.2% |
+| Sigmoid production/hand | OFF | 172466 | 172466 | tie |
+| Sigmoid production/hand | ON | 164399 | 160303 | -2.5% |
+| Sigmoid fresh semantic | OFF | 163897 | 163897 | unchanged |
+| Sigmoid fresh semantic | ON | 117561 | 117561 | unchanged |
+
+This is not a complete four-arm recovery for Softplus: its old generated arm
+is still semantically stale and was not re-labelled or timed as an admitted
+replacement. I0 still has no distinct hand corpus arm. Sigmoid has all four
+matched cells; only the production ON cell improves.
+
+Correctness preceded adoption. I0, sigmoid and their direct Exp/Mish consumers
+pass the selected ordinary Blackhole nodes. I0 and sigmoid each pass nine
+65,536-pattern FP32 strata with zero out-of-tolerance results (I0 max 1 bf16
+ULP; sigmoid max 0). Softplus passes 16 ordinary/SDPA configurations plus three
+new negative-tail/threshold tests spanning bf16 Dest16, bf16 Dest32 and fp32
+Dest32. Wormhole compile-only passes 9 selected producers plus all 15 Softplus
+SDPA configurations; this is not Wormhole silicon.
+
+Two limits remain explicit. The production Exp edge test fails identically at
+baseline and candidate, including an identical pytest failure payload; it is
+not newly cleared or newly regressed. The generalized-MoE softmax selection is
+also blocked at this pin: candidate and baseline each pass 1/19 and fail 18/19
+at the same pre-existing `lreg-pressure-exceeded` compile guard. Do not claim a
+positive generalized-MoE validation from those jobs.
+
+Durable evidence remains under `/data/nkapre/sfpi-boundary-topk-20261009/`:
+jobs 129463--129478, especially `i0-sigmoid-candidate-perf-129465.tsv`,
+`softplus-candidate-perf-129467.tsv`, the job 129465/129467/129473 JUnit XML,
+`i0-sigmoid-strata-129472/BOARD.tsv`, the job 129475 Wormhole XML, and the
+candidate/baseline generalized-MoE XML from jobs 129477/129478.
+
 ## 2026-10-09 machine-to-machine takeover
 
 Read this section, then the parallel fix round below. This is a documentation
