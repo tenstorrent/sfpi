@@ -25,10 +25,26 @@ The archived driver is `full-sweep-592b/on_only_bisect.py`, SHA256
 `ce443a0d542732d179a81110175121080b928e2e360946f5e50d13b668e257b0`.
 The original three ordinary correctness selectors pass 3/3 for semantic
 OFF and ON-minus-init-hoist on BH device0; comparator selectors pass 3/3
-for hand OFF and literal hand ON. Candidate timing and general mechanism
-review are pending. Do not relabel these candidates literal ON or overwrite
-its compile refusal; these finite/sample checks are not full-domain numeric
-admission. Device evidence is `compiler-bisect-on-only-device0-v1/`.
+for hand OFF and literal hand ON. All 36 timing runs pass, three identical
+repeats per cell. TILE_LOOP values are already cycles/tile:
+
+| Row | Semantic OFF | ON minus init-hoist | Hand OFF | Hand ON |
+|---|---:|---:|---:|---:|
+| minmax-max | 195.8125 | 192.7734375 | 145.90625 | 145.90625 |
+| minmax-min | 195.8125 | 192.7734375 | 145.90625 | 145.90625 |
+| mulint32-fresh | 303.7734375 | 318.875 | 286.6328125 | 286.6328125 |
+
+The changed-flag candidate improves min/max 1.5520% versus OFF but still
+trails hand 32.1214%. It regresses mulint32 4.9713% versus OFF and trails
+hand 11.2486%. Restored compilation is not universal performance recovery.
+All 48 compiled math ELFs/text/objdumps are archived. The exact candidate
+flag sequence is literal ON with only init-hoist removed; clean source and
+attested compiler are unchanged. Do not relabel the candidate literal ON,
+overwrite its compile refusal, or promote a default. These ordinary
+finite/sample checks remain UNREVIEWED for full-domain numeric admission.
+Evidence: `compiler-bisect-on-only-device0-v1/`, `SUMMARY.json` SHA256
+`f9db61fcad59842d037ecb127f26e98bbabfbcda6b760e1c268a6b441fea29e9`.
+General fixed-register lifetime review remains ongoing; no compiler patch.
 
 ## 2026-10-11 canonical GELU staged admission integrated
 

@@ -1,5 +1,17 @@
 # Worklog
 
+## 2026-10-11 — changed-flag recovery measured, no blanket promotion
+
+- Clean592b ON-minus-init-hoist candidate passes ordinary device0 checks
+  for all three ON-only compiler failures; 36 timing runs and 48 archived
+  math ELFs retain actual execution identity. Every cell's three repeats
+  agree. Literal ON remains a compile refusal in the immutable baseline.
+- Min/max candidate improves 1.5520% versus OFF but remains 32.1214% slower
+  than hand. Mulint32 candidate regresses 4.9713% versus OFF and remains
+  11.2486% slower than hand. No default change or full-domain admission.
+- General init-hoist/fixed-LREG lifetime analysis and controlled rdiv
+  option attribution continue; no compiler source change landed.
+
 ## 2026-10-11 — controlled ON-only failure recovery investigation
 
 - Exact 592b compile controls isolate the same init-hoist interaction in
