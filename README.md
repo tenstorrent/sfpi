@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Softplus's next bounded source recovery is pushed at tt-metal `66b5e8fe134`:
+semantic ON improves 4.42% with exhaustive BF16 output equality preserved,
+leaving a 6.37% gap to hand. The full sweep is still running; see the
+[measured recovery checkpoint](HANDOFF.md#2026-10-11-bounded-softplus-performance-recovery).
+
 Exact timed-format Expm1Cw/I1 gates and a fail-closed terminal admission
 report are now pushed (`fed8cf378c7`, `ef9ec66de16`). Full BF16 enumeration
 passes OFF/ON with production/fresh equality; I1 still has 129 ULP of

@@ -1,5 +1,57 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 bounded Softplus performance recovery
+
+tt-metal `66b5e8fe134` is pushed to both mirrors. The BF16 fresh Softplus
+path now uses a nonpositive-input exponential helper specialization: only
+the redundant upper clamp is removed, while the lower clamp remains.
+Finite nonpositive inputs justify the algebra; special values were checked
+exhaustively rather than assumed. Default helper callers and the FP32 source
+arm retain their previous arithmetic. No compiler, flags or hand body changed.
+
+Matched device1, three-repeat cycles are sem OFF **204857**, sem ON
+**177337**, hand OFF **180041**, hand ON **166724**, identical across repeats.
+Against admitted 991b, this saves 8194 OFF / 8192 ON cycles (**3.85% / 4.42%**).
+The semantic ON gap to hand shrinks from 11.28% to **6.37% slower**. This is
+measured partial recovery, not parity or a full win.
+
+All 65,536 BF16 inputs are exactly equal to admitted 991b fresh output under
+OFF and ON, with unchanged oracle/per-class admission (max1 ULP, zero misses).
+Focused tests pass 10/10 per profile. BH/WH compile passes; final comments
+leave measured `.text` unchanged under both profiles on both architectures.
+Forced FP32 Softplus `.text` matches baseline on BH/WH OFF/ON. The default
+helper's Sigmoid consumer `.text` matches on BH OFF/ON; WH Sigmoid retains
+its existing unsupported-reciprocal static assertion, not a compile PASS.
+There is no WH silicon claim.
+
+Evidence: `full-sweep-592b/softplus-nonpos-candidate-device1/EVIDENCE.md`
+and `timing4arm/results.tsv`. Final header SHA256 values:
+
+- helpers.h: `ccef00810a614c0145b5f1a7bb4803f56a20c72d8a7ed1897203e900a9fa708e`
+- softplus.h: `854eda5e83a8c8c69693d466b3369627336b2e94a9a459dcf7bf330baaac8659`
+
+Additional clean-592b consumer checks pass 21/21 per profile: production
+Exp/Mish2, Softplus ordinary1, boundary/tail3, and SDPA beta/threshold/precision15.
+`source592b-companion-gates/` records clean working-source/HEAD identity,
+compiler, selectors and ELFs. These discharge bounded consumer requirements,
+not full-domain proof. The admission ledger now reflects them.
+
+ReLU's baseline exhaustive check uncovered a contract split: fresh has zero
+ULP/misses for all BF16 patterns; production fails all 254 NaN inputs.
+The unchanged packed oracle canonicalizes propagated NaNs to signed infinity;
+production instead clamps them to finite values. The ledger retains this
+failure at `relu-candidate-device2-v2/baseline/raw/{OFF,ON}/`. Early special
+probes incorrectly expected payload preservation and were corrected against
+the existing oracle, without changing it. A fresh-only ReLU optimization is
+still uncommitted: preliminary timing improved, but its wrapper discarded
+original timing ELFs, so a durable matched rerun is required before landing.
+
+The immutable full sweep reached **150/284: 129 PASS, 9 SKIP, 12 compile FAIL**
+at this checkpoint. It remains running and separate from repaired-source
+measurements. A unit-origin Softplus experiment is separate pending work,
+not part of 66b5 or its evidence. Host CI at `ef9ec66de16` passed all groups:
+https://github.com/tenstorrent/tt-metal/actions/runs/38171097039
+
 ## 2026-10-11 continued swarm: exact-format gates and terminal claim filter
 
 tt-metal `fed8cf378c7` adds four ordinary Expm1Cw/I1 production/fresh

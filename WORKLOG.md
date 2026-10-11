@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-11 — measured partial Softplus recovery
+
+- Pushed tt-metal `66b5e8fe134` to both mirrors. Removed only the proven
+  redundant upper exponential clamp in fresh BF16 Softplus; default helper,
+  FP32 arm, compiler and hand body unchanged.
+- Exact all-BF16 output equality to admitted source, unchanged numerical
+  admission, focused tests and BH/WH compile/code-binding checks pass.
+  Matched sem OFF/ON 204857/177337 saves 3.85%/4.42%; hand 180041/166724
+  leaves ON 6.37% slower. Partial recovery, not parity.
+- Clean592b consumer companion checks pass 21/21 per profile. ReLU fresh
+  exhaustive oracle passes while production fails 254 NaNs; retain that
+  contract split explicitly. ReLU optimization timing remains preliminary
+  until an evidence-retaining matched rerun closes missing timing ELF custody.
+- Full immutable sweep checkpoint150/284:129 PASS,9 SKIP,12 compile FAIL.
+  Host CI for ef9ec66de16 passes; no scheduled-silicon activation is implied.
+
 ## 2026-10-11 — exact-format and report productization
 
 - Pushed tt-metal `fed8cf378c7`: Expm1Cw/I1 timed BF16 format gates pass 4/4
