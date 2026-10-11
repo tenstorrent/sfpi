@@ -38,6 +38,14 @@ source, leaving 11 cycles (0.03813%) above hand. This is near parity, not a
 default promotion or a re-booked baseline. Final-header compile bindings
 reproduce the retained timing `.text` hashes for both arms/all profiles.
 
+The row's TILE_LOOP MATH_ISOLATE metric is already normalized to cycles per
+tile by `loop_factor * tile_cnt`; do not divide by eight again. Its matched
+semantic/hand values are 1696.7265625 / 222.734375 OFF,
+239.7265625 / 222.75 ON, and 222.6640625 / 222.75 with the prefix option.
+That is a 7.1175% option recovery and a tiny -0.03858% residual versus hand.
+The KERNEL and TILE_LOOP residual signs differ, but both are well within
+the comparison band: neither supports a strict performance-win claim.
+
 Evidence root: `full-sweep-592b/gelu-asymptote-candidate-device1-v2/`.
 `changed-output-ledger/` records the numerical tradeoff;
 `timing6cell-final/` and `timing6cell-final-binding/` retain timing custody.
