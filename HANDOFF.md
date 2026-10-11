@@ -1,5 +1,47 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 sweep productization
+
+tt-metal `592b495aedeb9f3cd0c6a1bde817466053c7cbf8` is pushed identically to
+`tenstorrent/tt-metal` and `nkapreTT/tt-metal` on `nkapre/sfpi`.
+The canonical nightly selftest now accounts for shared OFF-baseline
+memoization: five compile sessions, one OFF producer, three explicit reuse
+records, and identical stable evidence between serial/concurrent execution.
+No compiler or kernel implementation changed.
+
+The new `corpus/tools/selftest_host.py` entry point runs 15 hardware-free
+checks using exact numpy/pyelftools/z3 pins from `requirements-formal.txt`.
+It refuses installed-version mismatches. Current formal campaigns and the
+historical pin-59 reproducer are labeled separately; real trace capture,
+full installed-harness oracle parity, historical instruments, and silicon
+remain explicitly outside this host-only result. A fresh Python 3.12
+environment passed all 15 checks; the nine sweep orchestration selftests,
+inventory validation, workflow actionlint and repository commit hooks pass.
+The expanded host workflow also passed on GitHub at the committed revision:
+https://github.com/tenstorrent/tt-metal/actions/runs/38148557996.
+
+The reusable corpus workflow now exercises the orchestration gates before
+mapped BH/WH compilation. The new resource-owner workflow defines scheduled
+nightly/weekly and manual host/headline modes, serialized P150 execution,
+strict four-repository source/commit and compiler identity checks, required
+status aggregation, and evidence retention. Deployment instructions are in
+tt-metal `.github/workflows/tt-llk-sfpu-corpus-resource-owner.md`.
+The wrapper retains its reviewed straight-silicon behavior and records
+`--skip-craq-gate`; formal, simulator and exhaustive-stream campaigns are
+not silently included in that performance sweep.
+
+Deployment is still pending: the workflow must be installed on the default
+branch by its owner and provided the documented runner/environment/settings.
+Nothing was pushed to `main`. No new silicon measurement ran in this pass.
+Exabox SSH works through userspace Tailscale (`tailscale nc`) with the live
+forwarded SSH agent; do not persist an ephemeral agent socket in scripts.
+The shared `/data/nkapre/sfpi-boundary-topk-20261009` kit lacks canonical
+SETUP-STATE and pinned compiler/simulator artifacts. Its old node-local
+compiler hashes differ from the reviewed sweep pins; do not bypass the pin
+gate. The prior `bh-glx-120-b08u08` node was occupied by another user's job
+at inspection. Provision the reviewed artifacts and current source tuple
+on an allocated node before dry-run/headline acceptance, then enable scheduling.
+
 ## 2026-10-10 digamma and signbit recovery
 
 tt-metal tip `c66bd1275cf` is pushed identically to both tt-metal mirrors. It

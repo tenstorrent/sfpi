@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-11 — sweep productization
+
+- Pushed tt-metal `592b495aede` to both `nkapre/sfpi` mirrors. Repaired the
+  memoized classify selftest, added strict pinned host validation (15 checks),
+  expanded corpus CI, and added the serialized resource-owner workflow with
+  status, evidence retention and deployment instructions.
+- Fresh host environment: 15/15 pass; nine orchestration selftests, inventory,
+  actionlint and commit hooks pass. Hardware-required validation remains
+  explicitly unrun. No kernel/compiler change or `main` push.
+- GitHub host validation run `38148557996` passed on the pushed commit.
+- Recovered Exabox access using the live forwarded SSH agent. Resource audit
+  found missing canonical compiler/simulator pins and setup state in the shared
+  kit; the old node-local compiler is a different binary. No allocation or
+  measurement was started. Default-branch workflow deployment and provisioned
+  pinned resources remain required for scheduled full-sweep acceptance.
+
 ## 2026-10-10 — digamma and signbit recovery
 
 - Committed digamma as tt-metal `1b12e1402ff`, signbit as `c66bd1275cf`, and

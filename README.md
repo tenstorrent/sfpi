@@ -3,6 +3,12 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+The sweep productization update is committed at tt-metal `592b495aede`:
+repaired nightly gates, a pinned 15-check host validation entry point, and a
+serialized resource-owner workflow. Host checks pass; scheduled silicon
+deployment still needs the reviewed binary artifacts and runner setup. See
+the [productization handoff](HANDOFF.md#2026-10-11-sweep-productization).
+
 ### Takeover — 2026-10-10
 
 Start with [machine-to-machine HANDOFF](HANDOFF.md#2026-10-09-machine-to-machine-takeover)
