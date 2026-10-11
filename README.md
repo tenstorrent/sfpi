@@ -3,6 +3,12 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+GELU's finite-BF16 accuracy repair is landed at tt-metal `ccb29a658d9`.
+Matched timing with an existing compiler option recovers 7.01%, reaching
+28,857 cycles versus hand's 28,846. This is a bounded finite-error recovery,
+not full-domain admission or a default-flag change. See the
+[GELU checkpoint](HANDOFF.md#2026-10-11-gelu-finite-accuracy-repair-and-matched-option-recovery).
+
 Hardshrink's negative-NaN bug and ordinary-oracle inconsistency are repaired
 at tt-metal `20803d83e70`, pushed to both mirrors. Exhaustive BF16 OFF/ON
 equals production; the permanent regression rejects old source. Matched

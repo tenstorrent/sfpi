@@ -1,5 +1,20 @@
 # Worklog
 
+## 2026-10-11 — GELU finite accuracy repair landed
+
+- tt-metal `ccb29a658d9`: one asymptotic intercept corrected; permanent host
+  and device regressions, current finite-error metrics and explicit caveats.
+- All BF16 outputs agree OFF/ON/ON+prefix. Finite maximum absolute errors
+  beat hand's measured bars; 79 tiny pointwise regressions, unchanged ULP
+  debt and negative-infinity failure remain disclosed. No full-domain win.
+- Six-cell matched three-repeat timing: semantic 217529 / 31033 / 28857,
+  hand 28849 / 28846 / 28846. Existing prefix option recovers 7.0119% to
+  within 0.03813% of hand. Actual binaries and final-source text bindings
+  retained; no compiler/default promotion or immutable-baseline update.
+- Six normal-assertion device tests pass all three profiles; old-source
+  positive witnesses fail. WH checks are compile-only. Final local host
+  suite 17/17 PASS. BF16 companion is not yet auto-selected by TSV.
+
 ## 2026-10-11 — productization audit exposes staging defect
 
 - Pushed tt-metal `f9f50c4d044` and `808d3e3c8ed` to both mirrors: CI trigger

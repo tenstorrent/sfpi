@@ -1,5 +1,57 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 GELU finite accuracy repair and matched option recovery
+
+tt-metal `ccb29a658d9` changes only the large-magnitude affine intercept in
+the licensed fresh GELU body from `-0x1.2fcp-15f` to zero. All other
+coefficients, the hand body, compiler and default flags are unchanged.
+Final header SHA256:
+`178725e7f7f29c9e64568c0548ba844f0353549c53f71eae5b55380637ce39ef`.
+
+Actual device output is bit-identical between OFF, ON and ON plus the
+existing `-mtt-tensix-optimize-crosscall-config-prefix` option across all
+65,536 BF16 patterns. Over finite BF16 inputs, maximum stored-output error
+versus exact-double GELU is 0.018938053553616996, below hand's
+0.023886588700354136; versus BF16-rounded golden it is 0.01806640625, below
+hand's 0.02392578125. These are two different reference metrics, not raw
+versus stored output. Both satisfy the existing finite maximum-error
+license; neither establishes pointwise or ULP dominance.
+
+The repair changes 2,178 finite outputs. Of those, 79 negative-tail inputs
+have slightly worse pointwise absolute error (maximum increase
+0.0000362396240234375), while the global maxima improve. Maximum ULP remains
+30,004 versus hand's 29,804; the pre-existing negative-infinity to
+positive-infinity failure is unchanged. Do not claim full-special or full
+FP32 admission. The immutable 592b GELU row remains unfulfilled.
+
+Matched device1 measurements retain actual timing binaries for six cells,
+three repeats each; every repeat agrees:
+
+| Profile | Semantic KERNEL cycles | Hand KERNEL cycles |
+|---|---:|---:|
+| OFF | 217,529 | 28,849 |
+| ON | 31,033 | 28,846 |
+| ON + crosscall-config-prefix | 28,857 | 28,846 |
+
+The existing option recovers 2,176 cycles (7.0119%) within the repaired
+source, leaving 11 cycles (0.03813%) above hand. This is near parity, not a
+default promotion or a re-booked baseline. Final-header compile bindings
+reproduce the retained timing `.text` hashes for both arms/all profiles.
+
+Evidence root: `full-sweep-592b/gelu-asymptote-candidate-device1-v2/`.
+`changed-output-ledger/` records the numerical tradeoff;
+`timing6cell-final/` and `timing6cell-final-binding/` retain timing custody.
+`device-regression-v4/` passes six normal-assertion tests under all three
+profiles on BH; all three WH compile legs pass six tests, not WH silicon.
+The old-intercept control still fails the 258 and 4.03125 witnesses.
+The final device-test file is AST-identical to the validated file after
+formatting. Local pinned host checks pass 17/17 in 51.9 seconds.
+
+The existing TSV FP32 correctness selectors remain unchanged. The new BF16
+stream/witness tests are permanent standalone companion gates, not yet
+automatically selected by that TSV row. Composite staging work below is
+separate and must preserve this distinction.
+
 ## 2026-10-11 sweep productization audit: trigger and format binding repairs
 
 tt-metal `f9f50c4d044` expands CI triggers to fresh kernel and harness changes;
