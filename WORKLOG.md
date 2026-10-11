@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-11 — stronger gates expose additional numerical debt
+
+- Exact592b Hardshrink exhaustive OFF/ON fails127 negative NaNs in fresh,
+  production zero ULP/misses. Added source-bound refusal to the durable14-row
+  admission overlay; raw baseline unchanged. A source repair and oracle-parity
+  regression are pending, with no tolerance relaxation.
+- GELU's existing config-prefix option recovers7.01% at identical BF16 output,
+  but current OFF and ON both violate the recorded absolute-error license.
+  Current-device evidence supersedes historical comments; no default change
+  or admitted semantic win. OFF/ON all-BF16 equality rules out an ON-induced
+  discrepancy on this path, not all possible compiler errors.
+- Parked AddInt restore because its negative-zero semantics differ.
+- Current tt-metal72bfc passes all16 local host groups in41.2s. GitHub host CI
+  at202736 also passed: https://github.com/tenstorrent/tt-metal/actions/runs/38174569481.
+- Full sweep checkpoint217/284:177 PASS,18 SKIP,22 FAIL; still running.
+
 ## 2026-10-11 — ReLU recovery and productized gate
 
 - Pushed tt-metal `72bfc90564d` to both mirrors: fresh non-NaN min/max clamp,

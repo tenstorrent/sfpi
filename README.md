@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Stronger gates have exposed Hardshrink negative-NaN failures at the immutable
+baseline and a current GELU approximation-license failure. A measured GELU
+option recovery is therefore not an admitted win. The full sweep remains
+running; see the [numerical refusal checkpoint](HANDOFF.md#2026-10-11-additional-numerical-refusals-during-the-full-sweep).
+
 Fresh ReLU recovery and its permanent admission gate are pushed at tt-metal
 `72bfc90564d`: matched KERNEL cycles improve 5.88% OFF / 6.23% ON with
 exhaustive BF16 equality preserved. Production's 254 NaN failures remain

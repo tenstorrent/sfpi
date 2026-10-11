@@ -1,5 +1,53 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 additional numerical refusals during the full sweep
+
+The immutable sweep reached **217/284: 177 PASS, 18 SKIP, 22 FAIL** at this
+checkpoint. The new failed rows are compile refusals; the terminal result is
+still pending. Do not confuse an ordinary row PASS with exhaustive admission.
+
+Exact clean-592b Hardshrink validation on device2 enumerated all 65,536 BF16
+patterns under each literal profile. Fresh fails all 127 negative NaNs (first
+`0xff81`: zero instead of the expected signed-infinity packed result), while
+production has zero ULP/misses everywhere. Finite claimed inputs pass. Evidence:
+`full-sweep-592b/hardshrink-admission-592b-device2/`. The live admission ledger
+now has 14 rows and explicitly refuses `hardshrink-fresh`; deployed TSV SHA256
+is `6c8d8c79ea2089c64d677bb568fc49fd7223e9cb288c508513a4d63f12749da6`.
+The later source repair is pending, not part of the immutable baseline.
+
+The new regression work also exposed an ordinary-oracle mismatch: scalar
+`abs(x)>lambda` maps NaN to zero, unlike PyTorch hardshrink and the exhaustive
+oracle, which propagate it. Host construction of BF16 tensors from Python
+NaNs also loses the negative sign. A permanent gate must prove the negative
+input reaches the device and reject old source against the corrected oracle;
+an old-oracle failure is not a valid negative control. No tolerances changed.
+
+GELU-approx's existing `crosscall-config-prefix` option was measured on device1
+at current source72bfc, separately from the raw baseline. Three identical
+KERNEL repeats: literal OFF sem/hand **221627/28849**, literal ON
+**31033/28846**, ON plus only that option **28857/28846**. It recovers 2176
+cycles (7.01%), with an 11-cycle gap to hand. Actual timing ELFs are retained
+under `gelu-config-prefix-device1/timing6cell-v4`. The hand binary is unchanged;
+the semantic candidate matches ON on every BF16 input. OFF also matches ON
+on all 65,536 patterns (`off-vs-on-bf16-v4`), so these numerical failures are
+not introduced by the ON transform on the measured path.
+
+This is **not an accuracy-admitted win**. Fresh violates its recorded
+equal-or-better maximum-absolute-error license on current silicon:
+all-finite BF16 maximum error is **2.0** at x=258 (device256, reference258),
+versus hand0.02392578125. Within [-5,5], fresh error versus packed-BF16 golden
+is0.03125; versus exact-double GELU it is0.0312485667421 at x=5. Fresh also
+has worse maximum ULP (30004 versus29804), and both arms return positive
+infinity at negative infinity instead of the mathematical limit zero.
+Evidence: `gelu-config-prefix-device1/exhaustive-bf16-maxabs-v2/` and
+`off-vs-on-bf16-v4/`. Historical approximation comments do not override these
+measurements. No option was added to defaults and no GELU source was committed.
+
+The historical AddInt single-cast restore is parked: commit3687e5c explicitly
+changes sign-magnitude negative zero from zero to INT_MIN on Blackhole.
+Historical speed or agreement with hand is not sufficient to restore it
+without resolving the current API contract and proving the conversion.
+
 ## 2026-10-11 ReLU recovery and permanent admission gate
 
 tt-metal `72bfc90564d` is pushed to both mirrors. Fresh ReLU now applies
