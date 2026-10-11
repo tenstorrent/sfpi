@@ -1,5 +1,19 @@
 # Worklog
 
+## 2026-10-11 — canonical GELU admission integrated
+
+- tt-metal `c1835283f16`: retained one-item selectors now cover original
+  FP32, timed BF16 and mixed tail witnesses for both arms; unchanged golden
+  tolerances, all consumer assertions active, no C++ or compiler change.
+- BH OFF/ON/ON+prefix producer 2/2 and semantic/hand consumers 1/1 each;
+  seven ELF entries/profile preserve pre/post custody. WH compile 2/2 each.
+  Old-intercept consumer fails the exact 258 witness as required.
+- Planner marks composite row unhooked and removes stale single-variant
+  FP32 membership; new disjointness regression runs before fixture mutation.
+- Independent source/JUnit/custody review passes. Final-tree full pinned
+  host suite 18/18 PASS in 55.9s; commit hooks PASS. Staged runtime/header
+  and math-text bindings are recorded, not a new full-tree exhaustive claim.
+
 ## 2026-10-11 — full baseline sealed and staged admission repaired
 
 - Immutable 592b run finished 284/284: 239 PASS, 21 SKIP, 24 compile-stage

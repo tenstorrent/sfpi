@@ -1,5 +1,44 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 canonical GELU staged admission integrated
+
+tt-metal `c1835283f16` keeps the existing one-item semantic/hand correctness
+selectors and adds the timed BF16 ordinary path plus eight mixed BF16 tail
+witnesses, retaining the original FP32 case. Both arms use unchanged normal
+golden tolerances; additional checks require exact 258/4.03125 outputs and
+the unchanged hand maximum-absolute-error bound for -3/-5. Producer mode
+prepares all three calls; consumer mode executes every assertion. No C++
+body, compiler, default flag or performance anchor changes in this commit.
+
+The composite planner binding is explicitly structural-unhooked, not an
+exhaustive single-variant streamer. GELU is removed from the single-variant
+FP32 set; a pre-fixture disjointness regression prevents stale membership
+from breaking full campaign planning. The standalone BF16 stream node
+remains available for exact-format exhaustive runs.
+
+Evidence under `full-sweep-592b/gelu-asymptote-candidate-device1-v2/`:
+`gelu-composite-canonical-device1/`. BH OFF/ON/ON+prefix each pass producer
+2/2, semantic consumer 1/1 and hand consumer 1/1, with exactly the original
+JUnit selector identities. Seven ELF entries per profile are unchanged
+before/after consumption. WH passes producer 2/2 per profile (compile-only).
+The old-intercept control fails `256.0 == 258.0`, with its own ELF custody
+intact. Repaired source is restored afterward. An independent review read
+the JUnit, source hashes and custody inventories and found no blocker.
+
+Executed runtime-test SHA256 is
+`790801290e294a2bea29c1a146f6f0f80a1fedfa3eefed354aaaaa11fcf8bf55`;
+the header remains `178725e7f7f29c9e64568c0548ba844f0353549c53f71eae5b55380637ce39ef`.
+The stage is reconstructable from base `592b495aedeb9f3cd0c6a1bde817466053c7cbf8`
+plus `stage-provenance/`'s complete tracked binary patch (SHA256
+`c8e5a1a7b0c7996d045be59f1d5e3ecb1b4dc9aacb071cb7f789b519f91094b2`)
+and archived sole untracked standalone test. It is not the complete c183
+tree. The staged math `.text` matches prior standalone regression
+executables by profile. This is staged source/text binding, not a claim
+that a new full current-tree exhaustive sweep ran. Final local pinned host checks pass
+18/18 in 55.9 seconds, including the historical non-live check; all commit
+hooks pass. Both tt-metal mirrors received the commit. The finite-error
+and full-special limitations below still apply.
+
 ## 2026-10-11 full sweep sealed; composite staging repaired
 
 The immutable tt-metal `592b495aedeb9f3cd0c6a1bde817466053c7cbf8`
@@ -14,6 +53,10 @@ Raw timing comparisons use the inclusive 0.5% band:
 |---|---:|---:|---:|---:|
 | Semantic ON versus OFF | 239 | 186 | 51 | 2 |
 | Semantic ON versus hand ON | 142 | 64 | 14 | 64 |
+
+The two raw ON/OFF slower rows are `fill-fresh` (16,827 to 16,941,
++0.6775%) and `rdiv` (57,531 to 58,167, +1.1055%). Both are UNREVIEWED
+for numeric admission; their passing ordinary checks do not close that gap.
 
 The campaign selected 164 four-arm rows, 99 semantic-only rows and 21
 exclusions. Raw PASS means the executed sweep checks passed, not exhaustive
@@ -52,8 +95,9 @@ The old Hardshrink header still fails the normal consumer negative control.
 Evidence: `unary-composite-producer-808d-v3/`; the negative control is
 retained under `unary-composite-producer-808d-v2/`.
 Pinned host checks pass 18/18; GitHub host CI `38181938215` passes.
-Both mirrors received this commit. Canonical GELU integration is a separate
-pending check; standalone GELU evidence below must not be overstated.
+Both mirrors received this commit. Canonical GELU integration is recorded
+in the newer checkpoint above; standalone exhaustive evidence remains a
+separate validation scope.
 
 Next compiler investigation is compile-only flag bisection of the three
 ON-only failures: minmax-max, minmax-min and mulint32-fresh. Retain exact
@@ -117,10 +161,10 @@ The old-intercept control still fails the 258 and 4.03125 witnesses.
 The final device-test file is AST-identical to the validated file after
 formatting. Local pinned host checks pass 17/17 in 51.9 seconds.
 
-The existing TSV FP32 correctness selectors remain unchanged. The new BF16
-stream/witness tests are permanent standalone companion gates, not yet
-automatically selected by that TSV row. Composite staging work below is
-separate and must preserve this distinction.
+At this checkpoint the existing TSV FP32 selectors remained unchanged and
+the BF16 gates were standalone only. The newer canonical-integration
+checkpoint above adds BF16 checks to those same selector identities; it
+does not turn the composite selector into an exhaustive streamer.
 
 ## 2026-10-11 sweep productization audit: trigger and format binding repairs
 

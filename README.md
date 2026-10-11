@@ -11,6 +11,11 @@ remains fail-closed. Composite Hardshrink/ReLU staged validation is repaired
 at tt-metal `5cf5d067fd8`, with OFF/ON producer/consumer and ELF-custody
 checks passing. See the [terminal checkpoint](HANDOFF.md#2026-10-11-full-sweep-sealed-composite-staging-repaired).
 
+Canonical GELU staged admission now includes timed-format BF16 regression
+checks (`c1835283f16`), with producer/consumer and old-source negative-control
+proof. Host checks pass 18/18. See the
+[integration checkpoint](HANDOFF.md#2026-10-11-canonical-gelu-staged-admission-integrated).
+
 GELU's finite-BF16 accuracy repair is landed at tt-metal `ccb29a658d9`.
 Matched timing with an existing compiler option recovers 7.01%, reaching
 28,857 cycles versus hand's 28,846. This is a bounded finite-error recovery,
