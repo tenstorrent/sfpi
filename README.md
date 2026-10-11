@@ -3,6 +3,12 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Exact timed-format Expm1Cw/I1 gates and a fail-closed terminal admission
+report are now pushed (`fed8cf378c7`, `ef9ec66de16`). Full BF16 enumeration
+passes OFF/ON with production/fresh equality; I1 still has 129 ULP of
+in-claim near-zero error in both arms. The full 284-row run remains pending.
+See the [continued swarm checkpoint](HANDOFF.md#2026-10-11-continued-swarm-exact-format-gates-and-terminal-claim-filter).
+
 The 2026-10-11 swarm landed strict BF16 Softplus validation (`b76de4f8dc5`)
 and the corrected fresh body (`991b02445e9`) on both tt-metal mirrors.
 Exhaustive timed-format BF16 admission passes OFF/ON, but semantic ON still

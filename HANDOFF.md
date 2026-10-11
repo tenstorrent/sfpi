@@ -1,5 +1,51 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 continued swarm: exact-format gates and terminal claim filter
+
+tt-metal `fed8cf378c7` adds four ordinary Expm1Cw/I1 production/fresh
+BF16-to-BF16, Dest16 correctness nodes and rewires only their four corpus
+rows' correctness selectors. All four pass under each literal OFF/ON profile
+on Blackhole; existing FP32 and BF16-to-FP32 tests remain. The corresponding
+fresh and production sources and performance selectors are unchanged.
+
+Separate current-source evidence under `targeted-exact-fed8/raw-bf16/`
+enumerates all 65,536 BF16 inputs on those exact timed format paths under
+both profiles. Expm1Cw and I1 are each fresh/production bit-identical and pass
+the existing tolerance/per-class non-regression gates. Expm1Cw maximum error
+is 1 ULP. I1 maximum is **129 ULP inside the [-3.75,3.75] claim**, at input
+bits `0x80ff`, approximately -2.3418e-38; both arms have that same error and
+zero out-of-tolerance among 32,994 in-claim inputs. This is equality and
+tolerance evidence, not high-precision accuracy. Expm1Cw's two ordinary
+BF16-to-FP32 Dest32 nodes also pass under each profile. The wrapper's final
+checksum pass initially self-included its manifest; only host finalization
+was rerun with that file excluded, after all device checks had completed.
+
+tt-metal `ef9ec66de16` productizes a separate host claim filter:
+`corpus/tools/sweep_admission_report.py`. It requires a clean-source pinned
+manifest, coherent completed population, and trusted terminal summary/results
+hashes in the admission ledger. It hashes the exact parsed snapshots, rejects
+contradictory passing decisions, marks raw FAIL/SKIP as `RAW_NOT_PASS`, and
+keeps absent rows `UNREVIEWED`. Causal timings are explicitly raw; any admitted
+paired timing is bounded partial coverage, never a full-domain or full-win
+certificate. All 16 host selftest groups pass, including 14 adversarial
+claim-filter tests; changed-file commit hooks pass. No real formal/silicon
+proof is implied by that host suite.
+
+Both revisions are pushed to both tt-metal `nkapre/sfpi` mirrors. The tool
+is also deployed beside the durable full-sweep evidence, not inside its raw
+source/results directory. Updated `admission.tsv` pins manifest SHA256
+`b9c6ef78afbe1eb84b4b1ced70d423793d981192aab9c06fd8ba367b0c1b2e33`.
+The live ledger intentionally lacks terminal result pins: an actual remote
+invocation refuses with exit 2 rather than emitting comparisons. After the
+producer exits and all 284 rows are accounted for, create a new
+`admission-terminal.tsv` with final hashes and generate a separate report.
+Previous overlay files are retained as `*.pre-terminal-binding.*`.
+
+The immutable 592b full sweep reached 117/284 at this checkpoint:
+98 PASS, 7 SKIP, 12 compile FAIL. Current-source companions do not relabel
+that baseline. ReLU recovery and remaining consumer checks are still in
+progress. No compiler patch, compiler pin, default flag or baseline changed.
+
 ## 2026-10-11 swarm: admitted Softplus repair and validation failures
 
 tt-metal `991b02445e9` is pushed to both `nkapre/sfpi` mirrors. It follows

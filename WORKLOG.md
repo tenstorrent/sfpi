@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-11 — exact-format and report productization
+
+- Pushed tt-metal `fed8cf378c7`: Expm1Cw/I1 timed BF16 format gates pass 4/4
+  OFF and ON, with only the four correctness-selector rows rewired.
+- Separate source-bound raw BF16 enumeration passes all 65,536 inputs per
+  op/profile, fresh/production bit-identical. Expm1Cw max1 ULP; I1 max129 ULP
+  inside the claim near zero in both arms, tolerance PASS, not high accuracy.
+  Expm1Cw BF16-input Dest32 ordinary gates pass 2/2 per profile.
+- Pushed `ef9ec66de16`: terminal admission report, 14 adversarial tests, and
+  host-suite integration. All 16 host groups and commit hooks pass. Reviewed
+  failures now prevent contradictory admission, identity mixing and live-file
+  parse/hash mismatch. Remote live-ledger invocation correctly refuses before
+  terminal hashes exist; raw campaign files remain untouched.
+- Full sweep checkpoint: 117/284, 98 PASS, 7 SKIP, 12 compile FAIL. Not a
+  terminal count or full win. Continued bounded ReLU/consumer work separately.
+
 ## 2026-10-11 — swarm validation and fresh Softplus repair
 
 - Pushed tt-metal `b76de4f8dc5` and `991b02445e9` to both mirrors. Added
