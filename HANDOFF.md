@@ -35,9 +35,25 @@ The final oracle hash is
 `d4de42f165604e54520fa5c92544e81307c8e3ba37c51dde7b8baca9d4ef8edd`;
 commit-hook formatting changes are AST-identical to the validated oracle
 `4057a22ea87e9ad22aa3b13390af4d233bd5a4063f535f7f501bd3d8a9f281ec`.
-Hooks pass. Matched timing is pending; this commit claims correctness only.
+Hooks and GitHub host CI pass (run `38178335271`). Matched device2 timing
+retains actual binaries for all four arms and three repeats: semantic OFF/ON
+36,920 / 32,953 cycles; hand OFF/ON 29,106 / 25,651. Every repeat agrees.
+The repaired semantic source still trails hand by 26.85% / 28.47%; these
+measurements do not establish the fix's cost against old source on another
+chip. Evidence: `hardshrink-timing-final-592b-device2/`.
 
-The immutable campaign reached **231/284: 190 PASS, 19 SKIP, 22 FAIL**.
+Enabling the existing store-fold and store-sink options leaves both arms'
+text unchanged, so no redundant device timing was booked. Exact pass dumps
+report `store-fold-sink-format-unproven`: this TU uses runtime-resolved
+SRCB loads and stores. Compiler hardening `b088074d77c` deliberately removed
+that license because load/store SRCB can resolve differently; static
+same-format proofs do not cover those cross-resolution cases. Do not
+restore the old shortcut or infer format identity from this kernel.
+Evidence: `hardshrink-store-sink-compile-592b/` and
+`hardshrink-store-sink-passdump-592b/`. No compiler/default change landed.
+
+The immutable campaign reached **245/284: 203 PASS, 20 SKIP, 22 FAIL**
+at 22:07 UTC; it is not yet terminal.
 Its old Hardshrink row stays refused. GELU's one-coefficient finite-accuracy
 repair is separately pending and must not be confused with a full-domain
 win or the earlier unchanged-source option measurement.

@@ -1,5 +1,18 @@
 # Worklog
 
+## 2026-10-11 — Hardshrink timing and compiler refusal closed
+
+- Repaired-source matched four-arm, three-repeat timing: semantic OFF/ON
+  36,920 / 32,953 cycles, hand 29,106 / 25,651. Still slower by 26.85% /
+  28.47%; actual binaries retained, no old-source fix-cost attribution.
+- Existing store-fold/store-sink options produce identical text. Exact
+  dumps identify runtime SRCB format uncertainty; hardening `b088074d77c`
+  intentionally refuses this unlicensed case. No compiler workaround or
+  redundant device run. Host CI at `20803d83e70` passes.
+- Immutable sweep checkpoint 245/284: 203 PASS, 20 SKIP, 22 FAIL. Latest
+  15-row admission overlay preserves old-source refusals; terminal pins
+  will be generated only after a coherent complete run.
+
 ## 2026-10-11 — Hardshrink correctness repair landed
 
 - Pushed tt-metal `20803d83e70` to both mirrors: explicit sign-clear magnitude,
