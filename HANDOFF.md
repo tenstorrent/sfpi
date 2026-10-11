@@ -1,5 +1,32 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 sweep productization audit: trigger and format binding repairs
+
+tt-metal `f9f50c4d044` expands CI triggers to fresh kernel and harness changes;
+`808d3e3c8ed` binds exhaustive planning to the exact current semantic/hand
+selectors and also triggers host checks on corpus-manifest changes. Both
+are pushed to both mirrors. Expm1Cw/I1's exact timed-format nodes now plan
+65,536 BF16 inputs, not the stale 2^32 FP32 space. Hardshrink/ReLU composite
+selectors are explicitly unhooked for single-variant streaming. A planner's
+count-based COMPLETE is not source-bound correctness admission. Focused
+tests include selector drift, mismatched arms, stale coverage counts and
+the checked-in manifest; the pinned local host suite passes all 17 groups.
+The trigger change passed GitHub host CI (`38180035574`); trigger coverage
+does not mean the mapped-corpus compile job executes every fresh arm.
+
+The audit also found a separate staging defect in the new composite
+admission tests: compile-producer mode skips out of a pytest item after its
+first harness call. Hardshrink's later BF16/special variants therefore need
+explicit preparation before a compile-consumer sweep can use them. Direct
+device admission evidence remains valid; canonical staged-sweep integration
+is being repaired and must not yet be described as complete. Preserve all
+ordinary and special checks, rather than reverting to weaker coverage.
+
+GELU's pending finite-BF16 accuracy repair passes its six focused tests with
+normal golden assertions under OFF, ON and the existing prefix option;
+old-source controls still reject the two repaired positive-tail witnesses.
+Final timing/binary binding remains separate from those assertions.
+
 ## 2026-10-11 Hardshrink sign handling and oracle consistency repaired
 
 tt-metal `20803d83e70` is pushed to both `nkapre/sfpi` mirrors. Fresh

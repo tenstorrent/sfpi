@@ -1,5 +1,17 @@
 # Worklog
 
+## 2026-10-11 — productization audit exposes staging defect
+
+- Pushed tt-metal `f9f50c4d044` and `808d3e3c8ed` to both mirrors: CI trigger
+  coverage and exact-format planning repairs. Local host suite 17/17 PASS;
+  trigger commit GitHub host CI PASS. No compiler/default changes.
+- Expm1Cw/I1 plan the actual BF16 space. Composite Hardshrink/ReLU nodes
+  are not treated as single-variant exhaustive streamers; stale selector
+  and count bindings are tested. Planning COMPLETE is not admission.
+- Found compile-producer exits at the first call inside composite admission
+  tests. Direct device results stand, but staged-sweep wiring needs a fix;
+  do not claim full productization while it is pending.
+
 ## 2026-10-11 — Hardshrink timing and compiler refusal closed
 
 - Repaired-source matched four-arm, three-repeat timing: semantic OFF/ON
