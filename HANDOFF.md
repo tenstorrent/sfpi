@@ -1,5 +1,67 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 full sweep sealed; composite staging repaired
+
+The immutable tt-metal `592b495aedeb9f3cd0c6a1bde817466053c7cbf8`
+Blackhole campaign finished **284/284: 239 PASS, 21 SKIP, 24 FAIL**.
+All 24 failed rows failed compilation (61 failed arm-stages); zero timeouts
+were found across 3,933 status records. This is not a full correctness or
+performance win. Later source repairs are not adopted into this baseline.
+
+Raw timing comparisons use the inclusive 0.5% band:
+
+| Comparison | Complete rows | Faster | Parity | Slower |
+|---|---:|---:|---:|---:|
+| Semantic ON versus OFF | 239 | 186 | 51 | 2 |
+| Semantic ON versus hand ON | 142 | 64 | 14 | 64 |
+
+The campaign selected 164 four-arm rows, 99 semantic-only rows and 21
+exclusions. Raw PASS means the executed sweep checks passed, not exhaustive
+numeric admission. The sealed 15-row companion ledger permits only one
+bounded-partial versus-hand comparison (sigmoid-fresh, nine FP32 strata)
+and five causal OFF/ON comparisons. Over all 284 rows, effective statuses
+are 224 UNREVIEWED, 45 RAW_NOT_PASS, 4 RAW_CAUSAL_ONLY,
+2 DOMAIN_SCOPED_UNFULFILLED, 2 CONDITIONAL_UNFULFILLED,
+3 REFUSED_FULL_VALIDATION_FAILURE, 2 REFUSED_ACCURACY_WIN,
+1 BOUNDED_PARTIAL_ADMITTED and 1 REFUSED_STALE_SEMANTICS.
+`campaign_fully_admitted=false`; full-domain/formal verification is not
+implied by timing or partial companion coverage.
+
+Evidence root on Exabox:
+`/data/nkapre/sfpi-boundary-topk-20261009/full-sweep-592b/`.
+Raw data remains in `full-284/`. The original postflight failed because it
+ran on the login host against a compute-local `/home` path. Its failure log
+is preserved; `full-284.postflight.retry.log` records successful reporting
+on the allocated compute node, without rerunning or mutating the baseline.
+
+| Artifact | SHA256 |
+|---|---|
+| `full-284/results.tsv` | `659315f682dd3f2dcb116c3ef7c2ddbc50734eba2fb558df13b9ac84a1bb015d` |
+| `full-284/summary.json` | `e41d78854d79977653d688910c73023deeb79a6ebd7583945fd97dfc00fdf44a` |
+| `full-284-report.json` | `4dfc4c54fb98b32050bf15b63f342e9cd516ed6f38e8a8e5e871b6fad60faf59` |
+| `admission-terminal.tsv` | `d38b8b92ea0ca2389ffe09b8cef1e2e8ac405972c6774275315f6f6fd490935f` |
+| `full-284-admission-report.json` | `13a2d5cf491c378683cc12881c1bdd0cd69ae0c17dd131916beaa60708cb634d` |
+
+tt-metal `5cf5d067fd8bf8bddace340f88ef86621ad5b50d` repairs the
+composite-producer defect described below. Producer mode prepares every
+Hardshrink/ReLU helper variant before returning; consumers retain all
+ordinary, boundary and special assertions. Both literal profiles pass
+three producer and three consumer nodes on BH device2. Pre-consumer,
+post-consumer and retained ELF inventories match (19 ELFs per profile).
+The old Hardshrink header still fails the normal consumer negative control.
+Evidence: `unary-composite-producer-808d-v3/`; the negative control is
+retained under `unary-composite-producer-808d-v2/`.
+Pinned host checks pass 18/18; GitHub host CI `38181938215` passes.
+Both mirrors received this commit. Canonical GELU integration is a separate
+pending check; standalone GELU evidence below must not be overstated.
+
+Next compiler investigation is compile-only flag bisection of the three
+ON-only failures: minmax-max, minmax-min and mulint32-fresh. Retain exact
+commands, preprocessed inputs and pass dumps. A terminal spill diagnostic
+does not identify its root cause and does not justify weakening the guard.
+No compiler, default flag, GCC pin or immutable timing anchor changed.
+Scheduled silicon deployment still requires runner/artifact provisioning.
+
 ## 2026-10-11 GELU finite accuracy repair and matched option recovery
 
 tt-metal `ccb29a658d9` changes only the large-magnitude affine intercept in

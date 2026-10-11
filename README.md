@@ -3,6 +3,14 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+The full 284-row Blackhole sweep is complete: **239 PASS, 21 SKIP,
+24 compile-stage FAIL**, with no timeouts. Raw semantic ON versus hand ON
+is 64 faster / 14 parity / 64 slower across 142 complete comparisons;
+these are not full-domain admitted wins. The sealed admission report
+remains fail-closed. Composite Hardshrink/ReLU staged validation is repaired
+at tt-metal `5cf5d067fd8`, with OFF/ON producer/consumer and ELF-custody
+checks passing. See the [terminal checkpoint](HANDOFF.md#2026-10-11-full-sweep-sealed-composite-staging-repaired).
+
 GELU's finite-BF16 accuracy repair is landed at tt-metal `ccb29a658d9`.
 Matched timing with an existing compiler option recovers 7.01%, reaching
 28,857 cycles versus hand's 28,846. This is a bounded finite-error recovery,
@@ -17,9 +25,9 @@ store-sink shortcut is refused by the current compiler's format-safety gate.
 See the [Hardshrink repair](HANDOFF.md#2026-10-11-hardshrink-sign-handling-and-oracle-consistency-repaired).
 
 Stronger gates have exposed Hardshrink negative-NaN failures at the immutable
-baseline and a current GELU approximation-license failure. A measured GELU
-option recovery is therefore not an admitted win. The full sweep remains
-running; see the [numerical refusal checkpoint](HANDOFF.md#2026-10-11-additional-numerical-refusals-during-the-full-sweep).
+baseline and a pre-repair GELU approximation-license failure. Later repairs
+do not change those baseline refusals; see the historical
+[numerical refusal checkpoint](HANDOFF.md#2026-10-11-additional-numerical-refusals-during-the-full-sweep).
 
 Fresh ReLU recovery and its permanent admission gate are pushed at tt-metal
 `72bfc90564d`: matched KERNEL cycles improve 5.88% OFF / 6.23% ON with
@@ -29,13 +37,14 @@ visible; this is not a versus-hand win. See the
 
 Softplus's unit-origin recovery is pushed at tt-metal `202736dda62`:
 semantic ON improves another 2.31% with exhaustive BF16 output equality
-preserved, leaving a 3.91% gap to hand. The full sweep is still running; see
+preserved, leaving a 3.91% gap to hand. See
 the [latest measured recovery](HANDOFF.md#2026-10-11-softplus-unit-origin-recovery).
 
 Exact timed-format Expm1Cw/I1 gates and a fail-closed terminal admission
 report are now pushed (`fed8cf378c7`, `ef9ec66de16`). Full BF16 enumeration
 passes OFF/ON with production/fresh equality; I1 still has 129 ULP of
-in-claim near-zero error in both arms. The full 284-row run remains pending.
+in-claim near-zero error in both arms. These later-source gates do not
+retroactively admit the immutable 284-row run.
 See the [continued swarm checkpoint](HANDOFF.md#2026-10-11-continued-swarm-exact-format-gates-and-terminal-claim-filter).
 
 The 2026-10-11 swarm landed strict BF16 Softplus validation (`b76de4f8dc5`)
@@ -45,10 +54,11 @@ trails hand by 11.28%. Full TopK exposes 24 compile failures per profile;
 expm1's FP32 edge and the partial I0/sigmoid strata pass. No compiler change
 was landed. See the [admission and failure ledger](HANDOFF.md#2026-10-11-swarm-admitted-softplus-repair-and-validation-failures).
 
-A new current-source Blackhole sweep was launched on 2026-10-11 (Slurm
+A Blackhole sweep was launched on 2026-10-11 (Slurm
 129833): 164 four-arm entries, 99 semantic-only entries and 21 explicit
-exclusions. The pilot passes, but the full result is pending; see the
-[running checkpoint and evidence paths](HANDOFF.md#2026-10-11-current-source-full-silicon-sweep--running-checkpoint).
+exclusions. It is now complete as summarized above; the historical
+[launch checkpoint](HANDOFF.md#2026-10-11-current-source-full-silicon-sweep--running-checkpoint)
+retains setup and evidence paths.
 
 The sweep productization update is committed at tt-metal `592b495aede`:
 repaired nightly gates, a pinned 15-check host validation entry point, and a

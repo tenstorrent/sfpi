@@ -1,5 +1,24 @@
 # Worklog
 
+## 2026-10-11 — full baseline sealed and staged admission repaired
+
+- Immutable 592b run finished 284/284: 239 PASS, 21 SKIP, 24 compile-stage
+  FAIL (61 arm-stages), zero timeouts. Raw ON/OFF: 186 faster, 51 parity,
+  2 slower of 239; ON/hand ON: 64 faster, 14 parity, 64 slower of 142.
+  Inclusive comparison band is 0.5%, not the historical September 1%.
+- Sealed 15-row ledger and reports retain source/compiler/results hashes.
+  Only one bounded-partial versus-hand and five causal OFF/ON comparisons
+  qualify; campaign_fully_admitted remains false. No later-source adoption.
+- Preserved postflight login/compute-path failure, then regenerated reports
+  successfully on the compute node without rerunning the raw baseline.
+- tt-metal `5cf5d067fd8` pushed to both mirrors: prepare every composite
+  Hardshrink/ReLU variant in producer mode, keep runtime assertions intact.
+  Device2 OFF/ON producer and consumer each pass 3/3; pre/post/retained ELF
+  inventories match. Old Hardshrink normal-consumer control still fails.
+  Pinned host checks 18/18 PASS; GitHub host CI 38181938215 PASS.
+- Canonical GELU integration and compile-only ON-only failure triage remain
+  active. No compiler/default/pin changes or full-win claim.
+
 ## 2026-10-11 — GELU finite accuracy repair landed
 
 - tt-metal `ccb29a658d9`: one asymptotic intercept corrected; permanent host
