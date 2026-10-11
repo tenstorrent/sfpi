@@ -1,5 +1,35 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 ON-only compiler failures: controlled interaction witness
+
+Compile-only controls on clean immutable 592b reproduce the same result for
+minmax-max, minmax-min and mulint32-fresh: literal OFF passes, literal ON
+fails the LREG-pressure guard, and exact ON with `init-hoist` removed passes.
+Appending the first 24 ordered ON tokens to literal OFF passes; adding token
+25, `-mtt-tensix-optimize-init-hoist`, fails. OFF plus that token alone
+passes. Thus the flag participates in an interaction necessary for these
+exact ON failures; it is not independently sufficient, and prefix bisection
+does not establish a unique or minimal cause because flags can interact
+non-monotonically. No compiler source, spill guard or default changed.
+
+Each `full-sweep-592b/compiler-bisect-on-only-<row>-v2/` retains commands,
+clean source/compiler identities and boundary RTL dumps (13 PASS-side,
+7 FAIL-side files). The max v1 harness-path failure is preserved separately.
+Summary SHA256s:
+
+- minmax-max: `86a6ed6186179142ebeb91e6298cf2981ca0eeb8442772501b0a32e51d3c6cd9`
+- minmax-min: `6b989a2653d7d7099e98648a74d0b1ecbf39bc85cd7bdd9a37699353fc9ac7a9`
+- mulint32-fresh: `bb7a2e8cb4e21ffa223c9ffd50eb113dbf4b674c9ac765b5e0a53e84336a9b9d`
+
+The archived driver is `full-sweep-592b/on_only_bisect.py`, SHA256
+`ce443a0d542732d179a81110175121080b928e2e360946f5e50d13b668e257b0`.
+The original three ordinary correctness selectors pass 3/3 for semantic
+OFF and ON-minus-init-hoist on BH device0; comparator selectors pass 3/3
+for hand OFF and literal hand ON. Candidate timing and general mechanism
+review are pending. Do not relabel these candidates literal ON or overwrite
+its compile refusal; these finite/sample checks are not full-domain numeric
+admission. Device evidence is `compiler-bisect-on-only-device0-v1/`.
+
 ## 2026-10-11 canonical GELU staged admission integrated
 
 tt-metal `c1835283f16` keeps the existing one-item semantic/hand correctness
@@ -36,8 +66,16 @@ tree. The staged math `.text` matches prior standalone regression
 executables by profile. This is staged source/text binding, not a claim
 that a new full current-tree exhaustive sweep ran. Final local pinned host checks pass
 18/18 in 55.9 seconds, including the historical non-live check; all commit
-hooks pass. Both tt-metal mirrors received the commit. The finite-error
+hooks pass; GitHub host CI `38182593880` passes. Both tt-metal mirrors
+received the commit. The finite-error
 and full-special limitations below still apply.
+
+Follow-up tt-metal `bab42323639` adds a permanent full checked-in corpus
+planner regression: all 164 paired rows are accounted for without replacing
+the real classification sets, and absent validation never yields COMPLETE.
+This device-free check uses synthetic flag selections, not measured tuning
+proposals. The focused test, commit hooks and GitHub host CI `38183227695`
+pass; both mirrors received the commit. No runtime source changes.
 
 ## 2026-10-11 full sweep sealed; composite staging repaired
 
@@ -47,7 +85,8 @@ All 24 failed rows failed compilation (61 failed arm-stages); zero timeouts
 were found across 3,933 status records. This is not a full correctness or
 performance win. Later source repairs are not adopted into this baseline.
 
-Raw timing comparisons use the inclusive 0.5% band:
+Raw timing comparisons classify deltas at or below -0.5% as faster, at or
+above +0.5% as slower, and strictly between those thresholds as parity:
 
 | Comparison | Complete rows | Faster | Parity | Slower |
 |---|---:|---:|---:|---:|

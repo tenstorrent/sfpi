@@ -1,5 +1,19 @@
 # Worklog
 
+## 2026-10-11 — controlled ON-only failure recovery investigation
+
+- Exact 592b compile controls isolate the same init-hoist interaction in
+  minmax-max/min and mulint32-fresh: literal ON fails, ON-minus-init passes,
+  OFF-plus-init alone passes. Prefix boundary and RTL dumps retained; not
+  a unique/minimal root-cause claim, no compiler or default change.
+- Original selectors pass on BH device0 under semantic OFF/candidate and
+  hand OFF/ON (3/3 each profile). Matched timings are still pending; this
+  is ordinary finite/sample validation, not exhaustive admission.
+- tt-metal `bab42323639` makes full-manifest planner coverage a regression
+  test with the real classification sets. All 164 paired rows are accounted
+  for. Focused test, hooks and GitHub host CI 38183227695 PASS; both mirrors
+  match. Synthetic selections exercise planning, not tuning performance.
+
 ## 2026-10-11 — canonical GELU admission integrated
 
 - tt-metal `c1835283f16`: retained one-item selectors now cover original
@@ -19,7 +33,8 @@
 - Immutable 592b run finished 284/284: 239 PASS, 21 SKIP, 24 compile-stage
   FAIL (61 arm-stages), zero timeouts. Raw ON/OFF: 186 faster, 51 parity,
   2 slower of 239; ON/hand ON: 64 faster, 14 parity, 64 slower of 142.
-  Inclusive comparison band is 0.5%, not the historical September 1%.
+  Comparison thresholds are -0.5% / +0.5% (inclusive faster/slower), with
+  parity strictly between them, not the historical September 1% threshold.
 - Sealed 15-row ledger and reports retain source/compiler/results hashes.
   Only one bounded-partial versus-hand and five causal OFF/ON comparisons
   qualify; campaign_fully_admitted remains false. No later-source adoption.
