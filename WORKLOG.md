@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-11 — current-source full silicon sweep started
+
+- Allocated exclusive BH `bh-glx-120-b04u08`, Slurm 129833; staged clean
+  tt-metal `592b495aede` and workflow `035b07b` with the hash-verified Exabox
+  GCC `ba4b9b13a52` compiler. No source/compiler change or historical re-pin.
+- ReLU pilot passes four-arm correctness and three-repeat timing, but semantic
+  ON 65723 cycles still loses to hand ON 37550. Full 284-entry serial sweep
+  runs durably as step `129833.9`: 164 four-arm, 99 semantic-only, 21 exclusions.
+- At 18:45 UTC only `abs` and `absint32` are complete (both PASS). This is a
+  running checkpoint, not corpus completion or a full-win claim. Formal,
+  exhaustive and ULP admission are NOT_RUN. Explicit subprocess timeout: 120s.
+- Evidence: `/data/nkapre/sfpi-boundary-topk-20261009/full-sweep-592b/`;
+  source identity, continuation paths and caveats are in HANDOFF. A detached
+  host-only postflight watcher requires exactly 284 coherent completed rows
+  before producing the report; incomplete campaigns remain errors.
+
 ## 2026-10-11 — sweep productization
 
 - Pushed tt-metal `592b495aede` to both `nkapre/sfpi` mirrors. Repaired the

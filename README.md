@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+A new current-source Blackhole sweep was launched on 2026-10-11 (Slurm
+129833): 164 four-arm entries, 99 semantic-only entries and 21 explicit
+exclusions. The pilot passes, but the full result is pending; see the
+[running checkpoint and evidence paths](HANDOFF.md#2026-10-11-current-source-full-silicon-sweep--running-checkpoint).
+
 The sweep productization update is committed at tt-metal `592b495aede`:
 repaired nightly gates, a pinned 15-check host validation entry point, and a
 serialized resource-owner workflow. Host checks pass; scheduled silicon

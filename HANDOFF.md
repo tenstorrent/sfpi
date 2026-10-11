@@ -1,5 +1,53 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 current-source full silicon sweep — running checkpoint
+
+At 18:45 UTC, a new current-source campaign is running on exclusive Blackhole
+allocation **129833**, node `bh-glx-120-b04u08`, step `129833.9`
+(`sfpi_full_284`). This is not the historical pin-59 canonical campaign and
+does not discharge its artifact/deployment requirements below.
+
+The staged, clean tt-metal revision is `592b495aedeb9f3cd0c6a1bde817466053c7cbf8`;
+the existing `craq-workflow` runner is `035b07b872d3429afea0584840c9b9c58ae7f18f`.
+The attested Exabox compiler uses GCC `ba4b9b13a52` and the SFPI `8d8ad39`
+headers; SFPI changes through `d463e09` are documentation-only. Its copied
+binaries were hash-checked before use:
+
+- Driver: `cc240736a9d4b33f7017ae789055bbcb4d2cbc801b8ba2e8f5db8ec2ced8af21`
+- cc1plus: `5b78cd2c2384782e43d5cfb72bb91fa4e410ff23f6667eb7ec738750e665fe26`
+
+Stage root: `/home/nkapre/sfpi-full-sweep-592b/`. Durable evidence root:
+`/data/nkapre/sfpi-boundary-topk-20261009/full-sweep-592b/`.
+`full-284/manifest.json` records source, compiler/assembler hashes, flags,
+seed and row roster. `full-284/summary.json`, `results.tsv`, per-row results,
+raw profiler files and `full-284.launch.log` record progress and failures.
+The login launcher is detached (PID 2721096); SSH disconnection does not stop
+the Slurm step. Inspect live scheduler state before interacting with it.
+The detached host-only `sfpi-full-sweep-postflight.sh` watcher (PID 2730284)
+waits for the runner to exit, requires 284 coherent completed rows, then uses
+the existing reporter to produce `full-284-report.json` with a 0.5% band.
+Incomplete/invalid runs retain a postflight error, not a partial success
+report. See `full-284.postflight.log` and `sfpi-full-sweep-RUNNING.md` beside
+the evidence. After inspecting completion/postflight, release only this
+allocation with `scancel 129833`; the hold otherwise has a 12-hour limit.
+
+The command uses `scripts/sweep_llks.py`, all 284 rows, device 0, three timing
+repetitions and the corpus's literal OFF/ON flags, without overrides or
+historical adoption. It explicitly sets a **120-second subprocess timeout**
+(runner default is 300); a timeout requires raw-log/phase diagnosis, not an
+unsupported claim of a hardware fault. There are 164 four-arm rows, 99
+semantic-only OFF/ON rows, and 21 named exclusions. All cells in each row must
+pass ordinary correctness before timing. Formal, exhaustive and ULP admission
+remain **NOT_RUN** by this runner.
+
+The ReLU pilot passed all four arms, with median cycles sem OFF/ON
+69689/65723 and hand OFF/ON 41136/37550. This is a semantic loss against hand,
+not a recovered win. At the checkpoint, full-sweep `abs` and `absint32` pass;
+the remaining corpus is not yet measured. Read the live evidence for later
+status. Do not convert an incomplete sweep into a final win count, compare
+these galaxy absolute cycles to another machine's anchors, or count a
+correctness pass as a speedup.
+
 ## 2026-10-11 sweep productization
 
 tt-metal `592b495aedeb9f3cd0c6a1bde817466053c7cbf8` is pushed identically to
