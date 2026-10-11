@@ -44,7 +44,18 @@ overwrite its compile refusal, or promote a default. These ordinary
 finite/sample checks remain UNREVIEWED for full-domain numeric admission.
 Evidence: `compiler-bisect-on-only-device0-v1/`, `SUMMARY.json` SHA256
 `f9db61fcad59842d037ecb127f26e98bbabfbcda6b760e1c268a6b441fea29e9`.
-General fixed-register lifetime review remains ongoing; no compiler patch.
+The minmax-max RTL review identifies a genuine fixed-register conflict:
+hoisted descriptor writes require L0 (`sfpwriteconfig_v` operand constraint `x0`),
+while raw L0 remains live through that insertion point. Predicated raw
+SFPLOADI read/write masks preserve inactive lanes across the surrounding
+loop, so this is not permission to delete a conservative-looking sentinel.
+LRA splits hard L0 into a singleton-L0 preservation value, then emits an
+unsupported memory spill/reload; the spill guard correctly rejects it.
+Moving the prefix before raw initialization can overwrite configuration
+ownership, and spare-looking final registers do not prove a safe save.
+A generic fixed-write-footprint versus live-raw-ownership legality check
+is being investigated with paired minimal fixtures. No compiler patch has
+landed, and no ownership or spill checks have been weakened.
 
 ## 2026-10-11 canonical GELU staged admission integrated
 
