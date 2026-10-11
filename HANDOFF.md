@@ -1,5 +1,43 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 ReLU recovery and permanent admission gate
+
+tt-metal `72bfc90564d` is pushed to both mirrors. Fresh ReLU now applies
+min/max under its existing non-NaN magnitude guard. Every BF16 output matches
+the baseline fresh body under OFF and ON, across all 65,536 patterns; both
+have zero ULP/misses in every input class. The production comparator still
+fails all 254 NaN encodings against the unchanged packed oracle.
+
+The new `test_relu_fresh_cpp_admission` retains broad ordinary coverage and
+adds strict packed-special checks. It passes OFF/ON with normal assertions.
+A hash-bound temporary copy selecting production fails against golden under
+both profiles, with no skip or XFAIL. Python-float stimuli do not independently
+preserve all payload/signed-zero bits: the separate exhaustive raw-bit gate
+covers those. Only `relu`'s `sem_corr` selector and its explanatory note change;
+the hand selector, performance selectors, compiler and flags remain unchanged.
+
+The necessary matched rerun retained all actual timing ELFs. All 24 repetitions
+have exactly one TILE_LOOP and KERNEL record and `.text` matches to the
+compile-gate binaries. Full ELF hashes are not claimed equal to separate builds.
+Fresh KERNEL cycles improve OFF **69689 -> 65593 (5.88%)**, ON
+**65723 -> 61626 (6.23%)**. TILE_LOOP post means improve 541.875 -> 509.859375
+and 510.8125 -> 478.8125; these are already normalized, not divided again.
+Hand KERNEL remains 41136/37550, so fresh remains 59.45%/64.12% slower than
+that contract-failing comparator. This is fresh recovery, not a versus-hand win.
+
+Evidence: `full-sweep-592b/relu-candidate-device2-v4/`, including
+`TIMING-FINAL-COMPARISON.json` (SHA256
+`7c4fc2ddb965edf9255f3c160fa541fdfa588524ffd4e62500ae386c2b5e3f9e`),
+`candidate/admission-node/`, and its `production-negative-control-v2/`.
+Header SHA256 is
+`6880aa4e260a320ab5ec6fee9c388adc4251703f02f09fd130ea7b6d1034149d`.
+Commit hooks pass without changing the validated source hashes.
+
+The immutable sweep reached **171/284: 148 PASS, 9 SKIP, 14 compile FAIL**.
+New failures `lcm`/`lcm-fresh` are LREG-pressure refusals, not silicon mismatches.
+Generic existing-option audits and fresh Hardshrink validation are subsequent
+pending work; no compiler patch or default profile change is admitted.
+
 ## 2026-10-11 Softplus unit-origin recovery
 
 tt-metal `202736dda62` is pushed to both `nkapre/sfpi` mirrors. Normalizing

@@ -3,6 +3,12 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Fresh ReLU recovery and its permanent admission gate are pushed at tt-metal
+`72bfc90564d`: matched KERNEL cycles improve 5.88% OFF / 6.23% ON with
+exhaustive BF16 equality preserved. Production's 254 NaN failures remain
+visible; this is not a versus-hand win. See the
+[ReLU evidence checkpoint](HANDOFF.md#2026-10-11-relu-recovery-and-permanent-admission-gate).
+
 Softplus's unit-origin recovery is pushed at tt-metal `202736dda62`:
 semantic ON improves another 2.31% with exhaustive BF16 output equality
 preserved, leaving a 3.91% gap to hand. The full sweep is still running; see

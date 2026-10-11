@@ -1,5 +1,17 @@
 # Worklog
 
+## 2026-10-11 — ReLU recovery and productized gate
+
+- Pushed tt-metal `72bfc90564d` to both mirrors: fresh non-NaN min/max clamp,
+  broad-plus-special admission node, only ReLU semantic correctness selector
+  rewired. Production negative control fails OFF/ON with no skip/XFAIL.
+- Exhaustive BF16 candidate/baseline fresh equality and zero ULP preserved.
+  Matched retained-binary rerun closes the previous custody gap: KERNEL
+  69689 -> 65593 OFF, 65723 -> 61626 ON, recovering 5.88%/6.23%.
+  Still slower than hand; production's 254 NaN failures remain explicit.
+- Full immutable sweep 171/284: 148 PASS, 9 SKIP, 14 compile FAIL. Added
+  lcm/lcm-fresh LREG-pressure refusals, not new numerical device failures.
+
 ## 2026-10-11 — unit-origin Softplus partial recovery
 
 - Pushed tt-metal `202736dda62` to both mirrors; generic opt-in exponential
