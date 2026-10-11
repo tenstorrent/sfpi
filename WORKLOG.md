@@ -1,5 +1,25 @@
 # Worklog
 
+## 2026-10-11 — swarm validation and fresh Softplus repair
+
+- Pushed tt-metal `b76de4f8dc5` and `991b02445e9` to both mirrors. Added
+  strict BF16 tail/origin regressions and a reproducible independently derived
+  residual; no compiler or production body changed.
+- Old fresh Softplus fails both negative controls; corrected source passes
+  focused tests and all 65,536 raw BF16 inputs on the exact timed output
+  format under OFF/ON, including per-class ULP non-regression. WH compile-only
+  passes. Matched sem OFF/ON 213051/185529 versus hand 180041/166724 leaves
+  semantic ON 11.28% slower than hand: not a win. Rejected degree-2 source
+  regressed maximum error to 2 ULP and was not timed or landed.
+- expm1 FP32 edge passes both profiles. Full TopK exposes 24 compile failures
+  per profile (189 PASS, 16 SKIP, 34 XFAIL). I0/sigmoid nine FP32 strata pass;
+  589,824 patterns per op/profile are partial coverage, not a 2^32 proof.
+- Generic compiler CLOBBER candidate did not recover either exact failed TU;
+  archived it, restored its owned edits, and stopped only its build step.
+  All 15 host selftest groups and changed-file hooks pass.
+- Full 592b sweep remains active and immutable. Its stale Softplus comparison
+  remains inadmissible; companion evidence and claim limits are in HANDOFF.
+
 ## 2026-10-11 — current-source full silicon sweep started
 
 - Allocated exclusive BH `bh-glx-120-b04u08`, Slurm 129833; staged clean

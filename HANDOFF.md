@@ -1,5 +1,81 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 swarm: admitted Softplus repair and validation failures
+
+tt-metal `991b02445e9` is pushed to both `nkapre/sfpi` mirrors. It follows
+`b76de4f8dc5`, which added strict BF16 tail admission and corrected ULP-sweep
+shape handling. No compiler, production kernel, default flag, anchor or `main`
+branch changed. SFPI-GCC remains `ba4b9b13a52`.
+
+The old Softplus correctness node selected FP32 while its performance node
+selected BF16, activating different polynomial bodies. The BF16 fresh body
+incorrectly zeroed the negative tail. Its new sweep gate checks every one of
+the 33,810 finite BF16 inputs in [-40,30], with zero absolute tolerance and
+unchanged relative tolerance. Existing FP32 tests are retained. A separate
+exact-output origin test covers signed zeros and signed input subnormals.
+Both tests fail on the old fresh body and pass on production under OFF/ON.
+
+The admitted fresh BF16 formula uses an independently fitted, degree-3
+endpoint-constrained approximation to log1p(u)/u. The exponential estimate is
+normalized by its known origin value, folded into the polynomial coefficients.
+`corpus/tools/fit_softplus_residual.py` reproduces them with pinned NumPy;
+that host calculation is not device evidence. The FP32 source arm is unchanged.
+
+Blackhole validation used the attested compiler below, separate device 1, and
+592b source plus archived changes now committed at the revisions above:
+
+- Ten focused boundary/finite-domain cases pass under each literal profile.
+- The two exact-origin cases pass under each profile; baseline fresh fails
+  and production passes in both negative-control runs.
+- Exact timed BF16-to-BF16, 16-bit Dest enumeration covers all 65,536 raw
+  patterns under OFF and ON, two dispatches per leg. Both implementations
+  pass tolerance; fresh maximum error is no worse than hand in every input
+  class (global maximum 1 BF16 ULP). Outputs are not bit-identical.
+- BF16-input/FP32-output enumeration also passes. An accidentally selected
+  FP32-input ordinary node covered only 65,536 of 2^32 patterns; its evidence
+  is retained as partial and does not count as BF16 or full-FP32 coverage.
+- Final comment-only source binding is Blackhole `.text`-identical under
+  OFF and ON. Wormhole OFF/ON compile passes, not Wormhole silicon.
+
+Three-repeat matched cycles are sem OFF **213051**, sem ON **185529**, hand
+OFF **180041**, hand ON **166724**. Semantic ON improves 12.92% over its OFF
+but remains **11.28% slower than hand ON**: this is an admitted correctness
+repair, not a semantic win. The degree-2 alternative was rejected without
+timing because it increased the finite-normal maximum from 1 to 2 ULP.
+The minimal tail repair and unnormalized degree-4 alternative also failed
+per-class accuracy admission; their timings cannot stand in for admitted wins.
+
+Clean 592b companion validation on device 2 produced:
+
+- FP32 expm1 overflow boundary: 2/2 PASS under each profile.
+- Full TopK: **189 PASS / 24 FAIL / 16 SKIP / 34 XFAIL** under each profile.
+  All 24 failures are compilation refusals for threaded-merge stress variants
+  (`lreg-pressure-exceeded`), not device numeric mismatches. Full TopK is FAIL.
+- I0 and sigmoid nine-strata checks: 18/18 rows per profile pass, zero
+  out-of-tolerance; I0 maximum at most 1 BF16 ULP, sigmoid maximum 0. Coverage
+  is 589,824 sampled FP32 patterns per operation/profile, not exhaustive.
+
+Durable evidence root remains `full-sweep-592b` below. See
+`targeted-softplus/candidate-edomain3-normalized/`, `targeted-softplus/origin-gate/`,
+and `targeted-device2/`. The final Softplus header SHA256 is
+`ed98d7db5e200df079c217c95bf9a13f7a355bbed81b2a9499e3a28b41d6d2d3`.
+`admission.tsv` and `ADMISSION.md` record additional claim limits without
+rewriting raw results; the 592b stale Softplus row stays refused permanently.
+
+A bounded generic allocator CLOBBER experiment passed synthetic BH/WH checks
+but did not recover exact binaryfmod or binary-bcast ON translation units:
+the existing opaque-instruction spill audit still refuses them. No compiler
+patch was committed. Its source/tests/logs are archived under
+`compiler-clobber-candidate/evidence/` and `preprocessed-gates/`; only its
+candidate-build step 129833.79 was stopped. Working-tree compiler edits were
+removed after archiving; the original compiler and full sweep were untouched.
+
+The immutable full 284-row run is still running at source 592b, not 991b.
+At the latest checkpoint it reached 100 rows: 82 PASS, 6 SKIP, 12 compile FAIL.
+Do not call these terminal counts or incorporate repaired-source measurements
+into that population. Further exact-format Expm1Cw/I1 gates and bounded ReLU
+recovery are in progress; read live evidence before claiming their outcomes.
+
 ## 2026-10-11 current-source full silicon sweep — running checkpoint
 
 At 18:45 UTC, a new current-source campaign is running on exclusive Blackhole

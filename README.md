@@ -3,6 +3,13 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+The 2026-10-11 swarm landed strict BF16 Softplus validation (`b76de4f8dc5`)
+and the corrected fresh body (`991b02445e9`) on both tt-metal mirrors.
+Exhaustive timed-format BF16 admission passes OFF/ON, but semantic ON still
+trails hand by 11.28%. Full TopK exposes 24 compile failures per profile;
+expm1's FP32 edge and the partial I0/sigmoid strata pass. No compiler change
+was landed. See the [admission and failure ledger](HANDOFF.md#2026-10-11-swarm-admitted-softplus-repair-and-validation-failures).
+
 A new current-source Blackhole sweep was launched on 2026-10-11 (Slurm
 129833): 164 four-arm entries, 99 semantic-only entries and 21 explicit
 exclusions. The pilot passes, but the full result is pending; see the
@@ -36,7 +43,7 @@ The next source recovery is committed at tt-metal `d33883d572f`: matched
 Blackhole timing recovers I0 by 8.0--8.2%, production Softplus by 50.2--52.7%,
 and production sigmoid ON by 2.5% (OFF ties). I0/sigmoid stratified checks,
 Softplus negative-tail/threshold tests, and selected Wormhole compile-only
-coverage are green. Softplus's stale generated arm is still not admitted, and
+coverage are green. Softplus's generated arm at that revision was not admitted, and
 the pre-existing Exp-edge and generalized-MoE LREG-pressure failures are not
 claimed as fixed. Exact scope is in the
 [2026-10-10 handoff update](HANDOFF.md#2026-10-10-exabox-performance-recovery).
