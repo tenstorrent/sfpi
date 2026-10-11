@@ -1,5 +1,50 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 rdiv causal regression recovery, golden refusal retained
+
+On clean 592b with the attested compiler, removing only
+`-mtt-tensix-optimize-const-residency` from literal ON recovers its measured
+regression. All five cells below ran on the same BH device1, three identical
+repeats each; the OFF and hand references were rerun, not adopted from the
+device0 baseline. TILE_LOOP is the row's primary metric, already cycles/tile
+(shown to the report's six decimal places).
+
+| Profile | KERNEL cycles | TILE_LOOP cycles/tile |
+|---|---:|---:|
+| Semantic OFF | 57,531 | 446.773438 |
+| Semantic ON | 58,167 | 451.835938 |
+| Semantic ON minus const-residency | 57,525 | 446.820312 |
+| Hand OFF | 49,714 | 385.851562 |
+| Hand ON | 49,325 | 382.867188 |
+
+Candidate versus ON improves 1.1037% KERNEL / 1.1101% TILE_LOOP. Versus OFF,
+the residual signs differ (-0.01043% / +0.01049%), both effectively parity.
+It still trails hand ON by 16.6244% / 16.7037%. Actual timing ELF inventories
+are retained and agree across each cell's repeats.
+
+Candidate and literal ON outputs are byte-identical on all 65,536 BF16
+patterns, SHA256
+`a32bd45de14bba8398ac2904722b9c40267e7b9b4c244a019db9760e203bd26e`.
+Ordinary assertions pass, but exhaustive golden checks still report **382
+tolerance failures**, including NaN, negative-subnormal and negative-zero
+classes (127 in-claim failures; overall maximum ULP 65,535). A negative
+subnormal witness produces +infinity instead of -infinity. Therefore this
+is causal compiler-transform recovery only, not semantic accuracy admission
+or an approved hand replacement. Tolerances and source are unchanged.
+
+The code-generation evidence identifies a profitability issue: residency
+credits a recurring SFPLOADI saving although the later combiner can absorb
+that single-use load into SFPMULI. Residency instead adds peeling and
+constant programming without reducing steady-state words. A generic
+generated-combine-table pricing correction is being prototyped, not a
+kernel-specific rule or default change. No compiler patch has landed.
+
+Evidence: `full-sweep-592b/audit-rdiv-dropone/`, particularly
+`device1-five-cell-summary.tsv` (SHA256
+`55c42b1ec353e1350b6f7fab3e7b6d6bb061a190c38a81614f7f75905605b7dc`),
+`timing3rep-device1/` and `device1-reference-matrix/`. The failed initial
+scaffold attempt remains separate from successful runs.
+
 ## 2026-10-11 ON-only compiler failures: controlled interaction witness
 
 Compile-only controls on clean immutable 592b reproduce the same result for

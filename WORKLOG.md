@@ -1,5 +1,18 @@
 # Worklog
 
+## 2026-10-11 — rdiv same-device causal recovery
+
+- Clean592b, attested compiler, same device1 five-cell x3 matrix: semantic
+  OFF/ON/ON-minus-const-residency KERNEL 57531/58167/57525; hand OFF/ON
+  49714/49325. Every cell repeats exactly. Primary TILE_LOOP improves
+  1.1101% versus ON, reaches OFF parity, still trails hand ON 16.7037%.
+- All65536 BF16 candidate outputs equal literal ON, but both retain 382
+  golden tolerance failures (127 in claim). No semantic admission, no
+  weaker tolerance, no default promotion or baseline rebooking.
+- Generic single-use immediate-fold pricing gap identified. Compiler
+  prototype and the separate raw-LREG legality prototype remain gated on
+  source review, compiler regressions and actual candidate execution.
+
 ## 2026-10-11 — changed-flag recovery measured, no blanket promotion
 
 - Clean592b ON-minus-init-hoist candidate passes ordinary device0 checks

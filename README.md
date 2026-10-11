@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Matched follow-up recovers `rdiv`'s ON/OFF regression with an existing
+option disabled, but retains 382 exhaustive golden failures; it is not an
+admitted win. Compiler fixes remain under investigation. See the
+[causal recovery checkpoint](HANDOFF.md#2026-10-11-rdiv-causal-regression-recovery-golden-refusal-retained).
+
 The full 284-row Blackhole sweep is complete: **239 PASS, 21 SKIP,
 24 compile-stage FAIL**, with no timeouts. Raw semantic ON versus hand ON
 is 64 faster / 14 parity / 64 slower across 142 complete comparisons;
