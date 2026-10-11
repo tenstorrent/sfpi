@@ -25,6 +25,10 @@ are retained and agree across each cell's repeats.
 Candidate and literal ON outputs are byte-identical on all 65,536 BF16
 patterns, SHA256
 `a32bd45de14bba8398ac2904722b9c40267e7b9b4c244a019db9760e203bd26e`.
+The archived evidence-only `test_rdiv_fresh_bf16_stream.py` gate exercises
+Float16_b-to-Float16_b, DestAccumulation.No, fresh implementation 1, matching
+the timed path; it is not the generic FP32 correctness selector. Sixteen
+raw-input bands cover the complete two-byte input space.
 Ordinary assertions pass, but exhaustive golden checks still report **382
 tolerance failures**, including NaN, negative-subnormal and negative-zero
 classes (127 in-claim failures; overall maximum ULP 65,535). A negative
