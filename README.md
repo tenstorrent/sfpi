@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Hardshrink's negative-NaN bug and ordinary-oracle inconsistency are repaired
+at tt-metal `20803d83e70`, pushed to both mirrors. Exhaustive BF16 OFF/ON
+equals production; the permanent regression rejects old source. Timing is
+pending. See the [Hardshrink repair](HANDOFF.md#2026-10-11-hardshrink-sign-handling-and-oracle-consistency-repaired).
+
 Stronger gates have exposed Hardshrink negative-NaN failures at the immutable
 baseline and a current GELU approximation-license failure. A measured GELU
 option recovery is therefore not an admitted win. The full sweep remains

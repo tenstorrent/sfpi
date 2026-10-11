@@ -1,5 +1,47 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 Hardshrink sign handling and oracle consistency repaired
+
+tt-metal `20803d83e70` is pushed to both `nkapre/sfpi` mirrors. Fresh
+Hardshrink explicitly clears the sign before its magnitude comparison;
+SFPABS preserves negative NaN signs and was incorrectly zeroing those lanes.
+The ordinary scalar golden now calls the documented PyTorch reference, so
+its NaN behavior agrees with the existing exhaustive oracle. No tolerance,
+production body, compiler, default flag or baseline changed.
+
+The new admission node retains broad ordinary FP32 coverage, adds strict
+BF16 finite boundaries, and checks FP32 specials whose sign survives host
+construction. Actual packed-input captures prove both NaN signs reach the
+test. Under both literal profiles, old fresh fails against the corrected
+oracle, while production and repaired fresh pass. The corrected scalar
+oracle matches all 65,536 BF16 reference results; the old one differs on
+all 254 NaN inputs. Adding Hardshrink to installed-harness oracle parity
+protects this consistency; the portable host suite does not execute that
+installed-harness check.
+
+Separate exhaustive device2 runs prove repaired fresh equals production on
+all 65,536 BF16 patterns under OFF and ON, with zero ULP/misses in every
+class. BH/WH OFF/ON compile checks pass; no WH silicon claim. Evidence is
+592b plus the archived source patches, not an unmodified current-tree run:
+
+- `full-sweep-592b/hardshrink-candidate-raw-592b-device2/`: exhaustive result.
+- `hardshrink-admission-v8-592b-device2/`: final normal assertions, negative
+  controls, packed-input proof and old/new oracle comparison.
+- `hardshrink-final-compile-592b/`: final compile custody.
+
+The header SHA256 is
+`76e1fd23d4570ccf84d00e53c782c5bc8f89638fbd3217b21b878665f128fa3d`.
+The final oracle hash is
+`d4de42f165604e54520fa5c92544e81307c8e3ba37c51dde7b8baca9d4ef8edd`;
+commit-hook formatting changes are AST-identical to the validated oracle
+`4057a22ea87e9ad22aa3b13390af4d233bd5a4063f535f7f501bd3d8a9f281ec`.
+Hooks pass. Matched timing is pending; this commit claims correctness only.
+
+The immutable campaign reached **231/284: 190 PASS, 19 SKIP, 22 FAIL**.
+Its old Hardshrink row stays refused. GELU's one-coefficient finite-accuracy
+repair is separately pending and must not be confused with a full-domain
+win or the earlier unchanged-source option measurement.
+
 ## 2026-10-11 additional numerical refusals during the full sweep
 
 The immutable sweep reached **217/284: 177 PASS, 18 SKIP, 22 FAIL** at this

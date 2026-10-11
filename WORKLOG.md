@@ -1,5 +1,18 @@
 # Worklog
 
+## 2026-10-11 — Hardshrink correctness repair landed
+
+- Pushed tt-metal `20803d83e70` to both mirrors: explicit sign-clear magnitude,
+  PyTorch-consistent scalar golden, permanent admission node and oracle parity.
+- Repaired fresh equals production for all 65,536 BF16 patterns OFF/ON,
+  zero ULP/misses. Old fresh fails the corrected normal gate; repaired fresh
+  and production pass. Actual packed inputs prove both NaN signs.
+- Corrected oracle agrees on all 65,536 patterns; old oracle differs on 254
+  NaNs. BH/WH OFF/ON compile passes, not WH silicon. Tolerances unchanged.
+- Hooks pass; final golden formatting is AST-identical to device-validated
+  source. Matched timing pending. Immutable 592b refusal stays unchanged.
+- Full sweep checkpoint: 231/284, 190 PASS, 19 SKIP, 22 FAIL.
+
 ## 2026-10-11 — stronger gates expose additional numerical debt
 
 - Exact592b Hardshrink exhaustive OFF/ON fails127 negative NaNs in fresh,
