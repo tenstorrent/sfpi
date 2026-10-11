@@ -1,5 +1,39 @@
 # Handoff — 2026-10-09
 
+## 2026-10-11 Softplus unit-origin recovery
+
+tt-metal `202736dda62` is pushed to both `nkapre/sfpi` mirrors. Normalizing
+the exponential mantissa polynomial to unit origin lets BF16 fresh Softplus
+use the direct residual coefficients, avoiding non-unit constant loads.
+The generic helper mode defaults off; FP32 Softplus and default consumers
+retain their arithmetic. No compiler, flags, hand body or baseline changed.
+
+Matched device1 cycles, identical across three repetitions: sem OFF **196666**,
+sem ON **173241**, hand OFF **180041**, hand ON **166724**. Relative to 66b5,
+semantic saves 8191 OFF / 4096 ON cycles (**4.00% / 2.31%**). The ON gap is
+now **3.91% slower than hand**, not parity. Relative to the admitted 991b
+correctness repair, cumulative savings are 16385 OFF / 12288 ON cycles.
+
+All 65,536 BF16 patterns under each profile remain bit-identical to admitted
+66b5 fresh output, with unchanged per-class admission, maximum 1 ULP and zero
+misses. Focused origin/boundary/tail gates pass. BH/WH OFF/ON compile and final
+comment-only `.text` binding pass; no WH silicon claim. Default-helper Sigmoid
+BH OFF/ON and forced FP32 Softplus BH/WH OFF/ON `.text` match 66b5. Coefficient
+reproduction passes pinned NumPy 1.26.4. Commit hooks pass without source changes.
+
+Evidence: `full-sweep-592b/softplus-unit-origin-device1/EVIDENCE.md` and
+`timing4arm/results.tsv`; actual timing ELFs and per-repetition hashes retained.
+Final SHA256:
+
+- helpers.h: `145c39c8bd36efa3b6ede4a161a213c00a18bb5f2d8117a173e687075f491358`
+- softplus.h: `e1cb0e456278fd72040f01976409a837f0e2d3fc0c2aa2f76e57b633dff4ade1`
+- fitter: `4fced0bd515e9526c1f3d6733b1cf8c9ed0021606d081c755069536b8cff3531`
+
+The immutable sweep checkpoint is **157/284: 136 PASS, 9 SKIP, 12 compile FAIL**,
+not terminal. ReLU's evidence-retaining timing rerun has closed its binary
+custody gap, but its permanent fresh-only regression gate is still pending;
+do not treat it as committed. Production's 254 NaN failures remain visible.
+
 ## 2026-10-11 bounded Softplus performance recovery
 
 tt-metal `66b5e8fe134` is pushed to both mirrors. The BF16 fresh Softplus

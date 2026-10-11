@@ -1,5 +1,17 @@
 # Worklog
 
+## 2026-10-11 — unit-origin Softplus partial recovery
+
+- Pushed tt-metal `202736dda62` to both mirrors; generic opt-in exponential
+  normalization plus direct BF16 residual coefficients. Compiler unchanged.
+- All BF16 outputs exactly equal admitted 66b5 under OFF/ON; focused gates,
+  BH/WH compile, final `.text` binding and unaffected-consumer checks pass.
+- Matched three-repeat sem 196666/173241, hand 180041/166724: another 4.00%/2.31%
+  semantic improvement, still 3.91% slower ON than hand. Actual timing binaries
+  retained. No full-win or WH-silicon claim.
+- Full immutable sweep 157/284: 136 PASS, 9 SKIP, 12 compile FAIL. ReLU rerun
+  closes timing custody; its permanent gate remains pending before landing.
+
 ## 2026-10-11 — measured partial Softplus recovery
 
 - Pushed tt-metal `66b5e8fe134` to both mirrors. Removed only the proven
