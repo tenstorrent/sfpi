@@ -1,5 +1,50 @@
 # Handoff — 2026-10-09
 
+## 2026-10-12 effect-ABI sweep and GCC PR publication gate
+
+The separate 08fd effect-ABI Blackhole pilot completed a segmented 284-row
+three-repeat corpus run on `bh-glx-120-b08u08` (Slurm 130160): **239 PASS,
+21 SKIP, 24 compile FAIL**. The first 249 rows were interrupted by NFS quota;
+three intact per-row reruns and a node-local 37-row continuation completed
+the reconciled set. All 24 failures are compile-stage, not measured numerical
+or performance failures. The exact source/compiler/runner/flag identities,
+segment overlap, failure list and limited timing comparisons are in the
+[scoped sweep report](https://github.com/tenstorrent/tt-metal/blob/84c21ea9bfd99f03c2e2993932b7a80e6adac1c9/tt_metal/tt-llk/tests/corpus/SWEEP_20261012.md).
+The committed strict TopK pilot separately reports 82 PASS / 2 narrowly
+scoped FP16-infinity XFAIL. Neither test proves the later GCC/SFPI restack
+candidate on silicon.
+
+The local, **unpublished** GCC PR #23–54 restack ends at
+`0318be498ea13a70781ec138d756cc59bd148c16` with SFPI gitlink candidate
+`e3553b88ce7808387b137c48eb525a10c95e02da`. All 34 stage-head host
+suites passed; final stage had 8,166 PASS / 2 expected XFAIL / zero unexpected,
+and WH/BH/QSR header ABI passed. A 33-ref atomic lease-protected push **dry
+run** succeeded, but no GCC PR head, compiler mirror or SFPI mirror was
+pushed. The proposed #23 head bases directly on current public `main`; the
+conflict shown on its old public head is not a proposed-source conflict.
+Public #23–54 heads still have no human approvals or new-head CI evidence.
+
+One scoped allocator graph repair was committed **locally only** as GCC
+`b1d49f8a329d3ad15b529d9a5b2a3c256203d388`. It accepts a bare hard-LREG
+point CLOBBER while retaining refusal of other hard-register forms. Its full
+host suite passed 8,176 assertions / 2 expected XFAIL / zero unexpected;
+the ten added PASS assertions are paired positive/negative regressions. A
+node-built 08fd-plus-patch compile-only probe of 27 previously failing ON
+arms recovered **zero**: 26 reached the downstream
+`dst-rwc-effect-unproved` spill guard, one retained plain pressure. The first
+opaque instruction in `binary-bcast` is an address-modifier `.ttinsn`, so a
+blanket opaque-ASM bypass would weaken correctness. Probe evidence is under
+`/workspace/sfpi-evidence-20261012/`; local publication inventory is
+`/workspace/sfpi-publication-prep/README.md`.
+
+Do not call GCC #22–54 merge-ready. Resolve the #22-versus-#54 landing path,
+Nathan's effect/API and ISA-mask review, the remaining compile failures, and
+exact combined-pin device correctness/performance before publishing the
+leased PR stack, mirror pins and companion. No `main` was pushed. Both GCC mirrors
+remain `ba4b9b13a5215c2e0b2a51de75018e1a477a13d1`, and both tt-metal
+`nkapre/sfpi` mirrors are `84c21ea9bfd99f03c2e2993932b7a80e6adac1c9`
+as of this checkpoint.
+
 ## 2026-10-12 corrected init candidate: native gates and matched timing
 
 The stalled native gate was rerun from the actual `gcc` build directory:

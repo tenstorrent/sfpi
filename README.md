@@ -3,6 +3,12 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+The separate 08fd Blackhole effect-ABI sweep is reconciled at 239 PASS /
+21 SKIP / 24 compile FAIL over 284 rows, and the GCC #23–54 restack is still
+unpublished. A narrow local allocator fix passes its host suite but recovers
+no failed compile arm in a focused node probe. See the
+[publication checkpoint](HANDOFF.md#2026-10-12-effect-abi-sweep-and-gcc-pr-publication-gate).
+
 The corrected init-hoist candidate now passes 161 native assertions,
 12 ordinary device checks and all 36 matched timing cells. Min/max measures
 8.38% faster than hand ON; mulint32 remains 4.58% slower. These are not

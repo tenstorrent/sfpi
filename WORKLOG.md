@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-10-12 — effect-ABI sweep reconciled; PR publication held
+
+- Completed the separate 08fd effect-ABI Blackhole 284-row campaign across
+  three evidence segments: 239 PASS / 21 SKIP / 24 compile FAIL. Published
+  the scoped report at tt-metal `84c21ea9bfd` on both `nkapre/sfpi` mirrors.
+  Strict TopK selectors separately passed 82 with two narrow FP16 XFAIL.
+- Audited 34 local GCC restack stages through `0318be498ea`: exact final
+  `rvtt.exp` 8,166 PASS / 2 XFAIL, WH/BH/QSR ABI PASS. The 33-ref atomic
+  lease-protected dry run changed no remote; public PR heads remain old.
+- Locally committed scoped allocator graph repair `b1d49f8a329`; full host
+  suite 8,176 PASS / 2 XFAIL, zero unexpected. In a node-built 08fd-plus-patch
+  compile-only probe, 0/27 failing ON arms recovered. The first downstream
+  opaque instruction is address-modifier `.ttinsn`, not raw-LREG metadata;
+  spill legality was not weakened. Patch remains unpushed.
+- Released Slurm jobs 130160 and queued 130240 after copying evidence.
+  Exact combined-pin device gates, owner/API review, #22/#54 decision and
+  new-head CI/approvals remain. No compiler/SFPI PR or `main` push.
+
 ## 2026-10-12 — execution unblocked and matched timing completed
 
 - Retried native tests in the correct gcc build directory: init102 and
