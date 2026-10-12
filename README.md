@@ -3,9 +3,15 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-Generic compiler candidates now recover a literal-ON minmax compile failure
-and pass the corrected residency regression suite (243 assertions). Device
-validation is pending; no compiler fix or pin has landed. See the
+The corrected init-hoist candidate now passes 161 native assertions,
+12 ordinary device checks and all 36 matched timing cells. Min/max measures
+8.38% faster than hand ON; mulint32 remains 4.58% slower. These are not
+full-domain admitted wins, and no compiler pin has changed. See the
+[matched checkpoint](HANDOFF.md#2026-10-12-corrected-init-candidate-native-gates-and-matched-timing).
+
+The earlier generic compiler checkpoint records the first literal-ON
+compile recovery and 243 residency assertions, before subsequent review
+corrections and device checks. See the
 [compiler checkpoint](HANDOFF.md#2026-10-12-compiler-candidates-compile-recovery-device-gate-pending).
 
 Matched follow-up recovers `rdiv`'s ON/OFF regression with an existing

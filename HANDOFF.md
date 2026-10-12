@@ -1,5 +1,58 @@
 # Handoff — 2026-10-09
 
+## 2026-10-12 corrected init candidate: native gates and matched timing
+
+The stalled native gate was rerun from the actual `gcc` build directory:
+`init-hoist-*.C` reports 102 expected passes and `raw-lreg-*.C` reports 59,
+with no unexpected failures. The earlier parent-directory invocation did
+not run tests. Logs are retained under shared evidence
+`compiler-init-creg-native-gates-v1/`. Native cc1plus
+`7ac198248e6678d0f676b8a07496036b7eb4d5fde8d1ceda48c02ae1a46e1e28`
+contains corrected init plus the older residency prototype, not the
+init-only remote binary. The CREG8/12/15 positive forms stage2/full;
+live-L0 and unknown-mask negative controls still refuse.
+
+Init-only Exabox cc1plus
+`63986aa5ddaf15e7d40355b5a2f2988cfcc883f19e3463ae614977b5296db586`
+passes original ordinary selectors for all three rows under semantic
+OFF/ON and hand OFF/ON: 12/12 on device0, clean tt-metal592b. It is selected
+by explicit `-B` with the attested driver/binutils unchanged. Source
+crosscall SHA is `3cab61ecedfe65e452df17554d93f2c798b40cebf6796063097ccbd04afe44ae`.
+The correction recognizes valid constant-register reads 8..15 as outside
+raw L0..L7 ownership; it does not broaden writes or unknown operands.
+
+Matched timing job129883 completed all 36 cells in 2m27s on the same
+physical node `bh-glx-120-b04u08`, device0. Three-repeat median TILE_LOOP
+cycles/tile:
+
+| Row | Semantic OFF | Semantic ON | Hand OFF | Hand ON |
+|---|---:|---:|---:|---:|
+| minmax-max | 195.8125 | 133.6796875 | 145.90625 | 145.90625 |
+| minmax-min | 195.8125 | 133.6796875 | 145.90625 | 145.90625 |
+| mulint32-fresh | 303.7734375 | 299.75 | 286.6328125 | 286.6328125 |
+
+Min/max is 31.7308% faster than semantic OFF and 8.3797% faster than hand
+ON. Mulint32 is 1.3245% faster than semantic OFF but still 4.5763% slower
+than hand ON. These are measured performance comparisons, not full-domain
+admitted wins. Ordinary correctness and performance selectors compile
+different kernels: the ordinary ON streams match prior ON-minus-init,
+whereas the timed ON kernel permits stage2 init hoisting and differs from
+that earlier candidate. Do not use the ordinary ELF equality to claim
+equality of timed ELFs or validation of the exact timed kernel. Iteration,
+tile-count and normalization settings match the previous timing; KERNEL
+duration corroborates the min/max improvement (17435 versus prior25000).
+
+Evidence: `compiler-init-creg-corrected-device0-v1/` (ordinary) and
+`compiler-init-creg-corrected-timing-device0-v2/` (timing), under the shared
+full-sweep592b root. Timing SUMMARY.json SHA256
+`17e73b4960045eb9e204cd8262cd24e06d3eb02fafc2ab116f4c1510f95b1d26`;
+CELLS.tsv SHA256
+`acc1a6886a32d7a654ad2d7810f72828978589fa7aae8f19265cc3d35391538c`.
+Initial timing job129879 stopped in preflight because an existing perf-data
+directory was present; those artifacts were preserved, not deleted or
+counted as an execution. No compiler commit/pin/default change is included
+in this checkpoint; the immutable full sweep and admission refusals stand.
+
 ## 2026-10-12 compiler candidates: compile recovery, device gate pending
 
 Two generic compiler prototypes are under test; neither is committed or

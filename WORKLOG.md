@@ -1,5 +1,20 @@
 # Worklog
 
+## 2026-10-12 — execution unblocked and matched timing completed
+
+- Retried native tests in the correct gcc build directory: init102 and
+  raw59 assertions PASS, no unexpected failures; original invocation's
+  wrong-directory failure retained and never counted as a test.
+- Corrected init-only remote6398 passes ordinary device0 checks12/12.
+  Timing job129883 completed36/36 cells, three repeats of all four arms
+  for min/max/mul on the same physical device. Initial preflight failure
+  retained separately; no artifact deletion or idle reservation afterward.
+- Min/max measured8.3797% faster than handON; mul remains4.5763% slower.
+  Ordinary and performance kernels differ: only the latter permits this
+  additional stage2 hoist. Timing is not full-domain correctness admission.
+- Compiler prototypes remain uncommitted/unpinned; separate corrected
+  residency native and broader gates are running locally.
+
 ## 2026-10-12 — generic compiler prototypes reach compile/regression gates
 
 - Frozen init-only candidate compiles literal-ON production minmax-max;
