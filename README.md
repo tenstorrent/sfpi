@@ -3,6 +3,11 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Generic compiler candidates now recover a literal-ON minmax compile failure
+and pass the corrected residency regression suite (243 assertions). Device
+validation is pending; no compiler fix or pin has landed. See the
+[compiler checkpoint](HANDOFF.md#2026-10-12-compiler-candidates-compile-recovery-device-gate-pending).
+
 Matched follow-up recovers `rdiv`'s ON/OFF regression with an existing
 option disabled, but retains 382 exhaustive golden failures; it is not an
 admitted win. Compiler fixes remain under investigation. See the

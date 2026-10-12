@@ -1,5 +1,57 @@
 # Handoff — 2026-10-09
 
+## 2026-10-12 compiler candidates: compile recovery, device gate pending
+
+Two generic compiler prototypes are under test; neither is committed or
+pinned. The attested device compiler remains unchanged. This checkpoint
+does not replace the sealed 284-row baseline or its numerical refusals.
+
+The init-hoist prototype checks whole-caller fixed-LREG lifetimes, including
+committed inline-call transfers, before moving an init prefix that writes
+L0. It refuses an unsafe move instead of weakening the allocator's spill
+guard. Frozen local init-only cc1plus SHA256 is
+`82b4b1da4da26775fc1510fece0ec09f2484bf5ac099ef8cc23442f9a5179ac1`,
+archived at `/tmp/sfpi-init-lreg-candidate.t6qD3W/`.
+
+For reconstructed production harness inputs on clean tt-metal 592b, this
+candidate compiles minmax-max under literal ON, where both the attested
+compiler and installed local baseline refuse LREG pressure. It also
+compiles the prefix25 minmax-max/min and mulint32-fresh witnesses. Prefix25
+is not literal ON. The valid preprocessing reconstruction includes both
+`sources/sfpu_binary_test.cpp` and `trisc.cpp`; earlier incomplete-input
+attempts are retained but are not recovery evidence. No candidate silicon
+correctness or timing result is claimed here.
+
+The separate residency prototype uses the generated combine matcher to
+avoid crediting a materialization saving when an eligible immediate fold
+already removes that materialization. It preserves competing MAD patterns
+and uses no kernel-name rule. Frozen combined init/residency cc1plus is
+`aa6e4a104e0fb3dac155eda2be07910f22483e4c5e44bc0bb7cb6b98df483f92`,
+archived at `/tmp/sfpi-init-residency-candidate.MoMPYT/`.
+
+Its new native regression selectors pass 54 assertions. The full
+const-residency suite initially reports 235 PASS / 8 assertion FAIL. Four
+legacy fixtures used FLOATB constants that now disappear in immediate
+folding, bypassing their intended residency mechanism. Adjacent non-FLOATB
+inputs restore that mechanism without relaxing any original count or
+refusal assertion; direct baseline/candidate checks agree, and the corrected
+native suite reports **243 PASS / 0 unexpected failures**. These are compiler
+regressions, not numerical or device-performance admission. DejaGNU's
+summary is authoritative: make returned zero even for the failing run.
+
+Local retained native logs:
+`/tmp/sfpi-residency-legacy-old.e4BLmT/g++.sum` SHA256
+`6cc039d916e8de5ddf4ec71d54aee8e0eec4248327a41a00239fa75816ffe386`;
+`/tmp/sfpi-residency-legacy-fixed.AlX6oc/g++.sum` SHA256
+`82c0e924be85ecbb782b23e7917381d6b7c3ae923205e35969bb7813785ab23e`.
+Production compile evidence is under the shared evidence root's
+`compiler-init-hoist-outer-l0-repro-v1/` tree. The clean Exabox-compatible
+baseline build is separately archived under
+`compiler-init-hoist-build-prep-v1/`; it is not the attested compiler.
+Next gates are broader compiler regressions, isolated candidate execution,
+and matched same-chip OFF/ON and hand OFF/ON measurements. Existing rdiv
+golden failures remain disqualifying even if code generation improves.
+
 ## 2026-10-11 rdiv causal regression recovery, golden refusal retained
 
 On clean 592b with the attested compiler, removing only

@@ -1,5 +1,18 @@
 # Worklog
 
+## 2026-10-12 — generic compiler prototypes reach compile/regression gates
+
+- Frozen init-only candidate compiles literal-ON production minmax-max;
+  attested and local baseline controls both fail LREG pressure. Prefix25
+  max/min/mul witnesses also recover, kept distinct from literal ON.
+- Combined init/residency prototype passes 54 new native assertions.
+  Retained original full residency suite: 235 PASS / 8 assertion FAIL.
+  Four mechanism-preserving fixture corrections retain all original
+  assertions; corrected full suite: 243 PASS / no unexpected failures.
+- Neither compiler prototype is committed, pinned or admitted on silicon.
+  Attested compiler, immutable full sweep and numerical refusals remain
+  unchanged. See HANDOFF for binary identities and retained evidence.
+
 ## 2026-10-11 — rdiv same-device causal recovery
 
 - Clean592b, attested compiler, same device1 five-cell x3 matrix: semantic
