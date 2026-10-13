@@ -3,6 +3,14 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+The 2026-10-13 exact GCC0318/SFPIe355 Blackhole effect-only gate passed
+80/80, but its focused 11-row corpus still has six compile-pressure failures;
+the full final-pin sweep has not run. A scoped `sigmoidappx-tree` source
+recovery is pushed on both tt-metal mirrors with matched 17.6409% semantic
+OFF / 18.1549% ON KERNEL-cycle improvements and full BF16 old/new equality.
+Local compiler recovery is not yet silicon-validated or published. See the
+[current checkpoint](HANDOFF.md#2026-10-13-scoped-recovery-and-exact-final-silicon-gate).
+
 The separate 08fd Blackhole effect-ABI sweep is reconciled at 239 PASS /
 21 SKIP / 24 compile FAIL over 284 rows, and the GCC #23–54 restack is still
 unpublished. A narrow local allocator fix passes its host suite but recovers

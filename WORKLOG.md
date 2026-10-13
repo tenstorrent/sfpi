@@ -1,5 +1,24 @@
 # Worklog
 
+## 2026-10-13 — scoped sigmoid recovery; final-pin pressure gate
+
+- Pushed tt-metal `96321e9e43b` identically to both `nkapre/sfpi` mirrors.
+  At GCC0318/SFPIe355 on Blackhole, matched three-repeat `sigmoidappx-tree`
+  semantic KERNEL cycles improve 17.6409% OFF / 18.1549% ON; hand cells are
+  unchanged. All 65,536 BF16 input encodings have identical old/new output
+  hashes OFF/ON. This does not establish hand parity or FP32/full-corpus
+  admission; evidence is in `sigmoidappx-evidence/REPORT.md` under the local
+  2026-10-12 evidence directory.
+- Exact GCC0318/SFPIe355 effect-only silicon fixture passed 80/80. A focused
+  11-row three-repeat corpus gave 5 PASS / 6 compile FAIL, all six with
+  `lreg-pressure-exceeded`; no exact-final 284-row claim was made.
+- Local, unpushed GCC `ea82f1c6eb2` makes the split crosscall-hoist service
+  the sole implementation after duplicate definitions were found in PR #32
+  onward; `cb1ffa895a6` adds the live-LREG init guard. Three archived ON
+  pressure TUs and their OFF controls now compile; focused host suite 67 PASS.
+  Candidate silicon, complete configured host suite, affected PR #32–54
+  restack, new-head CI and reviews remain pending.
+
 ## 2026-10-12 — effect-ABI sweep reconciled; PR publication held
 
 - Completed the separate 08fd effect-ABI Blackhole 284-row campaign across

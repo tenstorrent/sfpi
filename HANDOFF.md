@@ -1,5 +1,35 @@
 # Handoff — 2026-10-09
 
+## 2026-10-13 scoped recovery and exact-final silicon gate
+
+tt-metal `96321e9e43b511e2d4d3b6373ea345d6c7845c1c` is pushed identically
+to the Tenstorrent and nkapreTT `nkapre/sfpi` mirrors. It replaces the
+`sigmoidappx-tree` nested exponent/fraction NaN guard with the sign-cleared
+integer comparison already used by the sibling sigmoid LUT body. On a separate
+Blackhole node, with exact GCC `0318be498ea` / SFPI `e3553b88ce7`, matched
+three-repeat KERNEL cycles fell 139,324 to 114,746 semantic OFF (17.6409%)
+and median 135,352 to 110,779 semantic ON (18.1549%). Hand OFF/ON remained
+28,849/28,846. All 65,536 raw BF16 input encodings produced identical
+baseline/candidate outputs under both profiles; ordinary and special-value
+selectors passed. This is a scoped source recovery, not hand parity, FP32
+exhaustive admission, or a full-corpus win. Evidence and ELF custody are in
+`/workspace/sfpi-evidence-20261012/sigmoidappx-evidence/REPORT.md`.
+
+The exact publication-candidate GCC `0318` / SFPI `e355` / tt-metal `388c628`
+Blackhole effect-only fixture passed 80/80. An 11-row three-repeat focused
+corpus ran 5 PASS / 6 compile FAIL; all six failures report
+`lreg-pressure-exceeded`. The exact 284-row final-pin sweep was not run.
+Baseline evidence is under
+`/workspace/sfpi-evidence-20261012/final-0318-job130264/`. A separate,
+**local and unpublished** GCC candidate (`ea82f1c6eb2`, `cb1ffa895a6`)
+eliminates duplicated crosscall-hoist definitions and guards hoisting through
+live architectural LREGs. It compiles three archived ON pressure failures and
+their OFF controls; focused host tests passed 67 assertions. Its silicon
+correctness and full configured host gate remain pending. The duplicate
+definitions originated in proposed GCC PR #32 and persist through #54, so
+appending the fix to the tip would not repair intermediate PR heads. No GCC
+PR refs or GCC/SFPI pins have been pushed.
+
 ## 2026-10-12 effect-ABI sweep and GCC PR publication gate
 
 The separate 08fd effect-ABI Blackhole pilot completed a segmented 284-row
