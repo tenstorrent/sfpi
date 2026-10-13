@@ -435,12 +435,50 @@ class vBool {
   friend class impl_::CC;
 
 public:
-  enum Logic : unsigned char;
-  enum Cond : unsigned char;
-  enum Type : unsigned char;
+  enum Logic : unsigned char {
+       And = SFPXLOGIC_MOD1_AND,
+        Or = SFPXLOGIC_MOD1_OR,
+       Not = SFPXLOGIC_MOD1_NOT,
+    Nearby = SFPXLOGIC_MOD1_NEARBY,
+  };
+
+  enum Cond : unsigned char {
+    EQ = SFPXCMP_MOD1_CC_EQ,
+    NE = SFPXCMP_MOD1_CC_NE,
+    LT = SFPXCMP_MOD1_CC_LT,
+    GE = SFPXCMP_MOD1_CC_GE,
+    GT = SFPXCMP_MOD1_CC_GT,
+    LE = SFPXCMP_MOD1_CC_LE,
+  };
+
+  enum Type : unsigned char {
+     UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
+      Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
+     SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
+    Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
+  };
 
 private:
   int result;
+
+public:
+  template<Cond C, Type T>
+  struct Cmp {
+  private:
+    // We need to squish the two operands into a single member so that the
+    // compiler's clobber notation doesn't force this into memory
+    impl_::sfpu2_t v;
+
+  public:
+    sfpi_inline Cmp (Cmp const &) = default;
+    sfpi_inline Cmp &operator= (Cmp const &) = default;
+
+  public:
+    sfpi_inline Cmp (impl_::vVal, impl_::vVal);
+
+  public:
+    sfpi_inline impl_::sfpu_t get (unsigned ix) const { return __builtin_rvtt_sfpselect2 (v, ix); }
+  };
 
 public:
   sfpi_inline vBool (vBool const &) = default;
@@ -450,7 +488,8 @@ public:
   sfpi_inline vBool (Logic, vBool, vBool);
 
 public:
-  sfpi_inline vBool (Cond, Type, impl_::vVal, impl_::vVal);
+  template<Cond C, Type T>
+  sfpi_inline vBool (Cmp<C, T>);
 
 public:
   sfpi_inline vBool (vInt);
@@ -465,22 +504,22 @@ sfpi_inline vBool operator&& (vBool, vBool);
 sfpi_inline vBool operator|| (vBool, vBool);
 sfpi_inline vBool operator! (vBool);
 
-// Comparisons
-sfpi_inline vBool operator== (vFloat, vFloat);
-sfpi_inline vBool operator!= (vFloat, vFloat);
-sfpi_inline vBool operator< (vFloat, vFloat);
-sfpi_inline vBool operator> (vFloat, vFloat);
-sfpi_inline vBool operator<= (vFloat, vFloat);
-sfpi_inline vBool operator>= (vFloat, vFloat);
-
 //////////////////////////////////////////////////////////////////////////////
+// Comparisons
 
-sfpi_inline  vBool operator== (vInt, vInt);
-sfpi_inline  vBool operator!= (vInt, vInt);
-sfpi_inline  vBool operator< (vInt, vInt);
-sfpi_inline  vBool operator> (vInt, vInt);
-sfpi_inline  vBool operator<= (vInt, vInt);
-sfpi_inline  vBool operator>= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Float> operator< (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Float> operator>= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Float> operator== (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Float> operator!= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Float> operator> (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Float> operator<= (vFloat, vFloat);
+
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt, vInt);
 
 // We need these overloads as vMag decays to vUInt and hence ambiguous
 sfpi_inline  auto operator== (vInt a, vMag b) { return a == vInt (b); }
@@ -490,17 +529,24 @@ sfpi_inline  auto operator> (vInt a, vMag b) { return a > vInt (b); }
 sfpi_inline  auto operator<= (vInt a, vMag b) { return a <= vInt (b); }
 sfpi_inline  auto operator>= (vInt a, vMag b) { return a >= vInt (b); }
 
-sfpi_inline vBool operator== (vSMag, vSMag);
-sfpi_inline vBool operator!= (vSMag, vSMag);
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, vUInt);
 
-//////////////////////////////////////////////////////////////////////////////
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, vSMag);
 
-sfpi_inline  vBool operator== (vUInt, vUInt);
-sfpi_inline  vBool operator!= (vUInt, vUInt);
-sfpi_inline  vBool operator< (vUInt, vUInt);
-sfpi_inline  vBool operator> (vUInt, vUInt);
-sfpi_inline  vBool operator<= (vUInt, vUInt);
-sfpi_inline  vBool operator>= (vUInt, vUInt);
+// Mark an ordering compare as 'close', specifically the compared values are
+// known to be within <2^31 of each other
+sfpi_inline vBool nearby (vBool);
+
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+template<vBool::Cond C, vBool::Type T>
+sfpi_inline vUInt mask (vBool::Cmp<C, T>);
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function
@@ -534,10 +580,6 @@ sfpi_inline  vBool operator>= (vUInt, vUInt);
 #define v_endblock                              \
   __cc.pred(sfpi::SFPXPRED_MOD1_END);         \
   }
-
-// Mark an ordering compare as 'close', specifically the compared values are
-// known to be within <2^31 of each other
-sfpi_inline vBool nearby (vBool);
 
 //////////////////////////////////////////////////////////////////////////////
 // LRegs
