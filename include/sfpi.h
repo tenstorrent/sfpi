@@ -439,9 +439,28 @@ class vBool {
   friend class impl_::CC;
 
 public:
-  enum Logic : unsigned char;
-  enum Cond : unsigned char;
-  enum Type : unsigned char;
+  enum Logic : unsigned char {
+       And = SFPXLOGIC_MOD1_AND,
+        Or = SFPXLOGIC_MOD1_OR,
+       Not = SFPXLOGIC_MOD1_NOT,
+    Nearby = SFPXLOGIC_MOD1_NEARBY,
+  };
+
+  enum Cond : unsigned char {
+    EQ = SFPXCMP_MOD1_CC_EQ,
+    NE = SFPXCMP_MOD1_CC_NE,
+    LT = SFPXCMP_MOD1_CC_LT,
+    GE = SFPXCMP_MOD1_CC_GE,
+    GT = SFPXCMP_MOD1_CC_GT,
+    LE = SFPXCMP_MOD1_CC_LE,
+  };
+
+  enum Type : unsigned char {
+     UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
+      Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
+     SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
+    Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
+  };
 
 private:
   int result;
@@ -480,64 +499,66 @@ private:
   sfpi_inline int get () const { return result; }
 };
 
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
 template<vBool::Cond C, vBool::Type T>
 sfpi_inline vUInt mask (vBool::Cmp<C, T>);
+#endif
 
 sfpi_inline vBool operator&& (vBool, vBool);
 sfpi_inline vBool operator|| (vBool, vBool);
 sfpi_inline vBool operator! (vBool);
 
 // Comparisons
-sfpi_inline vBool operator== (vFloat, vFloat);
-sfpi_inline vBool operator!= (vFloat, vFloat);
-sfpi_inline vBool operator< (vFloat, vFloat);
-sfpi_inline vBool operator> (vFloat, vFloat);
-sfpi_inline vBool operator<= (vFloat, vFloat);
-sfpi_inline vBool operator>= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Float> operator< (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Float> operator>= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Float> operator== (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Float> operator!= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Float> operator> (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Float> operator<= (vFloat, vFloat);
 
-sfpi_inline vBool operator== (vFloat, float);
-sfpi_inline vBool operator!= (vFloat, float);
-sfpi_inline vBool operator< (vFloat, float);
-sfpi_inline vBool operator> (vFloat, float);
-sfpi_inline vBool operator<= (vFloat, float);
-sfpi_inline vBool operator>= (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Float> operator< (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Float> operator>= (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Float> operator== (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Float> operator!= (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Float> operator> (vFloat, float);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Float> operator<= (vFloat, float);
 
-sfpi_inline vBool operator== (float a, vFloat b) { return b == a; }
-sfpi_inline vBool operator!= (float a, vFloat b) { return b != a; }
-sfpi_inline vBool operator< (float a, vFloat b) { return b > a; }
-sfpi_inline vBool operator> (float a, vFloat b) { return b < a; }
-sfpi_inline vBool operator<= (float a, vFloat b) { return b >= a; }
-sfpi_inline vBool operator>= (float a, vFloat b) { return b <= a; }
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Float> operator< (float a, vFloat b);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Float> operator>= (float a, vFloat b);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Float> operator== (float a, vFloat b);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Float> operator!= (float a, vFloat b);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Float> operator> (float a, vFloat b);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Float> operator<= (float a, vFloat b);
 
 //////////////////////////////////////////////////////////////////////////////
 
-sfpi_inline  vBool operator== (vInt, vInt);
-sfpi_inline  vBool operator!= (vInt, vInt);
-sfpi_inline  vBool operator< (vInt, vInt);
-sfpi_inline  vBool operator> (vInt, vInt);
-sfpi_inline  vBool operator<= (vInt, vInt);
-sfpi_inline  vBool operator>= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt, vInt);
 
-sfpi_inline  vBool operator== (vInt, int32_t);
-sfpi_inline  vBool operator!= (vInt, int32_t);
-sfpi_inline  vBool operator< (vInt, int32_t);
-sfpi_inline  vBool operator> (vInt, int32_t);
-sfpi_inline  vBool operator<= (vInt, int32_t);
-sfpi_inline  vBool operator>= (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt, int32_t);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt, int32_t);
 
-sfpi_inline  vBool operator== (vInt a, vMag b) { return a == vInt (b); }
-sfpi_inline  vBool operator!= (vInt a, vMag b) { return a != vInt (b); }
-sfpi_inline  vBool operator< (vInt a, vMag b) { return a < vInt (b); }
-sfpi_inline  vBool operator> (vInt a, vMag b) { return a > vInt (b); }
-sfpi_inline  vBool operator<= (vInt a, vMag b) { return a <= vInt (b); }
-sfpi_inline  vBool operator>= (vInt a, vMag b) { return a >= vInt (b); }
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt a, vMag b) { return a < vInt (b); }
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt a, vMag b) { return a >= vInt (b); }
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt a, vMag b) { return a == vInt (b); }
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt a, vMag b) { return a != vInt (b); }
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt a, vMag b) { return a > vInt (b); }
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt a, vMag b) { return a <= vInt (b); }
 
-sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
-sfpi_inline  vBool operator!= (vInt a, int b) { return a != int32_t (b); }
-sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
-sfpi_inline  vBool operator> (vInt a, int b) { return a > int32_t (b); }
-sfpi_inline  vBool operator<= (vInt a, int b) { return a <= int32_t (b); }
-sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt a, int b) { return a < int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt a, int b) { return a >= int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt a, int b) { return a == int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt a, int b) { return a != int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt a, int b) { return a > int32_t (b); }
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt a, int b) { return a <= int32_t (b); }
 
 // FIXME: These should be deprecated and removed -- mixing signed and unsigned
 // in compares is not sensible. Sadly user code does this because the old
@@ -582,42 +603,46 @@ sfpi_inline  vBool operator<= (vInt a, unsigned b) = delete;
 __SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
 sfpi_inline  vBool operator>= (vInt a, unsigned b) = delete;
 
-sfpi_inline vBool operator== (vSMag, vSMag);
-sfpi_inline vBool operator== (vSMag, unsigned);
-sfpi_inline vBool operator== (vSMag, int);
-sfpi_inline vBool operator!= (vSMag, vSMag);
-sfpi_inline vBool operator!= (vSMag, unsigned);
-sfpi_inline vBool operator!= (vSMag, int);
+//////////////////////////////////////////////////////////////////////////////
+
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, vUInt);
+
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, uint32_t);
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, uint32_t);
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, uint32_t);
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, uint32_t);
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, uint32_t);
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, uint32_t);
+
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt a, unsigned b) { return a < uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt a, unsigned b) { return a >= uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt a, unsigned b) { return a > uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt a, unsigned b) { return a <= uint32_t (b); }
+
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt a, int b) { return a < uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt a, int b) { return a >= uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt a, int b) { return a == uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt a, int b) { return a != uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt a, int b) { return a > uint32_t (b); }
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt a, int b) { return a <= uint32_t (b); }
 
 //////////////////////////////////////////////////////////////////////////////
 
-sfpi_inline  vBool operator== (vUInt, vUInt);
-sfpi_inline  vBool operator!= (vUInt, vUInt);
-sfpi_inline  vBool operator< (vUInt, vUInt);
-sfpi_inline  vBool operator> (vUInt, vUInt);
-sfpi_inline  vBool operator<= (vUInt, vUInt);
-sfpi_inline  vBool operator>= (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, vSMag);
 
-sfpi_inline  vBool operator== (vUInt, uint32_t);
-sfpi_inline  vBool operator!= (vUInt, uint32_t);
-sfpi_inline  vBool operator< (vUInt, uint32_t);
-sfpi_inline  vBool operator> (vUInt, uint32_t);
-sfpi_inline  vBool operator<= (vUInt, uint32_t);
-sfpi_inline  vBool operator>= (vUInt, uint32_t);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, unsigned);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, unsigned);
 
-sfpi_inline  vBool operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
-sfpi_inline  vBool operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
-sfpi_inline  vBool operator< (vUInt a, unsigned b) { return a < uint32_t (b); }
-sfpi_inline  vBool operator> (vUInt a, unsigned b) { return a > uint32_t (b); }
-sfpi_inline  vBool operator<= (vUInt a, unsigned b) { return a <= uint32_t (b); }
-sfpi_inline  vBool operator>= (vUInt a, unsigned b) { return a >= uint32_t (b); }
-
-sfpi_inline  vBool operator== (vUInt a, int b) { return a == uint32_t (b); }
-sfpi_inline  vBool operator!= (vUInt a, int b) { return a != uint32_t (b); }
-sfpi_inline  vBool operator< (vUInt a, int b) { return a < uint32_t (b); }
-sfpi_inline  vBool operator> (vUInt a, int b) { return a > uint32_t (b); }
-sfpi_inline  vBool operator<= (vUInt a, int b) { return a <= uint32_t (b); }
-sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, int);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, int);
 
 //////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function

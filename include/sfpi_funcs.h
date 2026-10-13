@@ -28,29 +28,6 @@ sfpi::sFloat16b::sFloat16b (float v)
 //////////////////////////////////////////////////////////////////////////////
 // vBool definitions
 
-enum sfpi::vBool::Logic : unsigned char {
-     And = SFPXLOGIC_MOD1_AND,
-      Or = SFPXLOGIC_MOD1_OR,
-     Not = SFPXLOGIC_MOD1_NOT,
-  Nearby = SFPXLOGIC_MOD1_NEARBY,
-};
-
-enum sfpi::vBool::Cond : unsigned char {
-      EQ = SFPXCMP_MOD1_CC_EQ,
-      NE = SFPXCMP_MOD1_CC_NE,
-      LT = SFPXCMP_MOD1_CC_LT,
-      GE = SFPXCMP_MOD1_CC_GE,
-      GT = SFPXCMP_MOD1_CC_GT,
-      LE = SFPXCMP_MOD1_CC_LE,
-};
-
-enum sfpi::vBool::Type : unsigned char {
-    UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
-     Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
-    SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
-   Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
-};
-
 template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
 sfpi::vBool::Cmp<C, T>::Cmp (sfpi::impl_::vVal a, sfpi::impl_::vVal b)
     : a (a), b (b) {}
@@ -65,6 +42,44 @@ sfpi::vBool::vBool (vInt a) : vBool (Cmp<NE, Int> (a, vInt (0))) {}
 sfpi::vBool::vBool (vUInt a) : vBool (Cmp<NE, UInt> (a, vUInt (0))) {}
 sfpi::vBool::vBool (vSMag a) : vBool (Cmp<NE, SMag> (a, vSMag (0))) {}
 
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
+sfpi::vUInt sfpi::mask (vBool::Cmp<C, T> cmp) {
+  static_assert (false
+                 || T == vBool::Float
+                 || T == vBool::SMag
+#if __riscv_xtttensixqsr
+                 || T == vBool::Int
+#endif
+                 || false, "Type not suitable for mask generation");
+  constexpr unsigned imm_type =
+      0
+#if __riscv_xtttensixqsr
+      | (T == vBool::Float ? SFPGTLE_IMM_TYPE_FLOAT :
+         T == vBool::SMag ? SFPGTLE_IMM_TYPE_SMAG :
+         T == vBool::Int ? SFPGTLE_IMM_TYPE_INT :
+         ~0u)
+#endif
+      ;
+
+  if constexpr (C == SFPXCMP_MOD1_CC_LT)
+    return __builtin_rvtt_sfpgt (cmp.b.get (), cmp.a.get (), 0, imm_type);
+  else if constexpr (C == SFPXCMP_MOD1_CC_GE)
+    return __builtin_rvtt_sfple (cmp.b.get (), cmp.a.get (), 0, imm_type);
+  else if constexpr (C == SFPXCMP_MOD1_CC_EQ)
+    return vUInt (__builtin_rvtt_sfple (cmp.a.get (), cmp.b.get (), 0, imm_type))
+        & vUInt (__builtin_rvtt_sfple (cmp.b.get (), cmp.a.get (), 0, imm_type));
+  else if constexpr (C == SFPXCMP_MOD1_CC_NE)
+    return vUInt (__builtin_rvtt_sfpgt (cmp.a.get (), cmp.b.get (), 0, imm_type))
+        | vUInt (__builtin_rvtt_sfpgt (cmp.b.get (), cmp.a.get (), 0, imm_type));
+  else if constexpr (C == SFPXCMP_MOD1_CC_GT)
+    return __builtin_rvtt_sfpgt (cmp.a.get (), cmp.b.get (), 0, imm_type);
+  else if constexpr (C == SFPXCMP_MOD1_CC_LE)
+    return __builtin_rvtt_sfple (cmp.a.get (), cmp.b.get (), 0, imm_type);
+  else
+    static_assert (false, "Comparison not suitale for mask generation");
+}
+#endif
 auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
   if (mod & SFPXPRED_MOD1_ELSE)
     __builtin_rvtt_sfpcompc ();
@@ -546,18 +561,38 @@ auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
 // Comparisons
-auto sfpi::operator== (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::EQ, vBool::Float> (a, b); }
-auto sfpi::operator!= (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::NE, vBool::Float> (a, b); }
-auto sfpi::operator< (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::LT, vBool::Float> (a, b); }
-auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::GT, vBool::Float> (a, b); }
-auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::LE, vBool::Float> (a, b); }
-auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool::Cmp<vBool::GE, vBool::Float> (a, b); }
-auto sfpi::operator== (vFloat a, float b)-> vBool { return a == vFloat (b); }
-auto sfpi::operator!= (vFloat a, float b)-> vBool { return a != vFloat (b); }
-auto sfpi::operator< (vFloat a, float b)-> vBool { return a < vFloat (b); }
-auto sfpi::operator> (vFloat a, float b)-> vBool { return a > vFloat (b); }
-auto sfpi::operator<= (vFloat a, float b)-> vBool { return a <= vFloat (b); }
-auto sfpi::operator>= (vFloat a, float b)-> vBool { return a >= vFloat (b); }
+auto sfpi::operator< (vFloat a, vFloat b)-> vBool::Cmp<vBool::LT, vBool::Float> {
+  return vBool::Cmp<vBool::LT, vBool::Float> (a, b);
+}
+auto sfpi::operator>= (vFloat a, vFloat b)-> vBool::Cmp<vBool::GE, vBool::Float> {
+  return vBool::Cmp<vBool::GE, vBool::Float> (a, b);
+}
+auto sfpi::operator== (vFloat a, vFloat b)-> vBool::Cmp<vBool::EQ, vBool::Float> {
+  return vBool::Cmp<vBool::EQ, vBool::Float> (a, b);
+}
+auto sfpi::operator!= (vFloat a, vFloat b)-> vBool::Cmp<vBool::NE, vBool::Float> {
+  return vBool::Cmp<vBool::NE, vBool::Float> (a, b);
+}
+auto sfpi::operator> (vFloat a, vFloat b)-> vBool::Cmp<vBool::GT, vBool::Float> {
+  return vBool::Cmp<vBool::GT, vBool::Float> (a, b);
+}
+auto sfpi::operator<= (vFloat a, vFloat b)-> vBool::Cmp<vBool::LE, vBool::Float> {
+  return vBool::Cmp<vBool::LE, vBool::Float> (a, b);
+}
+
+auto sfpi::operator< (vFloat a, float b)-> vBool::Cmp<vBool::LT, vBool::Float> { return a < vFloat (b); }
+auto sfpi::operator>= (vFloat a, float b)-> vBool::Cmp<vBool::GE, vBool::Float> { return a >= vFloat (b); }
+auto sfpi::operator== (vFloat a, float b)-> vBool::Cmp<vBool::EQ, vBool::Float> { return a == vFloat (b); }
+auto sfpi::operator!= (vFloat a, float b)-> vBool::Cmp<vBool::NE, vBool::Float> { return a != vFloat (b); }
+auto sfpi::operator> (vFloat a, float b)-> vBool::Cmp<vBool::GT, vBool::Float> { return a > vFloat (b); }
+auto sfpi::operator<= (vFloat a, float b)-> vBool::Cmp<vBool::LE, vBool::Float> { return a <= vFloat (b); }
+
+auto sfpi::operator< (float a, vFloat b)-> vBool::Cmp<vBool::LT, vBool::Float> { return vFloat (a) < b; }
+auto sfpi::operator>= (float a, vFloat b)-> vBool::Cmp<vBool::GE, vBool::Float> { return vFloat (a) >= b; }
+auto sfpi::operator== (float a, vFloat b)-> vBool::Cmp<vBool::EQ, vBool::Float> { return vFloat (a) == b; }
+auto sfpi::operator!= (float a, vFloat b)-> vBool::Cmp<vBool::NE, vBool::Float> { return vFloat (a) != b; }
+auto sfpi::operator> (float a, vFloat b)-> vBool::Cmp<vBool::GT, vBool::Float> { return vFloat (a) > b; }
+auto sfpi::operator<= (float a, vFloat b)-> vBool::Cmp<vBool::LE, vBool::Float> { return vFloat (a) <= b; }
 
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
@@ -623,19 +658,31 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
-auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::EQ, vBool::Int> (a, b); }
-auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::NE, vBool::Int> (a, b); }
-auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::LT, vBool::Int> (a, b); }
-auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::GT, vBool::Int> (a, b); }
-auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::LE, vBool::Int> (a, b); }
-auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool::Cmp<vBool::GE, vBool::Int> (a, b); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool::Cmp<vBool::LT, vBool::Int> {
+  return vBool::Cmp<vBool::LT, vBool::Int> (a, b);
+}
+auto sfpi::operator>= (vInt a, vInt b)-> vBool::Cmp<vBool::GE, vBool::Int> {
+  return vBool::Cmp<vBool::GE, vBool::Int> (a, b);
+}
+auto sfpi::operator== (vInt a, vInt b)-> vBool::Cmp<vBool::EQ, vBool::Int> {
+  return vBool::Cmp<vBool::EQ, vBool::Int> (a, b);
+}
+auto sfpi::operator!= (vInt a, vInt b)-> vBool::Cmp<vBool::NE, vBool::Int> {
+  return vBool::Cmp<vBool::NE, vBool::Int> (a, b);
+}
+auto sfpi::operator> (vInt a, vInt b)-> vBool::Cmp<vBool::GT, vBool::Int> {
+  return vBool::Cmp<vBool::GT, vBool::Int> (a, b);
+}
+auto sfpi::operator<= (vInt a, vInt b)-> vBool::Cmp<vBool::LE, vBool::Int> {
+  return vBool::Cmp<vBool::LE, vBool::Int> (a, b);
+}
 
-auto sfpi::operator== (vInt a, int32_t b)-> vBool { return a == vInt (b); }
-auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return a != vInt (b); }
-auto sfpi::operator< (vInt a, int32_t b)-> vBool { return a < vInt (b); }
-auto sfpi::operator> (vInt a, int32_t b)-> vBool { return a > vInt (b); }
-auto sfpi::operator<= (vInt a, int32_t b)-> vBool { return a <= vInt (b); }
-auto sfpi::operator>= (vInt a, int32_t b)-> vBool { return a >= vInt (b); }
+auto sfpi::operator< (vInt a, int32_t b)-> vBool::Cmp<vBool::LT, vBool::Int> { return a < vInt (b); }
+auto sfpi::operator>= (vInt a, int32_t b)-> vBool::Cmp<vBool::GE, vBool::Int> { return a >= vInt (b); }
+auto sfpi::operator== (vInt a, int32_t b)-> vBool::Cmp<vBool::EQ, vBool::Int> { return a == vInt (b); }
+auto sfpi::operator!= (vInt a, int32_t b)-> vBool::Cmp<vBool::NE, vBool::Int> { return a != vInt (b); }
+auto sfpi::operator> (vInt a, int32_t b)-> vBool::Cmp<vBool::GT, vBool::Int> { return a > vInt (b); }
+auto sfpi::operator<= (vInt a, int32_t b)-> vBool::Cmp<vBool::LE, vBool::Int> { return a <= vInt (b); }
 
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
@@ -702,20 +749,31 @@ auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
-auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::EQ, vBool::UInt> (a, b); }
-auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::NE, vBool::UInt> (a, b); }
-auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::LT, vBool::UInt> (a, b); }
-auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::GT, vBool::UInt> (a, b); }
-auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::LE, vBool::UInt> (a, b); }
-auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool::Cmp<vBool::GE, vBool::UInt> (a, b); }
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool::Cmp<vBool::LT, vBool::UInt> {
+  return vBool::Cmp<vBool::LT, vBool::UInt> (a, b);
+}
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool::Cmp<vBool::GE, vBool::UInt> {
+  return vBool::Cmp<vBool::GE, vBool::UInt> (a, b);
+}
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool::Cmp<vBool::EQ, vBool::UInt> {
+  return vBool::Cmp<vBool::EQ, vBool::UInt> (a, b);
+}
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool::Cmp<vBool::NE, vBool::UInt> {
+  return vBool::Cmp<vBool::NE, vBool::UInt> (a, b);
+}
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool::Cmp<vBool::GT, vBool::UInt> {
+  return vBool::Cmp<vBool::GT, vBool::UInt> (a, b);
+}
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool::Cmp<vBool::LE, vBool::UInt> {
+  return vBool::Cmp<vBool::LE, vBool::UInt> (a, b);
+}
 
-auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return a == vUInt (b); }
-auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return a != vUInt (b); }
-auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return a < vUInt (b); }
-auto sfpi::operator> (vUInt a, uint32_t b)-> vBool { return a > vUInt (b); }
-auto sfpi::operator<= (vUInt a, uint32_t b)-> vBool { return a <= vUInt (b); }
-auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool { return a >= vUInt (b); }
-
+auto sfpi::operator< (vUInt a, uint32_t b)-> vBool::Cmp<vBool::LT, vBool::UInt> { return a < vUInt (b); }
+auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool::Cmp<vBool::GE, vBool::UInt> { return a >= vUInt (b); }
+auto sfpi::operator== (vUInt a, uint32_t b)-> vBool::Cmp<vBool::EQ, vBool::UInt> { return a == vUInt (b); }
+auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool::Cmp<vBool::NE, vBool::UInt> { return a != vUInt (b); }
+auto sfpi::operator> (vUInt a, uint32_t b)-> vBool::Cmp<vBool::GT, vBool::UInt> { return a > vUInt (b); }
+auto sfpi::operator<= (vUInt a, uint32_t b)-> vBool::Cmp<vBool::LE, vBool::UInt> { return a <= vUInt (b); }
 
 //////////////////////////////////////////////////////////////////////////////
 // vMag definitions
@@ -743,11 +801,15 @@ sfpi::vSMag::vSMag (impl_::vMag val)
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
 
-auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vBool::Cmp<vBool::EQ, vBool::SMag> (a, b); }
-auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vBool::Cmp<vBool::NE, vBool::SMag> (a, b); }
+auto sfpi::operator== (vSMag a, vSMag b)-> vBool::Cmp<vBool::EQ, vBool::SMag> {
+  return vBool::Cmp<vBool::EQ, vBool::SMag> (a, b);
+}
+auto sfpi::operator!= (vSMag a, vSMag b)-> vBool::Cmp<vBool::NE, vBool::SMag> {
+  return vBool::Cmp<vBool::NE, vBool::SMag> (a, b);
+}
 
-auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return a == vSMag (b); }
-auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return a != vSMag (b); }
+auto sfpi::operator== (vSMag a, unsigned b)-> vBool::Cmp<vBool::EQ, vBool::SMag> { return a == vSMag (b); }
+auto sfpi::operator!= (vSMag a, unsigned b)-> vBool::Cmp<vBool::NE, vBool::SMag> { return a != vSMag (b); }
 
-auto sfpi::operator== (vSMag a, int b)-> vBool { return a == vSMag (b); }
-auto sfpi::operator!= (vSMag a, int b)-> vBool { return a != vSMag (b); }
+auto sfpi::operator== (vSMag a, int b)-> vBool::Cmp<vBool::EQ, vBool::SMag> { return a == vSMag (b); }
+auto sfpi::operator!= (vSMag a, int b)-> vBool::Cmp<vBool::NE, vBool::SMag> { return a != vSMag (b); }
