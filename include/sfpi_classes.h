@@ -86,6 +86,7 @@ enum class DataLayout {
 namespace impl_ {
 
 using sfpu_t = ::__xtt_vector;
+using sfpu2_t = ::__xtt_vector2;
 
 // Type pun bit pattern
 sfpi_inline uint32_t float_as_uint (float val);
