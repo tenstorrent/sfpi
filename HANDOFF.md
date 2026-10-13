@@ -23,9 +23,19 @@ Baseline evidence is under
 `/workspace/sfpi-evidence-20261012/final-0318-job130264/`. A separate,
 **local and unpublished** GCC candidate (`ea82f1c6eb2`, `cb1ffa895a6`)
 eliminates duplicated crosscall-hoist definitions and guards hoisting through
-live architectural LREGs. It compiles three archived ON pressure failures and
-their OFF controls; focused host tests passed 67 assertions. Its silicon
-correctness and full configured host gate remain pending. The duplicate
+live architectural LREGs. On the same node, source and 11-row roster, its
+effect-only fixture also passed 80/80 and the focused roster improved to
+7 PASS / 4 compile FAIL: `minmax-max` and `mulint32-fresh` became full 2x2
+passes; `minmax-min` was separately tested against its 0318 ON compile failure
+and became a full 2x2 pass. All four remaining focused failures are the same
+compile-pressure arms, with no observed numerical/device failure in completed
+cells. The candidate also passed strict TopK (82 PASS / 2 narrow XFAIL) and
+the FP32 expm1 boundary producer/consumer gate OFF/ON. Focused host tests
+passed 67 assertions; four further raw-LREG transfer regressions are locally
+committed as GCC `683cb508fbc` and pass 9/9. A complete configured host suite
+and the rewritten PR-stage chain remain pending. Exact binary, runner and
+evidence hashes are in
+`/workspace/sfpi-evidence-20261012/final-0318-job130264/REPORT.md`. The duplicate
 definitions originated in proposed GCC PR #32 and persist through #54, so
 appending the fix to the tip would not repair intermediate PR heads. No GCC
 PR refs or GCC/SFPI pins have been pushed.

@@ -5,10 +5,12 @@ This repo contains SFPI.
 
 The 2026-10-13 exact GCC0318/SFPIe355 Blackhole effect-only gate passed
 80/80, but its focused 11-row corpus still has six compile-pressure failures;
-the full final-pin sweep has not run. A scoped `sigmoidappx-tree` source
+an isolated compiler candidate reduces that focus to four, with three
+semantic-ON pressure rows recovered on silicon including a separate
+`minmax-min` control. The full final-pin sweep has not run. A scoped `sigmoidappx-tree` source
 recovery is pushed on both tt-metal mirrors with matched 17.6409% semantic
 OFF / 18.1549% ON KERNEL-cycle improvements and full BF16 old/new equality.
-Local compiler recovery is not yet silicon-validated or published. See the
+The compiler candidate is not published or PR-stack validated. See the
 [current checkpoint](HANDOFF.md#2026-10-13-scoped-recovery-and-exact-final-silicon-gate).
 
 The separate 08fd Blackhole effect-ABI sweep is reconciled at 239 PASS /

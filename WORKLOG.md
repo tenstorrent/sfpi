@@ -11,13 +11,22 @@
   2026-10-12 evidence directory.
 - Exact GCC0318/SFPIe355 effect-only silicon fixture passed 80/80. A focused
   11-row three-repeat corpus gave 5 PASS / 6 compile FAIL, all six with
-  `lreg-pressure-exceeded`; no exact-final 284-row claim was made.
+  `lreg-pressure-exceeded`; no exact-final 284-row claim was made. An isolated
+  cb1 candidate on the same source/runner/device also passed effect-only
+  80/80 and improved the roster to 7 PASS / 4 compile FAIL, recovering
+  `minmax-max` and `mulint32-fresh` as full 2x2 passes. Separate matched
+  `minmax-min` control recovered its 0318 semantic-ON compile failure to
+  full 2x2 PASS. Strict TopK gave 82 PASS / 2 narrow XFAIL per compiler;
+  FP32 expm1 boundary consumers passed all eight baseline/candidate OFF/ON
+  combinations. Evidence is in `final-0318-job130264/REPORT.md` under the
+  same local evidence root; Slurm job 130264 was released after custody.
 - Local, unpushed GCC `ea82f1c6eb2` makes the split crosscall-hoist service
   the sole implementation after duplicate definitions were found in PR #32
   onward; `cb1ffa895a6` adds the live-LREG init guard. Three archived ON
   pressure TUs and their OFF controls now compile; focused host suite 67 PASS.
-  Candidate silicon, complete configured host suite, affected PR #32–54
-  restack, new-head CI and reviews remain pending.
+  Four more transfer-path regressions were committed locally as `683cb508fbc`
+  and passed 9/9. Complete configured host suite, affected PR #32–54 restack,
+  new-head CI and reviews remain pending. No GCC PR head was pushed.
 
 ## 2026-10-12 — effect-ABI sweep reconciled; PR publication held
 
