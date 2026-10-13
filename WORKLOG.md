@@ -1,5 +1,32 @@
 # Worklog
 
+## 2026-10-13 — overnight restack audit and full experimental sweep
+
+- Completed the unpublished GCC #32–54 restack: 23/23 individual build,
+  symbol and configured `rvtt.exp` gates passed with complete evidence.
+  Corrected #54 `397391b7ae1` has the exact source tree of the silicon-tested
+  `14b758e` candidate, 8,187 PASS / 2 expected XFAIL, no unexpected results.
+  Two live-in-dependent tests moved intact from #52 to #54 after the
+  preserved fail-stop run; 37/37 remote leases matched. No PR ref or SFPI
+  gitlink was pushed. See local
+  `compiler-recovery-restack-20261013/final-offline-audit.md` evidence.
+- Ran experimental GCC14b/SFPIe355/tt-metal a00 Blackhole job 130307 over
+  exactly 284 unique rows: 242 PASS / 21 declared SKIP / 21 compile FAIL.
+  All 58 failing-arm logs report `lreg-pressure-exceeded`; no numerical or
+  device-correctness failures. This is an explicit compiler override because
+  the SFPI gitlink still pins GCC0318, not a published combined-pin win.
+  Effect-only 80/80, strict TopK 82 PASS / 2 narrow XFAIL, and selected
+  FP32 expm1 boundary producer/consumer OFF/ON checks passed separately.
+  Timing comprises three paired repeats without proven warm-up. Full report:
+  `/workspace/sfpi-evidence-20261012/SWEEP_14B_20261013.md`.
+- Archived all per-row logs/JUnit/ELFs/profiler files to durable `/data` as
+  `evidence-full284-20261013.tar.zst` (SHA256
+  `46f0842e848233183057231b032ef0eaeeaf740eea62e2b4465e9a7817edf246`);
+  local/durable hashes and zstd integrity passed. Released only job 130307.
+  Residual pressure recovery requires generic ISA-backed effect/interval
+  proofs; no guard was weakened. #22/#54 ownership, PR-triggered CI/review,
+  and publication dry-run remain open; zero GCC PRs are merge-ready.
+
 ## 2026-10-13 — scoped sigmoid recovery; final-pin pressure gate
 
 - Pushed tt-metal `a00c34dd4d5` identically to both `nkapre/sfpi` mirrors:
@@ -14,8 +41,8 @@
   source tree exactly equals local silicon-tested candidate `683cb508fbc`.
   Final head passed `all-gcc`, unique hoist-symbol ownership, WH/BH/QSR
   header ABI, and configured `rvtt.exp` (8,187 PASS / 2 XFAIL / zero
-  unexpected or unresolved). Parent/lease checks passed; intermediate
-  stage gates are being backfilled. No PR refs or compiler/SFPI pins pushed.
+  unexpected or unresolved). The corrected 23-stage gate and final sweep are
+  recorded above. No PR refs or compiler/SFPI pins pushed.
 - Exact GCC0318 compile-only diagnostics on exclusive BH jobs 130275/130287
   reproduced the remaining focused pressure failures in both OFF/ON arms.
   UnaryMax's `SFPLOADMACRO` effect conservatively spans L0–L7; binary-bcast

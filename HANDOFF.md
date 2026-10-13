@@ -1,5 +1,43 @@
 # Handoff — 2026-10-09
 
+## 2026-10-13 overnight GCC restack and full Blackhole sweep
+
+The **unpublished** GCC #32–54 recovery restack is complete offline. All 23
+parent-linked heads passed individual build, unique-symbol, and configured
+`rvtt.exp` gates with no unexpected or unresolved results. Corrected proposed
+#54 `397391b7ae120eeee5089590234fbbf618891575` has the same source tree
+`79b6a80cf818092222926c1985501c1f2922693e` as the silicon-tested
+`14b758e` candidate; its full suite passed 8,187 / 2 expected XFAIL. Two
+live-in-dependent allocator regressions were moved intact from #52 to #54;
+the failed pre-relocation #52 run remains archived. The final checkout is
+clean, the 23-stage evidence audit and 37/37 remote leases passed, and **no
+GCC PR ref or SFPI gitlink was pushed**. Exact heads, logs, range-diff and
+lease evidence are in
+`/workspace/sfpi-evidence-20261012/compiler-recovery-restack-20261013/final-offline-audit.md`
+and `/workspace/sfpi-publication-prep/compiler-recovery-provisional-heads-20261013.tsv`.
+
+The exact experimental GCC `14b758e` override / SFPI `e3553b88ce7` /
+tt-metal `a00c34dd4d5` Blackhole job 130307 completed all 284 unique rows:
+**242 PASS / 21 declared SKIP / 21 compile FAIL**. All 58 failed compile-arm
+logs contain `lreg-pressure-exceeded`; no numerical/device-correctness
+failure was reported. The SFPI gitlink remains GCC `0318be498ea`, so this is
+**not** a published combined pin or full-corpus win. Effect-only 80/80,
+strict TopK 82 PASS / 2 narrow XFAIL, and selected FP32 expm1 boundary
+producer/consumer checks OFF/ON passed separately. The four segments have
+identical normalized manifest identity and exactly cover the corpus. Timing
+is three alternating-order paired repeats, with no separately established
+warm-up; passing-row examples and the full failing-arm roster are in
+`/workspace/sfpi-evidence-20261012/SWEEP_14B_20261013.md`.
+
+Full per-row logs, JUnit, ELF and profiler artifacts are preserved as
+`/data/nkapre/sfpi-sweep-14b-20261013/evidence/evidence-full284-20261013.tar.zst`
+(SHA256 `46f0842e848233183057231b032ef0eaeeaf740eea62e2b4465e9a7817edf246`);
+local/durable hashes and zstd integrity passed. Job 130307 was released.
+Next gates are a generic, ISA-backed proof for residual pressure cases,
+#22/#54 API ownership, PR-triggered CI/review and publication dry-run.
+Do not count re-booked anchors or the scoped sigmoid source rewrite as
+compiler performance recovery.
+
 ## 2026-10-13 scoped recovery and exact-final silicon gate
 
 tt-metal `a00c34dd4d598bd1a9a9dac236f4e68a8c5c8bcb` is now pushed
@@ -15,17 +53,15 @@ the original tree in GCC, an all-FP32 proof, or hand parity. The original
 compiler gap remains in the sweep roster. Evidence and exact ELF custody are
 in `/workspace/sfpi-evidence-20261012/sigmoidappx-next-20261013/REPORT.md`.
 
-The **offline, unpublished** GCC #32–54 recovery restack now ends at proposed
+The initial **offline, unpublished** GCC #32–54 recovery restack ended at proposed
 #54 `14b758e78ed82468ebd3d871c5128bcb831907fe`. Its source tree exactly
 matches the locally silicon-tested `683cb508fbc` candidate. The rewritten
 final head passed `all-gcc`, the unique crosscall-hoist symbol check, WH/BH/QSR
 header ABI probes, and configured `rvtt.exp` (8,187 PASS / 2 expected XFAIL /
 zero unexpected or unresolved). Proposed parent-linked heads and lease
-checks are in `/workspace/sfpi-publication-prep/`; intermediate #15–33
-stage gates are still being backfilled. The final source equality does not
-erase the four residual focused compile-pressure rows or establish a complete
-284-row final-pin device sweep. No GCC PR head, GCC mirror, or SFPI compiler
-pin was pushed.
+checks are in `/workspace/sfpi-publication-prep/`. The corrected and fully
+gated restack, complete experimental 284-row sweep and remaining failures
+are reported above. No GCC PR head, GCC mirror, or SFPI compiler pin was pushed.
 
 Exact GCC `0318` silicon-node compile diagnostics reproduced all remaining
 focused pressure failures in both OFF and ON arms. For `unarymaxmin-max`,

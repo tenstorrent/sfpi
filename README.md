@@ -3,15 +3,21 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-The 2026-10-13 exact GCC0318/SFPIe355 Blackhole effect-only gate passed
-80/80, but its focused 11-row corpus still has six compile-pressure failures;
-an isolated compiler candidate reduces that focus to four, with three
-semantic-ON pressure rows recovered on silicon including a separate
-`minmax-min` control. The full final-pin sweep has not run. A scoped `sigmoidappx-tree` source
-recovery is pushed on both tt-metal mirrors with matched 17.6409% semantic
-OFF / 18.1549% ON KERNEL-cycle improvements and full BF16 old/new equality.
-The compiler candidate is not published or PR-stack validated. See the
-[current checkpoint](HANDOFF.md#2026-10-13-scoped-recovery-and-exact-final-silicon-gate).
+The 2026-10-13 experimental GCC14b/SFPIe355/tt-metal a00 Blackhole sweep
+completed all 284 rows: **242 PASS / 21 declared SKIP / 21 compile FAIL**.
+All 58 failed compile arms report register pressure, with no numerical/device
+failure. Full per-row evidence is durably archived. The corrected GCC #32–54
+restack passed 23 individual host gates offline, but no PR head or SFPI GCC
+gitlink was pushed; SFPI still pins GCC0318. This is not a full win or a
+published combined pin. See the
+[overnight checkpoint](HANDOFF.md#2026-10-13-overnight-gcc-restack-and-full-blackhole-sweep).
+
+The earlier exact GCC0318/SFPIe355 effect-only gate passed 80/80, while its
+focused 11-row corpus had six compile-pressure failures; an isolated compiler
+candidate reduced that focus to four. A scoped `sigmoidappx-tree` source
+rewrite is pushed on both tt-metal mirrors with full BF16 old/new equality,
+but it is not compiler performance recovery. See the
+[scoped checkpoint](HANDOFF.md#2026-10-13-scoped-recovery-and-exact-final-silicon-gate).
 
 The separate 08fd Blackhole effect-ABI sweep is reconciled at 239 PASS /
 21 SKIP / 24 compile FAIL over 284 rows, and the GCC #23–54 restack is still
