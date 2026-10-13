@@ -173,9 +173,6 @@ public:
   sfpi_inline explicit sFloat16b (unsigned v) : sFloat16b (uint32_t (v)) {}
   sfpi_inline explicit sFloat16b (signed v) : sFloat16b (int32_t (v)) {}
 
-  __SFPI_DEPRECATED ("convert to float first")   // This will removed
-  sfpi_inline explicit sFloat16b (double f) = delete;
-
 public:
   sfpi_inline uint32_t get () const { return val; }
 };
@@ -469,10 +466,6 @@ public:
   sfpi_inline vBool (vUInt);
   sfpi_inline vBool (vSMag);
 
-public:
-  __SFPI_DEPRECATED ("vBool conversion to vInt deprecated, use vBool, or v_if ... v_endif")
-  sfpi_inline operator vInt () const = delete;
-
 private:
   sfpi_inline int get () const { return result; }
 };
@@ -532,49 +525,6 @@ sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
 sfpi_inline  vBool operator> (vInt a, int b) { return a > int32_t (b); }
 sfpi_inline  vBool operator<= (vInt a, int b) { return a <= int32_t (b); }
 sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
-
-// FIXME: These should be deprecated and removed -- mixing signed and unsigned
-// in compares is not sensible. Sadly user code does this because the old
-// iplementatiion permitted it :(
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, vUInt b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, vUInt b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, vUInt b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, vUInt b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, vUInt b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, vUInt b) = delete;
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, uint32_t b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, uint32_t b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, uint32_t b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, uint32_t b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, uint32_t b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, uint32_t b) = delete;
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, unsigned b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, unsigned b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, unsigned b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, unsigned b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, unsigned b) = delete;
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, unsigned b) = delete;
 
 sfpi_inline vBool operator== (vSMag, vSMag);
 sfpi_inline vBool operator== (vSMag, unsigned);
@@ -670,17 +620,6 @@ using PackSrcS __SFPI_DEPRECATED ("Use SrcSView<2>") = impl_::SrcSRegFile<2>;
 
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
-
-__SFPI_DEPRECATED ("just use 0.0f or sfpi::vFloat(0.0f)")
-constexpr impl_::LRegFile::vCReg<vFloat, true> vConst0(CREG_IDX_0);
-__SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
-constexpr impl_::LRegFile::vCReg<vFloat, true> vConst1(CREG_IDX_1);
-__SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
-#if __riscv_xtttensixwh || __riscv_xtttensixbh
-constexpr impl_::LRegFile::vCReg<vFloat, true> vConstNeg1(CREG_IDX_NEG_1);
-#endif
-__SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
-constexpr impl_::LRegFile::vCReg<vFloat, true> vConst0p8373 (CREG_IDX_0P837300003);
 
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
