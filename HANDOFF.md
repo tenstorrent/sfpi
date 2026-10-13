@@ -27,6 +27,20 @@ erase the four residual focused compile-pressure rows or establish a complete
 284-row final-pin device sweep. No GCC PR head, GCC mirror, or SFPI compiler
 pin was pushed.
 
+Exact GCC `0318` silicon-node compile diagnostics reproduced all remaining
+focused pressure failures in both OFF and ON arms. For `unarymaxmin-max`,
+`SFPLOADMACRO` has a conservative all-eight-LREG read/write mask because its
+configured template is not encoded in the instruction word; the first LRA
+spill collides with hard L0. `binary-bcast` separately loses a provably
+constant SFPLOAD word's L4–L7 destination range at the early raw-effect
+metadata phase, yielding another all-LREG mask. `binaryfmod` and
+`blaze-softmaxk` already have precise raw masks; their first spills involve
+long-lived typed values/hard-LREG intervals, so neither broad mask fix is a
+demonstrated cure. No guard was bypassed, no compile row was claimed
+recovered, and both exclusive jobs were released. Exact commands, compiler
+hashes, RTL and design notes are under
+`/workspace/sfpi-evidence-20261012/pressure-{130275,130287}/`.
+
 tt-metal `96321e9e43b511e2d4d3b6373ea345d6c7845c1c` is pushed identically
 to the Tenstorrent and nkapreTT `nkapre/sfpi` mirrors. It replaces the
 `sigmoidappx-tree` nested exponent/fraction NaN guard with the sign-cleared

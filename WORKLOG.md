@@ -16,6 +16,14 @@
   header ABI, and configured `rvtt.exp` (8,187 PASS / 2 XFAIL / zero
   unexpected or unresolved). Parent/lease checks passed; intermediate
   stage gates are being backfilled. No PR refs or compiler/SFPI pins pushed.
+- Exact GCC0318 compile-only diagnostics on exclusive BH jobs 130275/130287
+  reproduced the remaining focused pressure failures in both OFF/ON arms.
+  UnaryMax's `SFPLOADMACRO` effect conservatively spans L0–L7; binary-bcast
+  loses a later-folded L4–L7 SFPLOAD destination range; fmod and blaze already
+  have precise masks and different first spills. These are diagnosis, not
+  recovered compile or numerical results. Reports/dumps/design notes are in
+  local `pressure-130275/` and `pressure-130287/` evidence directories;
+  both device allocations were released.
 
 - Pushed tt-metal `96321e9e43b` identically to both `nkapre/sfpi` mirrors.
   At GCC0318/SFPIe355 on Blackhole, matched three-repeat `sigmoidappx-tree`
