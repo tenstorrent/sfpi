@@ -1032,8 +1032,8 @@ sfpi_inline ToType convert (FromType val, RoundMode round [[gnu::unused]] = Roun
       else
         static_assert (false, "Cannot convert vFloat{,16[ab]} to target type");
 
-      return ToType (__builtin_rvtt_sfpstochrnd_i
-                     (val.get(), 0, mod1, impl_::stochrnd_rnd (round)));
+      return ToType (__builtin_rvtt_sfpstochrnd
+                     (val.get(), mod1, impl_::stochrnd_rnd (round)));
     }
 }
 
@@ -1161,25 +1161,25 @@ sfpi_inline vFloat polynomial (vFloat) {
 // These do not appear used anywhere.  We should get to converting to a new
 // convert-like API
 sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_v
+  return __builtin_rvtt_sfpstochrnd_descale_v
       (in.get(), descale.get(),
        SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::stochrnd_rnd (rounding));
 }
 
 sfpi_inline vUInt int32_to_uint8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
+  return __builtin_rvtt_sfpstochrnd_descale_i
       (in.get(), descale,
        SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::stochrnd_rnd (rounding));
 }
 
 sfpi_inline vInt int32_to_int8 (vInt in, vUInt descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_v
+  return __builtin_rvtt_sfpstochrnd_descale_v
       (in.get(), descale.get(),
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 
 sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_i
+  return __builtin_rvtt_sfpstochrnd_descale_i
       (in.get(), descale,
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }

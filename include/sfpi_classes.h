@@ -29,8 +29,8 @@
 #define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpstochrnd_i(src, imm, mod1, mode) \
-  __builtin_rvtt_sfpstochrnd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
+#define __builtin_rvtt_sfpstochrnd_descale_i(src, imm, mod1, mode) \
+  __builtin_rvtt_sfpstochrnd_descale_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
@@ -264,9 +264,15 @@ class CC {
 private:
   unsigned dep = 0;
   unsigned depth = 0;
+  bool pending_push = false;
+  // Macro-owned CC frames require v_endif/v_endblock; direct CC keeps RAII.
+  bool explicit_end = false;
+
+  sfpi_inline CC &finish (bool emit_end);
 
 public:
   sfpi_inline CC () = default;
+  sfpi_inline explicit CC (bool require_end) : explicit_end (require_end) {}
   sfpi_inline ~CC ();
 
   // Moveable, not copyable
@@ -275,6 +281,8 @@ public:
 
   sfpi_inline CC &if_();
   sfpi_inline CC &else_();
+  sfpi_inline CC &elseif_();
+  sfpi_inline CC &block_();
 
   sfpi_inline void cond (vBool);
   sfpi_inline void cond (vInt);
@@ -282,6 +290,7 @@ public:
 
   sfpi_inline CC &push ();
   sfpi_inline CC &pop ();
+  sfpi_inline CC &end_ ();
 };
 
 //////////////////////////////////////////////////////////////////////////////

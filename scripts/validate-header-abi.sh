@@ -181,12 +181,25 @@ void sfpi_header_abi_templates()
     sort2<SortOrder::Ascending>(sa, sb);
     sort2_rows<RowPattern::Min02Max13>(sa, sb);
 
+    // Compile every SFPSTOCHRND form used by the public SFPI helpers.  The
+    // plain float conversion and the vector/immediate integer descale forms
+    // have distinct compiler builtin names and operand counts.
+    vFloat round_input = l_reg[LRegs::LReg3];
+    vInt int_input = as<vInt>(l_reg[LRegs::LReg4]);
+    vUInt descale = as<vUInt>(l_reg[LRegs::LReg5]);
+    dst_reg[0] = convert<vFloat16a>(round_input, RoundMode::Nearest);
+    dst_reg[1] = convert<vFloat16b>(round_input, RoundMode::NearestStochastic);
+    dst_reg[2] = int32_to_uint8(int_input, descale);
+    dst_reg[3] = int32_to_uint8(int_input, 2u);
+    dst_reg[4] = int32_to_int8(int_input, descale);
+    dst_reg[5] = int32_to_int8(int_input, 2u);
+
     dst_reg[0] = fa + as<vFloat>(sa);
 }
 EOF
 
 template_targets=()
-for probe in "-mcpu=tt-wh-tensix -DARCH_WORMHOLE"              "-mcpu=tt-bh-tensix -DARCH_BLACKHOLE"              "-march=rv32im_xtttensixqsr -mabi=ilp32 -DARCH_QUASAR"; do
+for probe in "-mcpu=tt-wh-tensix -DARCH_WORMHOLE"              "-mcpu=tt-bh-tensix -DARCH_BLACKHOLE"              "-mcpu=tt-qsr32-tensix -DARCH_QUASAR"; do
     # shellcheck disable=SC2086
     if "$cxx" $probe -E -x c++ /dev/null -o /dev/null 2>/dev/null; then
         template_targets+=("$probe")
@@ -196,7 +209,9 @@ if [[ ${#template_targets[@]} -eq 0 ]]; then
     echo "no tensix target accepted by this compiler" >&2
     exit 1
 fi
+target_index=0
 for target in "${template_targets[@]}"; do
+    target_index=$((target_index + 1))
     # shellcheck disable=SC2086
     "$cxx" $target -O2 \
         -I"$install/include" -fno-exceptions -fno-rtti -Werror \
@@ -207,6 +222,20 @@ for target in "${template_targets[@]}"; do
         echo "template ABI probe left an rvtt builtin unresolved: $target" >&2
         exit 1
     fi
+    stochrnd_count=$(grep -Ec '(^|[[:space:]])SFPSTOCHRND([[:space:]]|$)' "$output/header-abi-templates.S" || true)
+    if [[ $stochrnd_count -lt 6 ]]; then
+        echo "template ABI probe emitted only $stochrnd_count of six SFPSTOCHRND forms: $target" >&2
+        exit 1
+    fi
+    # The upstream predicate checker requires explicit PUSH/ELSE/END markers.
+    # Compile and assemble nested v_if/v_elseif/v_else and v_block/v_and on
+    # every supported target so a stale header cannot pass the ABI smoke.
+    # shellcheck disable=SC2086
+    "$cxx" $target -O2 -I"$install/include" \
+        -fno-exceptions -fno-rtti -Werror \
+        -c "$(dirname "$0")/predicate-header-abi.C" \
+        -o "$output/predicate-header-abi-$target_index.o" \
+        || { echo "predicate header ABI probe failed for: $target" >&2; exit 1; }
 done
 
 compiler_version=$("$cxx" --version)
@@ -214,6 +243,8 @@ compiler_version=${compiler_version%%$'\n'*}
 echo "PASS: SFPI header/compiler ABI ($compiler_version)"
 echo "targets: ${#template_targets[@]} (templates instantiated)"
 echo "cc1plus: $cc1plus"
+echo "cc1plus_sha256: $(sha256sum "$cc1plus" | cut -d ' ' -f1)"
+echo "sfpi_lib_sha256: $(sha256sum "$install/include/sfpi_lib.h" | cut -d ' ' -f1)"
 if [[ $temporary -eq 0 ]]; then
     echo "assembly: $output/header-abi.S"
     echo "object: $output/header-abi.o"

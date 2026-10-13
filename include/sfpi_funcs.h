@@ -77,27 +77,55 @@ sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
 sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
 
 sfpi::impl_::CC::CC (CC &&src)
-    : dep (src.dep), depth (src.depth) {
+    : dep (src.dep), depth (src.depth), pending_push (src.pending_push),
+      explicit_end (src.explicit_end) {
   src.dep = 0;
   src.depth = 0;
+  src.pending_push = false;
+  src.explicit_end = false;
 }
 
-sfpi::impl_::CC::~CC () { pop (); }
+// A macro-owned frame that leaves scope before v_endif/v_endblock still
+// balances hardware CC, but omits END so the compiler rejects the escape.
+sfpi::impl_::CC::~CC () { finish (!explicit_end); }
 
 auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
-  pop ();
-  dep = src.dep, depth = src.depth;
-  src.dep = 0, src.depth = 0;
+  finish (!explicit_end);
+  dep = src.dep, depth = src.depth, pending_push = src.pending_push,
+    explicit_end = src.explicit_end;
+  src.dep = 0, src.depth = 0, src.pending_push = false,
+    src.explicit_end = false;
   return *this;
 }
 
 auto sfpi::impl_::CC::if_()-> CC & {
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF
+                                 | (pending_push ? SFPXPRED_MOD1_PUSH : 0)
+                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+  pending_push = false;
   return *this;
 }
 auto sfpi::impl_::CC::else_()-> CC & {
   __builtin_rvtt_sfpcompc ();
-  return *this;    
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_ELSE
+                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+  return *this;
+}
+auto sfpi::impl_::CC::elseif_()-> CC & {
+  __builtin_rvtt_sfpcompc ();
+  push ();
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | SFPXPRED_MOD1_ELSE
+                                 | SFPXPRED_MOD1_PUSH
+                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+  pending_push = false;
+  return *this;
+}
+auto sfpi::impl_::CC::block_()-> CC & {
+  push ();
+  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_PUSH
+                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+  pending_push = false;
+  return *this;
 }
 
 auto sfpi::impl_::CC::cond (vBool op)-> void {
@@ -113,10 +141,20 @@ auto sfpi::impl_::CC::cond (vUInt v)-> void {
 auto sfpi::impl_::CC::push ()-> CC & {
   depth++;
   __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
+  pending_push = true;
   return *this;
 }
 
-auto sfpi::impl_::CC::pop ()-> CC & {
+auto sfpi::impl_::CC::pop ()-> CC & { return finish (true); }
+
+auto sfpi::impl_::CC::end_ ()-> CC & {
+  finish (true);
+  depth = 0;
+  explicit_end = false;
+  return *this;
+}
+
+auto sfpi::impl_::CC::finish (bool emit_end)-> CC & {
   // The pop count is always a compile-time constant after inlining (the
   // push()/else_() chain is textual), but the natural rolled loop stops
   // being completely peeled at depth >= 5 (-O2 cunroll refuses on size
@@ -127,6 +165,9 @@ auto sfpi::impl_::CC::pop ()-> CC & {
   // in the first place; the residual loop only exists for depth > 8
   // (beyond any architectural CC-stack use) and keeps the old shape.
   const unsigned int n = depth;
+  if (n != 0 && emit_end)
+    __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_ENDIF
+                             | (n << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
   if (n >= 1) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
   if (n >= 2) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
   if (n >= 3) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
