@@ -447,6 +447,16 @@ private:
   int result;
 
 public:
+  template<Cond C, Type T>
+  struct Cmp {
+  public:
+    impl_::vVal a, b;
+
+  public:
+    sfpi_inline Cmp (impl_::vVal, impl_::vVal);
+  };
+
+public:
   sfpi_inline vBool (vBool const &) = default;
   sfpi_inline vBool &operator= (vBool const &) = default;
 
@@ -454,16 +464,9 @@ public:
   sfpi_inline vBool (Logic, vBool, vBool);
 
 public:
-  sfpi_inline vBool (Cond, Type, impl_::vVal, impl_::vVal);
-#if 0
-  sfpi_inline vBool (Cond, Type, impl_::vVal, uint32_t);
+  template<Cond C, Type T>
+  sfpi_inline vBool (Cmp<C, T>);
 
-public:
-  sfpi_inline vBool (Cond, vFloat, vFloat);
-  sfpi_inline vBool (Cond, vInt, vInt);
-  sfpi_inline vBool (Cond, vUInt, vUInt);
-  sfpi_inline vBool (Cond, vSMag, vSMag);
-#endif
 public:
   sfpi_inline vBool (vInt);
   sfpi_inline vBool (vUInt);
@@ -476,6 +479,9 @@ public:
 private:
   sfpi_inline int get () const { return result; }
 };
+
+template<vBool::Cond C, vBool::Type T>
+sfpi_inline vUInt mask (vBool::Cmp<C, T>);
 
 sfpi_inline vBool operator&& (vBool, vBool);
 sfpi_inline vBool operator|| (vBool, vBool);
