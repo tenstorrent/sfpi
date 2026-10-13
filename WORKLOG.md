@@ -2,6 +2,21 @@
 
 ## 2026-10-13 — scoped sigmoid recovery; final-pin pressure gate
 
+- Pushed tt-metal `a00c34dd4d5` identically to both `nkapre/sfpi` mirrors:
+  the fresh-C++ `sigmoidappx-tree` source now calls a typed three-entry LUT.
+  All 65,536 BF16 input encodings gave matching outputs OFF/ON
+  on Blackhole. Matched three-repeat warm KERNEL cycles improved 24.6510%
+  OFF and 25.1907% ON, with hand unchanged. This is a BF16-scoped source
+  rewrite, not GCC recovery or hand parity; the original tree loss remains
+  recorded. Evidence: `sigmoidappx-next-20261013/REPORT.md` under the local
+  2026-10-12 evidence directory.
+- Provisional GCC #32–54 offline restack reached #54 `14b758e78ed8`, whose
+  source tree exactly equals local silicon-tested candidate `683cb508fbc`.
+  Final head passed `all-gcc`, unique hoist-symbol ownership, WH/BH/QSR
+  header ABI, and configured `rvtt.exp` (8,187 PASS / 2 XFAIL / zero
+  unexpected or unresolved). Parent/lease checks passed; intermediate
+  stage gates are being backfilled. No PR refs or compiler/SFPI pins pushed.
+
 - Pushed tt-metal `96321e9e43b` identically to both `nkapre/sfpi` mirrors.
   At GCC0318/SFPIe355 on Blackhole, matched three-repeat `sigmoidappx-tree`
   semantic KERNEL cycles improve 17.6409% OFF / 18.1549% ON; hand cells are

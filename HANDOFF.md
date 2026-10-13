@@ -2,6 +2,31 @@
 
 ## 2026-10-13 scoped recovery and exact-final silicon gate
 
+tt-metal `a00c34dd4d598bd1a9a9dac236f4e68a8c5c8bcb` is now pushed
+identically to both `nkapre/sfpi` mirrors. It changes only the
+`sigmoidappx-tree` fresh-C++ selector from an affine dispatch tree to an
+explicit typed three-entry LUT. Against the preceding `96321e9` source on
+the same Blackhole node with GCC `0318be498ea` / SFPI `e3553b88ce7`, all
+65,536 BF16 input encodings yielded byte-identical BF16 outputs in semantic
+OFF and ON. Matched three-repeat warm KERNEL cycles fell 114,746 to 86,460
+OFF (24.6510%) and 110,779 to 82,873 ON (25.1907%); hand remained
+28,849/28,846. This is a BF16-validated **source rewrite**, not recovery of
+the original tree in GCC, an all-FP32 proof, or hand parity. The original
+compiler gap remains in the sweep roster. Evidence and exact ELF custody are
+in `/workspace/sfpi-evidence-20261012/sigmoidappx-next-20261013/REPORT.md`.
+
+The **offline, unpublished** GCC #32–54 recovery restack now ends at proposed
+#54 `14b758e78ed82468ebd3d871c5128bcb831907fe`. Its source tree exactly
+matches the locally silicon-tested `683cb508fbc` candidate. The rewritten
+final head passed `all-gcc`, the unique crosscall-hoist symbol check, WH/BH/QSR
+header ABI probes, and configured `rvtt.exp` (8,187 PASS / 2 expected XFAIL /
+zero unexpected or unresolved). Proposed parent-linked heads and lease
+checks are in `/workspace/sfpi-publication-prep/`; intermediate #15–33
+stage gates are still being backfilled. The final source equality does not
+erase the four residual focused compile-pressure rows or establish a complete
+284-row final-pin device sweep. No GCC PR head, GCC mirror, or SFPI compiler
+pin was pushed.
+
 tt-metal `96321e9e43b511e2d4d3b6373ea345d6c7845c1c` is pushed identically
 to the Tenstorrent and nkapreTT `nkapre/sfpi` mirrors. It replaces the
 `sigmoidappx-tree` nested exponent/fraction NaN guard with the sign-cleared
