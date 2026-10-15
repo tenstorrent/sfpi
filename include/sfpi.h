@@ -405,7 +405,6 @@ public:
   sfpi_inline vSMag (unsigned);
   sfpi_inline vSMag (int);
   sfpi_inline vSMag (impl_::vMag);
-
 };
 using vSMag16 = impl_::vSMag16;
 using vSMag8 = impl_::vSMag8;
@@ -516,14 +515,12 @@ sfpi_inline  vBool operator<= (vInt, int32_t);
 sfpi_inline  vBool operator>= (vInt, int32_t);
 #endif
 
-#if 0
-sfpi_inline  vBool operator== (vInt a, vMag b) { return a == vInt (b); }
-sfpi_inline  vBool operator!= (vInt a, vMag b) { return a != vInt (b); }
-sfpi_inline  vBool operator< (vInt a, vMag b) { return a < vInt (b); }
-sfpi_inline  vBool operator> (vInt a, vMag b) { return a > vInt (b); }
-sfpi_inline  vBool operator<= (vInt a, vMag b) { return a <= vInt (b); }
-sfpi_inline  vBool operator>= (vInt a, vMag b) { return a >= vInt (b); }
-#endif
+sfpi_inline  auto operator== (vInt a, vMag b) { return a == vInt (b); }
+sfpi_inline  auto operator!= (vInt a, vMag b) { return a != vInt (b); }
+sfpi_inline  auto operator< (vInt a, vMag b) { return a < vInt (b); }
+sfpi_inline  auto operator> (vInt a, vMag b) { return a > vInt (b); }
+sfpi_inline  auto operator<= (vInt a, vMag b) { return a <= vInt (b); }
+sfpi_inline  auto operator>= (vInt a, vMag b) { return a >= vInt (b); }
 
 #if 0
 sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
