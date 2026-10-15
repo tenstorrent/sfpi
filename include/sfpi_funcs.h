@@ -559,12 +559,14 @@ auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, vBo
 auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, vBool::Float, a, b); }
 auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, vBool::Float, a, b); }
 
+#if 0
 auto sfpi::operator== (vFloat a, float b)-> vBool { return a == vFloat (b); }
 auto sfpi::operator!= (vFloat a, float b)-> vBool { return a != vFloat (b); }
 auto sfpi::operator< (vFloat a, float b)-> vBool { return a < vFloat (b); }
 auto sfpi::operator> (vFloat a, float b)-> vBool { return a > vFloat (b); }
 auto sfpi::operator<= (vFloat a, float b)-> vBool { return a <= vFloat (b); }
 auto sfpi::operator>= (vFloat a, float b)-> vBool { return a >= vFloat (b); }
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
@@ -637,12 +639,14 @@ auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, vBool::
 auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, vBool::Int, a, b); }
 auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, vBool::Int, a, b); }
 
+#if 0
 auto sfpi::operator== (vInt a, int32_t b)-> vBool { return a == vInt (b); }
 auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return a != vInt (b); }
 auto sfpi::operator< (vInt a, int32_t b)-> vBool { return a < vInt (b); }
 auto sfpi::operator> (vInt a, int32_t b)-> vBool { return a > vInt (b); }
 auto sfpi::operator<= (vInt a, int32_t b)-> vBool { return a <= vInt (b); }
 auto sfpi::operator>= (vInt a, int32_t b)-> vBool { return a >= vInt (b); }
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
@@ -716,13 +720,14 @@ auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, vBool
 auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, vBool::UInt, a, b); }
 auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, vBool::UInt, a, b); }
 
+#if 0
 auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return a == vUInt (b); }
 auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return a != vUInt (b); }
 auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return a < vUInt (b); }
 auto sfpi::operator> (vUInt a, uint32_t b)-> vBool { return a > vUInt (b); }
 auto sfpi::operator<= (vUInt a, uint32_t b)-> vBool { return a <= vUInt (b); }
 auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool { return a >= vUInt (b); }
-
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // vMag definitions
@@ -753,8 +758,10 @@ auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)
 auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vBool (vBool::EQ, vBool::SMag, a, b); }
 auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vBool (vBool::NE, vBool::SMag, a, b); }
 
+#if 0
 auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return a == vSMag (b); }
 auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return a != vSMag (b); }
 
 auto sfpi::operator== (vSMag a, int b)-> vBool { return a == vSMag (b); }
 auto sfpi::operator!= (vSMag a, int b)-> vBool { return a != vSMag (b); }
+#endif

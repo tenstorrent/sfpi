@@ -482,6 +482,7 @@ sfpi_inline vBool operator> (vFloat, vFloat);
 sfpi_inline vBool operator<= (vFloat, vFloat);
 sfpi_inline vBool operator>= (vFloat, vFloat);
 
+#if 0
 sfpi_inline vBool operator== (vFloat, float);
 sfpi_inline vBool operator!= (vFloat, float);
 sfpi_inline vBool operator< (vFloat, float);
@@ -495,6 +496,7 @@ sfpi_inline vBool operator< (float a, vFloat b) { return b > a; }
 sfpi_inline vBool operator> (float a, vFloat b) { return b < a; }
 sfpi_inline vBool operator<= (float a, vFloat b) { return b >= a; }
 sfpi_inline vBool operator>= (float a, vFloat b) { return b <= a; }
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -505,34 +507,43 @@ sfpi_inline  vBool operator> (vInt, vInt);
 sfpi_inline  vBool operator<= (vInt, vInt);
 sfpi_inline  vBool operator>= (vInt, vInt);
 
+#if 0
 sfpi_inline  vBool operator== (vInt, int32_t);
 sfpi_inline  vBool operator!= (vInt, int32_t);
 sfpi_inline  vBool operator< (vInt, int32_t);
 sfpi_inline  vBool operator> (vInt, int32_t);
 sfpi_inline  vBool operator<= (vInt, int32_t);
 sfpi_inline  vBool operator>= (vInt, int32_t);
+#endif
 
+#if 0
 sfpi_inline  vBool operator== (vInt a, vMag b) { return a == vInt (b); }
 sfpi_inline  vBool operator!= (vInt a, vMag b) { return a != vInt (b); }
 sfpi_inline  vBool operator< (vInt a, vMag b) { return a < vInt (b); }
 sfpi_inline  vBool operator> (vInt a, vMag b) { return a > vInt (b); }
 sfpi_inline  vBool operator<= (vInt a, vMag b) { return a <= vInt (b); }
 sfpi_inline  vBool operator>= (vInt a, vMag b) { return a >= vInt (b); }
+#endif
 
+#if 0
 sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
 sfpi_inline  vBool operator!= (vInt a, int b) { return a != int32_t (b); }
 sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
 sfpi_inline  vBool operator> (vInt a, int b) { return a > int32_t (b); }
 sfpi_inline  vBool operator<= (vInt a, int b) { return a <= int32_t (b); }
 sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
+#endif
 
 sfpi_inline vBool operator== (vSMag, vSMag);
+#if 0
 sfpi_inline vBool operator== (vSMag, unsigned);
 sfpi_inline vBool operator== (vSMag, int);
+#endif
 sfpi_inline vBool operator!= (vSMag, vSMag);
+#if 0
 sfpi_inline vBool operator!= (vSMag, unsigned);
 sfpi_inline vBool operator!= (vSMag, int);
-
+#endif
 //////////////////////////////////////////////////////////////////////////////
 
 sfpi_inline  vBool operator== (vUInt, vUInt);
@@ -542,6 +553,7 @@ sfpi_inline  vBool operator> (vUInt, vUInt);
 sfpi_inline  vBool operator<= (vUInt, vUInt);
 sfpi_inline  vBool operator>= (vUInt, vUInt);
 
+#if 0
 sfpi_inline  vBool operator== (vUInt, uint32_t);
 sfpi_inline  vBool operator!= (vUInt, uint32_t);
 sfpi_inline  vBool operator< (vUInt, uint32_t);
@@ -562,6 +574,7 @@ sfpi_inline  vBool operator< (vUInt a, int b) { return a < uint32_t (b); }
 sfpi_inline  vBool operator> (vUInt a, int b) { return a > uint32_t (b); }
 sfpi_inline  vBool operator<= (vUInt a, int b) { return a <= uint32_t (b); }
 sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function
