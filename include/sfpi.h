@@ -399,11 +399,11 @@ public:
   sfpi_inline vSMag &operator= (vSMag const &) = default;
 
 public:
-  sfpi_inline explicit vSMag (impl_::sfpu_t);
-  sfpi_inline explicit vSMag (uint32_t);
-  sfpi_inline explicit vSMag (int32_t);
-  sfpi_inline explicit vSMag (unsigned);
-  sfpi_inline explicit vSMag (int);
+  sfpi_inline vSMag (impl_::sfpu_t);
+  sfpi_inline vSMag (uint32_t);
+  sfpi_inline vSMag (int32_t);
+  sfpi_inline vSMag (unsigned);
+  sfpi_inline vSMag (int);
   sfpi_inline vSMag (impl_::vMag);
 
 };
