@@ -1105,6 +1105,68 @@ sfpi_inline void face_transpose_release_banks ()
   __builtin_rvtt_ttsetrwc (3, 0, 0, 0, 0, 7);
 }
 
+namespace facetranspose_impl_ {
+
+// The three passes of face_transpose_dst_32b.  Pass 1 parks face F's
+// lo16 halves in SrcA rows 16F..16F+15, so a batch can run each pass over
+// up to four faces before the next.
+template <unsigned FaceRow, unsigned F>
+sfpi_inline void face_pass_lo ()
+{
+  constexpr unsigned b = bh_srcb_transpose_row_base;
+  constexpr unsigned am = bh_addr_mod_sfpu;
+  constexpr unsigned a = 16 * F;
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_32b_low, b + 0, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_32b_low, b + 4, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_32b_low, b + 8, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_32b_low, b + 12, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 12);
+  __builtin_rvtt_tttrnspsrcb ();
+  __builtin_rvtt_ttmovb2a (a + 0, am, bh_movb2a_mov_4_rows, b + 0);
+  __builtin_rvtt_ttmovb2a (a + 4, am, bh_movb2a_mov_4_rows, b + 4);
+  __builtin_rvtt_ttmovb2a (a + 8, am, bh_movb2a_mov_4_rows, b + 8);
+  __builtin_rvtt_ttmovb2a (a + 12, am, bh_movb2a_mov_4_rows, b + 12);
+}
+
+template <unsigned FaceRow>
+sfpi_inline void face_pass_hi ()
+{
+  constexpr unsigned b = bh_srcb_transpose_row_base;
+  constexpr unsigned am = bh_addr_mod_sfpu;
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_norm, b + 0, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_norm, b + 4, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_norm, b + 8, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovd2b (bh_mov_dest_norm, b + 12, am,
+			   bh_movd2b_mov_4_rows, FaceRow + 12);
+  __builtin_rvtt_tttrnspsrcb ();
+  __builtin_rvtt_ttmovb2d (bh_mov_dest_norm, b + 0, am,
+			   bh_movb2d_mov_4_rows, FaceRow + 0);
+  __builtin_rvtt_ttmovb2d (bh_mov_dest_norm, b + 4, am,
+			   bh_movb2d_mov_4_rows, FaceRow + 4);
+  __builtin_rvtt_ttmovb2d (bh_mov_dest_norm, b + 8, am,
+			   bh_movb2d_mov_4_rows, FaceRow + 8);
+  __builtin_rvtt_ttmovb2d (bh_mov_dest_norm, b + 12, am,
+			   bh_movb2d_mov_4_rows, FaceRow + 12);
+}
+
+template <unsigned FaceRow, unsigned F>
+sfpi_inline void face_pass_merge ()
+{
+  constexpr unsigned am = bh_addr_mod_sfpu;
+  __builtin_rvtt_ttmova2d (bh_mov_dest_32b_low, 16 * F + 0, am,
+			   bh_mova2d_mov_8_rows, FaceRow + 0);
+  __builtin_rvtt_ttmova2d (bh_mov_dest_32b_low, 16 * F + 8, am,
+			   bh_mova2d_mov_8_rows, FaceRow + 8);
+}
+
+} // namespace facetranspose_impl_
+
 // Transpose one 16x16 face of 32-bit Dst datums in place at Dst row
 // FaceRow.  Caller holds a face_transpose_cfg block open.  18 FPU words +
 // 10 config-byte words, straight-line; bit-exact for every 32-bit datum.
@@ -1116,55 +1178,21 @@ sfpi_inline void face_transpose_dst_32b ()
   static_assert (FaceRow % 16 == 0 && FaceRow + 16 <= 1024,
 		 "crosslane-facetranspose-row-unaligned: FaceRow must be a "
 		 "16-aligned Dst face row below 1024");
-  constexpr unsigned b = fi::bh_srcb_transpose_row_base;
-  constexpr unsigned am = fi::bh_addr_mod_sfpu;
-
   // Pass 1: lo16 halves -> SrcB (BF16-shuffled), transpose, park in SrcA.
   fi::set_srca_format<fi::bh_fmt_float16_b> ();
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 0, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 0);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 4, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 4);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 8, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 8);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_32b_low, b + 12, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 12);
-  __builtin_rvtt_tttrnspsrcb ();
-  __builtin_rvtt_ttmovb2a (0, am, fi::bh_movb2a_mov_4_rows, b + 0);
-  __builtin_rvtt_ttmovb2a (4, am, fi::bh_movb2a_mov_4_rows, b + 4);
-  __builtin_rvtt_ttmovb2a (8, am, fi::bh_movb2a_mov_4_rows, b + 8);
-  __builtin_rvtt_ttmovb2a (12, am, fi::bh_movb2a_mov_4_rows, b + 12);
+  fi::face_pass_lo<FaceRow, 0> ();
 
   // Pass 2: hi16 halves -> SrcB (TF32-shuffled), transpose, write back to
   // Dst bits 31..16 (bits 15..0 zeroed, rewritten by pass 3).
   fi::set_srca_format<fi::bh_fmt_tf32> ();
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 0, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 0);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 4, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 4);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 8, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 8);
-  __builtin_rvtt_ttmovd2b (fi::bh_mov_dest_norm, b + 12, am,
-			   fi::bh_movd2b_mov_4_rows, FaceRow + 12);
-  __builtin_rvtt_tttrnspsrcb ();
-  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 0, am,
-			   fi::bh_movb2d_mov_4_rows, FaceRow + 0);
-  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 4, am,
-			   fi::bh_movb2d_mov_4_rows, FaceRow + 4);
-  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 8, am,
-			   fi::bh_movb2d_mov_4_rows, FaceRow + 8);
-  __builtin_rvtt_ttmovb2d (fi::bh_mov_dest_norm, b + 12, am,
-			   fi::bh_movb2d_mov_4_rows, FaceRow + 12);
+  fi::face_pass_hi<FaceRow> ();
 
   // Pass 3: parked lo16 halves from SrcA -> Dst bits 15..0 (hi16
   // preserved).  Fp32_enabled must be 0 across these two words (the
   // UseDst32bLo write path) and back to 1 after -- the entry invariant.
   fi::set_fp32_enabled<0> ();
   fi::set_srca_format<fi::bh_fmt_float32> ();
-  __builtin_rvtt_ttmova2d (fi::bh_mov_dest_32b_low, 0, am,
-			   fi::bh_mova2d_mov_8_rows, FaceRow + 0);
-  __builtin_rvtt_ttmova2d (fi::bh_mov_dest_32b_low, 8, am,
-			   fi::bh_mova2d_mov_8_rows, FaceRow + 8);
+  fi::face_pass_merge<FaceRow, 0> ();
   fi::set_fp32_enabled<1> ();
 #else
   static_assert (facetranspose_impl_::dependent_false_u<FaceRow>::value,
@@ -1182,11 +1210,46 @@ sfpi_inline void face_transpose_dst_32b_batch ()
   static_assert (N >= 1 && Base % 16 == 0 && Base + 16 * N <= 1024,
 		 "crosslane-facetranspose-row-unaligned: batch must be "
 		 "16-aligned consecutive Dst faces below 1024");
+  namespace fi = facetranspose_impl_;
   if constexpr (OuterCfg)
     face_transpose_cfg_enter ();
-  face_transpose_dst_32b<Base> ();
-  if constexpr (N > 1)
-    face_transpose_dst_32b_batch<N - 1, Base + 16, false> ();
+#if __riscv_xtttensixbh
+  if constexpr (N >= 2 && N <= 4)
+    {
+      // Run each pass over every face before the next, so the format
+      // switches are paid once per batch: SrcA holds the four parked
+      // faces' lo16 halves at once.
+      fi::set_srca_format<fi::bh_fmt_float16_b> ();
+      fi::face_pass_lo<Base, 0> ();
+      fi::face_pass_lo<Base + 16, 1> ();
+      if constexpr (N > 2)
+	fi::face_pass_lo<Base + 32, 2> ();
+      if constexpr (N > 3)
+	fi::face_pass_lo<Base + 48, 3> ();
+      fi::set_srca_format<fi::bh_fmt_tf32> ();
+      fi::face_pass_hi<Base> ();
+      fi::face_pass_hi<Base + 16> ();
+      if constexpr (N > 2)
+	fi::face_pass_hi<Base + 32> ();
+      if constexpr (N > 3)
+	fi::face_pass_hi<Base + 48> ();
+      fi::set_fp32_enabled<0> ();
+      fi::set_srca_format<fi::bh_fmt_float32> ();
+      fi::face_pass_merge<Base, 0> ();
+      fi::face_pass_merge<Base + 16, 1> ();
+      if constexpr (N > 2)
+	fi::face_pass_merge<Base + 32, 2> ();
+      if constexpr (N > 3)
+	fi::face_pass_merge<Base + 48, 3> ();
+      fi::set_fp32_enabled<1> ();
+    }
+  else
+#endif
+    {
+      face_transpose_dst_32b<Base> ();
+      if constexpr (N > 1)
+	face_transpose_dst_32b_batch<N - 1, Base + 16, false> ();
+    }
   if constexpr (OuterCfg)
     face_transpose_cfg_leave ();
 }
