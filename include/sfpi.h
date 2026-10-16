@@ -208,10 +208,10 @@ sfpi_inline vFloat operator+ (vFloat, vFloat);
 sfpi_inline vFloat operator- (vFloat, vFloat);
 sfpi_inline vFloat operator* (vFloat, vFloat);
 
-sfpi_inline vFloat operator+ (float, vFloat);
+//sfpi_inline vFloat operator+ (float, vFloat);
 sfpi_inline vFloat operator- (vFloat, float);
 sfpi_inline vFloat operator- (float, vFloat);
-sfpi_inline vFloat operator* (float, vFloat);
+//sfpi_inline vFloat operator* (float, vFloat);
 
 using vFloat16a = impl_::vFloat16a;
 using vFloat16b = impl_::vFloat16b;
