@@ -542,7 +542,7 @@ auto sfpi::vFloat::operator-- ()-> vFloat { *this -= 1; return *this; }
 
 auto sfpi::operator+ (vFloat a)-> vFloat { return a; }
 auto sfpi::operator+ (vFloat a, vFloat b)-> vFloat { return a.flt_add (b); }
-auto sfpi::operator+ (float a, vFloat b)-> vFloat { return b + a; }
+//auto sfpi::operator+ (float a, vFloat b)-> vFloat { return b + a; }
 auto sfpi::operator- (vFloat a)-> vFloat {
   return __builtin_rvtt_sfpmov (a.get (), SFPMOV_MOD1_COMPSIGN);
 }
@@ -550,9 +550,9 @@ auto sfpi::operator- (vFloat a, vFloat b)-> vFloat { return a.flt_add (-b); }
 auto sfpi::operator- (vFloat a, float b)-> vFloat {
   return __builtin_constant_p (b) ? a + vFloat (-b) : a + -vFloat (b);
 }
-auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
+//auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
-auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
+//auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
 // Comparisons
 auto sfpi::operator< (vFloat a, vFloat b)-> vBool::Cmp<vBool::LT, vBool::Float> {
