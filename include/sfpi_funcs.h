@@ -520,15 +520,7 @@ sfpi::vFloat::vFloat (float f)
     : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
-auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & {
-#if __riscv_xtttensixwh
-  vFloat neg1 = -1.0f;
-  *this = __builtin_rvtt_sfpmad (neg1.get (), a.get(), get (), SFPMAD_MOD1_OFFSET_NONE);
-#else // __riscv_xtttensixbh || __riscv_xtttensixqsr
-  *this = *this + -a;
-#endif
-  return *this;
-}
+auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & { return *this = *this + -a; }
 auto sfpi::vFloat::operator*= (vFloat m)-> vFloat & { return *this = *this * m; }
 
 auto sfpi::vFloat::operator++ (int)-> vFloat { vFloat tmp = *this; *this += 1; return tmp; }
@@ -542,12 +534,11 @@ auto sfpi::operator+ (float a, vFloat b)-> vFloat { return b + a; }
 auto sfpi::operator- (vFloat a)-> vFloat {
   return __builtin_rvtt_sfpmov (a.get (), SFPMOV_MOD1_COMPSIGN);
 }
-auto sfpi::operator- (vFloat a, vFloat b)-> vFloat {
-  // Do not use sfpmad here, the optimizer will handle that.
-  return a.flt_add (-b);
+auto sfpi::operator- (vFloat a, vFloat b)-> vFloat { return a.flt_add (-b); }
+auto sfpi::operator- (vFloat a, float b)-> vFloat {
+  return __builtin_constant_p (b) ? a + vFloat (-b) : a + -vFloat (b);
 }
-auto sfpi::operator- (vFloat a, float b)-> vFloat { return a - vFloat (b); }
-auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) - b; }
+auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
