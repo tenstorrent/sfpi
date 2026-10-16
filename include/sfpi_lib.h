@@ -1185,25 +1185,28 @@ sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = 
 }
 
 sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     vFloat (0).get (), vFloat (0).get (), vFloat (0).get (), vFloat (0).get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
 }
 sfpi_inline void subvec_transp (vInt &a, vInt &b, vInt &c, vInt &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     vInt (0).get (), vInt (0).get (), vInt (0).get (), vInt (0).get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
 }
 sfpi_inline void subvec_transp (vUInt &a, vUInt &b, vUInt &c, vUInt &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get ());
-  a = __builtin_rvtt_sfpselect4 (r, 0);
-  b = __builtin_rvtt_sfpselect4 (r, 1);
-  c = __builtin_rvtt_sfpselect4 (r, 2);
-  d = __builtin_rvtt_sfpselect4 (r, 3);
+  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
+                                     vUInt (0).get (), vUInt (0).get (), vUInt (0).get (), vUInt (0).get ());
+  a = __builtin_rvtt_sfpselect8 (r, 0);
+  b = __builtin_rvtt_sfpselect8 (r, 1);
+  c = __builtin_rvtt_sfpselect8 (r, 2);
+  d = __builtin_rvtt_sfpselect8 (r, 3);
 }
 
 sfpi_inline impl_::sfpu_t subvec_shflror1(const impl_::vVal& src)

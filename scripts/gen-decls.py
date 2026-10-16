@@ -21,6 +21,7 @@ types={"USI":"unsigned",
        "XTT_VEC":"__xtt_vector",
        "XTT_VEC2":"__xtt_vector2",
        "XTT_VEC4":"__xtt_vector4",
+       "XTT_VEC8":"__xtt_vector8",
        "MAX":None}
 
 builtins=[]
