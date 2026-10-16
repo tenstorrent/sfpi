@@ -208,10 +208,10 @@ sfpi_inline vFloat operator+ (vFloat, vFloat);
 sfpi_inline vFloat operator- (vFloat, vFloat);
 sfpi_inline vFloat operator* (vFloat, vFloat);
 
-sfpi_inline vFloat operator+ (float, vFloat);
+//sfpi_inline vFloat operator+ (float, vFloat);
 sfpi_inline vFloat operator- (vFloat, float);
-sfpi_inline vFloat operator- (float, vFloat);
-sfpi_inline vFloat operator* (float, vFloat);
+//sfpi_inline vFloat operator- (float, vFloat);
+//sfpi_inline vFloat operator* (float, vFloat);
 
 using vFloat16a = impl_::vFloat16a;
 using vFloat16b = impl_::vFloat16b;
@@ -280,19 +280,19 @@ sfpi_inline vInt operator<< (vInt, unsigned);
 sfpi_inline vInt operator>> (vInt, unsigned);
 #endif
 
-sfpi_inline vInt operator+ (vInt, int32_t);
-sfpi_inline vInt operator- (vInt, int32_t);
-sfpi_inline vInt operator& (vInt, int32_t);
-sfpi_inline vInt operator| (vInt, int32_t);
-sfpi_inline vInt operator^ (vInt, int32_t);
+//sfpi_inline vInt operator+ (vInt, int32_t);
+//sfpi_inline vInt operator- (vInt, int32_t);
+//sfpi_inline vInt operator& (vInt, int32_t);
+//sfpi_inline vInt operator| (vInt, int32_t);
+//sfpi_inline vInt operator^ (vInt, int32_t);
 
-sfpi_inline vInt operator& (vInt, int);
-sfpi_inline vInt operator| (vInt, int);
-sfpi_inline vInt operator^ (vInt, int);
+//sfpi_inline vInt operator& (vInt, int);
+//sfpi_inline vInt operator| (vInt, int);
+//sfpi_inline vInt operator^ (vInt, int);
 
-sfpi_inline vInt operator& (vInt, unsigned);
-sfpi_inline vInt operator| (vInt, unsigned);
-sfpi_inline vInt operator^ (vInt, unsigned);
+//sfpi_inline vInt operator& (vInt, unsigned);
+//sfpi_inline vInt operator| (vInt, unsigned);
+//sfpi_inline vInt operator^ (vInt, unsigned);
 
 //////////////////////////////////////////////////////////////////////////////
 class vUInt : public impl_::vVal {
@@ -353,42 +353,24 @@ sfpi_inline vUInt operator^ (vUInt, vUInt);
 sfpi_inline vUInt operator<< (vUInt, unsigned);
 sfpi_inline vUInt operator>> (vUInt, unsigned);
 
-sfpi_inline vUInt operator+ (vUInt, int32_t);
-sfpi_inline vUInt operator- (vUInt, int32_t);
+//sfpi_inline vUInt operator+ (vUInt, int32_t);
+//sfpi_inline vUInt operator- (vUInt, int32_t);
 
-sfpi_inline vUInt operator& (vUInt, uint32_t);
-sfpi_inline vUInt operator| (vUInt, uint32_t);
-sfpi_inline vUInt operator^ (vUInt, uint32_t);
+//sfpi_inline vUInt operator& (vUInt, uint32_t);
+//sfpi_inline vUInt operator| (vUInt, uint32_t);
+//sfpi_inline vUInt operator^ (vUInt, uint32_t);
 
-sfpi_inline vUInt operator- (vUInt, vInt);
-sfpi_inline vUInt operator& (vUInt, vInt);
-sfpi_inline vUInt operator| (vUInt, vInt);
-sfpi_inline vUInt operator^ (vUInt, vInt);
-
-sfpi_inline vUInt operator& (vInt, vUInt);
-sfpi_inline vUInt operator| (vInt, vUInt);
-sfpi_inline vUInt operator^ (vInt, vUInt);
-
-sfpi_inline vUInt operator& (vUInt, unsigned);
-sfpi_inline vUInt operator| (vUInt, unsigned);
-sfpi_inline vUInt operator^ (vUInt, unsigned);
+//sfpi_inline vUInt operator& (vUInt, unsigned);
+//sfpi_inline vUInt operator| (vUInt, unsigned);
+//sfpi_inline vUInt operator^ (vUInt, unsigned);
 
 sfpi_inline vMag operator>> (vMag, unsigned);
 sfpi_inline vMag operator>> (vMag, int);
 sfpi_inline vMag operator>> (vMag, vUInt);
 
-sfpi_inline vMag operator& (vMag, unsigned);
-sfpi_inline vMag operator& (vMag, int);
+//sfpi_inline vMag operator& (vMag, unsigned);
+//sfpi_inline vMag operator& (vMag, int);
 sfpi_inline vMag operator& (vMag, vMag);
-
-sfpi_inline vInt operator+ (vInt, vMag);
-sfpi_inline vInt operator+ (vMag, vInt);
-sfpi_inline vInt operator- (vInt, vMag);
-sfpi_inline vInt operator- (vMag, vInt);
-sfpi_inline vUInt operator+ (vUInt, vMag);
-sfpi_inline vUInt operator+ (vMag, vUInt);
-sfpi_inline vUInt operator- (vUInt, vMag);
-sfpi_inline vUInt operator- (vMag, vUInt);
 
 //////////////////////////////////////////////////////////////////////////////
 // Sign-Magnitude, a container
@@ -412,22 +394,80 @@ using vSMag8 = impl_::vSMag8;
 sfpi_inline vUInt operator& (vSMag, unsigned);
 
 //////////////////////////////////////////////////////////////////////////////
+// Permitted cross-type operators
 
-sfpi_inline vUInt operator& (vUInt, int);
-sfpi_inline vUInt operator| (vUInt, int);
-sfpi_inline vUInt operator^ (vUInt, int);
+sfpi_inline vUInt operator- (vUInt a, vInt b) { return a - vUInt (b); }
+sfpi_inline vUInt operator& (vUInt a, vInt b) { return a & vUInt (b); }
+sfpi_inline vUInt operator| (vUInt a, vInt b) { return a | vUInt (b); }
+sfpi_inline vUInt operator^ (vUInt a, vInt b) { return a ^ vUInt (b); }
 
-sfpi_inline vInt operator+ (int32_t a, vInt b) { return b + a; }
-sfpi_inline vInt operator- (int32_t a, vInt b) { return vInt (a) - b; }
-sfpi_inline vInt operator& (int32_t a, vInt b) { return b & a; }
-sfpi_inline vInt operator| (int32_t a, vInt b) { return b | a; }
-sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
+sfpi_inline vUInt operator& (vInt a, vUInt b) { return b & a; }
+sfpi_inline vUInt operator| (vInt a, vUInt b) { return b | a; }
+sfpi_inline vUInt operator^ (vInt a, vUInt b) { return b ^ a; }
 
-sfpi_inline vUInt operator+ (int32_t a, vUInt b) { return b + a; }
-sfpi_inline vUInt operator- (int32_t a, vUInt b) { return vUInt (a) - b; }
-sfpi_inline vUInt operator& (int32_t a, vUInt b) { return b & uint32_t (a); }
-sfpi_inline vUInt operator| (int32_t a, vUInt b) { return b | uint32_t (a); }
-sfpi_inline vUInt operator^ (int32_t a, vUInt b) { return b ^ uint32_t (a); }
+sfpi_inline vInt operator+ (vInt a, vMag b) { return a + vInt (b); }
+sfpi_inline vInt operator+ (vMag a, vInt b) { return vInt (a) + b; }
+sfpi_inline vInt operator- (vInt a, vMag b) { return a - vInt (b); }
+sfpi_inline vInt operator- (vMag a, vInt b) { return vInt (a) - b; }
+sfpi_inline vUInt operator+ (vUInt a, vMag b) { return a + vUInt (b); }
+sfpi_inline vUInt operator+ (vMag a, vUInt b) { return vUInt (a) + b; }
+sfpi_inline vUInt operator- (vUInt a, vMag b) { return a - vUInt (b); }
+sfpi_inline vUInt operator- (vMag a, vUInt b) { return vUInt (a) = b; }
+
+#if 1
+// We need integer-accepting overloads because of the above cross-type operations
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator+ (vInt a, T b) { return a + vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator- (vInt a, T b) { return a - vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator- (T a, vInt b) { return vInt (a) - b; }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator& (vInt a, T b) { return a & vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator| (vInt a, T b) { return a | vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator^ (vInt a, T b) { return a ^ vInt (b); }
+
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator+ (vUInt a, T b) { return a + vUInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator- (vUInt a, T b) { return a - vUInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator& (vUInt a, T b) { return a & vUInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator| (vUInt a, T b) { return a | vUInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator^ (vUInt a, T b) { return a ^ vUInt (b); }
+
+#endif
+
+//sfpi_inline vUInt operator& (vUInt, int);
+//sfpi_inline vUInt operator| (vUInt, int);
+//sfpi_inline vUInt operator^ (vUInt, int);
+
+//sfpi_inline vInt operator+ (int32_t a, vInt b) { return b + a; }
+//sfpi_inline vInt operator- (int32_t a, vInt b) { return vInt (a) - b; }
+//sfpi_inline vInt operator& (int32_t a, vInt b) { return b & a; }
+//sfpi_inline vInt operator| (int32_t a, vInt b) { return b | a; }
+//sfpi_inline vInt operator^ (int32_t a, vInt b) { return b ^ a; }
+
+//sfpi_inline vUInt operator+ (int32_t a, vUInt b) { return b + a; }
+//sfpi_inline vUInt operator- (int32_t a, vUInt b) { return vUInt (a) - b; }
+//sfpi_inline vUInt operator& (int32_t a, vUInt b) { return b & uint32_t (a); }
+//sfpi_inline vUInt operator| (int32_t a, vUInt b) { return b | uint32_t (a); }
+//sfpi_inline vUInt operator^ (int32_t a, vUInt b) { return b ^ uint32_t (a); }
 
 //////////////////////////////////////////////////////////////////////////////
 
