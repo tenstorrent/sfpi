@@ -618,7 +618,14 @@ auto sfpi::operator- (vFloat a)-> vFloat {
 }
 auto sfpi::operator- (vFloat a, vFloat b)-> vFloat { return a.flt_add (-b); }
 auto sfpi::operator- (vFloat a, float b)-> vFloat {
+#if __riscv_xtttensixwh
   return __builtin_constant_p (b) ? a + vFloat (-b) : a + -vFloat (b);
+#else // __riscv_xtttensixbh || __riscv_xtttensixqsr
+  // SFPMAD complements its addend for free.  Materializing b rather than -b
+  // keeps a constant register or a resident constant usable as that addend,
+  // so x * y - b can still fuse into one SFPMAD.
+  return a - vFloat (b);
+#endif
 }
 auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
