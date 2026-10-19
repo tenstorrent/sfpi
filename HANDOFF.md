@@ -1,5 +1,43 @@
 # Handoff — 2026-10-09
 
+## 2026-10-19 review of the 2026-10-13 pressure-recovery swarm
+
+This records a **review of offline family experiments**, not validation of
+the current SFPI/compiler tip. Reports and diffs are under
+`/workspace/swarm-20261013/{A,B,C,D,E,F}/`. On the original 58 failing
+compile arms, the independent recoveries total **42**, not 44: A 4, B 2,
+C 16, D 14, F 6. F's reported eight tested arms include two already-passing
+`reduce-sdpa` controls; E removes some dssingleface pressure but recovers
+zero complete arms alone. Do not add family counts to infer the integrated
+result. None of these changes had been tested on silicon in the family runs.
+
+C's GCC `sfprawlreg_lane_effect` plus Blackhole LLK header is the generic
+compiler/header recovery; E's tied pinned-output live-in handling for
+`transp8` is also compiler work. A, B, D and F change LLK or test source and
+are **source-shape recoveries**, not compiler wins. C's 8,200 PASS / 2 XFAIL
+host suite and byte-identical assembly for unchanged inputs do not prove
+new-header hardware behavior. The compiler's typed-SFPENCC all-lanes proof
+assumes LaneConfig `ROW_MASK` is clear; the [Blackhole ISA's `IsLaneEnabled`
+model](https://github.com/tenstorrent/tt-isa-documentation/blob/main/BlackholeA0/TensixTile/TensixCoprocessor/VectorUnit.md)
+says a set row-mask bit disables a lane even when lane flags permit it.
+Prove that invariant or fail closed before admitting C. The new header's
+opcode lane-write classifications also need authoritative ISA/owner and
+Blackhole checks. Unpaired raw `SFPCONFIG` register-15 writes appear to
+invalidate the compiler proof, but a direct regression for that path is
+missing; dssingleface uses those writes.
+
+F fixed a real `SDPA_IMPL` test-selector bug: prior `sdpametal` “semantic”
+results actually exercised the hand body. The newly selected semantic body
+needs its first device correctness and matched OFF/ON timing run. The five
+`zaamo` test failures observed with E occurred in both same-environment 14b
+baseline and patched suites: not an E-induced regression, but not a clean
+host-suite claim either. Before any combined recovery/performance or merge
+claim, require one regenerated integrated arm/control run, same-environment
+full-suite comparison, direct row-mask/config-15 tests, and Blackhole
+semantic/hand OFF/ON correctness and paired timing. Preserve the separate
+silicon caveat for A/D/F raw-code or ownership changes. No family report
+alone authorizes publishing compiler, LLK or SFPI pins.
+
 ## 2026-10-13 overnight GCC restack and full Blackhole sweep
 
 The **unpublished** GCC #32–54 recovery restack is complete offline. All 23
