@@ -296,40 +296,36 @@ sfpi_inline vInt operator| (vInt, unsigned);
 sfpi_inline vInt operator^ (vInt, unsigned);
 #else
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator+ (vInt a, T b) {
-  return a + vInt (b);
-}
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator+ (vInt a, T b) { return a + vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator- (vInt a, T b) { return a - vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator& (vInt a, T b) { return a & vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator| (vInt a, T b) { return a | vInt (b); }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator^ (vInt a, T b) { return a ^ vInt (b); }
 
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator- (vInt a, T b) {
-  return a - vInt (b);
-}
-
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator+ (T a, vInt b) { return b + a; }
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator- (T a, vInt b) {
-  return vInt (a) - b;
-}
-
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator- (T a, vInt b) { return vInt (a) - b; }
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator& (vInt a, T b) {
-  return a & vInt (b);
-}
-
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator& (T a, vInt b) { return b & a; }
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator| (vInt a, T b) {
-  return a | vInt (b);
-}
-
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator| (T a, vInt b) { return b | a; }
 template<typename T,
-typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-sfpi_inline vInt operator^ (vInt a, T b) {
-  return a ^ vInt (b);
-}
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vInt operator^ (T a, vInt b) { return b ^ a; }
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -418,6 +414,22 @@ sfpi_inline vUInt operator| (vUInt a, T b) { return a | vUInt (b); }
 template<typename T,
          typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
 sfpi_inline vUInt operator^ (vUInt a, T b) { return a ^ vUInt (b); }
+
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator+ (T a, vUInt b) { return b + a; }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator- (T a, vUInt b) { return vUInt (a) - b; }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator& (T a, vUInt b) { return b & a; }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator| (T a, vUInt b) { return b | a; }
+template<typename T,
+         typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+sfpi_inline vUInt operator^ (T a, vUInt b) { return b ^ a; }
 #endif
 
 sfpi_inline vMag operator>> (vMag, unsigned);
