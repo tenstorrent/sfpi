@@ -129,8 +129,8 @@ parser.add_argument("defs", type=str, nargs=1)
 args = parser.parse_args()
 
 process = subprocess.Popen([args.gcc,
-                          "-DRVTT_FN(name,arch,c,type,e,f)=builtin_def(#name,#type,#arch)",
-                          "-DRVTT_OVR(a,arch,c,type,e,f)=builtin_ovr(#type,#arch)",
+                          "-DRVTT_FN(name,arch,c,type,e,f,g)=builtin_def(#name,#type,#arch)",
+                          "-DRVTT_OVR(a,arch,c,type,e,f,g)=builtin_ovr(#type,#arch)",
                             "-E", "-w", "-x", "c++", args.defs[0]],
                            stdout=subprocess.PIPE, text=True)
 exec (process.communicate()[0])
