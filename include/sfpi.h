@@ -237,7 +237,7 @@ public:
 
 public:
   __SFPI_DEPRECATED("Implicit vInt->vUInt conversion deprecated, use an explicit cast or restructure")
-  sfpi_inline operator vUInt () const;
+  sfpi_inline operator vUInt () const = delete;
 
 public:
   sfpi_inline vInt &operator+= (vInt);
@@ -313,7 +313,7 @@ public:
 
 public:
   __SFPI_DEPRECATED("Implicit vUInt->vInt conversion deprecated, use an explicit cast or restructure")
-  sfpi_inline operator vInt () const;
+  sfpi_inline operator vInt () const = delete;
 
 public:
   // Operations
