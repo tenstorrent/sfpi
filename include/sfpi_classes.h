@@ -11,39 +11,47 @@
 #include "tensix_builtins.h"
 #include "sfpi_constants.h"
 
-#define __builtin_rvtt_sfpxloadi(imm, bits) __builtin_rvtt_sfpxloadi(ckernel::instrn_buffer, imm, 0, 0, bits)
+#define __builtin_rvtt_sfpxloadi(imm, bits) \
+  __SFPI_WARN() __builtin_rvtt_sfpxloadi(::ckernel::instrn_buffer, imm, 0, 0, bits)
 
-#define __builtin_rvtt_sfploadi(imm, mod0) __builtin_rvtt_sfploadi(ckernel::instrn_buffer, imm, 0, 0, mod0)
-#define __builtin_rvtt_sfpload(addr, mod0, mode) __builtin_rvtt_sfpload(ckernel::instrn_buffer, addr, 0, 0, mod0, mode)
+#define __builtin_rvtt_sfploadi(imm, mod0) \
+  __SFPI_WARN() __builtin_rvtt_sfploadi(::ckernel::instrn_buffer, imm, 0, 0, mod0)
+#define __builtin_rvtt_sfpload(addr, mod0, mode) \
+  __SFPI_WARN() __builtin_rvtt_sfpload(::ckernel::instrn_buffer, addr, 0, 0, mod0, mode)
 #define __builtin_rvtt_sfpstore(src, addr, mod0, mode) \
-  __builtin_rvtt_sfpstore(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
+  __SFPI_WARN() __builtin_rvtt_sfpstore(::ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode)
 #define __builtin_rvtt_sfploadsrcs(addr, mod0, mode, done)          \
-  __builtin_rvtt_sfploadsrcs(ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
+  __SFPI_WARN() __builtin_rvtt_sfploadsrcs(::ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
 #define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
-  __builtin_rvtt_sfpstoresrcs(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
+  __SFPI_WARN() __builtin_rvtt_sfpstoresrcs(::ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
 #define __builtin_rvtt_sfpwriteconfig_i(imm, mod1)          \
-  __builtin_rvtt_sfpwriteconfig_i(ckernel::instrn_buffer, imm, 0, 0, mod1e)
+  __SFPI_WARN() __builtin_rvtt_sfpwriteconfig_i(::ckernel::instrn_buffer, imm, 0, 0, mod1e)
 
 #define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) \
-  __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+  __SFPI_WARN() __builtin_rvtt_sfpsetexp_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpsetman_i(src, imm, mod1) \
-  __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+  __SFPI_WARN() __builtin_rvtt_sfpsetman_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) \
-  __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+  __SFPI_WARN() __builtin_rvtt_sfpsetsgn_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 
-#define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpdivp2(src, imm, mod1) __builtin_rvtt_sfpdivp2(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpiadd_i(src, imm, mod1) \
+  __SFPI_WARN() __builtin_rvtt_sfpiadd_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpshft_i(src, imm, mod1) \
+  __SFPI_WARN() __builtin_rvtt_sfpshft_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpdivp2(src, imm, mod1) \
+  __SFPI_WARN() __builtin_rvtt_sfpdivp2(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpstochrnd_descale_i(src, imm, mod1, mode) \
-  __builtin_rvtt_sfpstochrnd_descale_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
+  __SFPI_WARN() __builtin_rvtt_sfpstochrnd_descale_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1, mode)
 
 #define sfpi_inline __attribute__((always_inline)) inline
 
 // Turn on deprecations by default
 #if defined (SFPI_MARK_DEPRECATED) ? SFPI_MARK_DEPRECATED : 1
 #define __SFPI_DEPRECATED(X) [[deprecated (X)]]
+#define __SFPI_WARN() _Pragma ("GCC warning \"macro is deprecated provide iptr operands explicitly\"")
 #else
 #define __SFPI_DEPRECATED(X)
+#define __SFPI_WARN()
 #endif
 
 namespace sfpi {
@@ -130,14 +138,14 @@ public:
     return __builtin_rvtt_sfpiadd_v (get (), b.get (), SFPIADD_MOD1_CC_NONE);
   }
   sfpi_inline sfpu_t int_add (int32_t b, bool) const {
-    return __builtin_rvtt_sfpiadd_i (get (), b, SFPIADD_MOD1_CC_NONE);
+    return (__builtin_rvtt_sfpiadd_i) (::ckernel::instrn_buffer, get (), b, 0, 0, SFPIADD_MOD1_CC_NONE);
   }
   sfpi_inline sfpu_t int_sub (vVal b, bool) const {
     // subtracts the first op from the second op, because, why not :)
     return __builtin_rvtt_sfpiadd_v (b.get (), get (), SFPIADD_MOD1_CC_NONE | SFPIADD_MOD1_ARG_2SCOMP_LREG_DST);
   }
   sfpi_inline sfpu_t int_sub (int32_t b, bool) const {
-    return __builtin_rvtt_sfpiadd_i (get (), -b, SFPIADD_MOD1_CC_NONE);
+    return (__builtin_rvtt_sfpiadd_i) (::ckernel::instrn_buffer, get (), -b, 0, 0, SFPIADD_MOD1_CC_NONE);
   }
 
 public:
@@ -149,7 +157,7 @@ public:
                                      SFPSHFT_MOD1_LOGICAL);
   }
   sfpi_inline sfpu_t int_shift (int b, bool is_signed __attribute__ ((unused))) const {
-    return __builtin_rvtt_sfpshft_i (get (), b,
+    return (__builtin_rvtt_sfpshft_i) (::ckernel::instrn_buffer, get (), b, 0, 0,
 #if __riscv_xtttensixbh || __riscv_xtttensixqsr
                                      is_signed ? SFPSHFT_MOD1_ARITHMETIC :
 #endif
@@ -371,11 +379,11 @@ public:
 
   public:
     sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
-      __builtin_rvtt_sfpstore (val, this->get (), mod, addr_mode);
+      (__builtin_rvtt_sfpstore) (::ckernel::instrn_buffer, val, this->get (), 0, 0, mod, addr_mode);
     }
     
     sfpi_inline sfpu_t read (unsigned mod, unsigned addr_mode) const {
-      return __builtin_rvtt_sfpload (this->get (), mod, addr_mode);
+      return (__builtin_rvtt_sfpload) (::ckernel::instrn_buffer, this->get (), 0, 0, mod, addr_mode);
     }
   };
 
@@ -427,11 +435,11 @@ public:
 
   public:
     sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
-      __builtin_rvtt_sfpstoresrcs (val, this->get (), mod, addr_mode, is_done);
+      (__builtin_rvtt_sfpstoresrcs) (::ckernel::instrn_buffer, val, this->get (), 0, 0, mod, addr_mode, is_done);
     }
     
     sfpi_inline sfpu_t read (unsigned mod, unsigned addr_mode) const {
-      return __builtin_rvtt_sfploadsrcs (this->get (), mod, addr_mode, is_done);
+      return (__builtin_rvtt_sfploadsrcs) (::ckernel::instrn_buffer, this->get (), 0, 0, mod, addr_mode, is_done);
     }
   };
 
