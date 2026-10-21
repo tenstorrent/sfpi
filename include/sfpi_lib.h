@@ -117,7 +117,7 @@ public:
 
 public:
   sfpi_inline explicit vLut (sLut v)
-      : vVal (__builtin_rvtt_sfpxloadi (v.get (), -int (sizeof (typename sLut::scalar_t)) * 8)) {}
+      : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, v.get (), 0, 0, -int (sizeof (typename sLut::scalar_t)) * 8)) {}
   sfpi_inline explicit vLut (impl_::sfpu_t vec) : vVal (vec) {}
   sfpi_inline explicit vLut (typename sLut::single_t a0, typename sLut::single_t a1)
       : vLut (sLut (a0, a1)) {}
@@ -438,7 +438,7 @@ sfpi_inline vUInt exsgn (Type v) {
 }
 
 sfpi_inline vFloat setexp (vFloat v, int exp) {
-  return __builtin_rvtt_sfpsetexp_i (v.get(), exp, 0);
+  return (__builtin_rvtt_sfpsetexp_i) (::ckernel::instrn_buffer, v.get(), exp, 0, 0, 0);
 }
 
 sfpi_inline vFloat setexp (vFloat v, vInt exp) {
@@ -450,11 +450,11 @@ sfpi_inline vFloat copyexp (vFloat v, vFloat exp) {
 }
 
 sfpi_inline vFloat addexp (vFloat in, int exp) {
-  return __builtin_rvtt_sfpdivp2 (in.get (), exp, SFPSDIVP2_MOD1_ADD);
+  return (__builtin_rvtt_sfpdivp2) (::ckernel::instrn_buffer, in.get (), exp, 0, 0, SFPSDIVP2_MOD1_ADD);
 }
 
 sfpi_inline vFloat setman (vFloat v, unsigned man) {
-  return __builtin_rvtt_sfpsetman_i (v.get(), man, 0);
+  return (__builtin_rvtt_sfpsetman_i) (::ckernel::instrn_buffer, v.get(), man, 0, 0, 0);
 }
 
 template <typename Type,
@@ -473,11 +473,11 @@ template <typename Type,
           typename std::enable_if_t<std::disjunction<std::is_base_of<vFloat, Type>,
                                                      std::is_base_of<vSMag, Type>>::value>* = nullptr>
 sfpi_inline Type setsgn (Type v, int sgn) {
-  return Type (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
+  return Type ((__builtin_rvtt_sfpsetsgn_i) (::ckernel::instrn_buffer, v.get (), sgn, 0, 0, 0));
 }
 
 sfpi_inline vSMag setsgn (vUInt v, int sgn) {
-  return vSMag (__builtin_rvtt_sfpsetsgn_i (v.get (), sgn, 0));
+  return vSMag ((__builtin_rvtt_sfpsetsgn_i) (::ckernel::instrn_buffer, v.get (), sgn, 0, 0, 0));
 }
 
 template <typename TypeA, typename TypeB,
@@ -582,7 +582,7 @@ sfpi_inline vUInt shft (vUInt v, vInt amt, ShiftMode mode = ShiftMode::Logical) 
 }
 
 sfpi_inline vUInt shft (vUInt v, int amt, ShiftMode mode = ShiftMode::Logical) {
-  return __builtin_rvtt_sfpshft_i (v.get (), amt, impl_::shft_mode (mode));
+  return (__builtin_rvtt_sfpshft_i) (::ckernel::instrn_buffer, v.get (), amt, 0, 0, impl_::shft_mode (mode));
 }
 
 // WH has no arithmetic shift, force the user to specify logical
@@ -603,7 +603,7 @@ sfpi_inline vInt shft(vInt v, int amt, ShiftMode mode =
                       ShiftMode(~0)
 #endif
                       ) {
-  return __builtin_rvtt_sfpshft_i (v.get (), amt, impl_::shft_mode (mode));
+  return (__builtin_rvtt_sfpshft_i) (::ckernel::instrn_buffer, v.get (), amt, 0, 0, impl_::shft_mode (mode));
 }
 
 sfpi_inline vBool is_nan (vFloat v) {
@@ -1089,8 +1089,8 @@ sfpi_inline vUInt int32_to_uint8 (vInt in, vUInt descale, RoundMode rounding = R
 }
 
 sfpi_inline vUInt int32_to_uint8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_descale_i
-      (in.get(), descale,
+  return (__builtin_rvtt_sfpstochrnd_descale_i)
+      (::ckernel::instrn_buffer, in.get(), descale, 0, 0,
        SFPSTOCHRND_MOD1_INT32_TO_UINT8, impl_::stochrnd_rnd (rounding));
 }
 
@@ -1101,8 +1101,8 @@ sfpi_inline vInt int32_to_int8 (vInt in, vUInt descale, RoundMode rounding = Rou
 }
 
 sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = RoundMode::NearestStochastic) {
-  return __builtin_rvtt_sfpstochrnd_descale_i
-      (in.get(), descale,
+  return (__builtin_rvtt_sfpstochrnd_descale_i)
+      (::ckernel::instrn_buffer, in.get(), descale, 0, 0,
        SFPSTOCHRND_MOD1_INT32_TO_INT8, impl_::stochrnd_rnd (rounding));
 }
 

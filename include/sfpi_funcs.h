@@ -525,11 +525,11 @@ sfpi::impl_::vReg_<Derived, Fmt>::operator vSMag16 () const {
 // vFloat definitions
 sfpi::vFloat::vFloat (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vFloat::vFloat (sFloat16a val)
-    : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATA)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val.get (), 0, 0, SFPLOADI_MOD0_FLOATA)) {}
 sfpi::vFloat::vFloat (sFloat16b val)
-    : vVal (__builtin_rvtt_sfploadi (val.get (), SFPLOADI_MOD0_FLOATB)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val.get (), 0, 0, SFPLOADI_MOD0_FLOATB)) {}
 sfpi::vFloat::vFloat (float f)
-    : vVal (__builtin_rvtt_sfpxloadi (impl_::float_as_uint (f), -32)) {}
+    : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, impl_::float_as_uint (f), 0, 0, -32)) {}
 
 auto sfpi::vFloat::operator+= (vFloat a)-> vFloat & { return *this = *this + a; }
 auto sfpi::vFloat::operator-= (vFloat a)-> vFloat & { return *this = *this + -a; }
@@ -581,13 +581,13 @@ sfpi::vInt::vInt (vMag val) : vInt (val.get ()) {}
 sfpi::vInt::vInt (vUInt val) : vVal (val.get ()) {}
 sfpi::vInt::vInt (vUInt16 val) : vInt (vUInt (val)) {}
 sfpi::vInt::vInt (int16_t val)
-    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val, 0, 0, SFPLOADI_MOD0_SHORT)) {}
 sfpi::vInt::vInt (uint16_t val)
-    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val, 0, 0, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vInt::vInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, val, 0, 0, 31)) {}
 sfpi::vInt::vInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
+    : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, val, 0, 0, -32)) {}
 sfpi::vInt::vInt (int val) : vInt (int32_t (val)) {};
 sfpi::vInt::vInt (unsigned val) : vInt (uint32_t (val)) {}
 
@@ -662,13 +662,13 @@ auto sfpi::operator<= (vInt a, vInt b)-> vBool::Cmp<vBool::LE, vBool::Int> {
 sfpi::vUInt::vUInt (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vUInt::vUInt (vInt val) : vVal (val.get ()) {}
 sfpi::vUInt::vUInt (int16_t val)
-    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_SHORT)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val, 0, 0, SFPLOADI_MOD0_SHORT)) {}
 sfpi::vUInt::vUInt (uint16_t val)
-    : vVal (__builtin_rvtt_sfploadi (val, SFPLOADI_MOD0_USHORT)) {}
+    : vVal ((__builtin_rvtt_sfploadi) (::ckernel::instrn_buffer, val, 0, 0, SFPLOADI_MOD0_USHORT)) {}
 sfpi::vUInt::vUInt (int32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, val, 0, 0, 31)) {}
 sfpi::vUInt::vUInt (uint32_t val)
-    : vVal (__builtin_rvtt_sfpxloadi (val, -32)) {}
+    : vVal ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, val, 0, 0, -32)) {}
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
@@ -755,7 +755,7 @@ auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vSMag::vSMag (uint32_t val)
-    : vSMag (__builtin_rvtt_sfpxloadi (val, -32)) {}
+    : vSMag ((__builtin_rvtt_sfpxloadi) (::ckernel::instrn_buffer, val, 0, 0, -32)) {}
 sfpi::vSMag::vSMag (int32_t val)
     : vSMag (uint32_t (val < 0 ? 0 - (uint32_t (val) << 1 >> 1) : uint32_t (val))) {}
 sfpi::vSMag::vSMag (unsigned val)
