@@ -189,63 +189,6 @@ stamps/check-write-permission:
 	mkdir -p $(@D) && touch $@
 
 #
-# Rule for auto init submodules
-#
-
-ifeq ($(findstring $(srcdir),$(GCC_SRCDIR)),$(srcdir))
-GCC_SRC_GIT := $(GCC_SRCDIR)/.git
-else
-GCC_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(BINUTILS_SRCDIR)),$(srcdir))
-BINUTILS_SRC_GIT := $(BINUTILS_SRCDIR)/.git
-else
-BINUTILS_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(GDB_SRCDIR)),$(srcdir))
-GDB_SRC_GIT := $(GDB_SRCDIR)/.git
-else
-GDB_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(NEWLIB_SRCDIR)),$(srcdir))
-NEWLIB_SRC_GIT := $(NEWLIB_SRCDIR)/.git
-else
-NEWLIB_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(GLIBC_SRCDIR)),$(srcdir))
-GLIBC_SRC_GIT := $(GLIBC_SRCDIR)/.git
-else
-GLIBC_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(QEMU_SRCDIR)),$(srcdir))
-QEMU_SRC_GIT := $(QEMU_SRCDIR)/.git
-else
-QEMU_SRC_GIT :=
-endif
-
-ifeq ($(findstring $(srcdir),$(SPIKE_SRCDIR)),$(srcdir))
-SPIKE_SRC_GIT := $(SPIKE_SRCDIR)/.git
-else
-SPIKE_SRC_GIT :=
-endif
-
-ifneq ("$(wildcard $(GCC_SRCDIR)/.git)","")
-GCCPKGVER := g$(shell git -C $(GCC_SRCDIR) describe --always --dirty --exclude '*')
-else
-GCCPKGVER :=
-endif
-
-$(srcdir)/%/.git:
-	cd $(srcdir) && \
-	flock `git rev-parse --git-dir`/config git submodule init $(@D) && \
-	flock `git rev-parse --git-dir`/config git submodule update $(@D)
-
-#
 # NEWLIB
 #
 
@@ -255,11 +198,11 @@ else
 BINUTILS_GDB_FLAGS := --enable-gdb $(GDB_TARGET_FLAGS)
 endif
 
-stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check-write-permission
+stamps/build-binutils-newlib: stamps/check-write-permission
 	rm -rf $@ $(@F)
 	mkdir $(@F)
 # CC_FOR_TARGET is required for the ld testsuite.
-	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
+	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $(BINUTILS_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -273,11 +216,11 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 	$(MAKE) -C $(@F) install
 	mkdir -p $(@D) && touch $@
 
-stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
+stamps/build-gdb-newlib: stamps/check-write-permission
 	rm -rf $@ $(@F)
 	mkdir $(@F)
 # CC_FOR_TARGET is required for the ld testsuite.
-	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $</configure \
+	cd $(@F) && CC_FOR_TARGET=$(NEWLIB_CC_FOR_TARGET) $(GDB_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -295,11 +238,10 @@ stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
 	$(call SMALL_BUILD, $(@F))
 	mkdir -p $(@D) && touch $@
 
-stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils-newlib
-	if test -f $</contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" = "true"; then cd $< && ./contrib/download_prerequisites; fi
+stamps/build-gcc-newlib-stage1: stamps/build-binutils-newlib
 	rm -rf $@ $(@F)
 	mkdir $(@F)
-	cd $(@F) && $</configure \
+	cd $(@F) && $(GCC_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -333,10 +275,10 @@ stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binuti
 	$(call SMALL_BUILD, $(@F))
 	mkdir -p $(@D) && touch $@
 
-stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-stage1
+stamps/build-newlib: stamps/build-gcc-newlib-stage1
 	rm -rf $@ $(@F)
 	mkdir $(@F)
-	cd $(@F) && $</configure \
+	cd $(@F) && $(NEWLIB_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
@@ -351,10 +293,10 @@ stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-
 	$(call SMALL_BUILD, $(@F))
 	mkdir -p $(@D) && touch $@
 
-stamps/build-newlib-nano: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-stage1
+stamps/build-newlib-nano: stamps/build-gcc-newlib-stage1
 	rm -rf $@ $(@F)
 	mkdir $(@F)
-	cd $(@F) && $</configure \
+	cd $(@F) && $(NEWLIB_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(builddir)/install-newlib-nano \
@@ -400,18 +342,16 @@ stamps/merge-newlib-nano: stamps/build-newlib-nano stamps/build-newlib
 	$(call SMALL_BUILD, $(builddir)/install-newlib-nano)
 	mkdir -p $(@D) && touch $@
 
-stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib \
-		stamps/merge-newlib-nano
+stamps/build-gcc-newlib-stage2: stamps/build-newlib stamps/merge-newlib-nano
 	rm -rf $@ $(@F)
 	mkdir $(@F)
-	cd $(@F) && $</configure \
+	cd $(@F) && $(GCC_SRCDIR)/configure \
 		--target=$(NEWLIB_TUPLE) \
 		$(CONFIGURE_HOST) \
 		--prefix=$(INSTALL_DIR) \
 		--disable-shared \
 		--disable-threads \
 		--enable-languages=c,c++ \
-		--with-pkgversion="$(GCCPKGVER)" \
 		@with_zstd@ @with_system_zlib@ \
 		--enable-tls \
 		--with-newlib \
@@ -439,7 +379,7 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 	$(MAKE) -C $(@F) install
 	mkdir -p $(@D) && touch $@
 
-stamps/build-spike: $(SPIKE_SRCDIR) $(SPIKE_SRC_GIT)
+stamps/build-spike: $(SPIKE_SRCDIR)
 	rm -rf $@ $(@F)
 	mkdir $(@F)
 	cd $(@F) && $</configure \
@@ -473,7 +413,7 @@ stamps/build-pk64: $(PK_SRCDIR) stamps/build-gcc-newlib-stage2
 	mkdir -p $(@D)
 	date > $@
 
-stamps/build-qemu: $(QEMU_SRCDIR) $(QEMU_SRC_GIT)
+stamps/build-qemu: $(QEMU_SRCDIR)
 	rm -rf $@ $(@F)
 	mkdir $(@F)
 	cd $(@F) && $</configure \
@@ -487,7 +427,7 @@ stamps/build-qemu: $(QEMU_SRCDIR) $(QEMU_SRC_GIT)
 	mkdir -p $(@D)
 	date > $@
 
-stamps/build-dejagnu: $(srcdir)/riscv-dejagnu $(srcdir)/riscv-dejagnu/.git
+stamps/build-dejagnu: $(srcdir)/riscv-dejagnu
 	rm -rf $@ $(@F)
 	mkdir $(@F)
 	cd $(@F) && $</configure \
