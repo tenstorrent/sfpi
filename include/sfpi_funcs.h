@@ -28,103 +28,76 @@ sfpi::sFloat16b::sFloat16b (float v)
 //////////////////////////////////////////////////////////////////////////////
 // vBool definitions
 
-enum sfpi::vBool::Logic : unsigned char {
-     And = SFPXLOGIC_MOD1_AND,
-      Or = SFPXLOGIC_MOD1_OR,
-     Not = SFPXLOGIC_MOD1_NOT,
-  Nearby = SFPXLOGIC_MOD1_NEARBY,
-};
-
-enum sfpi::vBool::Cond : unsigned char {
-      EQ = SFPXCMP_MOD1_CC_EQ,
-      NE = SFPXCMP_MOD1_CC_NE,
-      LT = SFPXCMP_MOD1_CC_LT,
-      GE = SFPXCMP_MOD1_CC_GE,
-      GT = SFPXCMP_MOD1_CC_GT,
-      LE = SFPXCMP_MOD1_CC_LE,
-};
-
-enum sfpi::vBool::Type : unsigned char {
-    UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
-     Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
-    SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
-   Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
-};
-
 sfpi::vBool::vBool (Logic t, vBool a, vBool b)
     : result (__builtin_rvtt_sfpxlogic (t, a.get (), b.get ())) {}
+template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
+sfpi::vBool::vBool (Cmp<C, T> cmp)
+    :  result (__builtin_rvtt_sfpxcmp (cmp.get (0), cmp.get (1), C | T)) {}
 
-sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, impl_::vVal b)
-    : result (__builtin_rvtt_sfpxcmp (a.get (), b.get (), c | t)) {}
+sfpi::vBool::vBool (vInt a) : vBool (Cmp<NE, Int> (a, vInt (0))) {}
+sfpi::vBool::vBool (vUInt a) : vBool (Cmp<NE, UInt> (a, vUInt (0))) {}
+sfpi::vBool::vBool (vSMag a) : vBool (Cmp<NE, SMag> (a, vSMag (0))) {}
 
-sfpi::vBool::vBool (Cond c, Type t, impl_::vVal a, uint32_t s)
-    : result (__builtin_rvtt_sfpxcmp (a.get (), __builtin_rvtt_sfpxloadi (s, -32), c | t)) {}
+template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
+sfpi::vBool::Cmp<C, T>::Cmp (impl_::vVal a, impl_::vVal b)
+    : v (__builtin_rvtt_sfpconcat2 (a.get (), b.get ())) {}
 
-sfpi::vBool::vBool (Cond c, vFloat a, vFloat b)
-    : vBool (c, Float, a, b) {}
-sfpi::vBool::vBool (Cond c, vFloat a, float s)
-    : vBool (c, Float, a, impl_::float_as_uint (s)) {}
-sfpi::vBool::vBool (Cond c, vInt a, vInt b) : vBool (c, Int, a, b) {}
-sfpi::vBool::vBool (Cond c, vInt a, int32_t s) : vBool (c, Int, a, s) {}
-sfpi::vBool::vBool (Cond c, vUInt a, vUInt b) : vBool (c, UInt, a, b) {}
-sfpi::vBool::vBool (Cond c, vUInt a, uint32_t s) : vBool (c, UInt, a, s) {}
-sfpi::vBool::vBool (Cond c, vSMag a, vSMag b) : vBool (c, SMag, a, b) {}
-sfpi::vBool::vBool (Cond c, vSMag a, int s)
-    : vBool (c, SMag, a, s < 0 ? 0 - (unsigned (s) << 1 >> 1) : unsigned (s)) {}
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
+sfpi::vUInt sfpi::mask (vBool::Cmp<C, T> cmp) {
+  static_assert (false
+                 || T == vBool::Float
+                 || T == vBool::SMag
+#if __riscv_xtttensixqsr
+                 || T == vBool::Int
+#endif
+                 || false, "Type not suitable for mask generation");
 
-sfpi::vBool::vBool (vInt a) : vBool (NE, a, 0) {}
-sfpi::vBool::vBool (vUInt a) : vBool (NE, a, 0) {}
-sfpi::vBool::vBool (vSMag a) : vBool (NE, a, 0) {}
-
-sfpi::impl_::CC::CC (CC &&src)
-    : dep (src.dep), depth (src.depth), pending_push (src.pending_push),
-      explicit_end (src.explicit_end) {
-  src.dep = 0;
-  src.depth = 0;
-  src.pending_push = false;
-  src.explicit_end = false;
+#if __riscv_xtttensixqsr
+  constexpr unsigned imm_type =
+      T == vBool::Float ? SFPGTLE_IMM_TYPE_FLOAT :
+      T == vBool::SMag ? SFPGTLE_IMM_TYPE_SMAG :
+      T == vBool::Int ? SFPGTLE_IMM_TYPE_INT :
+      ~0u;
+#define SFPI_TRAIL 0, imm_type
+#else
+#define SFPI_TRAIL 0
+#endif
+  if constexpr (C == SFPXCMP_MOD1_CC_LT)
+    return __builtin_rvtt_sfpgt (cmp.get (1), cmp.get (0), SFPI_TRAIL);
+  else if constexpr (C == SFPXCMP_MOD1_CC_GE)
+    return __builtin_rvtt_sfple (cmp.get (1), cmp.get (0), SFPI_TRAIL);
+  else if constexpr (C == SFPXCMP_MOD1_CC_EQ)
+    return vUInt (__builtin_rvtt_sfple (cmp.get (0), cmp.get (1), SFPI_TRAIL))
+        & vUInt (__builtin_rvtt_sfple (cmp.get (1), cmp.get (0), SFPI_TRAIL));
+  else if constexpr (C == SFPXCMP_MOD1_CC_NE)
+    return vUInt (__builtin_rvtt_sfpgt (cmp.get (0), cmp.get (1), SFPI_TRAIL))
+        | vUInt (__builtin_rvtt_sfpgt (cmp.get (1), cmp.get (0), SFPI_TRAIL));
+  else if constexpr (C == SFPXCMP_MOD1_CC_GT)
+    return __builtin_rvtt_sfpgt (cmp.get (0), cmp.get (1), SFPI_TRAIL);
+  else if constexpr (C == SFPXCMP_MOD1_CC_LE)
+    return __builtin_rvtt_sfple (cmp.get (0), cmp.get (1), SFPI_TRAIL);
+  else
+    static_assert (false, "Comparison not suitale for mask generation");
+#undef SFPI_TRAIL
 }
+#endif
 
-// A macro-owned frame that leaves scope before v_endif/v_endblock still
-// balances hardware CC, but omits END so the compiler rejects the escape.
-sfpi::impl_::CC::~CC () { finish (!explicit_end); }
+auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
+  if (mod & SFPXPRED_MOD1_ELSE)
+    __builtin_rvtt_sfpcompc ();
 
-auto sfpi::impl_::CC::operator= (CC &&src)-> CC & {
-  finish (!explicit_end);
-  dep = src.dep, depth = src.depth, pending_push = src.pending_push,
-    explicit_end = src.explicit_end;
-  src.dep = 0, src.depth = 0, src.pending_push = false,
-    src.explicit_end = false;
-  return *this;
-}
+  if (mod & SFPXPRED_MOD1_PUSH) {
+    depth++;
+    __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
+  }
 
-auto sfpi::impl_::CC::if_()-> CC & {
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF
-                                 | (pending_push ? SFPXPRED_MOD1_PUSH : 0)
-                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  pending_push = false;
-  return *this;
-}
-auto sfpi::impl_::CC::else_()-> CC & {
-  __builtin_rvtt_sfpcompc ();
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_ELSE
-                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  return *this;
-}
-auto sfpi::impl_::CC::elseif_()-> CC & {
-  __builtin_rvtt_sfpcompc ();
-  push ();
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_IF | SFPXPRED_MOD1_ELSE
-                                 | SFPXPRED_MOD1_PUSH
-                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  pending_push = false;
-  return *this;
-}
-auto sfpi::impl_::CC::block_()-> CC & {
-  push ();
-  dep = __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_PUSH
-                                 | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  pending_push = false;
+  dep = __builtin_rvtt_sfpxpred (mod | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
+
+  if (mod == SFPXPRED_MOD1_END)
+    for (; depth; depth--)
+      __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+
   return *this;
 }
 
@@ -132,53 +105,10 @@ auto sfpi::impl_::CC::cond (vBool op)-> void {
   dep = __builtin_rvtt_sfpxcond (0, dep, op.get ());
 }
 auto sfpi::impl_::CC::cond (vInt v)-> void {
-  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
+  cond (vBool (v));
 }
 auto sfpi::impl_::CC::cond (vUInt v)-> void {
-  dep = __builtin_rvtt_sfpxcond (0, dep, vBool (vBool::NE, v, 0).get ());
-}
-
-auto sfpi::impl_::CC::push ()-> CC & {
-  depth++;
-  __builtin_rvtt_sfppushc (SFPPUSHC_MOD1_PUSH);
-  pending_push = true;
-  return *this;
-}
-
-auto sfpi::impl_::CC::pop ()-> CC & { return finish (true); }
-
-auto sfpi::impl_::CC::end_ ()-> CC & {
-  finish (true);
-  depth = 0;
-  explicit_end = false;
-  return *this;
-}
-
-auto sfpi::impl_::CC::finish (bool emit_end)-> CC & {
-  // The pop count is always a compile-time constant after inlining (the
-  // push()/else_() chain is textual), but the natural rolled loop stops
-  // being completely peeled at depth >= 5 (-O2 cunroll refuses on size
-  // growth), leaving a popc CFG self-loop that no rvtt CC analysis
-  // accepts: a five-region v_if/v_elseif chain ICEs the compiler
-  // (gimple-rvtt-live.cc process_block stack-depth assert; laneGU
-  // 2026-08-25).  A constant-foldable compare chain never forms a loop
-  // in the first place; the residual loop only exists for depth > 8
-  // (beyond any architectural CC-stack use) and keeps the old shape.
-  const unsigned int n = depth;
-  if (n != 0 && emit_end)
-    __builtin_rvtt_sfpxpred (SFPXPRED_MOD1_ENDIF
-                             | (n << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
-  if (n >= 1) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 2) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 3) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 4) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 5) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 6) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 7) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  if (n >= 8) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  for (unsigned ix = 8; ix < n; ix++)
-    __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
-  return *this;
+  cond (vBool (v));
 }
 
 // For the moment this is always presumed (that's a bug), so we don't need any annotation
@@ -618,34 +548,31 @@ auto sfpi::operator- (vFloat a)-> vFloat {
 }
 auto sfpi::operator- (vFloat a, vFloat b)-> vFloat { return a.flt_add (-b); }
 auto sfpi::operator- (vFloat a, float b)-> vFloat {
-#if __riscv_xtttensixwh
   return __builtin_constant_p (b) ? a + vFloat (-b) : a + -vFloat (b);
-#else // __riscv_xtttensixbh || __riscv_xtttensixqsr
-  // SFPMAD complements its addend for free.  Materializing b rather than -b
-  // keeps a constant register or a resident constant usable as that addend,
-  // so x * y - b can still fuse into one SFPMAD.
-  return a - vFloat (b);
-#endif
 }
 auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
 // Comparisons
-auto sfpi::operator== (vFloat a, vFloat b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vFloat a, vFloat b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vFloat a, vFloat b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vFloat a, vFloat b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vFloat a, vFloat b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vFloat a, vFloat b)-> vBool { return vBool (vBool::GE, a, b); }
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-auto sfpi::operator== (vFloat a, float b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vFloat a, float b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vFloat a, float b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vFloat a, float b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vFloat a, float b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vFloat a, float b)-> vBool { return vBool (vBool::GE, a, b); }
+auto sfpi::operator< (vFloat a, vFloat b)-> vBool::Cmp<vBool::LT, vBool::Float> {
+  return vBool::Cmp<vBool::LT, vBool::Float> (a, b);
+}
+auto sfpi::operator>= (vFloat a, vFloat b)-> vBool::Cmp<vBool::GE, vBool::Float> {
+  return vBool::Cmp<vBool::GE, vBool::Float> (a, b);
+}
+auto sfpi::operator== (vFloat a, vFloat b)-> vBool::Cmp<vBool::EQ, vBool::Float> {
+  return vBool::Cmp<vBool::EQ, vBool::Float> (a, b);
+}
+auto sfpi::operator!= (vFloat a, vFloat b)-> vBool::Cmp<vBool::NE, vBool::Float> {
+  return vBool::Cmp<vBool::NE, vBool::Float> (a, b);
+}
+auto sfpi::operator> (vFloat a, vFloat b)-> vBool::Cmp<vBool::GT, vBool::Float> {
+  return vBool::Cmp<vBool::GT, vBool::Float> (a, b);
+}
+auto sfpi::operator<= (vFloat a, vFloat b)-> vBool::Cmp<vBool::LE, vBool::Float> {
+  return vBool::Cmp<vBool::LE, vBool::Float> (a, b);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // vInt definitions
@@ -711,20 +638,24 @@ auto sfpi::operator^ (vInt a, int32_t b)-> vInt { return a ^ vInt (b); }
 auto sfpi::operator^ (vInt a, int b)-> vInt { return a ^ int32_t (b); }
 auto sfpi::operator^ (vInt a, unsigned b)-> vInt { return a ^ int32_t (b); }
 
-auto sfpi::operator== (vInt a, vInt b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vInt a, vInt b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vInt a, vInt b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vInt a, vInt b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vInt a, vInt b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vInt a, vInt b)-> vBool { return vBool (vBool::GE, a, b); }
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-auto sfpi::operator== (vInt a, int32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vInt a, int32_t b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vInt a, int32_t b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vInt a, int32_t b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vInt a, int32_t b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vInt a, int32_t b)-> vBool { return vBool (vBool::GE, a, b); }
+auto sfpi::operator< (vInt a, vInt b)-> vBool::Cmp<vBool::LT, vBool::Int> {
+  return vBool::Cmp<vBool::LT, vBool::Int> (a, b);
+}
+auto sfpi::operator>= (vInt a, vInt b)-> vBool::Cmp<vBool::GE, vBool::Int> {
+  return vBool::Cmp<vBool::GE, vBool::Int> (a, b);
+}
+auto sfpi::operator== (vInt a, vInt b)-> vBool::Cmp<vBool::EQ, vBool::Int> {
+  return vBool::Cmp<vBool::EQ, vBool::Int> (a, b);
+}
+auto sfpi::operator!= (vInt a, vInt b)-> vBool::Cmp<vBool::NE, vBool::Int> {
+  return vBool::Cmp<vBool::NE, vBool::Int> (a, b);
+}
+auto sfpi::operator> (vInt a, vInt b)-> vBool::Cmp<vBool::GT, vBool::Int> {
+  return vBool::Cmp<vBool::GT, vBool::Int> (a, b);
+}
+auto sfpi::operator<= (vInt a, vInt b)-> vBool::Cmp<vBool::LE, vBool::Int> {
+  return vBool::Cmp<vBool::LE, vBool::Int> (a, b);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // vUInt definitions
@@ -741,14 +672,8 @@ sfpi::vUInt::vUInt (uint32_t val)
 sfpi::vUInt::vUInt (int val) : vUInt (int32_t (val)) {}
 sfpi::vUInt::vUInt (unsigned val) : vUInt (uint32_t (val)) {}
 
-// sfpi.h declares this deprecated conversion always_inline but never defines
-// it -- unlike vBool's, which is explicitly = delete'd.  An always_inline
-// declaration with no body is not a soft delete: it compiles until something
-// calls it, then fails with "function body not available" pointing at the
-// declaration rather than the call.  main added the vSMag(vMag) converting
-// constructor, which is what tips exman()/shft() overload resolution to the
-// vUInt-returning shft and makes LLK kernels trip this.  Define it; the bit
-// pattern is unchanged, so the explicit vInt(vUInt) constructor is the body.
+// Keep the deprecated implicit conversion usable until its declaration is
+// removed; an always_inline declaration without a definition fails at use.
 sfpi::vUInt::operator sfpi::vInt () const { return vInt (*this); }
 
 auto sfpi::vUInt::operator+= (vUInt a)-> vUInt & { return *this = *this + a; }
@@ -801,21 +726,24 @@ auto sfpi::operator^ (vUInt a, uint32_t b)-> vUInt { return a ^ vUInt (b); }
 auto sfpi::operator^ (vUInt a, unsigned b)-> vUInt { return a ^ uint32_t (b); }
 auto sfpi::operator^ (vUInt a, int b)-> vUInt { return a ^ uint32_t (b); }
 
-auto sfpi::operator== (vUInt a, vUInt b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vUInt a, vUInt b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vUInt a, vUInt b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vUInt a, vUInt b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vUInt a, vUInt b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vUInt a, vUInt b)-> vBool { return vBool (vBool::GE, a, b); }
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-auto sfpi::operator== (vUInt a, uint32_t b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator!= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator< (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LT, a, b); }
-auto sfpi::operator> (vUInt a, uint32_t b)-> vBool { return vBool (vBool::GT, a, b); }
-auto sfpi::operator<= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::LE, a, b); }
-auto sfpi::operator>= (vUInt a, uint32_t b)-> vBool { return vBool (vBool::GE, a, b); }
-
+auto sfpi::operator< (vUInt a, vUInt b)-> vBool::Cmp<vBool::LT, vBool::UInt> {
+  return vBool::Cmp<vBool::LT, vBool::UInt> (a, b);
+}
+auto sfpi::operator>= (vUInt a, vUInt b)-> vBool::Cmp<vBool::GE, vBool::UInt> {
+  return vBool::Cmp<vBool::GE, vBool::UInt> (a, b);
+}
+auto sfpi::operator== (vUInt a, vUInt b)-> vBool::Cmp<vBool::EQ, vBool::UInt> {
+  return vBool::Cmp<vBool::EQ, vBool::UInt> (a, b);
+}
+auto sfpi::operator!= (vUInt a, vUInt b)-> vBool::Cmp<vBool::NE, vBool::UInt> {
+  return vBool::Cmp<vBool::NE, vBool::UInt> (a, b);
+}
+auto sfpi::operator> (vUInt a, vUInt b)-> vBool::Cmp<vBool::GT, vBool::UInt> {
+  return vBool::Cmp<vBool::GT, vBool::UInt> (a, b);
+}
+auto sfpi::operator<= (vUInt a, vUInt b)-> vBool::Cmp<vBool::LE, vBool::UInt> {
+  return vBool::Cmp<vBool::LE, vBool::UInt> (a, b);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // vMag definitions
@@ -831,16 +759,21 @@ auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 // vSMag definitions
 sfpi::vSMag::vSMag (impl_::sfpu_t vec) : vVal (vec) {}
 sfpi::vSMag::vSMag (uint32_t val)
-    : vSMag (__builtin_rvtt_sfpxloadi (val, 31)) {}
+    : vSMag (__builtin_rvtt_sfpxloadi (val, -32)) {}
+sfpi::vSMag::vSMag (int32_t val)
+    : vSMag (uint32_t (val < 0 ? 0 - (uint32_t (val) << 1 >> 1) : uint32_t (val))) {}
+sfpi::vSMag::vSMag (unsigned val)
+    : vSMag (uint32_t (val)) {}
+sfpi::vSMag::vSMag (int val)
+    : vSMag (int32_t (val)) {}
 sfpi::vSMag::vSMag (impl_::vMag val)
     : vSMag (val.get ()) {}
 
 auto sfpi::operator& (vSMag a, unsigned b)-> vUInt { return a.int_and (vUInt (b)); }
 
-auto sfpi::operator== (vSMag a, vSMag b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator== (vSMag a, unsigned b)-> vBool { return vBool (vBool::EQ, a, b); }
-auto sfpi::operator== (vSMag a, int b)-> vBool { return vBool (vBool::EQ, a, b); }
-
-auto sfpi::operator!= (vSMag a, vSMag b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator!= (vSMag a, unsigned b)-> vBool { return vBool (vBool::NE, a, b); }
-auto sfpi::operator!= (vSMag a, int b)-> vBool { return vBool (vBool::NE, a, b); }
+auto sfpi::operator== (vSMag a, vSMag b)-> vBool::Cmp<vBool::EQ, vBool::SMag> {
+  return vBool::Cmp<vBool::EQ, vBool::SMag> (a, b);
+}
+auto sfpi::operator!= (vSMag a, vSMag b)-> vBool::Cmp<vBool::NE, vBool::SMag> {
+  return vBool::Cmp<vBool::NE, vBool::SMag> (a, b);
+}

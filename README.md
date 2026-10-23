@@ -3,6 +3,22 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
+Current alignment work starts from upstream SFPI `5abc781` (7.90.0) and
+the existing `nkapre/sfpi` campaign. The headers use upstream's current
+comparison, mask, predicate, and eight-result transpose interfaces while
+retaining the campaign's typed cross-lane and sort-network APIs. The
+feature-gated `lltt::lreg_effect` wrapper matches focused SFPI PR #48.
+
+The previous published campaign head `d0795a7` pins GCC `6a35cb2197ef`,
+the public head of sfpi-gcc PR #54. Statements below that a GCC restack
+or pin was unpublished describe their dated experiments, not that current
+publication state. See [the current alignment checkpoint](HANDOFF.md#2026-10-22-upstream-alignment)
+and the repository alignment manifest for exact candidate revisions and
+validation. Historical device results are evidence for their recorded
+compiler/SFPI/tt-metal tuples; they do not validate a newly aligned tuple.
+
+## Historical campaign checkpoints
+
 The 2026-10-13 experimental GCC14b/SFPIe355/tt-metal a00 Blackhole sweep
 completed all 284 rows: **242 PASS / 21 declared SKIP / 21 compile FAIL**.
 All 58 failed compile arms report register pressure, with no numerical/device

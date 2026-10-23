@@ -229,7 +229,7 @@ echo "Fetching sfpi $sfpi_version ..." | dupstderr
 echo | dupstderr
 echo "Building ..." | dupstderr
 (set -x; rm -rf build)
-(set -x; scripts/build.sh --test-tt 2>&1)
+(set -x; scripts/build.sh --checking=release --test-tt 2>&1)
 
 echo | dupstderr
 echo "Packaging ..." | dupstderr

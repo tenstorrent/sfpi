@@ -48,4 +48,22 @@ replay_insn(unsigned start, unsigned length) {
   return (0x04 << 24) | (start << 14) | (length << 4);
 }
 
+#if __has_builtin(__builtin_rvtt_sfprawlreg_effect)
+#define LLTT_HAS_LREG_EFFECT 1
+
+// Describe the LREGs read and written by the raw instruction issued
+// immediately before (a TT/TTI word the compiler cannot see into).  Bit N of
+// READS or WRITES names LREG N.  The compiler then keeps each read LREG's
+// value from its producer up to that instruction, and treats a written LREG
+// as a new definition.  A mask that is not a compile-time constant counts as
+// every LREG.  Unless the compiler defines __riscv_xtt_sfprawlreg_merge, READS
+// must also name each written LREG whose old value disabled lanes keep.
+// Optimized code gets no instruction for this; at -O0 the inlined call leaves
+// a nop.  The parameters are const so constant masks are not spilled at -O0.
+[[gnu::always_inline]] inline void
+lreg_effect(const unsigned reads, const unsigned writes) {
+  __builtin_rvtt_sfprawlreg_effect(reads, writes);
+}
+#endif
+
 } // namespace 

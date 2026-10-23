@@ -1,5 +1,32 @@
 # Handoff — 2026-10-09
 
+## 2026-10-22 upstream alignment
+
+This checkpoint supersedes publication-status statements in the historical
+entries below. Published SFPI `d0795a762a07` pins published GCC
+`6a35cb2197ef` (sfpi-gcc #54); earlier entries describing GCC0318 or an
+unpublished restack retain the facts of their original experiments.
+
+The alignment candidate merges upstream SFPI `5abc7815dd24` (7.90.0),
+including its comparison/mask/predicate ABI, build workflow changes,
+`SrcSView` aliases, and eight-input/eight-output `subvec_transp` API.
+It preserves campaign cross-lane/sort-network interfaces, typed SETRWC and
+Dst face-advance helpers, LP-solve configuration, missing-harness/zero-pass
+test refusals, and incremental-build evidence. `transp8` now uses upstream's
+eight-result builtin and selects both banks through SSA instead of reading
+the companion hard registers after a four-result custom builtin.
+
+The same feature-gated `lltt::lreg_effect` wrapper is included here and in
+focused SFPI #48. Its new host tests exercise supported/unsupported compiler
+capability gates and constant/dynamic read/write mask forwarding. The
+predicate probe follows upstream's lexical, nonmovable CC ownership and
+exercises nested branches, explicit END, compare masks and `nearby`.
+
+Host header-contract and pin-install tests are distinct from target ABI and
+device validation. Current candidate compiler builds, target gates and
+cross-repository revision identity are recorded in the alignment manifest;
+no historical silicon result is promoted to validation of this candidate.
+
 ## 2026-10-19 review of the 2026-10-13 pressure-recovery swarm
 
 This records a **review of offline family experiments**, not validation of

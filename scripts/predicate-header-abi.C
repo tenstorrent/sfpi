@@ -5,7 +5,12 @@ volatile unsigned long *instrn_buffer;
 }
 
 #include <sfpi.h>
+#include <type_traits>
 using namespace sfpi;
+
+// Match upstream's graph ownership: a CC frame has one lexical owner.
+static_assert (!std::is_copy_constructible_v<sfpi::impl_::CC>);
+static_assert (!std::is_move_constructible_v<sfpi::impl_::CC>);
 
 void predicate_header_abi() {
     vFloat a = l_reg[LRegs::LReg3];
@@ -52,31 +57,26 @@ void predicate_header_deep_elseif_abi() {
     dst_reg[1] = result;
 }
 
-void predicate_header_move_abi() {
+void predicate_header_explicit_abi() {
     vFloat value = l_reg[LRegs::LReg3];
     vFloat result = 0.0f;
     {
         sfpi::impl_::CC active;
-        active.push().if_().cond (value < 1.0f);
+        active.pred (SFPXPRED_MOD1_PUSH | SFPXPRED_MOD1_IF).cond (value < 1.0f);
         result = 1.0f;
-        sfpi::impl_::CC owner;
-        owner = static_cast<sfpi::impl_::CC &&>(active);
-        sfpi::impl_::CC final_owner(static_cast<sfpi::impl_::CC &&>(owner));
+        active.pred (SFPXPRED_MOD1_END);
     }
     dst_reg[2] = result;
 }
 
-void predicate_header_explicit_move_abi() {
+void predicate_header_mask_abi() {
     vFloat value = l_reg[LRegs::LReg3];
     vFloat result = 0.0f;
-    {
-        sfpi::impl_::CC source(true);
-        source.push().if_().cond (value < 1.0f);
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+    dst_reg[2] = mask (value < 1.0f);
+#endif
+    v_if (nearby (as<vInt>(value) < 32)) {
         result = 1.0f;
-        sfpi::impl_::CC owner;
-        owner = static_cast<sfpi::impl_::CC &&>(source);
-        sfpi::impl_::CC final_owner(static_cast<sfpi::impl_::CC &&>(owner));
-        final_owner.end_();
-    }
+    } v_endif;
     dst_reg[3] = result;
 }

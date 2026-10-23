@@ -21,10 +21,15 @@
   __builtin_rvtt_sfploadsrcs(ckernel::instrn_buffer, addr, 0, 0, mod0, mode, done)
 #define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
   __builtin_rvtt_sfpstoresrcs(ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
+#define __builtin_rvtt_sfpwriteconfig_i(imm, mod1)          \
+  __builtin_rvtt_sfpwriteconfig_i(ckernel::instrn_buffer, imm, 0, 0, mod1)
 
-#define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpsetman_i(src, imm, mod1) __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
-#define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetexp_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetman_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetman_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
+#define __builtin_rvtt_sfpsetsgn_i(src, imm, mod1) \
+  __builtin_rvtt_sfpsetsgn_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 
 #define __builtin_rvtt_sfpiadd_i(src, imm, mod1) __builtin_rvtt_sfpiadd_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
 #define __builtin_rvtt_sfpshft_i(src, imm, mod1) __builtin_rvtt_sfpshft_i(ckernel::instrn_buffer, src, imm, 0, 0, mod1)
@@ -40,7 +45,6 @@
 #else
 #define __SFPI_DEPRECATED(X)
 #endif
-#define __SFPI_MIXED_SIGNEDNESS __SFPI_DEPRECATED("This function mizes signed and unsigned types, be explicit about signedness")
 
 namespace sfpi {
 
@@ -54,6 +58,7 @@ class sFloat16b;
 enum class LRegs : uint8_t;
 
 enum class DataLayout {
+  None = -1, // Always an error
   Default = 0,
 
   FSrcB,
@@ -81,6 +86,7 @@ enum class DataLayout {
 namespace impl_ {
 
 using sfpu_t = ::__xtt_vector;
+using sfpu2_t = ::__xtt_vector2;
 
 // Type pun bit pattern
 sfpi_inline uint32_t float_as_uint (float val);
@@ -221,7 +227,8 @@ public:
   };
 
 public:
-  template<typename Type, typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
+  template<typename Type,
+           typename std::enable_if_t<std::is_base_of<impl_::vVal, Type>::value>* = nullptr>
   class vCReg {
   private:
     vReg lreg;
@@ -232,7 +239,7 @@ public:
 
   public:
     sfpi_inline operator Type () const {
-      return lreg;
+      return Type (lreg);
     }
 
   public:
@@ -264,33 +271,22 @@ class CC {
 private:
   unsigned dep = 0;
   unsigned depth = 0;
-  bool pending_push = false;
-  // Macro-owned CC frames require v_endif/v_endblock; direct CC keeps RAII.
-  bool explicit_end = false;
-
-  sfpi_inline CC &finish (bool emit_end);
 
 public:
   sfpi_inline CC () = default;
-  sfpi_inline explicit CC (bool require_end) : explicit_end (require_end) {}
-  sfpi_inline ~CC ();
+  sfpi_inline ~CC () = default;
 
-  // Moveable, not copyable
-  sfpi_inline CC (CC &&);
-  sfpi_inline CC &operator= (CC &&);
+  // Not copyable, not moveable
+  sfpi_inline CC (CC const  &) = delete;
+  sfpi_inline CC &operator= (CC const &) = delete;
+  sfpi_inline CC (CC &&) = delete;
+  sfpi_inline CC &operator= (CC &&) = delete;
 
-  sfpi_inline CC &if_();
-  sfpi_inline CC &else_();
-  sfpi_inline CC &elseif_();
-  sfpi_inline CC &block_();
+  sfpi_inline CC &pred (unsigned);
 
   sfpi_inline void cond (vBool);
   sfpi_inline void cond (vInt);
   sfpi_inline void cond (vUInt);
-
-  sfpi_inline CC &push ();
-  sfpi_inline CC &pop ();
-  sfpi_inline CC &end_ ();
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -374,13 +370,6 @@ public:
     using vReg_<vReg, Fmt>::operator=;
 
   public:
-    // Deprecated 2026-04-14
-    __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUInt first")
-    sfpi_inline void operator= (vReg const &dreg) const;
-    __SFPI_DEPRECATED ("Convert to vFloat, vInt or vUint first")
-    sfpi_inline vFloat operator- () const;
-
-  public:
     sfpi_inline void write (sfpu_t val, unsigned mod, unsigned addr_mode) const {
       __builtin_rvtt_sfpstore (val, this->get (), mod, addr_mode);
     }
@@ -412,7 +401,7 @@ public:
 
 #if __riscv_xtttensixqsr
 // SrcS regs
-template<unsigned Slice>
+template <unsigned Slice, typename std::enable_if_t<(Slice < 3)>* = nullptr>
 class SrcSRegFile {
 public:
   template<DataLayout Fmt = DataLayout::Default>

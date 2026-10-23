@@ -629,11 +629,10 @@ sfpi_inline void sort2_kv_rows (vFloat &ka, vFloat &kb, vUInt &pa, vUInt &pb)
 // registers as a (register x row) 4x4 matrix per column and transposes
 // it -- on BOTH banks at once (SFPTRANSP.md: the instruction always
 // permutes LReg[0..3] AND LReg[4..7]).  This 8-operand form is the
-// AUDITED one: its RTL PARALLEL carries the complete architectural write
-// set, so the allocator sees the companion-bank definitions (the legacy
-// 4-operand sfpi::subvec_transp deliberately keeps refusing effect
-// defaults because it under-states the write set -- see rvtt.md; prefer
-// transp8 in new code).  Graduated from lane EX's bridge kit.
+// form carries all eight input and output values through the upstream
+// SFPTRANSP builtin, so the allocator sees both banks in SSA.  The legacy
+// four-input subvec_transp overload initializes the companion bank to zero;
+// use transp8 when those inputs and outputs must be preserved.
 // Cost: 1 slot (+ fixed-LReg companion reads).
 // TEN-2932: SFPTRANSP is one of the four opcodes ALLOWED to write
 // LReg[4..7] inside an open ENABLE_DEST_INDEX window.
@@ -641,31 +640,31 @@ sfpi_inline void sort2_kv_rows (vFloat &ka, vFloat &kb, vUInt &pa, vUInt &pb)
 sfpi_inline void transp8 (vFloat &v0, vFloat &v1, vFloat &v2, vFloat &v3,
 			  vUInt &c0, vUInt &c1, vUInt &c2, vUInt &c3)
 {
-  auto r = __builtin_rvtt_sfptransp8 (v0.get (), v1.get (), v2.get (), v3.get (),
+  auto r = __builtin_rvtt_sfptransp (v0.get (), v1.get (), v2.get (), v3.get (),
 				      c0.get (), c1.get (), c2.get (), c3.get ());
-  v0 = vFloat (__builtin_rvtt_sfpselect4 (r, 0));
-  v1 = vFloat (__builtin_rvtt_sfpselect4 (r, 1));
-  v2 = vFloat (__builtin_rvtt_sfpselect4 (r, 2));
-  v3 = vFloat (__builtin_rvtt_sfpselect4 (r, 3));
-  c0 = vUInt (l_reg[LRegs::LReg4]);
-  c1 = vUInt (l_reg[LRegs::LReg5]);
-  c2 = vUInt (l_reg[LRegs::LReg6]);
-  c3 = vUInt (l_reg[LRegs::LReg7]);
+  v0 = vFloat (__builtin_rvtt_sfpselect8 (r, 0));
+  v1 = vFloat (__builtin_rvtt_sfpselect8 (r, 1));
+  v2 = vFloat (__builtin_rvtt_sfpselect8 (r, 2));
+  v3 = vFloat (__builtin_rvtt_sfpselect8 (r, 3));
+  c0 = vUInt (__builtin_rvtt_sfpselect8 (r, 4));
+  c1 = vUInt (__builtin_rvtt_sfpselect8 (r, 5));
+  c2 = vUInt (__builtin_rvtt_sfpselect8 (r, 6));
+  c3 = vUInt (__builtin_rvtt_sfpselect8 (r, 7));
 }
 
 sfpi_inline void transp8 (vUInt &v0, vUInt &v1, vUInt &v2, vUInt &v3,
 			  vUInt &c0, vUInt &c1, vUInt &c2, vUInt &c3)
 {
-  auto r = __builtin_rvtt_sfptransp8 (v0.get (), v1.get (), v2.get (), v3.get (),
+  auto r = __builtin_rvtt_sfptransp (v0.get (), v1.get (), v2.get (), v3.get (),
 				      c0.get (), c1.get (), c2.get (), c3.get ());
-  v0 = vUInt (__builtin_rvtt_sfpselect4 (r, 0));
-  v1 = vUInt (__builtin_rvtt_sfpselect4 (r, 1));
-  v2 = vUInt (__builtin_rvtt_sfpselect4 (r, 2));
-  v3 = vUInt (__builtin_rvtt_sfpselect4 (r, 3));
-  c0 = vUInt (l_reg[LRegs::LReg4]);
-  c1 = vUInt (l_reg[LRegs::LReg5]);
-  c2 = vUInt (l_reg[LRegs::LReg6]);
-  c3 = vUInt (l_reg[LRegs::LReg7]);
+  v0 = vUInt (__builtin_rvtt_sfpselect8 (r, 0));
+  v1 = vUInt (__builtin_rvtt_sfpselect8 (r, 1));
+  v2 = vUInt (__builtin_rvtt_sfpselect8 (r, 2));
+  v3 = vUInt (__builtin_rvtt_sfpselect8 (r, 3));
+  c0 = vUInt (__builtin_rvtt_sfpselect8 (r, 4));
+  c1 = vUInt (__builtin_rvtt_sfpselect8 (r, 5));
+  c2 = vUInt (__builtin_rvtt_sfpselect8 (r, 6));
+  c3 = vUInt (__builtin_rvtt_sfpselect8 (r, 7));
 }
 
 //////////////////////////////////////////////////////////////////////////////

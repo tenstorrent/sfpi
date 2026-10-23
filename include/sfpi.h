@@ -47,7 +47,7 @@
 //
 // Quasar SrcS Register:
 //   Unlike dst_reg, you need a local variable, because it contains some state:
-//   UnpackSrcS src_reg; // or PackSrcS or ComputeSrcS
+//   SrcSView<N> src_reg; // N = 0, 1, 2
 //   src_reg[0] = vFloat(dst_reg[0]);
 //
 //   The same `mode` call can be used to modify mod and addr_mode operand.  You
@@ -173,23 +173,8 @@ public:
   sfpi_inline explicit sFloat16b (unsigned v) : sFloat16b (uint32_t (v)) {}
   sfpi_inline explicit sFloat16b (signed v) : sFloat16b (int32_t (v)) {}
 
-  __SFPI_DEPRECATED ("convert to float first")   // This will removed
-  sfpi_inline explicit sFloat16b (double f) : sFloat16b (float (f)) {}
-
 public:
   sfpi_inline uint32_t get () const { return val; }
-};
-
-// Sadly typedefs deprecations are silent, so use a wrapper class
-class __SFPI_DEPRECATED ("use sfpi::sFloat16a")   // This will removed
-  s2vFloat16a  : public sFloat16a {
- public:
-  using sFloat16a::sFloat16a;
-};
-class __SFPI_DEPRECATED ("use sfpi::sFloat16a")   // This will removed
-  s2vFloat16b : public sFloat16b {
-public:
-  using sFloat16b::sFloat16b;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -414,8 +399,11 @@ public:
   sfpi_inline vSMag &operator= (vSMag const &) = default;
 
 public:
-  sfpi_inline explicit vSMag (impl_::sfpu_t);
-  sfpi_inline explicit vSMag (uint32_t);
+  sfpi_inline vSMag (impl_::sfpu_t);
+  sfpi_inline vSMag (uint32_t);
+  sfpi_inline vSMag (int32_t);
+  sfpi_inline vSMag (unsigned);
+  sfpi_inline vSMag (int);
   sfpi_inline vSMag (impl_::vMag);
 };
 using vSMag16 = impl_::vSMag16;
@@ -447,12 +435,50 @@ class vBool {
   friend class impl_::CC;
 
 public:
-  enum Logic : unsigned char;
-  enum Cond : unsigned char;
-  enum Type : unsigned char;
+  enum Logic : unsigned char {
+       And = SFPXLOGIC_MOD1_AND,
+        Or = SFPXLOGIC_MOD1_OR,
+       Not = SFPXLOGIC_MOD1_NOT,
+    Nearby = SFPXLOGIC_MOD1_NEARBY,
+  };
+
+  enum Cond : unsigned char {
+    EQ = SFPXCMP_MOD1_CC_EQ,
+    NE = SFPXCMP_MOD1_CC_NE,
+    LT = SFPXCMP_MOD1_CC_LT,
+    GE = SFPXCMP_MOD1_CC_GE,
+    GT = SFPXCMP_MOD1_CC_GT,
+    LE = SFPXCMP_MOD1_CC_LE,
+  };
+
+  enum Type : unsigned char {
+     UInt = SFPXCMP_MOD1_TYPE_UINT << SFPXCMP_MOD1_TYPE_SHIFT,
+      Int = SFPXCMP_MOD1_TYPE_INT << SFPXCMP_MOD1_TYPE_SHIFT,
+     SMag = SFPXCMP_MOD1_TYPE_SMAG << SFPXCMP_MOD1_TYPE_SHIFT,
+    Float = SFPXCMP_MOD1_TYPE_FLOAT << SFPXCMP_MOD1_TYPE_SHIFT,
+  };
 
 private:
   int result;
+
+public:
+  template<Cond C, Type T>
+  struct Cmp {
+  private:
+    // We need to squish the two operands into a single member so that the
+    // compiler's clobber notation doesn't force this into memory
+    impl_::sfpu2_t v;
+
+  public:
+    sfpi_inline Cmp (Cmp const &) = default;
+    sfpi_inline Cmp &operator= (Cmp const &) = default;
+
+  public:
+    sfpi_inline Cmp (impl_::vVal, impl_::vVal);
+
+  public:
+    sfpi_inline impl_::sfpu_t get (unsigned ix) const { return __builtin_rvtt_sfpselect2 (v, ix); }
+  };
 
 public:
   sfpi_inline vBool (vBool const &) = default;
@@ -461,28 +487,14 @@ public:
 public:
   sfpi_inline vBool (Logic, vBool, vBool);
 
-private:
-  sfpi_inline vBool (Cond, Type, impl_::vVal, impl_::vVal);
-  sfpi_inline vBool (Cond, Type, impl_::vVal, uint32_t);
-
 public:
-  sfpi_inline vBool (Cond, vFloat, vFloat);
-  sfpi_inline vBool (Cond, vFloat, float);
-  sfpi_inline vBool (Cond, vInt, vInt);
-  sfpi_inline vBool (Cond, vInt, int32_t);
-  sfpi_inline vBool (Cond, vUInt, vUInt);
-  sfpi_inline vBool (Cond, vUInt, uint32_t);
-  sfpi_inline vBool (Cond, vSMag, vSMag);
-  sfpi_inline vBool (Cond, vSMag, int);
+  template<Cond C, Type T>
+  sfpi_inline vBool (Cmp<C, T>);
 
 public:
   sfpi_inline vBool (vInt);
   sfpi_inline vBool (vUInt);
   sfpi_inline vBool (vSMag);
-
-public:
-  __SFPI_DEPRECATED ("vBool conversion to vInt deprecated, use vBool, or v_if ... v_endif")   // This will removed
-  sfpi_inline operator vInt () const;
 
 private:
   sfpi_inline int get () const { return result; }
@@ -492,174 +504,81 @@ sfpi_inline vBool operator&& (vBool, vBool);
 sfpi_inline vBool operator|| (vBool, vBool);
 sfpi_inline vBool operator! (vBool);
 
+//////////////////////////////////////////////////////////////////////////////
+// Comparisons
+
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Float> operator< (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Float> operator>= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Float> operator== (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Float> operator!= (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Float> operator> (vFloat, vFloat);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Float> operator<= (vFloat, vFloat);
+
+sfpi_inline vBool::Cmp<vBool::LT, vBool::Int> operator< (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::Int> operator>= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::Int> operator== (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::Int> operator!= (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt, vInt);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt, vInt);
+
+// We need these overloads as vMag decays to vUInt and hence ambiguous
+sfpi_inline  auto operator== (vInt a, vMag b) { return a == vInt (b); }
+sfpi_inline  auto operator!= (vInt a, vMag b) { return a != vInt (b); }
+sfpi_inline  auto operator< (vInt a, vMag b) { return a < vInt (b); }
+sfpi_inline  auto operator> (vInt a, vMag b) { return a > vInt (b); }
+sfpi_inline  auto operator<= (vInt a, vMag b) { return a <= vInt (b); }
+sfpi_inline  auto operator>= (vInt a, vMag b) { return a >= vInt (b); }
+
+sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, vUInt);
+sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, vUInt);
+
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, vSMag);
+
 // Mark an ordering compare as 'close', specifically the compared values are
 // known to be within <2^31 of each other
 sfpi_inline vBool nearby (vBool);
 
-// Comparisons
-sfpi_inline vBool operator== (vFloat, vFloat);
-sfpi_inline vBool operator!= (vFloat, vFloat);
-sfpi_inline vBool operator< (vFloat, vFloat);
-sfpi_inline vBool operator> (vFloat, vFloat);
-sfpi_inline vBool operator<= (vFloat, vFloat);
-sfpi_inline vBool operator>= (vFloat, vFloat);
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-sfpi_inline vBool operator== (vFloat, float);
-sfpi_inline vBool operator!= (vFloat, float);
-sfpi_inline vBool operator< (vFloat, float);
-sfpi_inline vBool operator> (vFloat, float);
-sfpi_inline vBool operator<= (vFloat, float);
-sfpi_inline vBool operator>= (vFloat, float);
-
-sfpi_inline vBool operator== (float a, vFloat b) { return b == a; }
-sfpi_inline vBool operator!= (float a, vFloat b) { return b != a; }
-sfpi_inline vBool operator< (float a, vFloat b) { return b > a; }
-sfpi_inline vBool operator> (float a, vFloat b) { return b < a; }
-sfpi_inline vBool operator<= (float a, vFloat b) { return b >= a; }
-sfpi_inline vBool operator>= (float a, vFloat b) { return b <= a; }
-
-//////////////////////////////////////////////////////////////////////////////
-
-sfpi_inline  vBool operator== (vInt, vInt);
-sfpi_inline  vBool operator!= (vInt, vInt);
-sfpi_inline  vBool operator< (vInt, vInt);
-sfpi_inline  vBool operator> (vInt, vInt);
-sfpi_inline  vBool operator<= (vInt, vInt);
-sfpi_inline  vBool operator>= (vInt, vInt);
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-sfpi_inline  vBool operator== (vInt, int32_t);
-sfpi_inline  vBool operator!= (vInt, int32_t);
-sfpi_inline  vBool operator< (vInt, int32_t);
-sfpi_inline  vBool operator> (vInt, int32_t);
-sfpi_inline  vBool operator<= (vInt, int32_t);
-sfpi_inline  vBool operator>= (vInt, int32_t);
-
-sfpi_inline  vBool operator== (vInt a, vMag b) { return a == vInt (b); }
-sfpi_inline  vBool operator!= (vInt a, vMag b) { return a != vInt (b); }
-sfpi_inline  vBool operator< (vInt a, vMag b) { return a < vInt (b); }
-sfpi_inline  vBool operator> (vInt a, vMag b) { return a > vInt (b); }
-sfpi_inline  vBool operator<= (vInt a, vMag b) { return a <= vInt (b); }
-sfpi_inline  vBool operator>= (vInt a, vMag b) { return a >= vInt (b); }
-
-sfpi_inline  vBool operator== (vInt a, int b) { return a == int32_t (b); }
-sfpi_inline  vBool operator!= (vInt a, int b) { return a != int32_t (b); }
-sfpi_inline  vBool operator< (vInt a, int b) { return a < int32_t (b); }
-sfpi_inline  vBool operator> (vInt a, int b) { return a > int32_t (b); }
-sfpi_inline  vBool operator<= (vInt a, int b) { return a <= int32_t (b); }
-sfpi_inline  vBool operator>= (vInt a, int b) { return a >= int32_t (b); }
-
-// FIXME: These should be deprecated and removed -- mixing signed and unsigned
-// in compares is not sensible. Sadly user code does this because the old
-// iplementatiion permitted it :(
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, vUInt b) { return a == vInt (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, vUInt b) { return a != vInt (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, vUInt b) { return a < vInt (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, vUInt b) { return a > vInt (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, vUInt b) { return a <= vInt (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, vUInt b) { return a >= vInt (b); }
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, uint32_t b) { return a == int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, uint32_t b) { return a != int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, uint32_t b) { return a < int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, uint32_t b) { return a > int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, uint32_t b) { return a <= int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, uint32_t b) { return a >= int32_t (b); }
-
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator== (vInt a, unsigned b) { return a == int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator!= (vInt a, unsigned b) { return a != int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator< (vInt a, unsigned b) { return a < int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator> (vInt a, unsigned b) { return a > int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator<= (vInt a, unsigned b) { return a <= int32_t (b); }
-__SFPI_DEPRECATED ("mixed signednes compares are deprecated")   // This will removed
-sfpi_inline  vBool operator>= (vInt a, unsigned b) { return a >= int32_t (b); }
-
-sfpi_inline vBool operator== (vSMag, vSMag);
-sfpi_inline vBool operator== (vSMag, unsigned);
-sfpi_inline vBool operator== (vSMag, int);
-sfpi_inline vBool operator!= (vSMag, vSMag);
-sfpi_inline vBool operator!= (vSMag, unsigned);
-sfpi_inline vBool operator!= (vSMag, int);
-
-//////////////////////////////////////////////////////////////////////////////
-
-sfpi_inline  vBool operator== (vUInt, vUInt);
-sfpi_inline  vBool operator!= (vUInt, vUInt);
-sfpi_inline  vBool operator< (vUInt, vUInt);
-sfpi_inline  vBool operator> (vUInt, vUInt);
-sfpi_inline  vBool operator<= (vUInt, vUInt);
-sfpi_inline  vBool operator>= (vUInt, vUInt);
-
-// FIXME: Until we get sfpxloadi optimization into sfpxcmp, special case these compares
-sfpi_inline  vBool operator== (vUInt, uint32_t);
-sfpi_inline  vBool operator!= (vUInt, uint32_t);
-sfpi_inline  vBool operator< (vUInt, uint32_t);
-sfpi_inline  vBool operator> (vUInt, uint32_t);
-sfpi_inline  vBool operator<= (vUInt, uint32_t);
-sfpi_inline  vBool operator>= (vUInt, uint32_t);
-
-sfpi_inline  vBool operator== (vUInt a, unsigned b) { return a == uint32_t (b); }
-sfpi_inline  vBool operator!= (vUInt a, unsigned b) { return a != uint32_t (b); }
-sfpi_inline  vBool operator< (vUInt a, unsigned b) { return a < uint32_t (b); }
-sfpi_inline  vBool operator> (vUInt a, unsigned b) { return a > uint32_t (b); }
-sfpi_inline  vBool operator<= (vUInt a, unsigned b) { return a <= uint32_t (b); }
-sfpi_inline  vBool operator>= (vUInt a, unsigned b) { return a >= uint32_t (b); }
-
-sfpi_inline  vBool operator== (vUInt a, int b) { return a == uint32_t (b); }
-sfpi_inline  vBool operator!= (vUInt a, int b) { return a != uint32_t (b); }
-sfpi_inline  vBool operator< (vUInt a, int b) { return a < uint32_t (b); }
-sfpi_inline  vBool operator> (vUInt a, int b) { return a > uint32_t (b); }
-sfpi_inline  vBool operator<= (vUInt a, int b) { return a <= uint32_t (b); }
-sfpi_inline  vBool operator>= (vUInt a, int b) { return a >= uint32_t (b); }
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+template<vBool::Cond C, vBool::Type T>
+sfpi_inline vUInt mask (vBool::Cmp<C, T>);
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // C++17: In a function-call expression, the expression that names the function
 // is sequenced before every argument expression and every default argument. [expr.pre]
 
-#define v_if(x)                                 \
-  { sfpi::impl_::CC __cc (true);         \
-  __cc.push ().if_().cond (x);                  \
+#define v_if(x)                                         \
+  { sfpi::impl_::CC __cc;                               \
+  __cc.pred (sfpi::SFPXPRED_MOD1_IF                     \
+             | sfpi::SFPXPRED_MOD1_PUSH).cond (x);      \
   {
 
-#define v_elseif(x)                             \
-  } __cc.elseif_().cond (x); {
+#define v_elseif(x)                                     \
+  } __cc.pred (sfpi::SFPXPRED_MOD1_ELSE                 \
+               | sfpi::SFPXPRED_MOD1_IF                 \
+               | sfpi::SFPXPRED_MOD1_PUSH).cond (x); {
 
 #define v_else                                  \
-  } __cc.else_(); {
+  } __cc.pred (sfpi::SFPXPRED_MOD1_ELSE); {
 
 #define v_endif                                 \
-  }                                             \
-  __cc.end_ ();                                 \
+  } __cc.pred (sfpi::SFPXPRED_MOD1_END);      \
   }
 
 #define v_block                                 \
-  { sfpi::impl_::CC __cc (true);         \
-  __cc.block_ ();
+  { sfpi::impl_::CC __cc;                       \
+  __cc.pred (sfpi::SFPXPRED_MOD1_PUSH);
 
 #define v_and(x)                                \
-  __cc.if_().cond (x)
+  __cc.pred(sfpi::SFPXPRED_MOD1_IF).cond (x);
 
 #define v_endblock                              \
-  __cc.end_ ();                                 \
+  __cc.pred(sfpi::SFPXPRED_MOD1_END);         \
   }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -673,16 +592,15 @@ enum class LRegs : uint8_t {
 constexpr impl_::LRegFile l_reg;
 constexpr impl_::DstRegFile dst_reg;
 #if __riscv_xtttensixqsr
-using UnpackSrcS = impl_::SrcSRegFile<0>;
-using ComputeSrcS = impl_::SrcSRegFile<1>;
-using PackSrcS = impl_::SrcSRegFile<2>;
+template<unsigned Slice> using SrcSView = impl_::SrcSRegFile<Slice>;
+
+using UnpackSrcS __SFPI_DEPRECATED ("Use SrcSView<0>") = impl_::SrcSRegFile<0>;
+using ComputeSrcS __SFPI_DEPRECATED ("Use SrcSView<1>") = impl_::SrcSRegFile<1>;
+using PackSrcS __SFPI_DEPRECATED ("Use SrcSView<2>") = impl_::SrcSRegFile<2>;
 #endif
 
-// Compiler-visible architectural Dst face advance.  One face is two
-// architectural CR-mode Dst += 8 counter steps with no LREG, CC, or
-// configuration effect.  Keep the boundary typed so backend ownership
-// analyses can model the Dst/RWC effect without decoding an opaque
-// instruction word.  (Companion of lltt::setrwc; QSR refuses at expansion.)
+// Compiler-visible architectural Dst face advance, paired with lltt::setrwc.
+// Quasar refuses this operation at expansion.
 sfpi_inline void dst_face_advance () {
   __builtin_rvtt_ttdstface ();
 }
@@ -690,28 +608,18 @@ sfpi_inline void dst_face_advance () {
 //////////////////////////////////////////////////////////////////////////////
 // User accessible float constants
 
-__SFPI_DEPRECATED ("just use 0.0f or sfpi::vFloat(0.0f)")
-constexpr impl_::LRegFile::vCReg<vFloat> vConst0(CREG_IDX_0);
-__SFPI_DEPRECATED ("just use 1.0f or sfpi::vFloat(1.0f)")
-constexpr impl_::LRegFile::vCReg<vFloat> vConst1(CREG_IDX_1);
-__SFPI_DEPRECATED ("just use -1.0f or sfpi::vFloat(-1.0f)")
-#if __riscv_xtttensixwh || __riscv_xtttensixbh
-constexpr impl_::LRegFile::vCReg<vFloat> vConstNeg1(CREG_IDX_NEG_1);
-#endif
-__SFPI_DEPRECATED ("just use 0.8373f or sfpi::vFloat(0.8373f)")
-constexpr impl_::LRegFile::vCReg<vFloat> vConst0p8373 (CREG_IDX_0P837300003);
-
 constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm0 (CREG_IDX_PRGM1);
-constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
-constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
-
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm0 (CREG_IDX_PRGM1);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm1 (CREG_IDX_PRGM2);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm1 (CREG_IDX_PRGM2);
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm2 (CREG_IDX_PRGM3);
 constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm2 (CREG_IDX_PRGM3);
+#if !(__riscv_xtttensixwh || __riscv_xtttensixbh)
+constexpr impl_::LRegFile::vCReg<vFloat> vConstFloatPrgm3 (CREG_IDX_PRGM0);
+constexpr impl_::LRegFile::vCReg<vInt> vConstIntPrgm3 (CREG_IDX_PRGM0);
+#endif
 
 constexpr impl_::LRegFile::vCReg<vInt> vConstTileId (CREG_IDX_TILEID);
-
-//////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 

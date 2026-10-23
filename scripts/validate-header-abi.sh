@@ -236,6 +236,14 @@ for target in "${template_targets[@]}"; do
         -c "$(dirname "$0")/predicate-header-abi.C" \
         -o "$output/predicate-header-abi-$target_index.o" \
         || { echo "predicate header ABI probe failed for: $target" >&2; exit 1; }
+    # All eight transpose outputs and the current comparison/predicate API
+    # must coexist with the campaign cross-lane helpers in one translation unit.
+    # shellcheck disable=SC2086
+    "$cxx" $target -O2 -I"$install/include" \
+        -fno-exceptions -fno-rtti -Werror \
+        -c "$(dirname "$0")/alignment-header-abi.C" \
+        -o "$output/alignment-header-abi-$target_index.o" \
+        || { echo "aligned header ABI probe failed for: $target" >&2; exit 1; }
 done
 
 compiler_version=$("$cxx" --version)

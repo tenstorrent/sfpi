@@ -10,7 +10,8 @@ fi
 
 NCPUS=$(nproc)
 
-gcc_checking=release
+gcc_checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree
+binutils=false
 dejagnu=false
 enable_gdb=--disable-gdb
 sim=false
@@ -25,6 +26,7 @@ sfpi_version=
 BUILD=build
 while [ "$#" -ne 0 ] ; do
     case "$1" in
+	--binutils) binutils=true ;;
 	--checking) gcc_checking=all ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
@@ -253,7 +255,11 @@ if ! [[ -e $BUILD/Makefile ]]; then
 	(set -x; make -C $BUILD stamps/check-write-permission)
 	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
 	do
-	    if ! [[ $file =~ -stage2$ ]]; then
+	    if [[ -f $file ]]; then
+		:
+	    elif $binutils && [[ $file =~ -binutils- ]]; then
+		(set -x; make -C $BUILD -j$NCPUS $small_build $file)
+	    elif ! [[ $file =~ -stage2$ ]]; then
 		mkdir -p $BUILD/$(dirname $file)
 		echo Inremental $file
 		echo Incremental >$BUILD/$file
@@ -292,6 +298,7 @@ eval $($BIN/sfpi-info.sh DIST <$BUILD/version)
 
 if $test_binutils; then
     testing=true
+    rm -f $BUILD/stamps/check-binutils-newlib
     (set -x; nice make -C $BUILD -j$NCPUS NEWLIB_TARGET_BOARDS="$TARGET_BOARDS" check-binutils)
     mkdir -p $tests
     for sum in $(find $BUILD/build-binutils-newlib -name '*.sum')
