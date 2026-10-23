@@ -1,31 +1,24 @@
 # Handoff — 2026-10-09
 
-## 2026-10-22 upstream alignment
+## 2026-10-23 SFPI-only integration
 
-This checkpoint supersedes publication-status statements in the historical
-entries below. Published SFPI `d0795a762a07` pins published GCC
-`6a35cb2197ef` (sfpi-gcc #54); earlier entries describing GCC0318 or an
-unpublished restack retain the facts of their original experiments.
+This local candidate keeps published SFPI `d0795a762a07`, upstream
+`5abc7815dd24` and focused API PR #48 (`812119fa7bf4`) in its ancestry.
+The source headers retain the checked `ee378aa6c6c7` include tree:
+upstream comparison/mask and lexical predicate ownership, the deep-chain
+predicate repair, typed cross-lane/sort-network helpers, typed SETRWC,
+and the public raw-LREG effect wrapper.
 
-The alignment candidate merges upstream SFPI `5abc7815dd24` (7.90.0),
-including its comparison/mask/predicate ABI, build workflow changes,
-`SrcSView` aliases, and eight-input/eight-output `subvec_transp` API.
-It preserves campaign cross-lane/sort-network interfaces, typed SETRWC and
-Dst face-advance helpers, LP-solve configuration, missing-harness/zero-pass
-test refusals, and incremental-build evidence. `transp8` now uses upstream's
-eight-result builtin and selects both banks through SSA instead of reading
-the companion hard registers after a four-result custom builtin.
+GCC is pinned to `6a31b4d9bdccbe560c270de7eba17af6558f3b80`,
+tree `620a2a25467472851a6bfad9d870325a62a8f8f9`, which is the
+tree-equivalent replay of `2f09e81436a9`. Binutils is
+`f261c43d8363dc7ca38696fc8268cee4bf8ed620`.
 
-The same feature-gated `lltt::lreg_effect` wrapper is included here and in
-focused SFPI #48. Its new host tests exercise supported/unsupported compiler
-capability gates and constant/dynamic read/write mask forwarding. The
-predicate probe follows upstream's lexical, nonmovable CC ownership and
-exercises nested branches, explicit END, compare masks and `nearby`.
-
-Host header-contract and pin-install tests are distinct from target ABI and
-device validation. Current candidate compiler builds, target gates and
-cross-repository revision identity are recorded in the alignment manifest;
-no historical silicon result is promoted to validation of this candidate.
+The integration gate is limited to SFPI header capability, installation,
+declarations, native ABI/assembly, and the pinned toolchain build/tests.
+Exact local command receipts are retained separately during review.
+No historical device result below validates a different pin, and no
+local result implies hosted CI or remote publication.
 
 ## 2026-10-19 review of the 2026-10-13 pressure-recovery swarm
 

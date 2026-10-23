@@ -244,6 +244,16 @@ for target in "${template_targets[@]}"; do
         -c "$(dirname "$0")/alignment-header-abi.C" \
         -o "$output/alignment-header-abi-$target_index.o" \
         || { echo "aligned header ABI probe failed for: $target" >&2; exit 1; }
+    # The campaign pin includes the effect builtin. Prove availability and
+    # immediate/dynamic mask expansion at both optimization levels.
+    for optimization in 0 2; do
+        # shellcheck disable=SC2086
+        "$cxx" $target -O"$optimization" -I"$install/include" \
+            -fno-exceptions -fno-rtti -Werror \
+            -c "$(dirname "$0")/lreg-effect-header-abi.C" \
+            -o "$output/lreg-effect-header-abi-$target_index-O$optimization.o" \
+            || { echo "raw effect header ABI failed for: $target -O$optimization" >&2; exit 1; }
+    done
 done
 
 compiler_version=$("$cxx" --version)

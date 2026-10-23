@@ -30,6 +30,11 @@ on:
         required: false
         type: boolean
         default: true
+      validate_headers:
+        description: Validate campaign header and raw-effect ABI against the built pin
+        required: false
+        type: boolean
+        default: false
 
 env:
   SUDO: ${{inputs.box == 'none' && 'sudo' || ''}}
@@ -84,6 +89,12 @@ jobs:
         run: scripts/build.sh --dejagnu --small
       - name: Run Tests
         run: scripts/build.sh --test-tt ${{inputs.full && '--test-binutils' || null}}
+      - name: Validate header declarations
+        if: ${{inputs.validate_headers}}
+        run: bash scripts/validate-header-declarations.sh gcc build/sfpi/compiler/bin/riscv-tt-elf-g++
+      - name: Validate native header ABI
+        if: ${{inputs.validate_headers}}
+        run: bash scripts/validate-header-abi.sh build/sfpi build/tests/header-abi
       - name: Package toolchain
         run: scripts/release.sh --ci --tt-built ${{!inputs.txz && '--no-txz' || null}}
       - name: Upload artifacts
@@ -93,10 +104,11 @@ jobs:
           path: build/release/*
           compression-level: 0
       - name: Upload results
+        if: ${{always()}}
         uses: actions/upload-artifact@v6
         with:
           name: tests-${{inputs.arch}}-${{inputs.box}}
-          path: build/tests/*
+          path: build/tests/
       - id: version
         name: Record config
         shell: bash

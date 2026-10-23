@@ -94,9 +94,24 @@ auto sfpi::impl_::CC::pred (unsigned mod)-> CC & {
 
   dep = __builtin_rvtt_sfpxpred (mod | (depth << SFPXPRED_MOD1_DEPTH_SHIFT), dep);
 
-  if (mod == SFPXPRED_MOD1_END)
-    for (; depth; depth--)
+  if (mod == SFPXPRED_MOD1_END) {
+    // Keep the campaign's deep-elseif fix with upstream's lexical CC owner.
+    // A rolled pop loop at depth >= 5 survives -O2 peeling and reaches the
+    // RVTT liveness walk with inconsistent stack depths at its backedge.
+    // These tests fold after inlining, so legal stack depths have no loop.
+    const unsigned n = depth;
+    if (n >= 1) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 2) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 3) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 4) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 5) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 6) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 7) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    if (n >= 8) __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    for (unsigned ix = 8; ix < n; ix++)
       __builtin_rvtt_sfppopc (SFPPOPC_MOD1_POP);
+    depth = 0;
+  }
 
   return *this;
 }

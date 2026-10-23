@@ -3,19 +3,20 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-Current alignment work starts from upstream SFPI `5abc781` (7.90.0) and
-the existing `nkapre/sfpi` campaign. The headers use upstream's current
-comparison, mask, predicate, and eight-result transpose interfaces while
-retaining the campaign's typed cross-lane and sort-network APIs. The
-feature-gated `lltt::lreg_effect` wrapper matches focused SFPI PR #48.
+This local integration candidate preserves the published SFPI branch
+`d0795a7`, merges upstream SFPI `5abc781` (7.90.0), and includes the
+focused `lltt::lreg_effect` API from SFPI PR #48. It retains the typed
+cross-lane and sort-network interfaces with upstream's lexical predicate
+ownership and eight-result transpose representation.
 
-The previous published campaign head `d0795a7` pins GCC `6a35cb2197ef`,
-the public head of sfpi-gcc PR #54. Statements below that a GCC restack
-or pin was unpublished describe their dated experiments, not that current
-publication state. See [the current alignment checkpoint](HANDOFF.md#2026-10-22-upstream-alignment)
-and the repository alignment manifest for exact candidate revisions and
-validation. Historical device results are evidence for their recorded
-compiler/SFPI/tt-metal tuples; they do not validate a newly aligned tuple.
+The compiler pin is `6a31b4d9bdcc`, with the same source tree as the
+reviewed `2f09e81436a9` compiler candidate. Binutils remains pinned to
+`f261c43d8363`. Integration CI covers the exact compiler pin, header/API
+contracts, installation checks and native assembly probes.
+
+The entries below are historical evidence for their recorded tuples.
+They do not establish validation of a new compiler/header combination,
+hosted CI execution, or a published release.
 
 ## Historical campaign checkpoints
 

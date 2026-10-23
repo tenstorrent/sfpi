@@ -1,0 +1,41 @@
+name: Check SFPI integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'nkapre/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sfpi-check-${{github.head_ref || github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  host:
+    name: Header capability and installation contracts
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check supported and unsupported effect capability
+        run: python3 scripts/test-lreg-effect.py
+      - name: Check compiler install validation and rollback
+        run: bash scripts/test_pin_install_fast.sh
+      - name: Check shell entry points
+        run: bash -n scripts/build.sh scripts/validate-header-abi.sh scripts/validate-header-declarations.sh
+
+  toolchain:
+    name: Build and test the pinned toolchain
+    needs: host
+    uses: ./.github/workflows/build-sfpi.yaml
+    with:
+      arch: x86_64
+      box: none
+      full: true
+      checking: true
+      validate_headers: true
+      build_id: ${{github.run_number}}
