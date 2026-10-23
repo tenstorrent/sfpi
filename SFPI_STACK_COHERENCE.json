@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-23",
+  "scope": "SFPI/compiler and direct raw-LREG LLK integration",
+  "validation_status": "LOCAL_GATES_PASS",
+  "validated_sfpi_code_base": "2c3343f",
+  "tuple": {
+    "sfpi_include_tree": "ee378aa6c6c7f62ce503d044142b40f5cc4f9c7b",
+    "gcc": "91d70347e54b18a19fa95f2f7cf6458c0771fcd2",
+    "gcc_tree": "ad5a3848a56fb815ad1ab718da06f79963e8f528",
+    "binutils": "f261c43d8363dc7ca38696fc8268cee4bf8ed620",
+    "tt_metal": "658ab2cdfb325ba1e8656cb4e016f60ba98d7585",
+    "sfpi_api_pr48": "812119fa7bf49c1e07a3764f300526c7488da953",
+    "metal_metadata_pr59649": "1f9870e60dec74098c38dffb94b6be5f822b38fc",
+    "ci_pr55": "021da181eab1515cbe7470d19fee462bd8b0adfb"
+  },
+  "contract": {
+    "headers": "Preserve upstream lexical predicate ownership and eight-result transpose; expose typed crosslane/sort, SETRWC and lltt::lreg_effect.",
+    "compiler": "Track raw physical LREG reads/writes before IRA with SET/CLOBBER/USE; dropping an inactive-lane merge obligation requires independently proven enabled flags and clear ROW_MASK with current delivery.",
+    "delivery": "Unknown capture, replay, MOP or instruction effects remain conservative. Whole-TU MAY auditing does not replace per-launch MUST initialization.",
+    "llk": "TT/TTI metadata uses matching headers and compiler capabilities. Stock compatibility compilation alone does not establish allocator protection.",
+    "integration_selection": "Use the matching headers, backend, assembler and linker. An extra -B path alone does not select SFPI headers; default tt-metal release pins remain their separate compatibility path."
+  },
+  "stack": {
+    "plan_sha256": "db1453b6861d793c0d044b23f33b39f7a860589ca1da42c7694c8256dec99aff",
+    "compiler_slice_count": 30,
+    "ci_pr": 55,
+    "first_base": "nkapre/ci-rvtt",
+    "terminal_pr": 54,
+    "prefixes": [
+      {
+        "pr": 23,
+        "branch": "nkapre/pr-01-substrate",
+        "head": "6adccd3ac4bf66e940f4e62880c9519aaba87500",
+        "base_branch": "nkapre/ci-rvtt",
+        "base_head": "021da181eab1515cbe7470d19fee462bd8b0adfb"
+      },
+      {
+        "pr": 24,
+        "branch": "nkapre/pr-02-invariant",
+        "head": "deaba0f217b8e3f60cd96efb2e918858875ff0ed",
+        "base_branch": "nkapre/pr-01-substrate",
+        "base_head": "6adccd3ac4bf66e940f4e62880c9519aaba87500"
+      },
+      {
+        "pr": 25,
+        "branch": "nkapre/pr-03-combine",
+        "head": "5c6de1f0734eb6b23ffb8306cedf63669940bee6",
+        "base_branch": "nkapre/pr-02-invariant",
+        "base_head": "deaba0f217b8e3f60cd96efb2e918858875ff0ed"
+      },
+      {
+        "pr": 27,
+        "branch": "nkapre/pr-05-ccmask",
+        "head": "cf43fdce21679113c5ae458043015bba6be7d037",
+        "base_branch": "nkapre/pr-03-combine",
+        "base_head": "5c6de1f0734eb6b23ffb8306cedf63669940bee6"
+      },
+      {
+        "pr": 28,
+        "branch": "nkapre/pr-06-int-abs",
+        "head": "4af44e8010c6ecb785a4ada8e6255b569ace66fd",
+        "base_branch": "nkapre/pr-05-ccmask",
+        "base_head": "cf43fdce21679113c5ae458043015bba6be7d037"
+      },
+      {
+        "pr": 29,
+        "branch": "nkapre/pr-07-int-not",
+        "head": "b837269e8b64ae6685a56d179e67d0f5b789ade8",
+        "base_branch": "nkapre/pr-06-int-abs",
+        "base_head": "4af44e8010c6ecb785a4ada8e6255b569ace66fd"
+      },
+      {
+        "pr": 30,
+        "branch": "nkapre/pr-08-store-fold",
+        "head": "8afbda1987384d1eaee3983fdde0bbcc07623f77",
+        "base_branch": "nkapre/pr-07-int-not",
+        "base_head": "b837269e8b64ae6685a56d179e67d0f5b789ade8"
+      },
+      {
+        "pr": 31,
+        "branch": "nkapre/pr-09-lut-select",
+        "head": "ad6e218543d1ba15bc11197b5b1552d66784347e",
+        "base_branch": "nkapre/pr-08-store-fold",
+        "base_head": "8afbda1987384d1eaee3983fdde0bbcc07623f77"
+      },
+      {
+        "pr": 32,
+        "branch": "nkapre/pr-10-crosscall",
+        "head": "4c47fde1846f4256744b9413126b369fa2755a5f",
+        "base_branch": "nkapre/pr-09-lut-select",
+        "base_head": "ad6e218543d1ba15bc11197b5b1552d66784347e"
+      },
+      {
+        "pr": 33,
+        "branch": "nkapre/pr-11-crossloop",
+        "head": "8a519ea2cbff76beaad6730a617bc2272322a0e7",
+        "base_branch": "nkapre/pr-10-crosscall",
+        "base_head": "4c47fde1846f4256744b9413126b369fa2755a5f"
+      },
+      {
+        "pr": 34,
+        "branch": "nkapre/pr-12-prgm-const",
+        "head": "9fe3515b6fdf3a3bb482d0cefb8183e8d385aeeb",
+        "base_branch": "nkapre/pr-11-crossloop",
+        "base_head": "8a519ea2cbff76beaad6730a617bc2272322a0e7"
+      },
+      {
+        "pr": 35,
+        "branch": "nkapre/pr-13-dst-ownership",
+        "head": "702e29e19a80b39aafb318945a96f94c058a8b4f",
+        "base_branch": "nkapre/pr-12-prgm-const",
+        "base_head": "9fe3515b6fdf3a3bb482d0cefb8183e8d385aeeb"
+      },
+      {
+        "pr": 36,
+        "branch": "nkapre/pr-14-dst-autoincr",
+        "head": "81101e178c065e26d946ab697ea6d27ddd495648",
+        "base_branch": "nkapre/pr-13-dst-ownership",
+        "base_head": "702e29e19a80b39aafb318945a96f94c058a8b4f"
+      },
+      {
+        "pr": 37,
+        "branch": "nkapre/pr-15-crosslane",
+        "head": "5393b7f53e0d29efc260e1d29e70093e35a713d1",
+        "base_branch": "nkapre/pr-14-dst-autoincr",
+        "base_head": "81101e178c065e26d946ab697ea6d27ddd495648"
+      },
+      {
+        "pr": 38,
+        "branch": "nkapre/pr-16-transp-involution",
+        "head": "228641f4c8e5cda642ea95d912d880b0849cea19",
+        "base_branch": "nkapre/pr-15-crosslane",
+        "base_head": "5393b7f53e0d29efc260e1d29e70093e35a713d1"
+      },
+      {
+        "pr": 39,
+        "branch": "nkapre/pr-17-crosslane-window",
+        "head": "49c2c94595c24a965ec3f07194b07c4fdf558b60",
+        "base_branch": "nkapre/pr-16-transp-involution",
+        "base_head": "228641f4c8e5cda642ea95d912d880b0849cea19"
+      },
+      {
+        "pr": 40,
+        "branch": "nkapre/pr-18-dst-iteration",
+        "head": "8788b831476561c5e482eb30ed1703d7e50449c6",
+        "base_branch": "nkapre/pr-17-crosslane-window",
+        "base_head": "49c2c94595c24a965ec3f07194b07c4fdf558b60"
+      },
+      {
+        "pr": 41,
+        "branch": "nkapre/pr-19-reprprop",
+        "head": "8fac22579a7a7f42de0e9d22e45b6f6e88e413af",
+        "base_branch": "nkapre/pr-18-dst-iteration",
+        "base_head": "8788b831476561c5e482eb30ed1703d7e50449c6"
+      },
+      {
+        "pr": 42,
+        "branch": "nkapre/pr-20-reassoc",
+        "head": "bed97690bb6356a91236db3aac320232e9e24d59",
+        "base_branch": "nkapre/pr-19-reprprop",
+        "base_head": "8fac22579a7a7f42de0e9d22e45b6f6e88e413af"
+      },
+      {
+        "pr": 44,
+        "branch": "nkapre/pr-22-lreg-rename",
+        "head": "198d40071ab7c1254a990463a8ef81ef1572b8db",
+        "base_branch": "nkapre/pr-20-reassoc",
+        "base_head": "bed97690bb6356a91236db3aac320232e9e24d59"
+      },
+      {
+        "pr": 46,
+        "branch": "nkapre/pr-24-replay",
+        "head": "977e1d8ccaaf3824d740d7f9929b7f18821c024f",
+        "base_branch": "nkapre/pr-22-lreg-rename",
+        "base_head": "198d40071ab7c1254a990463a8ef81ef1572b8db"
+      },
+      {
+        "pr": 45,
+        "branch": "nkapre/pr-23-mop-form",
+        "head": "599d086890e6cb2f26fd2e9107ed3f665bb86a7c",
+        "base_branch": "nkapre/pr-24-replay",
+        "base_head": "977e1d8ccaaf3824d740d7f9929b7f18821c024f"
+      },
+      {
+        "pr": 47,
+        "branch": "nkapre/pr-25-delivery-shape",
+        "head": "b9cfed2cb9cbd8a19628b2f5892b0cdc3fdd55e6",
+        "base_branch": "nkapre/pr-23-mop-form",
+        "base_head": "599d086890e6cb2f26fd2e9107ed3f665bb86a7c"
+      },
+      {
+        "pr": 48,
+        "branch": "nkapre/pr-26-schedule",
+        "head": "cbc84c566c8c93804e43258317307101d0874781",
+        "base_branch": "nkapre/pr-25-delivery-shape",
+        "base_head": "b9cfed2cb9cbd8a19628b2f5892b0cdc3fdd55e6"
+      },
+      {
+        "pr": 49,
+        "branch": "nkapre/pr-27-macro-planner",
+        "head": "9ce85081e4a9261ee4fe5d4c54cd6f03a329a8ce",
+        "base_branch": "nkapre/pr-26-schedule",
+        "base_head": "cbc84c566c8c93804e43258317307101d0874781"
+      },
+      {
+        "pr": 53,
+        "branch": "nkapre/pr-31-spill-diag",
+        "head": "6fe7c8aa7f0c62c66676baec092cf318179fa8ae",
+        "base_branch": "nkapre/pr-27-macro-planner",
+        "base_head": "9ce85081e4a9261ee4fe5d4c54cd6f03a329a8ce"
+      },
+      {
+        "pr": 50,
+        "branch": "nkapre/pr-28-lp-schedule",
+        "head": "c9b23b580fa14d59eccf121a0eadad8b913fe6d7",
+        "base_branch": "nkapre/pr-31-spill-diag",
+        "base_head": "6fe7c8aa7f0c62c66676baec092cf318179fa8ae"
+      },
+      {
+        "pr": 51,
+        "branch": "nkapre/pr-29-presched-prera",
+        "head": "842fa60e74f54fdc82025c75b83d311d6105a221",
+        "base_branch": "nkapre/pr-28-lp-schedule",
+        "base_head": "c9b23b580fa14d59eccf121a0eadad8b913fe6d7"
+      },
+      {
+        "pr": 52,
+        "branch": "nkapre/pr-30-lreg-alloc",
+        "head": "5401b672d6d245f7f911850dae651f5e4f10a449",
+        "base_branch": "nkapre/pr-29-presched-prera",
+        "base_head": "842fa60e74f54fdc82025c75b83d311d6105a221"
+      },
+      {
+        "pr": 54,
+        "branch": "nkapre/pr-32-lreg-livein",
+        "head": "91d70347e54b18a19fa95f2f7cf6458c0771fcd2",
+        "base_branch": "nkapre/pr-30-lreg-alloc",
+        "base_head": "5401b672d6d245f7f911850dae651f5e4f10a449"
+      }
+    ]
+  },
+  "corrections": [
+    "Keep the bounded, fully decoded FIFO adapter and three poison regressions only in #33; remove them when the full producer arrives in #34.",
+    "Move the unchanged raw-LREG header fixture into sfpi/ so compiler-only gates can run without SFPI headers.",
+    "Preserve authored changes and commit messages while making every prefix cumulative with CI ancestry."
+  ],
+  "validation": {
+    "prefix33": {
+      "pass": 1683,
+      "xfail": 2,
+      "unexpected": 0
+    },
+    "prefix54": {
+      "pass": 7055,
+      "xfail": 2,
+      "unexpected": 0
+    },
+    "full": {
+      "pass": 8625,
+      "xfail": 2,
+      "sfpi_checks": 1559,
+      "unexpected": 0,
+      "actual_tested_commit": "560afc2afe53c15c2bf7126f68946bcf7cd6d888",
+      "planned_tree_identity": "Exact whole-tree equality with the final aggregate; no claim that its new commit ID was executed."
+    },
+    "native": {
+      "objects": 16,
+      "assembly_checks": 16,
+      "declaration_translation_units": 6,
+      "architectures": [
+        "WH",
+        "BH",
+        "QSR"
+      ],
+      "api_host_cases": 2
+    },
+    "llk": {
+      "host_cases": 24,
+      "selected_blackhole_tests": 14,
+      "custody_cases": 3,
+      "custody_mismatches_each": 0,
+      "device_scope": "Selected binary/TopK/reciprocal/masked-config correctness; no full-corpus or performance claim."
+    },
+    "reuse": "Unchanged prefix receipts retain their actual tested commits and raw logs; exact whole-source-tree equality qualifies reuse. Failed historical gates remain preserved. Device reuse requires unchanged compiler product sources, selected headers and runtime inputs.",
+    "compiler_sha256": "a6df6f810bb96ce6c0944d05f212b3222ab7bfc10e60511d53b909f9c290053a"
+  },
+  "evidence": {
+    "prefix33": {
+      "path": "/home/ttuser/sfpi-only-prefix33-scope-r2-root-gates/result.json",
+      "sha256": "d22c951d57e425bb52df4bdcabc75ae454d55b5660910eb84cbe84f1f7655682"
+    },
+    "prefix54": {
+      "path": "/home/ttuser/sfpi-only-prefix33-scope-r1-gcc54-gates/result.json",
+      "sha256": "db07eb7a331184ac6b4cf75e48960f15acd1b5c279871ae6aadb23da2e00e8f1"
+    },
+    "full": {
+      "path": "/home/ttuser/sfpi-gcc-evidence-sfpi-only-prefix33-scope-r1-full/result.json",
+      "sha256": "fcb91fdffd36f0228c68be5b70e1d9613c64fdb38324539da6bc47995a975328"
+    },
+    "native": {
+      "path": "/home/ttuser/sfpi-alignment.UbW4Dy/sfpi-only-final-r2-native/receipt.json",
+      "sha256": "b3a7a953962bc4db1fa009a2d314d6719ae5ba3a18fbd21ebae8ae3a43224bab"
+    },
+    "metal": {
+      "path": "/home/ttuser/sfpi-alignment.UbW4Dy/sfpi-direct-metal-clean-receipt.json",
+      "sha256": "9724e3d7732aaaec52238d04b5d975d4f9d2fc66360ad11395a2d953a799875e"
+    },
+    "identity": {
+      "path": "/home/ttuser/sfpi-alignment.UbW4Dy/gcc-prefix33-scope-r2-identity-audit.json",
+      "sha256": "28956a7472bd6f641ef1cafa5ad963b53530591511715b9abde4127329abeb11"
+    },
+    "cutoffs": {
+      "path": "/home/ttuser/sfpi-alignment.UbW4Dy/gcc-prefix33-scope-r2-boundary-audit.json",
+      "sha256": "ea392675e8a423c22b5eca934273d3bcc75c9af55b43eb593d0b51f41fcacbc6"
+    }
+  },
+  "publication": "Local validation receipts do not establish hosted CI. Remote branch and PR metadata readback are recorded separately after guarded publication."
+}

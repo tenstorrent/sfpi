@@ -3,7 +3,7 @@ SFPI: Tenstorrent SFPU programming interface
 
 This repo contains SFPI.
 
-This local integration candidate preserves the published SFPI branch
+This integration preserves the published SFPI branch
 `d0795a7`, merges upstream SFPI `5abc781` (7.90.0), and includes the
 focused `lltt::lreg_effect` API from SFPI PR #48. It retains the typed
 cross-lane and sort-network interfaces with upstream's lexical predicate
@@ -14,6 +14,12 @@ reviewed `2f09e81436a9` candidate; the final test layout moves the raw-LREG
 header fixture into the SFPI integration suite. Binutils remains pinned to
 `f261c43d8363`. Integration CI covers the exact compiler pin, header/API
 contracts, installation checks and native assembly probes.
+
+The [SFPI stack checkpoint](SFPI_STACK_COHERENCE.json) records the 30-slice
+compiler dependency chain, matching headers and direct LLK integration.
+Local validation passed 8,625 compiler/SFPI checks with two expected
+failures, 16 native object/assembly pairs, and 14 selected Blackhole tests.
+Hosted CI and broader hardware coverage are separate from these results.
 
 The entries below are historical evidence for their recorded tuples.
 They do not establish validation of a new compiler/header combination,

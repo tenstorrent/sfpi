@@ -2,7 +2,7 @@
 
 ## 2026-10-23 SFPI-only integration
 
-This local candidate keeps published SFPI `d0795a762a07`, upstream
+This integration keeps published SFPI `d0795a762a07`, upstream
 `5abc7815dd24` and focused API PR #48 (`812119fa7bf4`) in its ancestry.
 The source headers retain the checked `ee378aa6c6c7` include tree:
 upstream comparison/mask and lexical predicate ownership, the deep-chain
@@ -22,6 +22,16 @@ declarations, native ABI/assembly, and the pinned toolchain build/tests.
 Exact local command receipts are retained separately during review.
 No historical device result below validates a different pin, and no
 local result implies hosted CI or remote publication.
+
+The current [SFPI stack checkpoint](SFPI_STACK_COHERENCE.json) records the
+30 compiler slices and their exact dependency heads. The final full gate
+passed 8,625 checks / 2 expected XFAIL with 1,559 SFPI checks and zero
+unexpected results. It actually tested `560afc2afe53`, whose complete
+source tree equals the pinned `91d70347e54b`. The fresh #33 prefix passed
+1,683 checks / 2 expected XFAIL; #54 passed 7,055 / 2 expected XFAIL.
+Fresh SFPI native/API gates passed at `2c3343f`; this checkpoint adds only
+documentation afterward. Matched LLK evidence covers 14 selected
+Blackhole tests with the same product sources and selected headers.
 
 ## 2026-10-19 review of the 2026-10-13 pressure-recovery swarm
 
