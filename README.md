@@ -9,8 +9,9 @@ focused `lltt::lreg_effect` API from SFPI PR #48. It retains the typed
 cross-lane and sort-network interfaces with upstream's lexical predicate
 ownership and eight-result transpose representation.
 
-The compiler pin is `6a31b4d9bdcc`, with the same source tree as the
-reviewed `2f09e81436a9` compiler candidate. Binutils remains pinned to
+The compiler pin is `91d70347e54b`. Its compiler product sources match the
+reviewed `2f09e81436a9` candidate; the final test layout moves the raw-LREG
+header fixture into the SFPI integration suite. Binutils remains pinned to
 `f261c43d8363`. Integration CI covers the exact compiler pin, header/API
 contracts, installation checks and native assembly probes.
 

@@ -9,9 +9,12 @@ upstream comparison/mask and lexical predicate ownership, the deep-chain
 predicate repair, typed cross-lane/sort-network helpers, typed SETRWC,
 and the public raw-LREG effect wrapper.
 
-GCC is pinned to `6a31b4d9bdccbe560c270de7eba17af6558f3b80`,
-tree `620a2a25467472851a6bfad9d870325a62a8f8f9`, which is the
-tree-equivalent replay of `2f09e81436a9`. Binutils is
+GCC is pinned to `91d70347e54b18a19fa95f2f7cf6458c0771fcd2`,
+tree `ad5a3848a56fb815ad1ab718da06f79963e8f528`. Its compiler product
+sources match `2f09e81436a9`; the final test layout moves the unchanged
+raw-LREG header fixture into the SFPI integration suite. The cumulative
+PR stack also repairs the temporary early adapter in #33 and removes
+that adapter when the full producer arrives in #34. Binutils is
 `f261c43d8363dc7ca38696fc8268cee4bf8ed620`.
 
 The integration gate is limited to SFPI header capability, installation,
