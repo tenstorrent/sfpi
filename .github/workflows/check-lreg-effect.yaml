@@ -1,0 +1,25 @@
+name: Check lltt LREG effect header
+
+on:
+  pull_request:
+    paths:
+      - include/lltt.h
+      - scripts/test-lreg-effect.py
+      - .github/workflows/check-lreg-effect.yaml
+  push:
+    paths:
+      - include/lltt.h
+      - scripts/test-lreg-effect.py
+      - .github/workflows/check-lreg-effect.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  header:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check supported and unsupported compiler capability
+        run: python3 scripts/test-lreg-effect.py
