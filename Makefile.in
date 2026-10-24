@@ -269,6 +269,8 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		$(BINUTILS_TARGET_FLAGS) \
 		$(BINUTILS_GDB_FLAGS) \
 		$(IDENT_OPTIONS) \
+		$(WITH_ARCH) \
+		$(WITH_ABI) \
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(@F)
 	$(MAKE) -C $(@F) install
