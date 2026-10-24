@@ -101,7 +101,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build/tests
-          bash scripts/validate-header-declarations.sh gcc build/sfpi/compiler/bin/riscv-tt-elf-g++ \
+          bash scripts/validate-header-declarations.sh gcc build/sfpi/compiler/bin/riscv-tt-elf-g++ tt-bh \
             2>&1 | tee build/tests/header-declarations.log
       - name: Validate native header ABI
         if: ${{!cancelled() && inputs.validate_headers && steps.toolchain.outcome == 'success'}}

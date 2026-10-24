@@ -7,8 +7,8 @@
   "validated_sfpi_code_base": "b323806ad6e5531ae67ee0490f6d11aa4066b888",
   "documentation_input_base": "b323806ad6e5531ae67ee0490f6d11aa4066b888",
   "documentation_descendant": {
-    "commit": null,
-    "reason": "Commit ID omitted to avoid self-reference; containing documentation commit descends from validated_sfpi_code_base and changes only the listed documentation paths.",
+    "commit": "bb1ea20e1dd8548c0191186b4ef4dd6043133d1e",
+    "reason": "Recorded documentation-only checkpoint; the subsequent validation-gate followup is described separately below.",
     "allowed_changed_paths": [
       "README.md",
       "HANDOFF.md",
@@ -3693,7 +3693,7 @@
     "QSR runtime coverage",
     "Full coupled per-PR approval gating"
   ],
-  "external_status": "Hosted execution and publication receipts are recorded separately; these local counts establish neither.",
+  "external_status": "Hosted40064275764 built the pinned toolchain and passed8649compiler checks plus native ABI, but failed the declaration invocation for missing-mcpu. The validation-gate followup is locally qualified; post-push hosted status is recorded separately.",
   "historical_r2_checkpoint": {
     "classification": "HISTORICAL_WEAKER_CHECKING_NOT_CURRENT_QUALIFICATION",
     "checking_profile": "--enable-checking=yes",
@@ -4018,5 +4018,66 @@
       },
       "publication": "Local validation receipts do not establish hosted CI. Remote branch and PR metadata readback are recorded separately after guarded publication."
     }
+  },
+  "validation_gate_followup": {
+    "base_commit": "bb1ea20e1dd8548c0191186b4ef4dd6043133d1e",
+    "changed_paths": [
+      "scripts/validate-header-declarations.sh",
+      ".github/workflows/build-sfpi.yaml",
+      "scripts/build.sh",
+      "xfails/gas.xfail",
+      "xfails/ld.xfail",
+      "SFPI_STACK_COHERENCE.json"
+    ],
+    "purpose": [
+      "Optional scalarCPU argument; CI supplies tt-bh without -B",
+      "Remove3GAS+3LD stale expected-failure entries and retired compressed1d expectation",
+      "Count XPASS in all3 test modes and reject unexpected passes"
+    ],
+    "qualification": {
+      "path": "/home/ttuser/sfpi-alignment.UbW4Dy/declarations-installed-cpu-fix-v4/receipt.json",
+      "sha256": "d43ef92c7bc75cc3618a24c3c714518d0349467942d417abe6ae2fbfcc70a6d8"
+    },
+    "hosted_previous_run": {
+      "id": 40064275764,
+      "conclusion": "failure",
+      "processed_summaries": {
+        "binutils-x86_64_debian.sum": {
+          "UNTESTED": 17,
+          "PASS": 231,
+          "UNSUPPORTED": 16
+        },
+        "gcc-x86_64_debian.sum": {},
+        "gas-x86_64_debian.sum": {
+          "PASS": 615,
+          "XFAIL": 24,
+          "UNSUPPORTED": 9,
+          "XPASS": 3
+        },
+        "ld-x86_64_debian.sum": {
+          "PASS": 529,
+          "UNSUPPORTED": 227,
+          "XFAIL": 19,
+          "XPASS": 3
+        },
+        "g++-x86_64_debian.sum": {
+          "PASS": 8649,
+          "XFAIL": 2
+        }
+      },
+      "checking_macros": {
+        "ENABLE_ASSERT_CHECKING": 1,
+        "ENABLE_DF_CHECKING": 1,
+        "ENABLE_EXTRA_CHECKING": 1,
+        "ENABLE_GIMPLE_CHECKING": 1,
+        "ENABLE_RTL_CHECKING": 1,
+        "ENABLE_RTL_FLAG_CHECKING": 1,
+        "ENABLE_TREE_CHECKING": 1
+      },
+      "native_abi": "PASS all3 targets; artifacts retained",
+      "binutils_limit": "17genericbinutils UNTESTED cases remain recorded; not a completegenericbinutils validation claim"
+    },
+    "runtime_and_tuple": "No change to GCC/binutils/include trees or runtime code. No newhardware required or claimed.",
+    "hosted_fix_status": "Post-push validation recorded separately; local fix is not a hosted success."
   }
 }

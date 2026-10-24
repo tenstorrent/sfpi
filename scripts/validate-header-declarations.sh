@@ -2,15 +2,20 @@
 # Check all public header declarations before building the candidate compiler.
 # Uses generic RV32 for the target integer ABI, with generated fallback builtin
 # declarations. This does not exercise Tensix lowering, allocation or assembly.
+# SFPI compilers require an explicit scalar CPU; generic RISC-V compilers do not.
 set -euo pipefail
 
-if [[ $# != 2 ]]; then
-    echo "usage: $0 GCC_SOURCE RISCV_CXX" >&2
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+    echo "usage: $0 GCC_SOURCE RISCV_CXX [SCALAR_CPU]" >&2
     exit 2
 fi
 source_dir=$(cd "$(dirname "$0")/.." && pwd)
 definitions="$1/gcc/config/riscv/tt/rvtt-insn.def"
 cxx=$2
+cpu_options=()
+if [[ $# -eq 3 ]]; then
+    cpu_options=("-mcpu=$3")
+fi
 if [[ ! -r "$definitions" || ! -x "$cxx" ]]; then
     echo "need GCC source rvtt-insn.def and an executable RV32 C++ compiler" >&2
     exit 2
@@ -19,7 +24,7 @@ fixture=$(mktemp -d "${TMPDIR:-/tmp}/sfpi-header-declarations.XXXXXX")
 trap 'rm -rf "$fixture"' EXIT
 "$source_dir/scripts/gen-decls.py" "$definitions" >"$fixture/tensix_builtins.def"
 for architecture in WORMHOLE BLACKHOLE QUASAR; do
-    "$cxx" -march=rv32im -std=c++17 -D"ARCH_$architecture" \
+    "$cxx" "${cpu_options[@]}" -march=rv32im -std=c++17 -D"ARCH_$architecture" \
         -I"$source_dir/include" -I"$fixture" \
         -Wno-attributes -Wno-psabi -Wno-invalid-constexpr \
         -fsyntax-only "$source_dir/scripts/predicate-header-abi.C" \

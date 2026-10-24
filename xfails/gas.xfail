@@ -1,5 +1,2 @@
-
-multilibs: riscv-sim/*
-FAIL: gas/riscv/dis-partial-insn-byte
-FAIL: gas/riscv/dis-partial-insn-short
-FAIL: gas/riscv/dis-partial-insn-word
+# No additional expected GAS failures for the paired binutils pin.
+# The dis-partial-insn fixtures now pass and must remain ordinary passes.

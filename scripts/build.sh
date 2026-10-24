@@ -284,6 +284,7 @@ if $sim; then
 fi
 
 fails=0
+xpasses=0
 unresolveds=0
 errors=0
 expected_tests=0
@@ -307,6 +308,7 @@ if $test_binutils; then
 	cp ${sum%sum}log $tests/$dst.log
 	(set -x; nice $BIN/local-xfails.py --output $tests/$dst.sum --xfails xfails $sum)
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	xpasses=$((xpasses + $(grep -c '^XPASS:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
 	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
@@ -324,6 +326,7 @@ if $test_gcc; then
 	cp ${sum%sum}log $tests/$dst.log
 	(set -x; nice $BIN/local-xfails.py --output $tests/$dst.sum --xfails xfails $sum)
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	xpasses=$((xpasses + $(grep -c '^XPASS:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
 	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
@@ -340,6 +343,7 @@ if $test_tt; then
 	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.sum $tests/$dst.sum
 	cp $BUILD/build-gcc-newlib-stage2/gcc/testsuite/$cc/$cc.log $tests/$dst.log
 	fails=$((fails + $(grep -c '^FAIL:' $tests/$dst.sum || true)))
+	xpasses=$((xpasses + $(grep -c '^XPASS:' $tests/$dst.sum || true)))
 	unresolveds=$((unresolveds + $(grep -c '^UNRESOLVED:' $tests/$dst.sum || true)))
 	errors=$((errors + $(grep -c '^ERROR:' $tests/$dst.sum || true)))
 	expected_tests=$((expected_tests + $(awk '/^# of expected passes/{sum += $NF} END{print sum + 0}' $tests/$dst.sum)))
@@ -370,6 +374,10 @@ if $testing; then
     fi
     if [[ $fails != 0 ]]; then
 	echo "ERROR: $fails tests failed" >&2
+	ok=false
+    fi
+    if [[ $xpasses != 0 ]]; then
+	echo "ERROR: $xpasses tests passed unexpectedly; update stale expected failures" >&2
 	ok=false
     fi
     if ! $ok; then
