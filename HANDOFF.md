@@ -1,6 +1,24 @@
 # Handoff — 2026-10-09
 
-## 2026-10-23 SFPI-only integration
+## 2026-10-24 strong-checking SFPI tuple
+
+The exact local tuple is GCC `08c76cc663f53a6d85f6ce540fa83e728f49f333` on upstream GCC `6ceabd1e2fc4a418831b0075c554df82bb093f48`, binutils `a64f45d8a1c581a728951fe52103b56af01e2601`, and SFPI include tree `ee378aa6c6c7f62ce503d044142b40f5cc4f9c7b`. The SFPI ancestry also includes upstream `47efb14c4cc970481cfea7169009945387cd7467`, which only advanced its compiler gitlink; the merged integration selects the qualified aggregate.
+
+The 30 supplemental compiler-only prefixes and separate CI55 baseline use the recorded `rv32im/ilp32`, default ISA `20191213` profile; those results are not relabeled ISA 2.2. The coupled production full/native/device tuple instead uses SFPI's actual `rv32i/ilp32`, `rocket`, ISA `2.2` defaults. All 30 compiler-prefix gates and the separate CI55 baseline pass with `--enable-checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree`; all seven checking macros were captured enabled. The exact final compiler/SFPI suite passes 8,649 checks / 2 expected XFAIL. Native gates pass 16 object/assembly pairs, six declaration translation units, the two host API cases, installation and shell checks. Binutils separately passes 618 GAS / 532 LD checks with zero unexpected results.
+
+The compiler repairs BARRIER-safe predecessor inspection and preserves unsupported synthesized-word graphs (subtraction, multiple variable bases and cancelling accumulated constants) before rewriting. Supported PLUS constant-base and PHI behavior remains covered. Headers preserve lexical predicate ownership, the eight-result transpose representation, typed cross-lane/sort, SETRWC and `lltt::lreg_effect`.
+
+Fourteen selected Blackhole tests actually ran with LLK harness/kernel sources at `658ab2cdfb325ba1e8656cb4e016f60ba98d7585` and the qualified backend, headers, assembler and linker; integration `cc42927b996116509983695b10656763aa610904` differs only by the recorded workflow/documentation paths. This is a source-input custody qualification, not a claim that a later commit ID executed. Standalone ttexalens/tt-umd runtime provenance is recorded separately; the kernel-source commit does not identify a libttmetal/ttnn runtime or validate moving upstream main. The raw-LREG CPU workflow runs the existing host metadata checks on affected pull requests; 24 local checks passed. Hosted execution and publication receipts are recorded separately.
+
+Use matching headers and a driver configured with the matching assembler/linker defaults: those paths are compiled into the driver, so an extra `-B` alone cannot be assumed to override them. Compiler-only jobs are supplemental; full coupled per-PR approval gating remains open. QSR runtime coverage remains open. Local qualification establishes neither hosted CI success, maintainer acceptance, nor a release. Exact tested heads and documentation-only descendant limits are in [the checkpoint](SFPI_STACK_COHERENCE.json).
+
+### Historical manual-2019 validation profile
+
+The earlier manual `rv32im/ilp32`, ISA `20191213` full/native checkpoints remain historical. Its 14-case device attempt stopped in shared BRISC assembly before any correctness oracle or fresh linked ELF. Device topology initialization did occur; these were not 14 numerical failures. The source stayed unchanged: the coupled compiler was rebuilt with the actual SFPI production defaults, and the original BRISC CPU compile/link passed without a source patch or CLI ISA override.
+
+The recorded results below used the earlier weaker `--enable-checking=yes` profile. Hosted SFPI run [39949006609](https://github.com/tenstorrent/sfpi/actions/runs/39949006609) subsequently failed; these historical results do not qualify the current tuple.
+
+## Historical 2026-10-23 r2 SFPI-only integration
 
 This integration keeps published SFPI `d0795a762a07`, upstream
 `5abc7815dd24` and focused API PR #48 (`812119fa7bf4`) in its ancestry.
