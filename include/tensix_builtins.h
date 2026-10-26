@@ -41,6 +41,7 @@
 using __xtt_vector = unsigned __attribute__((vector_size (sizeof (unsigned) * 32)));
 using __xtt_vector2 = unsigned __attribute__((vector_size (sizeof (unsigned) * 32 * 2)));
 using __xtt_vector4 = unsigned __attribute__((vector_size (sizeof (unsigned) * 32 * 4)));
+using __xtt_vector8 = unsigned __attribute__((vector_size (sizeof (unsigned) * 32 * 8)));
 
 #endif
 
