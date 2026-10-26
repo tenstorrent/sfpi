@@ -19,4 +19,3 @@ void predicate_header_deep_elseif_abi() {
     } v_endif;
     dst_reg[1] = result;
 }
-
