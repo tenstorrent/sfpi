@@ -25,7 +25,7 @@
 #define __builtin_rvtt_sfpstoresrcs(src, addr, mod0, mode, done) \
   __SFPI_WARN() __builtin_rvtt_sfpstoresrcs(::ckernel::instrn_buffer, src, addr, 0, 0, mod0, mode, done)
 #define __builtin_rvtt_sfpwriteconfig_i(imm, mod1)          \
-  __SFPI_WARN() __builtin_rvtt_sfpwriteconfig_i(::ckernel::instrn_buffer, imm, 0, 0, mod1e)
+  __SFPI_WARN() __builtin_rvtt_sfpwriteconfig_i(::ckernel::instrn_buffer, imm, 0, 0, mod1)
 
 #define __builtin_rvtt_sfpsetexp_i(src, imm, mod1) \
   __SFPI_WARN() __builtin_rvtt_sfpsetexp_i(::ckernel::instrn_buffer, src, imm, 0, 0, mod1)
