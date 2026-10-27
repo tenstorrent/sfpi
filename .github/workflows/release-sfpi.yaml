@@ -9,7 +9,7 @@ on:
         default:
         type: string
       all:
-        description: All targets
+        description: All hosts
         type: boolean
         default: false
       full:
