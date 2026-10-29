@@ -12,12 +12,17 @@
 
 #include <cstdint>
 
+#if __riscv_xtttensixqsr
+#define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD, LAST, MUTEX) \
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD, LAST, MUTEX)
+#else
+#define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
+#endif
 extern volatile unsigned long __instrn_buffer[];
 
 namespace lltt {
 constexpr inline volatile unsigned long *[[gnu::rvtt_reg_ptr]] __instrn_buffer = ::__instrn_buffer;
-
-constexpr unsigned replay_start_shift_ = 10;
 
 enum ExecBool : bool {NoExec, Exec};
 
@@ -28,7 +33,7 @@ record(unsigned start, unsigned length
        , bool last = false, bool mutex = false
 #endif
        ) {
-  __builtin_rvtt_ttreplay (__instrn_buffer, (start << replay_start_shift_) | length, 0, 0, bool(E), true
+  __builtin_rvtt_ttreplay(start, length, bool(E), true
 #if __riscv_xtttensixqsr
                           , last, mutex
 #endif
@@ -41,7 +46,7 @@ replay(unsigned start, unsigned length
        , bool last = false, bool mutex = false
 #endif
        ) {
-  __builtin_rvtt_ttreplay (__instrn_buffer, (start << replay_start_shift_) | length, 0, 0, false, false
+  __builtin_rvtt_ttreplay(start, length, false, false
 #if __riscv_xtttensixqsr
                           , last, mutex
 #endif
@@ -55,7 +60,7 @@ replay_insn(unsigned start, unsigned length
 #endif
             ) {  
   // Perhaps another builtin?
-  return (0x04 << 24) | (((start << replay_start_shift_) | length) << 4)
+  return (0x04 << 24) | (start << 14) | (length << 4)
 #if __riscv_xtttensixqsr
       | (last << 3) | (mutex << 2)
 #endif
