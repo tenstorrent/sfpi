@@ -525,22 +525,28 @@ sfpi_inline vBool::Cmp<vBool::GT, vBool::Int> operator> (vInt, vInt);
 sfpi_inline vBool::Cmp<vBool::LE, vBool::Int> operator<= (vInt, vInt);
 
 // We need these overloads as vMag decays to vUInt and hence ambiguous
-sfpi_inline  auto operator== (vInt a, vMag b) { return a == vInt (b); }
-sfpi_inline  auto operator!= (vInt a, vMag b) { return a != vInt (b); }
-sfpi_inline  auto operator< (vInt a, vMag b) { return a < vInt (b); }
-sfpi_inline  auto operator> (vInt a, vMag b) { return a > vInt (b); }
-sfpi_inline  auto operator<= (vInt a, vMag b) { return a <= vInt (b); }
-sfpi_inline  auto operator>= (vInt a, vMag b) { return a >= vInt (b); }
+sfpi_inline auto operator== (vInt a, vMag b) { return a == vInt (b); }
+sfpi_inline auto operator!= (vInt a, vMag b) { return a != vInt (b); }
+sfpi_inline auto operator< (vInt a, vMag b) { return a < vInt (b); }
+sfpi_inline auto operator> (vInt a, vMag b) { return a > vInt (b); }
+sfpi_inline auto operator<= (vInt a, vMag b) { return a <= vInt (b); }
+sfpi_inline auto operator>= (vInt a, vMag b) { return a >= vInt (b); }
 
-sfpi_inline  vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, vUInt);
-sfpi_inline  vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, vUInt);
-sfpi_inline  vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, vUInt);
-sfpi_inline  vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, vUInt);
-sfpi_inline  vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, vUInt);
-sfpi_inline  vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::LT, vBool::UInt> operator< (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::UInt> operator>= (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::EQ, vBool::UInt> operator== (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::NE, vBool::UInt> operator!= (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::UInt> operator> (vUInt, vUInt);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::UInt> operator<= (vUInt, vUInt);
 
 sfpi_inline vBool::Cmp<vBool::EQ, vBool::SMag> operator== (vSMag, vSMag);
 sfpi_inline vBool::Cmp<vBool::NE, vBool::SMag> operator!= (vSMag, vSMag);
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+sfpi_inline vBool::Cmp<vBool::LT, vBool::SMag> operator< (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::GE, vBool::SMag> operator>= (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::GT, vBool::SMag> operator> (vSMag, vSMag);
+sfpi_inline vBool::Cmp<vBool::LE, vBool::SMag> operator<= (vSMag, vSMag);
+#endif
 
 // Mark an ordering compare as 'close', specifically the compared values are
 // known to be within <2^31 of each other

@@ -751,3 +751,17 @@ auto sfpi::operator== (vSMag a, vSMag b)-> vBool::Cmp<vBool::EQ, vBool::SMag> {
 auto sfpi::operator!= (vSMag a, vSMag b)-> vBool::Cmp<vBool::NE, vBool::SMag> {
   return vBool::Cmp<vBool::NE, vBool::SMag> (a, b);
 }
+#if __riscv_xtttensixbh || __riscv_xtttensixqsr
+auto sfpi::operator< (vSMag a, vSMag b)-> vBool::Cmp<vBool::LT, vBool::SMag> {
+  return vBool::Cmp<vBool::LT, vBool::SMag> (a, b);
+}
+auto sfpi::operator>= (vSMag a, vSMag b)-> vBool::Cmp<vBool::GE, vBool::SMag> {
+  return vBool::Cmp<vBool::GE, vBool::SMag> (a, b);
+}
+auto sfpi::operator> (vSMag a, vSMag b)-> vBool::Cmp<vBool::GT, vBool::SMag> {
+  return vBool::Cmp<vBool::GT, vBool::SMag> (a, b);
+}
+auto sfpi::operator<= (vSMag a, vSMag b)-> vBool::Cmp<vBool::LE, vBool::SMag> {
+  return vBool::Cmp<vBool::LE, vBool::SMag> (a, b);
+}
+#endif
