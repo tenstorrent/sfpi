@@ -725,8 +725,8 @@ auto sfpi::operator>> (vMag a, unsigned b)-> vMag { return vMag (a.int_shift (-b
 auto sfpi::operator>> (vMag a, int b)-> vMag { return vMag (a.int_shift (-b, false)); }
 auto sfpi::operator>> (vMag a, vUInt b)-> vMag { return vMag (a.int_shift (-b, false)); }
 
-auto sfpi::operator& (vMag a, unsigned b)-> vMag { return a & vMag (b); }
-auto sfpi::operator& (vMag a, int b)-> vMag { return a & unsigned (b); }
+//auto sfpi::operator& (vMag a, unsigned b)-> vMag { return a & vMag (b); }
+//auto sfpi::operator& (vMag a, int b)-> vMag { return a & unsigned (b); }
 auto sfpi::operator& (vMag a, vMag b)-> vMag { return vMag (a.int_and (b)); }
 
 //////////////////////////////////////////////////////////////////////////////
