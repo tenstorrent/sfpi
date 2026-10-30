@@ -387,8 +387,6 @@ sfpi_inline vMag operator>> (vMag, unsigned);
 sfpi_inline vMag operator>> (vMag, int);
 sfpi_inline vMag operator>> (vMag, vUInt);
 
-sfpi_inline vMag operator& (vMag, unsigned);
-sfpi_inline vMag operator& (vMag, int);
 sfpi_inline vMag operator& (vMag, vMag);
 
 //////////////////////////////////////////////////////////////////////////////
