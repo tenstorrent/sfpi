@@ -550,7 +550,7 @@ auto sfpi::operator- (vFloat a, vFloat b)-> vFloat { return a.flt_add (-b); }
 auto sfpi::operator- (vFloat a, float b)-> vFloat {
   return __builtin_constant_p (b) ? a + vFloat (-b) : a + -vFloat (b);
 }
-//auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
+auto sfpi::operator- (float a, vFloat b)-> vFloat { return vFloat (a) + -b; }
 auto sfpi::operator* (vFloat a, vFloat b)-> vFloat { return a.flt_mul (b); }
 //auto sfpi::operator* (float a, vFloat b)-> vFloat { return b * a; }
 
