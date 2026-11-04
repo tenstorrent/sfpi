@@ -14,10 +14,10 @@
 
 #if __riscv_xtttensixqsr
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD, LAST, MUTEX) \
-  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD, LAST, MUTEX)
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD, LAST, MUTEX)
 #else
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
-  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD)
 #endif
 extern volatile unsigned long __instrn_buffer[];
 
