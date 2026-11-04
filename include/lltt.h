@@ -14,10 +14,10 @@
 
 #if __riscv_xtttensixqsr
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD, LAST, MUTEX) \
-  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD, LAST, MUTEX)
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD, LAST, MUTEX)
 #else
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
-  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, LENGTH, 0, 0, START, EXEC, RECORD)
+  __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD)
 #endif
 extern volatile unsigned long __instrn_buffer[];
 
@@ -51,20 +51,6 @@ replay(unsigned start, unsigned length
                           , last, mutex
 #endif
                           );
-}
-
-[[gnu::always_inline]] constexpr std::uint32_t
-replay_insn(unsigned start, unsigned length
-#if __riscv_xtttensixqsr
-            , bool last = false, bool mutex = false
-#endif
-            ) {  
-  // Perhaps another builtin?
-  return (0x04 << 24) | (start << 14) | (length << 4)
-#if __riscv_xtttensixqsr
-      | (last << 3) | (mutex << 2)
-#endif
-      ;
 }
 
 } // namespace 
