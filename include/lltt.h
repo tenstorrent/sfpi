@@ -14,9 +14,11 @@
 
 #if __riscv_xtttensixqsr
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD, LAST, MUTEX) \
+  _Pragma ("GCC warning \"macro is deprecated provide iptr operands explicitly\"") \
   __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD, LAST, MUTEX)
 #else
 #define __builtin_rvtt_ttreplay(START, LENGTH, EXEC, RECORD) \
+  _Pragma ("GCC warning \"macro is deprecated provide iptr operands explicitly\"") \
   __builtin_rvtt_ttreplay(lltt::__instrn_buffer, START, LENGTH, 0, 0, EXEC, RECORD)
 #endif
 extern volatile unsigned long __instrn_buffer[];
@@ -33,11 +35,11 @@ record(unsigned start, unsigned length
        , bool last = false, bool mutex = false
 #endif
        ) {
-  __builtin_rvtt_ttreplay(start, length, bool(E), true
+  (__builtin_rvtt_ttreplay)(__instrn_buffer, start, length, 0, 0, bool(E), true
 #if __riscv_xtttensixqsr
-                          , last, mutex
+                            , last, mutex
 #endif
-                          );
+                            );
 }
 
 [[gnu::always_inline]] inline void
@@ -46,11 +48,11 @@ replay(unsigned start, unsigned length
        , bool last = false, bool mutex = false
 #endif
        ) {
-  __builtin_rvtt_ttreplay(start, length, false, false
+  (__builtin_rvtt_ttreplay)(__instrn_buffer, start, length, 0, 0, false, false
 #if __riscv_xtttensixqsr
-                          , last, mutex
+                            , last, mutex
 #endif
-                          );
+                            );
 }
 
 [[gnu::always_inline]] constexpr std::uint32_t
