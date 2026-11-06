@@ -32,7 +32,7 @@ sfpi::vBool::vBool (Logic t, vBool a, vBool b)
     : result (__builtin_rvtt_sfpxlogic (t, a.get (), b.get ())) {}
 template<sfpi::vBool::Cond C, sfpi::vBool::Type T>
 sfpi::vBool::vBool (Cmp<C, T> cmp)
-    :  result (__builtin_rvtt_sfpxcmp (cmp.get (0), cmp.get (1), C | T)) {}
+    :  result (__builtin_rvtt_sfpxcmp (cmp.get (0), cmp.get (1), (unsigned char) C | (unsigned char) T)) {}
 
 sfpi::vBool::vBool (vInt a) : vBool (Cmp<NE, Int> (a, vInt (0))) {}
 sfpi::vBool::vBool (vUInt a) : vBool (Cmp<NE, UInt> (a, vUInt (0))) {}
