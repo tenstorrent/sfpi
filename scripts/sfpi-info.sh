@@ -114,6 +114,10 @@ if [[ -r /etc/os-release ]]; then
     esac
 fi
 sfpi_arch=$(uname -m)
+# Releasing a toolchain built for another host (scripts/cross-host.sh).
+if [[ -n $SFPI_HOST_ARCH ]]; then
+    sfpi_arch=$SFPI_HOST_ARCH
+fi
 
 
 if [[ $1 != DIST ]]; then

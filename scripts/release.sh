@@ -48,7 +48,7 @@ if ! $ci ; then
 fi
 
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
+    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs ${STRIP:-strip} -g
 
 rm -rf $BUILD/release
 mkdir $BUILD/release
