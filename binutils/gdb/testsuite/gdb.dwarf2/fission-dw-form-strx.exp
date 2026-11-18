@@ -1,0 +1,86 @@
+# Copyright 2025-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Check support for a DW_FORM_strx attribute in a dwo file.
+
+load_lib dwarf.exp
+
+# We run objcopy locally to split out the .dwo file.
+if {[is_remote host]} {
+    return 0
+}
+
+# This test can only be run on targets which support DWARF-2 and use gas.
+require dwarf2_support
+
+standard_testfile main.c -dw.S
+
+set asm_file [standard_output_file $srcfile2]
+
+# Generate DWARF assembly with both skeleton and DWO sections.
+Dwarf::assemble $asm_file {
+    global srcfile testfile
+
+    # String offsets table for DWO.
+    debug_str_offsets { dwo 1 } int
+
+    # The information that will be split out into the .dwo file.
+    cu {
+	fission 1
+	version 5
+	dwo_id 0xF00D
+    } {
+	compile_unit {} {
+	    declare_labels int4_type
+
+	    int4_type: DW_TAG_base_type {
+		DW_AT_byte_size 4 DW_FORM_sdata
+		DW_AT_encoding  @DW_ATE_signed
+		DW_AT_name      0 DW_FORM_strx_id
+	    }
+
+	    DW_TAG_variable {
+		DW_AT_name global_var
+		DW_AT_type :$int4_type
+		DW_AT_location {
+		    DW_OP_const1u 12
+		    DW_OP_stack_value
+		} SPECIAL_expr
+	    }
+	}
+    }
+
+    # The skeleton information that will remain in the .o file.
+    cu {
+	version 5
+	dwo_id 0xF00D
+    } {
+	compile_unit {
+	    DW_AT_dwo_name ${testfile}-dw.dwo DW_FORM_strp
+	} {}
+    }
+}
+
+# Build the executable and extract the .dwo file using objcopy.
+set obj [standard_output_file "${testfile}-dw.o"]
+if {[build_executable_and_dwo_files "$testfile.exp" "${binfile}" {nodebug} \
+	 [list $asm_file [list nodebug split-dwo] $obj] \
+	 [list $srcfile  [list nodebug]]]} {
+    return -1
+}
+
+clean_restart $::testfile
+
+gdb_test "ptype global_var" "type = int"
