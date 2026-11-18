@@ -1,0 +1,68 @@
+# -*- makefile -*- tt makefile fragment
+
+MULTILIB_OPTIONS := \
+mcpu=tt-wh/mcpu=tt-bh/mcpu=tt-qsr32/mcpu=tt-qsr64 \
+mabi=ilp32/mabi=lp64 \
+
+MULTILIB_MATCHES := \
+mcpu?tt-wh=mcpu?tt-wh-tensix \
+mcpu?tt-bh=mcpu?tt-bh-tensix \
+mcpu?tt-qsr32=mcpu?tt-qsr32-tensix \
+mcpu?tt-qsr64=mcpu?tt-qsr64-rocc \
+
+MULTILIB_REQUIRED := \
+mcpu=tt-wh/mabi=ilp32 \
+mcpu=tt-bh/mabi=ilp32 \
+mcpu=tt-qsr32/mabi=ilp32 \
+mcpu=tt-qsr64/mabi=lp64 \
+
+MULTILIB_OSDIRNAMES := \
+mcpu.tt-wh/mabi.ilp32=!wh-ilp32 \
+mcpu.tt-bh/mabi.ilp32=!bh-ilp32 \
+mcpu.tt-qsr32/mabi.ilp32=!qsr32-ilp32 \
+mcpu.tt-qsr64/mabi.lp64=!qsr64-lp64 \
+
+MULTILIB_REUSE :=
+MULTILIB_DIRNAMES :=
+MULTILIB_EXCEPTIONS :=
+MULTILIB_EXTRA_OPTS :=
+
+RVTT_OBJS := rvtt.o \
+	gimple-rvtt-attrib.o \
+	gimple-rvtt-cc.o \
+	gimple-rvtt-check.o \
+	gimple-rvtt-combine.o \
+	gimple-rvtt-dce.o \
+	gimple-rvtt-schedule.o \
+	gimple-rvtt-immvar.o \
+	gimple-rvtt-live.o \
+	gimple-rvtt-noval.o \
+	gimple-rvtt-pred.o \
+	gimple-rvtt-synth.o \
+	gimple-rvtt-unspec.o \
+	rtl-rvtt-fix-ebreak.o \
+	rtl-rvtt-fix-raw.o \
+	rtl-rvtt-fix-rocc.o \
+	rtl-rvtt-hll.o \
+	rtl-rvtt-replay.o \
+	rtl-rvtt-rmext.o \
+	rtl-rvtt-schedule.o \
+	rtl-rvtt-synth.o \
+	rtl-rvtt-unspec.o \
+
+OBJS += $(RVTT_OBJS)
+
+$(RVTT_OBJS): %.o: $(srcdir)/config/riscv/tt/%.cc
+	$(COMPILE) $<
+	$(POSTCOMPILE)
+
+gimple-rvtt-combine.o: rvtt-combine.inc
+
+PASSES_EXTRA += $(srcdir)/config/riscv/tt/rvtt-passes.def
+
+genprog += rvtt-combine
+
+build/genrvtt-combine.o: $(srcdir)/config/riscv/tt/genrvtt-combine.cc
+
+rvtt-combine.inc: build/genrvtt-combine$(build_exeext) $(srcdir)/config/riscv/tt/rvtt.gc
+	$(RUN_GEN) $^ $@

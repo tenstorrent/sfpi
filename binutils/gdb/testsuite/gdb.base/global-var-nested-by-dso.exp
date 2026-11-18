@@ -1,0 +1,53 @@
+# Copyright 2014-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+require allow_shlib_tests
+
+standard_testfile
+
+set lib1name $testfile-solib1
+set srcfile_lib1 $srcdir/$subdir/$lib1name.c
+set binfile_lib1 [standard_output_file $lib1name.so]
+
+set lib2name $testfile-solib2
+set srcfile_lib2 $srcdir/$subdir/$lib2name.c
+set binfile_lib2 [standard_output_file $lib2name.so]
+
+
+if { [build_executable "build shlib 1" $binfile_lib1 \
+	  $srcfile_lib1  [list debug shlib]] != 0 } {
+  return
+}
+
+if { [build_executable "build shlib 2" $binfile_lib2 \
+	  $srcfile_lib2  [list debug shlib]] != 0 } {
+  return
+}
+
+if { [prepare_for_testing "prepare" $testfile $srcfile \
+	  [list debug shlib=$binfile_lib1 shlib=$binfile_lib2]] != 0 } {
+  return
+}
+
+gdb_load_shlib $binfile_lib1
+gdb_load_shlib $binfile_lib2
+
+if { ![runto_main] } {
+    return
+}
+
+gdb_test "next" "$decimal.*b_main \\(\\);" "step over c_main"
+gdb_test "next" "$decimal.*return 0;" "step over b_main"
+gdb_test "print test" " = 42"

@@ -1,9 +1,3 @@
-[submodule "binutils"]
-	path = binutils
-	url = https://github.com/tenstorrent/sfpi-binutils.git
-[submodule "gcc"]
-	path = gcc
-	url = https://github.com/tenstorrent/sfpi-gcc.git
 [submodule "newlib"]
 	path = newlib
 	url = https://github.com/tenstorrent-forks/newlib-cygwin-mirror

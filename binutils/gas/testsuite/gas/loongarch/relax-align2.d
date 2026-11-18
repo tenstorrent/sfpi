@@ -1,0 +1,19 @@
+#as: --no-warn
+#readelf: -rsW
+
+#...
+Relocation section '\.rela\.text'.*
+#...
+.*R_LARCH_ALIGN.*c
+.*R_LARCH_ALIGN.*\.Lla-relax-align.*404
+#...
+Relocation section '\.rela\.text2'.*
+#...
+.*R_LARCH_ALIGN.*c
+.*R_LARCH_ALIGN.*\.Lla-relax-align.*404
+#...
+Symbol table '\.symtab' contains .* entries:
+#...
+.*1.*\.Lla-relax-align
+.*5.*\.Lla-relax-align
+#pass

@@ -1,0 +1,155 @@
+	.text
+_start:
+	subfus	10,0,12,11
+	subwus	10,11,12
+	subfus.	10,0,12,11
+	subwus.	10,11,12
+	subfus	20,1,22,21
+	subdus	20,21,22
+	subfus.	20,1,22,21
+	subdus.	20,21,22
+	lxvrl	 34,10,11
+	lxvrll	 35,10,12
+	lxvprl	 36,10,13
+	lxvprll	 38,10,14
+	stxvrl	 40,10,15
+	stxvrll	 41,10,16
+	stxvprl	 40,10,17
+	stxvprll 42,10,18
+	xvrlw	 31,41,51
+	xvadduwm 30,42,52
+	xvadduhm 30,42,53
+	xvsubuwm 29,43,54
+	xvsubuhm 63,0,30
+	xvmuluwm 30,40,60
+	xvmuluhm 60,61,62
+	xvmulhsw 34,35,36
+	xvmulhsh 1,2,3
+	xvmulhuw 20,21,22
+	xvmulhuh 20,42,52
+	xxaesencp 2, 4, 6, 0
+	xxaes128encp 2, 4, 6
+	xxaesencp 2, 4, 36, 1
+	xxaes192encp 2, 4, 36
+	xxaesencp 32, 34, 36, 2
+	xxaes256encp 32, 34, 36
+	xxaesdecp 2, 4, 6, 0
+	xxaes128decp 2, 4, 6
+	xxaesdecp 2, 4, 36, 1
+	xxaes192decp 2, 4, 36
+	xxaesdecp 32, 34, 36, 2
+	xxaes256decp 32, 34, 36
+	xxaesgenlkp 16, 18, 0
+	xxaes128genlkp 16, 18
+	xxaesgenlkp 40, 50, 1
+	xxaes192genlkp 40, 50
+	xxaesgenlkp 20, 54, 2
+	xxaes256genlkp 20, 54
+	xxgfmul128 1, 2, 3, 0
+	xxgfmul128gcm 1, 2, 3
+	xxgfmul128 31, 32, 33, 1
+	xxgfmul128xts 31, 32, 33
+	paddis 12, 9, 15, 0
+	paddis 12, 9, 15
+	paddis 12, 9, ~(1<<15), 0
+	paddis 12, 9, ~(1<<15)
+	paddis 9, 0, 25, 1
+	paddis 24, 0, 2147483647, 0
+	paddis 24, 0, 2147483647
+	plis 24, 2147483647
+	paddis 30, 10, -2147483648, 0
+	paddis 30, 10, -2147483648
+	psubis 30, 10, 2147483648, 0
+	nop
+	paddis 30, 10, 2147483647, 0
+	paddis 30, 10, 2147483647
+	psubis 30, 10, -2147483647, 0
+	paddis 15, 0, 2147483647, 1
+	psubis 15, 0, -2147483647, 1
+	vucmprhn 13, 24, 21
+	vucmprln 13, 24, 22
+	vucmprhb 14, 24, 22
+	vucmprlb 14, 24, 21
+	vucmprhh 15, 24, 22
+	vucmprlh 15, 24, 21
+	vupkhsntob 21, 22
+	vupklsntob 20, 21
+	vupkint4tobf16 17, 18, 3
+	vupkint8tobf16 15, 25, 1
+	vupkint4tofp32 16, 24, 7
+	vupkint8tofp32 17, 23, 3
+	lxvpb32x 34, 18, 19
+	stxvpb32x 34, 20, 21
+	ccmclean
+	ccmrl
+	mtlpl 4, 2
+	mtummcrae 1
+	mtummcr2e 2
+	mtmmcr2e 3
+	mtmmcrae 4
+	mtmmcr1e 5
+	mtmmcr3e 6
+	mtupmc7 7
+	mtupmc8 8
+	mtpmc7 9
+	mtpmc8 10
+	mfummcrae 11
+	mfmmcrae 12
+	mfummcr1e 13
+	mfmmcr1e 14
+	mfummcr2e 15
+	mfmmcr2e 16
+	mfummcr3e 17
+	mfmmcr3e 18
+	mfupmc7 19
+	mfpmc7 20
+	mfupmc8 21
+	mfpmc8 22
+	tlbiep 2, 4, 3, 1, 1
+	tlbiep 2, 3
+	tlbieio 7, 6, 2
+	tlbsyncio 9
+	ptesyncio 5
+	xxmulmul 34, 36, 38, 6
+	xxmulmulhiadd 37, 39, 9, 1, 0, 1
+	xxmulmulloadd 42, 44, 45, 0, 1
+	xxssumudm 4, 5, 6, 1
+	xxssumudmc 3, 4, 7, 0
+	xsaddadduqm 51, 52, 53
+	xsaddaddsuqm 0, 1, 2
+	xsaddsubuqm 61, 62, 63
+	xsaddsubsuqm 3, 4, 5
+	xsmerge2t1uqm 6, 8, 10
+	xsmerge2t2uqm 12, 14, 16
+	xsmerge2t3uqm 18, 19, 20
+	xsmerge3t1uqm 21, 23, 25
+	xsrebase2t1uqm 27, 29, 30
+	xsrebase2t2uqm 31, 32, 33
+	xsrebase2t3uqm 34, 35, 36
+	xsrebase2t4uqm 35, 36, 37
+	xsrebase3t1uqm 38, 39, 40
+	xsrebase3t2uqm 41, 42, 43
+	xsrebase3t3uqm 44, 45, 46
+	xxssumudmcext 35, 9, 11, 13, 1
+	dmsha256hash 5, 6
+	dmsha512hash 5, 7
+	dmsha2hash 2, 3, 0
+	dmsha2hash 4, 6, 1
+	dmsha3dw 1
+	dmcryshash 3
+	dmsha3hash 3, 0
+	dmsha3hash 2, 8
+	dmsha3hash 2, 12
+	dmxxsha3512pad 3, 4, 1
+	dmxxsha3384pad 3, 2, 1
+	dmxxsha3256pad 1, 3, 1
+	dmxxsha3224pad 2, 37, 0
+	dmxxshake256pad 3, 38, 0
+	dmxxshake128pad 4, 39, 0
+	dmxxsha384512pad 5, 8
+	dmxxsha224256pad 6, 41
+	dmxxshapad 7, 3, 0, 0, 0
+	dmxxshapad 6, 40, 3, 1, 2
+	dmxxshapad 7, 41, 1, 1, 2
+	dmxxshapad 6, 42, 1, 0, 3
+

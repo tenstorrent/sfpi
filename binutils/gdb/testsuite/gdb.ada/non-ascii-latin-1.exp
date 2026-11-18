@@ -1,0 +1,67 @@
+# Copyright 2022-2026 Free Software Foundation, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Test UTF-8 identifiers.
+
+load_lib "ada.exp"
+
+require allow_ada_tests
+require {have_host_locale C.UTF-8}
+
+# Enable basic use of UTF-8.  LC_ALL gets reset for each testfile.  We
+# want this despite the program itself using Latin-1, as this test is
+# written using UTF-8.
+setenv LC_ALL C.UTF-8
+
+standard_ada_testfile prog
+
+set flags [list debug additional_flags=-gnati1]
+if {[gdb_compile_ada "${srcfile}" "${binfile}" executable $flags] != ""} {
+    return
+}
+
+set remote_cmd_file [gdb_remote_download host $srcdir/$subdir/non-ascii-latin-1.gdb]
+
+# Restart without an executable so that we can set the encoding early.
+clean_restart
+
+gdb_test_no_output "source $remote_cmd_file" "load cmd file"
+
+# The default is Latin-1, but set this explicitly just in case we get
+# to change the default someday.
+gdb_test_no_output "set ada source-charset ISO-8859-1"
+
+gdb_load ${binfile}
+
+set bp_location [gdb_get_line_number "BREAK" ${testdir}/prog.adb]
+
+# With Tcl 9.0, something (dejagnu/expect/gdb testsuite infrastructure)
+# has problems with gdb IO containing non-UTF-8 chars.  Work around this by:
+# - avoiding to show the source line, which contains non-UTF-8 chars, using
+#   "set print frame-info location", and
+# - avoiding to use commands containing non-UTF-8 chars, using user-defined
+#   commands defined in remote_cmd_file.
+
+with_set "print frame-info" "location" {
+    runto "prog.adb:$bp_location"
+}
+
+gdb_test "print_1" " = 23" "print VAR_Þ"
+gdb_test "print_2" " = 23" "print var_þ"
+
+gdb_test break_1 "Breakpoint $decimal .*" \
+    "gdb_breakpoint: set breakpoint at FUNC_Þ"
+gdb_test break_2 "Breakpoint $decimal .*" \
+    "gdb_breakpoint: set breakpoint at func_þ"

@@ -1,0 +1,60 @@
+/* Declaration of target-specific passes for Tensix. -*- C++ -*-
+   Copyright (C) 2026 Tenstorrent Inc.
+   Written by Nathan Sidwell (nsidwell@tenstorrent.com, nathan@acm.org).
+
+   This file is part of GCC.
+
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3, or (at your option)
+   any later version.
+
+   GCC is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
+
+// Gimple passes
+INSERT_PASS_BEFORE (pass_all_optimizations, 1, pass_rvtt_check_early);
+INSERT_PASS_BEFORE (pass_all_optimizations, 1, pass_rvtt_immvar_expand);
+INSERT_PASS_BEFORE (pass_all_optimizations, 1, pass_rvtt_synth_split);
+
+INSERT_PASS_BEFORE (pass_dse, 2, pass_rvtt_iptr_anull);
+
+// Insert the bulk of these just before rtl expansion
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_check_late);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_immload_shorten);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_noval_elide);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_synth_cse);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_dce);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_dce);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_synth_renumber);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_vif);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_immload_combine);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_live);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_cc);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_combine);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_schedule_ssa);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_unspec_prop_ssa);
+INSERT_PASS_BEFORE (pass_expand, 1, pass_rvtt_attrib);
+
+// RTL passes
+INSERT_PASS_BEFORE (pass_lower_subreg, 1, pass_rvtt_unspec_prop_rtl);
+INSERT_PASS_AFTER (pass_cse, 1, pass_rvtt_fix_ebreak);
+INSERT_PASS_AFTER (pass_late_combine, 1, pass_rvtt_rmext);
+INSERT_PASS_BEFORE (pass_postreload, 1, pass_rvtt_synth_opcode);
+INSERT_PASS_BEFORE (pass_postreload, 1, pass_rvtt_schedule);
+INSERT_PASS_AFTER (pass_postreload, 1, pass_rvtt_replay);
+
+// This pass should run as late as possible, ideally just before final.
+// However, the machine reorg pass, when using -msave-restore, injects an insn
+// that causes df_analyze to crash, so run before that And, free_cfg pass calls
+// free_bb_for_insn resulting in problems w/ df_analyze, so call before that
+INSERT_PASS_BEFORE (pass_free_cfg, 1, pass_rvtt_hll);
+
+INSERT_PASS_BEFORE (pass_free_cfg, 1, pass_rvtt_fix_rocc);
+INSERT_PASS_BEFORE (pass_free_cfg, 1, pass_rvtt_fix_raw);

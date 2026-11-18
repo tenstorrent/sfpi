@@ -1,0 +1,145 @@
+# Copyright 2021-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Test that scoped local variables in an inlined function are printed
+# properly.
+
+load_lib dwarf.exp
+
+# This test can only be run on targets that support DWARF-2 and use
+# gas.
+require dwarf2_support
+
+standard_testfile .c .S
+
+# Make some DWARF for the test.  The concrete inlined instance
+# (i.e. the DW_TAG_inlined_subroutine) has a DW_TAG_lexical_block that
+# does not contain a DW_AT_abstract_origin attribute.  This is
+# deliberate.  Bad GDB printed duplicate local variables with
+# "optimized out" values in this case.
+
+set asm_file [standard_output_file $srcfile2]
+Dwarf::assemble $asm_file {
+    global srcfile srcdir subdir
+    declare_labels int_label func_label num_label value_label lines_label
+
+    get_func_info main
+    set func_call [gdb_get_line_number "func call"]
+
+    set global_num_addr [gdb_target_symbol global_num]
+    set global_value_addr [gdb_target_symbol global_value]
+
+    cu {} {
+	compile_unit {
+	    DW_AT_language @DW_LANG_C99
+	    DW_AT_name $srcfile
+	    DW_AT_low_pc $main_start addr
+	    DW_AT_high_pc "$main_start + $main_len" addr
+	    DW_AT_stmt_list ${lines_label} DW_FORM_sec_offset
+	} {
+	    int_label: base_type {
+		DW_AT_name "int"
+		DW_AT_byte_size 4 sdata
+		DW_AT_encoding @DW_ATE_signed
+	    }
+
+	    func_label: subprogram {
+		DW_AT_name func
+		DW_AT_inline @DW_INL_declared_inlined
+	    } {
+		num_label: DW_TAG_variable {
+		    DW_AT_name num
+		    DW_AT_type :$int_label
+		}
+		lexical_block {
+		} {
+		    value_label: DW_TAG_variable {
+			DW_AT_name value
+			DW_AT_type :$int_label
+		    }
+		}
+	    }
+
+	    subprogram {
+		DW_AT_name main
+		DW_AT_external 1 flag
+		DW_AT_low_pc $main_start addr
+		DW_AT_high_pc "$main_start + $main_len" addr
+	    } {
+		inlined_subroutine {
+		    DW_AT_abstract_origin %$func_label
+		    DW_AT_low_pc main_label addr
+		    DW_AT_high_pc main_label2 addr
+		    DW_AT_call_file 1 data1
+		    DW_AT_call_line $func_call data1
+		} {
+		    DW_TAG_variable {
+			DW_AT_abstract_origin %$num_label
+			DW_AT_location {
+			    DW_OP_addr $global_num_addr
+			} SPECIAL_expr
+		    }
+		    lexical_block {
+			DW_AT_low_pc scope_label1 addr
+			DW_AT_high_pc scope_label2 addr
+		    } {
+			DW_TAG_variable {
+			    DW_AT_abstract_origin %$value_label
+			    DW_AT_location {
+				DW_OP_addr $global_value_addr
+			    } SPECIAL_expr
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    lines {version 2} lines_label {
+	include_dir "${srcdir}/${subdir}"
+	file_name "$srcfile" 1
+
+	program {
+	    DW_LNE_set_address $main_start
+	    line [gdb_get_line_number "main prologue"]
+	    DW_LNS_copy
+	    DW_LNE_set_address main_label
+	    line [gdb_get_line_number "func call"]
+	    DW_LNS_copy
+	    DW_LNE_set_address main_label
+	    line [gdb_get_line_number "func end"]
+	    DW_LNS_copy
+	    DW_LNE_set_address main_label2
+	    line [gdb_get_line_number "main end"]
+	    DW_LNS_copy
+	    DW_LNE_set_address $main_end
+	    DW_LNE_end_sequence
+	}
+    }
+}
+
+if {[prepare_for_testing "failed to prepare" ${testfile} \
+	 [list $srcfile $asm_file] {nodebug}]} {
+    return
+}
+
+runto breakpoint_label
+
+# When using cc-with-debug-names, nothing will force the CU to be
+# expanded.  Do it manually.
+gdb_test_no_output "maint expand-symtabs [file tail $srcfile]"
+
+# Bad GDB was printing an additional "value = <optimized out>".
+gdb_test "info locals" "value = 42\r\nnum = 42"

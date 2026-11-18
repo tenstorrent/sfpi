@@ -1,0 +1,69 @@
+#   Copyright 1997-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This test exercises PR20569.  GDB would crash when attempting to follow
+# an exec call when it could not resolve the path to the symbol file.
+# This was the case when an invalid sysroot is provided.
+
+standard_testfile foll-exec.c
+
+set testfile "foll-exec"
+set binfile [standard_output_file $testfile]
+set testfile2 "execd-prog"
+set srcfile2 ${testfile2}.c
+set binfile2 [standard_output_file ${testfile2}]
+
+set compile_options debug
+
+# Build the executable which will be exec'd.
+if { [build_executable "build exec'd file" $testfile2 $srcfile2 $compile_options] != 0 } {
+    return
+}
+
+if { [is_remote target] } {
+    gdb_remote_download target $binfile2
+}
+
+# Build the test executable, which performs the exec.
+if { [prepare_for_testing "prepare" $testfile $srcfile $compile_options] != 0 } {
+    return
+}
+
+proc do_exec_sysroot_test {} {
+    global gdb_prompt
+
+    gdb_test_no_output "set sysroot /a/path/that/does/not/exist"
+
+    # Start the program running, and stop at main.
+    #
+    if {![runto_main]} {
+	return
+    }
+
+    # Verify that the system supports "catch exec".
+    gdb_test "catch exec" "Catchpoint \[0-9\]* \\(exec\\)" "insert exec catchpoint"
+    set test "continue to exec catchpoint"
+    gdb_test_multiple "continue" $test {
+	-re ".*Your system does not support this type\r\nof catchpoint.*$gdb_prompt $" {
+	    unsupported $test
+	    return
+	}
+	-re ".*Could not load symbols for executable.*$gdb_prompt $" {
+	    pass $test
+	}
+    }
+}
+
+do_exec_sysroot_test
