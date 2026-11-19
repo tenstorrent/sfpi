@@ -1,5 +1,5 @@
 ! { dg-do compile }
-! { dg-options "-O2" }
+! { dg-options "-O2 -Wsurprising" }
 ! { dg-require-visibility "" }
 !
 ! PR fortran/52751 (top, "module mod")
@@ -8,19 +8,21 @@
 ! Ensure that (only) those module variables and procedures which are PRIVATE
 ! and have no C-binding label are optimized away.
 !
-      module mod
-        integer :: aa
-        integer, private :: iii
-        integer, private, bind(C) :: jj             ! { dg-warning "PRIVATE but has been given the binding label" }
-        integer, private, bind(C,name='lll') :: kk  ! { dg-warning "PRIVATE but has been given the binding label" }
-        integer, private, bind(C,name='') :: mmmm
-        integer, bind(C) :: nnn
-        integer, bind(C,name='oo') :: pp
-        integer, bind(C,name='') :: qq
-      end module mod
+module mod
+  integer :: aa
+  integer, private :: iii
+  integer, private, bind(C) :: jj       ! { dg-warning "is marked PRIVATE" }
+  integer, private, bind(C,name='lll') :: kk
+  integer, private, bind(C,name='') :: mmmm
+  integer, bind(C) :: nnn
+  integer, bind(C,name='oo') :: pp
+  integer, bind(C,name='') :: qq
+end module mod
 
-! The two xfails below have appeared with the introduction of submodules. 'iii' and
+! The xfails below have appeared with the introduction of submodules. 'iii' and
 ! 'mmm' now are TREE_PUBLIC but has DECL_VISIBILITY (decl) = VISIBILITY_HIDDEN set.
+! Similarly 'two' and 'six' (PRIVATE procedures) now have TREE_PUBLIC +
+! VISIBILITY_HIDDEN so that submodules can reach them via host association.
 
       ! { dg-final { scan-assembler "__mod_MOD_aa" } }
       ! { dg-final { scan-assembler-not "iii" { xfail *-*-* } } }
@@ -43,10 +45,10 @@ CONTAINS
   integer FUNCTION two()
      two = 42
   END FUNCTION two
-  integer FUNCTION three() bind(C) ! { dg-warning "PRIVATE but has been given the binding label" }
+  integer FUNCTION three() bind(C) ! { dg-warning "is marked PRIVATE" }
      three = 43
   END FUNCTION three
-  integer FUNCTION four() bind(C, name='five') ! { dg-warning "PRIVATE but has been given the binding label" }
+  integer FUNCTION four() bind(C, name='five')
      four = 44
   END FUNCTION four
   integer FUNCTION six() bind(C, name='')
@@ -64,11 +66,11 @@ CONTAINS
 END MODULE
 
 ! { dg-final { scan-assembler "__m_MOD_one" } }
-! { dg-final { scan-assembler-not "two" } }
+! { dg-final { scan-assembler-not "two" { xfail *-*-* } } }
 ! { dg-final { scan-assembler "three" } }
 ! { dg-final { scan-assembler-not "four" } }
 ! { dg-final { scan-assembler "five" } }
-! { dg-final { scan-assembler-not "six" } }
+! { dg-final { scan-assembler-not "six" { xfail *-*-* } } }
 ! { dg-final { scan-assembler "seven" } }
 ! { dg-final { scan-assembler "nine" } }
 ! { dg-final { scan-assembler "__m_MOD_ten" } }

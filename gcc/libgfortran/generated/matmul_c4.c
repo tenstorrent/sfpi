@@ -1,5 +1,5 @@
 /* Implementation of the MATMUL intrinsic
-   Copyright (C) 2002-2025 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
    Contributed by Paul Brook <paul@nowt.org>
 
 This file is part of the GNU Fortran runtime library (libgfortran).
@@ -1785,7 +1785,7 @@ matmul_c4_avx512f (gfc_array_c4 * const restrict retarray,
 
 #endif  /* HAVE_AVX512F */
 
-/* AMD-specifix funtions with AVX128 and FMA3/FMA4.  */
+/* AMD-specific functions with AVX128 and FMA3/FMA4.  */
 
 #if defined(HAVE_AVX) && defined(HAVE_FMA3) && defined(HAVE_AVX128)
 void

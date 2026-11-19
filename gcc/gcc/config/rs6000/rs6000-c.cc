@@ -1,5 +1,5 @@
 /* Subroutines for the C front end on the PowerPC architecture.
-   Copyright (C) 2002-2025 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Zack Weinberg <zack@codesourcery.com>
    and Paolo Bonzini <bonzini@gnu.org>
@@ -437,6 +437,8 @@ rs6000_target_modify_macros (bool define_p, HOST_WIDE_INT flags)
     rs6000_define_or_undefine_macro (define_p, "_ARCH_PWR10");
   if ((flags & OPTION_MASK_POWER11) != 0)
     rs6000_define_or_undefine_macro (define_p, "_ARCH_PWR11");
+  if ((flags & OPTION_MASK_FUTURE) != 0)
+    rs6000_define_or_undefine_macro (define_p, "_ARCH_FUTURE");
   if ((flags & OPTION_MASK_SOFT_FLOAT) != 0)
     rs6000_define_or_undefine_macro (define_p, "_SOFT_FLOAT");
   if ((flags & OPTION_MASK_RECIP_PRECISION) != 0)
@@ -835,14 +837,40 @@ rs6000_builtin_type_compatible (tree parmtype, tree argtype)
   return lang_hooks.types_compatible_p (parmtype, argtype);
 }
 
-/* In addition to calling fold_convert for EXPR of type TYPE, also
+/* Return fold_convert (TYPE, EXPR) for C and convert (TYPE, EXPR)
+   for C++.  The latter is needed because resolve_overloaded_builtin
+   can be called when parsing templates too if they don't have type
+   dependent operands, but the nested trees might not be usable in
+   GENERIC folding.  */
+
+static tree
+c_fold_convert (tree type, tree expr)
+{
+  return c_dialect_cxx () ? convert (type, expr) : fold_convert (type, expr);
+}
+
+/* Similar wrapper for fold_build2_loc.  For C++ just call build2_loc.  */
+
+static tree
+c_fold_build2_loc (location_t loc, enum tree_code code, tree type, tree arg0,
+		   tree arg1)
+{
+  if (!c_dialect_cxx ())
+    return fold_build2_loc (loc, code, type, arg0, arg1);
+  else if (loc != UNKNOWN_LOCATION)
+    return build2_loc (loc, code, type, arg0, arg1);
+  else
+    return build2 (code, type, arg0, arg1);
+}
+
+/* In addition to calling c_fold_convert for EXPR of type TYPE, also
    call c_fully_fold to remove any C_MAYBE_CONST_EXPRs that could be
    hiding there (PR47197).  */
 
 static tree
 fully_fold_convert (tree type, tree expr)
 {
-  tree result = fold_convert (type, expr);
+  tree result = c_fold_convert (type, expr);
   bool maybe_const = true;
 
   if (!c_dialect_cxx ())
@@ -855,7 +883,7 @@ fully_fold_convert (tree type, tree expr)
    The overloaded builtin that matched the types and args is described
    by DESC.  The N arguments are given in ARGS, respectively.
 
-   Actually the only thing it does is calling fold_convert on ARGS, with
+   Actually the only thing it does is calling c_fold_convert on ARGS, with
    a small exception for vec_{all,any}_{ge,le} predicates. */
 
 static tree
@@ -891,8 +919,9 @@ altivec_build_resolved_builtin (tree *args, int n, tree fntype, tree ret_type,
       std::swap (args[1], args[2]);
       std::swap (arg_type[1], arg_type[2]);
 
-      args[0] = fold_build2 (BIT_XOR_EXPR, TREE_TYPE (args[0]), args[0],
-			     build_int_cst (NULL_TREE, 2));
+      args[0] = c_fold_build2_loc (UNKNOWN_LOCATION, BIT_XOR_EXPR,
+				   TREE_TYPE (args[0]), args[0],
+				   build_int_cst (NULL_TREE, 2));
     }
 
   for (int j = 0; j < n; j++)
@@ -900,7 +929,7 @@ altivec_build_resolved_builtin (tree *args, int n, tree fntype, tree ret_type,
 
   /* If the number of arguments to an overloaded function increases,
      we must expand this switch.  */
-  gcc_assert (MAX_OVLD_ARGS <= 4);
+  gcc_assert (MAX_OVLD_ARGS <= 6);
 
   tree call;
   switch (n)
@@ -920,10 +949,14 @@ altivec_build_resolved_builtin (tree *args, int n, tree fntype, tree ret_type,
     case 4:
       call = build_call_expr (fndecl, 4, args[0], args[1], args[2], args[3]);
       break;
+    case 6:
+      call = build_call_expr (fndecl, 6, args[0], args[1], args[2], args[3],
+			      args[4], args[5]);
+      break;
     default:
       gcc_unreachable ();
     }
-  return fold_convert (ret_type, call);
+  return c_fold_convert (ret_type, call);
 }
 
 /* Enumeration of possible results from attempted overload resolution.
@@ -964,8 +997,8 @@ resolve_vec_mul (resolution *res, tree *args, tree *types, location_t loc)
     case E_TImode:
       /* For scalar types just use a multiply expression.  */
       *res = resolved;
-      return fold_build2_loc (loc, MULT_EXPR, types[0], args[0],
-			      fold_convert (types[0], args[1]));
+      return c_fold_build2_loc (loc, MULT_EXPR, types[0], args[0],
+				c_fold_convert (types[0], args[1]));
     case E_SFmode:
       {
 	/* For floats use the xvmulsp instruction directly.  */
@@ -1108,8 +1141,8 @@ resolve_vec_adde_sube (resolution *res, rs6000_gen_builtins fcode,
 							params);
 	tree const1 = build_int_cstu (TREE_TYPE (types[0]), 1);
 	tree ones_vector = build_vector_from_val (types[0], const1);
-	tree and_expr = fold_build2_loc (loc, BIT_AND_EXPR, types[0],
-					 args[2], ones_vector);
+	tree and_expr = c_fold_build2_loc (loc, BIT_AND_EXPR, types[0],
+					   args[2], ones_vector);
 	params = make_tree_vector ();
 	vec_safe_push (params, call);
 	vec_safe_push (params, and_expr);
@@ -1194,8 +1227,8 @@ resolve_vec_addec_subec (resolution *res, rs6000_gen_builtins fcode,
 							 params);
 	tree const1 = build_int_cstu (TREE_TYPE (types[0]), 1);
 	tree ones_vector = build_vector_from_val (types[0], const1);
-	tree and_expr = fold_build2_loc (loc, BIT_AND_EXPR, types[0],
-					 args[2], ones_vector);
+	tree and_expr = c_fold_build2_loc (loc, BIT_AND_EXPR, types[0],
+					   args[2], ones_vector);
 	params = make_tree_vector ();
 	vec_safe_push (params, call2);
 	vec_safe_push (params, and_expr);
@@ -1303,7 +1336,7 @@ resolve_vec_splats (resolution *res, rs6000_gen_builtins fcode,
       return error_mark_node;
     }
 
-  arg = save_expr (fold_convert (TREE_TYPE (type), arg));
+  arg = save_expr (c_fold_convert (TREE_TYPE (type), arg));
   vec<constructor_elt, va_gc> *vec;
   vec_alloc (vec, size);
 
@@ -1442,7 +1475,7 @@ resolve_vec_extract (resolution *res, vec<tree, va_gc> *arglist,
 	  tree result = build_call_expr (call, 2, arg1, arg2);
 	  /* Coerce the result to vector element type.  May be no-op.  */
 	  arg1_inner_type = TREE_TYPE (arg1_type);
-	  result = fold_convert (arg1_inner_type, result);
+	  result = c_fold_convert (arg1_inner_type, result);
 	  *res = resolved;
 	  return result;
 	}
@@ -1566,8 +1599,9 @@ resolve_vec_insert (resolution *res, vec<tree, va_gc> *arglist,
   if (TARGET_VSX)
     {
       stmt = build_array_ref (loc, stmt, arg2);
-      stmt = fold_build2 (MODIFY_EXPR, TREE_TYPE (arg0), stmt,
-			  convert (TREE_TYPE (stmt), arg0));
+      stmt = c_fold_build2_loc (UNKNOWN_LOCATION, MODIFY_EXPR,
+				TREE_TYPE (arg0), stmt,
+				convert (TREE_TYPE (stmt), arg0));
       stmt = build2 (COMPOUND_EXPR, arg1_type, stmt, decl);
     }
   else
@@ -1680,10 +1714,121 @@ find_instance (bool *unsupported_builtin, int *instance,
 
 tree
 altivec_resolve_overloaded_builtin (location_t loc, tree fndecl,
-				    void *passed_arglist, bool)
+				    void *passed_arglist, bool complain)
 {
   rs6000_gen_builtins fcode
     = (rs6000_gen_builtins) DECL_MD_FUNCTION_CODE (fndecl);
+
+  /* Handle __builtin_ppc_atomic_cas_local before standard overload
+     processing.  */
+  if (fcode == RS6000_OVLD_PPC_ATOMIC_CAS)
+    {
+      vec<tree, va_gc> *arglist
+	= static_cast<vec<tree, va_gc> *> (passed_arglist);
+
+      /* Expected: (void *ptr, void *expected, void *desired,
+      bool weak, int success_order, int failure_order).  */
+      if (vec_safe_length (arglist) != 6)
+	{
+	  if (complain)
+	    error_at (loc, "%qE requires 6 arguments", fndecl);
+	  return error_mark_node;
+	}
+
+      /* Get the first argument to determine the actual type.  */
+      tree arg0 = (*arglist)[0];
+      tree type0 = TREE_TYPE (arg0);
+
+      /* Must be a pointer.  */
+      if (!POINTER_TYPE_P (type0))
+	{
+	  if (complain)
+	    error_at (loc, "first argument to %qE must be a pointer", fndecl);
+	  return error_mark_node;
+	}
+
+      /* Get the pointee type.  */
+      tree pointee_type = TREE_TYPE (type0);
+
+      /* Must be a complete type.  */
+      if (!COMPLETE_TYPE_P (pointee_type))
+	{
+	  if (complain)
+	    error_at (loc, "first argument to %qE must point to a complete"
+		      " type", fndecl);
+	  return error_mark_node;
+	}
+
+      /* Get size in bytes.  */
+      tree size_tree = TYPE_SIZE_UNIT (pointee_type);
+      if (!tree_fits_uhwi_p (size_tree))
+	{
+	  if (complain)
+	    error_at (loc, "type size must be constant");
+	  return error_mark_node;
+	}
+
+      unsigned HOST_WIDE_INT size = tree_to_uhwi (size_tree);
+
+      /* Determine which size-specific builtin to use.  */
+      rs6000_gen_builtins target_fcode;
+      tree int_type;
+
+      switch (size)
+	{
+	case 1:
+	  target_fcode = RS6000_BIF_PPC_ATOMIC_CAS_QI;
+	  int_type = unsigned_char_type_node;
+	  break;
+	case 2:
+	  target_fcode = RS6000_BIF_PPC_ATOMIC_CAS_HI;
+	  int_type = short_unsigned_type_node;
+	  break;
+	case 4:
+	  target_fcode = RS6000_BIF_PPC_ATOMIC_CAS_SI;
+	  int_type = unsigned_intSI_type_node;
+	  break;
+	case 8:
+	  target_fcode = RS6000_BIF_PPC_ATOMIC_CAS_DI;
+	  int_type = long_long_unsigned_type_node;
+	  break;
+	case 16:
+	  target_fcode = RS6000_BIF_PPC_ATOMIC_CAS_TI;
+	  int_type = unsigned_intTI_type_node;
+	  break;
+	default:
+	  if (complain)
+	    error_at (loc, "size %wu not supported for %qE "
+		      "(must be 1, 2, 4, 8, or 16 bytes)", size, fndecl);
+	  return error_mark_node;
+	}
+
+      /* Create pointer type to the appropriate integer type.  */
+      tree int_ptr_type = build_pointer_type (int_type);
+
+      /* Cast the three pointer arguments to the appropriate integer
+      pointer type.  */
+      tree new_arg0 = build1 (VIEW_CONVERT_EXPR, int_ptr_type, (*arglist)[0]);
+      tree new_arg1 = build1 (VIEW_CONVERT_EXPR, int_ptr_type, (*arglist)[1]);
+      tree new_arg2 = build1 (VIEW_CONVERT_EXPR, int_ptr_type, (*arglist)[2]);
+
+      /* Build new argument list with casted pointers.  */
+      vec<tree, va_gc> *new_arglist;
+      vec_alloc (new_arglist, 6);
+      new_arglist->quick_push (new_arg0);
+      new_arglist->quick_push (new_arg1);
+      new_arglist->quick_push (new_arg2);
+      new_arglist->quick_push ((*arglist)[3]);  /* weak (bool).  */
+      new_arglist->quick_push ((*arglist)[4]);  /* success_memorder.  */
+      new_arglist->quick_push ((*arglist)[5]);  /* failure_memorder.  */
+
+      /* Get the target builtin function.  */
+      tree new_fndecl = rs6000_builtin_decls[target_fcode];
+
+      /* Build and return the function call.  */
+      return build_function_call_vec (loc, vNULL, new_fndecl, new_arglist,
+				      NULL, fndecl);
+    }
 
   /* Return immediately if this isn't an overload.  */
   if (fcode <= RS6000_OVLD_NONE)
@@ -1791,7 +1936,7 @@ altivec_resolve_overloaded_builtin (location_t loc, tree fndecl,
 		     "const");
 	  type = build_qualified_type (TREE_TYPE (type), 0);
 	  type = build_pointer_type (type);
-	  arg = fold_convert (type, arg);
+	  arg = c_fold_convert (type, arg);
 	}
 
       /* For RS6000_OVLD_VEC_LXVL, convert any const * to its non constant
@@ -1802,7 +1947,7 @@ altivec_resolve_overloaded_builtin (location_t loc, tree fndecl,
 	{
 	  type = build_qualified_type (TREE_TYPE (type), 0);
 	  type = build_pointer_type (type);
-	  arg = fold_convert (type, arg);
+	  arg = c_fold_convert (type, arg);
 	}
 
       args[n] = arg;

@@ -1,6 +1,6 @@
 /* Medium-level subroutines: convert bit-field store and extract
    and shifts, multiplies and divides to rtl instructions.
-   Copyright (C) 1987-2025 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -3938,8 +3938,7 @@ expmed_mult_highpart_optab (scalar_int_mode mode, rtx op0, rtx op1,
       wop1 = convert_modes (wider_mode, mode, op1, unsignedp);
       tem = expand_binop (wider_mode, smul_optab, wop0, wop1, 0,
 			  unsignedp, OPTAB_WIDEN);
-      insns = get_insns ();
-      end_sequence ();
+      insns = end_sequence ();
 
       if (tem)
 	{
@@ -4182,8 +4181,7 @@ expand_sdiv_pow2 (scalar_int_mode mode, rtx op0, HOST_WIDE_INT d)
 				     temp, temp2, mode, 0);
       if (temp2)
 	{
-	  rtx_insn *seq = get_insns ();
-	  end_sequence ();
+	  rtx_insn *seq = end_sequence ();
 	  emit_insn (seq);
 	  return expand_shift (RSHIFT_EXPR, mode, temp2, logd, NULL_RTX, 0);
 	}
@@ -5395,6 +5393,9 @@ make_tree (tree type, rtx x)
       t = wide_int_to_tree (type, rtx_mode_t (x, TYPE_MODE (type)));
       return t;
 
+    case CONST_POLY_INT:
+      return wide_int_to_tree (type, const_poly_int_value (x));
+
     case CONST_DOUBLE:
       STATIC_ASSERT (HOST_BITS_PER_WIDE_INT * 2 <= MAX_BITSIZE_MODE_ANY_INT);
       if (TARGET_SUPPORTS_WIDE_INT == 0 && GET_MODE (x) == VOIDmode)
@@ -5486,9 +5487,6 @@ make_tree (tree type, rtx x)
       /* fall through.  */
 
     default:
-      if (CONST_POLY_INT_P (x))
-	return wide_int_to_tree (t, const_poly_int_value (x));
-
       t = build_decl (RTL_LOCATION (x), VAR_DECL, NULL_TREE, type);
 
       /* If TYPE is a POINTER_TYPE, we might need to convert X from
@@ -6326,7 +6324,8 @@ expand_rotate_as_vec_perm (machine_mode mode, rtx dst, rtx x, rtx amt)
 			     qimode, perm_dst);
   if (!res)
     return NULL_RTX;
-  emit_move_insn (dst, lowpart_subreg (mode, res, qimode));
+  if (!rtx_equal_p (res, perm_dst))
+    emit_move_insn (dst, lowpart_subreg (mode, res, qimode));
   return dst;
 }
 
@@ -6410,18 +6409,25 @@ canonicalize_comparison (machine_mode mode, enum rtx_code *code, rtx *imm)
   if (overflow)
     return;
 
-  /* The following creates a pseudo; if we cannot do that, bail out.  */
-  if (!can_create_pseudo_p ())
-    return;
-
-  rtx reg = gen_rtx_REG (mode, LAST_VIRTUAL_REGISTER + 1);
   rtx new_imm = immed_wide_int_const (imm_modif, mode);
 
-  rtx_insn *old_rtx = gen_move_insn (reg, *imm);
-  rtx_insn *new_rtx = gen_move_insn (reg, new_imm);
+  int old_cost = rtx_cost (*imm, mode, COMPARE, 0, true);
+  int new_cost = rtx_cost (new_imm, mode, COMPARE, 0, true);
+
+  if (dump_file && (dump_flags & TDF_DETAILS))
+    {
+      fprintf (dump_file, ";; cmp: %s, old cst: ",
+	       GET_RTX_NAME (*code));
+      print_rtl (dump_file, *imm);
+      fprintf (dump_file, " new cst: ");
+      print_rtl (dump_file, new_imm);
+      fprintf (dump_file, "\n");
+      fprintf (dump_file, ";; old cst cost: %d, new cst cost: %d\n",
+	       old_cost, new_cost);
+    }
 
   /* Update the immediate and the code.  */
-  if (insn_cost (old_rtx, true) > insn_cost (new_rtx, true))
+  if (old_cost > new_cost)
     {
       *code = equivalent_cmp_code (*code);
       *imm = new_imm;

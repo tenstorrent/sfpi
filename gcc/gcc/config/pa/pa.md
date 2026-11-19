@@ -1,5 +1,5 @@
 ;;- Machine description for HP PA-RISC architecture for GCC compiler
-;;   Copyright (C) 1992-2025 Free Software Foundation, Inc.
+;;   Copyright (C) 1992-2026 Free Software Foundation, Inc.
 ;;   Contributed by the Center for Software Science at the University
 ;;   of Utah.
 
@@ -2346,6 +2346,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:SI (mult:SI (match_dup 1) (const_int 4)) (match_dup 2)))
 	(match_dup 3))
@@ -2364,6 +2365,7 @@
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:DI (mult:DI (match_dup 1) (const_int 4)) (match_dup 2)))
 	(match_dup 3))
@@ -2379,9 +2381,7 @@
         (match_operand:SI 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:SI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -2396,9 +2396,7 @@
         (match_operand:SI 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:SI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -2414,9 +2412,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:DI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -2432,9 +2428,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SI (plus:DI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -3961,6 +3955,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:SI (mult:SI (match_dup 1) (const_int 8)) (match_dup 2)))
 	(match_dup 3))
@@ -3978,6 +3973,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:SI (mult:SI (match_dup 1) (const_int 8)) (match_dup 2)))
 	(match_dup 3))
@@ -3996,6 +3992,7 @@
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:DI (mult:DI (match_dup 1) (const_int 8)) (match_dup 2)))
 	(match_dup 3))
@@ -4014,6 +4011,7 @@
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:DI (mult:DI (match_dup 1) (const_int 8)) (match_dup 2)))
 	(match_dup 3))
@@ -4029,9 +4027,7 @@
         (match_operand:DF 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:SI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -4046,9 +4042,7 @@
         (match_operand:DF 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:SI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -4064,9 +4058,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:DI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -4082,9 +4074,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DF (plus:DI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -4355,6 +4345,7 @@
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DI (plus:DI (mult:DI (match_dup 1) (const_int 8)) (match_dup 2)))
 	(match_dup 3))
@@ -4371,9 +4362,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DI (plus:DI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -4389,9 +4378,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:DI (plus:DI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -4625,6 +4612,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:SI (mult:SI (match_dup 1) (const_int 4)) (match_dup 2)))
 	(match_dup 3))
@@ -4643,6 +4631,7 @@
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
    && REG_OK_FOR_BASE_P (operands[2])
+   && (TARGET_NO_SPACE_REGS || REG_POINTER (operands[2]))
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:DI (mult:DI (match_dup 1) (const_int 4)) (match_dup 2)))
 	(match_dup 3))
@@ -4658,9 +4647,7 @@
         (match_operand:SF 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:SI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -4675,9 +4662,7 @@
         (match_operand:SF 3 "register_operand" ""))]
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:SI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -4693,9 +4678,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_INDEX_P (operands[1])
-   && REG_OK_FOR_BASE_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:DI (match_dup 1) (match_dup 2)))
 	(match_dup 3))
@@ -4711,9 +4694,7 @@
   "!TARGET_SOFT_FLOAT
    && !TARGET_DISABLE_INDEXING
    && TARGET_64BIT
-   && TARGET_NO_SPACE_REGS
-   && REG_OK_FOR_BASE_P (operands[1])
-   && REG_OK_FOR_INDEX_P (operands[2])
+   && REGS_OK_FOR_BASE_INDEX (operands[1], operands[2])
    && FP_REGNO_P (REGNO (operands[3]))"
   [(set (mem:SF (plus:DI (match_dup 2) (match_dup 1)))
 	(match_dup 3))
@@ -9966,10 +9947,9 @@ add,l %2,%3,%3\;bv,n %%r0(%3)"
   [(set_attr "type" "fpalu")
    (set_attr "length" "4")])
 
-;; The following two patterns are used by the trampoline code for nested
+;; The following four patterns are used by the trampoline code for nested
 ;; functions.  They flush the I and D cache lines from the start address
-;; (operand0) to the end address (operand1).  No lines are flushed if the
-;; end address is less than the start address (unsigned).
+;; (operand0) to the end address (operand1).
 ;;
 ;; Because the range of memory flushed is variable and the size of a MEM
 ;; can only be a CONST_INT, the patterns specify that they perform an
@@ -9978,9 +9958,9 @@ add,l %2,%3,%3\;bv,n %%r0(%3)"
 ;; The address range for an icache flush must lie within a single
 ;; space on targets with non-equivalent space registers.
 ;;
-;; Operand 0 contains the start address.
+;; Operand 0 contains the line aligned start address.
 ;; Operand 1 contains the end address.
-;; Operand 2 contains the line length to use.
+;; Operand 2 contains the line size to use.
 (define_insn "dcacheflush<P:mode>"
   [(const_int 1)
    (unspec_volatile [(mem:BLK (scratch))] UNSPECV_DCACHE)
@@ -9989,11 +9969,11 @@ add,l %2,%3,%3\;bv,n %%r0(%3)"
    (use (match_operand 2 "pmode_register_operand" "r"))
    (clobber (match_scratch:P 3 "=&0"))]
   ""
-  "cmpb,<dwc><<=,n %3,%1,.\;fdc,m %2(%3)\;sync"
+  "{comb|cmpb},<dwc><<,n %3,%1,.\;fdc,m %2(%3)\;sync"
   [(set_attr "type" "multi")
    (set_attr "length" "12")])
 
-(define_insn "icacheflush<P:mode>"
+(define_insn "icacheflush1<P:mode>"
   [(const_int 2)
    (unspec_volatile [(mem:BLK (scratch))] UNSPECV_ICACHE)
    (use (match_operand 0 "pmode_register_operand" "r"))
@@ -10003,24 +9983,86 @@ add,l %2,%3,%3\;bv,n %%r0(%3)"
    (clobber (match_operand 4 "pmode_register_operand" "=&r"))
    (clobber (match_scratch:P 5 "=&0"))]
   ""
-  "mfsp %%sr0,%4\;ldsid (%5),%3\;mtsp %3,%%sr0\;cmpb,<dwc><<=,n %5,%1,.\;fic,m %2(%%sr0,%5)\;sync\;mtsp %4,%%sr0\;nop\;nop\;nop\;nop\;nop\;nop"
+  "mfsp %%sr1,%4\;ldsid (%5),%3\;mtsp %3,%%sr1\;{comb|cmpb},<dwc><<,n %5,%1,.\;fic,m %2(%%sr1,%5)\;sync\;mtsp %4,%%sr1\;nop\;nop\;nop\;nop\;nop\;nop"
   [(set_attr "type" "multi")
    (set_attr "length" "52")])
 
+(define_insn "icacheflush2<P:mode>"
+  [(const_int 2)
+   (unspec_volatile [(mem:BLK (scratch))] UNSPECV_ICACHE)
+   (use (match_operand 0 "pmode_register_operand" "r"))
+   (use (match_operand 1 "pmode_register_operand" "r"))
+   (use (match_operand 2 "pmode_register_operand" "r"))
+   (clobber (match_scratch:P 3 "=&0"))]
+  "TARGET_PA_20"
+  "cmpb,<dwc><<,n %3,%1,.\;fic,m %2(%3)\;sync\;nop\;nop\;nop\;nop\;nop\;nop\;nop"
+  [(set_attr "type" "multi")
+   (set_attr "length" "40")])
+
+(define_insn "icacheflush3<P:mode>"
+  [(const_int 3)
+   (unspec_volatile [(mem:BLK (scratch))] UNSPECV_ICACHE)
+   (use (match_operand 0 "pmode_register_operand" "r"))
+   (use (match_operand 1 "pmode_register_operand" "r"))
+   (use (match_operand 2 "pmode_register_operand" "r"))
+   (clobber (match_scratch:P 3 "=&0"))]
+  "!TARGET_PA_20 && TARGET_NO_SPACE_REGS"
+  "comb,<dwc><<,n %3,%1,.\;fic,m %2(%%sr4,%3)\;sync\;nop\;nop\;nop\;nop\;nop\;nop\;nop"
+  [(set_attr "type" "multi")
+   (set_attr "length" "40")])
+
+;; clear_cache
+;;
+;; Note the data and instruction cache flushes need to be separated
+;; by a sync instruction (see page 7-151 in PA 2.0 architecture manual).
+;; Thus, we can't combine the flush operations in a single loop.
+
+;; Operand 0 contains the start address (inclusive).
+;; Operand 1 contains the end address (exclusive).
 (define_expand "clear_cache"
   [(match_operand 0 "pmode_register_operand")
    (match_operand 1 "pmode_register_operand")]
   ""
 {
-  rtx line_length = gen_reg_rtx (Pmode);
+  rtx start = gen_reg_rtx (Pmode);
+  rtx line_size = gen_reg_rtx (Pmode);
+  rtx lab = gen_label_rtx ();
+  rtx op0 = operands[0];
+  rtx op1 = operands[1];
 
-  emit_move_insn (line_length, GEN_INT (MIN_CACHELINE_SIZE));
+  /* Skip flush if op0 is greater than or equal to op1.  */
+  emit_cmp_and_jump_insns (op0, op1, GEU, NULL_RTX, Pmode, 0, lab);
+
+  /* Load cache line size.  */
+  emit_move_insn (line_size, GEN_INT (MIN_CACHELINE_SIZE));
+
   if (TARGET_64BIT)
-    emit_insn (gen_icacheflushdi (operands[0], operands[1], line_length,
-				  gen_reg_rtx (Pmode), gen_reg_rtx (Pmode)));
+    {
+      /* Align the start address.  */
+      emit_insn (gen_anddi3 (start, op0, GEN_INT (-MIN_CACHELINE_SIZE)));
+
+      /* Flush the cache.  */
+      emit_insn (gen_dcacheflushdi (start, op1, line_size));
+      emit_insn (gen_icacheflush2di (start, op1, line_size));
+    }
   else
-    emit_insn (gen_icacheflushsi (operands[0], operands[1], line_length,
-				  gen_reg_rtx (Pmode), gen_reg_rtx (Pmode)));
+    {
+      /* Align the start address.  */
+      emit_insn (gen_andsi3 (start, op0, GEN_INT (-MIN_CACHELINE_SIZE)));
+
+      /* Flush the cache.  */
+      emit_insn (gen_dcacheflushsi (start, op1, line_size));
+      if (TARGET_PA_20)
+	emit_insn (gen_icacheflush2si (start, op1, line_size));
+      else if (TARGET_NO_SPACE_REGS)
+	emit_insn (gen_icacheflush3si (start, op1, line_size));
+      else
+	emit_insn (gen_icacheflush1si (start, op1, line_size,
+				       gen_reg_rtx (Pmode),
+				       gen_reg_rtx (Pmode)));
+    }
+
+  emit_label (lab);
   DONE;
 })
 

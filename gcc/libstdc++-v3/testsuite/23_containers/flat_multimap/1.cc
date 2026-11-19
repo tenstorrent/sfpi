@@ -1,4 +1,5 @@
 // { dg-do run { target c++23 } }
+// { dg-timeout-factor 2 }
 
 #include <flat_map>
 #include <deque>
@@ -10,7 +11,7 @@
 
 struct Gt {
   template<typename T, typename U>
-  bool operator()(T const& l, U const & r) const
+  constexpr bool operator()(T const& l, U const & r) const
   { return l > r; }
 };
 
@@ -53,16 +54,17 @@ test_deduction_guide()
 		   std::vector<long, __gnu_test::SimpleAllocator<long>>,
 		   std::vector<float, __gnu_test::SimpleAllocator<float>>>>);
 
-  // LWG4223: deduces flat_multimap<long, float const>, which in turn instantiates
-  // std::vector<cosnt float> that is ill-formed.
-  // __gnu_test::test_input_range<std::pair<const long, const float>> r2(0, 0);
-  // std::flat_multimap it5(r2.begin(), r2.begin());
-  // std::flat_multimap fr5(std::from_range, r2);
+  __gnu_test::test_input_range<std::pair<const long, const float>> r2(0, 0);
+  std::flat_multimap it5(r2.begin(), r2.begin());
+  static_assert(std::is_same_v<decltype(it5), std::flat_multimap<long, float>>);
+  std::flat_multimap fr5(std::from_range, r2);
+  static_assert(std::is_same_v<decltype(fr5), std::flat_multimap<long, float>>);
 
-  // LWG4223: deduces flat_multimap<const long&, float&>
-  //__gnu_test::test_input_range<std::pair<const long&, float&>> r3(0, 0);
-  // std::flat_multimap it6(r3.begin(), r3.begin());
-  // std::flat_multimap fr6(std::from_range, r3);
+  __gnu_test::test_input_range<std::pair<const long&, float&>> r3(0, 0);
+  std::flat_multimap it6(r3.begin(), r3.begin());
+  static_assert(std::is_same_v<decltype(it6), std::flat_multimap<long, float>>);
+  std::flat_multimap fr6(std::from_range, r3);
+  static_assert(std::is_same_v<decltype(fr6), std::flat_multimap<long, float>>);
 
   __gnu_test::test_input_range<std::tuple<long, float>> r4(0, 0);
   std::flat_multimap it7(r4.begin(), r4.begin());
@@ -72,6 +74,7 @@ test_deduction_guide()
 }
 
 template<template<typename> class KeyContainer, template<typename> class MappedContainer>
+constexpr
 void
 test01()
 {
@@ -109,6 +112,7 @@ test01()
   VERIFY( m.end()[-1] == std::pair(12,3) );
 }
 
+constexpr
 void
 test02()
 {
@@ -135,6 +139,7 @@ test02()
   VERIFY( m.count(3) == 2 );
 }
 
+constexpr
 void
 test03()
 {
@@ -163,6 +168,7 @@ test03()
   VERIFY( std::ranges::equal(m, (std::pair<int, int>[]){{5, 6}}) );
 }
 
+constexpr
 void
 test04()
 {
@@ -195,6 +201,7 @@ test04()
   VERIFY( m5.values().get_allocator().get_personality() == 44 );
 }
 
+constexpr
 void
 test05()
 {
@@ -203,6 +210,8 @@ test05()
   VERIFY( std::ranges::equal(m | std::views::keys, (int[]){1, 2, 3, 3, 4, 5}) );
   VERIFY( std::ranges::equal(m | std::views::values, (int[]){-1, -2, -3, 3, -4, -5}) );
 }
+
+constexpr
 void
 test06()
 {
@@ -219,8 +228,138 @@ test06()
   VERIFY( std::ranges::equal(m | std::views::values, (int[]){2, 3, 4, 5, 6}) );
 }
 
-int
-main()
+constexpr
+void
+test07()
+{
+  // PR libstdc++/119427 - std::erase_if(std::flat_foo) does not work
+  // PR libstdc++/120465 - erase_if for flat_map calls predicate with incorrect type
+  std::flat_multimap<int, int> m = {std::pair{1, 2}, {3, 4}, {3, 3}, {5, 6}, {6, 6}};
+  auto n = std::erase_if(m, [](auto x) { return x.first == 1 || x.second == 6; });
+  VERIFY( n == 3 );
+  VERIFY( std::ranges::equal(m, (std::pair<int,int>[]){{3,4},{3,3}}) );
+}
+
+constexpr
+void
+test09()
+{
+  // PR libstdc++/122921 - The value_type of flat_map's iterator should be
+  // pair<Key, T> instead of pair<const Key, T>
+  using type = std::flat_multimap<int, int>;
+  using value_type = std::ranges::range_value_t<type>;
+  using value_type = type::value_type;
+  using value_type = std::pair<int, int>;
+}
+
+template<typename T>
+struct throwing_vector : std::vector<T>
+{
+  static inline bool throw_on_move = false;
+
+  throwing_vector() = default;
+  throwing_vector(const throwing_vector&) = default;
+  throwing_vector& operator=(const throwing_vector&) = default;
+
+  throwing_vector(throwing_vector&& other)
+  : std::vector<T>(std::move(other))
+  {
+    if (throw_on_move)
+      throw std::runtime_error("move ctor");
+  }
+
+  throwing_vector&
+  operator=(throwing_vector&& other)
+  {
+    static_cast<std::vector<T>&>(*this) = std::move(other);
+    if (throw_on_move)
+      throw std::runtime_error("move assign");
+    return *this;
+  }
+};
+
+template<template<typename> class KC, template<typename> class MC>
+void
+test10()
+{
+#if __cpp_exceptions
+  using flat_multimap = std::flat_multimap<int, int, std::less<int>, KC<int>, MC<int>>;
+
+  auto is_really_empty = [](const flat_multimap& m) {
+    return m.empty() && m.keys().empty() && m.values().empty();
+  };
+  throwing_vector<int>::throw_on_move = true;
+
+  // Verify invariant preservation upon throwing move construction.
+  flat_multimap source;
+  source.insert({{1, 100}, {2, 200}});
+  try
+    {
+      flat_multimap target(std::move(source));
+      VERIFY( false );
+    }
+  catch (const std::runtime_error&)
+    {
+      VERIFY( is_really_empty(source) );
+    }
+
+  // Verify invariant preservation upon throwing move assignment.
+  source = {{1, 100}, {2, 200}};
+  flat_multimap target;
+  target.insert({{3, 300}, {4, 400}});
+  try
+    {
+      target = std::move(source);
+      VERIFY( false );
+    }
+  catch (const std::runtime_error&)
+    {
+      VERIFY( is_really_empty(source) );
+      VERIFY( is_really_empty(target) );
+    }
+
+  // Verify invariant preservation upon throwing swap.
+  source = {{1, 100}, {2, 200}};
+  target = {{3, 300}, {4, 400}};
+  try
+    {
+      source.swap(target);
+      VERIFY( false );
+    }
+  catch (const std::runtime_error&)
+    {
+      VERIFY( is_really_empty(source) );
+      VERIFY( is_really_empty(target) );
+    }
+#endif
+}
+
+constexpr
+void
+test11()
+{
+  // Verify usability of flat_multimap::insert_range(sorted_equivalent_t, Rg&&).
+  std::flat_multimap<int, int> m = {{2, 200}};;
+  std::pair<int, int> s[] = {{1, 100}, {3, 300}};
+  m.insert_range(std::sorted_equivalent, s);
+  VERIFY( std::ranges::equal(m.keys(), (int[]){1, 2, 3}) );
+  VERIFY( std::ranges::equal(m.values(), (int[]){100, 200, 300}) );
+}
+
+void
+test12()
+{
+  // Verify usability of flat_multimap::operator=(initializer_list).
+  throwing_vector<int>::throw_on_move = true;
+  std::flat_multimap<int, int, std::less<int>, throwing_vector<int>> s;
+  std::initializer_list<std::pair<int, int>> il = {{2, 1}, {3, 2}, {1, 3}};
+  s = il;
+  VERIFY( std::ranges::equal(s.keys(), (int[]){1, 2, 3}) );
+  VERIFY( std::ranges::equal(s.values(), (int[]){3, 1, 2}) );
+}
+
+void
+test()
 {
   test01<std::vector, std::vector>();
   test01<std::deque, std::deque>();
@@ -231,4 +370,40 @@ main()
   test04();
   test05();
   test06();
+  test07();
+  test09();
+  test10<std::vector, throwing_vector>();
+  test10<throwing_vector, std::vector>();
+  test11();
+  test12();
+}
+
+constexpr
+bool
+test_constexpr()
+{
+  test01<std::vector, std::vector>();
+  test02();
+  test03();
+  test04();
+  test05();
+  test06();
+  test07();
+  test09();
+  // test10() is non-constexpr
+  test11();
+  // test12() is non-constexpr
+  return true;
+}
+
+int
+main()
+{
+  test();
+#if __cplusplus > 202302L
+  static_assert(test_constexpr());
+#if __cpp_lib_constexpr_flat_map != 202502L
+#error "Feature-test macro __cpp_lib_constexpr_flat_map has wrong value in <flat_map>"
+#endif
+#endif
 }

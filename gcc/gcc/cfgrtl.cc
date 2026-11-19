@@ -1,5 +1,5 @@
 /* Control flow graph manipulation code for GNU compiler.
-   Copyright (C) 1987-2025 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -538,7 +538,7 @@ emit_insn_at_entry (rtx insn)
    The insn chain range is inclusive
    (i.e. both BEGIN and END will be updated. */
 
-static void
+void
 update_bb_for_insn_chain (rtx_insn *begin, rtx_insn *end, basic_block bb)
 {
   rtx_insn *insn;
@@ -559,8 +559,8 @@ update_bb_for_insn (basic_block bb)
 }
 
 
-/* Like active_insn_p, except keep the return value use or clobber around
-   even after reload.  */
+/* Return true if adding or removing instances of INSN might affect the
+   semantics of the RTL.  */
 
 static bool
 flow_active_insn_p (const rtx_insn *insn)
@@ -568,16 +568,29 @@ flow_active_insn_p (const rtx_insn *insn)
   if (active_insn_p (insn))
     return true;
 
-  /* A clobber of the function return value exists for buggy
-     programs that fail to return a value.  Its effect is to
-     keep the return value from being live across the entire
-     function.  If we allow it to be skipped, we introduce the
-     possibility for register lifetime confusion.
-     Similarly, keep a USE of the function return value, otherwise
-     the USE is dropped and we could fail to thread jump if USE
-     appears on some paths and not on others, see PR90257.  */
-  if ((GET_CODE (PATTERN (insn)) == CLOBBER
-       || GET_CODE (PATTERN (insn)) == USE)
+  /* We cannot add new clobbers to a path without first proving that
+     the clobbered thing is dead.
+
+     For example:
+
+	(code_label L1)
+	(clobber X)
+	(set (pc) (label_ref L2))
+
+     is a forwarder block in the sense that a jump to L1 can be replaced
+     with a jump to L2, although perhaps with some loss of dataflow precision.
+     However, any attempt to merge a jump to L1 with a jump to L2 would be an
+     asymmetric operation, in that the merged code must jump to L2 rather than
+     to L1.  Our current definition of "forwarder block" does not allow for
+     this distinction and so we need to take a conservatively correct
+     approach.  */
+  if (GET_CODE (PATTERN (insn)) == CLOBBER)
+    return true;
+
+  /* Keep a USE of the function return value, otherwise the USE is dropped and
+     we could fail to thread a jump if USE appears on some paths and not on
+     others, see PR90257.  */
+  if (GET_CODE (PATTERN (insn)) == USE
       && REG_P (XEXP (PATTERN (insn), 0))
       && REG_FUNCTION_VALUE_P (XEXP (PATTERN (insn), 0)))
     return true;
@@ -1594,54 +1607,20 @@ force_nonfallthru_and_redirect (edge e, basic_block target, rtx jump_label)
     }
 
   /* If e->src ends with asm goto, see if any of the ASM_OPERANDS_LABELs
-     don't point to the target or fallthru label.  */
+     don't point to the fallthru label.  */
   if (JUMP_P (BB_END (e->src))
       && target != EXIT_BLOCK_PTR_FOR_FN (cfun)
       && (e->flags & EDGE_FALLTHRU)
       && (note = extract_asm_operands (PATTERN (BB_END (e->src)))))
     {
-      int i, n = ASM_OPERANDS_LABEL_LENGTH (note);
-      bool adjust_jump_target = false;
+      int n = ASM_OPERANDS_LABEL_LENGTH (note);
 
-      for (i = 0; i < n; ++i)
-	{
-	  if (XEXP (ASM_OPERANDS_LABEL (note, i), 0) == BB_HEAD (e->dest))
-	    {
-	      LABEL_NUSES (XEXP (ASM_OPERANDS_LABEL (note, i), 0))--;
-	      XEXP (ASM_OPERANDS_LABEL (note, i), 0) = block_label (target);
-	      LABEL_NUSES (XEXP (ASM_OPERANDS_LABEL (note, i), 0))++;
-	      adjust_jump_target = true;
-	    }
-	  if (XEXP (ASM_OPERANDS_LABEL (note, i), 0) == BB_HEAD (target))
+      for (int i = 0; i < n; ++i)
+	if (XEXP (ASM_OPERANDS_LABEL (note, i), 0) == BB_HEAD (e->dest))
+	  {
 	    asm_goto_edge = true;
-	}
-      if (adjust_jump_target)
-	{
-	  rtx_insn *insn = BB_END (e->src);
-	  rtx note;
-	  rtx_insn *old_label = BB_HEAD (e->dest);
-	  rtx_insn *new_label = BB_HEAD (target);
-
-	  if (JUMP_LABEL (insn) == old_label)
-	    {
-	      JUMP_LABEL (insn) = new_label;
-	      note = find_reg_note (insn, REG_LABEL_TARGET, new_label);
-	      if (note)
-		remove_note (insn, note);
-	    }
-	  else
-	    {
-	      note = find_reg_note (insn, REG_LABEL_TARGET, old_label);
-	      if (note)
-		remove_note (insn, note);
-	      if (JUMP_LABEL (insn) != new_label
-		  && !find_reg_note (insn, REG_LABEL_TARGET, new_label))
-		add_reg_note (insn, REG_LABEL_TARGET, new_label);
-	    }
-	  while ((note = find_reg_note (insn, REG_LABEL_OPERAND, old_label))
-		 != NULL_RTX)
-	    XEXP (note, 0) = new_label;
-	}
+	    break;
+	  }
     }
 
   if (EDGE_COUNT (e->src->succs) >= 2 || abnormal_edge_flags || asm_goto_edge)
@@ -1680,15 +1659,45 @@ force_nonfallthru_and_redirect (edge e, basic_block target, rtx jump_label)
          and the reg crossing note should be removed.  */
       fixup_partition_crossing (new_edge);
 
-      /* If asm goto has any label refs to target's label,
-	 add also edge from asm goto bb to target.  */
+      /* If asm goto has any label refs to e->dest, change them to point
+	 to jump_block instead.  */
       if (asm_goto_edge)
 	{
-	  new_edge->probability /= 2;
-	  jump_block->count /= 2;
-	  edge new_edge2 = make_edge (new_edge->src, target,
-				      e->flags & ~EDGE_FALLTHRU);
-	  new_edge2->probability = probability - new_edge->probability;
+	  int n = ASM_OPERANDS_LABEL_LENGTH (note);
+
+	  for (int i = 0; i < n; ++i)
+	    if (XEXP (ASM_OPERANDS_LABEL (note, i), 0) == BB_HEAD (e->dest))
+	      {
+		LABEL_NUSES (XEXP (ASM_OPERANDS_LABEL (note, i), 0))--;
+		XEXP (ASM_OPERANDS_LABEL (note, i), 0)
+		  = block_label (jump_block);
+		LABEL_NUSES (XEXP (ASM_OPERANDS_LABEL (note, i), 0))++;
+	      }
+
+	  rtx_insn *insn = BB_END (new_edge->src);
+	  rtx note;
+	  rtx_insn *old_label = BB_HEAD (e->dest);
+	  rtx_insn *new_label = BB_HEAD (jump_block);
+
+	  if (JUMP_LABEL (insn) == old_label)
+	    {
+	      JUMP_LABEL (insn) = new_label;
+	      note = find_reg_note (insn, REG_LABEL_TARGET, new_label);
+	      if (note)
+		remove_note (insn, note);
+	    }
+	  else
+	    {
+	      note = find_reg_note (insn, REG_LABEL_TARGET, old_label);
+	      if (note)
+		remove_note (insn, note);
+	      if (JUMP_LABEL (insn) != new_label
+		  && !find_reg_note (insn, REG_LABEL_TARGET, new_label))
+		add_reg_note (insn, REG_LABEL_TARGET, new_label);
+	    }
+	  while ((note = find_reg_note (insn, REG_LABEL_OPERAND, old_label))
+		 != NULL_RTX)
+	    XEXP (note, 0) = new_label;
 	}
 
       new_bb = jump_block;
@@ -1982,8 +1991,7 @@ insert_insn_on_edge (rtx pattern, edge e)
 
   emit_insn (pattern);
 
-  e->insns.r = get_insns ();
-  end_sequence ();
+  e->insns.r = end_sequence ();
 }
 
 /* Like insert_insn_on_edge, but if there are already queued instructions
@@ -2001,8 +2009,7 @@ prepend_insn_to_edge (rtx pattern, edge e)
   emit_insn (pattern);
   emit_insn (e->insns.r);
 
-  e->insns.r = get_insns ();
-  end_sequence ();
+  e->insns.r = end_sequence ();
 }
 
 /* Update the CFG for the instructions queued on edge E.  */
@@ -5278,8 +5285,7 @@ rtl_lv_add_condition_to_bb (basic_block first_head ,
   jump = get_last_insn ();
   JUMP_LABEL (jump) = label;
   LABEL_NUSES (label)++;
-  seq = get_insns ();
-  end_sequence ();
+  seq = end_sequence ();
 
   /* Add the new cond, in the new head.  */
   emit_insn_after (seq, BB_END (cond_bb));
@@ -5396,6 +5402,7 @@ struct cfg_hooks rtl_cfg_hooks = {
   rtl_verify_flow_info,
   rtl_dump_bb,
   rtl_dump_bb_for_graph,
+  rtl_dump_bb_as_sarif_properties,
   rtl_create_basic_block,
   rtl_redirect_edge_and_branch,
   rtl_redirect_edge_and_branch_force,
@@ -5438,6 +5445,7 @@ struct cfg_hooks cfg_layout_rtl_cfg_hooks = {
   rtl_verify_flow_info_1,
   rtl_dump_bb,
   rtl_dump_bb_for_graph,
+  rtl_dump_bb_as_sarif_properties,
   cfg_layout_create_basic_block,
   cfg_layout_redirect_edge_and_branch,
   cfg_layout_redirect_edge_and_branch_force,

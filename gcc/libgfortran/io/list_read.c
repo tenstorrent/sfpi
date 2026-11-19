@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2025 Free Software Foundation, Inc.
+/* Copyright (C) 2002-2026 Free Software Foundation, Inc.
    Contributed by Andy Vaught
    Namelist input contributed by Paul Thomas
    F2003 I/O support contributed by Jerry DeLisle
@@ -917,6 +917,7 @@ read_logical (st_parameter_dt *dtp, int length)
   if (parse_repeat (dtp))
     return;
 
+next:
   c = safe_tolower (next_char (dtp));
   l_push_char (dtp, c);
   switch (c)
@@ -961,6 +962,9 @@ read_logical (st_parameter_dt *dtp, int length)
     case '!':
       if (!dtp->u.p.namelist_mode)
         goto bad_logical;
+      eat_line (dtp);
+      eat_spaces (dtp);
+      goto next;
 
     CASE_SEPARATORS:
     case EOF:
@@ -1076,6 +1080,7 @@ read_integer (st_parameter_dt *dtp, int length, bt type)
   int c, negative;
   negative = 0;
 
+next:
   c = next_char (dtp);
   switch (c)
     {
@@ -1091,6 +1096,9 @@ read_integer (st_parameter_dt *dtp, int length, bt type)
     case '!':
       if (!dtp->u.p.namelist_mode)
         goto bad_integer;
+      eat_line (dtp);
+      eat_spaces (dtp);
+      goto next;
 
     CASE_SEPARATORS:		/* Single null.  */
       unget_char (dtp, c);
@@ -1260,8 +1268,14 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
 
   quote = ' ';			/* Space means no quote character.  */
 
+next:
   if ((c = next_char (dtp)) == EOF)
     goto eof;
+  if (c == ';')
+    {
+      push_char (dtp, c);
+      goto get_string;
+    }
   switch (c)
     {
     CASE_DIGITS:
@@ -1279,6 +1293,15 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
       quote = c;
       goto get_string;
 
+    case '!':
+      if (dtp->u.p.namelist_mode)
+	{
+	  eat_line (dtp);
+	  eat_spaces (dtp);
+	  goto next;
+	}
+      /* Fall through...  */
+
     default:
       if (dtp->u.p.namelist_mode)
 	{
@@ -1294,6 +1317,13 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
   for (;;)
     {
       c = next_char (dtp);
+
+      if (c == ';')
+	{
+	  push_char (dtp, c);
+	  goto get_string;
+	}
+
       switch (c)
 	{
 	CASE_DIGITS:
@@ -1302,6 +1332,16 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
 
 	CASE_SEPARATORS:
 	case EOF:
+	  /* At this point we have been reading a string of digits. Now we see
+	     the end of these digits without seeing the closing quote and not
+	     seeing the '*' for a repeat count.  When in namelist mode, if it
+	     was a string of digits it should have had the closing quote.  */
+	  if (dtp->u.p.namelist_mode)
+	    {
+	      snprintf (message, IOMSG_LEN, "Missing quote while reading item %d",
+			dtp->u.p.item_count);
+	      generate_error (&dtp->common, LIBERROR_READ_VALUE, message);
+	    }
 	  unget_char (dtp, c);
 	  goto done;		/* String was only digits!  */
 
@@ -1323,6 +1363,13 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
 
   if ((c = next_char (dtp)) == EOF)
     goto eof;
+
+  if (c == ';')
+    {
+      push_char (dtp, c);
+      goto get_string;
+    }
+
   switch (c)
     {
     CASE_SEPARATORS:
@@ -1342,10 +1389,27 @@ read_character (st_parameter_dt *dtp, int length __attribute__ ((unused)))
 
  get_string:
 
+  /* We could be at the beginning of a string or partially through a string
+     that began with all digits. Either way, the quote character for a namelist
+     read should have been set.  */
+  if (dtp->u.p.namelist_mode && (quote == ' '))
+    {
+      snprintf (message, IOMSG_LEN, "Missing quote while reading item %d",
+		dtp->u.p.item_count);
+      generate_error (&dtp->common, LIBERROR_READ_VALUE, message);
+    }
+
   for (;;)
     {
       if ((c = next_char (dtp)) == EOF)
 	goto done_eof;
+
+      if (c == ';')
+	{
+	  push_char (dtp, c);
+	  continue;
+	}
+
       switch (c)
 	{
 	case '"':
@@ -1657,6 +1721,7 @@ read_complex (st_parameter_dt *dtp, void *dest, int kind, size_t size)
   if (parse_repeat (dtp))
     return;
 
+next:
   c = next_char (dtp);
   switch (c)
     {
@@ -1666,6 +1731,9 @@ read_complex (st_parameter_dt *dtp, void *dest, int kind, size_t size)
     case '!':
       if (!dtp->u.p.namelist_mode)
 	goto bad_complex;
+      eat_line (dtp);
+      eat_spaces (dtp);
+      goto next;
 
     CASE_SEPARATORS:
     case EOF:
@@ -1767,6 +1835,7 @@ read_real (st_parameter_dt *dtp, void *dest, int length)
 
   seen_dp = 0;
 
+next:
   c = next_char (dtp);
   if (dtp->u.p.current_unit->decimal_status == DECIMAL_COMMA)
     {
@@ -1798,6 +1867,9 @@ read_real (st_parameter_dt *dtp, void *dest, int length)
     case '!':
       if (!dtp->u.p.namelist_mode)
 	goto bad_real;
+      eat_line (dtp);
+      eat_spaces (dtp);
+      goto next;
 
     CASE_SEPARATORS:
       unget_char (dtp, c);		/* Single null.  */
@@ -2275,6 +2347,8 @@ list_formatted_read_scalar (st_parameter_dt *dtp, bt type, void *p,
 	}
       if (c == ',' && dtp->u.p.current_unit->decimal_status == DECIMAL_COMMA)
 	c = '.';
+      if (c == ';' && dtp->u.p.current_unit->decimal_status == DECIMAL_POINT)
+	unget_char (dtp, c);
       else if (is_separator (c))
 	{
 	  /* Found a null value.  */
@@ -2526,6 +2600,7 @@ finish_list_read (st_parameter_dt *dtp)
       return;
     }
 
+  /* Only perform the following cleanup on external files or the stdin file.  */
   if (!is_internal_unit (dtp))
     {
       int c;
@@ -2533,23 +2608,31 @@ finish_list_read (st_parameter_dt *dtp)
       /* Set the next_char and push_char worker functions.  */
       set_workers (dtp);
 
-      if (likely (dtp->u.p.child_saved_iostat == LIBERROR_OK)
-	      && ((dtp->common.flags & IOPARM_DT_HAS_UDTIO) == 0))
+      /* Make sure there were no errors from a DTIO child read.  */
+      if (likely (dtp->u.p.child_saved_iostat == LIBERROR_OK))
 	{
+	  /* Peek ahead to see where we are in the parent read.  */
 	  c = next_char (dtp);
-	  if (c == EOF)
+	  unget_char (dtp, c);
+
+	  /* If the last read used DTIO, handle end conditions differently.  */
+	  if ((dtp->common.flags & IOPARM_DT_HAS_UDTIO) != 0)
 	    {
-	      free_line (dtp);
-	      hit_eof (dtp);
-	      return;
+	      if ((c == EOF) || (c == ' '))
+		return;
+	    }
+	  else
+	    {
+	      if (c == EOF)
+		{
+		  hit_eof (dtp);
+		  return;
+		}
 	    }
 	  if (c != '\n')
 	    eat_line (dtp);
 	}
     }
-
-  free_line (dtp);
-
 }
 
 /*			NAMELIST INPUT

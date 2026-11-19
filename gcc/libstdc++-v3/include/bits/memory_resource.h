@@ -1,6 +1,6 @@
 // <memory_resource> -*- C++ -*-
 
-// Copyright (C) 2018-2025 Free Software Foundation, Inc.
+// Copyright (C) 2018-2026 Free Software Foundation, Inc.
 //
 // This file is part of the GNU ISO C++ Library.  This library is free
 // software; you can redistribute it and/or modify it under the
@@ -38,7 +38,7 @@
 
 #include <new>				// operator new(size_t, void*)
 #include <cstddef>			// size_t, max_align_t, byte
-#include <bits/functexcept.h>		// __throw_bad_array_new_length
+#include <bits/new_throw.h>		// __throw_bad_array_new_length
 #include <bits/uses_allocator.h>	// allocator_arg_t, __use_alloc
 #include <bits/uses_allocator_args.h>	// uninitialized_construct_using_alloc
 #include <ext/numeric_traits.h>		// __int_traits
@@ -48,6 +48,7 @@
 # include <bits/utility.h>		// index_sequence
 # include <tuple>			// tuple, forward_as_tuple
 #endif
+#include <bits/memoryfwd.h>
 
 namespace std _GLIBCXX_VISIBILITY(default)
 {
@@ -467,6 +468,22 @@ namespace pmr
       [[nodiscard]] static pointer
       allocate(allocator_type& __a, size_type __n, const_void_pointer)
       { return __a.allocate(__n); }
+
+#ifdef __glibcxx_allocate_at_least
+      /**
+       *  @brief  Allocate memory.
+       *  @param  __a  An allocator.
+       *  @param  __n  The number of objects to allocate space for.
+       *  @return Memory of suitable size and alignment for `n` objects
+       *          of type `value_type`.
+       *
+       *  Just returns `{ a.allocate(n), n }`: `polymorphic_allocator`
+       *  cannot be extended without breaking ABI.
+      */
+      [[nodiscard]] static std::allocation_result<pointer, size_type>
+      allocate_at_least(allocator_type& __a, size_type __n)
+      { return { __a.allocate(__n), __n }; }
+#endif
 
       /**
        *  @brief  Deallocate memory.

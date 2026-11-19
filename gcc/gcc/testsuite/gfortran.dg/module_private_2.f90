@@ -1,5 +1,5 @@
 ! { dg-do compile }
-! { dg-options "-O2 -fdump-tree-optimized" }
+! { dg-options "-O2 -Wsurprising -fdump-tree-optimized" }
 !
 ! PR fortran/47266
 !
@@ -29,6 +29,7 @@ contains
     b => export1
   end subroutine pub
 end module m
-! { dg-final { scan-tree-dump-times "priv" 0 "optimized" } }
+! priv now has TREE_PUBLIC (VISIBILITY_HIDDEN) for submodule host-association,
+! so it is no longer optimized away.
 ! { dg-final { scan-tree-dump-times "export1 \\(\\)" 1 "optimized" } }
 ! { dg-final { scan-tree-dump-times "export2 \\(\\)" 1 "optimized" } }

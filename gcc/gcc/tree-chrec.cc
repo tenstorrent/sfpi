@@ -1,5 +1,5 @@
 /* Chains of recurrences.
-   Copyright (C) 2003-2025 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
    Contributed by Sebastian Pop <pop@cri.ensmp.fr>
 
 This file is part of GCC.
@@ -127,6 +127,16 @@ chrec_fold_plus_poly_poly (enum tree_code code,
 
   if (chrec_zerop (right))
     return left;
+  /* When we have an evolution in a non-wrapping type and in the process of
+     accumulating CHREC_RIGHT there was overflow this indicates in the
+     association that happened in accumulating the CHRECs clearly involved UB.
+     Avoid this.  When accumulating two CHRECs we basically turn
+     (a + INCR1) + INCR2 into a + (INCR1 + INCR2) which is not always valid.
+     Note this check only catches few invalid cases.  */
+  else if ((INTEGRAL_TYPE_P (type) && ! TYPE_OVERFLOW_WRAPS (type))
+	   && TREE_CODE (right) == INTEGER_CST
+	   && TREE_OVERFLOW (right))
+    return chrec_dont_know;
   else
     return build_polynomial_chrec
       (CHREC_VARIABLE (poly0), left, right);
@@ -1490,7 +1500,7 @@ convert_affine_scev (class loop *loop, tree type,
   new_step = *step;
   if (TYPE_PRECISION (step_type) > TYPE_PRECISION (ct) && TYPE_UNSIGNED (ct))
     {
-      tree signed_ct = build_nonstandard_integer_type (TYPE_PRECISION (ct), 0);
+      tree signed_ct = signed_type_for (ct);
       new_step = chrec_convert (signed_ct, new_step, at_stmt,
                                 use_overflow_semantics);
     }

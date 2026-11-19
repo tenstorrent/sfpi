@@ -1,5 +1,5 @@
 ;; Predicate definitions for eBPF.
-;; Copyright (C) 2019-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2019-2026 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
@@ -23,8 +23,7 @@
        (match_operand 0 "register_operand")))
 
 (define_predicate "imm32_operand"
-  (ior (and (match_code "const_int")
-            (match_test "IN_RANGE (INTVAL (op), 0, 0xffffffff)"))
+  (ior (match_test "BPF_IMM32_P (op)")
        (match_code "symbol_ref,label_ref,const")))
 
 (define_predicate "core_imm_operand"

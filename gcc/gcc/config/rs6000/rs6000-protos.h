@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for IBM RS/6000.
-   Copyright (C) 2000-2025 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
    This file is part of GCC.
@@ -127,7 +127,7 @@ extern bool rs6000_emit_set_const (rtx, rtx);
 extern bool rs6000_emit_cmove (rtx, rtx, rtx, rtx);
 extern bool rs6000_emit_int_cmove (rtx, rtx, rtx, rtx);
 extern void rs6000_emit_minmax (rtx, enum rtx_code, rtx, rtx);
-extern void rs6000_expand_atomic_compare_and_swap (rtx op[]);
+extern void rs6000_expand_atomic_compare_and_swap (rtx op[], bool local);
 extern rtx swap_endian_selector_for_mode (machine_mode mode);
 
 extern void rs6000_expand_atomic_exchange (rtx op[]);

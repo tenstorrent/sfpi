@@ -1,5 +1,5 @@
 ;; Predicate definitions for POWER and PowerPC.
-;; Copyright (C) 2005-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2005-2026 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
@@ -163,6 +163,40 @@
   return VINT_REGNO_P (REGNO (op));
 })
 
+;; Return 1 if op is a dense math register
+(define_predicate "dmr_register_operand"
+  (match_operand 0 "register_operand")
+{
+  if (!TARGET_DMF)
+    return 0;
+
+  if (!REG_P (op))
+    return 0;
+
+  if (!HARD_REGISTER_P (op))
+    return 1;
+
+  return DMR_REGNO_P (REGNO (op));
+})
+
+;; Return 1 if op is an accumulator.  On power10/11 systems, the accumulators
+;; overlap with the FPRs. If TARGET_DMF is true, it will be Dense math register.
+(define_predicate "accumulator_operand"
+  (match_operand 0 "register_operand")
+{
+  if (SUBREG_P (op))
+    op = SUBREG_REG (op);
+
+  if (!REG_P (op))
+    return 0;
+
+  if (!HARD_REGISTER_P (op))
+    return 1;
+
+  int r = REGNO (op);
+  return TARGET_DMF ? DMR_REGNO_P (r) : (FP_REGNO_P (r) && (r & 3) == 0);
+})
+
 ;; Return 1 if op is a vector register to do logical operations on (and, or,
 ;; xor, etc.)
 (define_predicate "vlogical_operand"
@@ -312,6 +346,11 @@
   (and (match_code "const_int")
        (match_test "IN_RANGE (INTVAL (op), 2, 3)")))
 
+;; Match op = 0..6.
+(define_predicate "const_0_to_6_operand"
+  (and (match_code "const_int")
+       (match_test "IN_RANGE (INTVAL (op), 0, 6)")))
+
 ;; Match op = 0..7.
 (define_predicate "const_0_to_7_operand"
   (and (match_code "const_int")
@@ -362,6 +401,9 @@
     return 1;
 
   if (TARGET_VSX && VSX_REGNO_P (REGNO (op)))
+    return 1;
+
+  if (TARGET_DMF && DMR_REGNO_P (REGNO (op)))
     return 1;
 
   return INT_REGNO_P (REGNO (op)) || FP_REGNO_P (REGNO (op));
@@ -2166,3 +2208,8 @@
   (and (match_code "subreg")
        (match_test "subreg_lowpart_offset (mode, GET_MODE (SUBREG_REG (op)))
 		    == SUBREG_BYTE (op)")))
+
+; Else operand for LEN_LOAD.
+(define_predicate "lxvl_else_operand"
+  (and (match_code "const_vector")
+       (match_test "op == CONST0_RTX (GET_MODE (op))")))

@@ -6,7 +6,7 @@
 --                                                                          --
 --                                 S p e c                                  --
 --                                                                          --
---             Copyright (C) 2020-2025, Free Software Foundation, Inc.      --
+--             Copyright (C) 2020-2026, Free Software Foundation, Inc.      --
 --                                                                          --
 -- GNAT is free software;  you can  redistribute it  and/or modify it under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -82,14 +82,16 @@ package Exp_Put_Image is
    function Build_Unknown_Put_Image_Call (N : Node_Id) return Node_Id;
    --  Build a call to Put_Image_Unknown
 
-   function Image_Should_Call_Put_Image (N : Node_Id) return Boolean;
-   --  True if T'Image should call T'Put_Image. N is the attribute_reference
-   --  T'Image.
+   function Image_Must_Call_Put_Image (N : Node_Id) return Boolean;
+   --  True if T'Image must be implemented by a call to T'Put_Image. N is the
+   --  attribute reference to T'Image.
 
    function Build_Image_Call (N : Node_Id) return Node_Id;
    --  N is a call to T'[[Wide_]Wide_]Image, and this translates it into the
    --  appropriate code to call T'Put_Image into a buffer and then extract the
-   --  [[wide] wide] string from the buffer.
+   --  [[wide] wide] string from the buffer. N must be wrapped in a transient
+   --  scope before invoking the function because the buffer is controlled and
+   --  the extraction is done on the secondary stack.
 
    procedure Preload_Root_Buffer_Type (Compilation_Unit : Node_Id);
    --  Call RTE (RE_Root_Buffer_Type) if necessary, to load the packages

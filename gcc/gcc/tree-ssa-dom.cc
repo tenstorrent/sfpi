@@ -1,5 +1,5 @@
 /* SSA Dominator optimizations for trees
-   Copyright (C) 2001-2025 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
    Contributed by Diego Novillo <dnovillo@redhat.com>
 
 This file is part of GCC.
@@ -1429,6 +1429,12 @@ dom_opt_dom_walker::set_global_ranges_from_unreachable_edges (basic_block bb)
       || !assert_unreachable_fallthru_edge_p (pred_e))
     return;
 
+  // Bail if the condition leading to the assert has 2 ssa-names.
+  // See PR 125501.
+  if ((TREE_CODE (gimple_cond_lhs (stmt)) == SSA_NAME
+      && TREE_CODE (gimple_cond_rhs (stmt)) == SSA_NAME))
+    return;
+
   tree name;
   FOR_EACH_GORI_EXPORT_NAME (m_ranger->gori_ssa (), pred_e->src, name)
     if (all_uses_feed_or_dominated_by_stmt (name, stmt)
@@ -2040,11 +2046,6 @@ cprop_operand (gimple *stmt, use_operand_p op_p, range_query *query)
 
   if (val && val != op)
     {
-      /* Do not replace hard register operands in asm statements.  */
-      if (gimple_code (stmt) == GIMPLE_ASM
-	  && !may_propagate_copy_into_asm (op))
-	return;
-
       /* Certain operands are not allowed to be copy propagated due
 	 to their interaction with exception handling and some GCC
 	 extensions.  */

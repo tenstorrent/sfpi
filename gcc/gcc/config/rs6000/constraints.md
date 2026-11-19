@@ -1,5 +1,5 @@
 ;; Constraint definitions for RS6000
-;; Copyright (C) 2006-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2026 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
@@ -98,6 +98,10 @@
 (define_register_constraint "wA" "rs6000_constraints[RS6000_CONSTRAINT_wA]"
   "@internal Like @code{b}, if @option{-mpowerpc64} is used; otherwise,
    @code{NO_REGS}.")
+
+(define_register_constraint "wD" "rs6000_constraints[RS6000_CONSTRAINT_wD]"
+  "@internal Floating point register @code{FPR} if TARGET_MMA is enabled.
+  1024 bit Dense math register @code{DMR} if TARGET_DMF is enabled.")
 
 ;; wB needs ISA 2.07 VUPKHSW
 (define_constraint "wB"
