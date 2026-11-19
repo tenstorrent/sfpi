@@ -29,11 +29,10 @@ void bar (unsigned man) {
 /*
 **_Z3barj:
 **	# READ L0
-**	slli	a5,a0,16
+**	zext.h	a5,a0
 **	lui	a3,%hi\(_ZN7ckernel13instrn_bufferE\)
 **	li	a4, 1897005056	# 1:71120000
 **	lw	a3,%lo\(_ZN7ckernel13instrn_bufferE\)\(a3\)
-**	srli	a5,a5,16
 **	add	a5,a5,a4
 **	sw	a5, 0\(a3\)	# 1:SFPLOADI	L1, -, 2
 **	srli	a0,a0,16

@@ -219,13 +219,13 @@ RISCV_CORE("tt-bh-vector-tensix",
 
 // #39314 default has no float 'f' extension, tt-sim doesn't grok them
 // #35991 default has no vector 'v' extension, tt-sim doesn't grok them, it's not on all compute cores anyway
-RISCV_CORE("tt-qsr32",          "rv32im_zaamo_zba_zbc"                "_xttzbkb",   "ilp32", "rvtt-qsr32")
-RISCV_CORE("tt-qsr32-tensix",   "rv32im_zaamo_zba_zbc"                "_xttzbkb_xtttensixqsr",
+RISCV_CORE("tt-qsr32",          "rv32im_zaamo_zba_zbb"                "_xttzbkb",   "ilp32", "rvtt-qsr32")
+RISCV_CORE("tt-qsr32-tensix",   "rv32im_zaamo_zba_zbb"                "_xttzbkb_xtttensixqsr",
                                                                                     "ilp32", "rvtt-qsr32")
 // zve32f implies f, make it explicit here
-RISCV_CORE("tt-qsr32-vector",   "rv32imf_zaamo_zba_zbc_zve32f_zvl128b""_xttzbkb",   "ilp32", "rvtt-qsr32")
+RISCV_CORE("tt-qsr32-vector",   "rv32imf_zaamo_zba_zbb_zve32f_zvl128b""_xttzbkb",   "ilp32", "rvtt-qsr32")
 RISCV_CORE("tt-qsr32-vector-tensix",
-                                "rv32imf_zaamo_zba_zbc_zve32f_zvl128b""_xttzbkb_xtttensixqsr",
+                                "rv32imf_zaamo_zba_zbb_zve32f_zvl128b""_xttzbkb_xtttensixqsr",
 				                                                    "ilp32", "rvtt-qsr32")
 
 // #31429 disable compressed 'c' extension, it interfers with our post-processing.
