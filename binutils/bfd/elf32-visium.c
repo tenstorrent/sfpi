@@ -1,6 +1,6 @@
 /* Visium-specific support for 32-bit ELF.
 
-   Copyright (C) 2003-2025 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -303,7 +303,7 @@ visium_parity_bit (bfd_vma insn)
    It sets instruction parity to even.  This cannot be done by a howto.  */
 
 static bfd_reloc_status_type
-visium_elf_howto_parity_reloc (bfd * input_bfd, arelent *reloc_entry,
+visium_elf_howto_parity_reloc (bfd *input_bfd, arelent *reloc_entry,
 			       asymbol *symbol, void *data,
 			       asection *input_section, bfd *output_bfd,
 			       char **error_message ATTRIBUTE_UNUSED)
@@ -316,7 +316,7 @@ visium_elf_howto_parity_reloc (bfd * input_bfd, arelent *reloc_entry,
   /* This part is from bfd_elf_generic_reloc.
      If we're relocating, and this an external symbol, we don't want
      to change anything.  */
-  if (output_bfd != (bfd *) NULL && (symbol->flags & BSF_SECTION_SYM) == 0)
+  if (output_bfd != NULL && (symbol->flags & BSF_SECTION_SYM) == 0)
     {
       reloc_entry->address += input_section->output_offset;
       return bfd_reloc_ok;
@@ -324,21 +324,21 @@ visium_elf_howto_parity_reloc (bfd * input_bfd, arelent *reloc_entry,
 
   /* Now do the reloc in the usual way.  */
 
-  /* Sanity check the address (offset in section).  */
-  if (reloc_entry->address > bfd_get_section_limit (input_bfd, input_section))
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, input_bfd,
+				  input_section, reloc_entry->address))
     return bfd_reloc_outofrange;
 
   ret = bfd_reloc_ok;
-  if (bfd_is_und_section (symbol->section) && output_bfd == (bfd *) NULL)
+  if (bfd_is_und_section (symbol->section) && output_bfd == NULL)
     ret = bfd_reloc_undefined;
 
-  if (bfd_is_com_section (symbol->section) || output_bfd != (bfd *) NULL)
+  if (bfd_is_com_section (symbol->section) || output_bfd != NULL)
     relocation = 0;
   else
     relocation = symbol->value;
 
   /* Only do this for a final link.  */
-  if (output_bfd == (bfd *) NULL)
+  if (output_bfd == NULL)
     {
       relocation += symbol->section->output_section->vma;
       relocation += symbol->section->output_offset;
@@ -383,7 +383,7 @@ visium_elf_howto_parity_reloc (bfd * input_bfd, arelent *reloc_entry,
   insn |= visium_parity_bit (insn);
   bfd_put_32 (input_bfd, insn, inplace_address);
 
-  if (output_bfd != (bfd *) NULL)
+  if (output_bfd != NULL)
     reloc_entry->address += input_section->output_offset;
 
   return ret;
@@ -505,7 +505,7 @@ visium_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;
@@ -549,8 +549,7 @@ visium_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
 /* Relocate a VISIUM ELF section.  */
 
 static int
-visium_elf_relocate_section (bfd *output_bfd,
-			     struct bfd_link_info *info, bfd *input_bfd,
+visium_elf_relocate_section (struct bfd_link_info *info, bfd *input_bfd,
 			     asection *input_section, bfd_byte *contents,
 			     Elf_Internal_Rela *relocs,
 			     Elf_Internal_Sym *local_syms,
@@ -561,7 +560,7 @@ visium_elf_relocate_section (bfd *output_bfd,
   Elf_Internal_Rela *rel;
   Elf_Internal_Rela *relend;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend = relocs + input_section->reloc_count;
 
@@ -595,7 +594,8 @@ visium_elf_relocate_section (bfd *output_bfd,
 	  /* This is a local symbol.  */
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -615,17 +615,9 @@ visium_elf_relocate_section (bfd *output_bfd,
 	}
 
       if (sec != NULL && discarded_section (sec))
-	{
-	  /* For relocs against symbols from removed linkonce sections,
-	     or sections discarded by a linker script, we just want the
-	     section contents zeroed.  Avoid any special processing.  */
-	  _bfd_clear_contents (howto, input_bfd, input_section,
-			       contents, rel->r_offset);
-
-	  rel->r_info = 0;
-	  rel->r_addend = 0;
-	  continue;
-	}
+	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
+					 rel, 1, relend, R_VISIUM_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -708,18 +700,19 @@ visium_elf_relocate_section (bfd *output_bfd,
 
 static asection *
 visium_elf_gc_mark_hook (asection *sec, struct bfd_link_info *info,
-			 Elf_Internal_Rela *rel, struct elf_link_hash_entry *h,
-			 Elf_Internal_Sym *sym)
+			 struct elf_reloc_cookie *cookie,
+			 struct elf_link_hash_entry *h,
+			 unsigned int symndx)
 {
   if (h != NULL)
-    switch (ELF32_R_TYPE (rel->r_info))
+    switch (ELF32_R_TYPE (cookie->rel->r_info))
       {
       case R_VISIUM_GNU_VTINHERIT:
       case R_VISIUM_GNU_VTENTRY:
 	return NULL;
       }
 
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
+  return _bfd_elf_gc_mark_hook (sec, info, cookie, h, symndx);
 }
 
 static bool
@@ -750,8 +743,7 @@ visium_elf_set_private_flags (bfd *abfd, flagword flags)
 static bool
 visium_elf_copy_private_bfd_data (bfd *ibfd, bfd *obfd)
 {
-  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return true;
 
   BFD_ASSERT (!elf_flags_init (obfd)
@@ -785,6 +777,9 @@ visium_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   const char *mcm = "mcm";
   const char *mcm24 = "mcm24";
   const char *gr6 = "gr6";
+
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
+    return true;
 
   new_flags = elf_elfheader (ibfd)->e_flags;
   old_flags = elf_elfheader (obfd)->e_flags;
@@ -857,6 +852,7 @@ visium_elf_print_private_bfd_data (bfd *abfd, void *ptr)
 #define ELF_ARCH		bfd_arch_visium
 #define ELF_MACHINE_CODE	EM_VISIUM
 #define ELF_OSABI		ELFOSABI_STANDALONE
+#define	ELF_OSABI_EXACT		1
 #define ELF_MAXPAGESIZE		1
 
 #define TARGET_BIG_SYM		visium_elf32_vec

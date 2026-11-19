@@ -1,6 +1,6 @@
 \input texinfo
 @setfilename ld.info
-@c Copyright (C) 1991-2025 Free Software Foundation, Inc.
+@c Copyright (C) 1991-2026 Free Software Foundation, Inc.
 @syncodeindex ky cp
 @c man begin INCLUDE
 @include configdoc.texi
@@ -56,7 +56,7 @@ This file documents the @sc{gnu} linker LD
 @end ifset
 version @value{VERSION}.
 
-Copyright @copyright{} 1991-2025 Free Software Foundation, Inc.
+Copyright @copyright{} 1991-2026 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3
@@ -93,7 +93,7 @@ section entitled ``GNU Free Documentation License''.
 
 @vskip 0pt plus 1filll
 @c man begin COPYRIGHT
-Copyright @copyright{} 1991-2025 Free Software Foundation, Inc.
+Copyright @copyright{} 1991-2026 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3
@@ -482,7 +482,7 @@ does not insert a version string.  This is the default.
 @item --enable-non-contiguous-regions
 This option avoids generating an error if an input section does not
 fit a matching output section. The linker tries to allocate the input
-section to subseque nt matching output sections, and generates an
+section to subsequent matching output sections, and generates an
 error only if no output section is large enough.  This is useful when
 several non-contiguous memory regions are available and the input
 section does not require a particular one.  The order in which input
@@ -531,15 +531,17 @@ named @var{entry}, the linker will try to parse @var{entry} as a number,
 and use that as the entry address (the number will be interpreted in
 base 10; you may use a leading @samp{0x} for base 16, or a leading
 @samp{0} for base 8).  @xref{Entry Point}, for a discussion of defaults
-and other ways of specifying the entry point.
+and other ways of specifying the entry point.  For i386 PE, @var{entry}
+can be also the original function name (without the leading underscore
+and/or the trailing stdcall @samp{@@number} when applicable).
 
 @kindex --exclude-libs
 @item --exclude-libs @var{lib},@var{lib},...
 Specifies a list of archive libraries from which symbols should not be automatically
 exported.  The library names may be delimited by commas or colons.  Specifying
 @code{--exclude-libs ALL} excludes symbols in all archive libraries from
-automatic export.  This option is available only for the i386 PE targeted
-port of the linker and for ELF targeted ports.  For i386 PE, symbols
+automatic export.  This option is available only for ELF and PE targeted
+ports of the linker.  For PE targets, symbols
 explicitly listed in a .def file are still exported, regardless of this
 option.  For ELF targeted ports, symbols affected by this option will
 be treated as hidden.
@@ -553,9 +555,9 @@ may be delimited by commas or colons, and must match exactly the filenames
 used by @command{ld} to open the files; for archive members, this is simply
 the member name, but for object files the name listed must include and
 match precisely any path used to specify the input file on the linker's
-command-line.  This option is available only for the i386 PE targeted port
-of the linker.  Symbols explicitly listed in a .def file are still exported,
+command-line. Symbols explicitly listed in a .def file are still exported,
 regardless of this option.
+[This option is specific to PE targeted ports of the linker]
 
 @cindex dynamic symbol table
 @kindex -E
@@ -1022,7 +1024,7 @@ Write a @dfn{dependency file} to @var{depfile}.  This file contains a rule
 suitable for @code{make} describing the output file and all the input files
 that were read to produce it.  The output is similar to the compiler's
 output with @samp{-M -MP} (@pxref{Preprocessor Options,, Options
-Controlling the Preprocessor, gcc.info, Using the GNU Compiler
+Controlling the Preprocessor, gcc, Using the GNU Compiler
 Collection}).  Note that there is no option like the compiler's @samp{-MM},
 to exclude ``system files'' (which is not a well-specified concept in the
 linker, unlike ``system headers'' in the compiler).  So the output from
@@ -1040,6 +1042,16 @@ option only affects ELF shared library generation.  Future releases of
 the linker may make more use of this option.  Also currently there is
 no difference in the linker's behaviour for different non-zero values
 of this option.  Again this may change with future releases.
+
+If @var{level} is zero or the string @samp{fast} then @command{ld}
+instead skips operations that are optional, resulting in a faster link
+but producing slower, larger binaries.  Currently the only operation
+that is skipped is the combining of mergeable sections, but this may
+change in the future.
+
+If @var{level} is the string @samp{default} or just the @samp{-}
+character then the linker's default behaviour of neither optimizing
+nor skipping operations is selected.
 
 @kindex -plugin @var{name}
 @item -plugin @var{name}
@@ -1067,7 +1079,8 @@ restored with one corresponding @option{--pop-state} option.
 The option which are covered are: @option{-Bdynamic}, @option{-Bstatic},
 @option{-dn}, @option{-dy}, @option{-call_shared}, @option{-non_shared},
 @option{-static}, @option{-N}, @option{-n}, @option{--whole-archive},
-@option{--no-whole-archive}, @option{-r}, @option{-Ur},
+@option{--no-whole-archive}, @option{--link-mapless},
+@option{--no-link-mapless}, @option{-r}, @option{-Ur},
 @option{--copy-dt-needed-entries}, @option{--no-copy-dt-needed-entries},
 @option{--as-needed}, @option{--no-as-needed}, and @option{-a}.
 
@@ -1083,8 +1096,8 @@ something as follows:
 @kindex --pop-state
 @cindex pop state governing input file handling
 @item --pop-state
-Undoes the effect of --push-state, restores the previous values of the
-flags governing input file handling.
+Undoes the effect of @option{--push-state}, restores the previous values
+of the flags governing input file handling.
 
 @kindex -q
 @kindex --emit-relocs
@@ -1743,6 +1756,34 @@ Supported for Linux/i386 and Linux/x86_64.
 
 Other keywords are ignored for Solaris compatibility.
 
+@item --gnu-tls-tag
+@itemx --no-gnu-tls-tag
+Add @code{GLIBC_ABI_GNU_TLS} version tag dependency in output programs
+and shared libraries when linking against glibc if input relocatable
+object files call @code{___tls_get_addr}.  The output will fail to load
+and run at run-time against glibc which doesn't define the
+@code{GLIBC_ABI_GNU_TLS} version tag.  Unless disabled by the
+@option{--disable-gnu-tls-tag} configure option at the linker build
+time, when no options are specified, linker will add the
+@code{GLIBC_ABI_GNU_TLS} version tag dependency if inputs have
+@code{___tls_get_addr} call and libc.so defines the
+@code{GLIBC_ABI_GNU_TLS} version tag.  Supported for Linux/i386.
+
+@item --gnu2-tls-tag
+@itemx --no-gnu2-tls-tag
+Add @code{GLIBC_ABI_GNU2_TLS} version tag dependency in output programs
+and shared libraries when linking against glibc if input relocatable
+object files have @code{R_386_TLS_DESC_CALL} or
+@code{R_X86_64_TLSDESC_CALL} relocation.  The output will fail to load
+and run at run-time against glibc which doesn't define the
+@code{GLIBC_ABI_GNU2_TLS} version tag.  Unless disabled by the
+@option{--disable-gnu2-tls-tag} configure option at the linker build
+time, when no options are specified, linker will add the
+@code{GLIBC_ABI_GNU2_TLS} version tag dependency if inputs have
+@code{R_386_TLS_DESC_CALL} or @code{R_X86_64_TLSDESC_CALL} relocation
+and libc.so defines the @code{GLIBC_ABI_GNU2_TLS} version tag.
+Supported for Linux/i386 and Linux/x86_64.
+
 @kindex -(
 @cindex groups of archives
 @item -( @var{archives} -)
@@ -1759,9 +1800,34 @@ would not be able to resolve that reference.  By grouping the archives,
 they will all be searched repeatedly until all possible references are
 resolved.
 
+This option is not allowed within a @option{--start-lib}/@option{--end-lib}
+option pair.
+
 Using this option has a significant performance cost.  It is best to use
 it only when there are unavoidable circular references between two or
 more archives.
+
+@kindex --start-lib
+@cindex artificial archives
+@item --start-lib @var{objects} --end-lib
+The @var{objects} should be a list of object files.
+
+The specified objects are treated as if they were members of an archive
+the name of which has been placed at the location of @option{--start-lib}
+on the command line.  All the usual linker archive handling properties
+and command line options apply to such an artificial archive.
+
+This option may be used multiple times, in which case each set of the
+objects specified will be treated as an individual archive.  Nesting this
+option is not allowed though.
+
+Options that affect archive processing are not allowed between
+@option{--start-lib} and @option{--end-lib} as it would make no sense
+to apply them midway through handling an archive.  These options include:
+@option{-(}/@option{--start-group}, @option{-)}/@option{--end-group},
+@option{--whole-archive}, and @option{--no-whole-archive}, as well as
+@option{--pop-state} where it would change the state of
+@option{--whole-archive} setting.
 
 @kindex --accept-unknown-input-arch
 @kindex --no-accept-unknown-input-arch
@@ -2184,6 +2250,9 @@ Memory region         Used Size  Region Size  %age Used
              RAM:          32 B         2 GB      0.00%
 @end smallexample
 
+Note: if you want to find out about the memory usage of the linker
+itself, then the @option{--stats} option will do this.
+
 @cindex help
 @cindex usage
 @kindex --help
@@ -2338,7 +2407,14 @@ library during a library search.  This option silences the warning.
 @kindex --no-whole-archive
 @item --no-whole-archive
 Turn off the effect of the @option{--whole-archive} option for subsequent
-archive files.
+archive files.  Not allowed within a @option{--start-lib}/@option{--end-lib}
+option pair.
+
+@kindex --no-link-mapless
+@item --no-link-mapless
+Reject archives that lack an index aka symbol map for all the subsequent
+archives referred on the command line.  If such a file is encountered,
+a link error occurs.  This is the traditional behavior.
 
 @cindex output file after errors
 @kindex --noinhibit-exec
@@ -2378,7 +2454,7 @@ library (which should be called @code{*.dll.a} or @code{*.a} for DLLs)
 may be used to link clients against the generated executable; this
 behaviour makes it possible to skip a separate import library creation
 step (eg. @code{dlltool} for DLLs).  This option is only available for
-the i386 PE and ELF targetted ports of the linker.
+the PE and ELF targetted ports of the linker.
 
 @kindex -pie
 @kindex --pic-executable
@@ -2706,9 +2782,79 @@ more than @var{count} relocations one output section will contain that
 many relocations.  @var{count} defaults to a value of 32768.
 
 @kindex --stats
-@item --stats
+@item --stats[=@var{filename}]
 Compute and display statistics about the operation of the linker, such
 as execution time and memory usage.
+
+If the optional @var{filename} argument is not supplied then only
+basic information is reported, and it is sent to the standard error
+output stream.  If the @var{filename} argument is supplied then
+extended information is written to the named file.  If @var{filename}
+is set to just the @var{-} symbol, then the extended information is
+sent to the standard output stream.  If the @var{filename} starts with
+@var{+} then the file is opened in append mode rather than overwrite
+mode.
+
+If the @option{-Map} option has been enabled then the information is
+also recorded in the map file as well.  Note: if both the
+@option{--stats} option and the @option{-Map} options have been given
+@var{filename} arguments and they match, then the information will
+only be written out once not twice.
+
+If the @code{LD_STATS} environment variable is defined then this
+behaves likes the @option{--stats} option.  If the variable's value is
+a string then this will used as the name of a file into which the
+information should be recorded.  Otherwise the information
+will be sent to the standard output stream.  Using the environment
+variable allows stats to be recorded without having to alter the
+linker's command line.  Note: if both the environment variable and the
+@option{--stats} option are used then the @option{--stats} option
+takes precedence.
+
+The extended information reported includes the cpu time used and, if
+the @var{getrusage()} system library call is available then maximum
+set size and the user and system run times as well.  In addition if
+the @var{mallinfo} or @var{mallinfo2} system library calls are
+available then the total memory usage is reported,
+
+The information is displayed for individual parts of the linking
+process which are referred to as @emph{phases}.  Note that
+individual phases can contain or overlap with each other so it should
+not be assumed that the overall resources used by the linker is the
+sum of the resources used by the individual phases.
+
+In addition the information is also reported for a special phase
+called @emph{ALL} which covers the entire linking process.  
+
+When extended information is being reported the linker version,
+command line arguments and linker start time are also included.  This
+makes it easier to handle the situation where multiple links are being
+invoked by a build system and to indentify exactly which arguments
+were responsible for producing the statistics that are reported.
+
+The extended output looks something like this:
+
+@smallexample
+Stats: linker version: (GNU Binutils) 2.44.50.20250401
+Stats: linker started: Wed Apr  2 09:36:41 2025
+Stats: args: ld -z norelro -z nomemory-seal -z no-separate-code -o a.out [...]
+
+Stats: phase               cpu time       rss      user time    system time     memory
+Stats: name                (microsec)   (KiB)      (seconds)      (seconds)      (KiB)
+Stats: ALL                   390082    217740              0              0   25219440
+Stats: ctf processing            12         0              0              0          0
+Stats: string merge            1324         0              0              0     406544
+Stats: parsing                  349       288              0              0     119792
+Stats: plugins                    1         0              0              0          0
+Stats: processing files      259616    214524              0              0   31569120
+Stats: write                 116493         0              0              0      48096
+@end smallexample
+
+@kindex --no-stats
+@item --no-stats
+Disables the reporting of usage statistics, should it have been
+enabled via the @option{--stats} command line option or the
+@var{LD_STATS} environment variable.
 
 @kindex --sysroot=@var{directory}
 @item --sysroot=@var{directory}
@@ -3077,11 +3223,20 @@ files.  This is normally used to turn an archive file into a shared
 library, forcing every object to be included in the resulting shared
 library.  This option may be used more than once.
 
+This option is not allowed within a @option{--start-lib}/@option{--end-lib}
+option pair.
+
 Two notes when using this option from gcc: First, gcc doesn't know
 about this option, so you have to use @option{-Wl,-whole-archive}.
 Second, don't forget to use @option{-Wl,-no-whole-archive} after your
 list of archives, because gcc will add its own list of archives to
 your link and you may not want this flag to affect those as well.
+
+@kindex --link-mapless
+@item --link-mapless
+Accept archives that lack an index aka symbol map for all the subsequent
+archives referred on the command line.  If missing, such an index is made
+internally on the fly at performance cost.  This is the default.
 
 @kindex --wrap=@var{symbol}
 @item --wrap=@var{symbol}
@@ -3148,9 +3303,13 @@ section and ELF @code{PT_GNU_EH_FRAME} segment header.
 @item --no-ld-generated-unwind-info
 Request creation of @code{.eh_frame} unwind info for linker
 generated code sections like PLT.  This option is on by default
-if linker generated unwind info is supported.  This option also
-controls the generation of @code{.sframe} stack trace info for linker
-generated code sections like PLT.
+if linker generated unwind info is supported.
+
+@kindex --discard-sframe
+@item --discard-sframe
+Discard @code{.sframe} stack trace info from the output.  This option also
+prohibits the creation of SFrame stack trace data for linker generated code
+sections like PLT.  This option is off by default.
 
 @kindex --enable-new-dtags
 @kindex --disable-new-dtags
@@ -3171,6 +3330,8 @@ close to @var{number}.  Increasing this value can reduce the length of
 time it takes the linker to perform its tasks, at the expense of
 increasing the linker's memory requirements.  Similarly reducing this
 value can reduce the memory requirements at the expense of speed.
+The default value is 4051 under normal circumstances and 1021 if the
+@option{--reduce-memory-overheads} command line option is used.
 
 @kindex --hash-style=@var{style}
 @item --hash-style=@var{style}
@@ -3236,7 +3397,10 @@ enable other tradeoffs in future versions of the linker.
 @item --max-cache-size=@var{size}
 @command{ld} normally caches the relocation information and symbol tables
 of input files in memory with the unlimited size.  This option sets the
-maximum cache size to @var{size}.
+maximum cache size to @var{size}.  Note - if the
+@option{--no-keep-memory} command line option has been used then the
+linker acts as if the maximum cache size has been set to 0 - ie
+nothing is retained.
 
 @kindex --build-id
 @kindex --build-id=@var{style}
@@ -3283,11 +3447,11 @@ will be validated.
 
 @c man end
 
-@subsection Options Specific to i386 PE Targets
+@subsection Options Specific to PE Targets
 
 @c man begin OPTIONS
 
-The i386 PE linker supports the @option{-shared} option, which causes
+The PE linker supports the @option{-shared} option, which causes
 the output to be a dynamically linked library (DLL) instead of a
 normal executable.  You should name the output @code{*.dll} when you
 use this option.  In addition, the linker fully supports the standard
@@ -3296,8 +3460,8 @@ like an object file (in fact, it should precede archives it exports
 symbols from, to ensure that they get linked in, just like a normal
 object file).
 
-In addition to the options common to all targets, the i386 PE linker
-support additional command-line options that are specific to the i386
+In addition to the options common to all targets, the PE linker
+supports additional command-line options that are specific to the
 PE target.  Options that take values may be separated from their
 values by either a space or an equals sign.
 
@@ -3307,21 +3471,21 @@ values by either a space or an equals sign.
 @item --add-stdcall-alias
 If given, symbols with a stdcall suffix (@@@var{nn}) will be exported
 as-is and also with the suffix stripped.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --base-file
 @item --base-file @var{file}
 Use @var{file} as the name of a file in which to save the base
 addresses of all the relocations needed for generating DLLs with
 @file{dlltool}.
-[This is an i386 PE specific option]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --dll
 @item --dll
 Create a DLL instead of a regular executable.  You may also use
 @option{-shared} or specify a @code{LIBRARY} in a given @code{.def}
 file.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --enable-long-section-names
 @kindex --disable-long-section-names
@@ -3343,7 +3507,7 @@ option is specified on the command-line, @command{ld} will enable long
 section names, overriding the default and technically correct behaviour,
 when it finds the presence of debug information while linking an executable
 image and not stripping symbols.
-[This option is valid for all PE targeted ports of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --enable-stdcall-fixup
 @kindex --disable-stdcall-fixup
@@ -3362,7 +3526,7 @@ to be usable.  If you specify @option{--enable-stdcall-fixup}, this
 feature is fully enabled and warnings are not printed.  If you specify
 @option{--disable-stdcall-fixup}, this feature is disabled and such
 mismatches are considered to be errors.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --leading-underscore
 @kindex --no-leading-underscore
@@ -3371,6 +3535,7 @@ mismatches are considered to be errors.
 For most targets default symbol-prefix is an underscore and is defined
 in target's description. By this option it is possible to
 disable/enable the default underscore symbol-prefix.
+[This option is specific to PE targeted ports of the linker]
 
 @cindex DLLs, creating
 @kindex --export-all-symbols
@@ -3397,25 +3562,25 @@ These cygwin-excludes are: @code{_cygwin_dll_entry@@12},
 @code{_fmode}, @code{_impure_ptr}, @code{cygwin_attach_dll},
 @code{cygwin_premain0}, @code{cygwin_premain1}, @code{cygwin_premain2},
 @code{cygwin_premain3}, and @code{environ}.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --exclude-symbols
 @item --exclude-symbols @var{symbol},@var{symbol},...
 Specifies a list of symbols which should not be automatically
 exported.  The symbol names may be delimited by commas or colons.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --exclude-all-symbols
 @item --exclude-all-symbols
 Specifies no symbols should be automatically exported.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --file-alignment
 @item --file-alignment
 Specify the file alignment.  Sections in the file will always begin at
 file offsets which are multiples of this number.  This defaults to
 512.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @cindex heap size
 @kindex --heap
@@ -3424,13 +3589,13 @@ file offsets which are multiples of this number.  This defaults to
 Specify the number of bytes of memory to reserve (and optionally commit)
 to be used as heap for this program.  The default is 1MB reserved, 4K
 committed.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --kill-at
 @item --kill-at
 If given, the stdcall suffixes (@@@var{nn}) will be stripped from
 symbols before they are exported.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --large-address-aware
 @item --large-address-aware
@@ -3439,7 +3604,7 @@ header is set to indicate that this executable supports virtual addresses
 greater than 2 gigabytes.  This should be used in conjunction with the /3GB
 or /USERVA=@var{value} megabytes switch in the ``[operating systems]''
 section of the BOOT.INI.  Otherwise, this bit has no effect.
-[This option is specific to PE targeted ports of the linker]
+[This option is specific to the i386 PE targeted port of the linker]
 
 @kindex --disable-large-address-aware
 @item --disable-large-address-aware
@@ -3447,37 +3612,37 @@ Reverts the effect of a previous @samp{--large-address-aware} option.
 This is useful if @samp{--large-address-aware} is always set by the compiler
 driver (e.g. Cygwin gcc) and the executable does not support virtual
 addresses greater than 2 gigabytes.
-[This option is specific to PE targeted ports of the linker]
+[This option is specific to the i386 PE targeted port of the linker]
 
 @kindex --major-image-version
 @item --major-image-version @var{value}
 Sets the major number of the ``image version''.  Defaults to 1.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --major-os-version
 @item --major-os-version @var{value}
 Sets the major number of the ``os version''.  Defaults to 4.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --major-subsystem-version
 @item --major-subsystem-version @var{value}
 Sets the major number of the ``subsystem version''.  Defaults to 4.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --minor-image-version
 @item --minor-image-version @var{value}
 Sets the minor number of the ``image version''.  Defaults to 0.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --minor-os-version
 @item --minor-os-version @var{value}
 Sets the minor number of the ``os version''.  Defaults to 0.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --minor-subsystem-version
 @item --minor-subsystem-version @var{value}
 Sets the minor number of the ``subsystem version''.  Defaults to 0.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @cindex DEF files, creating
 @cindex DLLs, creating
@@ -3488,7 +3653,7 @@ file corresponding to the DLL the linker is generating.  This DEF file
 (which should be called @code{*.def}) may be used to create an import
 library with @code{dlltool} or may be used as a reference to
 automatically or implicitly exported symbols.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @cindex DLLs, creating
 @kindex --enable-auto-image-base
@@ -3499,14 +3664,14 @@ Automatically choose the image base for DLLs, optionally starting with base
 By using a hash generated from the dllname to create unique image bases
 for each DLL, in-memory collisions and relocations which can delay program
 execution are avoided.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --disable-auto-image-base
 @item --disable-auto-image-base
 Do not automatically generate a unique image base.  If there is no
 user-specified image base (@code{--image-base}) then use the platform
 default.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @cindex DLLs, linking to
 @kindex --dll-search-prefix
@@ -3517,14 +3682,14 @@ search for @code{<string><basename>.dll} in preference to
 between DLLs built for the various "subplatforms": native, cygwin,
 uwin, pw, etc.  For instance, cygwin DLLs typically use
 @code{--dll-search-prefix=cyg}.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --enable-auto-import
 @item --enable-auto-import
 Do sophisticated linking of @code{_symbol} to @code{__imp__symbol} for
 DATA imports from DLLs, thus making it possible to bypass the dllimport
 mechanism on the user side and to reference unmangled symbol names.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 The following remarks pertain to the original implementation of the
 feature and are obsolete nowadays for Cygwin and MinGW targets.
@@ -3658,7 +3823,7 @@ functions).
 @item --disable-auto-import
 Do not attempt to do sophisticated linking of @code{_symbol} to
 @code{__imp__symbol} for DATA imports from DLLs.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --enable-runtime-pseudo-reloc
 @item --enable-runtime-pseudo-reloc
@@ -3666,23 +3831,23 @@ If your code contains expressions described in --enable-auto-import section,
 that is, DATA imports from DLL with non-zero offset, this switch will create
 a vector of 'runtime pseudo relocations' which can be used by runtime
 environment to adjust references to such data in your client code.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --disable-runtime-pseudo-reloc
 @item --disable-runtime-pseudo-reloc
 Do not create pseudo relocations for non-zero offset DATA imports from DLLs.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --enable-extra-pe-debug
 @item --enable-extra-pe-debug
 Show additional debug info related to auto-import symbol thunking.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --section-alignment
 @item --section-alignment
 Sets the section alignment.  Sections in memory will always begin at
 addresses which are a multiple of this number.  Defaults to 0x1000.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @cindex stack size
 @kindex --stack
@@ -3691,7 +3856,7 @@ addresses which are a multiple of this number.  Defaults to 0x1000.
 Specify the number of bytes of memory to reserve (and optionally commit)
 to be used as stack for this program.  The default is 2MB reserved, 4K
 committed.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 @kindex --subsystem
 @item --subsystem @var{which}
@@ -3702,7 +3867,7 @@ legal values for @var{which} are @code{native}, @code{windows},
 @code{console}, @code{posix}, and @code{xbox}.  You may optionally set
 the subsystem version also.  Numeric values are also accepted for
 @var{which}.
-[This option is specific to the i386 PE targeted port of the linker]
+[This option is specific to PE targeted ports of the linker]
 
 The following options set flags in the @code{DllCharacteristics} field
 of the PE file header:
@@ -3712,19 +3877,21 @@ of the PE file header:
 @item --high-entropy-va
 @itemx --disable-high-entropy-va
 Image is compatible with 64-bit address space layout randomization
-(ASLR).  This option is enabled by default for 64-bit PE images.
+(ASLR).  This option is enabled by default for 64-bit PE images in
+MinGW targets.
 
 This option also implies @option{--dynamicbase} and
 @option{--enable-reloc-section}.
+[This options is specific to 64-bit PE targeted ports of the linker]
 
 @kindex --dynamicbase
 @item --dynamicbase
 @itemx --disable-dynamicbase
 The image base address may be relocated using address space layout
 randomization (ASLR).  This feature was introduced with MS Windows
-Vista for i386 PE targets.  This option is enabled by default but
-can be disabled via the @option{--disable-dynamicbase} option.
-This option also implies @option{--enable-reloc-section}.
+Vista.  This option is enabled by default for MinGW targets but can be
+disabled via the @option{--disable-dynamicbase} option. This option
+also implies @option{--enable-reloc-section}.
 
 @kindex --forceinteg
 @item --forceinteg
@@ -3736,8 +3903,8 @@ default.
 @item --nxcompat
 @item --disable-nxcompat
 The image is compatible with the Data Execution Prevention.
-This feature was introduced with MS Windows XP SP2 for i386 PE
-targets.  The option is enabled by default.
+This feature was introduced with MS Windows XP SP2. The option is
+enabled by default for MinGW targets.
 
 @kindex --no-isolation
 @item --no-isolation
@@ -4078,6 +4245,15 @@ If the PE/COFF specific @option{--insert-timestamp} is active and the
 timestamp value in this variable will be inserted into the COFF header
 instead of the current time.
 
+@kindex LD_STATS
+@cindex LD_STATS
+If the @code{LD_STATS} environment variable is defined then linker
+resource use information will be recorded, just as if the
+@option{--stats} option had been used.  If the @code{LD_STATS}
+variable has a string value then this will used as the name of a file
+into which the information should be stored.  Otherwise the information
+will be sent to the standard output stream.
+
 @c man end
 @end ifset
 
@@ -4379,6 +4555,14 @@ The @code{GROUP} command is like @code{INPUT}, except that the named
 files should all be archives, and they are searched repeatedly until no
 new undefined references are created.  See the description of @samp{-(}
 in @ref{Options,,Command-line Options}.
+
+@item LIB(@var{file}, @var{file}, @dots{})
+@itemx LIB(@var{file} @var{file} @dots{})
+@kindex LIB(@var{files})
+@cindex artificial archives in linker scripts
+The @code{LIB} command is like @code{INPUT}, except that the named files
+are treated as if they were members of an archive.  See the description
+of @samp{--start-lib} in @ref{Options,,Command-line Options}.
 
 @item AS_NEEDED(@var{file}, @var{file}, @dots{})
 @itemx AS_NEEDED(@var{file} @var{file} @dots{})
@@ -5965,7 +6149,13 @@ parentheses.  The following types are defined:
 
 @item NOLOAD
 The section should be marked as not loadable, so that it will not be
-loaded into memory when the program is run.
+loaded into memory when the program is run.  When generating an ELF
+output file, the memory space is allocated for the section at run-time,
+except for SHT_NOTE sections.  For other output files, no memory space
+is allocated at run-time.
+
+Note - the ELF behaviour is a bug that may change to be consistent
+with non-ELF targets.
 
 @item READONLY
 The section should be marked as read-only.
@@ -6696,8 +6886,8 @@ depends upon @samp{VERS_1.1}.  The script binds the symbol @samp{foo2}
 to the version node @samp{VERS_1.2}.
 
 Finally, the version script defines node @samp{VERS_2.0}.  This node
-depends upon @samp{VERS_1.2}.  The scripts binds the symbols @samp{bar1}
-and @samp{bar2} are bound to the version node @samp{VERS_2.0}.
+depends upon @samp{VERS_1.2}.  The script binds the symbols @samp{bar1}
+and @samp{bar2} to the version node @samp{VERS_2.0}.
 
 When the linker finds a symbol defined in a library which is not
 specifically bound to a version node, it will effectively bind it to an
@@ -8055,9 +8245,9 @@ in certain ARM1176 processors.  The workaround is enabled by default if you
 are targeting ARM v6 (excluding ARM v6T2) or earlier.  It can be disabled
 unconditionally by specifying @samp{--no-fix-arm1176}.
 
-Further information is available in the ``ARM1176JZ-S and ARM1176JZF-S
-Programmer Advice Notice'' available on the ARM documentation website at:
-http://infocenter.arm.com/.
+Further information is available in ``ARM1176JZ-S and ARM1176JZF-S
+Programmer Advice Notice'' (UAN0002) available on the Arm documentation
+website at @uref{https://developer.arm.com/}.
 
 @cindex STM32L4xx erratum workaround
 @kindex --fix-stm32l4xx-629360
@@ -8246,46 +8436,53 @@ markings on input objects and marks the output with GCS if all conditions are
 validated.
 @itemize
 @item @samp{implicit} (default if @samp{-z gcs} is omitted) enables GCS marking
-on the output if, and only if, all input objects composing the link unit are
-marked with GCS.
+on the output if, and only if, all input static objects are marked with GCS.
 @item @samp{always} forces the marking of the output with GCS.
 @item @samp{never} ignores any GCS marking on the input objects, and does not
 mark the output with GCS.
 @end itemize
 
 @kindex -z gcs-report[=none|warning|error]
-@cindex Control warnings for missing GCS markings.
-The @samp{-z gcs-report[=none|warning|error]} option specifies how to report the
-missing GCS markings on inputs, i.e. the GNU_PROPERTY_AARCH64_FEATURE_1_GCS
-property. By default, if the option is omitted and @samp{-z gcs} is provided,
-warnings are emitted.
+@cindex Control diagnostics for missing GCS markings on static input objects.
+When @samp{-z gcs=always} is specified, then the @samp{-z gcs-report[=none|warning|error]}
+option can be used to specify how to report missing GCS markings (i.e.
+the GNU_PROPERTY_AARCH64_FEATURE_1_GCS property) on static inputs.
 @itemize
-@item @samp{none} disables any warning messages.
-@item @samp{warning} (the default value) emits warning messages when input objects
-composing the link unit are missing GCS markings.
-@item @samp{error} turns the warning messages into errors.
+@item @samp{none} disables the diagnostic messages.
+@item @samp{warning} (the default value) emits diagnostic messages as warnings.
+@item @samp{error} emits diagnostic messages as errors.
 @end itemize
 If issues are found, a maximum of 20 messages will be emitted, and then a summary
 with the total number of issues will be displayed at the end.
 
-@kindex -z gcs-report-dynamic=none|warning|error
-@cindex Control warnings for missing GCS markings on dynamic input objects.
-The @samp{-z gcs-report-dynamic=none|warning|error} option specifies how to
-report the missing GCS markings on dynamic input objects, i.e. the
-GNU_PROPERTY_AARCH64_FEATURE_1_GCS property. By default, if the option is
-omitted, it inherits the value of @samp{-z gcs-report}. However, the inherited
-value is capped to @samp{warning} as some user might want to only report errors
-in the currently built module, and not the shared dependencies. It is therefore
-necessary to use an explicit @samp{-z gcs-report-dynamic=error} option if you
-want the linker to error on GCS issues in the shared libraries.
+@kindex -z gcs-report-dynamic[=none|warning|error]
+@cindex Control diagnostics for missing GCS markings on dynamic input objects.
+If @samp{-z gcs} is not specified on the command line, or if it has the value
+@samp{implicit} or @samp{always}, then the @samp{-z gcs-report-dynamic[=none|warning|error]}
+option specifies how to report the missing GCS markings (i.e. the GNU_PROPERTY_AARCH64_FEATURE_1_GCS
+property) on dynamic input objects.
 @itemize
-@item @samp{none} disables any warning messages.
-@item @samp{warning} emits warning messages when dynamic objects are missing
-GCS markings.
-@item @samp{error} turns the warning messages into errors.
+@item @samp{none} (default value when @samp{-z gcs=implicit}) disables the diagnostic messages.
+@item @samp{warning} (default value when @samp{-z gcs=always}) emits diagnostic messages as warnings.
+@item @samp{error} emits diagnostic messages as errors.
 @end itemize
 If issues are found, a maximum of 20 messages will be emitted, and then a summary
 with the total number of issues will be displayed at the end.
+
+@kindex -z memtag-mode=@var{mode}
+@cindex MTE modes of operation
+The @samp{-z memtag-mode=mode} specifies the MTE mode of operation.
+The value of @samp{mode} can be one of @samp{none}, @samp{sync} or
+@samp{async}.  The specified modes determine the value of the
+@samp{DT_AARCH64_MEMTAG_MODE} dynamic tag.  The @samp{sync} mode
+implies precise exceptions, with the runtime providing the exact
+instruction where the fault occurred, and the exact faulting address.
+The @samp{async} mode implies imprecise exceptions.
+
+@kindex -z memtag-stack
+@cindex Mark program stack for MTE protection
+The @samp{-z memtag-stack} specifies that output object uses MTE
+instructions for stack memory usage.
 
 @ifclear GENERIC
 @lowersections
@@ -9599,7 +9796,7 @@ format can be supported simply by creating a new BFD back end and adding
 it to the library.  To conserve runtime memory, however, the linker and
 associated tools are usually configured to support only a subset of the
 object file formats available.  You can use @code{objdump -i}
-(@pxref{objdump,,objdump,binutils.info,The GNU Binary Utilities}) to
+(@pxref{objdump,,objdump,binutils,The GNU Binary Utilities}) to
 list all the formats available for your configuration.
 
 @cindex BFD requirements

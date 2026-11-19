@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Free Software Foundation, Inc.
+# Copyright 2018-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,14 +35,16 @@ set cobject [standard_output_file ${cfile}.o]
 
 if { [gdb_compile "${csrcfile}" "${cobject}" object [list debug]] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 if {[gdb_compile_ada "${srcfile}" "${binfile}" executable [list debug]] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 clean_restart ${testfile}
+
+gdb_test_no_output "set filename-display basename"
 
 set bp_location [gdb_get_line_number "STOP" ${testdir}/some_c.c]
 if {![runto "some_c.c:$bp_location"]} {
@@ -62,9 +64,9 @@ set func_in_ada(ada_syntax) \
 
 set type_in_c(c_syntax) "${decimal}:	typedef struct {\\.\\.\\.} some_type_in_c;"
 set type_in_c(ada_syntax) [multi_line \
-			      "${decimal}:	record" \
-			      "    some_component_in_c: int;" \
-			      "end record" ]
+			       "${decimal}:	record" \
+			       "    some_component_in_c: int;" \
+			       "end record" ]
 set type_in_ada(c_syntax) "${decimal}:	struct global_pack__some_type_in_ada"
 set type_in_ada(ada_syntax)  "${decimal}:	global_pack.some_type_in_ada"
 
@@ -119,10 +121,10 @@ foreach_with_prefix language_choice { "auto" "ada" "c" } {
 		[multi_line \
 		     "All functions matching regular expression \"proc_in_\":" \
 		     "" \
-		     "File .*proc_in_ada.adb:" \
+		     "File proc_in_ada.adb:" \
 		     $func_in_ada($ada_match) \
 		     "" \
-		     "File .*some_c.c:" \
+		     "File some_c.c:" \
 		     $func_in_c($c_match)
 		]
 
@@ -130,10 +132,10 @@ foreach_with_prefix language_choice { "auto" "ada" "c" } {
 		[multi_line \
 		     "All types matching regular expression \"some_type\":"  \
 		     "" \
-		     "File .*global_pack.ads:" \
+		     "File global_pack.ads:" \
 		     $type_in_ada($ada_match)\
 		     "" \
-		     "File .*some_c.c:" \
+		     "File some_c.c:" \
 		     $type_in_c($c_match)
 		]
 
@@ -141,18 +143,18 @@ foreach_with_prefix language_choice { "auto" "ada" "c" } {
 		[multi_line \
 		     "All variables matching regular expression \"some_struct\":" \
 		     "" \
-		     "File .*global_pack.ads:" \
+		     "File global_pack.ads:" \
 		     $var_in_ada($ada_match) \
 		     "" \
-		     "File .*some_c.c:" \
+		     "File some_c.c:" \
 		     $var_in_c($c_match)
 		]
 
 	    gdb_test "rbreak proc_in_" \
 		[multi_line \
-		     "Breakpoint.*file .*proc_in_ada.adb,.*" \
+		     "Breakpoint.*file proc_in_ada.adb,.*" \
 		     $rbreak_func_in_ada($ada_match) \
-		     "Breakpoint.*file .*some_c.c,.*" \
+		     "Breakpoint.*file some_c.c,.*" \
 		     $rbreak_func_in_c($c_match) \
 		     "Successfully created breakpoints $decimal-$decimal."
 		]
@@ -160,4 +162,3 @@ foreach_with_prefix language_choice { "auto" "ada" "c" } {
 	}
     }
 }
-

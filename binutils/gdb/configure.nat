@@ -1,5 +1,5 @@
 # ; -*- mode: sh ; -*-
-# Copyright (C) 2013-2024 Free Software Foundation, Inc.
+# Copyright (C) 2013-2026 Free Software Foundation, Inc.
 #
 # This file is part of GDB.
 #
@@ -77,6 +77,10 @@ case ${gdb_host} in
     cygwin*)
 	NATDEPFILES='x86-nat.o nat/x86-dregs.o windows-nat.o nat/windows-nat.o'
 	;;
+    mingw64a)
+	NATDEPFILES='aarch64-nat.o aarch64-windows-nat.o windows-nat.o \
+	nat/windows-nat.o nat/aarch64-hw-point.o'
+	;;
     mingw*)
 	NATDEPFILES='x86-nat.o nat/x86-dregs.o windows-nat.o nat/windows-nat.o'
 	;;
@@ -128,7 +132,8 @@ case ${gdb_host} in
 	    i386)
 		# Native config information for GDB on i386
 		# systems running Cygwin.
-		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o"
+		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o \
+		x86-windows-nat.o"
 		;;
 	esac
 	;;
@@ -137,7 +142,8 @@ case ${gdb_host} in
 	    i386)
 		# Native config information for GDB on amd64
 		# systems running Cygwin.
-		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o amd64-windows-nat.o"
+		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o \
+		amd64-windows-nat.o x86-windows-nat.o"
 		;;
 	esac
 	;;
@@ -211,23 +217,44 @@ case ${gdb_host} in
 		;;
 	esac
 	;;
+    gnu64)
+	case ${gdb_host_cpu} in
+	    i386)
+		# Host: x86_64 running the GNU Hurd
+		NATDEPFILES='x86-gnu-nat.o gnu-nat.o \
+		     x86-nat.o nat/x86-dregs.o \
+		     amd64-nat.o fork-child.o \
+		     nat/fork-inferior.o \
+		     notify_S.o process_reply_S.o msg_reply_S.o \
+		     msg_U.o exc_request_U.o exc_request_S.o'
+		HAVE_NATIVE_GCORE_HOST=1
+
+		NAT_FILE='nm-x86-gnu.h'
+		MH_CFLAGS='-D_GNU_SOURCE'
+
+		XM_CLIBS='-lshouldbeinlibc'
+
+		nat_makefile_frag="${srcdir}/config/${gdb_host_cpu}/x86-gnu.mn"
+		;;
+	esac
+	;;
     i386gnu)
 	case ${gdb_host_cpu} in
 	    i386)
 		# Host: Intel 386 running the GNU Hurd
-		NATDEPFILES='i386-gnu-nat.o gnu-nat.o \
+		NATDEPFILES='x86-gnu-nat.o gnu-nat.o \
 		     x86-nat.o nat/x86-dregs.o fork-child.o \
 		     nat/fork-inferior.o \
 		     notify_S.o process_reply_S.o msg_reply_S.o \
 		     msg_U.o exc_request_U.o exc_request_S.o'
 		HAVE_NATIVE_GCORE_HOST=1
 
-		NAT_FILE='nm-i386gnu.h'
+		NAT_FILE='nm-x86-gnu.h'
 		MH_CFLAGS='-D_GNU_SOURCE'
 
 		XM_CLIBS='-lshouldbeinlibc'
 
-		nat_makefile_frag="${srcdir}/config/${gdb_host_cpu}/i386gnu.mn"
+		nat_makefile_frag="${srcdir}/config/${gdb_host_cpu}/x86-gnu.mn"
 		;;
 	esac
 	;;
@@ -277,6 +304,10 @@ case ${gdb_host} in
 	    m68k)
 		# Host: Motorola m68k running GNU/Linux.
 		NATDEPFILES="${NATDEPFILES} m68k-linux-nat.o"
+		;;
+	    microblaze)
+		# Host: Microblaze running GNU/Linux.
+		NATDEPFILES="${NATDEPFILES} microblaze-linux-nat.o"
 		;;
 	    mips)
 		# Host: Linux/MIPS
@@ -340,14 +371,16 @@ case ${gdb_host} in
     mingw)
 	case ${gdb_host_cpu} in
 	    i386)
-		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o"
+		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o \
+		x86-windows-nat.o"
 		;;
 	esac
 	;;
     mingw64)
 	case ${gdb_host_cpu} in
 	    i386)
-		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o amd64-windows-nat.o"
+		NATDEPFILES="${NATDEPFILES} i386-windows-nat.o \
+		amd64-windows-nat.o x86-windows-nat.o"
 		;;
 	esac
 	;;

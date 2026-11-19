@@ -1,4 +1,4 @@
-#   Copyright 2013-2024 Free Software Foundation, Inc.
+#   Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ set exec_opts [list debug shlib=$lib_sl]
 if { [gdb_compile_shlib $libsrc $lib_sl $lib_opts] != ""
      || [gdb_compile $srcdir/$subdir/$srcfile $binfile executable $exec_opts] != ""} {
     untested "failed to compile shared library"
-    return -1
+    return
 }
 
 with_test_prefix "without format" {
@@ -48,8 +48,8 @@ with_test_prefix "without symbols" {
 	"y"
 
     gdb_test "info break" \
-        "Num     Type\[ \]+Disp Enb Address\[ \]+What.*
-\[0-9\]+\[\t \]+dprintf.*keep y.*PENDING.*pendfunc1.*" \
+	"Num     Type\[ \]+Disp Enb Address\[ \]+What.*
+${::decimal}\[\t \]+dprintf.*keep y.*PENDING.*pendfunc1.*" \
 	"single pending dprintf info"
 
     gdb_load ${binfile}
@@ -60,7 +60,7 @@ with_test_prefix "without symbols" {
     gdb_test "" ".*x=3.*x=4.*x=3.*" "run to resolved dprintf"
 }
 
-clean_restart ${binfile}
+clean_restart $testfile
 gdb_load_shlib $lib_sl
 
 #
@@ -76,7 +76,7 @@ gdb_test \
 
 gdb_test "info break" \
     "Num     Type\[ \]+Disp Enb Address\[ \]+What.*
-\[0-9\]+\[\t \]+dprintf.*keep y.*PENDING.*pendfunc1.*" \
+${::decimal}\[\t \]+dprintf.*keep y.*PENDING.*pendfunc1.*" \
 "single pending dprintf info"
 
 gdb_run_cmd

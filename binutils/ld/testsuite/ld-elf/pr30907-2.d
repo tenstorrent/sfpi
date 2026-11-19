@@ -2,7 +2,8 @@
 #source: pr22393-1.s
 #ld: -shared -z separate-code -z relro --rosegment
 #readelf: -l --wide
-#target: *-*-linux-gnu *-*-gnu* *-*-nacl* arm*-*-uclinuxfdpiceabi
+#notarget: i?86-*-* x86_64-*-*
+#target: *-*-linux-gnu *-*-gnu* arm*-*-uclinuxfdpiceabi
 #xfail: ![check_shared_lib_support] 
 #xfail: ![check_relro_support]
 

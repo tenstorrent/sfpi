@@ -1,6 +1,6 @@
 /* Definitions used by event-top.c, for GDB, the GNU debugger.
 
-   Copyright (C) 1999-2024 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    Written by Elena Zannoni <ezannoni@cygnus.com> of Cygnus Solutions.
 
@@ -64,7 +64,7 @@ extern void set_force_quit_flag ();
 
 /* Control C eventually causes this to be called, at a convenient time.  */
 
-extern void quit ();
+[[noreturn]] extern void quit ();
 
 /* Helper for the QUIT macro.  */
 

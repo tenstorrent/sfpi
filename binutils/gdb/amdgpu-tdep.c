@@ -1,6 +1,6 @@
 /* Target-dependent code for the AMDGPU architectures.
 
-   Copyright (C) 2019-2024 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -31,13 +31,28 @@
 #include "producer.h"
 #include "reggroups.h"
 
+/* Return true if INFO is of an AMDGPU architecture.  */
+
+static bool
+is_amdgpu_arch (const bfd_arch_info *info)
+{
+  return info->arch == bfd_arch_amdgcn;
+}
+
 /* See amdgpu-tdep.h.  */
 
 bool
 is_amdgpu_arch (struct gdbarch *arch)
 {
-  gdb_assert (arch != nullptr);
-  return gdbarch_bfd_arch_info (arch)->arch == bfd_arch_amdgcn;
+  return is_amdgpu_arch (gdbarch_bfd_arch_info (arch));
+}
+
+/* See amdgpu-tdep.h.  */
+
+bool
+is_amdgpu_arch (bfd *abfd)
+{
+  return is_amdgpu_arch (abfd->arch_info);
 }
 
 /* See amdgpu-tdep.h.  */
@@ -69,7 +84,7 @@ amdgpu_register_name (struct gdbarch *gdbarch, int regnum)
      However, at most one register with a given name is actually allocated for
      a specific wave.  If INFERIOR_PTID represents a GPU wave, we query
      amd-dbgapi to know whether the requested register actually exists for the
-     current wave, so there won't be duplicates in the the register names we
+     current wave, so there won't be duplicates in the register names we
      report for that wave.
 
      But there are two known cases where INFERIOR_PTID doesn't represent a GPU
@@ -341,7 +356,7 @@ using amd_dbgapi_register_type_enum_up
 
 /* Map type lookup names to types.  */
 using amd_dbgapi_register_type_map
-  = std::unordered_map<std::string, amd_dbgapi_register_type_up>;
+  = gdb::unordered_string_map<amd_dbgapi_register_type_up>;
 
 /* Parse S as a ULONGEST, raise an error on overflow.  */
 
@@ -802,7 +817,7 @@ amdgpu_register_type (struct gdbarch *gdbarch, int regnum)
   return tdep->register_types[regnum];
 }
 
-static int
+static bool
 amdgpu_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 			    const reggroup *group)
 {
@@ -848,8 +863,7 @@ amdgpu_frame_cache (const frame_info_ptr &this_frame, void **this_cache)
   if (*this_cache != nullptr)
     return (struct amdgpu_frame_cache *) *this_cache;
 
-  struct amdgpu_frame_cache *cache
-    = FRAME_OBSTACK_ZALLOC (struct amdgpu_frame_cache);
+  auto *cache = frame_obstack_zalloc<struct amdgpu_frame_cache> ();
   (*this_cache) = cache;
 
   cache->pc = get_frame_func (this_frame);
@@ -1002,7 +1016,7 @@ amdgpu_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR start_pc)
     {
       CORE_ADDR post_prologue_pc
 	= skip_prologue_using_sal (gdbarch, func_addr);
-      struct compunit_symtab *cust = find_pc_compunit_symtab (func_addr);
+      struct compunit_symtab *cust = find_compunit_symtab_for_pc (func_addr);
 
       /* Clang always emits a line note before the prologue and another
 	 one after.  We trust clang to emit usable line notes.  */
@@ -1042,7 +1056,7 @@ amdgpu_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   amdgpu_gdbarch_tdep *tdep = gdbarch_tdep<amdgpu_gdbarch_tdep> (gdbarch);
 
   /* Data types.  */
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
   set_gdbarch_ptr_bit (gdbarch, 64);
   set_gdbarch_addr_bit (gdbarch, 64);
   set_gdbarch_short_bit (gdbarch, 16);
@@ -1371,10 +1385,7 @@ amdgpu_register_type_parse_test ()
 
 #endif
 
-void _initialize_amdgpu_tdep ();
-
-void
-_initialize_amdgpu_tdep ()
+INIT_GDB_FILE (amdgpu_tdep)
 {
   gdbarch_register (bfd_arch_amdgcn, amdgpu_gdbarch_init, NULL,
 		    amdgpu_supports_arch_info);

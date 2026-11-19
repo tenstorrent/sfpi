@@ -1,4 +1,4 @@
-# Copyright 2010-2024 Free Software Foundation, Inc.
+# Copyright 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ foreach_with_prefix var { l l1 l2 l4 l8 } {
 		"set contents of byte at offset $i"
 	    gdb_test "p l" " = \\.TRUE\\."
 	    incr addr
-	    set addr [format "0x%x" $addr]
+	    set addr [format "0x%lx" $addr]
 	}
     }
 }

@@ -1,5 +1,5 @@
 /* input_scrub.c - Break up input buffers into whole numbers of lines.
-   Copyright (C) 1987-2025 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -150,6 +150,21 @@ input_scrub_reinit (void)
   memcpy (buffer_start, BEFORE_STRING, (int) BEFORE_SIZE);
 }
 
+/* Finish off old buffers.  */
+
+static void
+input_scrub_free (void)
+{
+  if (sb_index != (size_t) -1)
+    {
+      sb_kill (&from_sb);
+      sb_index = -1;
+    }
+  free (buffer_start);
+  buffer_start = NULL;
+  input_file_end ();
+}
+
 /* Push the state of input reading and scrubbing so that we can #include.
    The return value is a 'void *' (fudged for old compilers) to a save
    area, which can be restored by passing it to input_scrub_pop().  */
@@ -188,7 +203,7 @@ input_scrub_pop (struct input_save *saved)
 {
   char *saved_position;
 
-  input_scrub_end ();		/* Finish off old buffer */
+  input_scrub_free ();
 
   input_file_pop (saved->input_file_save);
   saved_position = saved->saved_position;
@@ -241,12 +256,9 @@ input_scrub_begin (void)
 void
 input_scrub_end (void)
 {
-  if (buffer_start)
-    {
-      free (buffer_start);
-      buffer_start = 0;
-      input_file_end ();
-    }
+  while (next_saved_file != NULL)
+    input_scrub_pop (next_saved_file);
+  input_scrub_free ();
 }
 
 /* Start reading input from a new file.
@@ -341,7 +353,6 @@ input_scrub_next_buffer (char **bufp)
     {
       if (sb_index >= from_sb.len)
 	{
-	  sb_kill (&from_sb);
 	  if (from_sb_expansion == expanding_macro)
 	    {
 	      cond_finish_check (macro_nest);
@@ -408,8 +419,8 @@ input_scrub_next_buffer (char **bufp)
       partial_size = limit - p;
 
       /* Save the fragment after that last newline.  */
-      memcpy (save_source, partial_where, (int) AFTER_SIZE);
-      memcpy (partial_where, AFTER_STRING, (int) AFTER_SIZE);
+      memcpy (save_source, partial_where, AFTER_SIZE);
+      memcpy (partial_where, AFTER_STRING, AFTER_SIZE);
       return partial_where;
 
     read_more:
@@ -481,7 +492,12 @@ new_logical_line_flags (const char *fname, /* DON'T destroy it!  We point to it!
       /* FIXME: we could check that include nesting is correct.  */
       break;
     case 1 << 3:
-      if (line_number < 0 || fname != NULL)
+      /* s_linefile conditionally decrements the line depending on
+	 whether '\n' is seen.  */
+      if (line_number < 0
+	  || (line_number == 0 && input_line_pointer[-1] != '\n'))
+	line_number = physical_input_line;
+      if (fname != NULL)
 	abort ();
       if (next_saved_file == NULL)
 	fname = physical_input_file;
@@ -520,14 +536,14 @@ new_logical_line (const char *fname, int line_number)
 void
 as_report_context (void)
 {
-  const struct input_save *saved = next_saved_file;
+  const struct input_save *saved;
   enum expansion expansion = from_sb_expansion;
   int indent = 1;
 
   if (!macro_nest)
     return;
 
-  do
+  for (saved = next_saved_file; saved; saved = saved->next_saved_file)
     {
       if (expansion != expanding_macro)
 	/* Nothing.  */;
@@ -542,7 +558,6 @@ as_report_context (void)
       expansion = saved->from_sb_expansion;
       ++indent;
     }
-  while ((saved = saved->next_saved_file) != NULL);
 }
 
 /* Return the current physical input file name and line number, if known  */
@@ -572,10 +587,10 @@ as_where (unsigned int *linep)
 
   if (macro_nest && is_linefile)
     {
-      const struct input_save *saved = next_saved_file;
+      const struct input_save *saved;
       enum expansion expansion = from_sb_expansion;
 
-      do
+      for (saved = next_saved_file; saved; saved = saved->next_saved_file)
 	{
 	  if (expansion != expanding_macro)
 	    /* Nothing.  */;
@@ -595,7 +610,6 @@ as_where (unsigned int *linep)
 
 	  expansion = saved->from_sb_expansion;
 	}
-      while ((saved = saved->next_saved_file) != NULL);
     }
 
   return file;

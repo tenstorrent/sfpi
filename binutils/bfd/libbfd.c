@@ -1,5 +1,5 @@
 /* Assorted BFD support routines, only used internally.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -113,9 +113,9 @@ _bfd_bool_bfd_asection_bfd_asection_true (bfd *ibfd ATTRIBUTE_UNUSED,
 
 bool
 _bfd_bool_bfd_asymbol_bfd_asymbol_true (bfd *ibfd ATTRIBUTE_UNUSED,
-					asymbol *isym ATTRIBUTE_UNUSED,
+					asymbol **isym ATTRIBUTE_UNUSED,
 					bfd *obfd ATTRIBUTE_UNUSED,
-					asymbol *osym ATTRIBUTE_UNUSED)
+					asymbol **osym ATTRIBUTE_UNUSED)
 {
   return true;
 }
@@ -199,13 +199,13 @@ _bfd_norelocs_canonicalize_reloc (bfd *abfd ATTRIBUTE_UNUSED,
   return 0;
 }
 
-void
-_bfd_norelocs_set_reloc (bfd *abfd ATTRIBUTE_UNUSED,
-			 asection *sec ATTRIBUTE_UNUSED,
-			 arelent **relptr ATTRIBUTE_UNUSED,
-			 unsigned int count ATTRIBUTE_UNUSED)
+bool
+_bfd_norelocs_finalize_section_relocs (bfd *abfd ATTRIBUTE_UNUSED,
+				       asection *sec ATTRIBUTE_UNUSED,
+				       arelent **relptr ATTRIBUTE_UNUSED,
+				       unsigned int count ATTRIBUTE_UNUSED)
 {
-  /* Do nothing.  */
+  return true;
 }
 
 bool
@@ -1098,24 +1098,26 @@ bfd_mmap_local (bfd *abfd, size_t rsize, void **map_addr, size_t *map_size)
 
 /* Mmap a memory region of RSIZE bytes at the current offset.
    Return mmap address and size in MAP_ADDR and MAP_SIZE.  Return NULL
-   on invalid input and MAP_FAILED for mmap failure.  */
+   on invalid input.  */
 
 void *
 _bfd_mmap_temporary (bfd *abfd, size_t rsize, void **map_addr,
 		     size_t *map_size)
 {
   /* Use mmap only if section size >= the minimum mmap section size.  */
-  if (rsize < _bfd_minimum_mmap_size)
+  if (rsize >= _bfd_minimum_mmap_size)
     {
-      void *mem = _bfd_malloc_and_read (abfd, rsize, rsize);
-      /* NB: Set *MAP_ADDR to MEM and *MAP_SIZE to 0 to indicate that
-	 _bfd_malloc_and_read is called.  */
-      *map_addr = mem;
-      *map_size = 0;
-      return mem;
+      void *result = bfd_mmap_local (abfd, rsize, map_addr, map_size);
+      if (result != MAP_FAILED)
+	return result;
     }
 
-  return bfd_mmap_local (abfd, rsize, map_addr, map_size);
+  void *mem = _bfd_malloc_and_read (abfd, rsize, rsize);
+  /* NB: Set *MAP_ADDR to MEM and *MAP_SIZE to 0 to indicate that
+     _bfd_malloc_and_read is called.  */
+  *map_addr = mem;
+  *map_size = 0;
+  return mem;
 }
 
 /* Munmap RSIZE bytes at PTR.  */
@@ -1213,15 +1215,10 @@ _bfd_mmap_read_temporary (void **data_p, size_t *size_p,
   if (use_mmmap)
     {
       void *mmaped = _bfd_mmap_temporary (abfd, size, mmap_base, size_p);
-      /* MAP_FAILED is returned when called from GDB on an object with
-	 opncls_iovec.  Use bfd_read in this case.  */
-      if (mmaped != MAP_FAILED)
-	{
-	  if (mmaped == NULL)
-	    abort ();
-	  *data_p = mmaped;
-	  return true;
-	}
+      if (mmaped == NULL)
+	return false;
+      *data_p = mmaped;
+      return true;
     }
 #endif
 
@@ -1388,37 +1385,6 @@ bfd_generic_is_local_label_name (bfd *abfd, const char *name)
   return name[0] == locals_prefix;
 }
 
-/* Helper function for reading uleb128 encoded data.  */
-
-bfd_vma
-_bfd_read_unsigned_leb128 (bfd *abfd ATTRIBUTE_UNUSED,
-			   bfd_byte *buf,
-			   unsigned int *bytes_read_ptr)
-{
-  bfd_vma result;
-  unsigned int num_read;
-  unsigned int shift;
-  bfd_byte byte;
-
-  result = 0;
-  shift = 0;
-  num_read = 0;
-  do
-    {
-      byte = bfd_get_8 (abfd, buf);
-      buf++;
-      num_read++;
-      if (shift < 8 * sizeof (result))
-	{
-	  result |= (((bfd_vma) byte & 0x7f) << shift);
-	  shift += 7;
-	}
-    }
-  while (byte & 0x80);
-  *bytes_read_ptr = num_read;
-  return result;
-}
-
 /* Read in a LEB128 encoded value from ABFD starting at *PTR.
    If SIGN is true, return a signed LEB128 value.
    *PTR is incremented by the number of bytes read.
@@ -1456,39 +1422,6 @@ _bfd_safe_read_leb128 (bfd *abfd ATTRIBUTE_UNUSED,
   return result;
 }
 
-/* Helper function for reading sleb128 encoded data.  */
-
-bfd_signed_vma
-_bfd_read_signed_leb128 (bfd *abfd ATTRIBUTE_UNUSED,
-			 bfd_byte *buf,
-			 unsigned int *bytes_read_ptr)
-{
-  bfd_vma result;
-  unsigned int shift;
-  unsigned int num_read;
-  bfd_byte byte;
-
-  result = 0;
-  shift = 0;
-  num_read = 0;
-  do
-    {
-      byte = bfd_get_8 (abfd, buf);
-      buf ++;
-      num_read ++;
-      if (shift < 8 * sizeof (result))
-	{
-	  result |= (((bfd_vma) byte & 0x7f) << shift);
-	  shift += 7;
-	}
-    }
-  while (byte & 0x80);
-  if (shift < 8 * sizeof (result) && (byte & 0x40))
-    result |= (((bfd_vma) -1) << shift);
-  *bytes_read_ptr = num_read;
-  return result;
-}
-
 /* Write VAL in uleb128 format to P.
    END indicates the last byte of allocated space for the uleb128 value to fit
    in.
@@ -1514,11 +1447,11 @@ _bfd_write_unsigned_leb128 (bfd_byte *p, bfd_byte *end, bfd_vma val)
 }
 
 bool
-_bfd_generic_init_private_section_data (bfd *ibfd ATTRIBUTE_UNUSED,
-					asection *isec ATTRIBUTE_UNUSED,
-					bfd *obfd ATTRIBUTE_UNUSED,
-					asection *osec ATTRIBUTE_UNUSED,
-					struct bfd_link_info *link_info ATTRIBUTE_UNUSED)
+_bfd_generic_bfd_copy_private_section_data (bfd *ibfd ATTRIBUTE_UNUSED,
+					    asection *isec ATTRIBUTE_UNUSED,
+					    bfd *obfd ATTRIBUTE_UNUSED,
+					    asection *osec ATTRIBUTE_UNUSED,
+					    struct bfd_link_info *link_info ATTRIBUTE_UNUSED)
 {
   return true;
 }

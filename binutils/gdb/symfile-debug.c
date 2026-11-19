@@ -1,6 +1,6 @@
 /* Debug logging for the symbol file functions for the GNU debugger, GDB.
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    Contributed by Cygnus Support, using pieces from other GDB modules.
 
@@ -33,7 +33,6 @@
 #include "symfile.h"
 #include "block.h"
 #include "filenames.h"
-#include "cli/cli-style.h"
 #include "build-id.h"
 #include "debuginfod-support.h"
 
@@ -153,27 +152,98 @@ objfile::forget_cached_source_info ()
     gdb_printf (gdb_stdlog, "qf->forget_cached_source_info (%s)\n",
 		objfile_debug_name (this));
 
-  for (compunit_symtab *cu : compunits ())
-    cu->forget_cached_source_info ();
+  for (compunit_symtab &cu : compunits ())
+    cu.forget_cached_source_info ();
 
   for (const auto &iter : qf)
     iter->forget_cached_source_info (this);
 }
 
-bool
-objfile::map_symtabs_matching_filename
-  (const char *name, const char *real_path,
-   gdb::function_view<bool (symtab *)> callback)
+/* Find the first symtab of CUST matching BASE_NAME, NAME and REAL_PATH, for
+   which CALLBACK returns true.
+
+   If NAME is not absolute, then REAL_PATH is NULL
+   If NAME is absolute, then REAL_PATH is the gdb_realpath form of NAME.
+
+   The return value, NAME, REAL_PATH and CALLBACK are identical to the
+   `objfile::find_symtab_matching_filename' method.
+
+   CUST indicates which compunit symtab to search.  Each symtab within
+   the specified compunit symtab is also searched.  */
+
+static symtab *
+find_symtab_in_compunit_symtab (const char *base_name, const char *name,
+				const char *real_path, compunit_symtab *cust,
+				find_symtab_callback_ftype callback)
+{
+  for (symtab *s : cust->filetabs ())
+    {
+      if (compare_filenames_for_search (s->filename (), name))
+	{
+	  if (callback (s))
+	    return s;
+
+	  continue;
+	}
+
+      /* Before we invoke realpath, which can get expensive when many
+	 files are involved, do a quick comparison of the basenames.  */
+      if (! basenames_may_differ
+	  && FILENAME_CMP (base_name, lbasename (s->filename ())) != 0)
+	continue;
+
+      if (compare_filenames_for_search (symtab_to_fullname (s), name))
+	{
+	  if (callback (s))
+	    return s;
+
+	  continue;
+	}
+
+      /* If the user gave us an absolute path, try to find the file in
+	 this symtab and use its absolute path.  */
+      if (real_path != NULL)
+	{
+	  const char *fullname = symtab_to_fullname (s);
+
+	  gdb_assert (IS_ABSOLUTE_PATH (real_path));
+	  gdb_assert (IS_ABSOLUTE_PATH (name));
+	  gdb::unique_xmalloc_ptr<char> fullname_real_path
+	    = gdb_realpath (fullname);
+	  fullname = fullname_real_path.get ();
+	  if (FILENAME_CMP (real_path, fullname) == 0)
+	    {
+	      if (callback (s))
+		return s;
+
+	      continue;
+	    }
+	}
+    }
+
+  for (compunit_symtab *iter : cust->includes)
+    if (symtab *result = find_symtab_in_compunit_symtab (base_name, name,
+							 real_path, iter,
+							 callback);
+	result != nullptr)
+      return result;
+
+  return nullptr;
+}
+
+symtab *
+objfile::find_symtab_matching_filename (const char *name,
+					const char *real_path,
+					find_symtab_callback_ftype callback)
 {
   if (debug_symfile)
     gdb_printf (gdb_stdlog,
-		"qf->map_symtabs_matching_filename (%s, \"%s\", "
+		"qf->find_symtab_matching_filename (%s, \"%s\", "
 		"\"%s\", %s)\n",
 		objfile_debug_name (this), name,
 		real_path ? real_path : NULL,
 		host_address_to_string (&callback));
 
-  bool retval = true;
   const char *name_basename = lbasename (name);
 
   auto match_one_filename = [&] (const char *filename, bool basenames)
@@ -188,45 +258,34 @@ objfile::map_symtabs_matching_filename
     return false;
   };
 
-  compunit_symtab *last_made = this->compunit_symtabs;
-
-  auto on_expansion = [&] (compunit_symtab *symtab)
+  symtab *result = nullptr;
+  auto compunit_callback = [&] (compunit_symtab *symtab)
   {
-    /* The callback to iterate_over_some_symtabs returns false to keep
-       going and true to continue, so we have to invert the result
-       here, for expand_symtabs_matching.  */
-    bool result = !iterate_over_some_symtabs (name, real_path,
-					      this->compunit_symtabs,
-					      last_made,
-					      callback);
-    last_made = this->compunit_symtabs;
-    return result;
+    /* Skip included compunits, as they are searched by
+       find_symtab_in_compunit_symtab.  */
+    if (symtab->user != nullptr)
+      return iteration_status::keep_going;
+
+    result = find_symtab_in_compunit_symtab (name_basename, name, real_path,
+					     symtab, callback);
+    return (result == nullptr
+	    ? iteration_status::keep_going
+	    : iteration_status::stop);
   };
 
   for (const auto &iter : qf)
-    {
-      if (!iter->expand_symtabs_matching (this,
-					  match_one_filename,
-					  nullptr,
-					  nullptr,
-					  on_expansion,
-					  (SEARCH_GLOBAL_BLOCK
-					   | SEARCH_STATIC_BLOCK),
-					  SEARCH_ALL_DOMAINS))
-	{
-	  retval = false;
-	  break;
-	}
-    }
+    if (iter->search (this, match_one_filename, nullptr, nullptr,
+		      compunit_callback,
+		      SEARCH_GLOBAL_BLOCK | SEARCH_STATIC_BLOCK,
+		      SEARCH_ALL_DOMAINS)
+	== iteration_status::stop)
+      break;
 
   if (debug_symfile)
-    gdb_printf (gdb_stdlog,
-		"qf->map_symtabs_matching_filename (...) = %d\n",
-		retval);
+    gdb_printf (gdb_stdlog, "qf->find_symtab_matching_filename (...) = %p\n",
+		result);
 
-  /* We must re-invert the return value here to match the caller's
-     expectations.  */
-  return !retval;
+  return result;
 }
 
 struct compunit_symtab *
@@ -257,26 +316,23 @@ objfile::lookup_symbol (block_enum kind, const lookup_name_info &name,
       {
 	retval = stab;
 	/* Found it.  */
-	return false;
+	return iteration_status::stop;
       }
     if (with_opaque != nullptr)
       retval = stab;
 
     /* Keep looking through other psymtabs.  */
-    return true;
+    return iteration_status::keep_going;
   };
 
   for (const auto &iter : qf)
     {
-      if (!iter->expand_symtabs_matching (this,
-					  nullptr,
-					  &name,
-					  nullptr,
-					  search_one_symtab,
-					  kind == GLOBAL_BLOCK
-					  ? SEARCH_GLOBAL_BLOCK
-					  : SEARCH_STATIC_BLOCK,
-					  domain))
+      if (iter->search (this, nullptr, &name, nullptr, search_one_symtab,
+			kind == GLOBAL_BLOCK
+			? SEARCH_GLOBAL_BLOCK
+			: SEARCH_STATIC_BLOCK,
+			domain)
+	  == iteration_status::stop)
 	break;
     }
 
@@ -312,28 +368,6 @@ objfile::dump ()
 }
 
 void
-objfile::expand_symtabs_for_function (const char *func_name)
-{
-  if (debug_symfile)
-    gdb_printf (gdb_stdlog,
-		"qf->expand_symtabs_for_function (%s, \"%s\")\n",
-		objfile_debug_name (this), func_name);
-
-  lookup_name_info base_lookup (func_name, symbol_name_match_type::FULL);
-  lookup_name_info lookup_name = base_lookup.make_ignore_params ();
-
-  for (const auto &iter : qf)
-    iter->expand_symtabs_matching (this,
-				   nullptr,
-				   &lookup_name,
-				   nullptr,
-				   nullptr,
-				   (SEARCH_GLOBAL_BLOCK
-				    | SEARCH_STATIC_BLOCK),
-				   SEARCH_FUNCTION_DOMAIN);
-}
-
-void
 objfile::expand_all_symtabs ()
 {
   if (debug_symfile)
@@ -359,45 +393,39 @@ objfile::expand_symtabs_with_fullname (const char *fullname)
   };
 
   for (const auto &iter : qf)
-    iter->expand_symtabs_matching (this,
-				   file_matcher,
-				   nullptr,
-				   nullptr,
-				   nullptr,
-				   (SEARCH_GLOBAL_BLOCK
-				    | SEARCH_STATIC_BLOCK),
-				   SEARCH_ALL_DOMAINS);
+    iter->search (this, file_matcher, nullptr, nullptr, nullptr,
+		  SEARCH_GLOBAL_BLOCK | SEARCH_STATIC_BLOCK,
+		  SEARCH_ALL_DOMAINS);
 }
 
-bool
-objfile::expand_symtabs_matching
-  (gdb::function_view<expand_symtabs_file_matcher_ftype> file_matcher,
-   const lookup_name_info *lookup_name,
-   gdb::function_view<expand_symtabs_symbol_matcher_ftype> symbol_matcher,
-   gdb::function_view<expand_symtabs_exp_notify_ftype> expansion_notify,
-   block_search_flags search_flags,
-   domain_search_flags domain,
-   gdb::function_view<expand_symtabs_lang_matcher_ftype> lang_matcher)
+iteration_status
+objfile::search (search_symtabs_file_matcher file_matcher,
+		 const lookup_name_info *lookup_name,
+		 search_symtabs_symbol_matcher symbol_matcher,
+		 compunit_symtab_iteration_callback compunit_callback,
+		 block_search_flags search_flags,
+		 domain_search_flags domain,
+		 search_symtabs_lang_matcher lang_matcher)
 {
-  /* This invariant is documented in quick-functions.h.  */
+  /* This invariant is documented in quick-symbol.h.  */
   gdb_assert (lookup_name != nullptr || symbol_matcher == nullptr);
 
   if (debug_symfile)
     gdb_printf (gdb_stdlog,
-		"qf->expand_symtabs_matching (%s, %s, %s, %s, %s)\n",
+		"qf->search (%s, %s, %s, %s, %s)\n",
 		objfile_debug_name (this),
 		host_address_to_string (&file_matcher),
 		host_address_to_string (&symbol_matcher),
-		host_address_to_string (&expansion_notify),
+		host_address_to_string (&compunit_callback),
 		domain_name (domain).c_str ());
 
   for (const auto &iter : qf)
-    if (!iter->expand_symtabs_matching (this, file_matcher, lookup_name,
-					symbol_matcher, expansion_notify,
-					search_flags, domain,
-					lang_matcher))
-      return false;
-  return true;
+    if (iter->search (this, file_matcher, lookup_name, symbol_matcher,
+		      compunit_callback, search_flags, domain, lang_matcher)
+	== iteration_status::stop)
+      return iteration_status::stop;
+
+  return iteration_status::keep_going;
 }
 
 struct compunit_symtab *
@@ -436,8 +464,7 @@ objfile::find_pc_sect_compunit_symtab (bound_minimal_symbol msymbol,
 }
 
 void
-objfile::map_symbol_filenames (gdb::function_view<symbol_filename_ftype> fun,
-			       bool need_fullname)
+objfile::map_symbol_filenames (symbol_filename_listener fun, bool need_fullname)
 {
   if (debug_symfile)
     gdb_printf (gdb_stdlog,
@@ -461,28 +488,28 @@ objfile::compute_main_name ()
     iter->compute_main_name (this);
 }
 
-struct compunit_symtab *
-objfile::find_compunit_symtab_by_address (CORE_ADDR address)
+struct symbol *
+objfile::find_symbol_by_address (CORE_ADDR address)
 {
   if (debug_symfile)
     gdb_printf (gdb_stdlog,
-		"qf->find_compunit_symtab_by_address (%s, %s)\n",
+		"qf->find_symbol_by_address (%s, %s)\n",
 		objfile_debug_name (this),
 		hex_string (address));
 
-  struct compunit_symtab *result = NULL;
+  struct symbol *result = NULL;
   for (const auto &iter : qf)
     {
-      result = iter->find_compunit_symtab_by_address (this, address);
+      result = iter->find_symbol_by_address (this, address);
       if (result != nullptr)
 	break;
     }
 
   if (debug_symfile)
     gdb_printf (gdb_stdlog,
-		"qf->find_compunit_symtab_by_address (...) = %s\n",
+		"qf->find_symbol_by_address (...) = %s\n",
 		result
-		? debug_symtab_name (result->primary_filetab ())
+		? result->print_name ()
 		: "NULL");
 
   return result;
@@ -690,18 +717,6 @@ static const struct sym_probe_fns debug_sym_probe_fns =
 /* Debugging version of struct sym_fns.  */
 
 static void
-debug_sym_new_init (struct objfile *objfile)
-{
-  const struct debug_sym_fns_data *debug_data
-    = symfile_debug_objfile_data_key.get (objfile);
-
-  gdb_printf (gdb_stdlog, "sf->sym_new_init (%s)\n",
-	      objfile_debug_name (objfile));
-
-  debug_data->real_sf->sym_new_init (objfile);
-}
-
-static void
 debug_sym_init (struct objfile *objfile)
 {
   const struct debug_sym_fns_data *debug_data
@@ -723,18 +738,6 @@ debug_sym_read (struct objfile *objfile, symfile_add_flags symfile_flags)
 	      objfile_debug_name (objfile), (unsigned) symfile_flags);
 
   debug_data->real_sf->sym_read (objfile, symfile_flags);
-}
-
-static void
-debug_sym_finish (struct objfile *objfile)
-{
-  const struct debug_sym_fns_data *debug_data
-    = symfile_debug_objfile_data_key.get (objfile);
-
-  gdb_printf (gdb_stdlog, "sf->sym_finish (%s)\n",
-	      objfile_debug_name (objfile));
-
-  debug_data->real_sf->sym_finish (objfile);
 }
 
 static void
@@ -760,18 +763,6 @@ debug_sym_segments (bfd *abfd)
   gdb_assert_not_reached ("debug_sym_segments called");
 }
 
-static void
-debug_sym_read_linetable (struct objfile *objfile)
-{
-  const struct debug_sym_fns_data *debug_data
-    = symfile_debug_objfile_data_key.get (objfile);
-
-  gdb_printf (gdb_stdlog, "sf->sym_read_linetable (%s)\n",
-	      objfile_debug_name (objfile));
-
-  debug_data->real_sf->sym_read_linetable (objfile);
-}
-
 static bfd_byte *
 debug_sym_relocate (struct objfile *objfile, asection *sectp, bfd_byte *buf)
 {
@@ -791,24 +782,6 @@ debug_sym_relocate (struct objfile *objfile, asection *sectp, bfd_byte *buf)
   return retval;
 }
 
-/* Template of debugging version of struct sym_fns.
-   A copy is made, with sym_flavour updated, and a pointer to the real table
-   installed in real_sf, and then a pointer to the copy is installed in the
-   objfile.  */
-
-static const struct sym_fns debug_sym_fns =
-{
-  debug_sym_new_init,
-  debug_sym_init,
-  debug_sym_read,
-  debug_sym_finish,
-  debug_sym_offsets,
-  debug_sym_segments,
-  debug_sym_read_linetable,
-  debug_sym_relocate,
-  &debug_sym_probe_fns,
-};
-
 /* Install the debugging versions of the symfile functions for OBJFILE.
    Do not call this if the debug versions are already installed.  */
 
@@ -832,14 +805,10 @@ install_symfile_debug_logging (struct objfile *objfile)
       (to)->debug_sf.name = func;		\
   } while (0)
 
-  COPY_SF_PTR (real_sf, debug_data, sym_new_init, debug_sym_new_init);
   COPY_SF_PTR (real_sf, debug_data, sym_init, debug_sym_init);
   COPY_SF_PTR (real_sf, debug_data, sym_read, debug_sym_read);
-  COPY_SF_PTR (real_sf, debug_data, sym_finish, debug_sym_finish);
   COPY_SF_PTR (real_sf, debug_data, sym_offsets, debug_sym_offsets);
   COPY_SF_PTR (real_sf, debug_data, sym_segments, debug_sym_segments);
-  COPY_SF_PTR (real_sf, debug_data, sym_read_linetable,
-	       debug_sym_read_linetable);
   COPY_SF_PTR (real_sf, debug_data, sym_relocate, debug_sym_relocate);
   if (real_sf->sym_probe_fns)
     debug_data->debug_sf.sym_probe_fns = &debug_sym_probe_fns;
@@ -893,17 +862,17 @@ static void
 set_debug_symfile (const char *args, int from_tty, struct cmd_list_element *c)
 {
   for (struct program_space *pspace : program_spaces)
-    for (objfile *objfile : pspace->objfiles ())
+    for (objfile &objfile : pspace->objfiles ())
       {
 	if (debug_symfile)
 	  {
-	    if (!symfile_debug_installed (objfile))
-	      install_symfile_debug_logging (objfile);
+	    if (!symfile_debug_installed (&objfile))
+	      install_symfile_debug_logging (&objfile);
 	  }
 	else
 	  {
-	    if (symfile_debug_installed (objfile))
-	      uninstall_symfile_debug_logging (objfile);
+	    if (symfile_debug_installed (&objfile))
+	      uninstall_symfile_debug_logging (&objfile);
 	  }
       }
 }
@@ -915,9 +884,7 @@ show_debug_symfile (struct ui_file *file, int from_tty,
   gdb_printf (file, _("Symfile debugging is %s.\n"), value);
 }
 
-void _initialize_symfile_debug ();
-void
-_initialize_symfile_debug ()
+INIT_GDB_FILE (symfile_debug)
 {
   add_setshow_boolean_cmd ("symfile", no_class, &debug_symfile, _("\
 Set debugging of the symfile functions."), _("\

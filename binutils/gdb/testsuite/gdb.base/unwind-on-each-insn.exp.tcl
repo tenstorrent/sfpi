@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 if {[prepare_for_testing_full "failed to prepare" \
 	 [list ${testfile} $ldflags \
 	      $srcfile $srcfile_flags $srcfile2 $srcfile2_flags]]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # Return a two element list, the first element is the stack-pointer

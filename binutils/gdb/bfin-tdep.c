@@ -1,6 +1,6 @@
 /* Target-dependent code for Analog Devices Blackfin processor, for GDB.
 
-   Copyright (C) 2005-2024 Free Software Foundation, Inc.
+   Copyright (C) 2005-2026 Free Software Foundation, Inc.
 
    Contributed by Analog Devices, Inc.
 
@@ -108,10 +108,12 @@
 #define P_RTS				0x0010
 /* MNOP  */
 #define P_MNOP				0xC803
+/* codespell:ignore-begin.  Ignore EXCPT.  */
 /* EXCPT, 16-bit, min  */
 #define P_EXCPT_MIN			0x00A0
 /* EXCPT, 16-bit, max  */
 #define P_EXCPT_MAX			0x00AF
+/* codespell:ignore-end.  */
 /* multi instruction mask 1, 16-bit  */
 #define P_BIT_MULTI_INS_1		0xC000
 /* multi instruction mask 2, 16-bit  */
@@ -265,10 +267,9 @@ struct bfin_frame_cache
 static struct bfin_frame_cache *
 bfin_alloc_frame_cache (void)
 {
-  struct bfin_frame_cache *cache;
   int i;
 
-  cache = FRAME_OBSTACK_ZALLOC (struct bfin_frame_cache);
+  auto *cache = frame_obstack_zalloc<bfin_frame_cache> ();
 
   /* Base address.  */
   cache->base = 0;
@@ -598,7 +599,7 @@ bfin_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
 
   *size = kind;
 
-  if (strcmp (target_shortname (), "sim") == 0)
+  if (streq (target_shortname (), "sim"))
     return bfin_sim_breakpoint;
   else
     return bfin_breakpoint;
@@ -769,7 +770,7 @@ bfin_abi (struct gdbarch *gdbarch)
 }
 
 /* Initialize the current architecture based on INFO.  If possible,
-   re-use an architecture from ARCHES, which is a list of
+   reuse an architecture from ARCHES, which is a list of
    architectures already created during this debugging session.
 
    Called e.g. at program startup, when reading a core file, and when
@@ -815,7 +816,6 @@ bfin_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_register_name (gdbarch, bfin_register_name);
   set_gdbarch_register_type (gdbarch, bfin_register_type);
   set_gdbarch_push_dummy_call (gdbarch, bfin_push_dummy_call);
-  set_gdbarch_believe_pcc_promotion (gdbarch, 1);
   set_gdbarch_return_value (gdbarch, bfin_return_value);
   set_gdbarch_skip_prologue (gdbarch, bfin_skip_prologue);
   set_gdbarch_inner_than (gdbarch, core_addr_lessthan);
@@ -837,9 +837,7 @@ bfin_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   return gdbarch;
 }
 
-void _initialize_bfin_tdep ();
-void
-_initialize_bfin_tdep ()
+INIT_GDB_FILE (bfin_tdep)
 {
   gdbarch_register (bfd_arch_bfin, bfin_gdbarch_init);
 }

@@ -1,6 +1,6 @@
 /* Routines for name->symbol lookups in GDB.
-   
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    Contributed by David Carlton <carlton@bactrian.org> and by Kealia,
    Inc.
@@ -34,7 +34,6 @@ struct multidictionary;
 
 struct symbol;
 struct obstack;
-struct pending;
 struct language_defn;
 
 /* The creation functions for various implementations of
@@ -46,7 +45,7 @@ struct language_defn;
 
 extern struct multidictionary *
   mdict_create_hashed (struct obstack *obstack,
-		       const struct pending *symbol_list);
+		       const std::vector<struct symbol *> &symbol_list);
 
 /* Create a multi-language dictionary of symbols, implemented
    via a hashtable that grows as necessary.  The initial dictionary of
@@ -64,7 +63,7 @@ extern struct multidictionary *
 
 extern struct multidictionary *
   mdict_create_linear (struct obstack *obstack,
-		       const struct pending *symbol_list);
+		       const std::vector<struct symbol *> &symbol_list);
 
 /* Create a multi-language dictionary of symbols, implemented
    via an array that grows as necessary.  The multidictionary initially
@@ -91,7 +90,7 @@ extern void mdict_add_symbol (struct multidictionary *mdict,
 /* Utility to add a list of symbols to a multidictionary.  */
 
 extern void mdict_add_pending (struct multidictionary *mdict,
-			       const struct pending *symbol_list);
+			       const std::vector<struct symbol *> &symbol_list);
 
 /* A type containing data that is used when iterating over all symbols
    in a dictionary.  Don't ever look at its innards; this type would
@@ -151,7 +150,7 @@ extern struct symbol *
 /* Advance MITERATOR to point at the next symbol in MDICT whose
    search_name () is NAME, as tested using COMPARE (see
    dict_iter_match_first), or NULL if there are no more such symbols.
-   Don't call this if you've previously received NULL from 
+   Don't call this if you've previously received NULL from
    mdict_iterator_match_first or mdict_iterator_match_next on this
    iteration.  And don't call it unless MITERATOR was created by a
    previous call to mdict_iter_match_first with the same NAME and COMPARE.  */
@@ -168,8 +167,8 @@ extern int mdict_size (const struct multidictionary *mdict);
    C++.  */
 struct mdict_iterator_wrapper
 {
-  typedef mdict_iterator_wrapper self_type;
-  typedef struct symbol *value_type;
+  using self_type = mdict_iterator_wrapper;
+  using value_type = struct symbol *;
 
   explicit mdict_iterator_wrapper (const struct multidictionary *mdict)
     : m_sym (mdict_iterator_first (mdict, &m_iter))

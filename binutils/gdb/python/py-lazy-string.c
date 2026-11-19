@@ -1,6 +1,6 @@
 /* Python interface to lazy strings.
 
-   Copyright (C) 2010-2024 Free Software Foundation, Inc.
+   Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,16 +23,15 @@
 #include "valprint.h"
 #include "language.h"
 
-struct lazy_string_object {
-  PyObject_HEAD
-
+struct lazy_string_object : public PyObject
+{
   /*  Holds the address of the lazy string.  */
   CORE_ADDR address;
 
   /*  Holds the encoding that will be applied to the string
       when the string is printed by GDB.  If the encoding is set
       to None then GDB will select the most appropriate
-      encoding when the sting is printed.  */
+      encoding when the string is printed.  */
   char *encoding;
 
   /* If TYPE is an array: If the length is known, then this value is the
@@ -52,8 +51,9 @@ struct lazy_string_object {
   PyObject *type;
 };
 
-extern PyTypeObject lazy_string_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("lazy_string_object");
+static_assert (gdb::is_python_allocatable_v<lazy_string_object>);
+
+extern PyTypeObject lazy_string_object_type;
 
 static PyObject *
 stpy_get_address (PyObject *self, void *closure)
@@ -74,10 +74,7 @@ stpy_get_encoding (PyObject *self, void *closure)
   if (self_string->encoding)
     result = PyUnicode_FromString (self_string->encoding);
   else
-    {
-      result = Py_None;
-      Py_INCREF (result);
-    }
+    result = py_none ().release ();
 
   return result;
 }
@@ -111,7 +108,7 @@ stpy_convert_to_value (PyObject *self, PyObject *args)
       return NULL;
     }
 
-  PyObject *result = nullptr;
+  gdbpy_ref<> result;
   try
     {
       scoped_value_mark free_values;
@@ -151,7 +148,7 @@ stpy_convert_to_value (PyObject *self, PyObject *args)
       return gdbpy_handle_gdb_exception (nullptr, except);
     }
 
-  return result;
+  return result.release ();
 }
 
 static void
@@ -233,17 +230,17 @@ gdbpy_create_lazy_string_object (CORE_ADDR address, long length,
 
   str_obj->address = address;
   str_obj->length = length;
-  if (encoding == NULL || !strcmp (encoding, ""))
+  if (encoding == NULL || streq (encoding, ""))
     str_obj->encoding = NULL;
   else
     str_obj->encoding = xstrdup (encoding);
-  str_obj->type = type_to_type_object (type);
+  str_obj->type = type_to_type_object (type).release ();
 
   return (PyObject *) str_obj;
 }
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_lazy_string (void)
+static int
+gdbpy_initialize_lazy_string ()
 {
   return gdbpy_type_ready (&lazy_string_object_type);
 }
@@ -295,7 +292,10 @@ gdbpy_extract_lazy_string (PyObject *string, CORE_ADDR *addr,
   *addr = lazy->address;
   *str_elt_type = stpy_lazy_string_elt_type (lazy);
   *length = lazy->length;
-  encoding->reset (lazy->encoding ? xstrdup (lazy->encoding) : NULL);
+  if (lazy->encoding == nullptr)
+    *encoding = nullptr;
+  else
+    *encoding = make_unique_xstrdup (lazy->encoding);
 }
 
 /* __str__ for LazyString.  */

@@ -1,6 +1,6 @@
 /* Support for debug methods in Python.
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -94,7 +94,7 @@ invoke_match_method (PyObject *matcher, PyObject *py_obj_type,
   if (enabled == 0)
     {
       /* Return 'None' if the matcher is not enabled.  */
-      Py_RETURN_NONE;
+      return py_none ().release ();
     }
 
   gdbpy_ref<> match_method (PyObject_GetAttrString (matcher,
@@ -123,7 +123,7 @@ gdbpy_get_matching_xmethod_workers
 
   gdbpy_enter enter_py;
 
-  gdbpy_ref<> py_type (type_to_type_object (obj_type));
+  gdbpy_ref<> py_type = type_to_type_object (obj_type);
   if (py_type == NULL)
     {
       gdbpy_print_stack ();
@@ -141,9 +141,9 @@ gdbpy_get_matching_xmethod_workers
   /* Gather debug method matchers registered with the object files.
      This could be done differently by iterating over each objfile's matcher
      list individually, but there's no data yet to show it's needed.  */
-  for (objfile *objfile : current_program_space->objfiles ())
+  for (objfile &objfile : current_program_space->objfiles ())
     {
-      gdbpy_ref<> py_objfile = objfile_to_objfile_object (objfile);
+      gdbpy_ref<> py_objfile = objfile_to_objfile_object (&objfile);
 
       if (py_objfile == NULL)
 	{
@@ -393,8 +393,7 @@ python_xmethod_worker::do_get_arg_types (std::vector<type *> *arg_types)
      be a 'const' value.  Hence, create a 'const' variant of the 'this' pointer
      type.  */
   obj_type = type_object_to_type (m_this_type);
-  (*arg_types)[0] = make_cv_type (1, 0, lookup_pointer_type (obj_type),
-				  NULL);
+  (*arg_types)[0] = make_cv_type (1, 0, lookup_pointer_type (obj_type));
 
   return EXT_LANG_RC_OK;
 }
@@ -445,7 +444,7 @@ python_xmethod_worker::do_get_result_type (value *obj,
       if (!types_equal (obj_type, this_type))
 	obj = value_cast (this_type, obj);
     }
-  gdbpy_ref<> py_value_obj (value_to_value_object (obj));
+  gdbpy_ref<> py_value_obj = value_to_value_object (obj);
   if (py_value_obj == NULL)
     {
       gdbpy_print_stack ();
@@ -459,20 +458,29 @@ python_xmethod_worker::do_get_result_type (value *obj,
       return EXT_LANG_RC_ERROR;
     }
 
-  /* PyTuple_SET_ITEM steals the reference of the element, hence the
+  /* PyTuple_SetItem steals the reference of the element, hence the
      release.  */
-  PyTuple_SET_ITEM (py_arg_tuple.get (), 0, py_value_obj.release ());
+  if (PyTuple_SetItem (py_arg_tuple.get (), 0, py_value_obj.release ()) < 0)
+    {
+      gdbpy_print_stack ();
+      return EXT_LANG_RC_ERROR;
+    }
 
   for (i = 0; i < args.size (); i++)
     {
-      PyObject *py_value_arg = value_to_value_object (args[i]);
+      gdbpy_ref<> py_value_arg = value_to_value_object (args[i]);
 
-      if (py_value_arg == NULL)
+      if (py_value_arg == nullptr)
 	{
 	  gdbpy_print_stack ();
 	  return EXT_LANG_RC_ERROR;
 	}
-      PyTuple_SET_ITEM (py_arg_tuple.get (), i + 1, py_value_arg);
+      if (PyTuple_SetItem (py_arg_tuple.get (), i + 1,
+			   py_value_arg.release ()) < 0)
+	{
+	  gdbpy_print_stack ();
+	  return EXT_LANG_RC_ERROR;
+	}
     }
 
   gdbpy_ref<> py_result_type
@@ -530,7 +538,7 @@ python_xmethod_worker::invoke (struct value *obj,
       if (!types_equal (obj_type, this_type))
 	obj = value_cast (this_type, obj);
     }
-  gdbpy_ref<> py_value_obj (value_to_value_object (obj));
+  gdbpy_ref<> py_value_obj = value_to_value_object (obj);
   if (py_value_obj == NULL)
     {
       gdbpy_print_stack ();
@@ -544,21 +552,24 @@ python_xmethod_worker::invoke (struct value *obj,
       error (_("Error while executing Python code."));
     }
 
-  /* PyTuple_SET_ITEM steals the reference of the element, hence the
+  /* PyTuple_SetItem steals the reference of the element, hence the
      release.  */
-  PyTuple_SET_ITEM (py_arg_tuple.get (), 0, py_value_obj.release ());
+  if (PyTuple_SetItem (py_arg_tuple.get (), 0, py_value_obj.release ()) < 0)
+    return nullptr;
 
   for (i = 0; i < args.size (); i++)
     {
-      PyObject *py_value_arg = value_to_value_object (args[i]);
+      gdbpy_ref<> py_value_arg = value_to_value_object (args[i]);
 
-      if (py_value_arg == NULL)
+      if (py_value_arg == nullptr)
 	{
 	  gdbpy_print_stack ();
 	  error (_("Error while executing Python code."));
 	}
 
-      PyTuple_SET_ITEM (py_arg_tuple.get (), i + 1, py_value_arg);
+      if (PyTuple_SetItem (py_arg_tuple.get (), i + 1,
+			   py_value_arg.release ()) < 0)
+	return nullptr;
     }
 
   gdbpy_ref<> py_result (PyObject_CallObject (m_py_worker,
@@ -598,8 +609,8 @@ python_xmethod_worker::python_xmethod_worker (PyObject *py_worker,
   Py_INCREF (this_type);
 }
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_xmethods (void)
+static int
+gdbpy_initialize_xmethods ()
 {
   py_match_method_name = PyUnicode_FromString (match_method_name);
   if (py_match_method_name == NULL)

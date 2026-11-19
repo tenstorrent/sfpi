@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,19 +17,17 @@
 
 standard_testfile .c
 
-if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug nowarnings}] != "" } {
-    untested "failed to compile"
-    return -1
+if { [prepare_for_testing "prepare" $testfile $srcfile \
+	  {debug nowarnings}] != 0 } {
+    return
 }
-
-clean_restart ${binfile}
 
 gdb_test "break $srcfile:stop_here" \
     "Breakpoint.*at.* file .*$srcfile, line.*" \
     "breakpoint function in file"
 
 gdb_run_cmd
-gdb_test "" "Breakpoint \[0-9\]+,.*stop_here.* at .*$srcfile:.*" "run until function breakpoint"
+gdb_test "" "Breakpoint ${::decimal},.*stop_here.* at .*$srcfile:.*" "run until function breakpoint"
 
 # We've now got the target program in a state where we can test "find".
 
@@ -164,7 +162,7 @@ gdb_test "find /w search_buf, +search_buf_size, 0x12345678" \
 
 # For native targets, test a pattern straddling a chunk boundary.
 
-if [isnative] {
+if {[isnative]} {
     gdb_test_no_output "set *(int32_t*) &search_buf\[${CHUNK_SIZE}-1\] = 0xfdb97531" ""
     gdb_test "find /w search_buf, +search_buf_size, 0xfdb97531" \
     "${hex_number}${one_pattern_found}" \

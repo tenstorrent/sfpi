@@ -1,5 +1,5 @@
 /* MI Command Set - varobj commands.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    Contributed by Cygnus Solutions (a Red Hat company).
 
@@ -25,11 +25,9 @@
 #include "varobj.h"
 #include "language.h"
 #include "value.h"
-#include <ctype.h>
 #include "mi-getopt.h"
 #include "gdbthread.h"
 #include "mi-parse.h"
-#include <optional>
 #include "inferior.h"
 
 static void varobj_update_one (struct varobj *var,
@@ -43,7 +41,7 @@ static int mi_print_value_p (struct varobj *var,
    if the value should be printed.  The PRINT_EXPRESSION parameter
    controls if the expression should be printed.  */
 
-static void 
+static void
 print_varobj (struct varobj *var, enum print_values print_values,
 	      int print_expression)
 {
@@ -58,7 +56,7 @@ print_varobj (struct varobj *var, enum print_values print_values,
       uiout->field_string ("exp", exp);
     }
   uiout->field_signed ("numchild", varobj_get_num_children (var));
-  
+
   if (mi_print_value_p (var, print_values))
     {
       std::string val = varobj_get_value (var);
@@ -105,18 +103,18 @@ mi_cmd_var_create (const char *command, const char *const *argv, int argc)
 
   const char *name = argv[0];
   std::string gen_name;
-  if (strcmp (name, "-") == 0)
+  if (streq (name, "-"))
     {
       gen_name = varobj_gen_name ();
       name = gen_name.c_str ();
     }
-  else if (!isalpha (name[0]))
+  else if (!c_isalpha (name[0]))
     error (_("-var-create: name of object must begin with a letter"));
 
-  if (strcmp (frame, "*") == 0)
+  if (streq (frame, "*"))
     var_type = USE_CURRENT_FRAME;
-  else if (strcmp (frame, "@") == 0)
-    var_type = USE_SELECTED_FRAME;  
+  else if (streq (frame, "@"))
+    var_type = USE_SELECTED_FRAME;
   else
     {
       var_type = USE_SPECIFIED_FRAME;
@@ -156,7 +154,7 @@ mi_cmd_var_delete (const char *command, const char *const *argv, int argc)
      starting with '-'.  */
   if (argc == 1)
     {
-      if (strcmp (name, "-c") == 0)
+      if (streq (name, "-c"))
 	error (_("-var-delete: Missing required "
 		 "argument after '-c': variable object name"));
       if (*name == '-')
@@ -167,7 +165,7 @@ mi_cmd_var_delete (const char *command, const char *const *argv, int argc)
      which would be the variable name.  */
   if (argc == 2)
     {
-      if (strcmp (name, "-c") != 0)
+      if (!streq (name, "-c"))
 	error (_("-var-delete: Invalid option."));
       children_only_p = 1;
       name = argv[1];
@@ -226,13 +224,13 @@ mi_cmd_var_set_format (const char *command, const char *const *argv, int argc)
   var = varobj_get_handle (argv[0]);
 
   format = mi_parse_format (argv[1]);
-  
+
   /* Set the format of VAR to the given format.  */
   varobj_set_display_format (var, format);
 
   /* Report the new current format.  */
   uiout->field_string ("format", varobj_format_string[(int) format]);
- 
+
   /* Report the value in the new format.  */
   std::string val = varobj_get_value (var);
   uiout->field_string ("value", val);
@@ -266,9 +264,9 @@ mi_cmd_var_set_frozen (const char *command, const char *const *argv, int argc)
 
   var = varobj_get_handle (argv[0]);
 
-  if (strcmp (argv[1], "0") == 0)
+  if (streq (argv[1], "0"))
     frozen = false;
-  else if (strcmp (argv[1], "1") == 0)
+  else if (streq (argv[1], "1"))
     frozen = true;
   else
     error (_("Invalid flag value"));
@@ -365,7 +363,7 @@ mi_cmd_var_list_children (const char *command, const char *const *argv,
 			  int argc)
 {
   struct ui_out *uiout = current_uiout;
-  struct varobj *var;  
+  struct varobj *var;
   enum print_values print_values;
   int from, to;
 
@@ -445,7 +443,7 @@ mi_cmd_var_info_path_expression (const char *command, const char *const *argv,
 
   /* Get varobj handle, if a valid var obj name was specified.  */
   var = varobj_get_handle (argv[0]);
-  
+
   const char *path_expr = varobj_get_path_expr (var);
 
   uiout->field_string ("path_expr", path_expr);
@@ -509,7 +507,7 @@ mi_cmd_var_evaluate_expression (const char *command, const char *const *argv,
   int formatFound;
   int oind;
   const char *oarg;
-    
+
   enum opt
   {
     OP_FORMAT
@@ -536,7 +534,7 @@ mi_cmd_var_evaluate_expression (const char *command, const char *const *argv,
 	case OP_FORMAT:
 	  if (formatFound)
 	    error (_("Cannot specify format more than once"));
-   
+
 	  format = mi_parse_format (oarg);
 	  formatFound = 1;
 	  break;
@@ -545,13 +543,13 @@ mi_cmd_var_evaluate_expression (const char *command, const char *const *argv,
 
   if (oind >= argc)
     error (_("Usage: [-f FORMAT] NAME"));
-   
+
   if (oind < argc - 1)
     error (_("Garbage at end of command"));
- 
+
   /* Get varobj handle, if a valid var obj name was specified.  */
   var = varobj_get_handle (argv[oind]);
-   
+
   if (formatFound)
     {
       std::string val = varobj_get_formatted_value (var, format);
@@ -609,14 +607,14 @@ mi_cmd_var_update_iter (struct varobj *var, bool only_floating,
   if (thread_id == -1)
     {
       thread_stopped = (inferior_ptid == null_ptid
-			|| inferior_thread ()->state == THREAD_STOPPED);
+			|| inferior_thread ()->state () == THREAD_STOPPED);
     }
   else
     {
       thread_info *tp = find_thread_global_id (thread_id);
 
       thread_stopped = (tp == NULL
-			|| tp->state == THREAD_STOPPED);
+			|| tp->state () == THREAD_STOPPED);
     }
 
   if (thread_stopped
@@ -676,7 +674,7 @@ varobj_update_one (struct varobj *var, enum print_values print_values,
   struct ui_out *uiout = current_uiout;
 
   std::vector<varobj_update_result> changes = varobj_update (&var, is_explicit);
-  
+
   for (const varobj_update_result &r : changes)
     {
       int from, to;
@@ -765,7 +763,7 @@ mi_cmd_var_set_update_range (const char *command, const char *const *argv,
 
   if (argc != 3)
     error (_("-var-set-update-range: Usage: VAROBJ FROM TO"));
-  
+
   var = varobj_get_handle (argv[0]);
   from = atoi (argv[1]);
   to = atoi (argv[2]);

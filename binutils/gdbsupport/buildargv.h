@@ -1,6 +1,6 @@
 /* RAII wrapper for buildargv
 
-   Copyright (C) 2021-2024 Free Software Foundation, Inc.
+   Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -52,8 +52,7 @@ public:
   {
   }
 
-  gdb_argv (const gdb_argv &) = delete;
-  gdb_argv &operator= (const gdb_argv &) = delete;
+  DISABLE_COPY_AND_ASSIGN (gdb_argv);
 
   gdb_argv &operator= (gdb_argv &&other)
   {
@@ -168,7 +167,7 @@ public:
 
   /* The iterator type.  */
 
-  typedef char **iterator;
+  using iterator = char **;
 
   /* Return an iterator pointing to the start of the array.  */
 

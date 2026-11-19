@@ -1,4 +1,4 @@
---  Copyright 2012-2024 Free Software Foundation, Inc.
+--  Copyright 2012-2026 Free Software Foundation, Inc.
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,10 @@
 with Pck; use Pck;
 procedure Foo is
    BT : aliased Bounded := New_Bounded (Low => 1, High => 3);
+   BT_First : Integer := BT'First;
+   BT_Last : Integer := BT'Last;
 begin
    Do_Nothing (BT'Address); -- STOP
+   Do_Nothing (BT_First'Address);
+   Do_Nothing (BT_Last'Address);
 end Foo;
-

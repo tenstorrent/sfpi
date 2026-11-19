@@ -1,4 +1,4 @@
-# Copyright 2007-2024 Free Software Foundation, Inc.
+# Copyright 2007-2026 Free Software Foundation, Inc.
 
 # This file is part of the GDB testsuite.
 
@@ -27,10 +27,10 @@ lappend opts additional_flags=-DIS_AMD64_REGS_TARGET=[is_amd64_regs_target]
 if { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" \
 	  executable $opts] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
-clean_restart $binfile
+clean_restart $::testfile
 
 runto func
 gdb_test "backtrace 10" \

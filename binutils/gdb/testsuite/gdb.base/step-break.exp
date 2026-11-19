@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,11 +18,11 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-     return -1
+    return
 }
 
 if {![runto_main]} {
-   return 0
+    return
 }
 
 set bp_location [gdb_get_line_number "set breakpoint here"]
@@ -31,7 +31,7 @@ gdb_test "break $bp_location" \
     "Breakpoint.*at.* file .*$srcfile, line $bp_location\\." \
     "breakpoint line number"
 
-gdb_test continue "Continuing\\..*Breakpoint \[0-9\]+, main \\(\\) at .*$srcfile:$bp_location.*set breakpoint here.*" \
+gdb_test continue "Continuing\\..*Breakpoint ${::decimal}, main \\(\\) at .*$srcfile:$bp_location.*set breakpoint here.*" \
     "run until breakpoint set at a line number"
 
 gdb_test "next 2" ".*place2.*" "next 2, 1"

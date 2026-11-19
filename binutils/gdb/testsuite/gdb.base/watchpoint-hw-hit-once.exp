@@ -1,4 +1,4 @@
-# Copyright 2009-2024 Free Software Foundation, Inc.
+# Copyright 2009-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,20 +18,20 @@ require allow_hw_watchpoint_access_tests
 set test watchpoint-hw-hit-once
 set srcfile ${test}.c
 if { [prepare_for_testing "failed to prepare" ${test} ${srcfile}] } {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 gdb_test "rwatch watchee"
 
 gdb_breakpoint [gdb_get_line_number "dummy = 2"]
 
-gdb_test "continue" "Continuing.\r\n\r\nHardware read watchpoint \[0-9\]+: watchee\r\n\r\nValue = 0\r\n.*"
+gdb_test "continue" "Continuing.\r\n\r\nHardware read watchpoint ${::decimal}: watchee\r\n\r\nValue = 0\r\n.*"
 
 # Here should be no repeated notification of the read watchpoint.
 gdb_test "continue" \
-	 "Continuing\\.\[ \r\n\]+Breakpoint \[0-9\]+, .*break-at-exit.*" \
+	 "Continuing\\.\[ \r\n\]+Breakpoint ${::decimal}, .*break-at-exit.*" \
 	 "continue to break-at-exit"

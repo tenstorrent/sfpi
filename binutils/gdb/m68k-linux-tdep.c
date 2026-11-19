@@ -1,6 +1,6 @@
 /* Motorola m68k target-dependent support for GNU/Linux.
 
-   Copyright (C) 1996-2024 Free Software Foundation, Inc.
+   Copyright (C) 1996-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,6 +35,7 @@
 #include "observable.h"
 #include "elf/common.h"
 #include "linux-tdep.h"
+#include "solib-svr4-linux.h"
 #include "regset.h"
 
 /* Offsets (in target ints) into jmp_buf.  */
@@ -208,14 +209,14 @@ struct m68k_linux_sigtramp_info
 };
 
 /* Nonzero if running on uClinux.  */
-static int target_is_uclinux;
+static std::optional<bool> target_is_uclinux;
 
 static void
 m68k_linux_inferior_created (inferior *inf)
 {
   /* Record that we will need to re-evaluate whether we are running on a
      uClinux or normal GNU/Linux target (see m68k_linux_get_sigtramp_info).  */
-  target_is_uclinux = -1;
+  target_is_uclinux = std::nullopt;
 }
 
 static struct m68k_linux_sigtramp_info
@@ -228,7 +229,7 @@ m68k_linux_get_sigtramp_info (const frame_info_ptr &this_frame)
 
   /* Determine whether we are running on a uClinux or normal GNU/Linux
      target so we can use the correct sigcontext layouts.  */
-  if (target_is_uclinux == -1)
+  if (!target_is_uclinux.has_value ())
     target_is_uclinux = linux_is_uclinux ();
 
   sp = get_frame_register_unsigned (this_frame, M68K_SP_REGNUM);
@@ -239,7 +240,7 @@ m68k_linux_get_sigtramp_info (const frame_info_ptr &this_frame)
   if (m68k_linux_pc_in_sigtramp (this_frame) == 2)
     info.sc_reg_offset = m68k_linux_ucontext_reg_offset;
   else
-    info.sc_reg_offset = (target_is_uclinux
+    info.sc_reg_offset = (target_is_uclinux.value ()
 			  ? m68k_uclinux_sigcontext_reg_offset
 			  : m68k_linux_sigcontext_reg_offset);
   return info;
@@ -407,8 +408,7 @@ m68k_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   /* Shared library handling.  */
 
   /* GNU/Linux uses SVR4-style shared libraries.  */
-  set_solib_svr4_fetch_link_map_offsets (gdbarch,
-					 linux_ilp32_fetch_link_map_offsets);
+  set_solib_svr4_ops (gdbarch, make_linux_ilp32_svr4_solib_ops);
 
   /* GNU/Linux uses the dynamic linker included in the GNU C Library.  */
   set_gdbarch_skip_solib_resolver (gdbarch, glibc_skip_solib_resolver);
@@ -424,9 +424,7 @@ m68k_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 					     svr4_fetch_objfile_link_map);
 }
 
-void _initialize_m68k_linux_tdep ();
-void
-_initialize_m68k_linux_tdep ()
+INIT_GDB_FILE (m68k_linux_tdep)
 {
   gdbarch_register_osabi (bfd_arch_m68k, 0, GDB_OSABI_LINUX,
 			  m68k_linux_init_abi);

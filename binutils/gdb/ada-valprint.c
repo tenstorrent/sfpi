@@ -1,6 +1,6 @@
 /* Support for printing Ada values for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -17,7 +17,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include <ctype.h>
 #include "event-top.h"
 #include "extract-store-integer.h"
 #include "gdbtypes.h"
@@ -31,19 +30,18 @@
 #include "cli/cli-style.h"
 #include "gdbarch.h"
 
-static int print_field_values (struct value *, struct value *,
-			       struct ui_file *, int,
-			       const struct value_print_options *,
-			       int, const struct language_defn *);
+static bool print_field_values (struct value *, struct value *,
+				struct ui_file *, int,
+				const struct value_print_options *,
+				bool, const struct language_defn *);
 
 
 
 /* Assuming TYPE is a simple array type, prints its lower bound on STREAM,
    if non-standard (i.e., other than 1 for numbers, other than lower bound
-   of index type for enumerated type).  Returns 1 if something printed,
-   otherwise 0.  */
+   of index type for enumerated type).  */
 
-static int
+static void
 print_optional_low_bound (struct ui_file *stream, struct type *type,
 			  const struct value_print_options *options)
 {
@@ -52,16 +50,16 @@ print_optional_low_bound (struct ui_file *stream, struct type *type,
   LONGEST high_bound;
 
   if (options->print_array_indexes)
-    return 0;
+    return;
 
   if (!get_array_bounds (type, &low_bound, &high_bound))
-    return 0;
+    return;
 
   /* If this is an empty array, then don't print the lower bound.
      That would be confusing, because we would print the lower bound,
      followed by... nothing!  */
   if (low_bound > high_bound)
-    return 0;
+    return;
 
   index_type = type->index_type ();
 
@@ -81,11 +79,11 @@ print_optional_low_bound (struct ui_file *stream, struct type *type,
     case TYPE_CODE_BOOL:
     case TYPE_CODE_CHAR:
       if (low_bound == 0)
-	return 0;
+	return;
       break;
     case TYPE_CODE_ENUM:
       if (low_bound == 0)
-	return 0;
+	return;
       low_bound = index_type->field (low_bound).loc_enumval ();
       break;
     case TYPE_CODE_UNDEF:
@@ -93,13 +91,12 @@ print_optional_low_bound (struct ui_file *stream, struct type *type,
       [[fallthrough]];
     default:
       if (low_bound == 1)
-	return 0;
+	return;
       break;
     }
 
   ada_print_scalar (index_type, low_bound, stream);
   gdb_printf (stream, " => ");
-  return 1;
 }
 
 /*  Version of val_print_array_elements for GNAT-style packed arrays.
@@ -254,35 +251,6 @@ val_print_packed_array_elements (struct type *type, const gdb_byte *valaddr,
     }
 }
 
-/* Print the character C on STREAM as part of the contents of a literal
-   string whose delimiter is QUOTER.  TYPE_LEN is the length in bytes
-   of the character.  */
-
-void
-ada_emit_char (int c, struct type *type, struct ui_file *stream,
-	       int quoter, int type_len)
-{
-  /* If this character fits in the normal ASCII range, and is
-     a printable character, then print the character as if it was
-     an ASCII character, even if this is a wide character.
-     The UCHAR_MAX check is necessary because the isascii function
-     requires that its argument have a value of an unsigned char,
-     or EOF (EOF is obviously not printable).  */
-  if (c <= UCHAR_MAX && isascii (c) && isprint (c))
-    {
-      if (c == quoter && c == '"')
-	gdb_printf (stream, "\"\"");
-      else
-	gdb_printf (stream, "%c", c);
-    }
-  else
-    {
-      /* Follow GNAT's lead here and only use 6 digits for
-	 wide_wide_character.  */
-      gdb_printf (stream, "[\"%0*x\"]", std::min (6, type_len * 2), c);
-    }
-}
-
 /* Character #I of STRING, given that TYPE_LEN is the size in bytes
    of a character.  */
 
@@ -358,14 +326,6 @@ ada_print_floating (const gdb_byte *valaddr, struct type *type,
     gdb_printf (stream, "%s", &s[skip_count]);
 }
 
-void
-ada_printchar (int c, struct type *type, struct ui_file *stream)
-{
-  gdb_puts ("'", stream);
-  ada_emit_char (c, type, stream, '\'', type->length ());
-  gdb_puts ("'", stream);
-}
-
 /* [From print_type_scalar in typeprint.c].   Print VAL on STREAM in a
    form appropriate for TYPE, if non-NULL.  If TYPE is NULL, print VAL
    like a default signed integer.  */
@@ -434,110 +394,12 @@ ada_print_scalar (struct type *type, LONGEST val, struct ui_file *stream)
     }
 }
 
-/* Print the character string STRING, printing at most LENGTH characters.
-   Printing stops early if the number hits print_max; repeat counts
-   are printed as appropriate.  Print ellipses at the end if we
-   had to stop before printing LENGTH characters, or if FORCE_ELLIPSES.
-   TYPE_LEN is the length (1 or 2) of the character type.  */
-
-static void
-printstr (struct ui_file *stream, struct type *elttype, const gdb_byte *string,
-	  unsigned int length, int force_ellipses, int type_len,
-	  const struct value_print_options *options)
-{
-  enum bfd_endian byte_order = type_byte_order (elttype);
-  unsigned int i;
-  unsigned int things_printed = 0;
-  int in_quotes = 0;
-  int need_comma = 0;
-
-  if (length == 0)
-    {
-      gdb_puts ("\"\"", stream);
-      return;
-    }
-
-  unsigned int print_max_chars = get_print_max_chars (options);
-  for (i = 0; i < length && things_printed < print_max_chars; i += 1)
-    {
-      /* Position of the character we are examining
-	 to see whether it is repeated.  */
-      unsigned int rep1;
-      /* Number of repetitions we have detected so far.  */
-      unsigned int reps;
-
-      QUIT;
-
-      if (need_comma)
-	{
-	  gdb_puts (", ", stream);
-	  need_comma = 0;
-	}
-
-      rep1 = i + 1;
-      reps = 1;
-      while (rep1 < length
-	     && char_at (string, rep1, type_len, byte_order)
-		== char_at (string, i, type_len, byte_order))
-	{
-	  rep1 += 1;
-	  reps += 1;
-	}
-
-      if (reps > options->repeat_count_threshold)
-	{
-	  if (in_quotes)
-	    {
-	      gdb_puts ("\", ", stream);
-	      in_quotes = 0;
-	    }
-	  gdb_puts ("'", stream);
-	  ada_emit_char (char_at (string, i, type_len, byte_order),
-			 elttype, stream, '\'', type_len);
-	  gdb_puts ("'", stream);
-	  gdb_printf (stream, _(" %p[<repeats %u times>%p]"),
-		      metadata_style.style ().ptr (), reps, nullptr);
-	  i = rep1 - 1;
-	  things_printed += options->repeat_count_threshold;
-	  need_comma = 1;
-	}
-      else
-	{
-	  if (!in_quotes)
-	    {
-	      gdb_puts ("\"", stream);
-	      in_quotes = 1;
-	    }
-	  ada_emit_char (char_at (string, i, type_len, byte_order),
-			 elttype, stream, '"', type_len);
-	  things_printed += 1;
-	}
-    }
-
-  /* Terminate the quotes if necessary.  */
-  if (in_quotes)
-    gdb_puts ("\"", stream);
-
-  if (force_ellipses || i < length)
-    gdb_puts ("...", stream);
-}
-
-void
-ada_printstr (struct ui_file *stream, struct type *type,
-	      const gdb_byte *string, unsigned int length,
-	      const char *encoding, int force_ellipses,
-	      const struct value_print_options *options)
-{
-  printstr (stream, type, string, length, force_ellipses, type->length (),
-	    options);
-}
-
-static int
+static bool
 print_variant_part (struct value *value, int field_num,
 		    struct value *outer_value,
 		    struct ui_file *stream, int recurse,
 		    const struct value_print_options *options,
-		    int comma_needed,
+		    bool comma_needed,
 		    const struct language_defn *language)
 {
   struct type *type = value->type ();
@@ -545,10 +407,10 @@ print_variant_part (struct value *value, int field_num,
   int which = ada_which_variant_applies (var_type, outer_value);
 
   if (which < 0)
-    return 0;
+    return false;
 
-  struct value *variant_field = value_field (value, field_num);
-  struct value *active_component = value_field (variant_field, which);
+  struct value *variant_field = value->field (field_num);
+  struct value *active_component = variant_field->field (which);
   return print_field_values (active_component, outer_value, stream, recurse,
 			     options, comma_needed, language);
 }
@@ -561,17 +423,17 @@ print_variant_part (struct value *value, int field_num,
    OUTER_VALUE gives the enclosing record (used to get discriminant
    values when printing variant parts).
 
-   COMMA_NEEDED is 1 if fields have been printed at the current recursion
+   COMMA_NEEDED is true if fields have been printed at the current recursion
    level, so that a comma is needed before any field printed by this
    call.
 
-   Returns 1 if COMMA_NEEDED or any fields were printed.  */
+   Returns true if COMMA_NEEDED or any fields were printed.  */
 
-static int
+static bool
 print_field_values (struct value *value, struct value *outer_value,
 		    struct ui_file *stream, int recurse,
 		    const struct value_print_options *options,
-		    int comma_needed,
+		    bool comma_needed,
 		    const struct language_defn *language)
 {
   int i, len;
@@ -604,7 +466,7 @@ print_field_values (struct value *value, struct value *outer_value,
 
       if (comma_needed)
 	gdb_printf (stream, ", ");
-      comma_needed = 1;
+      comma_needed = true;
 
       if (options->prettyformat)
 	{
@@ -656,7 +518,7 @@ print_field_values (struct value *value, struct value *outer_value,
 
 	  opts.deref_ref = false;
 
-	  struct value *v = value_field (value, i);
+	  struct value *v = value->field (i);
 	  common_val_print (v, stream, recurse + 1, &opts, language);
 	}
       annotate_field_end ();
@@ -706,8 +568,8 @@ ada_val_print_string (struct type *type, const gdb_byte *valaddr,
       len = temp_len;
     }
 
-  printstr (stream, elttype, valaddr + offset_aligned, len, 0,
-	    eltlen, options);
+  current_language->printstr (stream, elttype, valaddr + offset_aligned,
+			      len, nullptr, 0, options);
 }
 
 /* Implement Ada value_print'ing for the case where TYPE is a
@@ -790,7 +652,8 @@ ada_value_print_num (struct value *val, struct ui_file *stream, int recurse,
 	  gdb_printf (stream, "(");
 	  type_print (type, "", stream, -1);
 	  gdb_printf (stream, ") ");
-	  gdb_puts (paddress (gdbarch, addr), stream);
+	  fputs_styled (paddress (gdbarch, addr), address_style.style (),
+			stream);
 	}
       else
 	{
@@ -801,7 +664,7 @@ ada_value_print_num (struct value *val, struct ui_file *stream, int recurse,
 
 	      gdb_puts (" ", stream);
 	      c = unpack_long (type, valaddr);
-	      ada_printchar (c, type, stream);
+	      current_language->printchar (c, type, stream);
 	    }
 	}
       return;
@@ -856,7 +719,7 @@ ada_val_print_struct_union (struct value *value,
   gdb_printf (stream, "(");
 
   if (print_field_values (value, value, stream, recurse, options,
-			  0, language_def (language_ada)) != 0
+			  false, language_def (language_ada))
       && options->prettyformat)
     {
       gdb_printf (stream, "\n");
@@ -933,7 +796,7 @@ ada_val_print_ref (struct type *type, const gdb_byte *valaddr,
   deref_val = coerce_ref_if_computed (original_value);
   if (deref_val)
     {
-      if (ada_is_tagged_type (deref_val->type (), 1))
+      if (ada_is_tagged_type (deref_val->type (), true))
 	deref_val = ada_tag_value_at_base_address (deref_val);
 
       common_val_print (deref_val, stream, recurse + 1, options,
@@ -951,7 +814,7 @@ ada_val_print_ref (struct type *type, const gdb_byte *valaddr,
   deref_val
     = ada_value_ind (value_from_pointer (lookup_pointer_type (elttype),
 					 deref_val_int));
-  if (ada_is_tagged_type (deref_val->type (), 1))
+  if (ada_is_tagged_type (deref_val->type (), true))
     deref_val = ada_tag_value_at_base_address (deref_val);
 
   if (deref_val->lazy ())

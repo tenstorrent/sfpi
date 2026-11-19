@@ -1,6 +1,6 @@
 /* Target-dependent code for SDE on MIPS processors.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -153,9 +153,8 @@ mips_sde_frame_sniffer (const struct frame_unwind *self,
   const char *name;
 
   find_pc_partial_function (pc, &name, NULL, NULL);
-  return (name
-	  && (strcmp (name, "_xcptcall") == 0
-	      || strcmp (name, "_sigtramp") == 0));
+  return (name != nullptr
+	  && (streq (name, "_xcptcall") || streq (name, "_sigtramp")));
 }
 
 /* Data structure for the SDE frame unwinder.  */
@@ -200,19 +199,20 @@ mips_sde_frame_base_sniffer (const frame_info_ptr &this_frame)
     return NULL;
 }
 
-static void
-mips_sde_elf_osabi_sniff_abi_tag_sections (bfd *abfd, asection *sect,
-					   void *obj)
+static gdb_osabi
+mips_sde_elf_osabi_sniff_abi_tag_sections (bfd *abfd)
 {
-  enum gdb_osabi *os_ident_ptr = (enum gdb_osabi *) obj;
-  const char *name;
+  for (asection *sect : gdb_bfd_sections (abfd))
+    {
+      const char *name = bfd_section_name (sect);
 
-  name = bfd_section_name (sect);
+      /* The presence of a section with a ".sde" prefix is indicative
+	 of an SDE binary.  */
+      if (startswith (name, ".sde"))
+	return GDB_OSABI_SDE;
+    }
 
-  /* The presence of a section with a ".sde" prefix is indicative
-     of an SDE binary.  */
-  if (startswith (name, ".sde"))
-    *os_ident_ptr = GDB_OSABI_SDE;
+  return GDB_OSABI_UNKNOWN;
 }
 
 /* OSABI sniffer for MIPS SDE.  */
@@ -240,9 +240,7 @@ mips_sde_elf_osabi_sniffer (bfd *abfd)
 	 real OS in use we must look for OS notes that have been added.
 
 	 For SDE, we simply look for sections named with .sde as prefixes.  */
-      bfd_map_over_sections (abfd,
-			     mips_sde_elf_osabi_sniff_abi_tag_sections,
-			     &osabi);
+      osabi = mips_sde_elf_osabi_sniff_abi_tag_sections (abfd);
     }
   return osabi;
 }
@@ -254,9 +252,7 @@ mips_sde_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   frame_base_append_sniffer (gdbarch, mips_sde_frame_base_sniffer);
 }
 
-void _initialize_mips_sde_tdep ();
-void
-_initialize_mips_sde_tdep ()
+INIT_GDB_FILE (mips_sde_tdep)
 {
   gdbarch_register_osabi_sniffer (bfd_arch_mips,
 				  bfd_target_elf_flavour,

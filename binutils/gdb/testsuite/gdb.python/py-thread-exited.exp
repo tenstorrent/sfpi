@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Free Software Foundation, Inc.
+# Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ load_lib gdb-python.exp
 standard_testfile
 
 if {[gdb_compile_pthreads "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
-    return -1
+    return
 }
 
 save_vars { GDBFLAGS } {
@@ -32,8 +32,8 @@ gdb_test_no_output "source ${pyfile}" "load python file"
 
 gdb_test "test-events" "Event testers registered."
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 

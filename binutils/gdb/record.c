@@ -1,6 +1,6 @@
 /* Process record and replay target for GDB, the GNU debugger.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,12 +23,12 @@
 #include "observable.h"
 #include "inferior.h"
 #include "gdbsupport/common-utils.h"
+#include "cli/cli-style.h"
 #include "cli/cli-utils.h"
 #include "disasm.h"
 #include "interps.h"
 #include "top.h"
 
-#include <ctype.h>
 
 /* This is the debug switch for process record.  */
 unsigned int record_debug = 0;
@@ -63,7 +63,7 @@ struct cmd_list_element *info_record_cmdlist = NULL;
 struct target_ops *
 find_record_target (void)
 {
-  return find_target_at (record_stratum);
+  return current_inferior ()->target_at (record_stratum);
 }
 
 /* Check that recording is active.  Throw an error, if it isn't.  */
@@ -88,8 +88,9 @@ record_preopen (void)
 {
   /* Check if a record target is already running.  */
   if (find_record_target () != NULL)
-    error (_("The process is already being recorded.  Use \"record stop\" to "
-	     "stop recording first."));
+    error (_("The process is already being recorded.  Use \"%ps\" to "
+	     "stop recording first."),
+	   styled_string (command_style.style (), "record stop"));
 }
 
 /* See record.h.  */
@@ -104,20 +105,20 @@ record_start (const char *method, const char *format, int from_tty)
       else
 	error (_("Invalid format."));
     }
-  else if (strcmp (method, "full") == 0)
+  else if (streq (method, "full"))
     {
       if (format == NULL)
 	execute_command_to_string ("record full", from_tty, false);
       else
 	error (_("Invalid format."));
     }
-  else if (strcmp (method, "btrace") == 0)
+  else if (streq (method, "btrace"))
     {
       if (format == NULL)
 	execute_command_to_string ("record btrace", from_tty, false);
-      else if (strcmp (format, "bts") == 0)
+      else if (streq (format, "bts"))
 	execute_command_to_string ("record btrace bts", from_tty, false);
-      else if (strcmp (format, "pt") == 0)
+      else if (streq (format, "pt"))
 	execute_command_to_string ("record btrace pt", from_tty, false);
       else
 	error (_("Invalid format."));
@@ -152,12 +153,18 @@ record_read_memory (struct gdbarch *gdbarch,
 
 /* Stop recording.  */
 
-static void
+static bool
 record_stop (struct target_ops *t)
 {
   DEBUG ("stop %s", t->shortname ());
 
-  t->stop_recording ();
+  /* Force the execution direction to forward.  If the user had it
+     set to reverse when stopping recording, 'reverse-next' would
+     say the direction is reversed, but the inferior would move
+     forward, and there'd be no way to reconcile those.  */
+  execution_direction = EXEC_FORWARD;
+
+  return t->stop_recording ();
 }
 
 /* Unpush the record target.  */
@@ -179,7 +186,7 @@ record_disconnect (struct target_ops *t, const char *args, int from_tty)
 
   DEBUG ("disconnect %s", t->shortname ());
 
-  record_stop (t);
+  (void) record_stop (t);
   record_unpush (t);
 
   target_disconnect (args, from_tty);
@@ -194,7 +201,7 @@ record_detach (struct target_ops *t, inferior *inf, int from_tty)
 
   DEBUG ("detach %s", t->shortname ());
 
-  record_stop (t);
+  (void) record_stop (t);
   record_unpush (t);
 
   target_detach (inf, from_tty);
@@ -306,17 +313,18 @@ cmd_record_delete (const char *args, int from_tty)
 static void
 cmd_record_stop (const char *args, int from_tty)
 {
-  struct target_ops *t;
-
-  t = require_record_target ();
-
-  record_stop (t);
+  struct target_ops *t = require_record_target ();
+  bool thread_moved = record_stop (t);
   record_unpush (t);
 
   gdb_printf (_("Process record is stopped and all execution "
 		"logs are deleted.\n"));
 
   interps_notify_record_changed (current_inferior (), 0, NULL, NULL);
+
+  /* INFERIOR_PTID may have moved when we stopped recording.  */
+  if (thread_moved)
+    notify_user_selected_context_changed (USER_SELECTED_FRAME);
 }
 
 
@@ -423,7 +431,7 @@ get_insn_number (const char **arg)
   begin = *arg;
   pos = skip_spaces (begin);
 
-  if (!isdigit (*pos))
+  if (!c_isdigit (*pos))
     error (_("Expected positive number, got: %s."), pos);
 
   number = strtoulst (pos, &end, 10);
@@ -443,7 +451,7 @@ get_context_size (const char **arg)
 
   pos = skip_spaces (*arg);
 
-  if (!isdigit (*pos))
+  if (!c_isdigit (*pos))
     error (_("Expected positive number, got: %s."), pos);
 
   long result = strtol (pos, &end, 10);
@@ -483,7 +491,7 @@ get_insn_history_modifiers (const char **arg)
 
       for (; *args; ++args)
 	{
-	  if (isspace (*args))
+	  if (c_isspace (*args))
 	    break;
 
 	  if (*args == '/')
@@ -555,9 +563,9 @@ cmd_record_insn_history (const char *arg, int from_tty)
 
   int size = command_size_to_target_size (record_insn_history_size);
 
-  if (arg == NULL || *arg == 0 || strcmp (arg, "+") == 0)
+  if (arg == NULL || *arg == 0 || streq (arg, "+"))
     target_insn_history (size, flags);
-  else if (strcmp (arg, "-") == 0)
+  else if (streq (arg, "-"))
     target_insn_history (-size, flags);
   else
     {
@@ -627,7 +635,7 @@ get_call_history_modifiers (const char **arg)
 
       for (; *args; ++args)
 	{
-	  if (isspace (*args))
+	  if (c_isspace (*args))
 	    break;
 
 	  if (*args == '/')
@@ -672,9 +680,9 @@ cmd_record_call_history (const char *arg, int from_tty)
 
   int size = command_size_to_target_size (record_call_history_size);
 
-  if (arg == NULL || *arg == 0 || strcmp (arg, "+") == 0)
+  if (arg == NULL || *arg == 0 || streq (arg, "+"))
     target_call_history (size, flags);
-  else if (strcmp (arg, "-") == 0)
+  else if (streq (arg, "-"))
     target_call_history (-size, flags);
   else
     {
@@ -769,9 +777,7 @@ set_record_call_history_size (const char *args, int from_tty,
 			 &record_call_history_size);
 }
 
-void _initialize_record ();
-void
-_initialize_record ()
+INIT_GDB_FILE (record)
 {
   struct cmd_list_element *c;
 

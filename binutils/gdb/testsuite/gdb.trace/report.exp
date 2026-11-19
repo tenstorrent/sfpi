@@ -1,4 +1,4 @@
-#   Copyright 1998-2024 Free Software Foundation, Inc.
+#   Copyright 1998-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
     untested "failed to compile"
     return -1
 }
-clean_restart $binfile
+clean_restart $testfile
 runto_main
 
 if {![gdb_target_supports_trace]} {
@@ -65,27 +65,27 @@ if { $gdb_recursion_test_baseline == -1 } {
 set return_me 0
 
 gdb_test_multiple "list $gdb_recursion_test_baseline, +12" "" {
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 1 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 1 " {
 	set testline1 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 2 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 2 " {
 	set testline2 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 3 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 3 " {
 	set testline3 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 4 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 4 " {
 	set testline4 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 5 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 5 " {
 	set testline5 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+)\[^\r\n\]+gdbtestline 6 " {
+    -re "\[\r\n\](${::decimal})\[^\r\n\]+gdbtestline 6 " {
 	set testline6 $expect_out(1,string)
 	exp_continue
     }
@@ -100,7 +100,7 @@ all tests in this module will fail."
 	    untested "couldn't match pattern"
 	    set return_me 1
 all tests in this module will fail."
-    } 
+    }
 }
 
 if {$return_me == 1} {
@@ -154,7 +154,7 @@ gdb_trace_setactions "9.x: setup TP to collect expressions" \
 
 gdb_test "tstart" ".*" ""
 
-gdb_breakpoint "end" qualified
+gdb_breakpoint "end" -qualified
 gdb_test "continue" \
     "Continuing.*Breakpoint $decimal, end.*" \
     "run trace experiment"
@@ -265,10 +265,10 @@ proc use_collected_data { data_source } {
 	    "11.3: test \$trace_line"
 
 	gdb_test_multiple "print \$trace_file" "11.4: test \$trace_file" {
-	    -re "\\$\[0-9\]+ = \"$srcfile\"\[\r\n\]+$gdb_prompt $" {
+	    -re "${::valnum_re} = \"$srcfile\"\[\r\n\]+$gdb_prompt $" {
 		pass "11.4: test \$trace_file"
 	    }
-	    -re "\\$\[0-9\]+ = \"$srcdir/$subdir/$srcfile\"\[\r\n\]+$gdb_prompt $" {
+	    -re "${::valnum_re} = \"$srcdir/$subdir/$srcfile\"\[\r\n\]+$gdb_prompt $" {
 		pass "11.4: test \$trace_file"
 	    }
 	}
@@ -284,31 +284,31 @@ proc use_collected_data { data_source } {
 	    -re ">  end\r\n" {
 		exp_continue
 	    }
-	    -re "^Found trace frame \[0-9\]+, tracepoint \[0-9\]+\r\n" {
+	    -re "^Found trace frame ${::decimal}, tracepoint ${::decimal}\r\n" {
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline1 .tracepoint .$tdp1\\)\r\n" {
-		set linecount1 [expr $linecount1 + 1]
+		set linecount1 [expr {$linecount1 + 1}]
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline2 .tracepoint .$tdp2\\)\r\n" {
-		set linecount2 [expr $linecount2 + 1]
+		set linecount2 [expr {$linecount2 + 1}]
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline3 .tracepoint .$tdp3\\)\r\n" {
-		set linecount3 [expr $linecount3 + 1]
+		set linecount3 [expr {$linecount3 + 1}]
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline4 .tracepoint .$tdp4\\)\r\n" {
-		set linecount4 [expr $linecount4 + 1]
+		set linecount4 [expr {$linecount4 + 1}]
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline5 .tracepoint .$tdp5\\)\r\n" {
-		set linecount5 [expr $linecount5 + 1]
+		set linecount5 [expr {$linecount5 + 1}]
 		exp_continue
 	    }
 	    -re "^\[^\r\n\]* line $testline6 .tracepoint .$tdp6\\)\r\n" {
-		set linecount6 [expr $linecount6 + 1]
+		set linecount6 [expr {$linecount6 + 1}]
 		exp_continue
 	    }
 	    -re "^No trace frame found\r\n$gdb_prompt $" {
@@ -328,7 +328,7 @@ proc use_collected_data { data_source } {
 
 	gdb_test_multiple "while \$trace_frame != -1\n printf \"tracepoint #\%d, FP 0x\%08x, SP 0x\%08x, PC 0x%08x\\n\", \$tracepoint, \$fp, \$sp, \$pc\n tfind tracepoint\n end" "12.2: trace report #2" {
 	    -re "tracepoint #$tdp2, FP $hex, SP $hex, PC $hex" {
-		set linecount2 [expr $linecount2 + 1]
+		set linecount2 [expr {$linecount2 + 1}]
 		exp_continue
 	    }
 	    -re ".*$gdb_prompt $" {
@@ -348,7 +348,7 @@ proc use_collected_data { data_source } {
 
 	gdb_test_multiple "while \$trace_frame != -1\n printf \"TDP #\%d, frame \%d: depth = \%d, q1 = \%d\\n\", \$tracepoint, \$trace_frame, depth, q1\n tfind tracepoint\n end" "12.3: trace report #3" {
 	    -re "TDP #$tdp3, frame $decimal: depth = $decimal, q1 = $decimal" {
-		set linecount3 [expr $linecount3 + 1]
+		set linecount3 [expr {$linecount3 + 1}]
 		exp_continue
 	    }
 	    -re ".*$gdb_prompt $" {
@@ -368,7 +368,7 @@ proc use_collected_data { data_source } {
 
 	gdb_test_multiple "while \$trace_frame != -1\n printf \"TDP #\%d, frame %d: char_test = \%d, long_test = \%d\\n\", \$tracepoint, \$trace_frame, gdb_char_test, gdb_long_test\n tfind tracepoint\n end" "12.4: trace report #4" {
 	    -re "TDP #$tdp6, frame $decimal: char_test = $arg1, long_test = $arg3" {
-		set linecount6 [expr $linecount6 + 1]
+		set linecount6 [expr {$linecount6 + 1}]
 		exp_continue
 	    }
 	    -re ".*$gdb_prompt $" {
@@ -399,11 +399,6 @@ gdb_test "tsave ${tracefile}.tf" \
     "Trace data saved to file '${tracefile}.tf'.*" \
     "save tfile trace file"
 
-# Save trace frames to ctf.
-gdb_test "tsave -ctf ${tracefile}.ctf" \
-    "Trace data saved to directory '${tracefile}.ctf'.*" \
-    "save ctf trace file"
-
 # Change target to tfile.
 set test "change to tfile target"
 gdb_test_multiple "target tfile ${tracefile}.tf" "$test" {
@@ -417,12 +412,3 @@ gdb_test_multiple "target tfile ${tracefile}.tf" "$test" {
 }
 # Test the collected trace frames from tfile.
 use_collected_data "tfile"
-
-# Try to read ctf data if GDB supports.
-gdb_test_multiple "target ctf ${tracefile}.ctf" "" {
-    -re "Undefined target command: \"ctf ${tracefile}.ctf\"\.  Try \"help target\"\.\r\n$gdb_prompt $" {
-    }
-    -re ".*\r\n$gdb_prompt $" {
-	use_collected_data "ctf"
-    }
-}

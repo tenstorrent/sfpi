@@ -1,5 +1,5 @@
 /* sysdep.h -- handle host dependencies for binutils
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -119,7 +119,5 @@ extern char **environ;
 #define BUFSIZE 8192
 
 #include <limits.h>
-
-#define POISON_BFD_BOOLEAN 1
 
 #endif /* _BIN_SYSDEP_H */

@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2024 Free Software Foundation, Inc.
+# Copyright (C) 2011-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 standard_testfile .cc
 
 if { [build_executable "failed to prepare" ${testfile} $srcfile {debug c++}] } {
-    return -1
+    return
 }
 
 proc restart {} {
@@ -26,7 +26,7 @@ proc restart {} {
 
     clean_restart $testfile
 
-    if ![runto_main] {
+    if {![runto_main]} {
 	return 0
     }
     # Delete all breakpoints, watchpoints, tracepoints, and catchpoints so that
@@ -37,11 +37,11 @@ proc restart {} {
 }
 
 with_test_prefix "save" {
-    if ![restart] {
-	return -1
+    if {![restart]} {
+	return
     }
 
-    gdb_breakpoint "function" qualified
+    gdb_breakpoint "function" -qualified
     gdb_breakpoint "function"
 
     # Save the breakpoints into a file.
@@ -55,8 +55,8 @@ with_test_prefix "save" {
 }
 
 with_test_prefix "restore" {
-    if ![restart] {
-	return -1
+    if {![restart]} {
+	return
     }
 
     # Restore the breakpoints.

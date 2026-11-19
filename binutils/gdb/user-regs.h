@@ -1,6 +1,6 @@
 /* Per-frame user registers, for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat.
 
@@ -45,7 +45,7 @@ struct gdbarch;
    index.  */
 
 extern int user_reg_map_name_to_regnum (struct gdbarch *gdbarch,
-					const char *str, int len);
+					std::string_view str);
 
 extern const char *user_reg_map_regnum_to_name (struct gdbarch *gdbarch,
 						int regnum);
@@ -66,7 +66,7 @@ extern void user_reg_add_builtin (const char *name,
 				  const void *baton);
 
 /* Add a per-architecture frame register.  */
-extern void user_reg_add (struct gdbarch *gdbarch, const char *name, 
+extern void user_reg_add (struct gdbarch *gdbarch, const char *name,
 			  user_reg_read_ftype *read, const void *baton);
 
 #endif /* GDB_USER_REGS_H */

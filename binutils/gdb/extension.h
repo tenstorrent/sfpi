@@ -1,6 +1,6 @@
 /* Interface between gdb and its extension languages.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -232,7 +232,7 @@ private:
   const extension_language_defn *m_extlang;
 };
 
-typedef std::unique_ptr<xmethod_worker> xmethod_worker_up;
+using xmethod_worker_up = std::unique_ptr<xmethod_worker>;
 
 /* The interface for gdb's own extension(/scripting) language.  */
 extern const struct extension_language_defn extension_language_gdb;
@@ -247,7 +247,7 @@ extern int ext_lang_present_p (const struct extension_language_defn *);
 
 extern int ext_lang_initialized_p (const struct extension_language_defn *);
 
-extern void throw_ext_lang_unsupported
+[[noreturn]] extern void throw_ext_lang_unsupported
   (const struct extension_language_defn *);
 
 /* Accessors for "public" attributes of the extension language definition.  */
@@ -325,12 +325,14 @@ extern void get_matching_xmethod_workers
    std::vector<xmethod_worker_up> *workers);
 
 /* Try to colorize some source code.  FILENAME is the name of the file
-   holding the code.  CONTENTS is the source code itself.  This will
-   either a colorized (using ANSI terminal escapes) version of the
-   source code, or an empty value if colorizing could not be done.  */
+   holding the code.  CONTENTS is the source code itself.  LANG is the
+   language of the CONTENTS.  This will either a colorized (using ANSI
+   terminal escapes) version of the source code, or an empty value if
+   colorizing could not be done.  */
 
 extern std::optional<std::string> ext_lang_colorize
-  (const std::string &filename, const std::string &contents);
+  (const std::string &filename, const std::string &contents,
+   enum language lang);
 
 /* Try to colorize a single line of disassembler output, CONTENT for
    GDBARCH.  This will return either a colorized (using ANSI terminal

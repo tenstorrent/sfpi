@@ -5,3 +5,24 @@
 
 *.h	diff=cpp
 *.c	diff=cpp
+
+# Autoconf.
+
+*.ac	whitespace=space-before-tab,indent-with-non-tab,trailing-space
+*.m4	whitespace=space-before-tab,indent-with-non-tab,trailing-space
+
+# Generated files.
+
+configure   -whitespace
+aclocal.m4  -whitespace
+
+# Tab-indented files.
+
+*.[ly]	whitespace=space-before-tab,indent-with-non-tab,trailing-space
+*.def	whitespace=space-before-tab,indent-with-non-tab,trailing-space
+
+# Imported files.
+exc_request.defs -whitespace
+
+# Files with significant trailing whitespace.
+gdb-gdb.gdb.in  whitespace=space-before-tab,indent-with-non-tab,-trailing-space

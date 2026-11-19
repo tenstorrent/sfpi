@@ -1,5 +1,5 @@
 /* ELF emulation code for targets using elf.em.
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of the GNU Binutils.
 
@@ -95,7 +95,7 @@ ldelf_after_parse (void)
       else if (!link_info.maxpagesize_is_set)
 	link_info.maxpagesize = link_info.commonpagesize;
       else
-	einfo (_("%F%P: common page size (0x%v) > maximum page size (0x%v)\n"),
+	fatal (_("%P: common page size (0x%v) > maximum page size (0x%v)\n"),
 	       link_info.commonpagesize, link_info.maxpagesize);
     }
 }
@@ -121,7 +121,7 @@ ldelf_load_symbols (lang_input_statement_type *entry)
 
   if (entry->flags.just_syms
       && (bfd_get_file_flags (entry->the_bfd) & DYNAMIC) != 0)
-    einfo (_("%F%P: %pB: --just-symbols may not be used on DSO\n"),
+    fatal (_("%P: %pB: --just-symbols may not be used on DSO\n"),
 	   entry->the_bfd);
 
   if (link_class == 0
@@ -321,7 +321,7 @@ ldelf_try_needed (struct dt_needed *needed, int force, int is_linux)
       struct bfd_link_needed_list *needs;
 
       if (! bfd_elf_get_bfd_needed_list (abfd, &needs))
-	einfo (_("%F%P: %pB: bfd_elf_get_bfd_needed_list failed: %E\n"), abfd);
+	fatal (_("%P: %pB: bfd_elf_get_bfd_needed_list failed: %E\n"), abfd);
 
       if (needs != NULL)
 	{
@@ -369,7 +369,7 @@ ldelf_try_needed (struct dt_needed *needed, int force, int is_linux)
      can only check that using stat.  */
 
   if (bfd_stat (abfd, &global_stat) != 0)
-    einfo (_("%F%P: %pB: bfd_stat failed: %E\n"), abfd);
+    fatal (_("%P: %pB: bfd_stat failed: %E\n"), abfd);
 
   /* First strip off everything before the last '/'.  */
   soname = lbasename (bfd_get_filename (abfd));
@@ -408,7 +408,7 @@ ldelf_try_needed (struct dt_needed *needed, int force, int is_linux)
 
   /* Add this file into the symbol table.  */
   if (! bfd_link_add_symbols (abfd, &link_info))
-    einfo (_("%F%P: %pB: error adding symbols: %E\n"), abfd);
+    fatal (_("%P: %pB: error adding symbols: %E\n"), abfd);
 
   return true;
 }
@@ -534,9 +534,9 @@ ldelf_search_needed (const char *path, struct dt_needed *n, int force,
 				  replacement, rep_len + 1);
 			}
 
-		      replacement = freeme;
-		      if ((slash = strrchr (replacement, '/')) != NULL)
+		      if ((slash = strrchr (freeme, '/')) != NULL)
 			* slash = 0;
+		      replacement = freeme;
 		    }
 		}
 	      break;
@@ -794,7 +794,7 @@ ldelf_parse_ld_so_conf_include (struct ldelf_ld_so_conf *info,
 
   if (pattern[0] != '/')
     {
-      char *p = strrchr (filename, '/');
+      const char *p = strrchr (filename, '/');
       size_t patlen = strlen (pattern) + 1;
 
       newp = xmalloc (p - filename + 1 + patlen);
@@ -1037,7 +1037,7 @@ ldelf_handle_dt_needed (struct elf_link_hash_table *htab,
      needed list can actually grow while we are stepping through this
      loop.  */
   save_input_bfd_tail = link_info.input_bfds_tail;
-  needed = bfd_elf_get_needed_list (link_info.output_bfd, &link_info);
+  needed = bfd_elf_get_needed_list (&link_info);
   for (l = needed; l != NULL; l = l->next)
     {
       struct bfd_link_needed_list *ll;
@@ -1148,7 +1148,7 @@ ldelf_handle_dt_needed (struct elf_link_hash_table *htab,
 	  if (use_libpath)
 	    {
 	      found = 0;
-	      rp = bfd_elf_get_runpath_list (link_info.output_bfd, &link_info);
+	      rp = bfd_elf_get_runpath_list (&link_info);
 	      for (; !found && rp != NULL; rp = rp->next)
 		{
 		  path = ldelf_add_sysroot (rp->name);
@@ -1206,7 +1206,7 @@ ldelf_handle_dt_needed (struct elf_link_hash_table *htab,
 	  && elf_dt_name (abfd) != NULL)
 	{
 	  if (bfd_elf_add_dt_needed_tag (abfd, &link_info) < 0)
-	    einfo (_("%F%P: failed to add DT_NEEDED dynamic tag\n"));
+	    fatal (_("%P: failed to add DT_NEEDED dynamic tag\n"));
 	}
 
   link_info.input_bfds_tail = save_input_bfd_tail;
@@ -1257,10 +1257,8 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 		     bfd_get_target (link_info.output_bfd));
 
       if (link_info.out_implib_bfd == NULL)
-	{
-	  einfo (_("%F%P: %s: can't open for writing: %E\n"),
-		 command_line.out_implib_filename);
-	}
+	fatal (_("%P: %s: can't open for writing: %E\n"),
+	       command_line.out_implib_filename);
     }
 
   if (ldelf_emit_note_gnu_build_id != NULL
@@ -1293,6 +1291,7 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 	}
     }
 
+  get_elf_backend_data (link_info.output_bfd)->setup_object_attributes (&link_info);
   get_elf_backend_data (link_info.output_bfd)->setup_gnu_properties (&link_info);
 
   /* Do not allow executable files to be used as inputs to the link.  */
@@ -1314,7 +1313,7 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 	  && (elf_tdata (abfd)->elf_header->e_type == ET_EXEC
 	      || (elf_tdata (abfd)->elf_header->e_type == ET_DYN
 		  && elf_tdata (abfd)->is_pie)))
-	einfo (_("%F%P: cannot use executable file '%pB' as input to a link\n"),
+	fatal (_("%P: cannot use executable file '%pB' as input to a link\n"),
 	       abfd);
     }
 
@@ -1329,8 +1328,10 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 	     effect.  Instead we create a .note.GNU-stack section in much the
 	     same way as the assembler does with its --[no]execstack option.  */
 	  flagword flags = SEC_READONLY | (link_info.execstack ? SEC_CODE : 0);
-	  (void) bfd_make_section_with_flags (link_info.input_bfds,
-					      ".note.GNU-stack", flags);
+	  s = bfd_make_section_with_flags (link_info.input_bfds,
+					   ".note.GNU-stack", flags);
+	  if (s && bfd_get_flavour (s->owner) == bfd_target_elf_flavour)
+	    elf_section_type (s) = SHT_NOTE;
 	}
       return;
     }
@@ -1368,7 +1369,7 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 		}
 	      else if (seen_type != type)
 		{
-		  einfo (_("%F%P: compact frame descriptions incompatible with"
+		  fatal (_("%P: compact frame descriptions incompatible with"
 			   " DWARF2 .eh_frame from %pB\n"),
 			 type == DWARF2_EH_HDR ? abfd : elfbfd);
 		  break;
@@ -1390,9 +1391,7 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
 	}
       if (elfbfd)
 	{
-	  const struct elf_backend_data *bed;
-
-	  bed = get_elf_backend_data (elfbfd);
+	  elf_backend_data *bed = get_elf_backend_data (elfbfd);
 	  s = bfd_make_section_with_flags (elfbfd, ".eh_frame_hdr",
 					   bed->dynamic_sec_flags
 					   | SEC_READONLY);
@@ -1409,8 +1408,8 @@ ldelf_after_open (int use_libpath, int native, int is_linux, int is_freebsd,
     }
 
   if (link_info.eh_frame_hdr_type == COMPACT_EH_HDR)
-    if (!bfd_elf_parse_eh_frame_entries (NULL, &link_info))
-      einfo (_("%F%P: failed to parse EH frame entries\n"));
+    if (!bfd_elf_parse_eh_frame_entries (&link_info))
+      fatal (_("%P: failed to parse EH frame entries\n"));
 
   ldelf_handle_dt_needed (htab, use_libpath, native, is_linux,
 			  is_freebsd, elfsize, prefix);
@@ -1438,7 +1437,7 @@ id_note_section_size (bfd *abfd ATTRIBUTE_UNUSED)
 static bool
 write_build_id (bfd *abfd)
 {
-  const struct elf_backend_data *bed = get_elf_backend_data (abfd);
+  elf_backend_data *bed = get_elf_backend_data (abfd);
   struct elf_obj_tdata *t = elf_tdata (abfd);
   const char *style;
   asection *asec;
@@ -1665,11 +1664,10 @@ ldelf_find_exp_assignment (etree_type *exp)
 	 will do no harm.  */
       if (strcmp (exp->assign.dst, ".") != 0)
 	{
-	  if (!bfd_elf_record_link_assignment (link_info.output_bfd,
-					       &link_info,
+	  if (!bfd_elf_record_link_assignment (&link_info,
 					       exp->assign.dst, provide,
 					       exp->assign.hidden))
-	    einfo (_("%F%P: failed to record assignment to %s: %E\n"),
+	    fatal (_("%P: failed to record assignment to %s: %E\n"),
 		   exp->assign.dst);
 	}
       ldelf_find_exp_assignment (exp->assign.src);
@@ -1752,7 +1750,7 @@ ldelf_append_to_separated_string (char **to, char *op_arg)
    sections, but before any sizes or addresses have been set.  */
 
 void
-ldelf_before_allocation (char *audit, char *depaudit,
+ldelf_before_allocation (char **audit, char **depaudit,
 			 const char *default_interpreter_name)
 {
   const char *rpath;
@@ -1765,15 +1763,14 @@ ldelf_before_allocation (char *audit, char *depaudit,
 
   if (is_elf_hash_table (link_info.hash))
     {
-      _bfd_elf_tls_setup (link_info.output_bfd, &link_info);
+      bfd_elf_tls_setup (&link_info);
 
       /* Make __ehdr_start hidden if it has been referenced, to
 	 prevent the symbol from being dynamic.  */
       if (!bfd_link_relocatable (&link_info))
 	{
 	  struct elf_link_hash_table *htab = elf_hash_table (&link_info);
-	  struct elf_link_hash_entry *h
-	    = elf_link_hash_lookup (htab, "__ehdr_start", false, false, true);
+	  struct elf_link_hash_entry *h = htab->hehdr_start;
 
 	  /* Only adjust the export class if the symbol was referenced
 	     and not defined, otherwise leave it alone.  */
@@ -1821,33 +1818,31 @@ ldelf_before_allocation (char *audit, char *depaudit,
 	   a dep audit entry.  */
 	if (audit_libs && *audit_libs != '\0')
 	  {
-	    char *cp = xstrdup (audit_libs);
+	    char *copy_audit_libs = xstrdup (audit_libs);
+	    char *cp = copy_audit_libs;
 	    do
 	      {
-		int more = 0;
 		char *cp2 = strchr (cp, config.rpath_separator);
 
 		if (cp2)
-		  {
-		    *cp2 = '\0';
-		    more = 1;
-		  }
+		  *cp2++ = '\0';
 
-		if (cp != NULL && *cp != '\0')
-		  ldelf_append_to_separated_string (&depaudit, cp);
+		if (*cp != '\0')
+		  ldelf_append_to_separated_string (depaudit, cp);
 
-		cp = more ? ++cp2 : NULL;
+		cp = cp2;
 	      }
 	    while (cp != NULL);
+	    free (copy_audit_libs);
 	  }
       }
 
   if (! (bfd_elf_size_dynamic_sections
-	 (link_info.output_bfd, command_line.soname, rpath,
-	  command_line.filter_shlib, audit, depaudit,
+	 (&link_info, command_line.soname, rpath,
+	  command_line.filter_shlib, *audit, *depaudit,
 	  (const char * const *) command_line.auxiliary_filters,
-	  &link_info, &sinterp)))
-    einfo (_("%F%P: failed to set dynamic section sizes: %E\n"));
+	  &sinterp)))
+    fatal (_("%P: failed to set dynamic section sizes: %E\n"));
 
   if (sinterp != NULL)
     {
@@ -1857,6 +1852,7 @@ ldelf_before_allocation (char *audit, char *depaudit,
       if (default_interpreter_name != NULL)
 	{
 	  sinterp->contents = (bfd_byte *) default_interpreter_name;
+	  sinterp->alloced = 1;
 	  sinterp->size = strlen ((char *) sinterp->contents) + 1;
 	}
     }
@@ -1884,8 +1880,8 @@ ldelf_before_allocation (char *audit, char *depaudit,
 	msg = (char *) xmalloc ((size_t) (sz + 1));
 	if (! bfd_get_section_contents (is->the_bfd, s,	msg,
 					(file_ptr) 0, sz))
-	  einfo (_("%F%P: %pB: can't read contents of section .gnu.warning: %E\n"),
-		 is->the_bfd);
+	  fatal (_("%P: %pB: can't read contents of section %pA: %E\n"),
+		 is->the_bfd, s);
 	msg[sz] = '\0';
 	(*link_info.callbacks->warning) (&link_info, msg,
 					 (const char *) NULL, is->the_bfd,
@@ -1911,8 +1907,8 @@ ldelf_before_allocation (char *audit, char *depaudit,
 
   before_allocation_default ();
 
-  if (!bfd_elf_size_dynsym_hash_dynstr (link_info.output_bfd, &link_info))
-    einfo (_("%F%P: failed to set dynamic section sizes: %E\n"));
+  if (!bfd_elf_size_dynsym_hash_dynstr (&link_info))
+    fatal (_("%P: failed to set dynamic section sizes: %E\n"));
 
   if (ehdr_start != NULL)
     {
@@ -2092,13 +2088,14 @@ elf_orphan_compatible (asection *in, asection *out)
       && (elf_next_in_group (out) != NULL
 	  || ((elf_section_flags (in) & SHF_LINK_ORDER) != 0
 	      && (elf_section_flags (out) & SHF_LINK_ORDER) != 0
+	      && elf_linked_to_section (in) != NULL
 	      && (elf_linked_to_section (in)->output_section
 		  != elf_linked_to_section (out)->output_section))
 	  || ((elf_section_flags (out) ^ elf_section_flags (in))
 	      & (SHF_MASKPROC | SHF_MASKOS)) != 0))
     return false;
-  return _bfd_elf_match_sections_by_type (link_info.output_bfd, out,
-					  in->owner, in);
+  return bfd_elf_match_sections_by_type (link_info.output_bfd, out,
+					 in->owner, in);
 }
 
 /* Place an orphan section.  We use this to put random SHF_ALLOC
@@ -2244,14 +2241,17 @@ ldelf_place_orphan (asection *s, const char *secname, int constraint)
 	   lang_insert_orphan to create a new output section.  */
 	constraint = SPECIAL;
 
-	/* Check to see if we already have an output section statement
-	   with this name, and its bfd section has compatible flags.
-	   If the section already exists but does not have any flags
-	   set, then it has been created by the linker, possibly as a
-	   result of a --section-start command line switch.  */
+	/* Check to see if we already have an output section statement with
+	   this name, and it was either present in the script with a special
+	   type (knowing that lang_insert_orphan only creates normal_section
+	   output sections) or its BFD section has compatible flags.  If the
+	   section already exists but does not have any flags set, then it has
+	   been created by the linker, possibly as a result of --section-start
+	   command line switch.  */
 	if (os->bfd_section != NULL
 	    && !bfd_is_abs_section (os->bfd_section)
-	    && (os->bfd_section->flags == 0
+	    && (os->sectype >= noload_section
+		|| os->bfd_section->flags == 0
 		|| (((s->flags ^ os->bfd_section->flags)
 		     & (SEC_LOAD | SEC_ALLOC)) == 0
 		    && (!elfinput
@@ -2317,8 +2317,8 @@ ldelf_place_orphan (asection *s, const char *secname, int constraint)
 	    && ((nexts->flags ^ flags) & (SEC_LOAD | SEC_ALLOC)) == 0
 	    && (nexts->owner->flags & DYNAMIC) == 0
 	    && !bfd_input_just_syms (nexts->owner)
-	    && _bfd_elf_match_sections_by_type (nexts->owner, nexts,
-						s->owner, s))
+	    && bfd_elf_match_sections_by_type (nexts->owner, nexts,
+					       s->owner, s))
 	  flags = (((flags ^ SEC_READONLY)
 		    | (nexts->flags ^ SEC_READONLY))
 		   ^ SEC_READONLY);
@@ -2386,7 +2386,7 @@ ldelf_place_orphan (asection *s, const char *secname, int constraint)
       if (after == NULL)
 	after
 	  = lang_output_section_find_by_flags (s, flags, &place->os,
-					       _bfd_elf_match_sections_by_type);
+					       bfd_elf_match_sections_by_type);
       if (after == NULL)
 	/* *ABS* is always the first output section statement.  */
 	after = (void *) lang_os_list.head;

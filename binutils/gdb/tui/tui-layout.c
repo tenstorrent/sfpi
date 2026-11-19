@@ -1,6 +1,6 @@
 /* TUI layout window management.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    Contributed by Hewlett-Packard Company.
 
@@ -24,7 +24,7 @@
 #include "frame.h"
 #include "cli/cli-decode.h"
 #include "cli/cli-utils.h"
-#include <unordered_set>
+#include "gdbsupport/unordered_set.h"
 
 #include "tui/tui.h"
 #include "tui/tui-command.h"
@@ -37,7 +37,6 @@
 #include "tui/tui-layout.h"
 #include "tui/tui-source.h"
 #include "gdb_curses.h"
-#include "gdbsupport/gdb-safe-ctype.h"
 
 /* The layouts.  */
 static std::vector<std::unique_ptr<tui_layout_split>> layouts;
@@ -254,7 +253,7 @@ tui_remove_some_windows ()
 {
   tui_win_info *focus = tui_win_with_focus ();
 
-  if (strcmp (focus->name (), CMD_NAME) == 0)
+  if (streq (focus->name (), CMD_NAME))
     {
       /* Try leaving the source or disassembly window.  If neither
 	 exists, just do nothing.  */
@@ -381,14 +380,14 @@ tui_register_window (const char *name, window_factory &&factory)
 
   for (const char &c : name_copy)
     {
-      if (ISSPACE (c))
+      if (c_isspace (c))
 	error (_("invalid whitespace character in window name"));
 
-      if (!ISALNUM (c) && strchr ("-_.", c) == nullptr)
+      if (!c_isalnum (c) && strchr ("-_.", c) == nullptr)
 	error (_("invalid character '%c' in window name"), c);
     }
 
-  if (!ISALPHA (name_copy[0]))
+  if (!c_isalpha (name_copy[0]))
     error (_("window name must start with a letter, not '%c'"), name_copy[0]);
 
   /* We already check above for all the builtin window names.  If we get
@@ -507,7 +506,7 @@ tui_layout_window::specification (ui_file *output, int depth)
 std::string
 tui_layout_window::layout_fingerprint () const
 {
-  if (strcmp (get_name (), "cmd") == 0)
+  if (streq (get_name (), "cmd"))
     return "C";
   else
     return "";
@@ -825,7 +824,7 @@ tui_layout_split::apply (int x_, int y_, int width_, int height_,
       if (preserve_cmd_win_size_p
 	  && cmd_win_already_exists
 	  && m_splits[i].layout->get_name () != nullptr
-	  && strcmp (m_splits[i].layout->get_name (), "cmd") == 0)
+	  && streq (m_splits[i].layout->get_name (), "cmd"))
 	{
 	  /* Save the old cmd window information, in case we need to
 	     restore it later.  */
@@ -1043,9 +1042,9 @@ tui_layout_split::remove_windows (const char *name)
       const char *this_name = m_splits[i].layout->get_name ();
       if (this_name == nullptr)
 	m_splits[i].layout->remove_windows (name);
-      else if (strcmp (this_name, name) == 0
-	       || strcmp (this_name, CMD_NAME) == 0
-	       || strcmp (this_name, STATUS_NAME) == 0)
+      else if (streq (this_name, name)
+	       || streq (this_name, CMD_NAME)
+	       || streq (this_name, STATUS_NAME))
 	{
 	  /* Keep.  */
 	}
@@ -1119,14 +1118,6 @@ destroy_layout (struct cmd_list_element *self, void *context)
 /* List holding the sub-commands of "layout".  */
 
 static struct cmd_list_element *layout_list;
-
-/* Called to implement 'tui layout'.  */
-
-static void
-tui_layout_command (const char *args, int from_tty)
-{
-  help_list (layout_list, "tui layout ", all_commands, gdb_stdout);
-}
 
 /* Add a "layout" command with name NAME that switches to LAYOUT.  */
 
@@ -1229,7 +1220,7 @@ tui_new_layout_command (const char *spec, int from_tty)
 
   std::vector<std::unique_ptr<tui_layout_split>> splits;
   splits.emplace_back (new tui_layout_split (is_vertical));
-  std::unordered_set<std::string> seen_windows;
+  gdb::unordered_set<std::string> seen_windows;
   while (true)
     {
       spec = skip_spaces (spec);
@@ -1302,12 +1293,10 @@ tui_new_layout_command (const char *spec, int from_tty)
 /* Function to initialize gdb commands, for tui window layout
    manipulation.  */
 
-void _initialize_tui_layout ();
-void
-_initialize_tui_layout ()
+INIT_GDB_FILE (tui_layout)
 {
   struct cmd_list_element *layout_cmd
-    = add_prefix_cmd ("layout", class_tui, tui_layout_command, _("\
+    = add_basic_prefix_cmd ("layout", class_tui, _("\
 Change the layout of windows.\n\
 Usage: tui layout prev | next | LAYOUT-NAME"),
 		      &layout_list, 0, tui_get_cmd_list ());

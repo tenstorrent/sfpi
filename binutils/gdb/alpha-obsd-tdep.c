@@ -1,6 +1,6 @@
 /* Target-dependent code for OpenBSD/alpha.
 
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -101,16 +101,12 @@ alphaobsd_init_abi(struct gdbarch_info info, struct gdbarch *gdbarch)
   /* Hook into the DWARF CFI frame unwinder.  */
   alpha_dwarf2_init_abi (info, gdbarch);
 
-  /* Hook into the MDEBUG frame unwinder.  */
-  alpha_mdebug_init_abi (info, gdbarch);
-
   /* OpenBSD/alpha 3.0 and earlier does not provide single step
      support via ptrace(2); use software single-stepping for now.  */
-  set_gdbarch_software_single_step (gdbarch, alpha_software_single_step);
+  set_gdbarch_get_next_pcs (gdbarch, alpha_software_single_step);
 
   /* OpenBSD/alpha has SVR4-style shared libraries.  */
-  set_solib_svr4_fetch_link_map_offsets
-    (gdbarch, svr4_lp64_fetch_link_map_offsets);
+  set_solib_svr4_ops (gdbarch, make_svr4_lp64_solib_ops);
   set_gdbarch_skip_solib_resolver (gdbarch, obsd_skip_solib_resolver);
 
   tdep->dynamic_sigtramp_offset = alphaobsd_sigtramp_offset;
@@ -125,9 +121,7 @@ alphaobsd_init_abi(struct gdbarch_info info, struct gdbarch *gdbarch)
 }
 
 
-void _initialize_alphaobsd_tdep ();
-void
-_initialize_alphaobsd_tdep ()
+INIT_GDB_FILE (alphaobsd_tdep)
 {
   gdbarch_register_osabi (bfd_arch_alpha, 0, GDB_OSABI_OPENBSD,
 			  alphaobsd_init_abi);

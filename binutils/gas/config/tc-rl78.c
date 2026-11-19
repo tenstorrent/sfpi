@@ -1,5 +1,5 @@
 /* tc-rl78.c -- Assembler for the Renesas RL78
-   Copyright (C) 2011-2025 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -403,11 +403,6 @@ md_begin (void)
   rl78_abs_sym = symbol_make ("__rl78_abs__");
 }
 
-void
-rl78_md_end (void)
-{
-}
-
 /* Set the ELF specific flags.  */
 void
 rl78_elf_final_processing (void)
@@ -425,15 +420,13 @@ md_number_to_chars (char * buf, valueT val, int n)
 static void
 require_end_of_expr (const char *fname)
 {
-  while (* input_line_pointer == ' '
-	 || * input_line_pointer == '\t')
+  while (is_whitespace (* input_line_pointer))
     input_line_pointer ++;
 
-  if (! * input_line_pointer
-      || strchr ("\n\r,", * input_line_pointer)
+  if (is_end_of_stmt (* input_line_pointer)
+      || * input_line_pointer == ','
       || strchr (comment_chars, * input_line_pointer)
-      || strchr (line_comment_chars, * input_line_pointer)
-      || strchr (line_separator_chars, * input_line_pointer))
+      || strchr (line_comment_chars, * input_line_pointer))
     return;
 
   as_bad (_("%%%s() must be outermost term in expression"), fname);
@@ -707,7 +700,7 @@ rl78_cons_fix_new (fragS *	frag,
 	type = BFD_RELOC_RL78_DIFF;
     }
 
-  fixP = fix_new_exp (frag, where, (int) size, exp, 0, type);
+  fixP = fix_new_exp (frag, where, size, exp, 0, type);
   switch (exp->X_md)
     {
       /* These are intended to have values larger than the container,
@@ -1422,7 +1415,7 @@ md_apply_fix (struct fix * f ATTRIBUTE_UNUSED,
     return;
 
   op = f->fx_frag->fr_literal + f->fx_where;
-  val = (unsigned long) * t;
+  val = *t;
 
   if (f->fx_addsy == NULL)
     f->fx_done = 1;
@@ -1510,5 +1503,5 @@ valueT
 md_section_align (segT segment, valueT size)
 {
   int align = bfd_section_alignment (segment);
-  return ((size + (1 << align) - 1) & -(1 << align));
+  return (size + ((valueT) 1 << align) - 1) & -((valueT) 1 << align);
 }

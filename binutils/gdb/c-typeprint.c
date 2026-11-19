@@ -1,5 +1,5 @@
 /* Support for printing C and C++ types for GDB, the GNU debugger.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -128,7 +128,7 @@ c_print_type_1 (struct type *type,
 		  || code == TYPE_CODE_METHODPTR
 		  || TYPE_IS_REFERENCE (type))))
 	gdb_puts (" ", stream);
-      need_post_space = (varstring != NULL && strcmp (varstring, "") != 0);
+      need_post_space = (varstring != NULL && !streq (varstring, ""));
       c_type_print_varspec_prefix (type, stream, show, 0, need_post_space,
 				   language, flags, podata);
     }
@@ -181,8 +181,7 @@ c_print_typedef (struct type *type,
   gdb_printf (stream, "typedef ");
   type_print (type, "", stream, -1);
   if ((new_symbol->type ())->name () == 0
-      || strcmp ((new_symbol->type ())->name (),
-		 new_symbol->linkage_name ()) != 0
+      || !streq ((new_symbol->type ())->name (), new_symbol->linkage_name ())
       || new_symbol->type ()->code () == TYPE_CODE_TYPEDEF)
     gdb_printf (stream, " %s", new_symbol->print_name ());
   gdb_printf (stream, ";");
@@ -245,19 +244,17 @@ cp_type_print_derivation_info (struct ui_file *stream,
 /* Print the C++ method arguments ARGS to the file STREAM.  */
 
 static void
-cp_type_print_method_args (struct type *mtype, const char *prefix,
+cp_type_print_method_args (struct type *mtype,
 			   const char *varstring, int staticp,
 			   struct ui_file *stream,
 			   enum language language,
 			   const struct type_print_options *flags)
 {
-  struct field *args = mtype->fields ();
-  int nargs = mtype->num_fields ();
+  auto args = mtype->fields ();
+  int nargs = args.size ();
   int varargs = mtype->has_varargs ();
   int i;
 
-  fprintf_symbol (stream, prefix,
-		  language_cplus, DMGL_ANSI);
   fprintf_symbol (stream, varstring,
 		  language_cplus, DMGL_ANSI);
   gdb_puts ("(", stream);
@@ -337,7 +334,7 @@ cp_type_print_method_args (struct type *mtype, const char *prefix,
    On outermost call, SHOW > 0 means should ignore
    any typename for TYPE and show its details.
    SHOW is always zero on recursive calls.
-   
+
    NEED_POST_SPACE is non-zero when a space will be be needed
    between a trailing qualifier and a field, variable, or function
    name.  */
@@ -515,16 +512,15 @@ c_type_print_args (struct type *type, struct ui_file *stream,
 		   int linkage_name, enum language language,
 		   const struct type_print_options *flags)
 {
-  int i;
   int printed_any = 0;
 
   gdb_printf (stream, "(");
 
-  for (i = 0; i < type->num_fields (); i++)
+  for (const auto &field : type->fields ())
     {
       struct type *param_type;
 
-      if (type->field (i).is_artificial () && linkage_name)
+      if (field.is_artificial () && linkage_name)
 	continue;
 
       if (printed_any)
@@ -533,7 +529,7 @@ c_type_print_args (struct type *type, struct ui_file *stream,
 	  stream->wrap_here (4);
 	}
 
-      param_type = type->field (i).type ();
+      param_type = field.type ();
 
       if (language == language_cplus && linkage_name)
 	{
@@ -544,7 +540,7 @@ c_type_print_args (struct type *type, struct ui_file *stream,
 	     And the const/volatile qualifiers are not present in the mangled
 	     names as produced by GCC.  */
 
-	  param_type = make_cv_type (0, 0, param_type, NULL);
+	  param_type = make_cv_type (0, 0, param_type);
 	}
 
       c_print_type (param_type, "", stream, -1, 0, language, flags);
@@ -744,7 +740,7 @@ c_type_print_varspec_suffix (struct type *type,
 	    || type->bounds ()->high.kind () == PROP_LOCLIST)
 	  gdb_printf (stream, "variable length");
 	else if (get_array_bounds (type, &low_bound, &high_bound))
-	  gdb_printf (stream, "%s", 
+	  gdb_printf (stream, "%s",
 		      plongest (high_bound - low_bound + 1));
 	gdb_printf (stream, (is_vector ? ")))" : "]"));
 
@@ -788,14 +784,8 @@ c_type_print_varspec_suffix (struct type *type,
     }
 }
 
-/* A helper for c_type_print_base that displays template
-   parameters and their bindings, if needed.
-
-   TABLE is the local bindings table to use.  If NULL, no printing is
-   done.  Note that, at this point, TABLE won't have any useful
-   information in it -- but it is also used as a flag to
-   print_name_maybe_canonical to activate searching the global typedef
-   table.
+/* A helper for c_type_print_base_struct_union that displays template
+   parameters.
 
    TYPE is the type whose template arguments are being displayed.
 
@@ -806,36 +796,32 @@ c_type_print_template_args (const struct type_print_options *flags,
 			    struct type *type, struct ui_file *stream,
 			    enum language language)
 {
-  int first = 1, i;
-
-  if (flags->raw)
+  if (flags->raw || TYPE_N_TEMPLATE_ARGUMENTS (type) == 0)
     return;
 
-  for (i = 0; i < TYPE_N_TEMPLATE_ARGUMENTS (type); ++i)
+  stream->wrap_here (4);
+  gdb_printf (stream, _("[with "));
+
+  for (int i = 0; i < TYPE_N_TEMPLATE_ARGUMENTS (type); ++i)
     {
       struct symbol *sym = TYPE_TEMPLATE_ARGUMENT (type, i);
 
-      if (sym->aclass () != LOC_TYPEDEF)
-	continue;
-
-      if (first)
-	{
-	  stream->wrap_here (4);
-	  gdb_printf (stream, _("[with %s = "), sym->linkage_name ());
-	  first = 0;
-	}
-      else
+      if (i > 0)
 	{
 	  gdb_puts (", ", stream);
 	  stream->wrap_here (9);
-	  gdb_printf (stream, "%s = ", sym->linkage_name ());
 	}
 
-      c_print_type (sym->type (), "", stream, -1, 0, language, flags);
+      gdb_printf (stream, "%ps = ",
+		  styled_string (variable_name_style.style (),
+				 sym->linkage_name ()));
+      if (sym->loc_class () == LOC_TYPEDEF)
+	c_print_type (sym->type (), "", stream, -1, 0, language, flags);
+      else
+	print_variable_value (sym, {}, stream, 0, language_def (language));
     }
 
-  if (!first)
-    gdb_puts (_("] "), stream);
+  gdb_puts (_("] "), stream);
 }
 
 /* Use 'print_spaces', but take into consideration the
@@ -1111,13 +1097,10 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 	  int j, len2 = TYPE_FN_FIELDLIST_LENGTH (type, i);
 	  const char *method_name = TYPE_FN_FIELDLIST_NAME (type, i);
 	  const char *name = type->name ();
-	  int is_constructor = name && strcmp (method_name,
-					       name) == 0;
+	  int is_constructor = name != nullptr && streq (method_name, name);
 
 	  for (j = 0; j < len2; j++)
 	    {
-	      const char *mangled_name;
-	      gdb::unique_xmalloc_ptr<char> mangled_name_holder;
 	      const char *physname = TYPE_FN_FIELD_PHYSNAME (f, j);
 	      int is_full_physname_constructor =
 		TYPE_FN_FIELD_CONSTRUCTOR (f, j)
@@ -1162,14 +1145,8 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 
 		  gdb_puts (" ", stream);
 		}
-	      if (TYPE_FN_FIELD_STUB (f, j))
-		{
-		  /* Build something we can demangle.  */
-		  mangled_name_holder.reset (gdb_mangle_name (type, i, j));
-		  mangled_name = mangled_name_holder.get ();
-		}
-	      else
-		mangled_name = TYPE_FN_FIELD_PHYSNAME (f, j);
+
+	      const char *mangled_name = TYPE_FN_FIELD_PHYSNAME (f, j);
 
 	      gdb::unique_xmalloc_ptr<char> demangled_name
 		= gdb_demangle (mangled_name,
@@ -1181,22 +1158,14 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 		     arguments, the demangling will fail.
 		     Let's try to reconstruct the function
 		     signature from the symbol information.  */
-		  if (!TYPE_FN_FIELD_STUB (f, j))
-		    {
-		      int staticp = TYPE_FN_FIELD_STATIC_P (f, j);
-		      struct type *mtype = TYPE_FN_FIELD_TYPE (f, j);
+		  int staticp = TYPE_FN_FIELD_STATIC_P (f, j);
+		  struct type *mtype = TYPE_FN_FIELD_TYPE (f, j);
 
-		      cp_type_print_method_args (mtype,
-						 "",
-						 method_name,
-						 staticp,
-						 stream, language,
-						 &local_flags);
-		    }
-		  else
-		    fprintf_styled (stream, metadata_style.style (),
-				    _("<badly mangled name '%s'>"),
-				    mangled_name);
+		  cp_type_print_method_args (mtype,
+					     method_name,
+					     staticp,
+					     stream, language,
+					     &local_flags);
 		}
 	      else
 		{
@@ -1293,6 +1262,83 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
     }
 }
 
+/* Helper for 'c_type_print_base' that handles enums.
+   For a description of the arguments, see 'c_type_print_base'.  */
+
+static void
+c_type_print_base_enum (struct type *type, struct ui_file *stream,
+			int show, int level,
+			enum language language,
+			const struct type_print_options *flags,
+			struct print_offset_data *podata)
+{
+  c_type_print_modifier (type, stream, 0, 1, language);
+  gdb_printf (stream, "enum ");
+  if (type->is_declared_class ())
+    gdb_printf (stream, "class ");
+  /* Print the tag name if it exists.
+     The aCC compiler emits a spurious
+     "{unnamed struct}"/"{unnamed union}"/"{unnamed enum}"
+     tag for unnamed struct/union/enum's, which we don't
+     want to print.  */
+  if (type->name () != NULL
+      && !startswith (type->name (), "{unnamed"))
+    {
+      print_name_maybe_canonical (type->name (), flags, stream);
+      if (show > 0)
+	gdb_puts (" ", stream);
+    }
+
+  stream->wrap_here (4);
+  if (show < 0)
+    {
+      /* If we just printed a tag name, no need to print anything
+	 else.  */
+      if (type->name () == NULL)
+	gdb_printf (stream, "{...}");
+    }
+  else if (show > 0 || type->name () == NULL)
+    {
+      /* We can't handle this case perfectly, as DWARF does not
+	 tell us whether or not the underlying type was specified
+	 in the source (and other debug formats don't provide this
+	 at all).  We choose to print the underlying type, if it
+	 has a name, when in C++ on the theory that it's better to
+	 print too much than too little; but conversely not to
+	 print something egregiously outside the current
+	 language's syntax.  */
+      if (language == language_cplus && type->target_type () != NULL)
+	{
+	  struct type *underlying = check_typedef (type->target_type ());
+
+	  if (underlying->name () != NULL)
+	    gdb_printf (stream, ": %s ", underlying->name ());
+	}
+
+      gdb_printf (stream, "{\n");
+      int len = type->num_fields ();
+      if (len == 0)
+	gdb_printf (stream, "%*s%ps", level + 4, "",
+		    styled_string (metadata_style.style (),
+				   "<no enum values>"));
+      else
+	{
+	  for (int i = 0; i < len; i++)
+	    {
+	      QUIT;
+	      if (i != 0)
+		gdb_printf (stream, ",\n");
+	      gdb_printf (stream, "%*s%ps", level + 4, "",
+			  styled_string (variable_name_style.style (),
+					 type->field (i).name ()));
+	      gdb_printf (stream, " = %s",
+			  plongest (type->field (i).loc_enumval ()));
+	    }
+	}
+      gdb_printf (stream, "\n%*s}", level, "");
+    }
+}
+
 /* Print the name of the type (or the ultimate pointer target,
    function value or array element), or the description of a structure
    or union.
@@ -1318,9 +1364,6 @@ c_type_print_base_1 (struct type *type, struct ui_file *stream,
 		     const struct type_print_options *flags,
 		     struct print_offset_data *podata)
 {
-  int i;
-  int len;
-
   QUIT;
 
   if (type == NULL)
@@ -1400,71 +1443,8 @@ c_type_print_base_1 (struct type *type, struct ui_file *stream,
       break;
 
     case TYPE_CODE_ENUM:
-      c_type_print_modifier (type, stream, 0, 1, language);
-      gdb_printf (stream, "enum ");
-      if (type->is_declared_class ())
-	gdb_printf (stream, "class ");
-      /* Print the tag name if it exists.
-	 The aCC compiler emits a spurious 
-	 "{unnamed struct}"/"{unnamed union}"/"{unnamed enum}"
-	 tag for unnamed struct/union/enum's, which we don't
-	 want to print.  */
-      if (type->name () != NULL
-	  && !startswith (type->name (), "{unnamed"))
-	{
-	  print_name_maybe_canonical (type->name (), flags, stream);
-	  if (show > 0)
-	    gdb_puts (" ", stream);
-	}
-
-      stream->wrap_here (4);
-      if (show < 0)
-	{
-	  /* If we just printed a tag name, no need to print anything
-	     else.  */
-	  if (type->name () == NULL)
-	    gdb_printf (stream, "{...}");
-	}
-      else if (show > 0 || type->name () == NULL)
-	{
-	  LONGEST lastval = 0;
-
-	  /* We can't handle this case perfectly, as DWARF does not
-	     tell us whether or not the underlying type was specified
-	     in the source (and other debug formats don't provide this
-	     at all).  We choose to print the underlying type, if it
-	     has a name, when in C++ on the theory that it's better to
-	     print too much than too little; but conversely not to
-	     print something egregiously outside the current
-	     language's syntax.  */
-	  if (language == language_cplus && type->target_type () != NULL)
-	    {
-	      struct type *underlying = check_typedef (type->target_type ());
-
-	      if (underlying->name () != NULL)
-		gdb_printf (stream, ": %s ", underlying->name ());
-	    }
-
-	  gdb_printf (stream, "{");
-	  len = type->num_fields ();
-	  for (i = 0; i < len; i++)
-	    {
-	      QUIT;
-	      if (i)
-		gdb_printf (stream, ", ");
-	      stream->wrap_here (4);
-	      fputs_styled (type->field (i).name (),
-			    variable_name_style.style (), stream);
-	      if (lastval != type->field (i).loc_enumval ())
-		{
-		  gdb_printf (stream, " = %s",
-			      plongest (type->field (i).loc_enumval ()));
-		  lastval = type->field (i).loc_enumval ();
-		}
-	      lastval++;
-	    }
-	  gdb_printf (stream, "}");
-	}
+      c_type_print_base_enum (type, stream, show, level,
+			      language, flags, podata);
       break;
 
     case TYPE_CODE_FLAGS:
@@ -1493,8 +1473,8 @@ c_type_print_base_1 (struct type *type, struct ui_file *stream,
 			      level + 4, "",
 			      metadata_style.style ().ptr (), nullptr);
 	      }
-	    len = type->num_fields ();
-	    for (i = 0; i < len; i++)
+	    int len = type->num_fields ();
+	    for (int i = 0; i < len; i++)
 	      {
 		QUIT;
 		print_spaces (level + 4, stream);
@@ -1529,7 +1509,7 @@ c_type_print_base_1 (struct type *type, struct ui_file *stream,
       break;
 
     case TYPE_CODE_ERROR:
-      gdb_printf (stream, "%s", TYPE_ERROR_NAME (type));
+      gdb_printf (stream, "%s", type->error_name ());
       break;
 
     case TYPE_CODE_RANGE:

@@ -1,6 +1,6 @@
 /* Target-dependent code for s390.
 
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -41,6 +41,8 @@
 #include "value.h"
 #include "inferior.h"
 #include "dwarf2/loc.h"
+#include "gdbsupport/selftest.h"
+#include "gdb/disasm-selftests.h"
 
 #include "features/s390-linux32.c"
 #include "features/s390x-linux64.c"
@@ -52,7 +54,7 @@ static std::string s390_disassembler_options;
 
 constexpr gdb_byte s390_break_insn[] = { 0x0, 0x1 };
 
-typedef BP_MANIPULATION (s390_break_insn) s390_breakpoint;
+using s390_breakpoint = BP_MANIPULATION (s390_break_insn);
 
 /* Types.  */
 
@@ -299,6 +301,7 @@ s390_is_partial_instruction (struct gdbarch *gdbarch, CORE_ADDR loc, int *len)
       break;
     }
 
+  /* codespell:ignore-begin.  */
   switch (insn)
     {
     case 0xb255: /* MVST */
@@ -323,6 +326,7 @@ s390_is_partial_instruction (struct gdbarch *gdbarch, CORE_ADDR loc, int *len)
       *len = 4;
       return 1;
     }
+  /* codespell:ignore-end.  */
 
   return 0;
 }
@@ -1230,7 +1234,7 @@ regnum_is_gpr_full (s390_gdbarch_tdep *tdep, int regnum)
 /* Check whether REGNUM indicates a full vector register (v0-v15).
    These pseudo-registers are composed of f0-f15 and v0l-v15l.  */
 
-static int
+static bool
 regnum_is_vxr_full (s390_gdbarch_tdep *tdep, int regnum)
 {
   return (tdep->v0_full_regnum != -1
@@ -1475,7 +1479,7 @@ s390_pseudo_register_write (struct gdbarch *gdbarch, struct regcache *regcache,
 
 /* Implement pseudo_register_reggroup_p tdesc method.  */
 
-static int
+static bool
 s390_pseudo_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 				 const struct reggroup *group)
 {
@@ -1496,14 +1500,14 @@ s390_pseudo_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
     return regnum_is_vxr_full (tdep, regnum);
 
   if (group == general_reggroup && regnum_is_vxr_full (tdep, regnum))
-    return 0;
+    return false;
 
   return default_register_reggroup_p (gdbarch, regnum, group);
 }
 
 /* The "ax_pseudo_register_collect" gdbarch method.  */
 
-static int
+static void
 s390_ax_pseudo_register_collect (struct gdbarch *gdbarch,
 				 struct agent_expr *ax, int regnum)
 {
@@ -1529,15 +1533,12 @@ s390_ax_pseudo_register_collect (struct gdbarch *gdbarch,
       ax_reg_mask (ax, S390_V0_LOWER_REGNUM + regnum);
     }
   else
-    {
-      internal_error (_("invalid regnum"));
-    }
-  return 0;
+    gdb_assert_not_reached ("invalid regnum");
 }
 
 /* The "ax_pseudo_register_push_stack" gdbarch method.  */
 
-static int
+static bool
 s390_ax_pseudo_register_push_stack (struct gdbarch *gdbarch,
 				    struct agent_expr *ax, int regnum)
 {
@@ -1572,13 +1573,13 @@ s390_ax_pseudo_register_push_stack (struct gdbarch *gdbarch,
   else if (regnum_is_vxr_full (tdep, regnum))
     {
       /* Too large to stuff on the stack.  */
-      return 1;
+      return false;
     }
   else
     {
       internal_error (_("invalid regnum"));
     }
-  return 0;
+  return true;
 }
 
 /* The "gen_return_address" gdbarch method.  Since this is supposed to be
@@ -1639,7 +1640,7 @@ s390_address_class_name_to_type_flags (struct gdbarch *gdbarch,
 				       const char *name,
 				       type_instance_flags *type_flags_ptr)
 {
-  if (strcmp (name, "mode32") == 0)
+  if (streq (name, "mode32"))
     {
       *type_flags_ptr = TYPE_INSTANCE_FLAG_ADDRESS_CLASS_1;
       return true;
@@ -2195,8 +2196,8 @@ s390_get_return_buf_addr (struct type *val_type,
 
   if (val_on_entry == nullptr)
     {
-      warning ("Cannot determine the function return value.\n"
-	       "Try compiling with -fvar-tracking.");
+      warning (_("Cannot determine the function return value.\n"
+		 "Try compiling with -fvar-tracking."));
       return 0;
     }
 
@@ -2207,7 +2208,7 @@ s390_get_return_buf_addr (struct type *val_type,
 
 /* Implement the stack_frame_destroyed_p gdbarch method.  */
 
-static int
+static bool
 s390_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
   int word_size = gdbarch_ptr_bit (gdbarch) / 8;
@@ -2239,21 +2240,21 @@ s390_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
       && !target_read_memory (pc - 4, insn, 4)
       && is_rs (insn, op_lm, &r1, &r3, &d2, &b2)
       && r3 == S390_SP_REGNUM - S390_R0_REGNUM)
-    return 1;
+    return true;
 
   if (word_size == 4
       && !target_read_memory (pc - 6, insn, 6)
       && is_rsy (insn, op1_lmy, op2_lmy, &r1, &r3, &d2, &b2)
       && r3 == S390_SP_REGNUM - S390_R0_REGNUM)
-    return 1;
+    return true;
 
   if (word_size == 8
       && !target_read_memory (pc - 6, insn, 6)
       && is_rsy (insn, op1_lmg, op2_lmg, &r1, &r3, &d2, &b2)
       && r3 == S390_SP_REGNUM - S390_R0_REGNUM)
-    return 1;
+    return true;
 
-  return 0;
+  return false;
 }
 
 /* Implement unwind_pc gdbarch method.  */
@@ -2330,6 +2331,22 @@ s390_unwind_pseudo_register (const frame_info_ptr &this_frame, int regnum)
       val = frame_unwind_register_value (this_frame, S390_R0_REGNUM + reg);
       if (!val->optimized_out ())
 	return value_cast (type, val);
+    }
+
+  if (regnum_is_vxr_full (tdep, regnum))
+    {
+      struct value *val = value::allocate_register (this_frame, regnum);
+
+      int reg = regnum - tdep->v0_full_regnum;
+      struct value *val1
+	= frame_unwind_register_value (this_frame, S390_F0_REGNUM + reg);
+      struct value *val2
+	= frame_unwind_register_value (this_frame, S390_V0_LOWER_REGNUM + reg);
+
+      val1->contents_copy (val, 0, 0, 8);
+      val2->contents_copy (val, 8, 0, 8);
+
+      return value_cast (type, val);
     }
 
   return value::allocate_optimized_out (type);
@@ -2472,7 +2489,7 @@ s390_prologue_frame_unwind_cache (const frame_info_ptr &this_frame,
 	 size zero.  This is only possible if the next frame is a sentinel
 	 frame, a dummy frame, or a signal trampoline frame.  */
       /* FIXME: cagney/2004-05-01: This sanity check shouldn't be
-	 needed, instead the code should simpliy rely on its
+	 needed, instead the code should simply rely on its
 	 analysis.  */
       next_frame = get_next_frame (this_frame);
       while (next_frame && get_frame_type (next_frame) == INLINE_FRAME)
@@ -2521,7 +2538,7 @@ s390_prologue_frame_unwind_cache (const frame_info_ptr &this_frame,
      code at a point where the frame pointer has already been restored.
      This can only happen in an innermost frame.  */
   /* FIXME: cagney/2004-05-01: This sanity check shouldn't be needed,
-     instead the code should simpliy rely on its analysis.  */
+     instead the code should simply rely on its analysis.  */
   next_frame = get_next_frame (this_frame);
   while (next_frame && get_frame_type (next_frame) == INLINE_FRAME)
     next_frame = get_next_frame (next_frame);
@@ -2702,12 +2719,10 @@ static struct s390_unwind_cache *
 s390_frame_unwind_cache (const frame_info_ptr &this_frame,
 			 void **this_prologue_cache)
 {
-  struct s390_unwind_cache *info;
-
   if (*this_prologue_cache)
     return (struct s390_unwind_cache *) *this_prologue_cache;
 
-  info = FRAME_OBSTACK_ZALLOC (struct s390_unwind_cache);
+  auto *info = frame_obstack_zalloc<s390_unwind_cache> ();
   *this_prologue_cache = info;
   info->saved_regs = trad_frame_alloc_saved_regs (this_frame);
   info->func = -1;
@@ -2794,13 +2809,12 @@ s390_stub_frame_unwind_cache (const frame_info_ptr &this_frame,
 {
   struct gdbarch *gdbarch = get_frame_arch (this_frame);
   int word_size = gdbarch_ptr_bit (gdbarch) / 8;
-  struct s390_stub_unwind_cache *info;
   ULONGEST reg;
 
   if (*this_prologue_cache)
     return (struct s390_stub_unwind_cache *) *this_prologue_cache;
 
-  info = FRAME_OBSTACK_ZALLOC (struct s390_stub_unwind_cache);
+  auto *info = frame_obstack_zalloc<s390_stub_unwind_cache> ();
   *this_prologue_cache = info;
   info->saved_regs = trad_frame_alloc_saved_regs (this_frame);
 
@@ -3227,8 +3241,9 @@ ex:
       /* SVC - supervisor call */
       if (tdep->s390_syscall_record != NULL)
 	{
-	  if (tdep->s390_syscall_record (regcache, ibyte[1]))
-	    return -1;
+	  int res = tdep->s390_syscall_record (regcache, ibyte[1]);
+	  if (res != 0)
+	    return res;
 	}
       else
 	{
@@ -3359,6 +3374,7 @@ ex:
 	return -1;
       break;
 
+    /* codespell:ignore-begin.  */
     case 0x20: /* LPDR - load positive */
     case 0x30: /* LPER - load positive */
     case 0x21: /* LNDR - load negative */
@@ -3383,6 +3399,7 @@ ex:
     case 0x3f: /* SUR - subtract unnormalized */
     case 0x6f: /* SW - subtract unnormalized */
     case 0x7f: /* SU - subtract unnormalized */
+    /* codespell:ignore-end.  */
       /* float destination + flags */
       if (record_full_arch_list_add_reg (regcache, S390_F0_REGNUM + inib[2]))
 	return -1;
@@ -3909,7 +3926,9 @@ ex:
 
 	/* 0xb29e-0xb2a4 undefined */
 
+	/* codespell:ignore-begin.  */
 	case 0xb2a5: /* TRE - translate extended [partial] */
+	/* codespell:ignore-end.  */
 	  regcache_raw_read_unsigned (regcache, S390_R0_REGNUM + inib[6], &tmp);
 	  oaddr = s390_record_address_mask (gdbarch, regcache, tmp);
 	  regcache_raw_read_unsigned (regcache, S390_R0_REGNUM + (inib[6] | 1), &tmp);
@@ -6129,7 +6148,7 @@ ex:
 		return -1;
 	      }
 	  }
-          break;
+	  break;
 
 	/* 0xeb17-0xeb1b undefined */
 	/* 0xeb1e-0xeb1f undefined */
@@ -7006,8 +7025,6 @@ UNKNOWN_OP:
 
   if (record_full_arch_list_add_reg (regcache, S390_PSWA_REGNUM))
     return -1;
-  if (record_full_arch_list_add_end ())
-    return -1;
   return 0;
 }
 
@@ -7036,13 +7053,13 @@ s390_gnu_triplet_regexp (struct gdbarch *gdbarch)
 /* Implementation of `gdbarch_stap_is_single_operand', as defined in
    gdbarch.h.  */
 
-static int
+static bool
 s390_stap_is_single_operand (struct gdbarch *gdbarch, const char *s)
 {
-  return ((isdigit (*s) && s[1] == '(' && s[2] == '%') /* Displacement
+  return ((c_isdigit (*s) && s[1] == '(' && s[2] == '%') /* Displacement
 							  or indirection.  */
 	  || *s == '%' /* Register access.  */
-	  || isdigit (*s)); /* Literal number.  */
+	  || c_isdigit (*s)); /* Literal number.  */
 }
 
 /* gdbarch init.  */
@@ -7258,8 +7275,7 @@ s390_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   tdesc_arch_data_up tdesc_data = tdesc_data_alloc ();
   info.tdesc_data = tdesc_data.get ();
 
-  set_gdbarch_believe_pcc_promotion (gdbarch, 0);
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
 
   /* S/390 GNU/Linux uses either 64-bit or 128-bit long doubles.
      We can safely let them default to 128-bit, since the debug info
@@ -7282,7 +7298,7 @@ s390_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 					s390_displaced_step_copy_insn);
   set_gdbarch_displaced_step_fixup (gdbarch, s390_displaced_step_fixup);
   set_gdbarch_displaced_step_hw_singlestep (gdbarch, s390_displaced_step_hw_singlestep);
-  set_gdbarch_software_single_step (gdbarch, s390_software_single_step);
+  set_gdbarch_get_next_pcs (gdbarch, s390_software_single_step);
   set_gdbarch_max_insn_length (gdbarch, S390_MAX_INSTR_SIZE);
 
   /* Prologue analysis.  */
@@ -7294,7 +7310,6 @@ s390_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_fp0_regnum (gdbarch, S390_F0_REGNUM);
   set_gdbarch_guess_tracepoint_registers (gdbarch,
 					  s390_guess_tracepoint_registers);
-  set_gdbarch_stab_reg_to_regnum (gdbarch, s390_dwarf_reg_to_regnum);
   set_gdbarch_dwarf2_reg_to_regnum (gdbarch, s390_dwarf_reg_to_regnum);
   set_gdbarch_value_from_register (gdbarch, s390_value_from_register);
   set_gdbarch_dwarf2_reg_piece_offset (gdbarch, s390_dwarf2_reg_piece_offset);
@@ -7377,9 +7392,9 @@ s390_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   if (!tdesc_has_registers (tdesc))
     {
       if (info.bfd_arch_info->mach == bfd_mach_s390_31)
-	tdesc = tdesc_s390_linux32;
+	tdesc = tdesc_s390_linux32.get ();
       else
-	tdesc = tdesc_s390x_linux64;
+	tdesc = tdesc_s390x_linux64.get ();
     }
   tdep->tdesc = tdesc;
 
@@ -7452,13 +7467,61 @@ s390_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   return gdbarch;
 }
 
-void _initialize_s390_tdep ();
-void
-_initialize_s390_tdep ()
+#if GDB_SELF_TEST
+namespace selftests {
+
+/* Return bfd_arch_info representing s390x.  */
+
+static const bfd_arch_info *
+bfd_arch_info_s390x ()
+{
+  return bfd_lookup_arch (bfd_arch_s390, bfd_mach_s390_64);
+}
+
+/* Return gdbarch representing s390x.  */
+
+static gdbarch *
+gdbarch_s390x ()
+{
+  struct gdbarch_info info;
+  info.bfd_arch_info = bfd_arch_info_s390x ();
+  if (info.bfd_arch_info == nullptr)
+    return nullptr;
+
+  info.osabi = GDB_OSABI_NONE;
+  return gdbarch_find_by_info (info);
+}
+
+/* Check disassembly of s390x instructions.  */
+
+static void
+disassemble_s390x ()
+{
+  gdbarch *gdbarch = gdbarch_s390x ();
+  if (gdbarch == nullptr)
+    return;
+
+  scoped_restore disassembler_options_restore
+    = make_scoped_restore (&s390_disassembler_options, "zarch");
+
+  gdb::byte_vector insn = { 0xb9, 0x68, 0x00, 0x03 };
+  disassemble_insn (gdbarch, insn, "clzg\t%r0,%r3");
+}
+
+} /* namespace selftests */
+
+#endif /* GDB_SELF_TEST */
+
+INIT_GDB_FILE (s390_tdep)
 {
   /* Hook us into the gdbarch mechanism.  */
   gdbarch_register (bfd_arch_s390, s390_gdbarch_init);
 
   initialize_tdesc_s390_linux32 ();
   initialize_tdesc_s390x_linux64 ();
+
+#if GDB_SELF_TEST
+  selftests::register_test ("disassemble-s390x",
+			    selftests::disassemble_s390x);
+#endif /* GDB_SELF_TEST */
 }

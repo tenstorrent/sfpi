@@ -1,7 +1,7 @@
 /* Target-dependent code for Windows (including Cygwin) running on i386's,
    for GDB.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -95,12 +95,6 @@ i386_windows_skip_trampoline_code (const frame_info_ptr &frame, CORE_ADDR pc)
   return i386_pe_skip_trampoline_code (frame, pc, NULL);
 }
 
-static const char *
-i386_windows_auto_wide_charset (void)
-{
-  return "UTF-16";
-}
-
 /* Implement the "push_dummy_call" gdbarch method.  */
 
 static CORE_ADDR
@@ -154,8 +148,6 @@ i386_windows_init_abi_common (struct gdbarch_info info, struct gdbarch *gdbarch)
   set_gdbarch_core_xfer_shared_libraries
     (gdbarch, windows_core_xfer_shared_libraries);
   set_gdbarch_core_pid_to_str (gdbarch, windows_core_pid_to_str);
-
-  set_gdbarch_auto_wide_charset (gdbarch, i386_windows_auto_wide_charset);
 }
 
 /* gdbarch initialization for Windows on i386.  */
@@ -218,7 +210,7 @@ i386_cygwin_core_osabi_sniffer (bfd *abfd)
 
   /* Cygwin uses elf core dumps.  Do not claim all ELF executables,
      check whether there is a .reg section of proper size.  */
-  if (strcmp (target_name, "elf32-i386") == 0)
+  if (streq (target_name, "elf32-i386"))
     {
       asection *section = bfd_get_section_by_name (abfd, ".reg");
       if (section != nullptr
@@ -229,9 +221,7 @@ i386_cygwin_core_osabi_sniffer (bfd *abfd)
   return GDB_OSABI_UNKNOWN;
 }
 
-void _initialize_i386_windows_tdep ();
-void
-_initialize_i386_windows_tdep ()
+INIT_GDB_FILE (i386_windows_tdep)
 {
   gdbarch_register_osabi_sniffer (bfd_arch_i386, bfd_target_coff_flavour,
 				  i386_windows_osabi_sniffer);

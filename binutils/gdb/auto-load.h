@@ -1,6 +1,6 @@
 /* GDB routines for supporting auto-loaded scripts.
 
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -40,6 +40,11 @@ extern bool debug_auto_load;
 #define auto_load_debug_printf(fmt, ...) \
   debug_prefixed_printf_cond (debug_auto_load, "auto-load", fmt, ##__VA_ARGS__)
 
+/* Print "auto-load" enter/exit debug statements.  */
+
+#define AUTO_LOAD_SCOPED_DEBUG_ENTER_EXIT			\
+  scoped_debug_enter_exit (debug_auto_load, "auto-load")
+
 extern bool global_auto_load;
 
 extern bool auto_load_local_gdbinit;
@@ -54,7 +59,7 @@ extern struct auto_load_pspace_info *
   get_auto_load_pspace_data_for_loading (struct program_space *pspace);
 extern void auto_load_objfile_script (struct objfile *objfile,
 				      const struct extension_language_defn *);
-extern void load_auto_scripts_for_objfile (struct objfile *objfile);
+extern void load_auto_scripts_for_objfile (struct objfile &objfile);
 extern char auto_load_info_scripts_pattern_nl[];
 extern void auto_load_info_scripts (program_space *pspace, const char *pattern,
 				    int from_tty,

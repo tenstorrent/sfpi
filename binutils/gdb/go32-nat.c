@@ -1,5 +1,5 @@
 /* Native debugging support for Intel x86 running DJGPP.
-   Copyright (C) 1997-2024 Free Software Foundation, Inc.
+   Copyright (C) 1997-2026 Free Software Foundation, Inc.
    Written by Robert Hoehne.
 
    This file is part of GDB.
@@ -93,7 +93,6 @@
 #include "command.h"
 #include "cli/cli-cmds.h"
 #include "floatformat.h"
-#include "buildsym-legacy.h"
 #include "i387-tdep.h"
 #include "i386-tdep.h"
 #include "nat/x86-cpuid.h"
@@ -102,8 +101,8 @@
 #include "top.h"
 #include "cli/cli-utils.h"
 #include "inf-child.h"
+#include "filesystem.h"
 
-#include <ctype.h>
 #include <unistd.h>
 #include <sys/utsname.h>
 #include <io.h>
@@ -480,7 +479,7 @@ go32_nat_target::wait (ptid_t ptid, struct target_waitstatus *status,
      set with the gdb-command "cd ..."  */
   if (!*child_cwd)
     /* Initialize child's cwd with the current one.  */
-    getcwd (child_cwd, sizeof (child_cwd));
+    gdb_getcwd (child_cwd, sizeof (child_cwd));
 
   chdir (child_cwd);
 
@@ -503,7 +502,7 @@ go32_nat_target::wait (ptid_t ptid, struct target_waitstatus *status,
       a_tss.tss_eflags |= 0x0100;
     }
 
-  getcwd (child_cwd, sizeof (child_cwd)); /* in case it has changed */
+  gdb_getcwd (child_cwd, sizeof (child_cwd)); /* in case it has changed */
   if (current_directory != NULL)
     chdir (current_directory);
 
@@ -697,7 +696,7 @@ go32_nat_target::create_inferior (const char *exec_file,
 		      "not enough memory.\n"));
 
   /* Parse the command line and create redirections.  */
-  if (strpbrk (args, "<>"))
+  if (strpbrk (args, "<>") != nullptr)
     {
       if (redir_cmdline_parse (args, &child_cmd) == 0)
 	args = child_cmd.command;
@@ -1143,9 +1142,9 @@ go32_sysinfo (const char *arg, int from_tty)
       char cpu_string[80];
       char cpu_brand[20];
       unsigned brand_idx;
-      int intel_p = strcmp (cpuid_vendor, "GenuineIntel") == 0;
-      int amd_p = strcmp (cpuid_vendor, "AuthenticAMD") == 0;
-      int hygon_p = strcmp (cpuid_vendor, "HygonGenuine") == 0;
+      int intel_p = streq (cpuid_vendor, "GenuineIntel");
+      int amd_p = streq (cpuid_vendor, "AuthenticAMD");
+      int hygon_p = streq (cpuid_vendor, "HygonGenuine");
       unsigned cpu_family, cpu_model;
 
 #if 0
@@ -2057,9 +2056,7 @@ go32_pte_for_address (const char *arg, int from_tty)
 
 static struct cmd_list_element *info_dos_cmdlist = NULL;
 
-void _initialize_go32_nat ();
-void
-_initialize_go32_nat ()
+INIT_GDB_FILE (go32_nat)
 {
   x86_dr_low.set_control = go32_set_dr7;
   x86_dr_low.set_addr = go32_set_dr;

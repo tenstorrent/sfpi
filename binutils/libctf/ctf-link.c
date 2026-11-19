@@ -1,5 +1,5 @@
 /* CTF linking.
-   Copyright (C) 2019-2025 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of libctf.
 
@@ -19,10 +19,6 @@
 
 #include <ctf-impl.h>
 #include <string.h>
-
-#if defined (PIC)
-#pragma weak ctf_open
-#endif
 
 /* CTF linking consists of adding CTF archives full of content to be merged into
    this one to the current file (which must be writable) by calling
@@ -145,56 +141,33 @@ ctf_link_add_ctf_internal (ctf_dict_t *fp, ctf_archive_t *ctf,
   return ctf_set_errno (fp, ENOMEM);
 }
 
-/* Add a file, memory buffer, or unopened file (by name) to a link.
+/* Add an opened CTF archive or unopened file (by name) to a link.
+   If CTF is NULL and NAME is non-null, an unopened file is meant:
+   otherwise, the specified archive is assumed to have the given NAME.
 
-   You can call this with:
+   If CTF is NULL, the NAME is only opened when needed, and is closed when no
+   longer needed, so that large cu-mapped links will only use memory for their
+   cu-mapped inputs briefly (compensating for the memory usage of the
+   smushed-together cu-mapped verion).
 
-    CTF and NAME: link the passed ctf_archive_t, with the given NAME.
-    NAME alone: open NAME as a CTF file when needed.
-    BUF and NAME: open the BUF (of length N) as CTF, with the given NAME.  (Not
-    yet implemented.)
+   Passed in CTF args are owned by the dictionary and will be freed by it.
 
-    Passed in CTF args are owned by the dictionary and will be freed by it.
-    The BUF arg is *not* owned by the dictionary, and the user should not free
-    its referent until the link is done.
+   The order of calls to this function influences the order of types in the
+   final link output, but otherwise is not important.
 
-    The order of calls to this function influences the order of types in the
-    final link output, but otherwise is not important.
+   Repeated additions of the same NAME have no effect; repeated additions of
+   different dicts with the same NAME add all the dicts with unique NAMEs
+   derived from NAME.  */
 
-    Repeated additions of the same NAME have no effect; repeated additions of
-    different dicts with the same NAME add all the dicts with unique NAMEs
-    derived from NAME.
-
-    Private for now, but may in time become public once support for BUF is
-    implemented.  */
-
-static int
-ctf_link_add (ctf_dict_t *fp, ctf_archive_t *ctf, const char *name,
-	      void *buf _libctf_unused_, size_t n _libctf_unused_)
+int
+ctf_link_add_ctf (ctf_dict_t *fp, ctf_archive_t *ctf, const char *name)
 {
-  if (buf)
-    return (ctf_set_errno (fp, ECTF_NOTYET));
-
-  if (!((ctf && name && !buf)
-	|| (name && !buf && !ctf)
-	|| (buf && name && !ctf)))
+  if (!name)
     return (ctf_set_errno (fp, EINVAL));
-
-  /* We can only lazily open files if libctf.so is in use rather than
-     libctf-nobfd.so.  This is a little tricky: in shared libraries, we can use
-     a weak symbol so that -lctf -lctf-nobfd works, but in static libraries we
-     must distinguish between the two libraries explicitly.  */
-
-#if defined (PIC)
-  if (!buf && !ctf && name && !ctf_open)
-    return (ctf_set_errno (fp, ECTF_NEEDSBFD));
-#elif NOBFD
-  if (!buf && !ctf && name)
-    return (ctf_set_errno (fp, ECTF_NEEDSBFD));
-#endif
 
   if (fp->ctf_link_outputs)
     return (ctf_set_errno (fp, ECTF_LINKADDEDLATE));
+
   if (fp->ctf_link_inputs == NULL)
     fp->ctf_link_inputs = ctf_dynhash_create (ctf_hash_string,
 					      ctf_hash_eq_string, free,
@@ -203,22 +176,15 @@ ctf_link_add (ctf_dict_t *fp, ctf_archive_t *ctf, const char *name,
   if (fp->ctf_link_inputs == NULL)
     return (ctf_set_errno (fp, ENOMEM));
 
+  /* We can only lazily open files if libctf.so is in use rather than
+     libctf-nobfd.so.  */
+
+#if NOBFD
+  if (!ctf)
+    return (ctf_set_errno (fp, ECTF_NEEDSBFD));
+#endif
+
   return ctf_link_add_ctf_internal (fp, ctf, NULL, name);
-}
-
-/* Add an opened CTF archive or unopened file (by name) to a link.
-   If CTF is NULL and NAME is non-null, an unopened file is meant:
-   otherwise, the specified archive is assumed to have the given NAME.
-
-    Passed in CTF args are owned by the dictionary and will be freed by it.
-
-    The order of calls to this function influences the order of types in the
-    final link output, but otherwise is not important.  */
-
-int
-ctf_link_add_ctf (ctf_dict_t *fp, ctf_archive_t *ctf, const char *name)
-{
-  return ctf_link_add (fp, ctf, name, NULL, 0);
 }
 
 /* Lazily open a CTF archive for linking, if not already open.
@@ -238,12 +204,12 @@ ctf_link_lazy_open (ctf_dict_t *fp, ctf_link_input_t *input)
     return 1;
 
   /* See ctf_link_add_ctf.  */
-#if defined (PIC) || !NOBFD
-  input->clin_arc = ctf_open (input->clin_filename, NULL, &err);
-#else
+#if NOBFD
   ctf_err_warn (fp, 0, ECTF_NEEDSBFD, _("cannot open %s lazily"),
 		input->clin_filename);
   return ctf_set_errno (fp, ECTF_NEEDSBFD);
+#else
+  input->clin_arc = ctf_open (input->clin_filename, NULL, &err);
 #endif
 
   /* Having no CTF sections is not an error.  We just don't need to do
@@ -1148,19 +1114,19 @@ ctf_link_deduplicating_per_cu (ctf_dict_t *fp)
       uint32_t noutputs;
       uint32_t *parents;
 
-      if ((ninputs = ctf_link_deduplicating_count_inputs (fp, in,
-							  &only_input)) == -1)
+      ninputs = ctf_link_deduplicating_count_inputs (fp, in, &only_input);
+      if (ninputs == -1)
 	goto err_open_inputs;
 
       /* CU mapping with no inputs?  Skip.  */
       if (ninputs == 0)
 	continue;
 
-      if (labs ((long int) ninputs) > 0xfffffffe)
+      if ((size_t) ninputs > 0xfffffffe)
 	{
 	  ctf_set_errno (fp, EFBIG);
 	  ctf_err_warn (fp, 0, 0, _("too many inputs in deduplicating "
-				    "link: %li"), (long int) ninputs);
+				    "link: %lu"), (long unsigned) ninputs);
 	  goto err_open_inputs;
 	}
 
@@ -1221,10 +1187,7 @@ ctf_link_deduplicating_per_cu (ctf_dict_t *fp)
 
       if ((inputs = ctf_link_deduplicating_open_inputs (fp, in, ninputs,
 							&parents)) == NULL)
-	{
-	  ctf_next_destroy (i);
-	  goto err_open_inputs;
-	}
+	goto err_open_inputs;
 
       if ((out = ctf_create (&err)) == NULL)
 	{
@@ -1385,6 +1348,7 @@ ctf_link_deduplicating (ctf_dict_t *fp)
   ssize_t ninputs;
   uint32_t noutputs;
   uint32_t *parents;
+  int cu_phase = 0;
 
   if (ctf_dedup_atoms_init (fp) < 0)
     {
@@ -1392,9 +1356,20 @@ ctf_link_deduplicating (ctf_dict_t *fp)
       return;					/* Errno is set for us.  */
     }
 
-  if (fp->ctf_link_out_cu_mapping
-      && (ctf_link_deduplicating_per_cu (fp) < 0))
-    return;					/* Errno is set for us.  */
+  /* Trigger a CU-mapped link if need be: one pass of dedups squashing inputs into
+     single child dicts corresponding to each CU mapping, and one pass that
+     treats those as if they are ordinary inputs and links them together.
+
+     This latter pass does need to act very slightly differently from normal, so we
+     keep track of the "CU phase", with 0 being a normal link, 1 being the
+     squash-together phase, and 2 being the final act-as-if-it-were-normal pass.  */
+
+  if (fp->ctf_link_out_cu_mapping)
+    {
+      if (ctf_link_deduplicating_per_cu (fp) < 0)
+	return;					/* Errno is set for us.  */
+      cu_phase = 2;
+    }
 
   if ((ninputs = ctf_link_deduplicating_count_inputs (fp, NULL, NULL)) < 0)
     return;					/* Errno is set for us.  */
@@ -1406,7 +1381,7 @@ ctf_link_deduplicating (ctf_dict_t *fp)
   if (ninputs == 1 && ctf_cuname (inputs[0]) != NULL)
     ctf_cuname_set (fp, ctf_cuname (inputs[0]));
 
-  if (ctf_dedup (fp, inputs, ninputs, 0) < 0)
+  if (ctf_dedup (fp, inputs, ninputs, cu_phase) < 0)
     {
       ctf_err_warn (fp, 0, 0, _("deduplication failed for %s"),
 		    ctf_link_input_name (fp));
@@ -1414,7 +1389,7 @@ ctf_link_deduplicating (ctf_dict_t *fp)
     }
 
   if ((outputs = ctf_dedup_emit (fp, inputs, ninputs, parents, &noutputs,
-				 0)) == NULL)
+				 cu_phase)) == NULL)
     {
       ctf_err_warn (fp, 0, 0, _("deduplicating link type emission failed "
 				"for %s"), ctf_link_input_name (fp));
@@ -1671,7 +1646,7 @@ ctf_link_shuffle_syms (ctf_dict_t *fp)
   ctf_in_flight_dynsym_t *did, *nid;
   ctf_next_t *i = NULL;
   int err = ENOMEM;
-  void *name_, *sym_;
+  void *sym_;
 
   if (fp->ctf_stypes > 0)
     return ctf_set_errno (fp, ECTF_RDONLY);
@@ -1755,9 +1730,8 @@ ctf_link_shuffle_syms (ctf_dict_t *fp)
 				   sizeof (ctf_link_sym_t *))) == NULL)
     goto err;
 
-  while ((err = ctf_dynhash_next (fp->ctf_dynsyms, &i, &name_, &sym_)) == 0)
+  while ((err = ctf_dynhash_next (fp->ctf_dynsyms, &i, NULL, &sym_)) == 0)
     {
-      const char *name = (const char *) name;
       ctf_link_sym_t *symp = (ctf_link_sym_t *) sym_;
 
       if (!ctf_assert (fp, symp->st_symidx <= fp->ctf_dynsymmax))

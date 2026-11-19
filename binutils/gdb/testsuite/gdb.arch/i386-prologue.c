@@ -1,6 +1,6 @@
 /* Unwinder test program.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -101,7 +101,7 @@ asm(".text\n"
     "    ret\n");
 
 /* The purpose of this function is to verify that, during prologue
-   skip, GDB does not follow a jump at the beginnning of the "real"
+   skip, GDB does not follow a jump at the beginning of the "real"
    code.  */
 
 asm(".text\n"
@@ -166,4 +166,3 @@ asm(".text\n"
     "    popl  %ebp\n"
     "    leal  -4(%eax), %esp\n"
     "    ret\n");
-

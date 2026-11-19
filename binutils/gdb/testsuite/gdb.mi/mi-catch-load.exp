@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -20,7 +20,7 @@ standard_testfile mi-catch-load.c
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug shlib_load}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 set testfile2 mi-catch-load-so
@@ -29,14 +29,14 @@ set binfile2 [standard_output_file ${testfile2}.so]
 set binfile2_dlopen [shlib_target_file ${testfile2}.so]
 if { [gdb_compile_shlib "${srcdir}/${subdir}/${srcfile2}" ${binfile2} {debug}] != "" } {
     untested "failed to compile shared library"
-    return -1
+    return
 }
 
 gdb_download_shlib $binfile2
 
 # test -catch-load
 with_test_prefix "catch-load" {
-    mi_clean_restart $binfile
+    mi_clean_restart $::testfile
     mi_locate_shlib $binfile2
     mi_runto_main
 
@@ -63,7 +63,7 @@ with_test_prefix "catch-load" {
 
 # test -catch-unload
 with_test_prefix "catch-unload" {
-    mi_clean_restart $binfile
+    mi_clean_restart $::testfile
     mi_locate_shlib $binfile2
     mi_runto_main
 

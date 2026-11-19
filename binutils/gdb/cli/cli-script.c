@@ -1,6 +1,6 @@
 /* GDB CLI command scripting.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,7 +19,6 @@
 
 #include "event-top.h"
 #include "value.h"
-#include <ctype.h>
 
 #include "ui-out.h"
 #include "top.h"
@@ -63,7 +62,7 @@ static int control_level;
 static int command_nest_depth = 1;
 
 /* This is to prevent certain commands being printed twice.  */
-static int suppress_next_print_command_trace = 0;
+static bool suppress_next_print_command_trace = false;
 
 /* Command element for the 'while' command.  */
 static cmd_list_element *while_cmd_element = nullptr;
@@ -161,13 +160,17 @@ build_command_line (enum command_control_type type, const char *args)
   if (args == NULL || *args == '\0')
     {
       if (type == if_control)
-	error (_("if command requires an argument."));
+	error (_("\"%ps\" command requires an argument."),
+	       styled_string (command_style.style (), "if"));
       else if (type == while_control)
-	error (_("while command requires an argument."));
+	error (_("\"%ps\" command requires an argument."),
+	       styled_string (command_style.style (), "while"));
       else if (type == define_control)
-	error (_("define command requires an argument."));
+	error (_("\"%ps\" command requires an argument."),
+	       styled_string (command_style.style (), "define"));
       else if (type == document_control)
-	error (_("document command requires an argument."));
+	error (_("\"%ps\" command requires an argument."),
+	       styled_string (command_style.style (), "document"));
     }
   gdb_assert (args != NULL);
 
@@ -361,13 +364,12 @@ public:
   {
   }
 
+  DISABLE_COPY_AND_ASSIGN (scoped_restore_hook_in);
+
   ~scoped_restore_hook_in ()
   {
     m_cmd->hook_in = 0;
   }
-
-  scoped_restore_hook_in (const scoped_restore_hook_in &) = delete;
-  scoped_restore_hook_in &operator= (const scoped_restore_hook_in &) = delete;
 
 private:
 
@@ -422,14 +424,14 @@ execute_control_commands (struct command_line *cmdlines, int from_tty)
 
 std::string
 execute_control_commands_to_string (struct command_line *commands,
-				    int from_tty)
+				    int from_tty, bool term_out)
 {
   std::string result;
 
   execute_fn_to_string (result, [&] ()
     {
       execute_control_commands (commands, from_tty);
-    }, false);
+    }, term_out);
 
   return result;
 }
@@ -469,7 +471,7 @@ reset_command_nest_depth (void)
   command_nest_depth = 1;
 
   /* Just in case.  */
-  suppress_next_print_command_trace = 0;
+  suppress_next_print_command_trace = false;
 }
 
 /* Print the command, prefixed with '+' to represent the call depth.
@@ -484,26 +486,24 @@ ATTRIBUTE_PRINTF (1, 2)
 void
 print_command_trace (const char *fmt, ...)
 {
-  int i;
-
   if (suppress_next_print_command_trace)
     {
-      suppress_next_print_command_trace = 0;
+      suppress_next_print_command_trace = false;
       return;
     }
 
   if (!source_verbose && !trace_commands)
     return;
 
-  for (i=0; i < command_nest_depth; i++)
-    gdb_printf ("+");
+  for (int i = 0; i < command_nest_depth; ++i)
+    gdb_printf (gdb_stdlog, "+");
 
   va_list args;
 
   va_start (args, fmt);
-  gdb_vprintf (fmt, args);
+  gdb_vprintf (gdb_stdlog, fmt, args);
   va_end (args);
-  gdb_puts ("\n");
+  gdb_puts ("\n", gdb_stdlog);
 }
 
 /* Helper for execute_control_command.  */
@@ -660,9 +660,13 @@ execute_control_command_1 (struct command_line *cmd, int from_tty)
       }
 
     case compile_control:
+#if defined(HAVE_COMPILE)
       eval_compile_command (cmd, NULL, cmd->control_u.compile.scope,
 			    cmd->control_u.compile.scope_data);
       ret = simple_control;
+#else
+      error (_("compile support has not been compiled into gdb"));
+#endif
       break;
 
     case define_control:
@@ -714,7 +718,7 @@ execute_control_command (struct command_line *cmd, int from_tty)
 enum command_control_type
 execute_control_command_untraced (struct command_line *cmd)
 {
-  suppress_next_print_command_trace = 1;
+  suppress_next_print_command_trace = true;
   return execute_control_command (cmd);
 }
 
@@ -774,8 +778,7 @@ user_args::user_args (const char *command_line)
       int bsquote = 0;
 
       /* Strip whitespace.  */
-      while (*p == ' ' || *p == '\t')
-	p++;
+      p = skip_spaces (p);
 
       /* P now points to an argument.  */
       start_arg = p;
@@ -825,7 +828,7 @@ locate_arg (const char *p)
   while ((p = strchr (p, '$')))
     {
       if (startswith (p, "$arg")
-	  && (isdigit (p[4]) || p[4] == 'c'))
+	  && (c_isdigit (p[4]) || p[4] == 'c'))
 	return p;
       p++;
     }
@@ -928,7 +931,7 @@ line_first_arg (const char *p)
 {
   const char *first_arg = p + find_command_name_length (p);
 
-  return skip_spaces (first_arg); 
+  return skip_spaces (first_arg);
 }
 
 /* Process one input line.  If the command is an "end", return such an
@@ -1320,9 +1323,9 @@ validate_comname (const char **comname)
 
   /* Find the last word of the argument.  */
   p = *comname + strlen (*comname);
-  while (p > *comname && isspace (p[-1]))
+  while (p > *comname && c_isspace (p[-1]))
     p--;
-  while (p > *comname && !isspace (p[-1]))
+  while (p > *comname && !c_isspace (p[-1]))
     p--;
   last_word = p;
 
@@ -1337,7 +1340,8 @@ validate_comname (const char **comname)
 
       c = lookup_cmd (&tem, cmdlist, "", NULL, 0, 1);
       if (!c->is_prefix ())
-	error (_("\"%s\" is not a prefix command."), prefix.c_str ());
+	error (_("\"%ps\" is not a prefix command."),
+	       styled_string (command_style.style (), prefix.c_str ()));
 
       list = c->subcommands;
       *comname = last_word;
@@ -1380,7 +1384,7 @@ do_define_command (const char *comname, int from_tty,
   const char *comfull;
   int  hook_type      = CMD_NO_HOOK;
   int  hook_name_size = 0;
-   
+
 #define	HOOK_STRING	"hook-"
 #define	HOOK_LEN 5
 #define HOOK_POST_STRING "hookpost-"
@@ -1410,7 +1414,8 @@ do_define_command (const char *comname, int from_tty,
       else
 	q = query (_("Really redefine built-in command \"%s\"? "), c->name);
       if (!q)
-	error (_("Command \"%s\" not redefined."), c->name);
+	error (_("Command \"%ps\" not redefined."),
+	       styled_string (command_style.style (), c->name));
     }
 
   /* If this new command is a hook, then mark the command which it
@@ -1519,17 +1524,21 @@ do_document_command (const char *comname, int from_tty,
 
   lookup_cmd_composition (comfull, &alias, &prefix_cmd, &c);
   if (c == nullptr)
-    error (_("Undefined command: \"%s\"."), comfull);
+    error (_("Undefined command: \"%ps\"."),
+	   styled_string (command_style.style (), comfull));
   else if (c == CMD_LIST_AMBIGUOUS)
-    error (_("Ambiguous command: \"%s\"."), comfull);
+    error (_("Ambiguous command: \"%ps\"."),
+	   styled_string (command_style.style (), comfull));
 
   if (c->theclass != class_user
       && (alias == nullptr || alias->theclass != class_alias))
     {
       if (alias == nullptr)
-	error (_("Command \"%s\" is built-in."), comfull);
+	error (_("Command \"%ps\" is built-in."),
+	       styled_string (command_style.style (), comfull));
       else
-	error (_("Alias \"%s\" is built-in."), comfull);
+	error (_("Alias \"%ps\" is built-in."),
+	       styled_string (command_style.style (), comfull));
     }
 
   /* If we found an alias of class_alias, the user is documenting this
@@ -1594,7 +1603,8 @@ define_prefix_command (const char *comname, int from_tty)
   c = lookup_cmd_exact (comname, *list);
 
   if (c != nullptr && c->theclass != class_user)
-    error (_("Command \"%s\" is built-in."), comfull);
+    error (_("Command \"%ps\" is built-in."),
+	   styled_string (command_style.style (), comfull));
 
   if (c != nullptr && c->is_prefix ())
     {
@@ -1619,6 +1629,65 @@ define_prefix_command (const char *comname, int from_tty)
      it can be followed by C args that must not cause a 'subcommand'
      not recognised error, and thus we must allow unknown.  */
   c->allow_unknown = c->user_commands.get () != nullptr;
+}
+
+/* See cli/cli-script.h.  */
+
+bool
+commands_equal (const command_line *a, const command_line *b)
+{
+  if ((a == nullptr) != (b == nullptr))
+    return false;
+
+  while (a != nullptr)
+    {
+      /* We are either at the end of both command lists, or there's
+	 another command in both lists.  */
+      if ((a->next == nullptr) != (b->next == nullptr))
+	return false;
+
+      /* There's a command line for both, or neither.  */
+      if ((a->line == nullptr) != (b->line == nullptr))
+	return false;
+
+      /* Check control_type matches.  */
+      if (a->control_type != b->control_type)
+	return false;
+
+      if (a->control_type == compile_control)
+	{
+	  if (a->control_u.compile.scope != b->control_u.compile.scope)
+	    return false;
+
+	  /* This is where we "fail safe".  The scope_data is a 'void *'
+	     pointer which changes in meaning based on the value of
+	     'scope'.  It is possible that two different 'void *' pointers
+	     could point to the equal scope data, however, we just assume
+	     that if the pointers are different, then the scope_data is
+	     different.  This could be improved in the future.  */
+	  if (a->control_u.compile.scope_data
+	      != b->control_u.compile.scope_data)
+	    return false;
+	}
+
+      /* Check lines are identical.  */
+      if (a->line != nullptr && !streq (a->line, b->line))
+	return false;
+
+      /* Check body_list_0.  */
+      if (!commands_equal (a->body_list_0.get (), b->body_list_0.get ()))
+	return false;
+
+      /* Check body_list_1.  */
+      if (!commands_equal (a->body_list_1.get (), b->body_list_1.get ()))
+	return false;
+
+      /* Move to the next element in each chain.  */
+      a = a->next;
+      b = b->next;
+    }
+
+  return true;
 }
 
 
@@ -1647,50 +1716,16 @@ script_from_file (FILE *stream, const char *file)
       /* Re-throw the error, but with the file name information
 	 prepended.  */
       throw_error (e.error,
-		   _("%s:%d: Error in sourced command file:\n%s"),
-		   source_file_name.c_str (), source_line_number,
+		   _("%ps:%ps: Error in sourced command file:\n%s"),
+		   styled_string (file_name_style.style (),
+				  source_file_name.c_str ()),
+		   styled_string (line_number_style.style (),
+				  plongest (source_line_number)),
 		   e.what ());
     }
 }
 
-/* Print the definition of user command C to STREAM.  Or, if C is a
-   prefix command, show the definitions of all user commands under C
-   (recursively).  PREFIX and NAME combined are the name of the
-   current command.  */
-void
-show_user_1 (struct cmd_list_element *c, const char *prefix, const char *name,
-	     struct ui_file *stream)
-{
-  if (cli_user_command_p (c))
-    {
-      struct command_line *cmdlines = c->user_commands.get ();
-
-      gdb_printf (stream, "User %scommand \"",
-		  c->is_prefix () ? "prefix" : "");
-      fprintf_styled (stream, command_style.style (), "%s%s",
-		      prefix, name);
-      gdb_printf (stream, "\":\n");
-      if (cmdlines)
-	{
-	  print_command_lines (current_uiout, cmdlines, 1);
-	  gdb_puts ("\n", stream);
-	}
-    }
-
-  if (c->is_prefix ())
-    {
-      const std::string prefixname = c->prefixname ();
-
-      for (c = *c->subcommands; c != NULL; c = c->next)
-	if (c->theclass == class_user || c->is_prefix ())
-	  show_user_1 (c, prefixname.c_str (), c->name, gdb_stdout);
-    }
-
-}
-
-void _initialize_cli_script ();
-void
-_initialize_cli_script ()
+INIT_GDB_FILE (cli_script)
 {
   struct cmd_list_element *c;
 

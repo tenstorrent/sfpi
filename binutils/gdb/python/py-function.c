@@ -1,6 +1,6 @@
 /* Convenience functions implemented in Python.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -27,8 +27,7 @@
 #include "expression.h"
 #include "language.h"
 
-extern PyTypeObject fnpy_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("PyObject");
+extern PyTypeObject fnpy_object_type;
 
 
 
@@ -46,10 +45,11 @@ convert_values_to_python (int argc, struct value **argv)
 
   for (i = 0; i < argc; ++i)
     {
-      gdbpy_ref<> elt (value_to_value_object (argv[i]));
+      gdbpy_ref<> elt = value_to_value_object (argv[i]);
       if (elt == NULL)
 	return NULL;
-      PyTuple_SetItem (result.get (), i, elt.release ());
+      if (PyTuple_SetItem (result.get (), i, elt.release ()) < 0)
+	return nullptr;
     }
   return result;
 }
@@ -126,7 +126,7 @@ fnpy_init (PyObject *self, PyObject *args, PyObject *kwds)
 	}
     }
   if (! docstring)
-    docstring.reset (xstrdup (_("This function is not documented.")));
+    docstring = make_unique_xstrdup (_("This function is not documented."));
 
   add_internal_function (make_unique_xstrdup (name), std::move (docstring),
 			 fnpy_call, self_ref.release ());
@@ -135,8 +135,8 @@ fnpy_init (PyObject *self, PyObject *args, PyObject *kwds)
 
 /* Initialize internal function support.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_functions (void)
+static int
+gdbpy_initialize_functions ()
 {
   fnpy_object_type.tp_new = PyType_GenericNew;
   return gdbpy_type_ready (&fnpy_object_type);

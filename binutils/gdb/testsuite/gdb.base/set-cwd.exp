@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ require !use_gdb_stub
 standard_testfile
 
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile debug] } {
-    return -1
+    return
 }
 
 # Test that tilde expansion works fine.
@@ -40,7 +40,7 @@ proc_with_prefix test_tilde_expansion { } {
     set home ""
     set test "print home var"
     gdb_test_multiple "print home" $test {
-	-re "\\\$$decimal = $hex \"\(.+\)\"\r\n$gdb_prompt $" {
+	-re "${::valnum_re} = $hex \"\(.+\)\"\r\n$gdb_prompt $" {
 	    set home $expect_out(1,string)
 	    pass $test
 	}
@@ -54,7 +54,7 @@ proc_with_prefix test_tilde_expansion { } {
     set curdir ""
     set test "print dir var"
     gdb_test_multiple "print dir" $test {
-	-re "\\\$$decimal = \"\(.+\)\"\(, .*repeats.*\)?\r\n$gdb_prompt $" {
+	-re "${::valnum_re} = \"\(.+\)\"\(, .*repeats.*\)?\r\n$gdb_prompt $" {
 	    set curdir $expect_out(1,string)
 	    pass $test
 	}
@@ -71,6 +71,29 @@ proc_with_prefix test_tilde_expansion { } {
 
 # The temporary directory that we will use to start the inferior.
 set tmpdir [standard_output_file ""]
+
+# Check that the 'dir' variable in the inferior is set to
+# EXPECTED_DIR.  Use MESSAGE as test message.
+
+proc test_dir {expected_dir message} {
+    set dir "UNSET"
+    gdb_test_multiple "print dir" "$message: extract dir" {
+	-re -wrap " = \"(.*)\", .*" {
+	    set dir $expect_out(1,string)
+	    pass $gdb_test_name
+	}
+    }
+
+    if {[istarget "*-*-mingw*"]} {
+	# getcwd on native Windows uses backslashes.  Convert to
+	# forward slashes.  We look for pairs of backslashes as DIR
+	# comes from a C string printed by GDB, which escapes
+	# backslashes.
+	set dir [string map {\\\\ /} $dir]
+    }
+
+    gdb_assert [string equal $expected_dir $dir] $message
+}
 
 # Test that when we "set cwd" the inferior will be started under the
 # correct working directory and GDB will not be affected by this.
@@ -107,8 +130,7 @@ proc_with_prefix test_cd_into_dir { } {
     gdb_breakpoint [gdb_get_line_number "break-here"]
     gdb_continue_to_breakpoint "break-here" ".* break-here .*"
 
-    gdb_test "print dir" "\\\$$decimal = \"$tmpdir\", .*" \
-	"inferior cwd is correctly set"
+    test_dir $tmpdir "inferior cwd is correctly set"
 
     set gdb_cwd_after_run ""
     set test "pwd after run"
@@ -164,8 +186,7 @@ proc_with_prefix test_cwd_reset { } {
     gdb_breakpoint [gdb_get_line_number "break-here"]
     gdb_continue_to_breakpoint "break-here" ".* break-here .*"
 
-    gdb_test "print dir" "\\\$$decimal = \"$tmpdir\", .*" \
-	"inferior cwd is correctly set"
+    test_dir $tmpdir "inferior cwd is correctly set"
 
     # Reset the inferior's cwd.
     gdb_test_no_output "set cwd" "resetting inferior cwd"
@@ -178,13 +199,12 @@ proc_with_prefix test_cwd_reset { } {
 	gdb_breakpoint [gdb_get_line_number "break-here"]
 	gdb_continue_to_breakpoint "break-here" ".* break-here .*"
 
-	gdb_test "print dir" "\\\$$decimal = \"$gdb_cwd\", .*" \
-	    "inferior cwd got reset correctly"
+	test_dir $gdb_cwd "inferior cwd got reset correctly"
     }
 }
 
 test_cd_into_dir
-clean_restart $binfile
+clean_restart $testfile
 test_tilde_expansion
-clean_restart $binfile
+clean_restart $testfile
 test_cwd_reset

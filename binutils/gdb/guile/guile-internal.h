@@ -1,6 +1,6 @@
 /* Internal header for GDB/Scheme code.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -148,18 +148,6 @@ struct scheme_integer_constant
   (scm_is_eq ((scm), SCM_BOOL_F) || scm_is_eq ((scm), SCM_BOOL_T))
 #define gdbscm_is_false(scm) scm_is_eq ((scm), SCM_BOOL_F)
 #define gdbscm_is_true(scm) (!gdbscm_is_false (scm))
-
-#ifndef HAVE_SCM_NEW_SMOB
-
-/* Guile <= 2.0.5 did not provide this function, so provide it here.  */
-
-static inline SCM
-scm_new_smob (scm_t_bits tc, scm_t_bits data)
-{
-  SCM_RETURN_NEWSMOB (tc, data);
-}
-
-#endif
 
 /* Function name that is passed around in case an error needs to be reported.
    __func is in C99, but we provide a wrapper "just in case",
@@ -442,10 +430,11 @@ extern const struct block *bkscm_scm_to_block
 
 /* scm-cmd.c */
 
-extern char *gdbscm_parse_command_name (const char *name,
-					const char *func_name, int arg_pos,
-					struct cmd_list_element ***base_list,
-					struct cmd_list_element **start_list);
+extern char *gdbscm_parse_command_name
+  (const char *name, const char *func_name, int arg_pos,
+   struct cmd_list_element ***base_list,
+   struct cmd_list_element **start_list,
+   struct cmd_list_element **prefix_cmd = nullptr);
 
 extern int gdbscm_valid_command_class_p (int command_class);
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2024 Free Software Foundation, Inc.
+# Copyright (C) 2012-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,29 +18,29 @@ require supports_reverse
 standard_testfile ".S" "${gdb_test_file_name}-nodebug.S"
 set executable ${testfile}
 
-if [info exists COMPILE] {
+if {[info exists COMPILE]} {
     # make check RUNTESTFLAGS="gdb.reverse/singlejmp-reverse.exp COMPILE=1"
     if { [build_executable_from_specs ${testfile}.exp $executable {} \
 				      ${testfile}.c {debug optimize=-O2} \
 				      ${testfile}-nodebug.c {optimize=-O2} \
 				      ] == -1 } {
-	return -1
+	return
     }
 } else {
     require is_x86_64_m64_target
     if { [build_executable ${testfile}.exp ${testfile} \
 	      [list ${srcfile} ${srcfile2}] {}] == -1 } {
-	return -1
+	return
     }
 }
 
 clean_restart $executable
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
-if [supports_process_record] {
+if {[supports_process_record]} {
     gdb_test_no_output "record"
 }
 

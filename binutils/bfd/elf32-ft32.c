@@ -1,8 +1,8 @@
 /* ft32-specific support for 32-bit ELF.
-   Copyright (C) 2013-2025 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    Copied from elf32-moxie.c which is..
-   Copyright (C) 2009-2025 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
    Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -342,21 +342,20 @@ ft32_info_to_howto_rela (bfd *abfd,
    accordingly.  */
 
 static int
-ft32_elf_relocate_section (bfd *output_bfd,
-			    struct bfd_link_info *info,
-			    bfd *input_bfd,
-			    asection *input_section,
-			    bfd_byte *contents,
-			    Elf_Internal_Rela *relocs,
-			    Elf_Internal_Sym *local_syms,
-			    asection **local_sections)
+ft32_elf_relocate_section (struct bfd_link_info *info,
+			   bfd *input_bfd,
+			   asection *input_section,
+			   bfd_byte *contents,
+			   Elf_Internal_Rela *relocs,
+			   Elf_Internal_Sym *local_syms,
+			   asection **local_sections)
 {
   Elf_Internal_Shdr *symtab_hdr;
   struct elf_link_hash_entry **sym_hashes;
   Elf_Internal_Rela *rel;
   Elf_Internal_Rela *relend;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -383,7 +382,8 @@ ft32_elf_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -403,7 +403,8 @@ ft32_elf_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_FT32_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -538,7 +539,7 @@ ft32_reloc_shortable
   r_type = ELF32_R_TYPE (irel->r_info);
   howto = &ft32_elf_howto_table [r_type];
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get the value of the symbol referred to by the reloc.  */
   if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
@@ -776,7 +777,7 @@ elf32_ft32_relax_delete_bytes (struct bfd_link_info *link_info, bfd * abfd,
   unsigned int symcount;
   Elf_Internal_Sym *isymbuf = NULL;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
 
   contents = elf_section_data (sec)->this_hdr.contents;
@@ -897,7 +898,7 @@ elf32_ft32_relax_delete_bytes (struct bfd_link_info *link_info, bfd * abfd,
   }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   if (isym)
     {
@@ -973,7 +974,7 @@ elf32_ft32_relax_is_branch_target (struct bfd_link_info *link_info,
   struct elf_link_hash_entry **start_hashes;
   unsigned int symcount;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Now we check for relocations pointing to ret.  */
   for (isec = abfd->sections; isec; isec = isec->next)
@@ -1109,7 +1110,7 @@ ft32_elf_relax_section (bfd *abfd,
       elf_section_data (sec)->this_hdr.contents = contents;
     }
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Read this BFD's local symbols if we haven't done so already.  */
   if (isymbuf == NULL && symtab_hdr->sh_info != 0)

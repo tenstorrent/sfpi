@@ -1,5 +1,5 @@
 /* Data structures associated with tracepoints in GDB.
-   Copyright (C) 1997-2024 Free Software Foundation, Inc.
+   Copyright (C) 1997-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -36,7 +36,7 @@ struct traceframe_info
   std::vector<int> tvars;
 };
 
-typedef std::unique_ptr<traceframe_info> traceframe_info_up;
+using traceframe_info_up = std::unique_ptr<traceframe_info>;
 
 /* A trace state variable is a value managed by a target being
    traced.  A trace state variable (or tsv for short) can be accessed
@@ -177,21 +177,21 @@ struct uploaded_tp
   int orig_size = 0;
 
   /* String that is the encoded form of the tracepoint's condition.  */
-  gdb::unique_xmalloc_ptr<char[]> cond;
+  gdb::unique_xmalloc_ptr<char> cond;
 
   /* Vectors of strings that are the encoded forms of a tracepoint's
      actions.  */
-  std::vector<gdb::unique_xmalloc_ptr<char[]>> actions;
-  std::vector<gdb::unique_xmalloc_ptr<char[]>> step_actions;
+  std::vector<gdb::unique_xmalloc_ptr<char>> actions;
+  std::vector<gdb::unique_xmalloc_ptr<char>> step_actions;
 
   /* The original string defining the location of the tracepoint.  */
-  gdb::unique_xmalloc_ptr<char[]> at_string;
+  gdb::unique_xmalloc_ptr<char> at_string;
 
   /* The original string defining the tracepoint's condition.  */
-  gdb::unique_xmalloc_ptr<char[]> cond_string;
+  gdb::unique_xmalloc_ptr<char> cond_string;
 
   /* List of original strings defining the tracepoint's actions.  */
-  std::vector<gdb::unique_xmalloc_ptr<char[]>> cmd_strings;
+  std::vector<gdb::unique_xmalloc_ptr<char>> cmd_strings;
 
   /* The tracepoint's current hit count.  */
   int hit_count = 0;
@@ -416,8 +416,6 @@ extern void tfind_1 (enum trace_find_type type, int num,
 
 extern void trace_save_tfile (const char *filename,
 			      int target_does_save);
-extern void trace_save_ctf (const char *dirname,
-			    int target_does_save);
 
 extern traceframe_info_up parse_traceframe_info (const char *tframe_info);
 

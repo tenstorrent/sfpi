@@ -1,5 +1,5 @@
 /* BFD library support routines for architectures.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Hacked by John Gilmore and Steve Chamberlain of Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -327,12 +327,12 @@ DESCRIPTION
 .#define bfd_mach_arm_6M        20
 .#define bfd_mach_arm_6SM       21
 .#define bfd_mach_arm_7EM       22
-.#define bfd_mach_arm_8         23
+.#define bfd_mach_arm_8A        23
 .#define bfd_mach_arm_8R        24
 .#define bfd_mach_arm_8M_BASE   25
 .#define bfd_mach_arm_8M_MAIN   26
 .#define bfd_mach_arm_8_1M_MAIN 27
-.#define bfd_mach_arm_9         28
+.#define bfd_mach_arm_9A        28
 .  bfd_arch_nds32,     {* Andes NDS32.  *}
 .#define bfd_mach_n1		1
 .#define bfd_mach_n1h		2
@@ -560,20 +560,36 @@ DESCRIPTION
 .#define bfd_mach_loongarch64	2
 .  bfd_arch_amdgcn,     {* AMDGCN *}
 .#define bfd_mach_amdgcn_unknown 0x000
-.#define bfd_mach_amdgcn_gfx900  0x02c
-.#define bfd_mach_amdgcn_gfx904  0x02e
-.#define bfd_mach_amdgcn_gfx906  0x02f
-.#define bfd_mach_amdgcn_gfx908  0x030
-.#define bfd_mach_amdgcn_gfx90a  0x03f
-.#define bfd_mach_amdgcn_gfx1010 0x033
-.#define bfd_mach_amdgcn_gfx1011 0x034
-.#define bfd_mach_amdgcn_gfx1012 0x035
-.#define bfd_mach_amdgcn_gfx1030 0x036
-.#define bfd_mach_amdgcn_gfx1031 0x037
-.#define bfd_mach_amdgcn_gfx1032 0x038
-.#define bfd_mach_amdgcn_gfx1100 0x041
-.#define bfd_mach_amdgcn_gfx1101 0x046
-.#define bfd_mach_amdgcn_gfx1102 0x047
+.#define bfd_mach_amdgcn_gfx9_generic    0x051
+.#define bfd_mach_amdgcn_gfx900          0x02c
+.#define bfd_mach_amdgcn_gfx904          0x02e
+.#define bfd_mach_amdgcn_gfx906          0x02f
+.#define bfd_mach_amdgcn_gfx908          0x030
+.#define bfd_mach_amdgcn_gfx90a          0x03f
+.#define bfd_mach_amdgcn_gfx9_4_generic  0x05f
+.#define bfd_mach_amdgcn_gfx942          0x04c
+.#define bfd_mach_amdgcn_gfx950          0x04f
+.#define bfd_mach_amdgcn_gfx10_1_generic 0x052
+.#define bfd_mach_amdgcn_gfx1010         0x033
+.#define bfd_mach_amdgcn_gfx1011         0x034
+.#define bfd_mach_amdgcn_gfx1012         0x035
+.#define bfd_mach_amdgcn_gfx10_3_generic 0x053
+.#define bfd_mach_amdgcn_gfx1030         0x036
+.#define bfd_mach_amdgcn_gfx1031         0x037
+.#define bfd_mach_amdgcn_gfx1032         0x038
+.#define bfd_mach_amdgcn_gfx11_generic   0x054
+.#define bfd_mach_amdgcn_gfx1100         0x041
+.#define bfd_mach_amdgcn_gfx1101         0x046
+.#define bfd_mach_amdgcn_gfx1102         0x047
+.#define bfd_mach_amdgcn_gfx1150         0x043
+.#define bfd_mach_amdgcn_gfx1151         0x04a
+.#define bfd_mach_amdgcn_gfx1152         0x055
+.#define bfd_mach_amdgcn_gfx1153         0x058
+.#define bfd_mach_amdgcn_gfx12_generic   0x059
+.#define bfd_mach_amdgcn_gfx1200         0x048
+.#define bfd_mach_amdgcn_gfx1201         0x04e
+.#define bfd_mach_amdgcn_gfx12_5_generic 0x05b
+.#define bfd_mach_amdgcn_gfx1250         0x049
 .  bfd_arch_last
 .  };
 */

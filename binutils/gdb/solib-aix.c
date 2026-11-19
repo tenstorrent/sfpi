@@ -1,4 +1,4 @@
-/* Copyright (C) 2013-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -17,13 +17,33 @@
 
 #include "solib-aix.h"
 #include "solib.h"
-#include "solist.h"
 #include "inferior.h"
 #include "gdb_bfd.h"
 #include "objfiles.h"
 #include "symtab.h"
 #include "xcoffread.h"
 #include "observable.h"
+#include "cli/cli-style.h"
+
+/* solib_ops for AIX systems.  */
+
+struct aix_solib_ops : public solib_ops
+{
+  using solib_ops::solib_ops;
+
+  void relocate_section_addresses (solib &so, target_section *) const override;
+  void create_inferior_hook (int from_tty) const override;
+  owning_intrusive_list<solib> current_sos () const override;
+  gdb_bfd_ref_ptr bfd_open (const char *pathname) const override;
+};
+
+/* See solib-aix.h.  */
+
+solib_ops_up
+make_aix_solib_ops (program_space *pspace)
+{
+  return std::make_unique<aix_solib_ops> (pspace);
+}
 
 /* Our private data in struct solib.  */
 
@@ -77,13 +97,7 @@ static const registry<inferior>::key<solib_aix_inferior_data>
 static struct solib_aix_inferior_data *
 get_solib_aix_inferior_data (struct inferior *inf)
 {
-  struct solib_aix_inferior_data *data;
-
-  data = solib_aix_inferior_data_handle.get (inf);
-  if (data == NULL)
-    data = solib_aix_inferior_data_handle.emplace (inf);
-
-  return data;
+  return &solib_aix_inferior_data_handle.try_emplace (inf);
 }
 
 #if !defined(HAVE_LIBEXPAT)
@@ -154,7 +168,7 @@ library_list_start_list (struct gdb_xml_parser *parser,
   char *version
     = (char *) xml_find_attribute (attributes, "version")->value.get ();
 
-  if (strcmp (version, "1.0") != 0)
+  if (!streq (version, "1.0"))
     gdb_xml_error (parser,
 		   _("Library list has unsupported version \"%s\""),
 		   version);
@@ -307,17 +321,16 @@ solib_aix_bss_data_overlap (bfd *abfd)
   return 0;
 }
 
-/* Implement the "relocate_section_addresses" solib_ops method.  */
-
-static void
-solib_aix_relocate_section_addresses (solib &so, target_section *sec)
+void
+aix_solib_ops::relocate_section_addresses (solib &so,
+					   target_section *sec) const
 {
   struct bfd_section *bfd_sect = sec->the_bfd_section;
   bfd *abfd = bfd_sect->owner;
   const char *section_name = bfd_section_name (bfd_sect);
   auto *info = gdb::checked_static_cast<lm_info_aix *> (so.lm_info.get ());
 
-  if (strcmp (section_name, ".text") == 0)
+  if (streq (section_name, ".text"))
     {
       sec->addr = info->text_addr;
       sec->endaddr = sec->addr + info->text_size;
@@ -326,12 +339,12 @@ solib_aix_relocate_section_addresses (solib &so, target_section *sec)
 	 XCOFF headers, so we need to adjust by this much.  */
       sec->addr += bfd_sect->filepos;
     }
-  else if (strcmp (section_name, ".data") == 0)
+  else if (streq (section_name, ".data"))
     {
       sec->addr = info->data_addr;
       sec->endaddr = sec->addr + info->data_size;
     }
-  else if (strcmp (section_name, ".bss") == 0)
+  else if (streq (section_name, ".bss"))
     {
       /* The information provided by the loader does not include
 	 the address of the .bss section, but we know that it gets
@@ -362,13 +375,13 @@ solib_aix_relocate_section_addresses (solib &so, target_section *sec)
 /* Compute and return the OBJFILE's section_offset array, using
    the associated loader info (INFO).  */
 
-static section_offsets
+static std::vector<CORE_ADDR>
 solib_aix_get_section_offsets (struct objfile *objfile,
 			       lm_info_aix *info)
 {
   bfd *abfd = objfile->obfd.get ();
 
-  section_offsets offsets (objfile->section_offsets.size ());
+  std::vector<CORE_ADDR> offsets (objfile->section_offsets.size ());
 
   /* .text */
 
@@ -411,10 +424,8 @@ solib_aix_get_section_offsets (struct objfile *objfile,
   return offsets;
 }
 
-/* Implement the "solib_create_inferior_hook" solib_ops method.  */
-
-static void
-solib_aix_solib_create_inferior_hook (int from_tty)
+void
+aix_solib_ops::create_inferior_hook (int from_tty) const
 {
   const char *warning_msg = "unable to relocate main executable";
 
@@ -435,17 +446,15 @@ solib_aix_solib_create_inferior_hook (int from_tty)
   if (current_program_space->symfile_object_file != NULL)
     {
       objfile *objf = current_program_space->symfile_object_file;
-      section_offsets offsets = solib_aix_get_section_offsets (objf,
-							       &exec_info);
+      std::vector<CORE_ADDR> offsets
+	= solib_aix_get_section_offsets (objf, &exec_info);
 
       objfile_relocate (objf, offsets);
     }
 }
 
-/* Implement the "current_sos" solib_ops method.  */
-
-static owning_intrusive_list<solib>
-solib_aix_current_sos ()
+owning_intrusive_list<solib>
+aix_solib_ops::current_sos () const
 {
   std::optional<std::vector<lm_info_aix>> &library_list
     = solib_aix_get_library_list (current_inferior (), NULL);
@@ -481,35 +490,15 @@ solib_aix_current_sos ()
 	}
 
       /* Add it to the list.  */
-      auto &new_solib = sos.emplace_back ();
-      new_solib.so_original_name = so_name;
-      new_solib.so_name = so_name;
-      new_solib.lm_info = std::make_unique<lm_info_aix> (info);
+      sos.emplace_back (std::make_unique<lm_info_aix> (info), so_name, so_name,
+			*this);
     }
 
   return sos;
 }
 
-/* Implement the "open_symbol_file_object" solib_ops method.  */
-
-static int
-solib_aix_open_symbol_file_object (int from_tty)
-{
-  return 0;
-}
-
-/* Implement the "in_dynsym_resolve_code" solib_ops method.  */
-
-static int
-solib_aix_in_dynsym_resolve_code (CORE_ADDR pc)
-{
-  return 0;
-}
-
-/* Implement the "bfd_open" solib_ops method.  */
-
-static gdb_bfd_ref_ptr
-solib_aix_bfd_open (const char *pathname)
+gdb_bfd_ref_ptr
+aix_solib_ops::bfd_open (const char *pathname) const
 {
   /* The pathname is actually a synthetic filename with the following
      form: "/path/to/sharedlib(member.o)" (double-quotes excluded).
@@ -523,7 +512,7 @@ solib_aix_bfd_open (const char *pathname)
   int found_file;
 
   if (pathname[path_len - 1] != ')')
-    return solib_bfd_open (pathname);
+    return solib_ops::bfd_open (pathname);
 
   /* Search for the associated parens.  */
   sep = strrchr (pathname, '(');
@@ -533,7 +522,7 @@ solib_aix_bfd_open (const char *pathname)
 	 to open pathname without decoding, possibly leading to
 	 a failure), rather than triggering an assert failure).  */
       warning (_("missing '(' in shared object pathname: %s"), pathname);
-      return solib_bfd_open (pathname);
+      return solib_ops::bfd_open (pathname);
     }
   filename_len = sep - pathname;
 
@@ -552,18 +541,20 @@ solib_aix_bfd_open (const char *pathname)
 						found_file));
   if (archive_bfd == NULL)
     {
-      warning (_("Could not open `%s' as an executable file: %s"),
-	       filename.c_str (), bfd_errmsg (bfd_get_error ()));
+      warning (_("Could not open `%ps' as an executable file: %s"),
+	       styled_string (file_name_style.style (), filename.c_str ()),
+	       bfd_errmsg (bfd_get_error ()));
       return NULL;
     }
 
-  if (bfd_check_format (archive_bfd.get (), bfd_object))
+  if (gdb_bfd_check_format (archive_bfd.get (), bfd_object))
     return archive_bfd;
 
-  if (! bfd_check_format (archive_bfd.get (), bfd_archive))
+  if (! gdb_bfd_check_format (archive_bfd.get (), bfd_archive))
     {
-      warning (_("\"%s\": not in executable format: %s."),
-	       filename.c_str (), bfd_errmsg (bfd_get_error ()));
+      warning (_("\"%ps\": not in executable format: %s."),
+	       styled_string (file_name_style.style (), filename.c_str ()),
+	       bfd_errmsg (bfd_get_error ()));
       return NULL;
     }
 
@@ -599,10 +590,11 @@ solib_aix_bfd_open (const char *pathname)
       return NULL;
     }
 
-  if (! bfd_check_format (object_bfd.get (), bfd_object))
+  if (! gdb_bfd_check_format (object_bfd.get (), bfd_object))
     {
-      warning (_("%s(%s): not in object format: %s."),
-	       filename.c_str (), member_name.c_str (),
+      warning (_("%ps(%s): not in object format: %s."),
+	       styled_string (file_name_style.style (), filename.c_str ()),
+	       member_name.c_str (),
 	       bfd_errmsg (bfd_get_error ()));
       return NULL;
     }
@@ -626,9 +618,9 @@ solib_aix_bfd_open (const char *pathname)
 static struct obj_section *
 data_obj_section_from_objfile (struct objfile *objfile)
 {
-  for (obj_section *osect : objfile->sections ())
-    if (strcmp (bfd_section_name (osect->the_bfd_section), ".data") == 0)
-      return osect;
+  for (obj_section &osect : objfile->sections ())
+    if (streq (bfd_section_name (osect.the_bfd_section), ".data"))
+      return &osect;
 
   return NULL;
 }
@@ -676,27 +668,7 @@ solib_aix_normal_stop_observer (struct bpstat *unused_1, int unused_2)
   data->library_list.reset ();
 }
 
-/* The solib_ops for AIX targets.  */
-const solib_ops solib_aix_so_ops =
-{
-  solib_aix_relocate_section_addresses,
-  nullptr,
-  nullptr,
-  solib_aix_solib_create_inferior_hook,
-  solib_aix_current_sos,
-  solib_aix_open_symbol_file_object,
-  solib_aix_in_dynsym_resolve_code,
-  solib_aix_bfd_open,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  default_find_solib_addr,
-};
-
-void _initialize_solib_aix ();
-void
-_initialize_solib_aix ()
+INIT_GDB_FILE (solib_aix)
 {
   gdb::observers::normal_stop.attach (solib_aix_normal_stop_observer,
 				      "solib-aix");

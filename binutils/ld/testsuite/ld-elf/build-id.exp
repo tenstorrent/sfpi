@@ -1,5 +1,5 @@
 # Expect script for --build-id tests.
-#   Copyright (C) 2021-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2021-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -19,23 +19,9 @@
 # MA 02110-1301, USA.
 #
 
-# Exclude non-ELF targets.
-
-if ![is_elf_format] {
+if { ![is_elf_format] || [uses_genelf] } {
     return
 }
-
-if { [istarget frv-*-*] || [istarget lm32-*-*] } {
-    return
-}
-
-if { !([istarget *-*-linux*]
-       || [istarget arm*-*-uclinuxfdpiceabi]
-       || [istarget *-*-nacl*]
-       || [istarget *-*-gnu*]) } then {
-    return
-}
-
 
 set stylelist {"" "--build-id" "--build-id=none" "--build-id=md5"
     "--build-id=sha1" "--build-id=guid" "--build-id=0xdeadbeef"}

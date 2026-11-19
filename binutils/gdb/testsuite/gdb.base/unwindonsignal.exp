@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ require {!target_info exists gdb,cannot_call_functions}
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 if { ![runto_main] } {
-    return 0
+    return
 }
 
 gdb_test "break stop_here" "Breakpoint \[0-9\]* at .*"
@@ -68,7 +68,7 @@ if {[gdb_test "call gen_signal ()"  \
 	      "\"set unwind-on-signal off\"\\.  Evaluation of the expression containing" \
 	      "the function \\(gen_signal\\) will be abandoned\\."] \
 	 "unwindonsignal, inferior function call signaled"] != 0} {
-    return 0
+    return
 }
 
 # Verify the stack got unwound.
@@ -86,3 +86,13 @@ gdb_test_multiple "maint print dummy-frames" \
 	pass $gdb_test_name
     }
 }
+
+# After the unwound infcall, the thread should be stopped, and a
+# subsequent resumption command should be accepted.  Regression test
+# for PR gdb/34148.
+
+gdb_test "info threads -running" \
+    "No threads matched\\." \
+    "thread is stopped"
+
+gdb_continue_to_end "after unwound infcall"

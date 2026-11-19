@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ lappend flags debug
 lappend_include_file flags $srcdir/lib/attributes.h
 
 if { [build_executable "failed to prepare" $testfile $srcfile $flags] } {
-    return -1
+    return
 }
 
 # Unwind to each function in FRAMES, and compare "info frame" output
@@ -97,7 +97,7 @@ proc compare_frames {frames} {
 
 proc test {enable} {
 
-    clean_restart $::binfile
+    clean_restart $::testfile
 
     gdb_test_no_output "maint frame-unwinder $enable DEBUGINFO"
 

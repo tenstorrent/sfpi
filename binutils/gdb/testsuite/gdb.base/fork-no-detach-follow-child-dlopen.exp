@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 # in the source of the shlib, and "list" should display the source where
 # the program stopped.
 
+require allow_fork_tests
 require allow_shlib_tests
 
 standard_testfile .c -shlib.c
@@ -34,21 +35,24 @@ if { [gdb_compile_shlib $srcdir/$subdir/$srcfile2 $shlib_path {debug}] != "" } {
 
 set shlib_path_target [gdb_download_shlib $::shlib_path]
 
-set opts [list shlib_load additional_flags=-DSHLIB_PATH="${shlib_path_target}"]
+set opts {}
+lappend opts shlib_load
+lappend opts additional_flags=-DSHLIB_PATH=[quote_for_host $shlib_path_target]
+
 if { [build_executable "failed to prepare" ${testfile} ${srcfile} $opts] } {
     return
 }
 
 proc do_test {} {
-    clean_restart $::binfile
+    clean_restart $::testfile
     gdb_locate_shlib $::shlib_path
     gdb_test_no_output "set follow-fork-mode child"
     gdb_test_no_output "set detach-on-fork off"
 
-    runto "add" qualified allow-pending
+    runto "add" -qualified -allow-pending
 
     # Since we have debug info in the shlib, we should have the file name available.
-    gdb_test "frame" "add \(.*\) at .*$::srcfile2:\[0-9\]+.*"
+    gdb_test "frame" "add \(.*\) at .*$::srcfile2:${::decimal}.*"
 
     # We must also be able to display the source for the current function.
     gdb_test "list" "return a \\+ b;.*"

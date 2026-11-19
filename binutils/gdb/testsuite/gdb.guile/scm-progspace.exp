@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2024 Free Software Foundation, Inc.
+# Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require allow_guile_tests
 standard_testfile
 
 if {[build_executable $testfile.exp $testfile $srcfile debug] == -1} {
-    return -1
+    return
 }
 
 clean_restart

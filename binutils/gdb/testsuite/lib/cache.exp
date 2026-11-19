@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# tclint-disable redefined-builtin
 
 # The in-memory cache.
 array set gdb_data_cache {}
@@ -24,26 +25,9 @@ proc ignore_pass { msg } {
 
 # Call proc real_name and return the result, while ignoring calls to pass.
 proc gdb_do_cache_wrap {real_name args} {
-    if { [info procs save_pass] != "" } {
-	return [uplevel 2 $real_name]
+    with_override pass ignore_pass {
+	return [uplevel 2 [list $real_name {*}$args]]
     }
-
-    rename pass save_pass
-    rename ignore_pass pass
-
-    set code [catch {uplevel 2 [list $real_name {*}$args]} result]
-
-    rename pass ignore_pass
-    rename save_pass pass
-
-    if {$code == 1} {
-	global errorInfo errorCode
-	return -code error -errorinfo $errorInfo -errorcode $errorCode $result
-    } elseif {$code > 1} {
-	return -code $code $result
-    }
-
-    return $result
 }
 
 # Global written to by gdb_exit_called proc.  Is set to true to
@@ -118,8 +102,6 @@ proc gdb_cache_maybe_gdb_exit { name do_exit also_called } {
 proc gdb_do_cache {name args} {
     global gdb_data_cache objdir
     global GDB_PARALLEL
-
-    verbose -log "gdb_do_cache: $name ( $args )"
 
     # Normally, if we have a cached value, we skip computation and return
     # the cached value.  If set to 1, instead don't skip computation and
@@ -205,12 +187,13 @@ proc gdb_do_cache {name args} {
     # As with the exit tracking above we also need to track any nested
     # caching procs that this proc might call.  To do this we backup
     # the current global list of nested caching proc calls and reset
-    # the global back ot the empty list.  As nested caching procs are
+    # the global back to the empty list.  As nested caching procs are
     # called their names are added to the global list, see
     # gdb_cache_maybe_gdb_exit for where this is done.
     set old_gdb_nested_caching_proc_calls $::gdb_nested_caching_proc_calls
     set ::gdb_nested_caching_proc_calls {}
 
+    verbose -log "gdb_do_cache: $name ( $args )"
     set real_name gdb_real__$name
     set gdb_data_cache(${cache_name},value) [gdb_do_cache_wrap $real_name {*}$args]
     set gdb_data_cache(${cache_name},exit) $::gdb_exit_called
@@ -295,6 +278,7 @@ proc gdb_do_cache {name args} {
 proc gdb_caching_proc {name arglist body} {
     # Define the underlying proc that we'll call.
     set real_name gdb_real__$name
+    # tclint-disable-next-line command-args
     proc $real_name $arglist $body
 
     # Define the advertised proc.
@@ -303,5 +287,6 @@ proc gdb_caching_proc {name arglist body} {
 	lappend caching_proc_body $$arg
     }
     set caching_proc_body [join $caching_proc_body]
+    # tclint-disable-next-line command-args
     proc $name $arglist $caching_proc_body
 }

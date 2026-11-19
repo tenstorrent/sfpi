@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,14 +25,14 @@ if { [gdb_compile_pthreads \
 	  "${binfile}" \
 	  executable {debug}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 clean_restart $executable
 
 # Start the second thread.
-if ![runto start] {
-    return -1
+if {![runto start]} {
+    return
 }
 
 # Go back to the main thread, and leave it in the loop, where we're

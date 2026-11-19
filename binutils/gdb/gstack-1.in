@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2024 Free Software Foundation, Inc.
+# Copyright (C) 2024-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 GDB=${GDB:-$(command -v gdb)}
 GDBARGS=${GDBARGS:-}
 AWK=${AWK:-}
-PKGVERSION=@PKGVERSION@
-VERSION=@VERSION@
+PKGVERSION="@PKGVERSION@"
+VERSION="@VERSION@"
 
 # Find an appropriate awk interpreter if one was not specified
 # via the environment.
@@ -64,7 +64,7 @@ function print_version() {
 while getopts hv-: OPT; do
     if [ "$OPT" = "-" ]; then
 	OPT="${OPTARG%%=*}"
-	OPTARG="${OPTARG#'$OPT'}"
+	OPTARG="${OPTARG#"$OPT"}"
 	OPTARG="${OPTARG#=}"
     fi
 
@@ -132,7 +132,8 @@ EOF
 	  )
 
 # Run GDB and remove some unwanted noise.
-"$GDB" --quiet -nx --readnever $GDBARGS <<EOF |
+# shellcheck disable=SC2086
+"$GDB" --quiet -nx $GDBARGS <<EOF |
 set width 0
 set height 0
 set pagination no

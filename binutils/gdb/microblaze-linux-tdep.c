@@ -1,6 +1,6 @@
 /* Target-dependent code for Xilinx MicroBlaze.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,9 +35,12 @@
 #include "frame-unwind.h"
 #include "tramp-frame.h"
 #include "linux-tdep.h"
+#include "glibc-tdep.h"
+#include "solib-svr4-linux.h"
+#include "features/microblaze-linux.c"
 
 static int
-microblaze_linux_memory_remove_breakpoint (struct gdbarch *gdbarch, 
+microblaze_linux_memory_remove_breakpoint (struct gdbarch *gdbarch,
 					   struct bp_target_info *bp_tgt)
 {
   CORE_ADDR addr = bp_tgt->reqstd_address;
@@ -49,6 +52,9 @@ microblaze_linux_memory_remove_breakpoint (struct gdbarch *gdbarch,
   /* Determine appropriate breakpoint contents and size for this address.  */
   bp = gdbarch_breakpoint_from_pc (gdbarch, &addr, &bplen);
 
+  /* Make sure we see the memory breakpoints.  */
+  scoped_restore restore_memory
+    = make_scoped_restore_show_memory_breakpoints (1);
   val = target_read_memory (addr, old_contents, bplen);
 
   /* If our breakpoint is no longer at the address, this means that the
@@ -81,7 +87,7 @@ microblaze_linux_sigtramp_cache (const frame_info_ptr &next_frame,
 
   /* Registers saved on stack.  */
   for (regnum = 0; regnum < MICROBLAZE_BTR_REGNUM; regnum++)
-    trad_frame_set_reg_addr (this_cache, regnum, 
+    trad_frame_set_reg_addr (this_cache, regnum,
 			     gpregs + regnum * MICROBLAZE_REGISTER_SIZE);
   trad_frame_set_id (this_cache, frame_id_build (base, func));
 }
@@ -99,7 +105,7 @@ microblaze_linux_sighandler_cache_init (const struct tramp_frame *self,
 				   0);
 }
 
-static struct tramp_frame microblaze_linux_sighandler_tramp_frame = 
+static struct tramp_frame microblaze_linux_sighandler_tramp_frame =
 {
   SIGTRAMP_FRAME,
   4,
@@ -111,29 +117,52 @@ static struct tramp_frame microblaze_linux_sighandler_tramp_frame =
   microblaze_linux_sighandler_cache_init
 };
 
+static struct regset microblaze_linux_gregset =
+  {
+    nullptr,
+    microblaze_supply_gregset
+  };
 
 static void
 microblaze_linux_init_abi (struct gdbarch_info info,
 			   struct gdbarch *gdbarch)
 {
+  struct microblaze_gdbarch_tdep *tdep =
+	  gdbarch_tdep<microblaze_gdbarch_tdep> (gdbarch);
+
+  tdep->gregset = &microblaze_linux_gregset;
+  tdep->sizeof_gregset = MICROBLAZE_REGISTER_SIZE * MICROBLAZE_REDR_REGNUM;
+
   linux_init_abi (info, gdbarch, 0);
 
   set_gdbarch_memory_remove_breakpoint (gdbarch,
 					microblaze_linux_memory_remove_breakpoint);
 
   /* Shared library handling.  */
-  set_solib_svr4_fetch_link_map_offsets (gdbarch,
-					 linux_ilp32_fetch_link_map_offsets);
+  set_solib_svr4_ops (gdbarch, make_linux_ilp32_svr4_solib_ops);
 
   /* Trampolines.  */
   tramp_frame_prepend_unwinder (gdbarch,
 				&microblaze_linux_sighandler_tramp_frame);
+
+  /* BFD target for core files.  */
+  if (gdbarch_byte_order (gdbarch) == BFD_ENDIAN_BIG)
+    set_gdbarch_gcore_bfd_target (gdbarch, "elf32-microblaze");
+  else
+    set_gdbarch_gcore_bfd_target (gdbarch, "elf32-microblazeel");
+
+
+  /* Shared library handling.  */
+  set_gdbarch_skip_trampoline_code (gdbarch, find_solib_trampoline_target);
+  set_gdbarch_skip_solib_resolver (gdbarch, glibc_skip_solib_resolver);
+
 }
 
-void _initialize_microblaze_linux_tdep ();
-void
-_initialize_microblaze_linux_tdep ()
+INIT_GDB_FILE (microblaze_linux_tdep)
 {
-  gdbarch_register_osabi (bfd_arch_microblaze, 0, GDB_OSABI_LINUX, 
+  gdbarch_register_osabi (bfd_arch_microblaze, 0, GDB_OSABI_LINUX,
 			  microblaze_linux_init_abi);
+
+  /* Initialize linux target description.  */
+  initialize_tdesc_microblaze_linux ();
 }

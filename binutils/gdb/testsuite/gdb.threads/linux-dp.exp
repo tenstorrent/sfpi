@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Free Software Foundation, Inc.
+# Copyright 1999-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,10 +41,10 @@ if {![istarget *-*-linux-gnu*]} {
 
 standard_testfile
 if {[gdb_compile_pthreads "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != ""} {
-    return -1
+    return
 }
 
-clean_restart ${binfile}
+clean_restart ${::testfile}
 gdb_test_no_output "set print sevenbit-strings"
 runto_main
 
@@ -64,7 +64,7 @@ for {set i 0} {$i < 5} {incr i} {
 	-re "^ *Id.*Frame *\[\r\n\]+" {
 	    exp_continue
 	}
-	-re "^. +(\[0-9\]+ *Thread \[-0-9a-fx.\]+) \[^\n\]*\n" {
+	-re "^. +(${::decimal} *Thread \[-0-9a-fx.\]+) \[^\n\]*\n" {
 	    verbose -log "found thread $expect_out(1,string)" 2
 	    lappend threads_before $expect_out(1,string)
 	    exp_continue
@@ -99,7 +99,7 @@ for {set i 0} {$i < 5} {incr i} {
 	    # when it first notices that the thread library doesn't support
 	    # debugging, or if we could explicitly ask GDB somehow.
 	    unsupported "this GDB does not support threads on this system."
-	    return -1
+	    return
 	}
 	-re "$gdb_prompt $" {
 	}
@@ -117,7 +117,7 @@ for {set i 0} {$i < 5} {incr i} {
     } else {
 	fail "create philosopher: $i"
     }
-    
+
     set threads_after {}
     gdb_test_multiple "info threads" "info threads after: $i" {
 	-re "info threads\r\n" {
@@ -126,7 +126,7 @@ for {set i 0} {$i < 5} {incr i} {
 	-re "^ *Id.*Frame *\[\r\n\]+" {
 	    exp_continue
 	}
-	-re "^. +(\[0-9\]+ *Thread \[-0-9a-fx.\]+) \[^\n\]*\n" {
+	-re "^. +(${::decimal} *Thread \[-0-9a-fx.\]+) \[^\n\]*\n" {
 	    set name $expect_out(1,string)
 	    for {set j 0} {$j != [llength $threads_before] } {incr j} {
 		if {$name == [lindex $threads_before $j]} {
@@ -172,7 +172,7 @@ for {set i 1} {$i <  $nthreads} {incr i} {
     append info_threads_ptn "$i *Thread .*"
 }
 append info_threads_ptn "\[\r\n\]+$gdb_prompt $"
-set info_threads_manager_ptn "[expr $nthreads + 1] *Thread .*$info_threads_ptn"
+set info_threads_manager_ptn "[expr {$nthreads + 1}] *Thread .*$info_threads_ptn"
 
 gdb_test_multiple "info threads" "info threads 2" {
     -re "$info_threads_manager_ptn" {
@@ -241,7 +241,7 @@ for {set i 0} {$only_five > 0 && $i < 10} {incr i} {
 	-re ".*$gdb_prompt $" {
 	    set only_five 0
 	}
-	timeout { 
+	timeout {
 	    set only_five -1
 	}
     }
@@ -282,7 +282,7 @@ proc check_philosopher_stack {thread seen_name} {
 
     select_thread $thread
     gdb_test_multiple "where" "$name" {
-	-re ".* in philosopher \\(data=(0x\[0-9a-f\]+).*\r\n$gdb_prompt $" {
+	-re ".* in philosopher \\(data=(${::hex}).*\r\n$gdb_prompt $" {
 	    set data $expect_out(1,string)
 	    if {[info exists seen($data)]} {
 		fail $name
@@ -331,7 +331,7 @@ set any_interesting 0
 catch {unset seen}
 array set seen {}
 for {set i 1} {$i <= $nthreads} {incr i} {
-    if [check_philosopher_stack $i seen] {
+    if {[check_philosopher_stack $i seen]} {
 	set any_interesting 1
     }
 }

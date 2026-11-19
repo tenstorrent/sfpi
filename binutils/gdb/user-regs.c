@@ -1,6 +1,6 @@
 /* User visible, per-frame registers, for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat.
 
@@ -128,13 +128,8 @@ user_reg_add (struct gdbarch *gdbarch, const char *name,
 }
 
 int
-user_reg_map_name_to_regnum (struct gdbarch *gdbarch, const char *name,
-			     int len)
+user_reg_map_name_to_regnum (struct gdbarch *gdbarch, std::string_view name)
 {
-  /* Make life easy, set the len to something reasonable.  */
-  if (len < 0)
-    len = strlen (name);
-
   /* Search register name space first - always let an architecture
      specific register override the user registers.  */
   {
@@ -144,7 +139,7 @@ user_reg_map_name_to_regnum (struct gdbarch *gdbarch, const char *name,
       {
 	const char *regname = gdbarch_register_name (gdbarch, i);
 
-	if (len == strlen (regname) && strncmp (regname, name, len) == 0)
+	if (regname == name)
 	  return i;
       }
   }
@@ -157,9 +152,7 @@ user_reg_map_name_to_regnum (struct gdbarch *gdbarch, const char *name,
 
     for (nr = 0, reg = regs->first; reg != NULL; reg = reg->next, nr++)
       {
-	if ((len < 0 && strcmp (reg->name, name))
-	    || (len == strlen (reg->name)
-		&& strncmp (reg->name, name, len) == 0))
+	if (reg->name == name)
 	  return gdbarch_num_cooked_regs (gdbarch) + nr;
       }
   }
@@ -237,9 +230,7 @@ maintenance_print_user_registers (const char *args, int from_tty)
     }
 }
 
-void _initialize_user_regs ();
-void
-_initialize_user_regs ()
+INIT_GDB_FILE (user_regs)
 {
   add_cmd ("user-registers", class_maintenance,
 	   maintenance_print_user_registers,

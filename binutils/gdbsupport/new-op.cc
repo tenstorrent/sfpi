@@ -1,6 +1,6 @@
 /* Replace operator new/new[], for GDB, the GNU debugger.
 
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -55,7 +55,7 @@ operator new (std::size_t sz)
   if (sz == 0)
     sz = 1;
 
-  void *p = malloc (sz);	/* ARI: malloc */
+  void *p = malloc (sz);
   if (p == NULL)
     {
       /* If the user decides to continue debugging, throw a
@@ -82,7 +82,7 @@ operator new (std::size_t sz, const std::nothrow_t&) noexcept
   /* malloc (0) is unpredictable; avoid it.  */
   if (sz == 0)
     sz = 1;
-  return malloc (sz);		/* ARI: malloc */
+  return malloc (sz);
 }
 
 void *

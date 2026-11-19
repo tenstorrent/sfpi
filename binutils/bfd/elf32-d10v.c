@@ -1,5 +1,5 @@
 /* D10V-specific support for 32-bit ELF
-   Copyright (C) 1996-2025 Free Software Foundation, Inc.
+   Copyright (C) 1996-2026 Free Software Foundation, Inc.
    Contributed by Martin Hunt (hunt@cygnus.com).
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -243,19 +243,19 @@ d10v_info_to_howto_rel (bfd *abfd,
 static asection *
 elf32_d10v_gc_mark_hook (asection *sec,
 			 struct bfd_link_info *info,
-			 Elf_Internal_Rela *rel,
+			 struct elf_reloc_cookie *cookie,
 			 struct elf_link_hash_entry *h,
-			 Elf_Internal_Sym *sym)
+			 unsigned int symndx)
 {
   if (h != NULL)
-    switch (ELF32_R_TYPE (rel->r_info))
+    switch (ELF32_R_TYPE (cookie->rel->r_info))
       {
       case R_D10V_GNU_VTINHERIT:
       case R_D10V_GNU_VTENTRY:
 	return NULL;
       }
 
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
+  return _bfd_elf_gc_mark_hook (sec, info, cookie, h, symndx);
 }
 
 /* Look through the relocs for a section during the first phase.
@@ -276,7 +276,7 @@ elf32_d10v_check_relocs (bfd *abfd,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;
@@ -387,8 +387,7 @@ insert_rel_addend (bfd *abfd,
 /* Relocate a D10V ELF section.  */
 
 static int
-elf32_d10v_relocate_section (bfd *output_bfd,
-			     struct bfd_link_info *info,
+elf32_d10v_relocate_section (struct bfd_link_info *info,
 			     bfd *input_bfd,
 			     asection *input_section,
 			     bfd_byte *contents,
@@ -401,7 +400,7 @@ elf32_d10v_relocate_section (bfd *output_bfd,
   Elf_Internal_Rela *rel, *relend;
   const char *name;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
 
   rel = relocs;
@@ -450,8 +449,8 @@ elf32_d10v_relocate_section (bfd *output_bfd,
 	      else
 		{
 		  asection *msec = sec;
-		  addend = _bfd_elf_rel_local_sym (output_bfd, sym, &msec,
-						   addend);
+		  addend = _bfd_elf_rel_local_sym (info->output_bfd,
+						   sym, &msec, addend);
 		  addend -= relocation;
 		  addend += msec->output_section->vma + msec->output_offset;
 		}
@@ -470,7 +469,8 @@ elf32_d10v_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_D10V_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;

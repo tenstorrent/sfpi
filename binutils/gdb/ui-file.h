@@ -1,5 +1,5 @@
 /* UI_FILE - a generic STDIO like output stream.
-   Copyright (C) 1999-2024 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -55,7 +55,7 @@ public:
 
   void putc (int c);
 
-  void vprintf (const char *, va_list) ATTRIBUTE_PRINTF (2, 0);
+  virtual void vprintf (const char *, va_list) ATTRIBUTE_PRINTF (2, 0);
 
   /* Methods below are both public, and overridable by ui_file
      subclasses.  */
@@ -101,6 +101,14 @@ public:
   virtual int fd () const
   { return -1; }
 
+  /* Return true if this object supports paging, false otherwise.  */
+  virtual bool can_page () const
+  {
+    /* Almost no file supports paging, which is why this is the
+       default.  */
+    return false;
+  }
+
   /* Indicate that if the next sequence of characters overflows the
      line, a newline should be inserted here rather than when it hits
      the end.  If INDENT is non-zero, it is a number of spaces to be
@@ -123,9 +131,6 @@ public:
   /* Emit an ANSI style escape for STYLE.  */
   virtual void emit_style_escape (const ui_file_style &style);
 
-  /* Rest the current output style to the empty style.  */
-  virtual void reset_style ();
-
   /* Print STR, bypassing any paging that might be done by this
      ui_file.  Note that nearly no code should call this -- it's
      intended for use by gdb_printf, but nothing else.  */
@@ -133,11 +138,6 @@ public:
   {
     this->puts (str);
   }
-
-protected:
-
-  /* The currently applied style.  */
-  ui_file_style m_applied_style;
 
 private:
 
@@ -147,7 +147,7 @@ private:
   void printchar (int c, int quoter, bool async_safe);
 };
 
-typedef std::unique_ptr<ui_file> ui_file_up;
+using ui_file_up = std::unique_ptr<ui_file>;
 
 /* A ui_file that writes to nowhere.  */
 
@@ -273,6 +273,11 @@ public:
   int fd () const override
   { return m_fd; }
 
+  bool can_page () const override
+  {
+    return m_file == stdout;
+  }
+
 private:
   /* Sets the internal stream to FILE, and saves the FILE's file
      descriptor in M_FD.  */
@@ -290,7 +295,7 @@ private:
   bool m_close_p;
 };
 
-typedef std::unique_ptr<stdio_file> stdio_file_up;
+using stdio_file_up = std::unique_ptr<stdio_file>;
 
 /* Like stdio_file, but specifically for stderr.
 
@@ -328,78 +333,73 @@ public:
   void puts (const char *linebuffer) override;
 };
 
-/* A ui_file implementation that maps onto two ui-file objects.  */
+/* A ui_file implementation that buffers terminal escape sequences.
+   Note that this does not buffer in general -- it only buffers when
+   an incomplete but potentially recognizable escape sequence is
+   started.  */
 
-class tee_file : public ui_file
+template<typename T>
+class escape_buffering_file : public T
 {
 public:
-  /* Create a file which writes to both ONE and TWO.  Ownership of
-     both files is up to the user.  */
-  tee_file (ui_file *one, ui_file *two);
-  ~tee_file () override;
+  using T::T;
 
-  void write (const char *buf, long length_buf) override;
-  void write_async_safe (const char *buf, long length_buf) override;
-  void puts (const char *) override;
+  /* Like the superclass methods but these forward to do_write and
+     do_puts, respectively.  */
+  void write (const char *buf, long length_buf) override final;
+  void puts (const char *linebuffer) override final;
 
-  bool isatty () override;
-  bool term_out () override;
-  bool can_emit_style_escape () override;
-  void flush () override;
+  /* This class does not override 'flush'.  While it does have an
+     internal buffer, it does not really make sense to flush the
+     buffer until an escape sequence has been fully processed.  */
 
-  void emit_style_escape (const ui_file_style &style) override
-  {
-    m_one->emit_style_escape (style);
-    m_two->emit_style_escape (style);
-  }
+protected:
 
-  void reset_style () override
-  {
-    m_one->reset_style ();
-    m_two->reset_style ();
-  }
-
-  void puts_unfiltered (const char *str) override
-  {
-    m_one->puts_unfiltered (str);
-    m_two->puts_unfiltered (str);
-  }
+  /* Called to output some text.  If the text contains a recognizable
+     terminal escape sequence, then it is guaranteed to be complete.
+     "Recognizable" here means that examine_ansi_escape did not return
+     INCOMPLETE.  */
+  virtual void do_puts (const char *buf) = 0;
+  virtual void do_write (const char *buf, long len) = 0;
 
 private:
-  /* The two underlying ui_files.  */
-  ui_file *m_one;
-  ui_file *m_two;
+
+  /* Buffer used only for incomplete escape sequences.  */
+  std::string m_buffer;
 };
 
 /* A ui_file implementation that filters out terminal escape
    sequences.  */
 
-class no_terminal_escape_file : public stdio_file
+template<typename T>
+class no_terminal_escape_file : public escape_buffering_file<T>
 {
 public:
-  no_terminal_escape_file ()
-  {
-  }
-
-  /* Like the stdio_file methods, but these filter out terminal escape
-     sequences.  */
-  void write (const char *buf, long length_buf) override;
-  void puts (const char *linebuffer) override;
+  using escape_buffering_file<T>::escape_buffering_file;
 
   void emit_style_escape (const ui_file_style &style) override
   {
   }
 
-  void reset_style () override
-  {
-  }
+protected:
+
+  void do_puts (const char *linebuffer) override;
+  void do_write (const char *buf, long len) override;
 };
 
-/* A base class for ui_file types that wrap another ui_file.  */
+/* A base class for ui_file types that wrap another ui_file.  The
+   precise underlying ui_file type is a template parameter, so that
+   either owning or non-owning wrappers can be made.  */
 
+template<typename T>
 class wrapped_file : public ui_file
 {
 public:
+
+  explicit wrapped_file (T stream)
+    : m_stream (std::move (stream))
+  {
+  }
 
   bool isatty () override
   { return m_stream->isatty (); }
@@ -419,41 +419,37 @@ public:
   void emit_style_escape (const ui_file_style &style) override
   { m_stream->emit_style_escape (style); }
 
-  /* Rest the current output style to the empty style.  */
-  void reset_style () override
-  { m_stream->reset_style (); }
-
   int fd () const override
   { return m_stream->fd (); }
 
   void puts_unfiltered (const char *str) override
   { m_stream->puts_unfiltered (str); }
 
+  void write (const char *buf, long length_buf) override
+  { return m_stream->write (buf, length_buf); }
+
   void write_async_safe (const char *buf, long length_buf) override
   { return m_stream->write_async_safe (buf, length_buf); }
 
-protected:
-
-  /* Note that this class does not assume ownership of the stream.
-     However, a subclass may choose to, by adding a 'delete' to its
-     destructor.  */
-  explicit wrapped_file (ui_file *stream)
-    : m_stream (stream)
+  bool can_page () const override
   {
+    return m_stream->can_page ();
   }
 
+protected:
+
   /* The underlying stream.  */
-  ui_file *m_stream;
+  T m_stream;
 };
 
 /* A ui_file that optionally puts a timestamp at the start of each
    line of output.  */
 
-class timestamped_file : public wrapped_file
+class timestamped_file : public wrapped_file<ui_file_up>
 {
 public:
-  explicit timestamped_file (ui_file *stream)
-    : wrapped_file (stream)
+  explicit timestamped_file (ui_file_up stream)
+    : wrapped_file (std::move (stream))
   {
   }
 
@@ -465,6 +461,29 @@ private:
 
   /* True if the next output should be timestamped.  */
   bool m_needs_timestamp = true;
+};
+
+/* A wrapped_file that expands TABs as it prints.  A TAB character is
+   always processed and will expand to the number of spaces required
+   to move to the next tab stop.
+
+   Note that this only really handles ASCII output correctly.  */
+
+class tab_expansion_file : public wrapped_file<ui_file *>
+{
+public:
+
+  explicit tab_expansion_file (ui_file *stream)
+    : wrapped_file (stream)
+  {
+  }
+
+  void write (const char *buf, long length_buf) override;
+
+private:
+
+  /* The current column.  */
+  int m_column = 0;
 };
 
 #endif /* GDB_UI_FILE_H */

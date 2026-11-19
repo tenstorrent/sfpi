@@ -1,6 +1,6 @@
 /* Path manipulation routines for GDB and gdbserver.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -32,6 +32,11 @@
 
 /* String containing the current directory (what getwd would return).  */
 extern char *current_directory;
+
+/* Normalize backslashes to forward slashes in the null-terminated
+   PATH string.  Returns PATH.  */
+
+extern char *normalize_slashes (char *path);
 
 /* Return the real path of FILENAME, expanding all the symbolic links.
 

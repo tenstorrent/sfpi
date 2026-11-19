@@ -1,5 +1,5 @@
 /* BFD back-end for National Semiconductor's CRX ELF
-   Copyright (C) 2004-2025 Free Software Foundation, Inc.
+   Copyright (C) 2004-2026 Free Software Foundation, Inc.
    Written by Tomer Levi, NSC, Israel.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -37,7 +37,7 @@ static bfd_reloc_status_type crx_elf_final_link_relocate
    bfd_byte *, bfd_vma, bfd_vma, bfd_vma,
    struct bfd_link_info *, asection *, int);
 static int elf32_crx_relocate_section
-  (bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
+  (struct bfd_link_info *, bfd *, asection *, bfd_byte *,
    Elf_Internal_Rela *, Elf_Internal_Sym *, asection **);
 static bool elf32_crx_relax_section
   (bfd *, asection *, struct bfd_link_info *, bool *);
@@ -624,7 +624,7 @@ elf32_crx_relax_delete_bytes (struct bfd_link_info *link_info, bfd *abfd,
     }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   for (isymend = isym + symtab_hdr->sh_info; isym < isymend; isym++)
     {
@@ -740,7 +740,7 @@ elf32_crx_get_relocated_section_contents (bfd *output_bfd,
 						       relocatable,
 						       symbols);
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
 
   bfd_byte *orig_data = data;
   if (data == NULL)
@@ -800,9 +800,9 @@ elf32_crx_get_relocated_section_contents (bfd *output_bfd,
 	  *secpp = isec;
 	}
 
-      if (! elf32_crx_relocate_section (output_bfd, link_info, input_bfd,
-				     input_section, data, internal_relocs,
-				     isymbuf, sections))
+      if (!elf32_crx_relocate_section (link_info, input_bfd,
+				       input_section, data, internal_relocs,
+				       isymbuf, sections))
 	goto error_return;
 
       free (sections);
@@ -828,7 +828,7 @@ elf32_crx_get_relocated_section_contents (bfd *output_bfd,
 /* Relocate a CRX ELF section.  */
 
 static int
-elf32_crx_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
+elf32_crx_relocate_section (struct bfd_link_info *info,
 			    bfd *input_bfd, asection *input_section,
 			    bfd_byte *contents, Elf_Internal_Rela *relocs,
 			    Elf_Internal_Sym *local_syms,
@@ -838,7 +838,7 @@ elf32_crx_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
   struct elf_link_hash_entry **sym_hashes;
   Elf_Internal_Rela *rel, *relend;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
 
   rel = relocs;
@@ -865,7 +865,8 @@ elf32_crx_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -879,16 +880,17 @@ elf32_crx_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_CRX_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
 
-      r = crx_elf_final_link_relocate (howto, input_bfd, output_bfd,
-					input_section,
-					contents, rel->r_offset,
-					relocation, rel->r_addend,
-					info, sec, h == NULL);
+      r = crx_elf_final_link_relocate (howto, input_bfd, info->output_bfd,
+				       input_section,
+				       contents, rel->r_offset,
+				       relocation, rel->r_addend,
+				       info, sec, h == NULL);
 
       if (r != bfd_reloc_ok)
 	{
@@ -979,7 +981,7 @@ elf32_crx_relax_section (bfd *abfd, asection *sec,
       || (sec->flags & SEC_CODE) == 0)
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get a copy of the native relocations.  */
   internal_relocs = (_bfd_elf_link_read_relocs

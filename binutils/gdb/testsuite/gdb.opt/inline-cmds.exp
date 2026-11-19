@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ gdb_test_multiple "list" $msg {
 	# func1_step above).
 	set x_val -1
 	gdb_test_multiple "print x" "" {
-	    -re "\\\$$decimal = (\[0-9\]*)\r\n$gdb_prompt $" {
+	    -re "${::valnum_re} = (\[0-9\]*)\r\n$gdb_prompt $" {
 		set x_val $expect_out(1,string)
 	    }
 	    -re "$gdb_prompt $" { }
@@ -176,24 +176,35 @@ if { $bt_test == 0 } {
 # "stop" at the call sites before entering them.
 runto_main
 
-set msg "step into func1"
-set saw_call_site 0
-gdb_test_multiple "list" $msg {
-    -re "($first|$opt).*$gdb_prompt $" {
+set saw_call_site false
+set saw_main_frame false
+# Don't send the command using gdb_test_multiple, as it will be
+# injected into the regexp that start with '^' and use '-wrap', and we
+# send a different command using 'send_gdb' within the gdb_test_multiple.
+send_gdb "list\r"
+gdb_test_multiple "" "step into func1" {
+    -re "^(list|step)\r\n" {
+	exp_continue
+    }
+    -re -wrap "^\[^\r\n\]*($first|$opt)\[^\r\n\]*" {
 	send_gdb "step\r"
 	exp_continue
     }
-    -re "result = func1.*$gdb_prompt $" {
-	set saw_call_site 1
+    -re -wrap "^\[^\r\n\]*y = 8\[^\r\n\]*" {
+	send_gdb "step\r"
+	exp_continue
+    }
+    -re "^main \\(\\) at \[^\r\n\]+\r\n" {
+	set saw_main_frame true
+	exp_continue
+    }
+    -re -wrap "^\[^\r\n\]*result = func1 \\(\\);" {
+	set saw_call_site true
 	send_gdb "step\r"
 	exp_continue
     }
     -re "func1 \\\(\\\) at .*\r\n$decimal.*bar \\\(\\\);\r\n$gdb_prompt $" {
-	if { $saw_call_site } {
-	    pass $msg
-	} else {
-	    fail $msg
-	}
+	gdb_assert { $saw_call_site && !$saw_main_frame } $gdb_test_name
     }
 }
 
@@ -241,7 +252,7 @@ gdb_test "step" ".*set breakpoint 2 here.*" "step into finish marker"
 
 # Some architectures will have one or more instructions after
 # the call instruction which still are part of the call sequence,
-# so it should be expected to return to the caller line after issue 
+# so it should be expected to return to the caller line after issue
 # a 'finish' command.
 gdb_test_multiple "finish" "finish from marker to func1" {
     -re -wrap "func1 \\(\\);" {
@@ -335,7 +346,7 @@ proc mi_cli_step {cli_output_re message} {
 # command run while the top interpreter is MI results in the expected
 # CLI output sent to MI's console.
 with_test_prefix "mi" {
-    if [mi_gdb_start] {
+    if {[mi_gdb_start]} {
 	return
     }
     mi_gdb_load ${binfile}

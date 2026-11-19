@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ require {istarget "powerpc*"} is_lp64_target
 standard_testfile .S
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} {debug quiet}] } {
-    return -1
+    return
 }
 
 # The test proper.  DISPLACED is true if we should try with displaced
@@ -39,12 +39,10 @@ proc do_test { displaced } {
     gdb_test_no_output "set displaced-stepping $displaced"
 
     set bp1 [gdb_get_line_number "lwarx"]
-    gdb_breakpoint "$bp1" "Breakpoint $decimal at $hex" \
-	"set the breakpoint at the start of the lwarx/stwcx sequence"
+    gdb_breakpoint "$bp1"
 
     set bp2 [gdb_get_line_number "ldarx"]
-    gdb_breakpoint "$bp2" "Breakpoint $decimal at $hex" \
-	"set the breakpoint at the start of the ldarx/stdcx sequence"
+    gdb_breakpoint "$bp2"
 
     gdb_test continue "Continuing.*Breakpoint $decimal.*" \
 	"continue until lwarx/stwcx start breakpoint"

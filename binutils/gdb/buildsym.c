@@ -1,5 +1,5 @@
 /* Support routines for building symbol tables in GDB's internal format.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -16,10 +16,10 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "buildsym-legacy.h"
-#include "bfd.h"
+#include "buildsym.h"
 #include "gdbsupport/gdb_obstack.h"
 #include "gdbsupport/pathstuff.h"
+#include "filesystem.h"
 #include "symtab.h"
 #include "symfile.h"
 #include "objfiles.h"
@@ -28,16 +28,10 @@
 #include "expression.h"
 #include "filenames.h"
 #include "macrotab.h"
-#include "demangle.h"
 #include "block.h"
 #include "cp-support.h"
 #include "dictionary.h"
 #include <algorithm>
-
-/* For cleanup_undefined_stabs_types and finish_global_stabs (somewhat
-   questionable--see comment where we call them).  */
-
-#include "stabsread.h"
 
 /* List of blocks already made (lexical contexts already closed).
    This is used at the end to make the blockvector.  */
@@ -55,14 +49,14 @@ buildsym_compunit::buildsym_compunit (struct objfile *objfile_,
 				      enum language language_,
 				      CORE_ADDR last_addr)
   : m_objfile (objfile_),
-    m_last_source_file (name == nullptr ? nullptr : xstrdup (name)),
     m_comp_dir (comp_dir_ == nullptr ? "" : comp_dir_),
+    m_owned_compunit_symtab (std::make_unique<compunit_symtab> (m_objfile, name)),
+    m_compunit_symtab (m_owned_compunit_symtab.get ()),
     m_language (language_),
     m_last_source_start_addr (last_addr)
 {
-  /* Allocate the compunit symtab now.  The caller needs it to allocate
-     non-primary symtabs.  It is also needed by get_macro_table.  */
-  m_compunit_symtab = allocate_compunit_symtab (m_objfile, name);
+  if (should_normalize_slashes ())
+    normalize_slashes (&m_comp_dir[0]);
 
   /* Build the subfile for NAME (the main source file) so that we can record
      a pointer to it for later.
@@ -90,20 +84,6 @@ buildsym_compunit::~buildsym_compunit ()
       nextsub = subfile->next;
       delete subfile;
     }
-
-  struct pending *next, *next1;
-
-  for (next = m_file_symbols; next != NULL; next = next1)
-    {
-      next1 = next->next;
-      xfree ((void *) next);
-    }
-
-  for (next = m_global_symbols; next != NULL; next = next1)
-    {
-      next1 = next->next;
-      xfree ((void *) next);
-    }
 }
 
 struct macro_table *
@@ -114,57 +94,6 @@ buildsym_compunit::get_macro_table ()
 					&m_objfile->per_bfd->string_cache,
 					m_compunit_symtab);
   return m_pending_macros;
-}
-
-/* Maintain the lists of symbols and blocks.  */
-
-/* Add a symbol to one of the lists of symbols.  */
-
-void
-add_symbol_to_list (struct symbol *symbol, struct pending **listhead)
-{
-  struct pending *link;
-
-  /* If this is an alias for another symbol, don't add it.  */
-  if (symbol->linkage_name () && symbol->linkage_name ()[0] == '#')
-    return;
-
-  /* We keep PENDINGSIZE symbols in each link of the list.  If we
-     don't have a link with room in it, add a new link.  */
-  if (*listhead == NULL || (*listhead)->nsyms == PENDINGSIZE)
-    {
-      link = XNEW (struct pending);
-      link->next = *listhead;
-      *listhead = link;
-      link->nsyms = 0;
-    }
-
-  (*listhead)->symbol[(*listhead)->nsyms++] = symbol;
-}
-
-/* Find a symbol named NAME on a LIST.  NAME need not be
-   '\0'-terminated; LENGTH is the length of the name.  */
-
-struct symbol *
-find_symbol_in_list (struct pending *list, char *name, int length)
-{
-  int j;
-  const char *pp;
-
-  while (list != NULL)
-    {
-      for (j = list->nsyms; --j >= 0;)
-	{
-	  pp = list->symbol[j]->linkage_name ();
-	  if (*pp == *name && strncmp (pp, name, length) == 0
-	      && pp[length] == '\0')
-	    {
-	      return (list->symbol[j]);
-	    }
-	}
-      list = list->next;
-    }
-  return (NULL);
 }
 
 /* Record BLOCK on the list of all blocks in the file.  Put it after
@@ -198,14 +127,13 @@ buildsym_compunit::record_pending_block (struct block *block,
 struct block *
 buildsym_compunit::finish_block_internal
     (struct symbol *symbol,
-     struct pending **listhead,
+     std::vector<struct symbol *> &symbol_list,
      struct pending_block *old_blocks,
      const struct dynamic_prop *static_link,
      CORE_ADDR start, CORE_ADDR end,
-     int is_global, int expandable)
+     bool is_global, bool expandable)
 {
   struct gdbarch *gdbarch = m_objfile->arch ();
-  struct pending *next, *next1;
   struct block *block;
   struct pending_block *pblock;
   struct pending_block *opblock;
@@ -218,7 +146,7 @@ buildsym_compunit::finish_block_internal
   if (symbol)
     {
       block->set_multidict
-	(mdict_create_linear (&m_objfile->objfile_obstack, *listhead));
+	(mdict_create_linear (&m_objfile->objfile_obstack, symbol_list));
     }
   else
     {
@@ -226,12 +154,12 @@ buildsym_compunit::finish_block_internal
 	{
 	  block->set_multidict
 	    (mdict_create_hashed_expandable (m_language));
-	  mdict_add_pending (block->multidict (), *listhead);
+	  mdict_add_pending (block->multidict (), symbol_list);
 	}
       else
 	{
 	  block->set_multidict
-	    (mdict_create_hashed (&m_objfile->objfile_obstack, *listhead));
+	    (mdict_create_hashed (&m_objfile->objfile_obstack, symbol_list));
 	}
     }
 
@@ -289,14 +217,8 @@ buildsym_compunit::finish_block_internal
   if (static_link != NULL)
     objfile_register_static_link (m_objfile, block, static_link);
 
-  /* Now free the links of the list, and empty the list.  */
-
-  for (next = *listhead; next; next = next1)
-    {
-      next1 = next->next;
-      xfree (next);
-    }
-  *listhead = NULL;
+  /* Now empty the list.  */
+  symbol_list.clear ();
 
   /* Check to be sure that the blocks have an end address that is
      greater than starting address.  */
@@ -325,7 +247,7 @@ buildsym_compunit::finish_block_internal
 
   opblock = NULL;
   for (pblock = m_pending_blocks;
-       pblock && pblock != old_blocks; 
+       pblock && pblock != old_blocks;
        pblock = pblock->next)
     {
       if (pblock->block->superblock () == NULL)
@@ -387,52 +309,32 @@ buildsym_compunit::finish_block (struct symbol *symbol,
 				 const struct dynamic_prop *static_link,
 				 CORE_ADDR start, CORE_ADDR end)
 {
-  return finish_block_internal (symbol, &m_local_symbols,
-				old_blocks, static_link, start, end, 0, 0);
+  return finish_block_internal (symbol, m_local_symbols,
+				old_blocks, static_link, start, end, false,
+				false);
 }
 
-/* Record that the range of addresses from START to END_INCLUSIVE
-   (inclusive, like it says) belongs to BLOCK.  BLOCK's start and end
-   addresses must be set already.  You must apply this function to all
-   BLOCK's children before applying it to BLOCK.
-
-   If a call to this function complicates the picture beyond that
-   already provided by BLOCK_START and BLOCK_END, then we create an
-   address map for the block.  */
-void
-buildsym_compunit::record_block_range (struct block *block,
-				       CORE_ADDR start,
-				       CORE_ADDR end_inclusive)
-{
-  /* If this is any different from the range recorded in the block's
-     own BLOCK_START and BLOCK_END, then note that the address map has
-     become interesting.  Note that even if this block doesn't have
-     any "interesting" ranges, some later block might, so we still
-     need to record this block in the addrmap.  */
-  if (start != block->start ()
-      || end_inclusive + 1 != block->end ())
-    m_pending_addrmap_interesting = true;
-
-  m_pending_addrmap.set_empty (start, end_inclusive, block);
-}
-
-struct blockvector *
+std::unique_ptr<struct blockvector>
 buildsym_compunit::make_blockvector ()
 {
   struct pending_block *next;
-  struct blockvector *blockvector;
+  std::unique_ptr<struct blockvector> blockvector;
   int i;
 
-  /* Count the length of the list of blocks.  */
+  /* Count the length of the list of blocks.  Also, if any blocks are
+     non-contiguous then we need to make use of the addrmap for mapping
+     addresses to blocks (PENDING_ADDRMAP_INTERESTING is set to true).  If
+     all the blocks are contiguous then we can avoid creating the addrmap,
+     and perform block look up using the blockvector.  */
 
+  bool pending_addrmap_interesting = false;
   for (next = m_pending_blocks, i = 0; next; next = next->next, i++)
     {
+      if (!next->block->is_contiguous ())
+	pending_addrmap_interesting = true;
     }
 
-  blockvector = (struct blockvector *)
-    obstack_alloc (&m_objfile->objfile_obstack,
-		   (sizeof (struct blockvector)
-		    + (i - 1) * sizeof (struct block *)));
+  blockvector = std::make_unique<struct blockvector> (i);
 
   /* Copy the blocks into the blockvector.  This is done in reverse
      order, which happens to put the blocks into the proper order
@@ -444,14 +346,50 @@ buildsym_compunit::make_blockvector ()
   for (next = m_pending_blocks; next; next = next->next)
     blockvector->set_block (--i, next->block);
 
-  free_pending_blocks ();
+  /* Finished with the pending blocks now.  */
+  m_pending_block_obstack.clear ();
+  m_pending_blocks = nullptr;
 
   /* If we needed an address map for this symtab, record it in the
      blockvector.  */
-  if (m_pending_addrmap_interesting)
-    blockvector->set_map
-      (new (&m_objfile->objfile_obstack) addrmap_fixed
-       (&m_objfile->objfile_obstack, &m_pending_addrmap));
+  if (pending_addrmap_interesting)
+    {
+      struct addrmap_mutable pending_addrmap;
+      int num_blocks = blockvector->num_blocks ();
+
+      /* If PENDING_ADDRMAP_INTERESTING is true then we must have seen
+	 an interesting block.  If we see one block, then we should at a
+	 minimum have a global block, and a static block.  */
+      gdb_assert (num_blocks > 1);
+
+      /* Assert our understanding of how the blocks are laid out.  */
+      gdb_assert (blockvector->block (0)->is_global_block ());
+      gdb_assert (blockvector->block (1)->is_static_block ());
+
+      /* The 'J > 1' here is so that we don't place the global block into
+	 the map.  For CU with gaps, the static block will reflect the
+	 gaps, while the global block will just reflect the full extent of
+	 the range.  */
+      for (int j = num_blocks; j > 1; )
+	{
+	  --j;
+	  struct block *b = blockvector->block (j);
+
+	  gdb_assert (!b->is_global_block ());
+
+	  if (b->is_contiguous ())
+	    pending_addrmap.set_empty (b->start (), (b->end () - 1), b);
+	  else
+	    {
+	      for (const auto &br : b->ranges ())
+		pending_addrmap.set_empty (br.start (), (br.end () - 1), b);
+	    }
+	}
+
+      blockvector->set_map
+	(new (&m_objfile->objfile_obstack) addrmap_fixed
+	 (&m_objfile->objfile_obstack, &pending_addrmap));
+    }
   else
     blockvector->set_map (nullptr);
 
@@ -549,74 +487,6 @@ buildsym_compunit::start_subfile (const char *name, const char *name_for_id)
   m_subfiles = subfile.release ();
 }
 
-/* For stabs readers, the first N_SO symbol is assumed to be the
-   source file name, and the subfile struct is initialized using that
-   assumption.  If another N_SO symbol is later seen, immediately
-   following the first one, then the first one is assumed to be the
-   directory name and the second one is really the source file name.
-
-   So we have to patch up the subfile struct by moving the old name
-   value to dirname and remembering the new name.  Some sanity
-   checking is performed to ensure that the state of the subfile
-   struct is reasonable and that the old name we are assuming to be a
-   directory name actually is (by checking for a trailing '/').  */
-
-void
-buildsym_compunit::patch_subfile_names (struct subfile *subfile,
-					const char *name)
-{
-  if (subfile != NULL
-      && m_comp_dir.empty ()
-      && !subfile->name.empty ()
-      && IS_DIR_SEPARATOR (subfile->name.back ()))
-    {
-      m_comp_dir = std::move (subfile->name);
-      subfile->name = name;
-      subfile->name_for_id = name;
-      set_last_source_file (name);
-
-      /* Default the source language to whatever can be deduced from
-	 the filename.  If nothing can be deduced (such as for a C/C++
-	 include file with a ".h" extension), then inherit whatever
-	 language the previous subfile had.  This kludgery is
-	 necessary because there is no standard way in some object
-	 formats to record the source language.  Also, when symtabs
-	 are allocated we try to deduce a language then as well, but
-	 it is too late for us to use that information while reading
-	 symbols, since symtabs aren't allocated until after all the
-	 symbols have been processed for a given source file.  */
-
-      subfile->language
-	= deduce_language_from_filename (subfile->name.c_str ());
-      if (subfile->language == language_unknown
-	  && subfile->next != NULL)
-	{
-	  subfile->language = subfile->next->language;
-	}
-    }
-}
-
-/* Handle the N_BINCL and N_EINCL symbol types that act like N_SOL for
-   switching source files (different subfiles, as we call them) within
-   one object file, but using a stack rather than in an arbitrary
-   order.  */
-
-void
-buildsym_compunit::push_subfile ()
-{
-  gdb_assert (m_current_subfile != NULL);
-  gdb_assert (!m_current_subfile->name.empty ());
-  m_subfile_stack.push_back (m_current_subfile->name.c_str ());
-}
-
-const char *
-buildsym_compunit::pop_subfile ()
-{
-  gdb_assert (!m_subfile_stack.empty ());
-  const char *name = m_subfile_stack.back ();
-  m_subfile_stack.pop_back ();
-  return name;
-}
 
 /* Add a linetable entry for line number LINE and address PC to the
    line vector for SUBFILE.  */
@@ -749,39 +619,20 @@ buildsym_compunit::watch_main_source_file_lossage ()
    END_ADDR is the same as for end_compunit_symtab: the address of the end of
    the file's text.
 
-   If EXPANDABLE is non-zero the STATIC_BLOCK dictionary is made
+   If EXPANDABLE is true the STATIC_BLOCK dictionary is made
    expandable.
 
-   If REQUIRED is non-zero, then a symtab is created even if it does
+   If REQUIRED is true, then a symtab is created even if it does
    not contain any symbols.  */
 
 struct block *
 buildsym_compunit::end_compunit_symtab_get_static_block (CORE_ADDR end_addr,
-							 int expandable,
-							 int required)
+							 bool expandable,
+							 bool required)
 {
-  /* Finish the lexical context of the last function in the file; pop
-     the context stack.  */
-
-  if (!m_context_stack.empty ())
-    {
-      struct context_stack cstk = pop_context ();
-
-      /* Make a block for the local symbols within.  */
-      finish_block (cstk.name, cstk.old_blocks, NULL,
-		    cstk.start_addr, end_addr);
-
-      if (!m_context_stack.empty ())
-	{
-	  /* This is said to happen with SCO.  The old coffread.c
-	     code simply emptied the context stack, so we do the
-	     same.  FIXME: Find out why it is happening.  This is not
-	     believed to happen in most cases (even for coffread.c);
-	     it used to be an abort().  */
-	  complaint (_("Context stack not empty in end_compunit_symtab"));
-	  m_context_stack.clear ();
-	}
-    }
+  /* The user should have guaranteed that all previous blocks have
+     been created.  */
+  gdb_assert (m_context_stack.empty ());
 
   /* Executables may have out of order pending blocks; sort the
      pending blocks.  */
@@ -808,23 +659,10 @@ buildsym_compunit::end_compunit_symtab_get_static_block (CORE_ADDR end_addr,
 	pb->block = barray[i++];
     }
 
-  /* Cleanup any undefined types that have been left hanging around
-     (this needs to be done before the finish_blocks so that
-     file_symbols is still good).
-
-     Both cleanup_undefined_stabs_types and finish_global_stabs are stabs
-     specific, but harmless for other symbol readers, since on gdb
-     startup or when finished reading stabs, the state is set so these
-     are no-ops.  FIXME: Is this handled right in case of QUIT?  Can
-     we make this cleaner?  */
-
-  cleanup_undefined_stabs_types (m_objfile);
-  finish_global_stabs (m_objfile);
-
   if (!required
       && m_pending_blocks == NULL
-      && m_file_symbols == NULL
-      && m_global_symbols == NULL
+      && m_file_symbols.empty ()
+      && m_global_symbols.empty ()
       && !m_have_line_numbers
       && m_pending_macros == NULL
       && m_global_using_directives == NULL)
@@ -835,41 +673,49 @@ buildsym_compunit::end_compunit_symtab_get_static_block (CORE_ADDR end_addr,
   else
     {
       /* Define the STATIC_BLOCK.  */
-      return finish_block_internal (NULL, get_file_symbols (), NULL, NULL,
+      return finish_block_internal (NULL, m_file_symbols, NULL, NULL,
 				    m_last_source_start_addr,
-				    end_addr, 0, expandable);
+				    end_addr, false, expandable);
     }
 }
 
-/* Subroutine of end_compunit_symtab_from_static_block to simplify it.
-   Handle the "have blockvector" case.
-   See end_compunit_symtab_from_static_block for a description of the
-   arguments.  */
+/* Implementation of the second part of end_compunit_symtab.  Pass STATIC_BLOCK
+   as value returned by end_compunit_symtab_get_static_block.
+
+   If EXPANDABLE is true the GLOBAL_BLOCK dictionary is made
+   expandable.  */
 
 struct compunit_symtab *
-buildsym_compunit::end_compunit_symtab_with_blockvector
-  (struct block *static_block, int expandable)
+buildsym_compunit::end_compunit_symtab_from_static_block
+  (struct block *static_block, bool expandable)
 {
   struct compunit_symtab *cu = m_compunit_symtab;
-  struct blockvector *blockvector;
   struct subfile *subfile;
   CORE_ADDR end_addr;
 
-  gdb_assert (static_block != NULL);
+  if (static_block == nullptr)
+    {
+      /* Handle the "no blockvector" case.
+	 When this happens there is nothing to record, so there's nothing
+	 to do: memory will be freed up later.
+
+	 Note: We won't be adding a compunit to the objfile's list of
+	 compunits, so there's nothing to unchain.  However, since each symtab
+	 is added to the objfile's obstack we can't free that space.
+	 We could do better, but this is believed to be a sufficiently rare
+	 event.  */
+      return nullptr;
+    }
+
   gdb_assert (m_subfiles != NULL);
 
   end_addr = static_block->end ();
 
   /* Create the GLOBAL_BLOCK and build the blockvector.  */
-  finish_block_internal (NULL, get_global_symbols (), NULL, NULL,
+  finish_block_internal (NULL, m_global_symbols, NULL, NULL,
 			 m_last_source_start_addr, end_addr,
-			 1, expandable);
-  blockvector = make_blockvector ();
-
-  /* Read the line table if it has to be read separately.
-     This is only used by xcoffread.c.  */
-  if (m_objfile->sf->sym_read_linetable != NULL)
-    m_objfile->sf->sym_read_linetable (m_objfile);
+			 true, expandable);
+  blockvector_up blockvector = make_blockvector ();
 
   /* Handle the case where the debug info specifies a different path
      for the main source file.  It can cause us to lose track of its
@@ -950,10 +796,10 @@ buildsym_compunit::end_compunit_symtab_with_blockvector
   /* Similarly for the producer.  */
   cu->set_producer (m_producer);
 
-  cu->set_blockvector (blockvector);
   blockvector->global_block ()->set_compunit (cu);
 
-  cu->set_macro_table (release_macros ());
+  cu->set_macro_table (m_pending_macros);
+  m_pending_macros = nullptr;
 
   /* Default any symbols without a specified symtab to the primary symtab.  */
   {
@@ -982,38 +828,9 @@ buildsym_compunit::end_compunit_symtab_with_blockvector
       }
   }
 
-  add_compunit_symtab_to_objfile (cu);
+  cu->set_blockvector (std::move (blockvector));
 
-  return cu;
-}
-
-/* Implementation of the second part of end_compunit_symtab.  Pass STATIC_BLOCK
-   as value returned by end_compunit_symtab_get_static_block.
-
-   If EXPANDABLE is non-zero the GLOBAL_BLOCK dictionary is made
-   expandable.  */
-
-struct compunit_symtab *
-buildsym_compunit::end_compunit_symtab_from_static_block
-  (struct block *static_block, int expandable)
-{
-  struct compunit_symtab *cu;
-
-  if (static_block == NULL)
-    {
-      /* Handle the "no blockvector" case.
-	 When this happens there is nothing to record, so there's nothing
-	 to do: memory will be freed up later.
-
-	 Note: We won't be adding a compunit to the objfile's list of
-	 compunits, so there's nothing to unchain.  However, since each symtab
-	 is added to the objfile's obstack we can't free that space.
-	 We could do better, but this is believed to be a sufficiently rare
-	 event.  */
-      cu = NULL;
-    }
-  else
-    cu = end_compunit_symtab_with_blockvector (static_block, expandable);
+  add_compunit_symtab_to_objfile (std::move (m_owned_compunit_symtab));
 
   return cu;
 }
@@ -1042,8 +859,8 @@ buildsym_compunit::end_compunit_symtab (CORE_ADDR end_addr)
 {
   struct block *static_block;
 
-  static_block = end_compunit_symtab_get_static_block (end_addr, 0, 0);
-  return end_compunit_symtab_from_static_block (static_block, 0);
+  static_block = end_compunit_symtab_get_static_block (end_addr, false, false);
+  return end_compunit_symtab_from_static_block (static_block, false);
 }
 
 /* Same as end_compunit_symtab except create a symtab that can be later added
@@ -1054,8 +871,8 @@ buildsym_compunit::end_expandable_symtab (CORE_ADDR end_addr)
 {
   struct block *static_block;
 
-  static_block = end_compunit_symtab_get_static_block (end_addr, 1, 0);
-  return end_compunit_symtab_from_static_block (static_block, 1);
+  static_block = end_compunit_symtab_get_static_block (end_addr, true, false);
+  return end_compunit_symtab_from_static_block (static_block, true);
 }
 
 /* Subroutine of augment_type_symtab to simplify it.
@@ -1063,20 +880,11 @@ buildsym_compunit::end_expandable_symtab (CORE_ADDR end_addr)
    don't have one.  */
 
 static void
-set_missing_symtab (struct pending *pending_list,
-		    struct compunit_symtab *cu)
+set_missing_symtab (const std::vector<symbol *> &symbols, compunit_symtab *cu)
 {
-  struct pending *pending;
-  int i;
-
-  for (pending = pending_list; pending != NULL; pending = pending->next)
-    {
-      for (i = 0; i < pending->nsyms; ++i)
-	{
-	  if (pending->symbol[i]->symtab () == NULL)
-	    pending->symbol[i]->set_symtab (cu->primary_filetab ());
-	}
-    }
+  for (symbol *sym : symbols)
+    if (sym->symtab () == nullptr)
+      sym->set_symtab (cu->primary_filetab ());
 }
 
 /* Same as end_compunit_symtab, but for the case where we're adding more symbols
@@ -1098,7 +906,7 @@ buildsym_compunit::augment_type_symtab ()
   if (m_have_line_numbers)
     complaint (_("Line numbers recorded in a type symtab"));
 
-  if (m_file_symbols != NULL)
+  if (!m_file_symbols.empty ())
     {
       struct block *block = blockvector->static_block ();
 
@@ -1109,7 +917,7 @@ buildsym_compunit::augment_type_symtab ()
       mdict_add_pending (block->multidict (), m_file_symbols);
     }
 
-  if (m_global_symbols != NULL)
+  if (!m_global_symbols.empty ())
     {
       struct block *block = blockvector->global_block ();
 
@@ -1121,36 +929,37 @@ buildsym_compunit::augment_type_symtab ()
     }
 }
 
-/* Push a context block.  Args are an identifying nesting level
-   (checkable when you pop it), and the starting PC address of this
+/* Push a context block.  VALUE is the starting PC address of this
    context.  */
 
-struct context_stack *
-buildsym_compunit::push_context (int desc, CORE_ADDR valu)
+void
+buildsym_compunit::push_context (CORE_ADDR value)
 {
-  struct context_stack *newobj = &m_context_stack.emplace_back ();
-
-  newobj->depth = desc;
-  newobj->locals = m_local_symbols;
-  newobj->old_blocks = m_pending_blocks;
-  newobj->start_addr = valu;
-  newobj->local_using_directives = m_local_using_directives;
-  newobj->name = NULL;
-
-  m_local_symbols = NULL;
-  m_local_using_directives = NULL;
-
-  return newobj;
+  m_context_stack.emplace_back (std::move (m_local_symbols),
+				m_local_using_directives,
+				m_pending_blocks, value);
+  m_local_using_directives = nullptr;
 }
 
-/* Pop a context block.  Returns the address of the context block just
-   popped.  */
+/* See buildsym.h.  */
 
-struct context_stack
-buildsym_compunit::pop_context ()
+block *
+buildsym_compunit::pop_context (CORE_ADDR end_addr,
+				const struct dynamic_prop *static_link,
+				bool required)
 {
   gdb_assert (!m_context_stack.empty ());
-  struct context_stack result = m_context_stack.back ();
+  lexical_context cstk = std::move (m_context_stack.back ());
   m_context_stack.pop_back ();
+
+  block *result = nullptr;
+  if (required || !m_local_symbols.empty ()
+      || m_local_using_directives != nullptr)
+    result = finish_block (cstk.name, cstk.old_blocks, static_link,
+			   cstk.start_addr, end_addr);
+
+  m_local_symbols = std::move (cstk.locals);
+  m_local_using_directives = cstk.local_using_directives;
+
   return result;
 }

@@ -1,6 +1,6 @@
 /* Low level packing and unpacking of values for GDB, the GNU Debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,7 +35,6 @@
 #include "valprint.h"
 #include "cli/cli-decode.h"
 #include "extension.h"
-#include <ctype.h>
 #include "tracepoint.h"
 #include "cp-abi.h"
 #include "user-regs.h"
@@ -45,6 +44,7 @@
 #include <utility>
 #include <vector>
 #include "completer.h"
+#include "gdbsupport/cleanups.h"
 #include "gdbsupport/selftest.h"
 #include "gdbsupport/array-view.h"
 #include "cli/cli-style.h"
@@ -55,10 +55,17 @@
 /* Definition of a user function.  */
 struct internal_function
 {
+  internal_function (std::string name, internal_function_fn_noside handler,
+		     void *cookie)
+    : name (std::move (name)),
+      handler (handler),
+      cookie (cookie)
+  {}
+
   /* The name of the function.  It is a bit odd to have this in the
      function itself -- the user might use a differently-named
      convenience variable to hold the function.  */
-  char *name;
+  std::string name;
 
   /* The handler.  */
   internal_function_fn_noside handler;
@@ -66,6 +73,8 @@ struct internal_function
   /* User data for the handler.  */
   void *cookie;
 };
+
+using internal_function_up = std::unique_ptr<internal_function>;
 
 /* Returns true if the ranges defined by [offset1, offset1+len1) and
    [offset2, offset2+len2) overlap.  */
@@ -98,7 +107,7 @@ ranges_contain (const std::vector<range> &ranges, LONGEST offset,
      range, we can do a binary search for the position the given range
      would be inserted if we only considered the starting OFFSET of
      ranges.  We call that position I.  Since we also have LENGTH to
-     care for (this is a range afterall), we need to check if the
+     care for (this is a range after all), we need to check if the
      _previous_ range overlaps the I range.  E.g.,
 
 	 R
@@ -258,7 +267,7 @@ insert_into_bit_range_vector (std::vector<range> *vectorp,
   /* Do a binary search for the position the given range would be
      inserted if we only considered the starting OFFSET of ranges.
      Call that position I.  Since we also have LENGTH to care for
-     (this is a range afterall), we need to check if the _previous_
+     (this is a range after all), we need to check if the _previous_
      range overlaps the I range.  E.g., calling R the new range:
 
        #1 - overlaps with previous
@@ -1119,6 +1128,12 @@ error_value_optimized_out (void)
 }
 
 void
+error_value_not_available ()
+{
+  throw_error (NOT_AVAILABLE_ERROR, _("value is not available"));
+}
+
+void
 value::require_not_optimized_out () const
 {
   if (!m_optimized_out.empty ())
@@ -1135,7 +1150,7 @@ void
 value::require_available () const
 {
   if (!m_unavailable.empty ())
-    throw_error (NOT_AVAILABLE_ERROR, _("value is not available"));
+    error_value_not_available ();
 }
 
 gdb::array_view<const gdb_byte>
@@ -1411,12 +1426,15 @@ value::address () const
 {
   if (m_lval != lval_memory)
     return 0;
+
   if (m_parent != NULL)
     return m_parent->address () + m_offset;
-  if (NULL != TYPE_DATA_LOCATION (type ()))
+
+  if (dynamic_prop *dyn_prop = type ()->dyn_prop (DYN_PROP_DATA_LOCATION);
+      dyn_prop != nullptr)
     {
-      gdb_assert (TYPE_DATA_LOCATION (type ())->is_constant ());
-      return TYPE_DATA_LOCATION_ADDR (type ());
+      gdb_assert (dyn_prop->is_constant ());
+      return dyn_prop->const_val ();
     }
 
   return m_location.address + m_offset;
@@ -1588,8 +1606,8 @@ make_cv_value (int cnst, int voltl, struct value *v)
   struct type *m_enclosing_type = v->enclosing_type ();
   struct value *cv_val = v->copy ();
 
-  cv_val->deprecated_set_type (make_cv_type (cnst, voltl, val_type, NULL));
-  cv_val->set_enclosing_type (make_cv_type (cnst, voltl, m_enclosing_type, NULL));
+  cv_val->deprecated_set_type (make_cv_type (cnst, voltl, val_type));
+  cv_val->set_enclosing_type (make_cv_type (cnst, voltl, m_enclosing_type));
 
   return cv_val;
 }
@@ -1649,41 +1667,33 @@ value::set_component_location (const struct value *whole)
   /* If the WHOLE value has a dynamically resolved location property then
      update the address of the COMPONENT.  */
   type = whole->type ();
-  if (NULL != TYPE_DATA_LOCATION (type)
-      && TYPE_DATA_LOCATION (type)->is_constant ())
-    set_address (TYPE_DATA_LOCATION_ADDR (type));
+  if (dynamic_prop *dyn_prop = type->dyn_prop (DYN_PROP_DATA_LOCATION);
+      dyn_prop != nullptr && dyn_prop->is_constant ())
+    set_address (dyn_prop->const_val ());
 
   /* Similarly, if the COMPONENT value has a dynamically resolved location
      property then update its address.  */
   type = this->type ();
-  if (NULL != TYPE_DATA_LOCATION (type)
-      && TYPE_DATA_LOCATION (type)->is_constant ())
+  if (dynamic_prop *dyn_prop = type->dyn_prop (DYN_PROP_DATA_LOCATION);
+      dyn_prop != nullptr && dyn_prop->is_constant ())
     {
-      /* If the COMPONENT has a dynamic location, and is an
-	 lval_internalvar_component, then we change it to a lval_memory.
+      /* If the COMPONENT has a dynamic location, force it to have lval_memory.
 
-	 Usually a component of an internalvar is created non-lazy, and has
-	 its content immediately copied from the parent internalvar.
-	 However, for components with a dynamic location, the content of
-	 the component is not contained within the parent, but is instead
-	 accessed indirectly.  Further, the component will be created as a
-	 lazy value.
+	 The data location, obtained by evaluating the DYN_PROP_DATA_LOCATION
+	 property (typically a DWARF DW_AT_data_location attribute), isn't
+	 related to the location of the object.  Even if the object is, let's
+	 say, a register, evaluating DYN_PROP_DATA_LOCATION yields a different
+	 location.  At the moment, we assume that it yields a memory location.
+	 But in theory, a DW_AT_data_location attribute could yield any kind of
+	 location.
 
-	 By changing the type of the component to lval_memory we ensure
-	 that value_fetch_lazy can successfully load the component.
-
-	 This solution isn't ideal, but a real fix would require values to
-	 carry around both the parent value contents, and the contents of
-	 any dynamic fields within the parent.  This is a substantial
-	 change to how values work in GDB.  */
-      if (this->lval () == lval_internalvar_component)
-	{
-	  gdb_assert (lazy ());
-	  m_lval = lval_memory;
-	}
-      else
-	gdb_assert (this->lval () == lval_memory);
-      set_address (TYPE_DATA_LOCATION_ADDR (type));
+	 Even in the case of internalvars, only the content of the object itself
+	 is copied to the internalvar.  If the object has a DYN_PROP_DATA_LOCATION
+	 property pointing outside the object, that data isn't captured in the
+	 internalvar.  */
+      gdb_assert (lazy ());
+      m_lval = lval_memory;
+      set_address (dyn_prop->const_val ());
     }
 }
 
@@ -1707,7 +1717,8 @@ value::record_latest ()
 
   /* We preserve VALUE_LVAL so that the user can find out where it was fetched
      from.  This is a bit dubious, because then *&$1 does not just return $1
-     but the current contents of that location.  c'est la vie...  */
+     but the current contents of that location.  <codespell:ignore-begin>
+     C'est la vie... <codespell:ignore-end>.  */
   set_modifiable (false);
 
   value_history.push_back (release_value (this));
@@ -1864,6 +1875,19 @@ struct internalvar
   internalvar (std::string name)
     : name (std::move (name))
   {}
+
+  internalvar (internalvar &&other)
+    : name (std::move(other.name)),
+      kind (other.kind),
+      u (other.u)
+  {
+    other.kind = INTERNALVAR_VOID;
+  }
+
+  ~internalvar ()
+  {
+    clear_internalvar (this);
+  }
 
   std::string name;
 
@@ -2277,13 +2301,13 @@ set_internalvar_string (struct internalvar *var, const char *string)
 }
 
 static void
-set_internalvar_function (struct internalvar *var, struct internal_function *f)
+set_internalvar_function (internalvar *var, internal_function_up f)
 {
   /* Clean up old contents.  */
   clear_internalvar (var);
 
   var->kind = INTERNALVAR_FUNCTION;
-  var->u.fn.function = f;
+  var->u.fn.function = f.release ();
   var->u.fn.canonical = 1;
   /* Variables installed here are always the canonical version.  */
 }
@@ -2302,6 +2326,10 @@ clear_internalvar (struct internalvar *var)
       xfree (var->u.string);
       break;
 
+    case INTERNALVAR_FUNCTION:
+      delete var->u.fn.function;
+      break;
+
     default:
       break;
     }
@@ -2316,18 +2344,6 @@ internalvar_name (const struct internalvar *var)
   return var->name.c_str ();
 }
 
-static struct internal_function *
-create_internal_function (const char *name,
-			  internal_function_fn_noside handler, void *cookie)
-{
-  struct internal_function *ifn = new (struct internal_function);
-
-  ifn->name = xstrdup (name);
-  ifn->handler = handler;
-  ifn->cookie = cookie;
-  return ifn;
-}
-
 const char *
 value_internal_function_name (struct value *val)
 {
@@ -2338,7 +2354,7 @@ value_internal_function_name (struct value *val)
   result = get_internalvar_function (VALUE_INTERNALVAR (val), &ifn);
   gdb_assert (result);
 
-  return ifn->name;
+  return ifn->name.c_str ();
 }
 
 struct value *
@@ -2373,11 +2389,9 @@ static struct cmd_list_element *
 do_add_internal_function (const char *name, const char *doc,
 			  internal_function_fn_noside handler, void *cookie)
 {
-  struct internal_function *ifn;
-  struct internalvar *var = lookup_internalvar (name);
-
-  ifn = create_internal_function (name, handler, cookie);
-  set_internalvar_function (var, ifn);
+  set_internalvar_function (lookup_internalvar (name),
+			    std::make_unique<internal_function> (name, handler,
+								 cookie));
 
   return add_cmd (name, no_class, function_command, doc, &functionlist);
 }
@@ -2821,7 +2835,7 @@ value_as_address (struct value *val)
 #endif
 }
 
-/* Unpack raw data (copied from debugee, target byte order) at VALADDR
+/* Unpack raw data (copied from debuggee, target byte order) at VALADDR
    as a long, or as a double, assuming the raw data is described
    by type TYPE.  Knows how to convert different sizes of values
    and can convert between fixed and floating point.  We don't assume
@@ -2912,7 +2926,7 @@ unpack_long (struct type *type, const gdb_byte *valaddr)
     }
 }
 
-/* Unpack raw data (copied from debugee, target byte order) at VALADDR
+/* Unpack raw data (copied from debuggee, target byte order) at VALADDR
    as a CORE_ADDR, assuming the raw data is described by type TYPE.
    We don't assume any alignment for the raw data.  Return value is in
    host byte order.
@@ -3095,13 +3109,13 @@ value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
       v->set_offset (this->offset ());
       v->set_embedded_offset (offset + embedded_offset () + boffset);
     }
-  else if (NULL != TYPE_DATA_LOCATION (type))
+  else if (NULL != type->dyn_prop (DYN_PROP_DATA_LOCATION))
     {
       /* Field is a dynamic data member.  */
 
       gdb_assert (0 == offset);
       /* We expect an already resolved data location.  */
-      gdb_assert (TYPE_DATA_LOCATION (type)->is_constant ());
+      gdb_assert (type->dyn_prop (DYN_PROP_DATA_LOCATION)->is_constant ());
       /* For dynamic data types defer memory allocation
 	 until we actual access the value.  */
       v = value::allocate_lazy (type);
@@ -3129,16 +3143,6 @@ value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
     }
   v->set_component_location (this);
   return v;
-}
-
-/* Given a value ARG1 of a struct or union type,
-   extract and return the value of one of its (non-static) fields.
-   FIELDNO says which field.  */
-
-struct value *
-value_field (struct value *arg1, int fieldno)
-{
-  return arg1->primitive_field (0, fieldno, arg1->type ());
 }
 
 /* Return a non-virtual function as a value.
@@ -3254,6 +3258,9 @@ unpack_bits_as_long (struct type *field_type, const gdb_byte *valaddr,
 	}
     }
 
+  if (field_type->code () == TYPE_CODE_RANGE)
+    val += field_type->bounds ()->bias;
+
   return val;
 }
 
@@ -3284,17 +3291,24 @@ unpack_value_field_as_long (struct type *type, const gdb_byte *valaddr,
   return 1;
 }
 
-/* Unpack a field FIELDNO of the specified TYPE, from the anonymous
-   object at VALADDR.  See unpack_bits_as_long for more details.  */
+/* See value.h.  */
+
+LONGEST
+unpack_field_as_long (const gdb_byte *valaddr, struct field *field)
+{
+  int bitpos = field->loc_bitpos ();
+  int bitsize = field->bitsize ();
+  struct type *field_type = field->type ();
+
+  return unpack_bits_as_long (field_type, valaddr, bitpos, bitsize);
+}
+
+/* See value.h.  */
 
 LONGEST
 unpack_field_as_long (struct type *type, const gdb_byte *valaddr, int fieldno)
 {
-  int bitpos = type->field (fieldno).loc_bitpos ();
-  int bitsize = type->field (fieldno).bitsize ();
-  struct type *field_type = type->field (fieldno).type ();
-
-  return unpack_bits_as_long (field_type, valaddr, bitpos, bitsize);
+  return unpack_field_as_long (valaddr, &type->field (fieldno));
 }
 
 /* See value.h.  */
@@ -3661,9 +3675,12 @@ value_from_contents_and_address (struct type *type,
     v = value::allocate_lazy (resolved_type);
   else
     v = value_from_contents (resolved_type, valaddr);
-  if (TYPE_DATA_LOCATION (resolved_type_no_typedef) != NULL
-      && TYPE_DATA_LOCATION (resolved_type_no_typedef)->is_constant ())
-    address = TYPE_DATA_LOCATION_ADDR (resolved_type_no_typedef);
+
+  if (dynamic_prop *dyn_prop
+	= resolved_type_no_typedef->dyn_prop (DYN_PROP_DATA_LOCATION);
+      dyn_prop != nullptr && dyn_prop->is_constant ())
+    address = dyn_prop->const_val ();
+
   v->set_lval (lval_memory);
   v->set_address (address);
   return v;
@@ -3700,11 +3717,11 @@ value_from_history_ref (const char *h, const char **endp)
     len = 2;
 
   /* Find length of numeral string.  */
-  for (; isdigit (h[len]); len++)
+  for (; c_isdigit (h[len]); len++)
     ;
 
   /* Make sure numeral string is not part of an identifier.  */
-  if (h[len] == '_' || isalpha (h[len]))
+  if (h[len] == '_' || c_isalpha (h[len]))
     return NULL;
 
   /* Now collect the index value.  */
@@ -3712,7 +3729,7 @@ value_from_history_ref (const char *h, const char **endp)
     {
       if (len == 2)
 	{
-	  /* For some bizarre reason, "$$" is equivalent to "$$1", 
+	  /* For some bizarre reason, "$$" is equivalent to "$$1",
 	     rather than to "$$0" as it ought to be!  */
 	  index = -1;
 	  *endp += len;
@@ -4474,9 +4491,7 @@ test_value_copy ()
 } /* namespace selftests */
 #endif /* GDB_SELF_TEST */
 
-void _initialize_values ();
-void
-_initialize_values ()
+INIT_GDB_FILE (values)
 {
   cmd_list_element *show_convenience_cmd
     = add_cmd ("convenience", no_class, show_convenience, _("\

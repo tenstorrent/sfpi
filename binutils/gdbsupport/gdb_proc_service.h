@@ -1,5 +1,5 @@
 /* <proc_service.h> replacement for systems that don't have it.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -84,19 +84,19 @@ typedef enum
 } ps_err_e;
 
 #ifndef HAVE_LWPID_T
-typedef unsigned int lwpid_t;
+using lwpid_t = unsigned int;
 #endif
 
 #ifndef HAVE_PSADDR_T
-typedef void *psaddr_t;
+using psaddr_t = void *;
 #endif
 
 #ifndef HAVE_PRGREGSET_T
-typedef elf_gregset_t prgregset_t;
+using prgregset_t = elf_gregset_t;
 #endif
 
 #ifndef HAVE_PRFPREGSET_T
-typedef elf_fpregset_t prfpregset_t;
+using prfpregset_t = elf_fpregset_t;
 #endif
 
 /* This type is opaque in this interface.  It's defined by the user of

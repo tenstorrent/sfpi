@@ -1,5 +1,5 @@
 /* GDB self-test for each gdbarch.
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -27,13 +27,13 @@ namespace selftests {
 
 static bool skip_arch (const char *arch)
 {
-  if (strcmp ("powerpc:EC603e", arch) == 0
-      || strcmp ("powerpc:e500mc", arch) == 0
-      || strcmp ("powerpc:e500mc64", arch) == 0
-      || strcmp ("powerpc:titan", arch) == 0
-      || strcmp ("powerpc:vle", arch) == 0
-      || strcmp ("powerpc:e5500", arch) == 0
-      || strcmp ("powerpc:e6500", arch) == 0)
+  if (streq ("powerpc:EC603e", arch)
+      || streq ("powerpc:e500mc", arch)
+      || streq ("powerpc:e500mc64", arch)
+      || streq ("powerpc:titan", arch)
+      || streq ("powerpc:vle", arch)
+      || streq ("powerpc:e5500", arch)
+      || streq ("powerpc:e6500", arch))
     {
       /* PR 19797 */
       return true;
@@ -108,5 +108,24 @@ reset ()
   registers_changed ();
   reinit_frame_cache ();
 }
-} // namespace selftests
+
+/* See selftest-arch.h.  */
+
+bool
+selftest_skip_warning_arch (struct gdbarch *gdbarch)
+{
+  const char *name = gdbarch_bfd_arch_info (gdbarch)->printable_name;
+
+  /* Avoid warning:
+       Running selftest <test>::m68hc11.
+       warning: No frame soft register found in the symbol table.
+       Stack backtrace will not work.
+     We could instead capture the output and then filter out the warning, but
+     that seems more trouble than it's worth.  */
+  return (streq (name, "m68hc11")
+	  || streq (name, "m68hc12")
+	  || streq (name, "m68hc12:HCS12"));
+}
+
+} /* namespace selftests */
 #endif /* GDB_SELF_TEST */

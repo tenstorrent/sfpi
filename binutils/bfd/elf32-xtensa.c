@@ -1,5 +1,5 @@
 /* Xtensa-specific support for 32-bit ELF.
-   Copyright (C) 2003-2025 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -22,7 +22,6 @@
 #include "bfd.h"
 
 #include <stdarg.h>
-#include <strings.h>
 
 #include "bfdlink.h"
 #include "libbfd.h"
@@ -414,16 +413,16 @@ elf_xtensa_reloc_type_lookup (bfd *abfd ATTRIBUTE_UNUSED,
       TRACE ("BFD_RELOC_XTENSA_RTLD");
       return &elf_howto_table[(unsigned) R_XTENSA_RTLD ];
 
-    case BFD_RELOC_XTENSA_GLOB_DAT:
-      TRACE ("BFD_RELOC_XTENSA_GLOB_DAT");
+    case BFD_RELOC_GLOB_DAT:
+      TRACE ("BFD_RELOC_GLOB_DAT");
       return &elf_howto_table[(unsigned) R_XTENSA_GLOB_DAT ];
 
-    case BFD_RELOC_XTENSA_JMP_SLOT:
-      TRACE ("BFD_RELOC_XTENSA_JMP_SLOT");
+    case BFD_RELOC_JMP_SLOT:
+      TRACE ("BFD_RELOC_JMP_SLOT");
       return &elf_howto_table[(unsigned) R_XTENSA_JMP_SLOT ];
 
-    case BFD_RELOC_XTENSA_RELATIVE:
-      TRACE ("BFD_RELOC_XTENSA_RELATIVE");
+    case BFD_RELOC_RELATIVE:
+      TRACE ("BFD_RELOC_RELATIVE");
       return &elf_howto_table[(unsigned) R_XTENSA_RELATIVE ];
 
     case BFD_RELOC_XTENSA_PLT:
@@ -1064,7 +1063,7 @@ elf_xtensa_check_relocs (bfd *abfd,
   if (htab == NULL)
     return false;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;
@@ -1322,9 +1321,9 @@ elf_xtensa_hide_symbol (struct bfd_link_info *info,
 static asection *
 elf_xtensa_gc_mark_hook (asection *sec,
 			 struct bfd_link_info *info,
-			 Elf_Internal_Rela *rel,
+			 struct elf_reloc_cookie *cookie,
 			 struct elf_link_hash_entry *h,
-			 Elf_Internal_Sym *sym)
+			 unsigned int symndx)
 {
   /* Property sections are marked "KEEP" in the linker scripts, but they
      should not cause other sections to be marked.  (This approach relies
@@ -1340,14 +1339,14 @@ elf_xtensa_gc_mark_hook (asection *sec,
     return NULL;
 
   if (h != NULL)
-    switch (ELF32_R_TYPE (rel->r_info))
+    switch (ELF32_R_TYPE (cookie->rel->r_info))
       {
       case R_XTENSA_GNU_VTINHERIT:
       case R_XTENSA_GNU_VTENTRY:
 	return NULL;
       }
 
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
+  return _bfd_elf_gc_mark_hook (sec, info, cookie, h, symndx);
 }
 
 
@@ -1529,7 +1528,7 @@ elf_xtensa_allocate_local_got_size (struct bfd_link_info *info)
       if (!local_got_refcounts)
 	continue;
 
-      symtab_hdr = &elf_tdata (i)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (i);
       cnt = symtab_hdr->sh_info;
 
       for (j = 0; j < cnt; ++j)
@@ -1555,8 +1554,7 @@ elf_xtensa_allocate_local_got_size (struct bfd_link_info *info)
 /* Set the sizes of the dynamic sections.  */
 
 static bool
-elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
-			       struct bfd_link_info *info)
+elf_xtensa_late_size_sections (struct bfd_link_info *info)
 {
   struct elf_xtensa_link_hash_table *htab;
   bfd *dynobj, *abfd;
@@ -1588,11 +1586,12 @@ elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
       /* Set the contents of the .interp section to the interpreter.  */
       if (bfd_link_executable (info) && !info->nointerp)
 	{
-	  s = bfd_get_linker_section (dynobj, ".interp");
+	  s = elf_hash_table (info)->interp;
 	  if (s == NULL)
 	    abort ();
 	  s->size = sizeof ELF_DYNAMIC_INTERPRETER;
 	  s->contents = (unsigned char *) ELF_DYNAMIC_INTERPRETER;
+	  s->alloced = 1;
 	}
 
       /* Allocate room for one word in ".got".  */
@@ -1731,6 +1730,7 @@ elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 	  s->contents = (bfd_byte *) bfd_zalloc (dynobj, s->size);
 	  if (s->contents == NULL)
 	    return false;
+	  s->alloced = 1;
 	}
     }
 
@@ -1750,8 +1750,8 @@ elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 
 	  loc = (srelgot->contents
 		 + srelgot->reloc_count * sizeof (Elf32_External_Rela));
-	  bfd_elf32_swap_reloca_out (output_bfd, &irela, loc);
-	  bfd_elf32_swap_reloca_out (output_bfd, &irela,
+	  bfd_elf32_swap_reloca_out (info->output_bfd, &irela, loc);
+	  bfd_elf32_swap_reloca_out (info->output_bfd, &irela,
 				     loc + sizeof (Elf32_External_Rela));
 	  srelgot->reloc_count += 2;
 	}
@@ -1764,8 +1764,7 @@ elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 #define add_dynamic_entry(TAG, VAL) \
   _bfd_elf_add_dynamic_entry (info, TAG, VAL)
 
-      if (!_bfd_elf_add_dynamic_tags (output_bfd, info,
-				      relplt || relgot))
+      if (!_bfd_elf_add_dynamic_tags (info, relplt || relgot))
 	return false;
 
       if (!add_dynamic_entry (DT_XTENSA_GOT_LOC_OFF, 0)
@@ -1778,7 +1777,7 @@ elf_xtensa_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 }
 
 static bool
-elf_xtensa_early_size_sections (bfd *output_bfd, struct bfd_link_info *info)
+elf_xtensa_early_size_sections (struct bfd_link_info *info)
 {
   struct elf_xtensa_link_hash_table *htab;
   asection *tls_sec;
@@ -1793,11 +1792,11 @@ elf_xtensa_early_size_sections (bfd *output_bfd, struct bfd_link_info *info)
     {
       struct elf_link_hash_entry *tlsbase = &htab->tlsbase->elf;
       struct bfd_link_hash_entry *bh = &tlsbase->root;
-      const struct elf_backend_data *bed = get_elf_backend_data (output_bfd);
+      elf_backend_data *bed = get_elf_backend_data (info->output_bfd);
 
       tlsbase->type = STT_TLS;
       if (!(_bfd_generic_link_add_one_symbol
-	    (info, output_bfd, "_TLS_MODULE_BASE_", BSF_LOCAL,
+	    (info, info->output_bfd, "_TLS_MODULE_BASE_", BSF_LOCAL,
 	     tls_sec, 0, NULL, false,
 	     bed->collect, &bh)))
 	return false;
@@ -2177,7 +2176,7 @@ bfd_elf_xtensa_reloc (bfd *abfd,
     }
 
   /* Is the address of the relocation really within the section?  */
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (howto, abfd, input_section, octets))
     return bfd_reloc_outofrange;
 
   /* Work out which section the relocation is targeted at and the
@@ -2490,8 +2489,7 @@ replace_tls_insn (Elf_Internal_Rela *rel,
    both relocatable and final links.  */
 
 static int
-elf_xtensa_relocate_section (bfd *output_bfd,
-			     struct bfd_link_info *info,
+elf_xtensa_relocate_section (struct bfd_link_info *info,
 			     bfd *input_bfd,
 			     asection *input_section,
 			     bfd_byte *contents,
@@ -2524,7 +2522,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
   if (htab == NULL)
     return false;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   local_got_tls_types = elf_xtensa_local_got_tls_type (input_bfd);
 
@@ -2594,7 +2592,8 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 	  sym = local_syms + r_symndx;
 	  sym_type = ELF32_ST_TYPE (sym->st_info);
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -2615,7 +2614,8 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_XTENSA_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	{
@@ -2793,7 +2793,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 	      BFD_ASSERT (srel != NULL);
 
 	      outrel.r_offset =
-		_bfd_elf_section_offset (output_bfd, info,
+		_bfd_elf_section_offset (info->output_bfd, info,
 					 input_section, rel->r_offset);
 
 	      if ((outrel.r_offset | 1) == (bfd_vma) -1)
@@ -2836,7 +2836,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 			     contents of the literal entry to the address of
 			     the PLT entry.  */
 			  relocation =
-			    elf_xtensa_create_plt_entry (info, output_bfd,
+			    elf_xtensa_create_plt_entry (info, info->output_bfd,
 							 srel->reloc_count);
 			}
 		      unresolved_reloc = false;
@@ -2855,7 +2855,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 
 	      loc = (srel->contents
 		     + srel->reloc_count++ * sizeof (Elf32_External_Rela));
-	      bfd_elf32_swap_reloca_out (output_bfd, &outrel, loc);
+	      bfd_elf32_swap_reloca_out (info->output_bfd, &outrel, loc);
 	      BFD_ASSERT (sizeof (Elf32_External_Rela) * srel->reloc_count
 			  <= srel->size);
 	    }
@@ -2953,7 +2953,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
 		BFD_ASSERT (srel);
 		loc = (srel->contents
 		       + srel->reloc_count++ * sizeof (Elf32_External_Rela));
-		bfd_elf32_swap_reloca_out (output_bfd, &outrel, loc);
+		bfd_elf32_swap_reloca_out (info->output_bfd, &outrel, loc);
 		BFD_ASSERT (sizeof (Elf32_External_Rela) * srel->reloc_count
 			    <= srel->size);
 	      }
@@ -3012,7 +3012,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
       if (unresolved_reloc
 	  && !((input_section->flags & SEC_DEBUGGING) != 0
 	       && h->def_dynamic)
-	  && _bfd_elf_section_offset (output_bfd, info, input_section,
+	  && _bfd_elf_section_offset (info->output_bfd, info, input_section,
 				      rel->r_offset) != (bfd_vma) -1)
 	{
 	  _bfd_error_handler
@@ -3066,8 +3066,7 @@ elf_xtensa_relocate_section (bfd *output_bfd,
    the PLT and GOT entries are all set up by relocate_section.  */
 
 static bool
-elf_xtensa_finish_dynamic_symbol (bfd *output_bfd ATTRIBUTE_UNUSED,
-				  struct bfd_link_info *info ATTRIBUTE_UNUSED,
+elf_xtensa_finish_dynamic_symbol (struct bfd_link_info *info ATTRIBUTE_UNUSED,
 				  struct elf_link_hash_entry *h,
 				  Elf_Internal_Sym *sym)
 {
@@ -3211,8 +3210,8 @@ elf_xtensa_combine_prop_entries (bfd *output_bfd,
 /* Finish up the dynamic sections.  */
 
 static bool
-elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
-				    struct bfd_link_info *info)
+elf_xtensa_finish_dynamic_sections (struct bfd_link_info *info,
+				    bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   struct elf_xtensa_link_hash_table *htab;
   bfd *dynobj;
@@ -3238,9 +3237,9 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
     {
       BFD_ASSERT (sgot->size == 4);
       if (sdyn == NULL)
-	bfd_put_32 (output_bfd, 0, sgot->contents);
+	bfd_put_32 (info->output_bfd, 0, sgot->contents);
       else
-	bfd_put_32 (output_bfd,
+	bfd_put_32 (info->output_bfd,
 		    sdyn->output_section->vma + sdyn->output_offset,
 		    sgot->contents);
     }
@@ -3263,7 +3262,7 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
       for (rtld_reloc = 0; rtld_reloc < srelgot->reloc_count; rtld_reloc++)
 	{
 	  loc = srelgot->contents + rtld_reloc * sizeof (Elf32_External_Rela);
-	  bfd_elf32_swap_reloca_in (output_bfd, loc, &irela);
+	  bfd_elf32_swap_reloca_in (info->output_bfd, loc, &irela);
 	  if (ELF32_R_TYPE (irela.r_info) == R_XTENSA_RTLD)
 	    break;
 	}
@@ -3284,24 +3283,24 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 	     each chunk of the .got.plt section.  */
 
 	  loc = srelgot->contents + rtld_reloc * sizeof (Elf32_External_Rela);
-	  bfd_elf32_swap_reloca_in (output_bfd, loc, &irela);
+	  bfd_elf32_swap_reloca_in (info->output_bfd, loc, &irela);
 	  BFD_ASSERT (ELF32_R_TYPE (irela.r_info) == R_XTENSA_RTLD);
 	  irela.r_offset = (sgotplt->output_section->vma
 			    + sgotplt->output_offset);
 	  irela.r_addend = 1; /* tell rtld to set value to resolver function */
-	  bfd_elf32_swap_reloca_out (output_bfd, &irela, loc);
+	  bfd_elf32_swap_reloca_out (info->output_bfd, &irela, loc);
 	  rtld_reloc += 1;
 	  BFD_ASSERT (rtld_reloc <= srelgot->reloc_count);
 
 	  /* Next literal immediately follows the first.  */
 	  loc += sizeof (Elf32_External_Rela);
-	  bfd_elf32_swap_reloca_in (output_bfd, loc, &irela);
+	  bfd_elf32_swap_reloca_in (info->output_bfd, loc, &irela);
 	  BFD_ASSERT (ELF32_R_TYPE (irela.r_info) == R_XTENSA_RTLD);
 	  irela.r_offset = (sgotplt->output_section->vma
 			    + sgotplt->output_offset + 4);
 	  /* Tell rtld to set value to object's link map.  */
 	  irela.r_addend = 2;
-	  bfd_elf32_swap_reloca_out (output_bfd, &irela, loc);
+	  bfd_elf32_swap_reloca_out (info->output_bfd, &irela, loc);
 	  rtld_reloc += 1;
 	  BFD_ASSERT (rtld_reloc <= srelgot->reloc_count);
 
@@ -3312,10 +3311,10 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 	    chunk_entries = plt_entries - (chunk * PLT_ENTRIES_PER_CHUNK);
 
 	  BFD_ASSERT ((unsigned) (chunk + 1) * 8 <= spltlittbl->size);
-	  bfd_put_32 (output_bfd,
+	  bfd_put_32 (info->output_bfd,
 		      sgotplt->output_section->vma + sgotplt->output_offset,
 		      spltlittbl->contents + (chunk * 8) + 0);
-	  bfd_put_32 (output_bfd,
+	  bfd_put_32 (info->output_bfd,
 		      8 + (chunk_entries * 4),
 		      spltlittbl->contents + (chunk * 8) + 4);
 	}
@@ -3324,7 +3323,7 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 	happen before the code below which combines adjacent literal
 	table entries, and the .xt.lit.plt contents have to be forced to
 	the output here.  */
-      if (! bfd_set_section_contents (output_bfd,
+      if (! bfd_set_section_contents (info->output_bfd,
 				      spltlittbl->output_section,
 				      spltlittbl->contents,
 				      spltlittbl->output_offset,
@@ -3344,13 +3343,13 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 
   /* Combine adjacent literal table entries.  */
   BFD_ASSERT (! bfd_link_relocatable (info));
-  sxtlit = bfd_get_section_by_name (output_bfd, ".xt.lit");
+  sxtlit = bfd_get_section_by_name (info->output_bfd, ".xt.lit");
   sgotloc = htab->sgotloc;
   BFD_ASSERT (sgotloc);
   if (sxtlit)
     {
       num_xtlit_entries =
-	elf_xtensa_combine_prop_entries (output_bfd, sxtlit, sgotloc);
+	elf_xtensa_combine_prop_entries (info->output_bfd, sxtlit, sgotloc);
       if (num_xtlit_entries < 0)
 	return false;
     }
@@ -3392,7 +3391,7 @@ elf_xtensa_finish_dynamic_sections (bfd *output_bfd,
 	  break;
 	}
 
-      bfd_elf32_swap_dyn_out (output_bfd, &dyn, dyncon);
+      bfd_elf32_swap_dyn_out (info->output_bfd, &dyn, dyncon);
     }
 
   return true;
@@ -3416,8 +3415,7 @@ elf_xtensa_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
     return false;
 
   /* Don't even pretend to support mixed-format linking.  */
-  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return false;
 
   out_flag = elf_elfheader (obfd)->e_flags;
@@ -6822,7 +6820,7 @@ retrieve_local_syms (bfd *input_bfd)
   Elf_Internal_Sym *isymbuf;
   size_t locsymcount;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   locsymcount = symtab_hdr->sh_info;
 
   isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
@@ -10230,7 +10228,7 @@ shrink_dynamic_reloc_sections (struct bfd_link_info *info,
   if (htab == NULL)
     return;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   r_type = ELF32_R_TYPE (rel->r_info);
@@ -10815,7 +10813,7 @@ relax_section_symbols (bfd *abfd, asection *sec)
 
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isymbuf = retrieve_local_syms (abfd);
 
   num_syms = symtab_hdr->sh_size / sizeof (Elf32_External_Sym);
@@ -11002,7 +11000,7 @@ elf_xtensa_get_gotplt_section (struct bfd_link_info *info, int chunk)
 static asection *
 get_elf_r_symndx_section (bfd *abfd, unsigned long r_symndx)
 {
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (abfd);
   asection *target_sec = NULL;
   if (r_symndx < symtab_hdr->sh_info)
     {
@@ -11057,7 +11055,7 @@ get_elf_r_symndx_hash_entry (bfd *abfd, unsigned long r_symndx)
 {
   unsigned long indx;
   struct elf_link_hash_entry *h;
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (abfd);
 
   if (r_symndx < symtab_hdr->sh_info)
     return NULL;
@@ -11076,7 +11074,7 @@ get_elf_r_symndx_hash_entry (bfd *abfd, unsigned long r_symndx)
 static bfd_vma
 get_elf_r_symndx_offset (bfd *abfd, unsigned long r_symndx)
 {
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (abfd);
   bfd_vma offset = 0;
 
   if (r_symndx < symtab_hdr->sh_info)

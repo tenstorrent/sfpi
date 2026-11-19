@@ -1,4 +1,4 @@
-# Copyright 2014-2024 Free Software Foundation, Inc.
+# Copyright 2014-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 set testname func-ptrs
 set srcfile ${testname}.c
 if { [prepare_for_testing "failed to prepare" ${testname} ${srcfile}] } {
-    return -1
+    return
 }
 
 if { ![runto_main] } {
-    return -1
+    return
 }
 
 
@@ -49,7 +49,7 @@ gdb_test "continue" \
 # Go back up, make sure the return value is 0.
 
 gdb_test "finish" \
-    "Run till exit from #0 +incr \\(i=-1\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is \\$$decimal = 0" \
+    "Run till exit from #0 +incr \\(i=-1\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is ${::valnum_re} = 0" \
     "go back to main from incr, first time"
 
 
@@ -72,7 +72,7 @@ gdb_test "finish" \
 
 gdb_test_no_output "up-silently" "move up to decr"
 gdb_test "finish" \
-    "Run till exit from #1 +($hex in )?decr \\(i=0\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is \\$$decimal = -1" \
+    "Run till exit from #1 +($hex in )?decr \\(i=0\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is ${::valnum_re} = -1" \
     "go back to main from decr"
 
 
@@ -87,7 +87,7 @@ gdb_test "continue" \
 # Go back up again, make sure the return value is 0.
 
 gdb_test "finish" \
-    "Run till exit from #0 +incr \\(i=-1\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is \\$$decimal = 0" \
+    "Run till exit from #0 +incr \\(i=-1\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+($hex in )?main \\(\\)\[ \r\n\]+at .*${srcfile}:$decimal\[\r\n\]+.*Value returned is ${::valnum_re} = 0" \
     "go back to main from incr, second time"
 
 

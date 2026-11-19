@@ -1,6 +1,6 @@
 /* GDB parameters implemented in Guile.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -24,6 +24,7 @@
 #include "language.h"
 #include "arch-utils.h"
 #include "guile-internal.h"
+#include "cli/cli-style.h"
 
 /* A GDB color.  */
 
@@ -338,11 +339,10 @@ gdbscm_color_components (SCM self)
   if (!color.is_direct ())
     gdbscm_misc_error (FUNC_NAME, SCM_ARG1, self, "color is not direct");
 
-  uint8_t rgb[3] = {};
-  color.get_rgb (rgb);
-  SCM red = scm_from_uint8 (rgb[0]);
-  SCM green = scm_from_uint8 (rgb[1]);
-  SCM blue = scm_from_uint8 (rgb[2]);
+  rgb_color rgb = color.get_rgb ();
+  SCM red = scm_from_uint8 (rgb.r ());
+  SCM green = scm_from_uint8 (rgb.g ());
+  SCM blue = scm_from_uint8 (rgb.b ());
   return scm_list_3 (red, green, blue);
 }
 
@@ -354,8 +354,14 @@ gdbscm_color_escape_sequence (SCM self, SCM is_fg_scm)
   const ui_file_style::color &color = coscm_get_color (self);
   SCM_ASSERT_TYPE (gdbscm_is_bool (is_fg_scm), is_fg_scm, SCM_ARG2, FUNC_NAME,
 		   _("boolean"));
-  bool is_fg = gdbscm_is_true (is_fg_scm);
-  std::string s = color.to_ansi (is_fg);
+
+  std::string s;
+  if (term_cli_styling ())
+    {
+      bool is_fg = gdbscm_is_true (is_fg_scm);
+      s = color.to_ansi (is_fg);
+    }
+
   return gdbscm_scm_from_host_string (s.c_str (), s.size ());
 }
 

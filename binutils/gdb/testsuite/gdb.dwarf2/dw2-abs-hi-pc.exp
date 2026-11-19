@@ -1,4 +1,4 @@
-# Copyright 2014-2024 Free Software Foundation, Inc.
+# Copyright 2014-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ lappend flags additional_flags=[quote_for_host -DWORLD_END=$world_start \
 
 set executable ${testfile}
 if {[build_executable ${testfile}.exp ${executable} $sources $flags] == -1} {
-    return -1
+    return
 }
 
 clean_restart $executable

@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2024 Free Software Foundation, Inc.
+# Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require allow_python_tests
 standard_testfile
 
 if { [gdb_compile_pthreads ${srcdir}/${subdir}/${srcfile} ${binfile} executable {debug}] != "" } {
-    return -1
+    return
 }
 
 # Start with a fresh gdb.
@@ -32,8 +32,8 @@ save_vars { env(ASAN_OPTIONS) env(TSAN_OPTIONS) } {
     # triggers address sanitizer.  Suppress the error, leaving us with just
     # this warning:
     #   WARNING: AddressSanitizer failed to allocate 0xffffffffffffffff bytes
-    set_sanitizer ASAN_OPTIONS allocator_may_return_null 1
-    set_sanitizer TSAN_OPTIONS allocator_may_return_null 1
+    append_environment ASAN_OPTIONS allocator_may_return_null 1
+    append_environment TSAN_OPTIONS allocator_may_return_null 1
 
     clean_restart ${testfile}
 }
@@ -62,7 +62,7 @@ gdb_test "python \
 # The following tests require execution.
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # The most recently added inferior.
@@ -87,11 +87,11 @@ gdb_test "python print (inferiors)" \
 gdb_py_test_silent_cmd "python i0 = inferiors\[0\]" "get first inferior" 0
 
 gdb_test "python print ('result = %s' % (i0 == inferiors\[0\]))" " = True" "test equality comparison (true)"
-gdb_test "python print ('result = %s' % i0.num)" " = \[0-9\]+" "test Inferior.num"
-gdb_test "python print ('result = %s' % i0.connection_num)" " = \[0-9\]+" "test Inferior.connection_num"
+gdb_test "python print ('result = %s' % i0.num)" " = ${::decimal}" "test Inferior.num"
+gdb_test "python print ('result = %s' % i0.connection_num)" " = ${::decimal}" "test Inferior.connection_num"
 gdb_test "python print ('result = %s' % (i0.connection_num == i0.connection.num))" " = True" \
     "Inferior.connection_num equals Inferior.connection.num"
-gdb_test "python print ('result = %s' % i0.pid)" " = \[0-9\]+" "test Inferior.pid"
+gdb_test "python print ('result = %s' % i0.pid)" " = ${::decimal}" "test Inferior.pid"
 gdb_test "python print ('result = %s' % i0.was_attached)" " = False" "test Inferior.was_attached"
 gdb_test "python print (i0.threads ())" \
     "\\(<gdb.InferiorThread id=${decimal}\\.${decimal} target-id=\"\[^\r\n\]*\">,\\)" \
@@ -318,7 +318,7 @@ with_test_prefix "large range" {
 
 # For native targets, test a pattern straddling a chunk boundary.
 
-if [isnative] {
+if {[isnative]} {
     with_test_prefix "straddling" {
 	gdb_test_no_output "set *(int32_t*) &search_buf\[${CHUNK_SIZE}-1\] = 0xfdb97531"
 	gdb_test_no_output "py pattern = pack('${python_pack_char}I', 0xfdb97531)"

@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 Free Software Foundation, Inc.
+# Copyright (C) 2016-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,29 +21,29 @@ require {can_compile rust}
 
 standard_testfile .rs
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug rust}]} {
-    return -1
+    return
 }
 
 set line [gdb_get_line_number "set breakpoint here"]
 if {![runto ${srcfile}:$line]} {
     untested "could not run to breakpoint"
-    return -1
+    return
 }
 
-gdb_test "print a" " = \\(\\)"
-gdb_test "ptype a" " = \\(\\)"
-gdb_test "print sizeof(a)" " = 0"
+gdb_test "print a" [quotemeta "$@DECIMAL = ()"]
+gdb_test "ptype a" [quotemeta "type = ()"]
+gdb_test "print sizeof(a)" [quotemeta "$@DECIMAL = 0"]
 
-gdb_test "print b" " = \\\[\\\]"
-gdb_test "ptype b" " = \\\[i32; 0\\\]"
-gdb_test "print *(&b as *const \[i32; 0\])" " = \\\[\\\]"
-gdb_test "print *(&b as *const \[i32; 0_0\])" " = \\\[\\\]"
+gdb_test "print b" [quotemeta {$@DECIMAL = []}]
+gdb_test "ptype b" [quotemeta {type = [i32; 0]}]
+gdb_test "print *(&b as *const \[i32; 0\])" [quotemeta {$@DECIMAL = []}]
+gdb_test "print *(&b as *const \[i32; 0_0\])" [quotemeta {$@DECIMAL = []}]
 
-gdb_test "print c" " = 99"
-gdb_test "ptype c" " = i32"
-gdb_test "print sizeof(c)" " = 4"
+gdb_test "print c" [quotemeta {$@DECIMAL = 99}]
+gdb_test "ptype c" "type = i32"
+gdb_test "print sizeof(c)" [quotemeta {$@DECIMAL = 4}]
 
-gdb_test "print c = 87" " = \\(\\)"
+gdb_test "print c = 87" [quotemeta {$@DECIMAL = ()}]
 gdb_test "print c" " = 87" "print after assignment"
 gdb_test "print c += 3" " = \\(\\)"
 gdb_test "print c" " = 90" "print after plus assignment"
@@ -72,7 +72,7 @@ gdb_test "whatis f" "type = &str"
 gdb_test "print *(&f as *mut &str)" " = \"hi bob\"" \
     "print via cast to &str"
 
-gdb_test "print g" " = \\(\\*mut \\\[u8; 6\\\]\\) $hex b\"hi bob\""
+gdb_test "print g" [quotemeta {$@DECIMAL = (*mut [u8; 6]) @HEX b"hi bob"}]
 gdb_test "ptype g" " = \\*mut \\\[u8; 6\\\]"
 
 gdb_test "print v" " = simple::Something::Three"
@@ -173,7 +173,7 @@ gdb_test "print simple::ByeBob\{field1: 0xff, field2:5\}" \
 
 gdb_test "print simple::HiBob(0xff, 5)" \
     "Type simple::HiBob is not a tuple struct"
-gdb_test "print sizeof(simple::HiBob)" " = \[0-9\]+"
+gdb_test "print sizeof(simple::HiBob)" " = ${::decimal}"
 gdb_test "print simple::HiBob + 5" \
     "Attempt to use a type name as an expression"
 gdb_test "print nosuchsymbol" \
@@ -188,7 +188,7 @@ gdb_test "print simple::HiBob{field1: 99, .. y}" \
 gdb_test "print e" " = simple::MoreComplicated::Two\\(73\\)"
 gdb_test "print e2" \
     " = simple::MoreComplicated::Four\\{this: true, is: 8, a: 109 'm', struct_: 100, variant: 10\\}"
-gdb_test "print sizeof(e)" " = 24"
+gdb_test "print sizeof(e)" " = (20|24)"
 gdb_test_sequence "ptype e" "" {
     " = enum simple::MoreComplicated \\{"
     "  One,"

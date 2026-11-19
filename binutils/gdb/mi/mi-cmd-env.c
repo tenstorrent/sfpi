@@ -1,5 +1,5 @@
 /* MI Command Set - environment commands.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat Inc.
 
@@ -19,11 +19,9 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "inferior.h"
-#include "value.h"
 #include "mi-out.h"
 #include "mi-cmds.h"
 #include "mi-getopt.h"
-#include "symtab.h"
 #include "target.h"
 #include "gdbsupport/environ.h"
 #include "command.h"
@@ -31,6 +29,7 @@
 #include "top.h"
 #include <sys/stat.h>
 #include "source.h"
+#include "filesystem.h"
 
 static const char path_var_name[] = "PATH";
 static char *orig_path = NULL;
@@ -49,7 +48,7 @@ env_execute_cli_command (const char *cmd, const char *args)
       if (args != NULL)
 	run = xstrprintf ("%s %s", cmd, args);
       else
-	run.reset (xstrdup (cmd));
+	run = make_unique_xstrdup (cmd);
       execute_command ( /*ui */ run.get (), 0 /*from_tty */ );
     }
 }
@@ -63,8 +62,8 @@ mi_cmd_env_pwd (const char *command, const char *const *argv, int argc)
 
   if (argc > 0)
     error (_("-environment-pwd: No arguments allowed"));
-	  
-  gdb::unique_xmalloc_ptr<char> cwd (getcwd (NULL, 0));
+
+  gdb::unique_xmalloc_ptr<char> cwd (gdb_getcwd (NULL, 0));
   if (cwd == NULL)
     error (_("-environment-pwd: error finding name of working directory: %s"),
 	   safe_strerror (errno));
@@ -79,7 +78,7 @@ mi_cmd_env_cd (const char *command, const char *const *argv, int argc)
 {
   if (argc == 0 || argc > 1)
     error (_("-environment-cd: Usage DIRECTORY"));
-	  
+
   env_execute_cli_command ("cd", argv[0]);
 }
 
@@ -89,7 +88,7 @@ env_mod_path (const char *dirname, std::string &which_path)
   if (dirname == 0 || dirname[0] == '\0')
     return;
 
-  /* Call add_path with last arg 0 to indicate not to parse for 
+  /* Call add_path with last arg 0 to indicate not to parse for
      separator characters.  */
   add_path (dirname, which_path, 0);
 }
@@ -238,9 +237,7 @@ mi_cmd_inferior_tty_show (const char *command, const char *const *argv,
     current_uiout->field_string ("inferior_tty_terminal", inferior_tty);
 }
 
-void _initialize_mi_cmd_env ();
-void 
-_initialize_mi_cmd_env ()
+INIT_GDB_FILE (mi_cmd_env)
 {
   const char *env;
 

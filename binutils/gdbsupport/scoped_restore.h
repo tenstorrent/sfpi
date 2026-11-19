@@ -1,6 +1,6 @@
 /* scoped_restore, a simple class for saving and restoring a value
 
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -42,7 +42,7 @@ protected:
 
 /* A convenience typedef.  Users of make_scoped_restore declare the
    local RAII object as having this type.  */
-typedef const scoped_restore_base &scoped_restore;
+using scoped_restore = const scoped_restore_base &;
 
 /* An RAII-based object that saves a variable's value, and then
    restores it again when this object is destroyed. */

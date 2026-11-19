@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 #
-# Copyright 2024 Free Software Foundation, Inc.
+# Copyright 2024-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,12 +32,12 @@ standard_testfile
 
 if {[build_executable "failed to prepare" $testfile $srcfile \
     {debug build-id}] == -1} {
-    return -1
+    return
 }
 
 # Split out BINFILE.debug.  Remove debug from BINFILE.
 if {[gdb_gnu_strip_debug $binfile] != 0} {
-    return -1
+    return
 }
 
 # Get the '.build-id/xx/xxx...xxx' part of the filename.

@@ -1,5 +1,5 @@
 /* Renesas RX specific support for 32-bit ELF.
-   Copyright (C) 2008-2025 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -494,8 +494,7 @@ static unsigned int rx_stack_top;
 
 static int
 rx_elf_relocate_section
-    (bfd *		     output_bfd,
-     struct bfd_link_info *  info,
+    (struct bfd_link_info *  info,
      bfd *		     input_bfd,
      asection *		     input_section,
      bfd_byte *		     contents,
@@ -513,12 +512,12 @@ rx_elf_relocate_section
   bfd_vma table_start_cache = 0;
   bfd_vma table_end_cache = 0;
 
-  if (elf_elfheader (output_bfd)->e_flags & E_FLAG_RX_PID)
+  if (elf_elfheader (info->output_bfd)->e_flags & E_FLAG_RX_PID)
     pid_mode = true;
   else
     pid_mode = false;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
   for (rel = relocs; rel < relend; rel ++)
@@ -550,7 +549,8 @@ rx_elf_relocate_section
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, & sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -652,7 +652,8 @@ rx_elf_relocate_section
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_RX_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	{
@@ -795,7 +796,7 @@ rx_elf_relocate_section
 	case R_RX_DIR16S:
 	  UNSAFE_FOR_PID;
 	  RANGE (-32768, 65535);
-	  if (BIGE (output_bfd) && !(input_section->flags & SEC_CODE))
+	  if (BIGE (info->output_bfd) && !(input_section->flags & SEC_CODE))
 	    {
 	      OP (1) = relocation;
 	      OP (0) = relocation >> 8;
@@ -885,7 +886,7 @@ rx_elf_relocate_section
 	case R_RX_DIR24S:
 	  UNSAFE_FOR_PID;
 	  RANGE (-0x800000, 0x7fffff);
-	  if (BIGE (output_bfd) && !(input_section->flags & SEC_CODE))
+	  if (BIGE (info->output_bfd) && !(input_section->flags & SEC_CODE))
 	    {
 	      OP (2) = relocation;
 	      OP (1) = relocation >> 8;
@@ -948,7 +949,7 @@ rx_elf_relocate_section
 	  break;
 
 	case R_RX_DIR32:
-	  if (BIGE (output_bfd) && !(input_section->flags & SEC_CODE))
+	  if (BIGE (info->output_bfd) && !(input_section->flags & SEC_CODE))
 	    {
 	      OP (3) = relocation;
 	      OP (2) = relocation >> 8;
@@ -965,7 +966,7 @@ rx_elf_relocate_section
 	  break;
 
 	case R_RX_DIR32_REV:
-	  if (BIGE (output_bfd))
+	  if (BIGE (info->output_bfd))
 	    {
 	      OP (0) = relocation;
 	      OP (1) = relocation >> 8;
@@ -985,9 +986,9 @@ rx_elf_relocate_section
 	  {
 	    bfd_vma val;
 	    WARN_REDHAT ("RX_RH_DIFF");
-	    val = bfd_get_32 (output_bfd, & OP (0));
+	    val = bfd_get_32 (info->output_bfd, & OP (0));
 	    val -= relocation;
-	    bfd_put_32 (output_bfd, val, & OP (0));
+	    bfd_put_32 (info->output_bfd, val, & OP (0));
 	  }
 	  break;
 
@@ -1148,7 +1149,7 @@ rx_elf_relocate_section
 	  UNSAFE_FOR_PID;
 	  RX_STACK_POP (relocation);
 	  RANGE (-0x800000, 0x7fffff);
-	  if (BIGE (output_bfd) && !(input_section->flags & SEC_CODE))
+	  if (BIGE (info->output_bfd) && !(input_section->flags & SEC_CODE))
 	    {
 	      OP (2) = relocation;
 	      OP (1) = relocation >> 8;
@@ -1192,7 +1193,7 @@ rx_elf_relocate_section
 	case R_RX_ABS16S:
 	  RX_STACK_POP (relocation);
 	  RANGE (-32768, 32767);
-	  if (BIGE (output_bfd) && !(input_section->flags & SEC_CODE))
+	  if (BIGE (info->output_bfd) && !(input_section->flags & SEC_CODE))
 	    {
 	      OP (1) = relocation;
 	      OP (0) = relocation >> 8;
@@ -1307,7 +1308,7 @@ rx_elf_relocate_section
 
 	case R_RX_OPneg:
 	  {
-	    int32_t tmp;
+	    uint32_t tmp;
 
 	    saw_subtract = true;
 	    RX_STACK_POP (tmp);
@@ -1318,7 +1319,7 @@ rx_elf_relocate_section
 
 	case R_RX_OPadd:
 	  {
-	    int32_t tmp1, tmp2;
+	    uint32_t tmp1, tmp2;
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
@@ -1329,7 +1330,7 @@ rx_elf_relocate_section
 
 	case R_RX_OPsub:
 	  {
-	    int32_t tmp1, tmp2;
+	    uint32_t tmp1, tmp2;
 
 	    saw_subtract = true;
 	    RX_STACK_POP (tmp1);
@@ -1341,7 +1342,7 @@ rx_elf_relocate_section
 
 	case R_RX_OPmul:
 	  {
-	    int32_t tmp1, tmp2;
+	    uint32_t tmp1, tmp2;
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
@@ -1356,29 +1357,46 @@ rx_elf_relocate_section
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
-	    tmp1 /= tmp2;
+	    if (tmp2 == 0)
+	      {
+		tmp1 = 0;
+		r = bfd_reloc_overflow;
+	      }
+	    else if (tmp2 == 1)
+	      ;
+	    else if (tmp2 == -1)
+	      tmp1 = - (uint32_t) tmp1;
+	    else
+	      tmp1 /= tmp2;
 	    RX_STACK_PUSH (tmp1);
 	  }
 	  break;
 
 	case R_RX_OPshla:
 	  {
-	    int32_t tmp1, tmp2;
+	    uint32_t tmp1, tmp2;
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
-	    tmp1 <<= tmp2;
+	    if (tmp2 >= 32)
+	      tmp1 = 0;
+	    else
+	      tmp1 <<= tmp2;
 	    RX_STACK_PUSH (tmp1);
 	  }
 	  break;
 
 	case R_RX_OPshra:
 	  {
-	    int32_t tmp1, tmp2;
+	    int32_t tmp1;
+	    uint32_t tmp2;
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
-	    tmp1 >>= tmp2;
+	    if (tmp2 >= 31)
+	      tmp1 = tmp1 < 0 ? -1 : 1;
+	    else
+	      tmp1 >>= tmp2;
 	    RX_STACK_PUSH (tmp1);
 	  }
 	  break;
@@ -1440,7 +1458,15 @@ rx_elf_relocate_section
 
 	    RX_STACK_POP (tmp1);
 	    RX_STACK_POP (tmp2);
-	    tmp1 %= tmp2;
+	    if (tmp2 == 0)
+	      {
+		tmp1 = 0;
+		r = bfd_reloc_overflow;
+	      }
+	    else if (tmp2 == 1 || tmp2 == -1)
+	      tmp1 = 0;
+	    else
+	      tmp1 %= tmp2;
 	    RX_STACK_PUSH (tmp1);
 	  }
 	  break;
@@ -1637,7 +1663,7 @@ elf32_rx_relax_delete_bytes (bfd *abfd, asection *sec, bfd_vma addr, int count,
     }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   isymend = isym + symtab_hdr->sh_info;
 
@@ -1806,9 +1832,7 @@ rx_offset_for_reloc (bfd *		      abfd,
 	    {
 	      if ((ssec->flags & SEC_MERGE)
 		  && ssec->sec_info_type == SEC_INFO_TYPE_MERGE)
-		symval = _bfd_merged_section_offset (abfd, & ssec,
-						     elf_section_data (ssec)->sec_info,
-						     symval);
+		symval = _bfd_merged_section_offset (abfd, & ssec, symval);
 	    }
 
 	  /* Now make the offset relative to where the linker is putting it.  */
@@ -1854,49 +1878,62 @@ rx_offset_for_reloc (bfd *		      abfd,
 
 	case R_RX_OPneg:
 	  RX_STACK_POP (tmp1);
-	  tmp1 = - tmp1;
+	  tmp1 = - (uint32_t) tmp1;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
 	case R_RX_OPadd:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 += tmp2;
+	  tmp1 += (uint32_t) tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
 	case R_RX_OPsub:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp2 -= tmp1;
+	  tmp2 -= (uint32_t) tmp1;
 	  RX_STACK_PUSH (tmp2);
 	  break;
 
 	case R_RX_OPmul:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 *= tmp2;
+	  tmp1 *= (uint32_t) tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
 	case R_RX_OPdiv:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 /= tmp2;
+	  if (tmp2 == 0)
+	    tmp1 = 0;
+	  else if (tmp2 == 1)
+	    ;
+	  else if (tmp2 == -1)
+	    tmp1 = - (uint32_t) tmp1;
+	  else
+	    tmp1 /= tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
 	case R_RX_OPshla:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 <<= tmp2;
+	  if ((uint32_t) tmp2 >= 32)
+	    tmp1 = 0;
+	  else
+	    tmp1 = (uint32_t) tmp1 << tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
 	case R_RX_OPshra:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 >>= tmp2;
+	  if ((uint32_t) tmp2 >= 31)
+	    tmp1 = tmp1 < 0 ? -1 : 1;
+	  else
+	    tmp1 >>= tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
@@ -1938,7 +1975,12 @@ rx_offset_for_reloc (bfd *		      abfd,
 	case R_RX_OPmod:
 	  RX_STACK_POP (tmp1);
 	  RX_STACK_POP (tmp2);
-	  tmp1 %= tmp2;
+	  if (tmp2 == 0)
+	    tmp1 = 0;
+	  else if (tmp2 == -1 || tmp2 == 1)
+	    tmp1 = 0;
+	  else
+	    tmp1 %= tmp2;
 	  RX_STACK_PUSH (tmp1);
 	  break;
 
@@ -3139,6 +3181,9 @@ rx_elf_merge_private_bfd_data (bfd * ibfd, struct bfd_link_info *info)
   flagword new_flags;
   bool error = false;
 
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
+    return true;
+
   new_flags = elf_elfheader (ibfd)->e_flags;
   old_flags = elf_elfheader (obfd)->e_flags;
 
@@ -3356,7 +3401,7 @@ rx_dump_symtab (bfd * abfd, void * internal_syms, void * external_syms)
   char * st_other_str;
   char * st_shndx_str;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   locsymcount = symtab_hdr->sh_size / get_elf_backend_data (abfd)->s->sizeof_sym;
   if (!internal_syms)
     isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
@@ -3685,13 +3730,13 @@ rx_final_link (bfd * abfd, struct bfd_link_info * info)
 	}
     }
 
-  return bfd_elf_final_link (abfd, info);
+  return _bfd_elf_final_link (abfd, info);
 }
 
 static bool
 elf32_rx_modify_headers (bfd *abfd, struct bfd_link_info *info)
 {
-  const struct elf_backend_data * bed;
+  elf_backend_data *bed;
   struct elf_obj_tdata * tdata;
   Elf_Internal_Phdr * phdr;
   unsigned int count;

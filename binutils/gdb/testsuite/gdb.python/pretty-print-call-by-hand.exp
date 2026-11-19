@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Free Software Foundation, Inc.
+# Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ standard_testfile
 
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile debug] } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # This proc restarts GDB, makes the inferior reach the desired spot - marked
@@ -39,7 +39,7 @@ proc start_test { breakpoint_comment } {
     # Start with a fresh gdb.
     # This is important because the test can crash GDB.
 
-    clean_restart ${binfile}
+    clean_restart ${::testfile}
 
     if {![runto_main]} {
 	untested "couldn't run to breakpoint"

@@ -2,7 +2,7 @@
    convert to internal format, for GDB. Used as a last resort if no
    debugging symbols recognized.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,7 +35,6 @@
 #include "gdbsupport/common-utils.h"
 #include "coff/internal.h"
 
-#include <ctype.h>
 
 /* Internal section information */
 
@@ -72,17 +71,17 @@ struct read_pe_section_data
 static int
 read_pe_section_index (const char *section_name)
 {
-  if (strcmp (section_name, ".text") == 0)
+  if (streq (section_name, ".text"))
     {
       return PE_SECTION_INDEX_TEXT;
     }
 
-  else if (strcmp (section_name, ".data") == 0)
+  else if (streq (section_name, ".data"))
     {
       return PE_SECTION_INDEX_DATA;
     }
 
-  else if (strcmp (section_name, ".bss") == 0)
+  else if (streq (section_name, ".bss"))
     {
       return PE_SECTION_INDEX_BSS;
     }
@@ -189,7 +188,7 @@ add_pe_forwarded_sym (minimal_symbol_reader &reader,
       int i;
 
       for (i = 0; i < forward_dll_name_len; i++)
-	forward_qualified_name[i] = tolower (forward_qualified_name[i]);
+	forward_qualified_name[i] = c_tolower (forward_qualified_name[i]);
       msymbol = lookup_minimal_symbol (current_program_space,
 				       forward_qualified_name.c_str ());
     }
@@ -337,14 +336,15 @@ read_pe_exported_syms (minimal_symbol_reader &reader,
   section_data[PE_SECTION_INDEX_BSS].ms_type = mst_bss;
   section_data[PE_SECTION_INDEX_BSS].section_name = ".bss";
 
-  is_pe64 = (strcmp (target, "pe-x86-64") == 0
-	     || strcmp (target, "pei-x86-64") == 0
-	     || strcmp (target, "pe-aarch64") == 0
-	     || strcmp (target, "pei-aarch64") == 0);
-  is_pe32 = (strcmp (target, "pe-i386") == 0
-	     || strcmp (target, "pei-i386") == 0
-	     || strcmp (target, "pe-arm-wince-little") == 0
-	     || strcmp (target, "pei-arm-wince-little") == 0);
+  is_pe64 = (streq (target, "pe-x86-64")
+	     || streq (target, "pei-x86-64")
+	     || streq (target, "pe-aarch64")
+	     || streq (target, "pei-aarch64")
+	     || streq (target, "pei-aarch64-little"));
+  is_pe32 = (streq (target, "pe-i386")
+	     || streq (target, "pei-i386")
+	     || streq (target, "pe-arm-wince-little")
+	     || streq (target, "pei-arm-wince-little"));
 
   /* Possibly print a debug message about DLL not having a valid format.  */
   auto maybe_print_debug_msg = [&] () -> void {
@@ -406,10 +406,10 @@ read_pe_exported_syms (minimal_symbol_reader &reader,
 	  || bfd_read (sname, sizeof (sname), dll) != sizeof (sname))
 	return maybe_print_debug_msg ();
 
-      if ((strcmp (sname, ".edata") == 0)
+      if (streq (sname, ".edata")
 	  || (vaddr <= export_opthdrrva && export_opthdrrva < vaddr + vsize))
 	{
-	  if (strcmp (sname, ".edata") != 0)
+	  if (!streq (sname, ".edata"))
 	    {
 	      if (debug_coff_pe_read)
 		gdb_printf (gdb_stdlog, _("Export RVA for dll "
@@ -636,14 +636,15 @@ pe_text_section_offset (struct bfd *abfd)
 
   target = bfd_get_target (abfd);
 
-  is_pe64 = (strcmp (target, "pe-x86-64") == 0
-	     || strcmp (target, "pei-x86-64") == 0
-	     || strcmp (target, "pe-aarch64") == 0
-	     || strcmp (target, "pei-aarch64") == 0);
-  is_pe32 = (strcmp (target, "pe-i386") == 0
-	     || strcmp (target, "pei-i386") == 0
-	     || strcmp (target, "pe-arm-wince-little") == 0
-	     || strcmp (target, "pei-arm-wince-little") == 0);
+  is_pe64 = (streq (target, "pe-x86-64")
+	     || streq (target, "pei-x86-64")
+	     || streq (target, "pe-aarch64")
+	     || streq (target, "pei-aarch64")
+	     || streq (target, "pei-aarch64-little"));
+  is_pe32 = (streq (target, "pe-i386")
+	     || streq (target, "pei-i386")
+	     || streq (target, "pe-arm-wince-little")
+	     || streq (target, "pei-arm-wince-little"));
 
   if (!is_pe32 && !is_pe64)
     {
@@ -676,7 +677,7 @@ pe_text_section_offset (struct bfd *abfd)
 	  || bfd_read (sname, SCNNMLEN, abfd) != SCNNMLEN)
 	return DEFAULT_COFF_PE_TEXT_SECTION_OFFSET;
       sname[SCNNMLEN] = '\0';
-      if (strcmp (sname, ".text") == 0)
+      if (streq (sname, ".text"))
 	return vaddr;
     }
 
@@ -694,9 +695,7 @@ show_debug_coff_pe_read (struct ui_file *file, int from_tty,
 
 /* Adds "Set/show debug coff_pe_read" commands.  */
 
-void _initialize_coff_pe_read ();
-void
-_initialize_coff_pe_read ()
+INIT_GDB_FILE (coff_pe_read)
 {
   add_setshow_zuinteger_cmd ("coff-pe-read", class_maintenance,
 			     &debug_coff_pe_read,

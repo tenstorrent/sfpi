@@ -22,6 +22,25 @@ _start:
 	lock xchg %ecx, (%edx)
 	lock xchg (%ecx), %edx
 
+	xchg	%cl, %cl
+	{load} xchg %dx, %dx
+	xchg	%edi, %edi
+
+	movsb	%al, %ax
+	movsbw	%al, %ax
+
+	movsw	%ax, %eax
+	movswl	%ax, %eax
+
+	movzb	%al, %ax
+	movzbw	%cl, %cx
+
+	.intel_syntax noprefix
+	movsx	ax, al
+	movsx	eax, ax
+	movzx	dx, dl
+	.att_syntax prefix
+
 	shl	$1, %dl
 	shl	%dl
 
@@ -39,6 +58,10 @@ _start:
 
 	sal	$1, %edx
 	sal	%edx
+
+	xadd	%cl, %cl
+	xadd	%dx, %dx
+	xadd	%edi, %edi
 
 	vandnpd	%zmm1, %zmm1, %zmm5
 
@@ -218,3 +241,4 @@ _start:
 	vpsllq	$1, %zmm2, %zmm3
 
 	vpbroadcastq	%xmm2, %xmm0
+	vpbroadcastq	%xmm2, %ymm0

@@ -1,6 +1,6 @@
 /* Find a variable's value in memory, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -32,6 +32,7 @@
 #include "block.h"
 #include "objfiles.h"
 #include "language.h"
+#include "cli/cli-style.h"
 
 /* Basic byte-swapping routines.  All 'extract' functions return a
    host-format integer from a target-format integer at ADDR which is
@@ -65,14 +66,15 @@ value_of_register (int regnum, const frame_info_ptr &next_frame)
 /* See value.h.  */
 
 value *
-value_of_register_lazy (const frame_info_ptr &next_frame, int regnum)
+value_of_register_lazy (const frame_info_ptr &next_frame, int regnum,
+			struct type *type)
 {
   gdbarch *gdbarch = frame_unwind_arch (next_frame);
 
   gdb_assert (regnum < gdbarch_num_cooked_regs (gdbarch));
   gdb_assert (next_frame != nullptr);
 
-  return value::allocate_register_lazy (next_frame, regnum);
+  return value::allocate_register_lazy (next_frame, regnum, type);
 }
 
 /* Given a pointer of type TYPE in target form in BUF, return the
@@ -124,7 +126,7 @@ symbol_read_needs (struct symbol *sym)
       computed_ops != nullptr)
     return computed_ops->get_symbol_read_needs (sym);
 
-  switch (sym->aclass ())
+  switch (sym->loc_class ())
     {
       /* All cases listed explicitly so that gcc -Wall will detect it if
 	 we failed to consider one.  */
@@ -298,7 +300,8 @@ language_defn::read_var_value (struct symbol *var,
   if (sym_need == SYMBOL_NEEDS_FRAME)
     gdb_assert (frame != NULL);
   else if (sym_need == SYMBOL_NEEDS_REGISTERS && !target_has_registers ())
-    error (_("Cannot read `%s' without registers"), var->print_name ());
+    error (_("Cannot read `%ps' without registers"),
+	   styled_string (variable_name_style.style (), var->print_name ()));
 
   if (frame != NULL)
     frame = get_hosting_frame (var, var_block, frame);
@@ -306,7 +309,7 @@ language_defn::read_var_value (struct symbol *var,
   if (const symbol_computed_ops *computed_ops = var->computed_ops ())
     return computed_ops->read_variable (var, frame);
 
-  switch (var->aclass ())
+  switch (var->loc_class ())
     {
     case LOC_CONST:
       if (is_dynamic_type (type))
@@ -429,7 +432,7 @@ language_defn::read_var_value (struct symbol *var,
 	const symbol_register_ops *reg_ops = var->register_ops ();
 	int regno = reg_ops->register_number (var, get_frame_arch (frame));
 
-	if (var->aclass () == LOC_REGPARM_ADDR)
+	if (var->loc_class () == LOC_REGPARM_ADDR)
 	  addr = value_as_address
 	   (value_from_register (lookup_pointer_type (type), regno, frame));
 	else
@@ -445,9 +448,8 @@ language_defn::read_var_value (struct symbol *var,
 	struct obj_section *obj_section;
 	bound_minimal_symbol bmsym;
 
-	gdbarch_iterate_over_objfiles_in_search_order
-	  (var->arch (),
-	   [var, &bmsym] (objfile *objfile)
+	current_program_space->iterate_over_objfiles_in_search_order
+	  ([var, &bmsym] (objfile *objfile)
 	     {
 		bmsym = lookup_minimal_symbol (current_program_space,
 					       var->linkage_name (), objfile);
@@ -485,7 +487,8 @@ language_defn::read_var_value (struct symbol *var,
 	/* Determine address of TLS variable. */
 	if (obj_section
 	    && (obj_section->the_bfd_section->flags & SEC_THREAD_LOCAL) != 0)
-	  addr = target_translate_tls_address (obj_section->objfile, addr);
+	  addr = target_translate_tls_address (obj_section->objfile, addr,
+					       var->print_name ());
       }
       break;
 
@@ -619,7 +622,7 @@ value_from_register (struct type *type, int regnum, const frame_info_ptr &frame)
 
   if (gdbarch_convert_register_p (gdbarch, regnum, type1))
     {
-      int optim, unavail, ok;
+      bool optim, unavail;
 
       /* The ISA/ABI need to something weird when obtaining the
 	 specified value from this register.  It might need to
@@ -630,9 +633,9 @@ value_from_register (struct type *type, int regnum, const frame_info_ptr &frame)
 	 including the location.  */
       v = value::allocate_register (get_next_frame_sentinel_okay (frame),
 				    regnum, type);
-      ok = gdbarch_register_to_value (gdbarch, frame, regnum, type1,
-				      v->contents_raw ().data (), &optim,
-				      &unavail);
+      bool ok = gdbarch_register_to_value (gdbarch, frame, regnum, type1,
+					   v->contents_raw ().data (), &optim,
+					   &unavail);
 
       if (!ok)
 	{

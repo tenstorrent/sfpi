@@ -1,4 +1,4 @@
-# Copyright 2019-2024 Free Software Foundation, Inc.
+# Copyright 2019-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@ standard_testfile
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
-if {[mi_clean_restart $binfile]} {
+if {[mi_clean_restart $::testfile]} {
     return
 }
 
@@ -42,7 +42,7 @@ proc check_cli_display {x show_source} {
     # here, but we do check that the stop happened.
     set stop "\\*stopped,reason=.*\r\n$mi_gdb_prompt$"
     if {$show_source} {
-	set src "~\"\[0-9\]+\[^\"\]*\\\\n\"\r\n"
+	set src "~\"${::decimal}\[^\"\]*\\\\n\"\r\n"
     } else {
 	set src ""
     }

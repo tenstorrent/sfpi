@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 # schedule-multiple on" or "set detach-on-fork on".  Test these two resolution
 # methods.
 
+require allow_fork_tests
+
 standard_testfile .c vforked-prog.c
 
 set binfile ${testfile}-exit
@@ -27,7 +29,7 @@ set binfile3 vforked-prog
 
 if { [build_executable "compile $binfile3" $binfile3 $srcfile2] } {
     untested "failed to compile third test binary"
-    return -1
+    return
 }
 
 if { [is_remote target] } {

@@ -1,6 +1,6 @@
 /* General window behavior.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    Contributed by Hewlett-Packard Company.
 
@@ -46,7 +46,7 @@ tui_batch_rendering::tui_batch_rendering ()
 tui_batch_rendering::~tui_batch_rendering ()
 {
   suppress_output = m_saved_suppress;
-  if (!suppress_output)
+  if (!suppress_output && tui_active)
     doupdate ();
 }
 
@@ -56,12 +56,17 @@ void
 tui_win_info::refresh_window ()
 {
   if (handle != NULL)
-    wnoutrefresh (handle.get ());
+    {
+      if (suppress_output)
+	wnoutrefresh (handle.get ());
+      else
+	wrefresh (handle.get ());
+    }
 }
 
 /* Draw a border around the window.  */
 static void
-box_win (struct tui_win_info *win_info, 
+box_win (struct tui_win_info *win_info,
 	 bool highlight_flag)
 {
   WINDOW *win;
@@ -75,7 +80,7 @@ box_win (struct tui_win_info *win_info,
 
   /* tui_apply_style resets the style entirely, so be sure to call it
      before applying ATTRS.  */
-  if (cli_styling)
+  if (term_cli_styling ())
     tui_apply_style (win, (highlight_flag
 			   ? tui_active_border_style.style ()
 			   : tui_border_style.style ()));
@@ -108,7 +113,7 @@ box_win (struct tui_win_info *win_info,
 void
 tui_unhighlight_win (struct tui_win_info *win_info)
 {
-  if (win_info != NULL 
+  if (win_info != NULL
       && win_info->can_box ()
       && win_info->handle != NULL)
     {

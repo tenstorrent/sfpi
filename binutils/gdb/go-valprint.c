@@ -1,6 +1,6 @@
 /* Support for printing Go values for GDB, the GNU debugger.
 
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -65,7 +65,7 @@ print_go_string (struct type *type,
   /* TODO(dje): Print address of struct or actual string?  */
   if (options->addressprint)
     {
-      gdb_puts (paddress (gdbarch, addr), stream);
+      fputs_styled (paddress (gdbarch, addr), address_style.style (), stream);
       gdb_puts (" ", stream);
     }
 

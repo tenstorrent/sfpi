@@ -1,6 +1,6 @@
 /* Cache and manage the values of registers for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -28,6 +28,7 @@
 #include "reggroups.h"
 #include "observable.h"
 #include "regset.h"
+#include "gdbsupport/unordered_map.h"
 #include <unordered_map>
 #include "cli/cli-cmds.h"
 
@@ -349,12 +350,12 @@ using ptid_regcache_map
 
 /* Type holding regcaches for a given pid.  */
 
-using pid_ptid_regcache_map = std::unordered_map<int, ptid_regcache_map>;
+using pid_ptid_regcache_map = gdb::unordered_map<int, ptid_regcache_map>;
 
 /* Type holding regcaches for a given target.  */
 
 using target_pid_ptid_regcache_map
-  = std::unordered_map<process_stratum_target *, pid_ptid_regcache_map>;
+  = gdb::unordered_map<process_stratum_target *, pid_ptid_regcache_map>;
 
 /* Global structure containing the existing regcaches.  */
 
@@ -428,7 +429,7 @@ get_thread_regcache (process_stratum_target *target, ptid_t ptid)
 struct regcache *
 get_thread_regcache (thread_info *thread)
 {
-  gdb_assert (thread->state != THREAD_EXITED);
+  gdb_assert (thread->state () != THREAD_EXITED);
 
   return get_thread_regcache (thread->inf->process_target (),
 			      thread->ptid);
@@ -1840,9 +1841,10 @@ reg_buffer_raw_compare_zero_len_test ()
   const regcache *regcache
     = get_thread_arch_regcache (&inf, ptid_t (1, 1), inf.arch ());
 
-  /* The buffer address is irrelevant since we end up comparing 0 bytes, we just
-     need to pass something.  */
-  gdb_byte buf;
+  /* The buffer address is irrelevant since we end up comparing 0 bytes, we
+     just need to pass something.  The variable needs to be initialized to
+     avoid compiler warnings about uninitialized values.  */
+  gdb_byte buf = 0;
   SELF_CHECK (regcache->raw_compare (0, &buf, register_size (inf.arch (), 0)));
 }
 
@@ -1910,32 +1912,13 @@ public:
   {}
 };
 
-/* Return true if regcache::cooked_{read,write}_test should be skipped for
-   GDBARCH.  */
-
-static bool
-selftest_skiparch (struct gdbarch *gdbarch)
-{
-  const char *name = gdbarch_bfd_arch_info (gdbarch)->printable_name;
-
-  /* Avoid warning:
-       Running selftest regcache::cooked_{read,write}_test::m68hc11.
-       warning: No frame soft register found in the symbol table.
-       Stack backtrace will not work.
-     We could instead capture the output and then filter out the warning, but
-     that seems more trouble than it's worth.  */
-  return (strcmp (name, "m68hc11") == 0
-	  || strcmp (name, "m68hc12") == 0
-	  || strcmp (name, "m68hc12:HCS12") == 0);
-}
-
 /* Test regcache::cooked_read gets registers from raw registers and
    memory instead of target to_{fetch,store}_registers.  */
 
 static void
 cooked_read_test (struct gdbarch *gdbarch)
 {
-  if (selftest_skiparch (gdbarch))
+  if (selftest_skip_warning_arch (gdbarch))
     return;
 
   scoped_mock_context<target_ops_no_register> mockctx (gdbarch);
@@ -2073,7 +2056,7 @@ cooked_read_test (struct gdbarch *gdbarch)
 static void
 cooked_write_test (struct gdbarch *gdbarch)
 {
-  if (selftest_skiparch (gdbarch))
+  if (selftest_skip_warning_arch (gdbarch))
     return;
 
   /* Create a mock environment.  A process_stratum target pushed.  */
@@ -2228,12 +2211,10 @@ regcache_thread_ptid_changed ()
   gdb_assert (regcaches.empty ());
 }
 
-} // namespace selftests
+} /* namespace selftests */
 #endif /* GDB_SELF_TEST */
 
-void _initialize_regcache ();
-void
-_initialize_regcache ()
+INIT_GDB_FILE (regcache)
 {
   struct cmd_list_element *c;
 

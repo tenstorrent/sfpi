@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,17 +25,17 @@ require is_x86_64_m64_target
 standard_testfile .S
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug nopie}] != "" } {
-     untested "failed to compile"
-     return -1
-}
-
-if {[mi_clean_restart $binfile]} {
+    untested "failed to compile"
     return
 }
 
-if ![mi_runto stop_frame] {
+if {[mi_clean_restart $::testfile]} {
+    return
+}
+
+if {![mi_runto stop_frame]} {
     perror "Failed to stop in stop_frame"
-    return -1
+    return
 }
 
 mi_gdb_test "111-stack-list-frames" \

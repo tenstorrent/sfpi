@@ -1,6 +1,6 @@
 /* Convert a DWARF location expression to C
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -70,16 +70,18 @@ struct insn_info
    TO_DO is a list of bytecodes which must be examined; it may be
    added to by this function.
    BYTE_ORDER and ADDR_SIZE describe this bytecode in the obvious way.
-   OP_PTR and OP_END are the bounds of the DWARF expression.  */
+   EXPR is the DWARF expression.  */
 
 static void
 compute_stack_depth_worker (int start, int *need_tempvar,
 			    std::vector<struct insn_info> *info,
 			    std::vector<int> *to_do,
 			    enum bfd_endian byte_order, unsigned int addr_size,
-			    const gdb_byte *op_ptr, const gdb_byte *op_end)
+			    gdb::array_view<const gdb_byte> expr)
 {
-  const gdb_byte * const base = op_ptr;
+  const gdb_byte *const base = expr.data ();
+  const gdb_byte *op_ptr = expr.data ();
+  const gdb_byte *const op_end = expr.data () + expr.size ();
   int stack_depth;
 
   op_ptr += start;
@@ -378,7 +380,7 @@ compute_stack_depth_worker (int start, int *need_tempvar,
    generator).
    IS_TLS is an out parameter which is set if this expression refers
    to a TLS variable.
-   OP_PTR and OP_END are the bounds of the DWARF expression.
+   EXPR is the DWARF expression.
    INITIAL_DEPTH is the initial depth of the DWARF expression stack.
    INFO is an array of insn_info objects, indexed by offset from the
    start of the DWARF expression.
@@ -388,14 +390,14 @@ compute_stack_depth_worker (int start, int *need_tempvar,
 static int
 compute_stack_depth (enum bfd_endian byte_order, unsigned int addr_size,
 		     int *need_tempvar, int *is_tls,
-		     const gdb_byte *op_ptr, const gdb_byte *op_end,
+		     gdb::array_view<const gdb_byte> expr,
 		     int initial_depth,
 		     std::vector<struct insn_info> *info)
 {
   std::vector<int> to_do;
-  int stack_depth, i;
+  int stack_depth;
 
-  info->resize (op_end - op_ptr);
+  info->resize (expr.size ());
 
   to_do.push_back (0);
   (*info)[0].depth = initial_depth;
@@ -406,14 +408,13 @@ compute_stack_depth (enum bfd_endian byte_order, unsigned int addr_size,
       int ndx = to_do.back ();
       to_do.pop_back ();
 
-      compute_stack_depth_worker (ndx, need_tempvar, info, &to_do,
-				  byte_order, addr_size,
-				  op_ptr, op_end);
+      compute_stack_depth_worker (ndx, need_tempvar, info, &to_do, byte_order,
+				  addr_size, expr);
     }
 
   stack_depth = 0;
   *is_tls = 0;
-  for (i = 0; i < op_end - op_ptr; ++i)
+  for (int i = 0; i < expr.size (); ++i)
     {
       if ((*info)[i].depth > stack_depth)
 	stack_depth = (*info)[i].depth;
@@ -579,7 +580,7 @@ pushf_register (int indent, string_file *stream,
 
    ADDR_SIZE is the DWARF address size to use.
 
-   OPT_PTR and OP_END are the bounds of the DWARF expression.
+   EXPR is the DWARF expression.
 
    If non-NULL, INITIAL points to an initial value to write to the
    stack.  If NULL, no initial value is written.
@@ -595,9 +596,9 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 			    struct gdbarch *arch,
 			    std::vector<bool> &registers_used,
 			    unsigned int addr_size,
-			    const gdb_byte *op_ptr, const gdb_byte *op_end,
+			    gdb::array_view<const gdb_byte> expr,
 			    CORE_ADDR *initial,
-			    dwarf2_per_cu_data *per_cu,
+			    dwarf2_per_cu *per_cu,
 			    dwarf2_per_objfile *per_objfile)
 {
   /* We keep a counter so that labels and other objects we create have
@@ -605,7 +606,6 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
   static unsigned int scope;
 
   enum bfd_endian byte_order = gdbarch_byte_order (arch);
-  const gdb_byte * const base = op_ptr;
   int need_tempvar = 0;
   int is_tls = 0;
   std::vector<struct insn_info> info;
@@ -620,7 +620,7 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 
   stack_depth = compute_stack_depth (byte_order, addr_size,
 				     &need_tempvar, &is_tls,
-				     op_ptr, op_end, initial != NULL,
+				     expr, initial != NULL,
 				     &info);
 
   /* This is a hack until we can add a feature to glibc to let us
@@ -632,7 +632,7 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
      offset by hand seemed too hackish.  */
   if (is_tls)
     {
-      frame_info_ptr frame = get_selected_frame (NULL);
+      frame_info_ptr frame = get_selected_frame ();
       struct value *val;
 
       if (frame == NULL)
@@ -667,6 +667,10 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 
   if (initial != NULL)
     pushf (indent, stream, "%s", core_addr_to_string (*initial));
+
+  const gdb_byte *const base = expr.data ();
+  const gdb_byte *op_ptr = base;
+  const gdb_byte *const op_end = expr.data () + expr.size ();
 
   while (op_ptr < op_end)
     {
@@ -880,8 +884,6 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 	  break;
 	case DW_OP_fbreg:
 	  {
-	    const gdb_byte *datastart;
-	    size_t datalen;
 	    const struct block *b;
 	    struct symbol *framefunc;
 	    char fb_name[50];
@@ -896,8 +898,8 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 	    if (!framefunc)
 	      error (_("No function found for block"));
 
-	    func_get_frame_base_dwarf_block (framefunc, pc,
-					     &datastart, &datalen);
+	    auto frame_base_expr
+	      = func_get_frame_base_dwarf_block (framefunc, pc);
 
 	    op_ptr = safe_read_sleb128 (op_ptr, op_end, &offset);
 
@@ -906,12 +908,10 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 	    xsnprintf (fb_name, sizeof (fb_name), "__frame_base_%ld",
 		       (long) (op_ptr - base));
 
-	    do_compile_dwarf_expr_to_c (indent, stream,
-					GCC_UINTPTR, fb_name,
-					sym, pc,
-					arch, registers_used, addr_size,
-					datastart, datastart + datalen,
-					NULL, per_cu, per_objfile);
+	    do_compile_dwarf_expr_to_c (indent, stream, GCC_UINTPTR, fb_name,
+					sym, pc, arch, registers_used,
+					addr_size, frame_base_expr, nullptr,
+					per_cu, per_objfile);
 
 	    pushf (indent, stream, "%s + %s", fb_name, hex_string (offset));
 	  }
@@ -1074,11 +1074,10 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 	    int regnum;
 	    CORE_ADDR text_offset;
 	    LONGEST off;
-	    const gdb_byte *cfa_start, *cfa_end;
+	    gdb::array_view<const gdb_byte> cfa_expr;
 
-	    if (dwarf2_fetch_cfa_info (arch, pc, per_cu,
-				       &regnum, &off,
-				       &text_offset, &cfa_start, &cfa_end))
+	    if (dwarf2_fetch_cfa_info (arch, pc, per_cu, &regnum, &off,
+				       &text_offset, cfa_expr))
 	      {
 		/* Register.  */
 		pushf_register (indent, stream, registers_used, arch, regnum,
@@ -1094,12 +1093,11 @@ do_compile_dwarf_expr_to_c (int indent, string_file *stream,
 		xsnprintf (cfa_name, sizeof (cfa_name),
 			   "__cfa_%ld", (long) (op_ptr - base));
 
-		do_compile_dwarf_expr_to_c (indent, stream,
-					    GCC_UINTPTR, cfa_name,
-					    sym, pc, arch, registers_used,
-					    addr_size,
-					    cfa_start, cfa_end,
-					    &text_offset, per_cu, per_objfile);
+		do_compile_dwarf_expr_to_c (indent, stream, GCC_UINTPTR,
+					    cfa_name, sym, pc, arch,
+					    registers_used, addr_size,
+					    cfa_expr, &text_offset, per_cu,
+					    per_objfile);
 		pushf (indent, stream, "%s", cfa_name);
 	      }
 	  }
@@ -1146,13 +1144,13 @@ compile_dwarf_expr_to_c (string_file *stream, const char *result_name,
 			 struct gdbarch *arch,
 			 std::vector<bool> &registers_used,
 			 unsigned int addr_size,
-			 const gdb_byte *op_ptr, const gdb_byte *op_end,
-			 dwarf2_per_cu_data *per_cu,
+			 gdb::array_view<const gdb_byte> expr,
+			 dwarf2_per_cu *per_cu,
 			 dwarf2_per_objfile *per_objfile)
 {
   do_compile_dwarf_expr_to_c (2, stream, GCC_UINTPTR, result_name, sym, pc,
-			      arch, registers_used, addr_size, op_ptr, op_end,
-			      NULL, per_cu, per_objfile);
+			      arch, registers_used, addr_size, expr, nullptr,
+			      per_cu, per_objfile);
 }
 
 /* See compile.h.  */
@@ -1165,12 +1163,11 @@ compile_dwarf_bounds_to_c (string_file *stream,
 			   struct gdbarch *arch,
 			   std::vector<bool> &registers_used,
 			   unsigned int addr_size,
-			   const gdb_byte *op_ptr, const gdb_byte *op_end,
-			   dwarf2_per_cu_data *per_cu,
+			   gdb::array_view<const gdb_byte> expr,
+			   dwarf2_per_cu *per_cu,
 			   dwarf2_per_objfile *per_objfile)
 {
-  do_compile_dwarf_expr_to_c (2, stream, "unsigned long ", result_name,
-			      sym, pc, arch, registers_used,
-			      addr_size, op_ptr, op_end, NULL, per_cu,
-			      per_objfile);
+  do_compile_dwarf_expr_to_c (2, stream, "unsigned long ", result_name, sym,
+			      pc, arch, registers_used, addr_size, expr,
+			      nullptr, per_cu, per_objfile);
 }

@@ -1,6 +1,6 @@
 /* Dynamic architecture support for GDB, the GNU debugger.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,6 +30,8 @@
 #include "displaced-stepping.h"
 #include "gdbsupport/gdb-checked-static-cast.h"
 #include "registry.h"
+#include "solib.h"
+#include "find-memory-region.h"
 
 struct floatformat;
 struct ui_file;
@@ -73,12 +75,6 @@ struct gdbarch_tdep_base
 };
 
 using gdbarch_tdep_up = std::unique_ptr<gdbarch_tdep_base>;
-
-/* Callback type for the 'iterate_over_objfiles_in_search_order'
-   gdbarch  method.  */
-
-using iterate_over_objfiles_in_search_order_cb_ftype
-  = gdb::function_view<bool(objfile *)>;
 
 /* Callback type for regset section iterators.  The callback usually
    invokes the REGSET's supply or collect method, to which it must
@@ -126,14 +122,10 @@ enum class memtag_type
   allocation,
 };
 
-/* Callback types for 'read_core_file_mappings' gdbarch method.  */
-
-using read_core_file_mappings_pre_loop_ftype =
-  gdb::function_view<void (ULONGEST count)>;
+/* Callback type for 'read_core_file_mappings' gdbarch method.  */
 
 using read_core_file_mappings_loop_ftype =
-  gdb::function_view<void (int num,
-			   ULONGEST start,
+  gdb::function_view<void (ULONGEST start,
 			   ULONGEST end,
 			   ULONGEST file_ofs,
 			   const char *filename,
@@ -210,7 +202,7 @@ gdbarch_tdep (struct gdbarch *gdbarch)
    information obtained from INFO.ABFD or the global defaults.
 
    The ARCHES parameter is a linked list (sorted most recently used)
-   of all the previously created architures for this architecture
+   of all the previously created architectures for this architecture
    family.  The (possibly NULL) ARCHES->gdbarch can used to access
    values from the previously selected architecture for this
    architecture family.

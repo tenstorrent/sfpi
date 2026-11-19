@@ -1,6 +1,6 @@
 /* Definitions for reading symbol files into GDB.
 
-   Copyright (C) 1990-2024 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -26,9 +26,7 @@
 #include "symfile-add-flags.h"
 #include "objfile-flags.h"
 #include "gdb_bfd.h"
-#include "gdbsupport/function-view.h"
 #include "target-section.h"
-#include "quick-symbol.h"
 
 /* Opaque declarations.  */
 struct target_section;
@@ -71,7 +69,7 @@ struct other_sections
    to communicate the section addresses in shared objects to
    symbol_file_add ().  */
 
-typedef std::vector<other_sections> section_addr_info;
+using section_addr_info = std::vector<other_sections>;
 
 /* A table listing the load segments in a symfile, and which segment
    each BFD section belongs to.  */
@@ -118,12 +116,6 @@ struct sym_probe_fns
 
 struct sym_fns
 {
-  /* Initializes anything that is global to the entire symbol table.
-     It is called during symbol_file_add, when we begin debugging an
-     entirely new program.  */
-
-  void (*sym_new_init) (struct objfile *);
-
   /* Reads any initial information from a symbol file, and initializes
      the struct sym_fns SF in preparation for sym_read().  It is
      called every time we read a symbol file for any reason.  */
@@ -136,13 +128,6 @@ struct sym_fns
      symbol_file_add & co.  */
 
   void (*sym_read) (struct objfile *, symfile_add_flags);
-
-  /* Called when we are finished with an objfile.  Should do all
-     cleanup that is specific to the object file format for the
-     particular objfile.  */
-
-  void (*sym_finish) (struct objfile *);
-
 
   /* This function produces a file-dependent section_offsets
      structure, allocated in the objfile's storage.
@@ -157,12 +142,6 @@ struct sym_fns
      which may be relocated independently.  */
 
   symfile_segment_data_up (*sym_segments) (bfd *abfd);
-
-  /* This function should read the linetable from the objfile when
-     the line table cannot be read while processing the debugging
-     information.  */
-
-  void (*sym_read_linetable) (struct objfile *);
 
   /* Relocate the contents of a debug section SECTP.  The
      contents are stored in BUF if it is non-NULL, or returned in a
@@ -179,7 +158,7 @@ extern section_addr_info
   build_section_addr_info_from_objfile (const struct objfile *objfile);
 
 extern void relative_addr_info_to_section_offsets
-  (section_offsets &section_offsets, const section_addr_info &addrs);
+  (std::vector<CORE_ADDR> &section_offsets, const section_addr_info &addrs);
 
 extern void addr_info_make_relative (section_addr_info *addrs,
 				     bfd *abfd);
@@ -213,11 +192,10 @@ allocate_symtab (struct compunit_symtab *cust, const char *filename)
   return allocate_symtab (cust, filename, filename);
 }
 
-extern struct compunit_symtab *allocate_compunit_symtab (struct objfile *,
-							 const char *)
-  ATTRIBUTE_NONNULL (1);
-
-extern void add_compunit_symtab_to_objfile (struct compunit_symtab *cu);
+/* Add CU to its objfile, transferring ownership to the objfile.
+   Returns a pointer to the compunit symtab.  */
+extern compunit_symtab *add_compunit_symtab_to_objfile
+     (std::unique_ptr<compunit_symtab> cu);
 
 extern void add_symtab_fns (enum bfd_flavour flavour, const struct sym_fns *);
 
@@ -340,24 +318,11 @@ extern bfd_byte *symfile_relocate_debug_section (struct objfile *, asection *,
 
 extern int symfile_map_offsets_to_segments (bfd *,
 					    const struct symfile_segment_data *,
-					    section_offsets &,
+					    std::vector<CORE_ADDR> &,
 					    int, const CORE_ADDR *);
 symfile_segment_data_up get_symfile_segment_data (bfd *abfd);
 
 extern scoped_restore_tmpl<int> increment_reading_symtab (void);
-
-bool expand_symtabs_matching
-  (gdb::function_view<expand_symtabs_file_matcher_ftype> file_matcher,
-   const lookup_name_info &lookup_name,
-   gdb::function_view<expand_symtabs_symbol_matcher_ftype> symbol_matcher,
-   gdb::function_view<expand_symtabs_exp_notify_ftype> expansion_notify,
-   block_search_flags search_flags,
-   domain_search_flags kind,
-   gdb::function_view<expand_symtabs_lang_matcher_ftype> lang_matcher
-     = nullptr);
-
-void map_symbol_filenames (gdb::function_view<symbol_filename_ftype> fun,
-			   bool need_fullname);
 
 /* Target-agnostic function to load the sections of an executable into memory.
 

@@ -1,6 +1,6 @@
 /* Code dealing with register stack frames, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -31,8 +31,7 @@ struct frame_unwind_cache
 void *
 sentinel_frame_cache (struct regcache *regcache)
 {
-  struct frame_unwind_cache *cache = 
-    FRAME_OBSTACK_ZALLOC (struct frame_unwind_cache);
+  auto *cache = frame_obstack_zalloc<frame_unwind_cache> ();
 
   cache->regcache = regcache;
   return cache;

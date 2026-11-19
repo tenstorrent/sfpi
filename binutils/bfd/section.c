@@ -1,5 +1,5 @@
 /* Object file "section" support for the BFD library.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -381,62 +381,6 @@ CODE_FRAGMENT
 .
 .  {*  End of section flags.  *}
 .
-.  {* Some internal packed boolean fields.  *}
-.
-.  {* See the vma field.  *}
-.  unsigned int user_set_vma : 1;
-.
-.  {* A mark flag used by some of the linker backends.  *}
-.  unsigned int linker_mark : 1;
-.
-.  {* Another mark flag used by some of the linker backends.  Set for
-.     output sections that have an input section.  *}
-.  unsigned int linker_has_input : 1;
-.
-.  {* Mark flag used by some linker backends for garbage collection.  *}
-.  unsigned int gc_mark : 1;
-.
-.  {* Section compression status.  *}
-.  unsigned int compress_status : 2;
-.#define COMPRESS_SECTION_NONE    0
-.#define COMPRESS_SECTION_DONE    1
-.#define DECOMPRESS_SECTION_ZLIB  2
-.#define DECOMPRESS_SECTION_ZSTD  3
-.
-.  {* The following flags are used by the ELF linker. *}
-.
-.  {* Mark sections which have been allocated to segments.  *}
-.  unsigned int segment_mark : 1;
-.
-.  {* Type of sec_info information.  *}
-.  unsigned int sec_info_type:3;
-.#define SEC_INFO_TYPE_NONE      0
-.#define SEC_INFO_TYPE_STABS     1
-.#define SEC_INFO_TYPE_MERGE     2
-.#define SEC_INFO_TYPE_EH_FRAME  3
-.#define SEC_INFO_TYPE_JUST_SYMS 4
-.#define SEC_INFO_TYPE_TARGET    5
-.#define SEC_INFO_TYPE_EH_FRAME_ENTRY 6
-.#define SEC_INFO_TYPE_SFRAME  7
-.
-.  {* Nonzero if this section uses RELA relocations, rather than REL.  *}
-.  unsigned int use_rela_p:1;
-.
-.  {* Nonzero if this section contents are mmapped, rather than malloced.  *}
-.  unsigned int mmapped_p:1;
-.
-.  {* Bits used by various backends.  The generic code doesn't touch
-.     these fields.  *}
-.
-.  unsigned int sec_flg0:1;
-.  unsigned int sec_flg1:1;
-.  unsigned int sec_flg2:1;
-.  unsigned int sec_flg3:1;
-.  unsigned int sec_flg4:1;
-.  unsigned int sec_flg5:1;
-.
-.  {* End of internal packed boolean fields.  *}
-.
 .  {*  The virtual memory address of the section - where it will be
 .      at run time.  The symbols are relocated against this.  The
 .      user_set_vma flag is maintained by bfd; if it's not set, the
@@ -531,9 +475,6 @@ CODE_FRAGMENT
 .     linenumbers are written out.  *}
 .  file_ptr moving_line_filepos;
 .
-.  {* What the section number is in the target world.  *}
-.  int target_index;
-.
 .  void *used_by_bfd;
 .
 .  {* If this is a constructor section then here is a list of the
@@ -562,8 +503,80 @@ CODE_FRAGMENT
 .     regions is enabled.  *}
 .  struct bfd_section *already_assigned;
 .
+.  {* A pointer used for various section optimizations.  sec_info_type
+.     qualifies which one it is.  *}
+.  void *sec_info;
+.
 .  {* Explicitly specified section type, if non-zero.  *}
 .  unsigned int type;
+.
+.  {* What the section number is in the target world.  *}
+.  int target_index;
+.
+.  {* Some internal packed boolean fields.  *}
+.
+.  {* See the vma field.  *}
+.  unsigned int user_set_vma : 1;
+.
+.  {* A mark flag used by some of the linker backends.  *}
+.  unsigned int linker_mark : 1;
+.
+.  {* Another mark flag used by some of the linker backends.  Set for
+.     output sections that have an input section.  *}
+.  unsigned int linker_has_input : 1;
+.
+.  {* Mark flag used by some linker backends for garbage collection.  *}
+.  unsigned int gc_mark : 1;
+.
+.  {* Section compression status.  *}
+.  unsigned int compress_status : 2;
+.#define COMPRESS_SECTION_NONE    0
+.#define COMPRESS_SECTION_DONE    1
+.#define DECOMPRESS_SECTION_ZLIB  2
+.#define DECOMPRESS_SECTION_ZSTD  3
+.
+.  {* The following flags are used by the ELF linker. *}
+.
+.  {* Mark sections which have been allocated to segments.  *}
+.  unsigned int segment_mark : 1;
+.
+.  {* Type of sec_info information.  *}
+.  unsigned int sec_info_type:3;
+.#define SEC_INFO_TYPE_NONE      0
+.#define SEC_INFO_TYPE_STABS     1
+.#define SEC_INFO_TYPE_MERGE     2
+.#define SEC_INFO_TYPE_EH_FRAME  3
+.#define SEC_INFO_TYPE_JUST_SYMS 4
+.#define SEC_INFO_TYPE_TARGET    5
+.#define SEC_INFO_TYPE_EH_FRAME_ENTRY 6
+.#define SEC_INFO_TYPE_SFRAME  7
+.
+.  {* Nonzero if this section uses RELA relocations, rather than REL.  *}
+.  unsigned int use_rela_p:1;
+.
+.  {* Nonzero if section contents are mmapped.  *}
+.  unsigned int mmapped_p:1;
+.
+.  {* Nonzero if section contents should not be freed.  *}
+.  unsigned int alloced:1;
+.
+.  {* Indicate that the section contains branch veneers.  This is used when
+.     support for non-contiguous memory regions is enabled.  The veneers have
+.     to be allocated to the same memory region as the code they are refered
+.     by, i.e. they cannot be moved to a subsequent memory region.  *}
+.  unsigned int veneer : 1;
+.
+.  {* Bits used by various backends.  The generic code doesn't touch
+.     these fields.  *}
+.
+.  unsigned int sec_flg0:1;
+.  unsigned int sec_flg1:1;
+.  unsigned int sec_flg2:1;
+.  unsigned int sec_flg3:1;
+.  unsigned int sec_flg4:1;
+.  unsigned int sec_flg5:1;
+.
+.  {* End of internal packed boolean fields.  *}
 .
 .} asection;
 .
@@ -709,56 +722,21 @@ EXTERNAL
 .          && sec->sec_info_type != SEC_INFO_TYPE_JUST_SYMS);
 .}
 .
-.#define BFD_FAKE_SECTION(SEC, SYM, NAME, IDX, FLAGS)			\
-.  {* name, next, prev, id,  section_id, index, flags, user_set_vma, *}	\
-.  {  NAME, NULL, NULL, IDX, 0,          0,     FLAGS, 0,		\
-.									\
-.  {* linker_mark, linker_has_input, gc_mark, decompress_status,     *}	\
-.     0,           0,                1,       0,			\
-.									\
-.  {* segment_mark, sec_info_type, use_rela_p, mmapped_p,           *}	\
-.     0,            0,             0,	       0,			\
-.									\
-.  {* sec_flg0, sec_flg1, sec_flg2, sec_flg3, sec_flg4, sec_flg5,    *}	\
-.     0,        0,        0,        0,        0,        0,		\
-.									\
-.  {* vma, lma, size, rawsize, compressed_size,                      *}	\
-.     0,   0,   0,    0,       0,					\
-.									\
-.  {* output_offset, output_section, relocation, orelocation,        *}	\
-.     0,             &SEC,           NULL,       NULL,			\
-.									\
-.  {* reloc_count, alignment_power, filepos, rel_filepos,            *}	\
-.     0,           0,               0,       0,				\
-.									\
-.  {* line_filepos, userdata, contents, lineno, lineno_count,        *}	\
-.     0,            NULL,     NULL,     NULL,   0,			\
-.									\
-.  {* entsize, kept_section, moving_line_filepos,                    *}	\
-.     0,       NULL,         0,						\
-.									\
-.  {* target_index, used_by_bfd, constructor_chain, owner,           *}	\
-.     0,            NULL,        NULL,              NULL,		\
-.									\
-.  {* symbol,                                                        *}	\
-.     (struct bfd_symbol *) SYM,					\
-.									\
-.  {* map_head, map_tail, already_assigned, type                     *}	\
-.     { NULL }, { NULL }, NULL,             0				\
-.									\
-.    }
+INTERNAL
+.#define BFD_FAKE_SECTION(SEC, SYM, NAME, IDX, FLAGS)	\
+.  { .name = NAME,					\
+.    .id = IDX,						\
+.    .flags = FLAGS,					\
+.    .gc_mark = 1,					\
+.    .output_section = &SEC,				\
+.    .symbol = (struct bfd_symbol *) SYM		\
+.  }
 .
-.{* We use a macro to initialize the static asymbol structures because
-.   traditional C does not permit us to initialize a union member while
-.   gcc warns if we don't initialize it.
-.   the_bfd, name, value, attr, section [, udata]  *}
-.#ifdef __STDC__
-.#define GLOBAL_SYM_INIT(NAME, SECTION) \
-.  { 0, NAME, 0, BSF_SECTION_SYM, SECTION, { 0 }}
-.#else
-.#define GLOBAL_SYM_INIT(NAME, SECTION) \
-.  { 0, NAME, 0, BSF_SECTION_SYM, SECTION }
-.#endif
+.#define GLOBAL_SYM_INIT(NAME, SECTION)			\
+.  { .name = NAME,					\
+.    .section = SECTION,				\
+.    .flags = BSF_SECTION_SYM				\
+.  }
 .
 */
 
@@ -1656,6 +1634,10 @@ DESCRIPTION
 bool
 bfd_malloc_and_get_section (bfd *abfd, sec_ptr sec, bfd_byte **buf)
 {
+  /* FIXME: We sometimes get here when sec->alloced is set.
+     arm, aarch64, and xtensa targets all abort on some ld tests
+     if we also test sec->alloced here.  We really should not ever be
+     mallocing a buffer if we already have an alloced one.  */
   if (sec->mmapped_p)
     abort ();
   *buf = NULL;
@@ -1664,10 +1646,6 @@ bfd_malloc_and_get_section (bfd *abfd, sec_ptr sec, bfd_byte **buf)
 /*
 FUNCTION
 	bfd_copy_private_section_data
-
-SYNOPSIS
-	bool bfd_copy_private_section_data
-	  (bfd *ibfd, asection *isec, bfd *obfd, asection *osec);
 
 DESCRIPTION
 	Copy private section information from @var{isec} in the BFD
@@ -1678,9 +1656,9 @@ DESCRIPTION
 	o <<bfd_error_no_memory>> -
 	Not enough memory exists to create private data for @var{osec}.
 
-.#define bfd_copy_private_section_data(ibfd, isection, obfd, osection) \
+.#define bfd_copy_private_section_data(ibfd, isec, obfd, osec, link_info) \
 .	BFD_SEND (obfd, _bfd_copy_private_section_data, \
-.		  (ibfd, isection, obfd, osection))
+.		  (ibfd, isec, obfd, osec, link_info))
 */
 
 /*

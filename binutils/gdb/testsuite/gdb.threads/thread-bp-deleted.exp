@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Free Software Foundation, Inc.
+# Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,31 +26,32 @@ standard_testfile
 
 if {[build_executable "failed to prepare" $testfile $srcfile \
 	 {debug pthreads}] == -1} {
-    return -1
+    return
 }
 
 # We need to do things a little differently when using the remote protocol.
 set is_remote \
-    [expr [target_info exists gdb_protocol] \
-	 && ([string equal [target_info gdb_protocol] "remote"] \
-	     || [string equal [target_info gdb_protocol] "extended-remote"])]
+    [expr \
+	 {[target_info exists gdb_protocol]
+	     && ([string equal [target_info gdb_protocol] "remote"]
+		 || [string equal [target_info gdb_protocol] "extended-remote"])}]
 
 # This test requires background execution, which relies on non-stop mode.
 save_vars { GDBFLAGS } {
     append GDBFLAGS " -ex \"maint set target-non-stop on\""
-    clean_restart ${binfile}
+    clean_restart ${::testfile}
 }
 
 if {![runto_main]} {
-    return -1
+    return
 }
 
-# Check we hace non-stop mode.  We do try to force this on above, but maybe
+# Check we have non-stop mode.  We do try to force this on above, but maybe
 # the target doesn't support non-stop mode, in which case (hopefully)
 # non-stop mode will still show as off, and this test should not be run.
 if {![is_target_non_stop]} {
     unsupported "required non-stop mode"
-    return -1
+    return
 }
 
 delete_breakpoints
@@ -95,8 +96,7 @@ proc check_for_thread_specific_breakpoint { testname bpnum expected } {
 
 # Create a thread-specific breakpoint.  This will never actually be hit; we
 # don't care, we just want to see GDB auto-delete this breakpoint.
-gdb_breakpoint "main thread $worker_thread" \
-    "create a thread-specific breakpoint"
+gdb_breakpoint "main thread $worker_thread"
 set bpnum [get_integer_valueof "\$bpnum" "INVALID" \
 	       "get number for thread-specific breakpoint"]
 
@@ -147,7 +147,7 @@ if {$is_remote} {
 	    exp_continue
 	}
 
-	-re "No threads match '99'\\.\r\n$gdb_prompt $" {
+	-re "No threads matched\\.\r\n$gdb_prompt $" {
 	    if {!$saw_thread_exited && !$saw_bp_deleted && $attempt_count > 0} {
 		sleep 1
 		incr attempt_count -1
@@ -189,7 +189,7 @@ gdb_test_lines "maint info breakpoints" "" ".*" \
 # Set the do_spin variable in the inferior.  This will cause it to drop out
 # of its spin loop and hit the next breakpoint.  Remember, at this point the
 # inferior is still executing.
-gdb_test "print do_spin = 0" "\\\$$decimal = 0"
+gdb_test "print do_spin = 0" "${::valnum_re} = 0"
 
 # Collect the notification that the inferior has stopped.
 gdb_test_multiple "" "wait for stop" {

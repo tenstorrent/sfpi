@@ -1,5 +1,5 @@
 /* Build symbol tables in GDB's internal format.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,6 +19,7 @@
 #ifndef GDB_BUILDSYM_H
 #define GDB_BUILDSYM_H
 
+#include "block.h"
 #include "gdbsupport/gdb_obstack.h"
 #include "symtab.h"
 #include "addrmap.h"
@@ -55,7 +56,7 @@ struct subfile
   struct subfile *next = nullptr;
   std::string name;
 
-  /* This field is analoguous in function to symtab::filename_for_id.
+  /* This field is analogous in function to symtab::filename_for_id.
 
      It is used to look up existing subfiles in calls to start_subfile.  */
   std::string name_for_id;
@@ -66,59 +67,6 @@ struct subfile
 };
 
 using subfile_up = std::unique_ptr<subfile>;
-
-/* Record the symbols defined for each context in a list.  We don't
-   create a struct block for the context until we know how long to
-   make it.  */
-
-#define PENDINGSIZE 100
-
-struct pending
-  {
-    struct pending *next;
-    int nsyms;
-    struct symbol *symbol[PENDINGSIZE];
-  };
-
-/* Stack representing unclosed lexical contexts (that will become
-   blocks, eventually).  */
-
-struct context_stack
-  {
-    /* Outer locals at the time we entered */
-
-    struct pending *locals;
-
-    /* Pending using directives at the time we entered.  */
-
-    struct using_direct *local_using_directives;
-
-    /* Pointer into blocklist as of entry */
-
-    struct pending_block *old_blocks;
-
-    /* Name of function, if any, defining context */
-
-    struct symbol *name;
-
-    /* Expression that computes the frame base of the lexically enclosing
-       function, if any.  NULL otherwise.  */
-
-    struct dynamic_prop *static_link;
-
-    /* PC where this context starts */
-
-    CORE_ADDR start_addr;
-
-    /* Temp slot for exception handling.  */
-
-    CORE_ADDR end_addr;
-
-    /* For error-checking matching push/pop */
-
-    int depth;
-
-  };
 
 /* Flags associated with a linetable entry.  */
 
@@ -171,7 +119,6 @@ struct buildsym_compunit
 		     const char *comp_dir_, enum language language_,
 		     CORE_ADDR last_addr, struct compunit_symtab *cust)
     : m_objfile (objfile_),
-      m_last_source_file (name == nullptr ? nullptr : xstrdup (name)),
       m_comp_dir (comp_dir_ == nullptr ? "" : comp_dir_),
       m_compunit_symtab (cust),
       m_language (language_),
@@ -183,41 +130,12 @@ struct buildsym_compunit
 
   DISABLE_COPY_AND_ASSIGN (buildsym_compunit);
 
-  void set_last_source_file (const char *name)
-  {
-    char *new_name = name == NULL ? NULL : xstrdup (name);
-    m_last_source_file.reset (new_name);
-  }
-
-  const char *get_last_source_file ()
-  {
-    return m_last_source_file.get ();
-  }
-
   struct macro_table *get_macro_table ();
-
-  struct macro_table *release_macros ()
-  {
-    struct macro_table *result = m_pending_macros;
-    m_pending_macros = nullptr;
-    return result;
-  }
-
-  /* This function is called to discard any pending blocks.  */
-
-  void free_pending_blocks ()
-  {
-    m_pending_block_obstack.clear ();
-    m_pending_blocks = nullptr;
-  }
 
   struct block *finish_block (struct symbol *symbol,
 			      struct pending_block *old_blocks,
 			      const struct dynamic_prop *static_link,
 			      CORE_ADDR start, CORE_ADDR end);
-
-  void record_block_range (struct block *block,
-			   CORE_ADDR start, CORE_ADDR end_inclusive);
 
   /* Start recording information about source code that comes from a source
      file.  This sets the current subfile, creating it if necessary.
@@ -229,19 +147,6 @@ struct buildsym_compunit
      existing subfiles).  It can be equal to NAME if NAME follows that rule.  */
   void start_subfile (const char *name, const char *name_for_id);
 
-  /* Same as above, but passes NAME for NAME_FOR_ID.  */
-
-  void start_subfile (const char *name)
-  {
-    return start_subfile (name, name);
-  }
-
-  void patch_subfile_names (struct subfile *subfile, const char *name);
-
-  void push_subfile ();
-
-  const char *pop_subfile ();
-
   void record_line (struct subfile *subfile, int line, unrelocated_addr pc,
 		    linetable_entry_flags flags);
 
@@ -250,24 +155,9 @@ struct buildsym_compunit
     return m_compunit_symtab;
   }
 
-  void set_last_source_start_addr (CORE_ADDR addr)
-  {
-    m_last_source_start_addr = addr;
-  }
-
-  CORE_ADDR get_last_source_start_addr ()
-  {
-    return m_last_source_start_addr;
-  }
-
   struct using_direct **get_local_using_directives ()
   {
     return &m_local_using_directives;
-  }
-
-  void set_local_using_directives (struct using_direct *new_local)
-  {
-    m_local_using_directives = new_local;
   }
 
   struct using_direct **get_global_using_directives ()
@@ -280,16 +170,22 @@ struct buildsym_compunit
     return m_context_stack.empty ();
   }
 
-  struct context_stack *get_current_context_stack ()
+  /* Return true if the lexical context currently being constructed
+     has a symbol, false otherwise.  */
+  bool current_context_has_function () const
   {
-    if (m_context_stack.empty ())
-      return nullptr;
-    return &m_context_stack.back ();
+    return (!m_context_stack.empty ()
+	    && m_context_stack.back ().name != nullptr);
   }
 
-  int get_context_stack_depth () const
+  /* Set the symbol on the lexical context currently being
+     constructed.  */
+  void set_current_context_function (symbol *fun)
   {
-    return m_context_stack.size ();
+    gdb_assert (!m_context_stack.empty ());
+    gdb_assert (m_context_stack.back ().name == nullptr);
+    gdb_assert (fun != nullptr);
+    m_context_stack.back ().name = fun;
   }
 
   struct subfile *get_current_subfile ()
@@ -297,19 +193,19 @@ struct buildsym_compunit
     return m_current_subfile;
   }
 
-  struct pending **get_local_symbols ()
+  std::vector<symbol *> &get_local_symbols ()
   {
-    return &m_local_symbols;
+    return m_local_symbols;
   }
 
-  struct pending **get_file_symbols ()
+  std::vector<symbol *> &get_file_symbols ()
   {
-    return &m_file_symbols;
+    return m_file_symbols;
   }
 
-  struct pending **get_global_symbols ()
+  std::vector<symbol *> &get_global_symbols ()
   {
-    return &m_global_symbols;
+    return m_global_symbols;
   }
 
   void record_debugformat (const char *format)
@@ -322,15 +218,23 @@ struct buildsym_compunit
     m_producer = producer;
   }
 
-  struct context_stack *push_context (int desc, CORE_ADDR valu);
+  void push_context (CORE_ADDR value);
 
-  struct context_stack pop_context ();
+  /* Pop a context and create the corresponding block.  Returns the
+     block.  END_ADDR is the final address of the block.  STATIC_LINK,
+     if provided, is the static link.  REQUIRED controls whether the
+     block is required.  When false, if the block does not contain any
+     variables or 'using' directives, this method will return
+     nullptr.  */
+  block *pop_context (CORE_ADDR end_addr,
+		      const struct dynamic_prop *static_link = nullptr,
+		      bool required = true);
 
   struct block *end_compunit_symtab_get_static_block
-    (CORE_ADDR end_addr, int expandable, int required);
+    (CORE_ADDR end_addr, bool expandable, bool required);
 
   struct compunit_symtab *end_compunit_symtab_from_static_block
-    (struct block *static_block, int expandable);
+    (struct block *static_block, bool expandable);
 
   struct compunit_symtab *end_compunit_symtab (CORE_ADDR end_addr);
 
@@ -343,18 +247,15 @@ private:
   void record_pending_block (struct block *block, struct pending_block *opblock);
 
   struct block *finish_block_internal (struct symbol *symbol,
-				       struct pending **listhead,
+				       std::vector<struct symbol *> &symbol_list,
 				       struct pending_block *old_blocks,
 				       const struct dynamic_prop *static_link,
 				       CORE_ADDR start, CORE_ADDR end,
-				       int is_global, int expandable);
+				       bool is_global, bool expandable);
 
-  struct blockvector *make_blockvector ();
+  blockvector_up make_blockvector ();
 
   void watch_main_source_file_lossage ();
-
-  struct compunit_symtab *end_compunit_symtab_with_blockvector
-    (struct block *static_block, int expandable);
 
   /* The objfile we're reading debug info from.  */
   struct objfile *m_objfile;
@@ -368,11 +269,6 @@ private:
   /* The subfile of the main source file.  */
   struct subfile *m_main_subfile = nullptr;
 
-  /* Name of source file whose symbol data we are now processing.  This
-     comes from a symbol of type N_SO for stabs.  For DWARF it comes
-     from the DW_AT_name attribute of a DW_TAG_compile_unit DIE.  */
-  gdb::unique_xmalloc_ptr<char> m_last_source_file;
-
   /* E.g., DW_AT_comp_dir if DWARF.  Space for this is malloc'd.  */
   std::string m_comp_dir;
 
@@ -384,8 +280,11 @@ private:
      the same lifetime as objfile.  */
   const char *m_debugformat = nullptr;
 
-  /* The compunit we are building.  */
-  struct compunit_symtab *m_compunit_symtab = nullptr;
+  /* The compunit we are building.  If the symtab is owned by this
+     object, both fields are set.  For a re-opened symtab, only
+     m_compunit_symtab is set.  */
+  std::unique_ptr<compunit_symtab> m_owned_compunit_symtab;
+  compunit_symtab *m_compunit_symtab;
 
   /* Language of this compunit_symtab.  */
   enum language m_language;
@@ -398,9 +297,9 @@ private:
      empty symtab from being tossed.  */
   bool m_have_line_numbers = false;
 
-  /* Core address of start of text of current source file.  This too
-     comes from the N_SO symbol.  For Dwarf it typically comes from the
-     DW_AT_low_pc attribute of a DW_TAG_compile_unit DIE.  */
+  /* Core address of start of text of current source file.  For DWARF it
+     typically comes from the DW_AT_low_pc attribute of a
+     DW_TAG_compile_unit DIE.  */
   CORE_ADDR m_last_source_start_addr;
 
   /* Stack of subfile names.  */
@@ -412,22 +311,40 @@ private:
   /* Global "using" directives.  */
   struct using_direct *m_global_using_directives = nullptr;
 
+  /* Unclosed lexical contexts (that will become blocks,
+     eventually).  */
+  struct lexical_context
+  {
+    lexical_context (std::vector<symbol *> locals,
+		     using_direct *local_using_directives,
+		     pending_block *old_blocks, CORE_ADDR start_addr)
+      : locals (std::move (locals)),
+	local_using_directives (local_using_directives),
+	old_blocks (old_blocks),
+	start_addr (start_addr)
+    {}
+
+    /* Outer locals at the time we entered.  */
+    std::vector<symbol *> locals;
+
+    /* Pending using directives at the time we entered.  */
+    using_direct *local_using_directives;
+
+    /* Pointer into blocklist as of entry.  */
+    pending_block *old_blocks;
+
+    /* Name of function, if any, defining context.  */
+    symbol *name = nullptr;
+
+    /* PC where this context starts.  */
+    CORE_ADDR start_addr;
+  };
+
   /* The stack of contexts that are pushed by push_context and popped
      by pop_context.  */
-  std::vector<struct context_stack> m_context_stack;
+  std::vector<lexical_context> m_context_stack;
 
   struct subfile *m_current_subfile = nullptr;
-
-  /* The mutable address map for the compilation unit whose symbols
-     we're currently reading.  The symtabs' shared blockvector will
-     point to a fixed copy of this.  */
-  struct addrmap_mutable m_pending_addrmap;
-
-  /* True if we recorded any ranges in the addrmap that are different
-     from those in the blockvector already.  We set this to false when
-     we start processing a symfile, and if it's still false at the
-     end, then we just toss the addrmap.  */
-  bool m_pending_addrmap_interesting = false;
 
   /* An obstack used for allocating pending blocks.  */
   auto_obstack m_pending_block_obstack;
@@ -439,21 +356,21 @@ private:
   struct pending_block *m_pending_blocks = nullptr;
 
   /* Pending static symbols and types at the top level.  */
-  struct pending *m_file_symbols = nullptr;
+  std::vector<symbol *> m_file_symbols;
 
   /* Pending global functions and variables.  */
-  struct pending *m_global_symbols = nullptr;
+  std::vector<symbol *> m_global_symbols;
 
   /* Pending symbols that are local to the lexical context.  */
-  struct pending *m_local_symbols = nullptr;
+  std::vector<symbol *> m_local_symbols;
 };
 
-
+using buildsym_compunit_up = std::unique_ptr<buildsym_compunit>;
 
-extern void add_symbol_to_list (struct symbol *symbol,
-				struct pending **listhead);
-
-extern struct symbol *find_symbol_in_list (struct pending *list,
-					   char *name, int length);
+static inline
+void add_symbol_to_list (symbol *symbol, std::vector<struct symbol *> &list)
+{
+  list.push_back (symbol);
+}
 
 #endif /* GDB_BUILDSYM_H */

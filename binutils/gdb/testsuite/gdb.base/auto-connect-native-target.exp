@@ -1,4 +1,4 @@
-# Copyright 2014-2024 Free Software Foundation, Inc.
+# Copyright 2014-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 require have_native_target
@@ -53,7 +53,7 @@ if { $topmost != "exec" } {
 # Check which target this board connects to.  If testing with a native
 # target board, this should cause the native target to auto connect.
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # Returns true if the native target is pushed on the target stack.
@@ -184,7 +184,7 @@ with_test_prefix "disconnect" {
     gdb_test "start" "Don't know how to run.*" "start no longer works"
 }
 
-# Reenable auto-connecting to the native target.  Plain "start" should
+# Re-enable auto-connecting to the native target.  Plain "start" should
 # start working again.
 gdb_test_no_output "set auto-connect-native-target on"
 

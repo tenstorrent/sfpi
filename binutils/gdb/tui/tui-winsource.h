@@ -1,6 +1,6 @@
 /* TUI display source/assembly window.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    Contributed by Hewlett-Packard Company.
 
@@ -160,7 +160,7 @@ public:
 
   /* Update the window to display the given location.  Does nothing if
      the location is already displayed.  */
-  virtual void maybe_update (const frame_info_ptr &fi, symtab_and_line sal) = 0;
+  virtual void maybe_update (struct gdbarch *gdbarch, symtab_and_line sal) = 0;
 
   void update_source_window_as_is  (struct gdbarch *gdbarch,
 				    const struct symtab_and_line &sal);
@@ -270,12 +270,12 @@ public:
 
   typedef std::vector<tui_win_info *>::iterator inner_iterator;
 
-  typedef tui_source_window_iterator self_type;
-  typedef struct tui_source_window_base *value_type;
-  typedef struct tui_source_window_base *&reference;
-  typedef struct tui_source_window_base **pointer;
-  typedef std::forward_iterator_tag iterator_category;
-  typedef int difference_type;
+  using self_type = tui_source_window_iterator;
+  using value_type = struct tui_source_window_base *;
+  using reference = struct tui_source_window_base *&;
+  using pointer = struct tui_source_window_base **;
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type = int;
 
   explicit tui_source_window_iterator (const inner_iterator &it,
 				       const inner_iterator &end)

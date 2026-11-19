@@ -1,6 +1,6 @@
 /* Self tests for packed for GDB, the GNU debugger.
 
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -58,7 +58,7 @@ CHECK_TRAIT (is_trivially_move_assignable);
 static void
 run_tests ()
 {
-  typedef packed<unsigned int, 2> packed_2;
+  using packed_2 = packed<unsigned int, 2>;
 
   packed_2 p1;
   packed_2 p2 (0x0102);
@@ -119,9 +119,7 @@ run_tests ()
 } /* namespace packed_tests */
 } /* namespace selftests */
 
-void _initialize_packed_selftests ();
-void
-_initialize_packed_selftests ()
+INIT_GDB_FILE (packed_selftests)
 {
   selftests::register_test ("packed", selftests::packed_tests::run_tests);
 }

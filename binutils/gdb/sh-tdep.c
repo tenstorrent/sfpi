@@ -1,6 +1,6 @@
 /* Target-dependent code for Renesas Super-H, for GDB.
 
-   Copyright (C) 1993-2024 Free Software Foundation, Inc.
+   Copyright (C) 1993-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -60,7 +60,7 @@ static const char sh_cc_gcc[] = "gcc";
 static const char sh_cc_renesas[] = "renesas";
 static const char *const sh_cc_enum[] = {
   sh_cc_gcc,
-  sh_cc_renesas, 
+  sh_cc_renesas,
   NULL
 };
 
@@ -392,7 +392,7 @@ sh_sw_breakpoint_from_kind (struct gdbarch *gdbarch, int kind, int *size)
   *size = kind;
 
   /* For remote stub targets, trapa #20 is used.  */
-  if (strcmp (target_shortname (), "remote") == 0)
+  if (streq (target_shortname (), "remote"))
     {
       static unsigned char big_remote_breakpoint[] = { 0xc3, 0x20 };
       static unsigned char little_remote_breakpoint[] = { 0x20, 0xc3 };
@@ -759,7 +759,7 @@ sh_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
    the return value from foo() will be in memory, not
    in R0, because there is no 3-byte integer type.
 
-   Similarly, in 
+   Similarly, in
 
    struct s { char c[2]; } wibble;
    struct s foo(void) {  return wibble; }
@@ -833,16 +833,16 @@ sh_frame_align (struct gdbarch *ignore, CORE_ADDR sp)
    manner, but using FP registers instead of GP registers.
 
    Arguments that are smaller than 4 bytes will still take up a whole
-   register or a whole 32-bit word on the stack, and will be 
+   register or a whole 32-bit word on the stack, and will be
    right-justified in the register or the stack word.  This includes
    chars, shorts, and small aggregate types.
 
-   Arguments that are larger than 4 bytes may be split between two or 
+   Arguments that are larger than 4 bytes may be split between two or
    more registers.  If there are not enough registers free, an argument
    may be passed partly in a register (or registers), and partly on the
    stack.  This includes doubles, long longs, and larger aggregates.
-   As far as I know, there is no upper limit to the size of aggregates 
-   that will be passed in this way; in other words, the convention of 
+   As far as I know, there is no upper limit to the size of aggregates
+   that will be passed in this way; in other words, the convention of
    passing a pointer to a large aggregate instead of a copy is not used.
 
    MVS: The above appears to be true for the SH variants that do not
@@ -851,24 +851,24 @@ sh_frame_align (struct gdbarch *ignore, CORE_ADDR sp)
    if it is larger than 16 bytes (four GP registers).
 
    An exceptional case exists for struct arguments (and possibly other
-   aggregates such as arrays) if the size is larger than 4 bytes but 
-   not a multiple of 4 bytes.  In this case the argument is never split 
+   aggregates such as arrays) if the size is larger than 4 bytes but
+   not a multiple of 4 bytes.  In this case the argument is never split
    between the registers and the stack, but instead is copied in its
-   entirety onto the stack, AND also copied into as many registers as 
-   there is room for.  In other words, space in registers permitting, 
+   entirety onto the stack, AND also copied into as many registers as
+   there is room for.  In other words, space in registers permitting,
    two copies of the same argument are passed in.  As far as I can tell,
-   only the one on the stack is used, although that may be a function 
+   only the one on the stack is used, although that may be a function
    of the level of compiler optimization.  I suspect this is a compiler
-   bug.  Arguments of these odd sizes are left-justified within the 
-   word (as opposed to arguments smaller than 4 bytes, which are 
+   bug.  Arguments of these odd sizes are left-justified within the
+   word (as opposed to arguments smaller than 4 bytes, which are
    right-justified).
 
-   If the function is to return an aggregate type such as a struct, it 
-   is either returned in the normal return value register R0 (if its 
+   If the function is to return an aggregate type such as a struct, it
+   is either returned in the normal return value register R0 (if its
    size is no greater than one byte), or else the caller must allocate
    space into which the callee will copy the return value (if the size
-   is greater than one byte).  In this case, a pointer to the return 
-   value location is passed into the callee in register R2, which does 
+   is greater than one byte).  In this case, a pointer to the return
+   value location is passed into the callee in register R2, which does
    not displace any of the other arguments passed in via registers R4
    to R7.  */
 
@@ -917,7 +917,7 @@ sh_init_flt_argreg (void)
 
 /* This function returns the next register to use for float arg passing.
    It returns either a valid value between FLOAT_ARG0_REGNUM and
-   FLOAT_ARGLAST_REGNUM if a register is available, otherwise it returns 
+   FLOAT_ARGLAST_REGNUM if a register is available, otherwise it returns
    FLOAT_ARGLAST_REGNUM + 1 to indicate that no register is available.
 
    Note that register number 0 in flt_argreg_array corresponds with the
@@ -1469,24 +1469,24 @@ sh_default_register_type (struct gdbarch *gdbarch, int reg_nr)
    The default code in reggroup.c doesn't identify system registers, some
    float registers or any of the vector registers.
    TODO: sh2a and dsp registers.  */
-static int
+static bool
 sh_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 			const struct reggroup *reggroup)
 {
   if (*gdbarch_register_name (gdbarch, regnum) == '\0')
-    return 0;
+    return false;
 
   if (reggroup == float_reggroup
       && (regnum == FPUL_REGNUM
 	  || regnum == FPSCR_REGNUM))
-    return 1;
+    return true;
 
   if (regnum >= FV0_REGNUM && regnum <= FV_LAST_REGNUM)
     {
       if (reggroup == vector_reggroup || reggroup == float_reggroup)
-	return 1;
+	return true;
       if (reggroup == general_reggroup)
-	return 0;
+	return false;
     }
 
   if (regnum == VBR_REGNUM
@@ -1496,9 +1496,9 @@ sh_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
       || regnum == SPC_REGNUM)
     {
       if (reggroup == system_reggroup)
-	return 1;
+	return true;
       if (reggroup == general_reggroup)
-	return 0;
+	return false;
     }
 
   /* The default code can cope with any other registers.  */
@@ -1508,9 +1508,9 @@ sh_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 /* On the sh4, the DRi pseudo registers are problematic if the target
    is little endian.  When the user writes one of those registers, for
    instance with 'set var $dr0=1', we want the double to be stored
-   like this: 
-   fr0 = 0x00 0x00 0xf0 0x3f 
-   fr1 = 0x00 0x00 0x00 0x00 
+   like this:
+   fr0 = 0x00 0x00 0xf0 0x3f
+   fr1 = 0x00 0x00 0x00 0x00
 
    This corresponds to little endian byte order & big endian word
    order.  However if we let gdb write the register w/o conversion, it
@@ -1518,7 +1518,7 @@ sh_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
    fr0 = 0x00 0x00 0x00 0x00
    fr1 = 0x00 0x00 0xf0 0x3f
    because it will consider fr0 and fr1 as a single LE stretch of memory.
-   
+
    To achieve what we want we must force gdb to store things in
    floatformat_ieee_double_littlebyte_bigword (which is defined in
    include/floatformat.h and libiberty/floatformat.c.
@@ -1821,10 +1821,9 @@ sh_dwarf2_frame_init_reg (struct gdbarch *gdbarch, int regnum,
 static struct sh_frame_cache *
 sh_alloc_frame_cache (void)
 {
-  struct sh_frame_cache *cache;
   int i;
 
-  cache = FRAME_OBSTACK_ZALLOC (struct sh_frame_cache);
+  auto *cache = frame_obstack_zalloc<sh_frame_cache> ();
 
   /* Base address.  */
   cache->base = 0;
@@ -2034,7 +2033,7 @@ static const struct frame_unwind_legacy sh_stub_unwind (
    either on the `ret' instruction itself or after an instruction which
    destroys the function's stack frame.  */
 
-static int
+static bool
 sh_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
@@ -2051,14 +2050,14 @@ sh_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
       if (addr < func_addr + 4)
 	addr = func_addr + 4;
       if (pc < addr)
-	return 0;
+	return false;
 
       /* First search forward until hitting an rts.  */
       while (addr < func_end
 	     && !IS_RTS (read_memory_unsigned_integer (addr, 2, byte_order)))
 	addr += 2;
       if (addr >= func_end)
-	return 0;
+	return false;
 
       /* At this point we should find a mov.l @r15+,r14 instruction,
 	 either before or after the rts.  If not, then the function has
@@ -2069,7 +2068,7 @@ sh_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 	addr -= 2;
       else if (!IS_RESTORE_FP (read_memory_unsigned_integer (addr + 2, 2,
 							     byte_order)))
-	return 0;
+	return false;
 
       inst = read_memory_unsigned_integer (addr - 2, 2, byte_order);
 
@@ -2113,9 +2112,9 @@ sh_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 	addr -= 4;
 
       if (pc >= addr)
-	return 1;
+	return true;
     }
-  return 0;
+  return false;
 }
 
 
@@ -2208,11 +2207,11 @@ sh_iterate_over_regset_sections (struct gdbarch *gdbarch,
 /* This is the implementation of gdbarch method
    return_in_first_hidden_param_p.  */
 
-static int
+static bool
 sh_return_in_first_hidden_param_p (struct gdbarch *gdbarch,
 				     struct type *type)
 {
-  return 0;
+  return false;
 }
 
 
@@ -2236,7 +2235,7 @@ sh_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_long_long_bit (gdbarch, 8 * TARGET_CHAR_BIT);
 
   set_gdbarch_wchar_bit (gdbarch, 2 * TARGET_CHAR_BIT);
-  set_gdbarch_wchar_signed (gdbarch, 0);
+  set_gdbarch_wchar_signed (gdbarch, false);
 
   set_gdbarch_float_bit (gdbarch, 4 * TARGET_CHAR_BIT);
   set_gdbarch_double_bit (gdbarch, 8 * TARGET_CHAR_BIT);
@@ -2265,8 +2264,6 @@ sh_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_push_dummy_call (gdbarch, sh_push_dummy_call_nofpu);
   set_gdbarch_return_in_first_hidden_param_p (gdbarch,
 					      sh_return_in_first_hidden_param_p);
-
-  set_gdbarch_believe_pcc_promotion (gdbarch, 1);
 
   set_gdbarch_frame_align (gdbarch, sh_frame_align);
   frame_base_set_default (gdbarch, &sh_frame_base);
@@ -2394,9 +2391,7 @@ sh_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   return gdbarch;
 }
 
-void _initialize_sh_tdep ();
-void
-_initialize_sh_tdep ()
+INIT_GDB_FILE (sh_tdep)
 {
   gdbarch_register (bfd_arch_sh, sh_gdbarch_init, NULL);
 
@@ -2405,7 +2400,7 @@ _initialize_sh_tdep ()
 			  _("SH specific commands."),
 			  &setshcmdlist, &showshcmdlist,
 			  &setlist, &showlist);
-  
+
   add_setshow_enum_cmd ("calling-convention", class_vars, sh_cc_enum,
 			&sh_active_calling_convention,
 			_("Set calling convention used when calling target "

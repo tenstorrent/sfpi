@@ -1,6 +1,6 @@
 /* Definitions for BFD wrappers used by GDB.
 
-   Copyright (C) 2011-2024 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -24,7 +24,6 @@
 #include "gdbsupport/byte-vector.h"
 #include "gdbsupport/function-view.h"
 #include "gdbsupport/gdb_ref_ptr.h"
-#include "gdbsupport/iterator-range.h"
 #include "gdbsupport/next-iterator.h"
 
 /* A registry adaptor for BFD.  This arranges to store the registry in
@@ -84,7 +83,7 @@ struct gdb_bfd_ref_policy
 };
 
 /* A gdb::ref_ptr that has been specialized for BFD objects.  */
-typedef gdb::ref_ptr<struct bfd, gdb_bfd_ref_policy> gdb_bfd_ref_ptr;
+using gdb_bfd_ref_ptr = gdb::ref_ptr<struct bfd, gdb_bfd_ref_policy>;
 
 /* Open a read-only (FOPEN_RB) BFD given arguments like bfd_fopen.
    If NAME starts with TARGET_SYSROOT_PREFIX then the BFD will be
@@ -242,13 +241,17 @@ using gdb_bfd_section_range = next_range<asection>;
 static inline gdb_bfd_section_range
 gdb_bfd_sections (bfd *abfd)
 {
-  return gdb_bfd_section_range (abfd->sections);
+  next_iterator<asection> begin (abfd->sections);
+
+  return gdb_bfd_section_range (std::move (begin));
 }
 
 static inline gdb_bfd_section_range
 gdb_bfd_sections (const gdb_bfd_ref_ptr &abfd)
 {
-  return gdb_bfd_section_range (abfd->sections);
+  next_iterator<asection> begin (abfd->sections);
+
+  return gdb_bfd_section_range (std::move (begin));
 };
 
 /* A wrapper for bfd_stat that acquires the per-BFD lock on ABFD.  */
@@ -265,7 +268,7 @@ extern long gdb_bfd_get_mtime (bfd *abfd)
 /* A wrapper for bfd_errmsg to produce a more helpful error message
    in the case of bfd_error_file_ambiguously recognized.
    MATCHING, if non-NULL, is the corresponding argument to
-   bfd_check_format_matches, and will be freed.  */
+   gdb_bfd_check_format_matches, and will be freed.  */
 
 extern std::string gdb_bfd_errmsg (bfd_error_type error_tag, char **matching);
 
@@ -273,5 +276,26 @@ extern std::string gdb_bfd_errmsg (bfd_error_type error_tag, char **matching);
    multi-threading.  */
 
 extern void gdb_bfd_init ();
+
+/* A wrapper for bfd_canonicalize_symtab that caches the result.  This
+   is important to avoid excess memory use on repeated calls.  See
+   PR gdb/32758. bfd_canonicalize_symtab should not be called directly
+   by other code in gdb.
+
+   When SHOULD_THROW is true (the default), this will throw an
+   exception if symbols could not be read.  When SHOULD_THROW is
+   false, an empty view is returned instead.  */
+
+extern gdb::array_view<asymbol *> gdb_bfd_canonicalize_symtab
+     (bfd *abfd, bool should_throw = true);
+
+/* A wrapper for bfd_check_format that acquires the BFD lock.  */
+
+extern bool gdb_bfd_check_format (bfd *abfd, bfd_format format);
+
+/* A wrapper for bfd_check_format_matches that acquires the BFD lock.  */
+
+extern bool gdb_bfd_check_format_matches (bfd *abfd, bfd_format format,
+					  char ***matching);
 
 #endif /* GDB_GDB_BFD_H */

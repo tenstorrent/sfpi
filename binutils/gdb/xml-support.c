@@ -1,6 +1,6 @@
 /* Helper routines for parsing XML using Expat.
 
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,9 +21,10 @@
 #include "xml-builtin.h"
 #include "xml-support.h"
 #include "gdbsupport/filestuff.h"
-#include "gdbsupport/gdb-safe-ctype.h"
 #include <vector>
 #include <string>
+#include "cli/cli-style.h"
+#include "ui-out.h"
 
 /* Debugging flag.  */
 static bool debug_xml;
@@ -230,7 +231,7 @@ xml_find_attribute (std::vector<gdb_xml_value> &attributes,
 		    const char *name)
 {
   for (gdb_xml_value &value : attributes)
-    if (strcmp (value.name, name) == 0)
+    if (streq (value.name, name))
       return &value;
 
   return NULL;
@@ -271,7 +272,7 @@ gdb_xml_parser::start_element (const XML_Char *name,
   seen = 1;
   for (element = scope.elements; element && element->name;
        element++, seen <<= 1)
-    if (strcmp (element->name, name) == 0)
+    if (streq (element->name, name))
       break;
 
   if (element == NULL || element->name == NULL)
@@ -308,7 +309,7 @@ gdb_xml_parser::start_element (const XML_Char *name,
       void *parsed_value;
 
       for (p = attrs; *p != NULL; p += 2)
-	if (!strcmp (attribute->name, p[0]))
+	if (streq (attribute->name, p[0]))
 	  {
 	    val = p[1];
 	    break;
@@ -353,7 +354,7 @@ gdb_xml_parser::start_element (const XML_Char *name,
 	  for (attribute = element->attributes;
 	       attribute != NULL && attribute->name != NULL;
 	       attribute++)
-	    if (strcmp (attribute->name, *p) == 0)
+	    if (streq (attribute->name, *p))
 	      break;
 
 	  if (attribute == NULL || attribute->name == NULL)
@@ -430,10 +431,10 @@ gdb_xml_parser::end_element (const XML_Char *name)
 	  body = scope->body.c_str ();
 
 	  /* Strip leading and trailing whitespace.  */
-	  while (length > 0 && ISSPACE (body[length - 1]))
+	  while (length > 0 && c_isspace (body[length - 1]))
 	    length--;
 	  scope->body.erase (length);
-	  while (*body && ISSPACE (*body))
+	  while (*body && c_isspace (*body))
 	    body++;
 	}
 
@@ -915,7 +916,7 @@ fetch_xml_builtin (const char *filename)
   const char *const (*p)[2];
 
   for (p = xml_builtin; (*p)[0]; p++)
-    if (strcmp ((*p)[0], filename) == 0)
+    if (streq ((*p)[0], filename))
       return (*p)[1];
 
   return NULL;
@@ -991,7 +992,8 @@ xml_fetch_content_from_file (const char *filename, const char *dirname)
   if (fread (text.data (), 1, len, file.get ()) != len
       || ferror (file.get ()))
     {
-      warning (_("Read error from \"%s\""), filename);
+      warning (_("Read error from \"%ps\""),
+	       styled_string (file_name_style.style (), filename));
       return {};
     }
 
@@ -999,10 +1001,7 @@ xml_fetch_content_from_file (const char *filename, const char *dirname)
   return text;
 }
 
-void _initialize_xml_support ();
-void _initialize_xml_support ();
-void
-_initialize_xml_support ()
+INIT_GDB_FILE (xml_support)
 {
   add_setshow_boolean_cmd ("xml", class_maintenance, &debug_xml,
 			   _("Set XML parser debugging."),

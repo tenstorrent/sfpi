@@ -1,6 +1,6 @@
 /* Support for printing C values for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -28,6 +28,7 @@
 #include "cp-abi.h"
 #include "target.h"
 #include "objfiles.h"
+#include "cli/cli-style.h"
 
 
 /* A helper for c_textual_element_type.  This checks the name of the
@@ -37,9 +38,9 @@
 static int
 textual_name (const char *name)
 {
-  return (!strcmp (name, "wchar_t")
-	  || !strcmp (name, "char16_t")
-	  || !strcmp (name, "char32_t"));
+  return (streq (name, "wchar_t")
+	  || streq (name, "char16_t")
+	  || streq (name, "char32_t"));
 }
 
 /* Apply a heuristic to decide whether an array of TYPE or a pointer
@@ -158,7 +159,8 @@ print_unpacked_pointer (struct type *type, struct type *elttype,
 					 demangle);
   else if (options->addressprint)
     {
-      gdb_puts (paddress (gdbarch, address), stream);
+      fputs_styled (paddress (gdbarch, address), address_style.style (),
+		    stream);
       want_space = 1;
     }
 
@@ -468,7 +470,7 @@ c_value_print_inner (struct value *val, struct ui_file *stream, int recurse,
 
 
 void
-c_value_print (struct value *val, struct ui_file *stream, 
+c_value_print (struct value *val, struct ui_file *stream,
 	       const struct value_print_options *options)
 {
   struct type *type, *real_type;
@@ -498,8 +500,7 @@ c_value_print (struct value *val, struct ui_file *stream,
       if (original_type->code () == TYPE_CODE_PTR
 	  && original_type->name () == NULL
 	  && original_type->target_type ()->name () != NULL
-	  && (strcmp (original_type->target_type ()->name (),
-		      "char") == 0
+	  && (streq (original_type->target_type ()->name (), "char")
 	      || textual_name (original_type->target_type ()->name ())))
 	{
 	  /* Print nothing.  */
@@ -563,7 +564,7 @@ c_value_print (struct value *val, struct ui_file *stream,
       if (real_type)
 	{
 	  /* We have RTTI information, so use it.  */
-	  val = value_full_object (val, real_type, 
+	  val = value_full_object (val, real_type,
 				   full, top, using_enc);
 	  /* In a destructor we might see a real type that is a
 	     superclass of the object's type.  In this case it is

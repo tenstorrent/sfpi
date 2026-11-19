@@ -1,6 +1,6 @@
 /* Main header file for the bfd library -- portable access to object files.
 
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
 
    Contributed by Cygnus Support.
 
@@ -41,6 +41,7 @@ extern "C" {
 #include <stdarg.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <inttypes.h>
 
 #if defined (__STDC__) || defined (ALMOST_STDC) || defined (HAVE_STRINGIZE)
 #ifndef SABER
@@ -70,24 +71,22 @@ extern "C" {
 /* The word size of the default bfd target.  */
 #define BFD_DEFAULT_TARGET_SIZE @bfd_default_target_size@
 
-#include <inttypes.h>
-
 #if BFD_ARCH_SIZE >= 64
 #define BFD64
 #endif
 
-/* Boolean type used in bfd.
-   General rule: Functions which are bfd_boolean return TRUE on
-   success and FALSE on failure (unless they're a predicate).  */
-
-#ifdef POISON_BFD_BOOLEAN
-# pragma GCC poison bfd_boolean
+#if GCC_VERSION >= 7000
+#define _bfd_mul_overflow(a, b, res) __builtin_mul_overflow (a, b, res)
 #else
-# define bfd_boolean bool
-# undef FALSE
-# undef TRUE
-# define FALSE 0
-# define TRUE 1
+/* Assumes unsigned values.  Careful!  Args evaluated multiple times.  */
+#define _bfd_mul_overflow(a, b, res) \
+  ((*res) = (a), (*res) *= (b), (b) != 0 && (*res) / (b) != (a))
+#endif
+
+#ifdef __GNUC__
+#define _bfd_constant_p(v) __builtin_constant_p (v)
+#else
+#define _bfd_constant_p(v) 0
 #endif
 
 /* Silence "applying zero offset to null pointer" UBSAN warnings.  */
@@ -151,11 +150,35 @@ struct orl;
    ? (((bfd_vma) (this) + ((boundary) - 1)) & ~ (bfd_vma) ((boundary)-1)) \
    : ~ (bfd_vma) 0)
 
+/* Detect whether we are compiling with -fsanitize=address.  */
+#ifndef BFD_ASAN
+/* gcc.  */
+# if defined __SANITIZE_ADDRESS__
+#  define BFD_ASAN 1
+/* clang.  */
+# elif defined __has_feature
+#  if __has_feature(address_sanitizer)
+#   define BFD_ASAN 1
+#  endif
+# endif
+# ifndef BFD_ASAN
+#  define BFD_ASAN 0
+# endif
+#endif
+
 /* Return TRUE if the start of STR matches PREFIX, FALSE otherwise.  */
 
 static inline bool
 startswith (const char *str, const char *prefix)
 {
   return strncmp (str, prefix, strlen (prefix)) == 0;
+}
+
+/* Return true if plugin is enabled.  */
+
+static inline bool
+bfd_plugin_enabled (void)
+{
+  return BFD_SUPPORTS_PLUGINS != 0;
 }
 

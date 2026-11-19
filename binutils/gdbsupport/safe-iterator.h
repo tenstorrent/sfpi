@@ -1,5 +1,5 @@
 /* A safe iterator for GDB, the GNU debugger.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -43,37 +43,31 @@ template<typename Iterator>
 class basic_safe_iterator
 {
 public:
-  typedef basic_safe_iterator self_type;
-  typedef typename Iterator::value_type value_type;
-  typedef typename Iterator::reference reference;
-  typedef typename Iterator::pointer pointer;
-  typedef typename Iterator::iterator_category iterator_category;
-  typedef typename Iterator::difference_type difference_type;
+  using self_type = basic_safe_iterator;
+  using value_type = typename Iterator::value_type;
+  using reference = typename Iterator::reference;
+  using pointer = typename Iterator::pointer;
+  using iterator_category = typename Iterator::iterator_category;
+  using difference_type = typename Iterator::difference_type;
 
-  /* Construct the begin iterator using the given arguments; the end iterator is
-     default constructed.  */
-  template<typename... Args>
-  explicit basic_safe_iterator (Args &&...args)
-    : m_it (std::forward<Args> (args)...),
-      m_next (m_it)
-  {
-    if (m_it != m_end)
-      ++m_next;
-  }
+  /* Construct the iterator using the underlying iterator BEGIN; the end
+     iterator is default constructed.  */
+  explicit basic_safe_iterator (Iterator begin)
+    : basic_safe_iterator (std::move (begin), Iterator {})
+  {}
 
-  /* Construct the iterator using the first argument, and construct
-     the end iterator using the second argument.  */
-  template<typename Arg>
-  explicit basic_safe_iterator (Arg &&arg, Arg &&arg2)
-    : m_it (std::forward<Arg> (arg)),
+  /* Construct the iterator using the underlying iterators BEGIN and END.  */
+  basic_safe_iterator (Iterator begin, Iterator end)
+    : m_it (std::move (begin)),
       m_next (m_it),
-      m_end (std::forward<Arg> (arg2))
+      m_end (std::move (end))
   {
     if (m_it != m_end)
       ++m_next;
   }
 
-  /* Create a one-past-end iterator.  */
+  /* Create a one-past-end iterator.  The underlying end iterator is obtained
+     by default-constructing.  */
   basic_safe_iterator ()
   {}
 
@@ -114,7 +108,7 @@ class basic_safe_range
 {
 public:
 
-  typedef basic_safe_iterator<typename Range::iterator> iterator;
+  using iterator = basic_safe_iterator<typename Range::iterator>;
 
   explicit basic_safe_range (Range range)
     : m_range (range)

@@ -1,6 +1,6 @@
 /* Self tests of the copy_bitwise routine for GDB, the GNU debugger.
 
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -82,7 +82,7 @@ check_copy_bitwise (const gdb_byte *dest, unsigned int dest_offset,
 
   /* Compare the resulting strings.  */
   expected[len] = actual[len] = '\0';
-  if (strcmp (expected, actual) != 0)
+  if (!streq (expected, actual))
     error (_("copy_bitwise %s != %s (%u+%u -> %u)"),
 	   expected, actual, source_offset, nbits, dest_offset);
 }
@@ -151,9 +151,7 @@ copy_bitwise_tests (void)
 
 } /* namespace selftests */
 
-void _initialize_copy_bitwise_utils_selftests ();
-void
-_initialize_copy_bitwise_utils_selftests ()
+INIT_GDB_FILE (copy_bitwise_utils_selftests)
 {
   selftests::register_test ("copy_bitwise", selftests::copy_bitwise_tests);
 }

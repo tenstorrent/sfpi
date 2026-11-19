@@ -1,5 +1,5 @@
 /* Linux bpf specific support for 64-bit ELF
-   Copyright (C) 2019-2025 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
    Contributed by Oracle Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -172,8 +172,7 @@ bpf_info_to_howto (bfd *abfd, arelent *bfd_reloc,
 #define sec_addr(sec) ((sec)->output_section->vma + (sec)->output_offset)
 
 static int
-bpf_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
-                          struct bfd_link_info *info,
+bpf_elf_relocate_section (struct bfd_link_info *info,
                           bfd *input_bfd,
                           asection *input_section,
                           bfd_byte *contents,
@@ -186,7 +185,7 @@ bpf_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
   Elf_Internal_Rela *rel;
   Elf_Internal_Rela *relend;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -241,7 +240,8 @@ bpf_elf_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_BPF_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;

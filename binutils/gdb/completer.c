@@ -1,5 +1,5 @@
 /* Line completion stuff for GDB, the GNU debugger.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -90,7 +90,7 @@ public:
   /* Return true of the name in this hash entry is STR.  */
   bool is_name_eq (const char *str) const
   {
-    return strcmp (m_name.get (), str) == 0;
+    return streq (m_name.get (), str);
   }
 
   /* Return the hash value based on the name of the entry.  */
@@ -160,7 +160,7 @@ enum explicit_location_match_type
    will quote it.  That's why we switch between
    current_language->word_break_characters () and
    gdb_completer_command_word_break_characters.  I'm not sure when
-   we need this behavior (perhaps for funky characters in C++ 
+   we need this behavior (perhaps for funky characters in C++
    symbols?).  */
 
 /* Variables which are necessary for fancy command line editing.  */
@@ -212,7 +212,7 @@ static const char gdb_completer_file_name_quote_characters[] = "'\"";
    symbols but don't want to complete on anything else either.  */
 
 void
-noop_completer (struct cmd_list_element *ignore, 
+noop_completer (struct cmd_list_element *ignore,
 		completion_tracker &tracker,
 		const char *text, const char *prefix)
 {
@@ -356,7 +356,7 @@ gdb_completer_file_name_quote_1 (const char *text, char quote_char)
   if (quote_char == '\'')
     {
       /* There is no backslash escaping permitted within a single quoted
-	 string, so in this case we can just return the input sting.  */
+	 string, so in this case we can just return the input string.  */
       str = text;
     }
   else if (quote_char == '"')
@@ -1008,7 +1008,7 @@ complete_files_symbols (completion_tracker &tracker,
 	 name, they cannot be asking for completion on files.  */
       if (strcspn (text, gdb_completer_file_name_break_characters)
 	  == text_len)
-	fn_list = make_source_files_completion_list (text, text);
+	fn_list = make_source_files_completion_list (text);
     }
 
   if (!fn_list.empty () && !tracker.have_completions ())
@@ -1059,7 +1059,7 @@ complete_source_filenames (const char *text)
      the user cannot be asking for completion on files.  */
   if (strcspn (text, gdb_completer_file_name_break_characters)
       == text_len)
-    return make_source_files_completion_list (text, text);
+    return make_source_files_completion_list (text);
 
   return {};
 }
@@ -1142,7 +1142,7 @@ collect_explicit_location_matches (completion_tracker &tracker,
 	const char *source
 	  = string_or_empty (explicit_loc->source_filename.get ());
 	completion_list matches
-	  = make_source_files_completion_list (source, source);
+	  = make_source_files_completion_list (source);
 	tracker.add_completions (std::move (matches));
       }
       break;
@@ -1698,10 +1698,7 @@ complete_line_internal_1 (completion_tracker &tracker,
 		      true);
 
   /* Move p up to the next interesting thing.  */
-  while (*p == ' ' || *p == '\t')
-    {
-      p++;
-    }
+  p = skip_spaces (p);
 
   tracker.advance_custom_word_point_by (p - tmp_command);
 
@@ -2164,7 +2161,7 @@ complete_line (completion_tracker &tracker,
 /* Complete on command names.  Used by "help".  */
 
 void
-command_completer (struct cmd_list_element *ignore, 
+command_completer (struct cmd_list_element *ignore,
 		   completion_tracker &tracker,
 		   const char *text, const char *word)
 {
@@ -2203,7 +2200,7 @@ signal_completer (struct cmd_list_element *ignore,
       signame = gdb_signal_to_name ((enum gdb_signal) signum);
 
       /* Ignore the unknown signal case.  */
-      if (!signame || strcmp (signame, "?") == 0)
+      if (!signame || streq (signame, "?"))
 	continue;
 
       if (strncasecmp (signame, word, len) == 0)
@@ -3006,7 +3003,7 @@ gdb_printable_part (char *pathname)
 
   temp = strrchr (pathname, '/');
 #if defined (__MSDOS__)
-  if (temp == 0 && ISALPHA ((unsigned char)pathname[0]) && pathname[1] == ':')
+  if (temp == 0 && c_isalpha (pathname[0]) && pathname[1] == ':')
     temp = pathname + 1;
 #endif
 
@@ -3037,7 +3034,7 @@ gdb_fnwidth (const char *string)
 #if defined (HANDLE_MULTIBYTE)
   mbstate_t ps;
   int left, w;
-  size_t clen;
+  size_t c_len;
   wchar_t wc;
 
   left = strlen (string) + 1;
@@ -3047,7 +3044,7 @@ gdb_fnwidth (const char *string)
   width = pos = 0;
   while (string[pos])
     {
-      if (CTRL_CHAR (string[pos]) || string[pos] == RUBOUT)
+      if (c_iscntrl (string[pos]))
 	{
 	  width += 2;
 	  pos++;
@@ -3055,18 +3052,18 @@ gdb_fnwidth (const char *string)
       else
 	{
 #if defined (HANDLE_MULTIBYTE)
-	  clen = mbrtowc (&wc, string + pos, left - pos, &ps);
-	  if (MB_INVALIDCH (clen))
+	  c_len = mbrtowc (&wc, string + pos, left - pos, &ps);
+	  if (MB_INVALIDCH (c_len))
 	    {
 	      width++;
 	      pos++;
 	      memset (&ps, 0, sizeof (mbstate_t));
 	    }
-	  else if (MB_NULLWCH (clen))
+	  else if (MB_NULLWCH (c_len))
 	    break;
 	  else
 	    {
-	      pos += clen;
+	      pos += c_len;
 	      w = wcwidth (wc);
 	      width += (w >= 0) ? w : 1;
 	    }
@@ -3121,20 +3118,10 @@ gdb_fnprint (const char *to_print, int prefix_bytes,
   s = to_print + prefix_bytes;
   while (*s)
     {
-      if (CTRL_CHAR (*s))
+      if (c_iscntrl (*s))
 	{
 	  displayer->putch (displayer, '^');
-	  displayer->putch (displayer, UNCTRL (*s));
-	  printed_len += 2;
-	  s++;
-#if defined (HANDLE_MULTIBYTE)
-	  memset (&ps, 0, sizeof (mbstate_t));
-#endif
-	}
-      else if (*s == RUBOUT)
-	{
-	  displayer->putch (displayer, '^');
-	  displayer->putch (displayer, '?');
+	  displayer->putch (displayer, c_unctrl (*s));
 	  printed_len += 2;
 	  s++;
 #if defined (HANDLE_MULTIBYTE)
@@ -3183,7 +3170,7 @@ gdb_print_filename (char *to_print, char *full_pathname, int prefix_bytes,
 		    const struct match_list_displayer *displayer)
 {
   int printed_len, extension_char, slen, tlen;
-  char *s, c, *new_full_pathname;
+  char c, *new_full_pathname;
   const char *dn;
   extern int _rl_complete_mark_directories;
 
@@ -3220,7 +3207,7 @@ gdb_print_filename (char *to_print, char *full_pathname, int prefix_bytes,
 	    dn = "/";		/* don't turn /// into // */
 	  else
 	    dn = full_pathname;
-	  s = tilde_expand (dn);
+	  char *s = gdb_rl_tilde_expand (dn).release ();
 	  if (rl_directory_completion_hook)
 	    (*rl_directory_completion_hook) (&s);
 
@@ -3245,20 +3232,22 @@ gdb_print_filename (char *to_print, char *full_pathname, int prefix_bytes,
 
 	  xfree (new_full_pathname);
 	  to_print[-1] = c;
+
+	  xfree (s);
 	}
       else
 	{
-	  s = tilde_expand (full_pathname);
+	  gdb::unique_xmalloc_ptr<char> s
+	    = gdb_rl_tilde_expand (full_pathname);
 #if defined (VISIBLE_STATS)
 	  if (rl_visible_stats)
 	    extension_char = stat_char (s);
 	  else
 #endif
-	    if (gdb_path_isdir (s))
+	    if (gdb_path_isdir (s.get ()))
 	      extension_char = '/';
 	}
 
-      xfree (s);
       if (extension_char)
 	{
 	  displayer->putch (displayer, extension_char);
@@ -3513,9 +3502,7 @@ skip_over_slash_fmt (completion_tracker &tracker, const char **args)
   return false;
 }
 
-void _initialize_completer ();
-void
-_initialize_completer ()
+INIT_GDB_FILE (completer)
 {
   /* Setup some readline completion globals.  */
   rl_completion_word_break_hook = gdb_completion_word_break_characters;

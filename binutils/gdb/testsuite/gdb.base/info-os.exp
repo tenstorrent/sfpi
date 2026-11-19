@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ standard_testfile .c
 # This test is Linux-only.
 if {![istarget *-*-linux*]} {
     unsupported "info-os.exp"
-    return -1
+    return
 }
 
 # Support for XML-output is needed to run this test.
@@ -26,11 +26,11 @@ require allow_xml_test
 
 # Compile test program.
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile {debug pthreads}] } {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return -1
+    return
 }
 
 # Get PID of test program.
@@ -128,7 +128,7 @@ proc expect_multiline { command expect test } {
 	    exp_continue
 	}
 	-re "^$gdb_prompt $" {
-	    if $found {
+	    if {$found} {
 		set ok 1
 	    }
 	    # Exit the loop.

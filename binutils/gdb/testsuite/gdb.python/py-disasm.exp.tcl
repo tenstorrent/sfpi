@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Free Software Foundation, Inc.
+# Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,24 +24,26 @@ standard_testfile py-disasm.c
 
 if { $kind == "obj" } {
 
-    set obj [standard_output_file ${gdb_test_file_name}.o]
+    set testfile $testfile.o
+    set binfile [standard_output_file $testfile]
 
-    if { [gdb_compile "$srcdir/$subdir/$srcfile" $obj object "debug"] != "" } {
-	untested "failed to compile object file [file tail $obj]"
-	return -1
+    if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile object \
+	      "debug"] != "" } {
+	untested "failed to compile object file $testfile"
+	return
     }
 
-    clean_restart $obj
+    clean_restart $testfile
 
 } else {
 
     if { [prepare_for_testing "failed to prepare" $testfile $srcfile] } {
-	return -1
+	return
     }
 
     if { ![runto_main] } {
 	fail "can't run to main"
-	return 0
+	return
     }
 
 }
@@ -49,7 +51,7 @@ if { $kind == "obj" } {
 set pyfile [gdb_remote_download host ${srcdir}/${subdir}/py-disasm.py]
 
 gdb_test "source ${pyfile}" "Python script imported" \
-         "import python scripts"
+	 "import python scripts"
 
 set line [gdb_get_line_number "Break here."]
 
@@ -122,7 +124,7 @@ set test_plans \
 	 [list "" "${base_pattern}\r\n.*"] \
 	 [list "GlobalNullDisassembler" "${base_pattern}\r\n.*"] \
 	 [list "ShowInfoRepr" "${base_pattern}\\s+## <gdb.disassembler.DisassembleInfo address=$hex architecture=\[^>\]+>\r\n.*"] \
-	 [list "ShowInfoSubClassRepr" "${base_pattern}\\s+## <MyInfo address=$hex architecture=\[^>\]+>\r\n.*"] \
+	 [list "ShowInfoSubClassRepr" "${base_pattern}\\s+## <ShowInfoSubClassRepr.MyInfo address=$hex architecture=\[^>\]+>\r\n.*"] \
 	 [list "ShowResultRepr" "${base_pattern}\\s+## <gdb.disassembler.DisassemblerResult length=$decimal string=\"\[^\r\n\]+\">\r\n.*"] \
 	 [list "ShowResultStr" "${base_pattern}\\s+## ${nop}\r\n.*"] \
 	 [list "GlobalPreInfoDisassembler" "${base_pattern}\\s+## ad = $hex, ar = ${curr_arch}\r\n.*"] \
@@ -152,7 +154,10 @@ set test_plans \
 		   "Buffer returned from read_memory is sized $decimal instead of the expected $decimal"]] \
 	 [list "ResultOfWrongType" \
 	      [make_exception_pattern "TypeError" \
-		   "Result is not a DisassemblerResult."]] \
+		   "Result from Disassembler must be gdb.DisassemblerResult, not ResultOfWrongType.Blah."]] \
+	 [list "ResultOfVeryWrongType" \
+	      [make_exception_pattern "TypeError" \
+		   "Result from Disassembler must be gdb.DisassemblerResult, not ResultOfVeryWrongType.Blah."]] \
 	 [list "ErrorCreatingTextPart_NoArgs" \
 	      [make_exception_pattern "TypeError" \
 		   [missing_arg_pattern "style" 1]]] \
@@ -332,7 +337,7 @@ foreach len {0 -1} {
 foreach type {DisassemblerTextPart DisassemblerAddressPart} {
     gdb_test "python result = gdb.disassembler.${type}()" \
 	[multi_line \
-	     "RuntimeError.*: Cannot create instances of DisassemblerPart\\." \
+	     "RuntimeError.*: Cannot create instances of gdb.disassembler.${type}\\." \
 	     "Error occurred in Python.*"] \
 	 "try to create an instance of ${type}"
 }

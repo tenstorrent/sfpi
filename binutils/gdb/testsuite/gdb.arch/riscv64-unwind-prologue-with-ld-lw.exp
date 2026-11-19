@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,20 +22,20 @@ standard_testfile riscv64-unwind-prologue-with-ld-lw.c \
 		  riscv64-unwind-prologue-with-ld-lw-foo.s
 if {[prepare_for_testing "failed to prepare" $testfile \
 			 "$srcfile $srcfile2"  nodebug]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 gdb_breakpoint "bar"
 gdb_continue_to_breakpoint "bar"
 gdb_test "bt" \
     [multi_line \
-         "#0\[ \t\]*$hex in bar \\\(\\\)" \
-         "#1\[ \t\]*$hex in foo \\\(\\\)" \
-         "#2\[ \t\]*$hex in main \\\(\\\)"] \
+	 "#0\[ \t\]*$hex in bar \\\(\\\)" \
+	 "#1\[ \t\]*$hex in foo \\\(\\\)" \
+	 "#2\[ \t\]*$hex in main \\\(\\\)"] \
     "Backtrace to the main frame"
 gdb_test "finish" "foo \\\(\\\)" "finish bar"
 gdb_test "finish" "main \\\(\\\)" "finish foo"

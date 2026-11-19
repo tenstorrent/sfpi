@@ -1,5 +1,5 @@
 /* MI Command Set - stack commands.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
    Contributed by Cygnus Solutions (a Red Hat company).
 
    This file is part of GDB.
@@ -18,26 +18,20 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "event-top.h"
-#include "target.h"
 #include "frame.h"
 #include "value.h"
 #include "mi-cmds.h"
 #include "ui-out.h"
 #include "symtab.h"
 #include "block.h"
-#include "stack.h"
 #include "dictionary.h"
 #include "language.h"
 #include "valprint.h"
-#include "utils.h"
 #include "mi-getopt.h"
 #include "extension.h"
-#include <ctype.h>
 #include "mi-parse.h"
 #include <optional>
-#include "gdbsupport/gdb-safe-ctype.h"
 #include "inferior.h"
-#include "observable.h"
 
 enum what_to_list { locals, arguments, all };
 
@@ -268,7 +262,7 @@ mi_cmd_stack_list_locals (const char *command, const char *const *argv,
     error (_("-stack-list-locals: Usage: [--no-frame-filters] "
 	     "[--skip-unavailable] PRINT_VALUES"));
 
-  frame = get_selected_frame (NULL);
+  frame = get_selected_frame ();
   print_value = mi_parse_print_values (argv[oind]);
 
    if (! raw_arg && frame_filters)
@@ -406,9 +400,9 @@ mi_cmd_stack_list_args (const char *command, const char *const *argv, int argc)
     }
 }
 
-/* Print a list of the local variables (including arguments) for the 
+/* Print a list of the local variables (including arguments) for the
    current frame.  ARGC must be 1 and ARGV[0] specify if only the names,
-   or both names and values of the variables must be printed.  See 
+   or both names and values of the variables must be printed.  See
    parse_print_value for possible values.  */
 
 void
@@ -462,7 +456,7 @@ mi_cmd_stack_list_variables (const char *command, const char *const *argv,
     error (_("-stack-list-variables: Usage: [--no-frame-filters] " \
 	     "[--skip-unavailable] PRINT_VALUES"));
 
-   frame = get_selected_frame (NULL);
+   frame = get_selected_frame ();
    print_value = mi_parse_print_values (argv[oind]);
 
    if (! raw_arg && frame_filters)
@@ -608,7 +602,7 @@ list_args_or_locals (const frame_print_options &fp_opts,
 	{
 	  int print_me = 0;
 
-	  switch (sym->aclass ())
+	  switch (sym->loc_class ())
 	    {
 	    default:
 	    case LOC_UNDEF:	/* catches errors        */
@@ -639,34 +633,25 @@ list_args_or_locals (const frame_print_options &fp_opts,
 	    }
 	  if (print_me)
 	    {
-	      struct symbol *sym2;
 	      struct frame_arg arg, entryarg;
 
-	      if (sym->is_argument ())
-		sym2 = (lookup_symbol_search_name
-			(sym->search_name (),
-			 block, SEARCH_VAR_DOMAIN).symbol);
-	      else
-		sym2 = sym;
-	      gdb_assert (sym2 != NULL);
-
-	      arg.sym = sym2;
+	      arg.sym = sym;
 	      arg.entry_kind = print_entry_values_no;
-	      entryarg.sym = sym2;
+	      entryarg.sym = sym;
 	      entryarg.entry_kind = print_entry_values_no;
 
 	      switch (values)
 		{
 		case PRINT_SIMPLE_VALUES:
-		  if (!mi_simple_type_p (sym2->type ()))
+		  if (!mi_simple_type_p (sym->type ()))
 		    break;
 		  [[fallthrough]];
 
 		case PRINT_ALL_VALUES:
 		  if (sym->is_argument ())
-		    read_frame_arg (fp_opts, sym2, fi, &arg, &entryarg);
+		    read_frame_arg (fp_opts, sym, fi, &arg, &entryarg);
 		  else
-		    read_frame_local (sym2, fi, &arg);
+		    read_frame_local (sym, fi, &arg);
 		  break;
 		}
 
@@ -777,5 +762,5 @@ mi_cmd_stack_info_frame (const char *command, const char *const *argv,
     error (_("-stack-info-frame: No arguments allowed"));
 
   print_frame_info (user_frame_print_options,
-		    get_selected_frame (NULL), 1, LOC_AND_ADDRESS, 0, 1);
+		    get_selected_frame (), 1, LOC_AND_ADDRESS, 0, 1);
 }

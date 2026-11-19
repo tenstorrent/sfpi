@@ -1,4 +1,4 @@
-# Copyright 2019-2024 Free Software Foundation, Inc.
+# Copyright 2019-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,18 +17,18 @@ standard_testfile .c -2.c
 
 set sources [list $srcfile $srcfile2]
 if { [prepare_for_testing "failed to prepare" ${testfile} $sources] } {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 get_debug_format
 if { [skip_inline_frame_tests] } {
-    return -1
+    return
 }
 
 # Set a break-point in inline function bar, in a CU for which the partial
 # symtab has not been expanded.
-gdb_breakpoint "bar" message
+gdb_breakpoint "bar" -message

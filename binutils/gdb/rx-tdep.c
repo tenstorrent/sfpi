@@ -1,6 +1,6 @@
 /* Target-dependent code for the Renesas RX for GDB, the GNU debugger.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat, Inc.
 
@@ -391,7 +391,7 @@ rx_analyze_frame_prologue (const frame_info_ptr &this_frame,
     {
       CORE_ADDR func_start, stop_addr;
 
-      *this_prologue_cache = FRAME_OBSTACK_ZALLOC (struct rx_prologue);
+      *this_prologue_cache = frame_obstack_zalloc<rx_prologue> ();
 
       func_start = get_frame_func (this_frame);
       stop_addr = get_frame_pc (this_frame);
@@ -433,9 +433,9 @@ rx_frame_type (const frame_info_ptr &this_frame, void **this_cache)
 
   /* No cached value; scan the function.  The frame type is cached in
      rx_analyze_prologue / rx_analyze_frame_prologue.  */
-  
+
   pc = get_frame_pc (this_frame);
-  
+
   /* Attempt to find the last address in the function.  If it cannot
      be determined, set the limit to be a short ways past the frame's
      pc.  */
@@ -926,7 +926,7 @@ rx_return_value (struct gdbarch *gdbarch,
 
 constexpr gdb_byte rx_break_insn[] = { 0x00 };
 
-typedef BP_MANIPULATION (rx_break_insn) rx_breakpoint;
+using rx_breakpoint = BP_MANIPULATION (rx_break_insn);
 
 /* Implement the dwarf_reg_to_regnum" gdbarch method.  */
 
@@ -975,7 +975,7 @@ rx_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
     }
 
   if (tdesc == NULL)
-      tdesc = tdesc_rx;
+    tdesc = tdesc_rx.get ();
 
   /* Check any target description for validity.  */
   if (tdesc_has_registers (tdesc))
@@ -1018,7 +1018,7 @@ rx_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_skip_prologue (gdbarch, rx_skip_prologue);
 
   /* Target builtin data types.  */
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
   set_gdbarch_short_bit (gdbarch, 16);
   set_gdbarch_int_bit (gdbarch, 32);
   set_gdbarch_long_bit (gdbarch, 32);
@@ -1056,16 +1056,14 @@ rx_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_return_value (gdbarch, rx_return_value);
 
   /* Virtual tables.  */
-  set_gdbarch_vbit_in_delta (gdbarch, 1);
+  set_gdbarch_vbit_in_delta (gdbarch, true);
 
   return gdbarch;
 }
 
 /* Register the above initialization routine.  */
 
-void _initialize_rx_tdep ();
-void
-_initialize_rx_tdep ()
+INIT_GDB_FILE (rx_tdep)
 {
   gdbarch_register (bfd_arch_rx, rx_gdbarch_init);
   initialize_tdesc_rx ();

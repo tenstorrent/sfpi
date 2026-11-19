@@ -1,5 +1,5 @@
 /* POWER/PowerPC XCOFF linker support.
-   Copyright (C) 1995-2025 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
    Written by Ian Lance Taylor <ian@cygnus.com>, Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -243,6 +243,55 @@ xcoff_get_section_contents (bfd *abfd, asection *sec)
   return contents;
 }
 
+/* Read .loader and swap in the header.  Sanity check to prevent
+   buffer overflows.  Don't bother to check for overlap as that sort
+   of insanity shouldn't lead to incorrect program behaviour.  */
+
+static bfd_byte *
+xcoff_get_ldhdr (bfd *abfd, asection *lsec, struct internal_ldhdr *ldhdr)
+{
+  bfd_byte *contents = xcoff_get_section_contents (abfd, lsec);
+  if (contents)
+    {
+      bfd_xcoff_swap_ldhdr_in (abfd, contents, ldhdr);
+      if (ldhdr->l_nsyms != 0)
+	{
+	  bfd_vma symoff = bfd_xcoff_loader_symbol_offset (abfd, ldhdr);
+	  if (symoff > lsec->size)
+	    goto fail;
+	  bfd_size_type onesym = bfd_xcoff_ldsymsz (abfd);
+	  bfd_size_type syms;
+	  if (_bfd_mul_overflow (ldhdr->l_nsyms, onesym, &syms)
+	      || syms > lsec->size - symoff)
+	    goto fail;
+	}
+      if (ldhdr->l_stlen != 0
+	  && (ldhdr->l_stoff > lsec->size
+	      || ldhdr->l_stlen > lsec->size - ldhdr->l_stoff))
+	goto fail;
+      if (ldhdr->l_nreloc != 0)
+	{
+	  bfd_vma reloff = bfd_xcoff_loader_reloc_offset (abfd, ldhdr);
+	  if (reloff > lsec->size)
+	    goto fail;
+	  bfd_size_type onerel = bfd_xcoff_ldrelsz (abfd);
+	  bfd_size_type rels;
+	  if (_bfd_mul_overflow (ldhdr->l_nreloc, onerel, &rels)
+	      || rels > lsec->size - reloff)
+	    goto fail;
+	}
+      if (ldhdr->l_nimpid != 0
+	  && (ldhdr->l_impoff > lsec->size
+	      || ldhdr->l_istlen > lsec->size - ldhdr->l_impoff))
+	goto fail;
+    }
+  return contents;
+
+ fail:
+  bfd_set_error (bfd_error_file_truncated);
+  return NULL;
+}
+
 /* Get the size required to hold the dynamic symbols.  */
 
 long
@@ -265,11 +314,9 @@ _bfd_xcoff_get_dynamic_symtab_upper_bound (bfd *abfd)
       return -1;
     }
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return -1;
-
-  bfd_xcoff_swap_ldhdr_in (abfd, (void *) contents, &ldhdr);
 
   return (ldhdr.l_nsyms + 1) * sizeof (asymbol *);
 }
@@ -299,11 +346,9 @@ _bfd_xcoff_canonicalize_dynamic_symtab (bfd *abfd, asymbol **psyms)
       return -1;
     }
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return -1;
-
-  bfd_xcoff_swap_ldhdr_in (abfd, contents, &ldhdr);
 
   strings = (char *) contents + ldhdr.l_stoff;
 
@@ -322,19 +367,21 @@ _bfd_xcoff_canonicalize_dynamic_symtab (bfd *abfd, asymbol **psyms)
 
       symbuf->symbol.the_bfd = abfd;
 
-      if (ldsym._l._l_l._l_zeroes == 0)
-	symbuf->symbol.name = strings + ldsym._l._l_l._l_offset;
-      else
+      if (ldsym._l._l_l._l_zeroes != 0)
 	{
 	  char *c;
 
-	  c = bfd_alloc (abfd, (bfd_size_type) SYMNMLEN + 1);
+	  c = bfd_alloc (abfd, SYMNMLEN + 1);
 	  if (c == NULL)
 	    return -1;
 	  memcpy (c, ldsym._l._l_name, SYMNMLEN);
 	  c[SYMNMLEN] = '\0';
 	  symbuf->symbol.name = c;
 	}
+      else if (ldsym._l._l_l._l_offset < ldhdr.l_stlen)
+	symbuf->symbol.name = strings + ldsym._l._l_l._l_offset;
+      else
+	symbuf->symbol.name = _("<corrupt>");
 
       if (ldsym.l_smclas == XMC_XO)
 	symbuf->symbol.section = bfd_abs_section_ptr;
@@ -384,11 +431,9 @@ _bfd_xcoff_get_dynamic_reloc_upper_bound (bfd *abfd)
       return -1;
     }
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return -1;
-
-  bfd_xcoff_swap_ldhdr_in (abfd, (struct external_ldhdr *) contents, &ldhdr);
 
   return (ldhdr.l_nreloc + 1) * sizeof (arelent *);
 }
@@ -419,11 +464,9 @@ _bfd_xcoff_canonicalize_dynamic_reloc (bfd *abfd,
       return -1;
     }
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return -1;
-
-  bfd_xcoff_swap_ldhdr_in (abfd, contents, &ldhdr);
 
   relbuf = bfd_alloc (abfd, ldhdr.l_nreloc * sizeof (arelent));
   if (relbuf == NULL)
@@ -668,7 +711,7 @@ _bfd_xcoff_bfd_link_hash_table_create (bfd *abfd)
 }
 
 /* Read internal relocs for an XCOFF csect.  This is a wrapper around
-   _bfd_coff_read_internal_relocs which tries to take advantage of any
+   bfd_coff_read_internal_relocs which tries to take advantage of any
    relocs which may have been cached for the enclosing section.  */
 
 static struct internal_reloc *
@@ -693,8 +736,8 @@ xcoff_read_internal_relocs (bfd *abfd,
 	  && cache
 	  && enclosing->reloc_count > 0)
 	{
-	  if (_bfd_coff_read_internal_relocs (abfd, enclosing, true,
-					      external_relocs, false, NULL)
+	  if (bfd_coff_read_internal_relocs (abfd, enclosing, true,
+					     external_relocs, false, NULL)
 	      == NULL)
 	    return NULL;
 	}
@@ -717,8 +760,8 @@ xcoff_read_internal_relocs (bfd *abfd,
 	}
     }
 
-  return _bfd_coff_read_internal_relocs (abfd, sec, cache, external_relocs,
-					 require_internal, internal_relocs);
+  return bfd_coff_read_internal_relocs (abfd, sec, cache, external_relocs,
+					require_internal, internal_relocs);
 }
 
 /* Split FILENAME into an import path and an import filename,
@@ -905,15 +948,13 @@ xcoff_link_add_dynamic_symbols (bfd *abfd, struct bfd_link_info *info)
       return false;
     }
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return false;
 
   /* Remove the sections from this object, so that they do not get
      included in the link.  */
   bfd_section_list_clear (abfd);
-
-  bfd_xcoff_swap_ldhdr_in (abfd, contents, &ldhdr);
 
   strings = (char *) contents + ldhdr.l_stoff;
 
@@ -934,14 +975,16 @@ xcoff_link_add_dynamic_symbols (bfd *abfd, struct bfd_link_info *info)
       if ((ldsym.l_smtype & L_EXPORT) == 0)
 	continue;
 
-      if (ldsym._l._l_l._l_zeroes == 0)
-	name = strings + ldsym._l._l_l._l_offset;
-      else
+      if (ldsym._l._l_l._l_zeroes != 0)
 	{
 	  memcpy (nambuf, ldsym._l._l_name, SYMNMLEN);
 	  nambuf[SYMNMLEN] = '\0';
 	  name = nambuf;
 	}
+      else if (ldsym._l._l_l._l_offset < ldhdr.l_stlen)
+	name = strings + ldsym._l._l_l._l_offset;
+      else
+	continue;
 
       /* Normally we could not call xcoff_link_hash_lookup in an add
 	 symbols routine, since we might not be using an XCOFF hash
@@ -995,7 +1038,7 @@ xcoff_link_add_dynamic_symbols (bfd *abfd, struct bfd_link_info *info)
 	    {
 	      char *dsnm;
 
-	      dsnm = bfd_malloc ((bfd_size_type) strlen (name) + 2);
+	      dsnm = bfd_malloc (strlen (name) + 2);
 	      if (dsnm == NULL)
 		return false;
 	      dsnm[0] = '.';
@@ -1038,7 +1081,7 @@ xcoff_link_add_dynamic_symbols (bfd *abfd, struct bfd_link_info *info)
   coff_section_data (abfd, lsec)->contents = NULL;
 
   /* Record this file in the import files.  */
-  n = bfd_alloc (abfd, (bfd_size_type) sizeof (struct xcoff_import_file));
+  n = bfd_alloc (abfd, sizeof (*n));
   if (n == NULL)
     return false;
   n->next = NULL;
@@ -1292,6 +1335,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
   } *reloc_info = NULL;
   bfd_size_type amt;
   unsigned short visibility;
+  unsigned int max_target_index;
 
   keep_syms = obj_coff_keep_syms (abfd);
 
@@ -1355,7 +1399,19 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
      order by VMA within a given section, so we handle this by
      scanning along the relocs as we process the csects.  We index
      into reloc_info using the section target_index.  */
-  amt = abfd->section_count + 1;
+  max_target_index = 0;
+  for (o = abfd->section_last; o != NULL; o = o->prev)
+    if (o->target_index != 0)
+      {
+	/* The last section added from the object file will have the
+	   highest target_index.  See coffgen.c coff_real_object_p and
+	   make_a_section_from_file.  Sections added by
+	   xcoff_link_create_extra_sections will have a zero
+	   target_index.  */
+	max_target_index = o->target_index;
+	break;
+      }
+  amt = max_target_index + 1;
   amt *= sizeof (struct reloc_info_struct);
   reloc_info = bfd_zmalloc (amt);
   if (reloc_info == NULL)
@@ -1421,7 +1477,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
       bfd_vma value;
       struct xcoff_link_hash_entry *set_toc;
 
-      bfd_coff_swap_sym_in (abfd, (void *) esym, (void *) &sym);
+      bfd_coff_swap_sym_in (abfd, esym, &sym);
 
       /* In this pass we are only interested in symbols with csect
 	 information.  */
@@ -1467,9 +1523,12 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 	{
 	  union internal_auxent auxlin;
 
-	  bfd_coff_swap_aux_in (abfd, (void *) (esym + symesz),
+	  if (symesz >= (size_t) (esym_end - esym))
+	    goto badaux;
+
+	  bfd_coff_swap_aux_in (abfd, esym + symesz,
 				sym.n_type, sym.n_sclass,
-				0, sym.n_numaux, (void *) &auxlin);
+				0, sym.n_numaux, &auxlin);
 
 	  if (auxlin.x_sym.x_fcnary.x_fcn.x_lnnoptr != 0)
 	    {
@@ -1496,7 +1555,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 
 		  linpstart = (reloc_info[enclosing->target_index].linenos
 			       + linoff);
-		  bfd_coff_swap_lineno_in (abfd, (void *) linpstart, (void *) &lin);
+		  bfd_coff_swap_lineno_in (abfd, linpstart, &lin);
 		  if (lin.l_lnno == 0
 		      && ((bfd_size_type) lin.l_addr.l_symndx
 			  == ((esym
@@ -1511,8 +1570,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 			   linp < linpend;
 			   linp += linesz)
 			{
-			  bfd_coff_swap_lineno_in (abfd, (void *) linp,
-						   (void *) &lin);
+			  bfd_coff_swap_lineno_in (abfd, linp, &lin);
 			  if (lin.l_lnno == 0)
 			    break;
 			}
@@ -1533,21 +1591,21 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
       visibility = sym.n_type & SYM_V_MASK;
 
       /* Pick up the csect auxiliary information.  */
-      if (sym.n_numaux == 0)
+      if (sym.n_numaux < 1
+	  || sym.n_numaux * symesz >= (size_t) (esym_end - esym))
 	{
+	badaux:
 	  _bfd_error_handler
 	    /* xgettext:c-format */
-	    (_("%pB: class %d symbol `%s' has no aux entries"),
+	    (_("%pB: class %d symbol '%s' has missing aux entries"),
 	     abfd, sym.n_sclass, name);
 	  bfd_set_error (bfd_error_bad_value);
 	  goto error_return;
 	}
 
-      bfd_coff_swap_aux_in (abfd,
-			    (void *) (esym + symesz * sym.n_numaux),
+      bfd_coff_swap_aux_in (abfd, esym + symesz * sym.n_numaux,
 			    sym.n_type, sym.n_sclass,
-			    sym.n_numaux - 1, sym.n_numaux,
-			    (void *) &aux);
+			    sym.n_numaux - 1, sym.n_numaux, &aux);
 
       smtyp = SMTYP_SMTYP (aux.x_csect.x_smtyp);
 
@@ -1670,7 +1728,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 
 		  erelsym = ((bfd_byte *) obj_coff_external_syms (abfd)
 			     + rel->r_symndx * symesz);
-		  bfd_coff_swap_sym_in (abfd, (void *) erelsym, (void *) &relsym);
+		  bfd_coff_swap_sym_in (abfd, erelsym, &relsym);
 		  if (EXTERN_SYM_P (relsym.n_sclass))
 		    {
 		      const char *relname;
@@ -1865,12 +1923,9 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 	     follow its appropriate XTY_SD symbol.  The .set pseudo op can
 	     cause the XTY_LD to not follow the XTY_SD symbol. */
 	  {
-	    bool bad;
-
-	    bad = false;
-	    if (aux.x_csect.x_scnlen.u64
-		>= (size_t) (esym - (bfd_byte *) obj_coff_external_syms (abfd)))
-	      bad = true;
+	    bool bad = (aux.x_csect.x_scnlen.u64
+			>= ((esym - (bfd_byte *) obj_coff_external_syms (abfd))
+			    / symesz));
 	    if (! bad)
 	      {
 		section = xcoff_data (abfd)->csects[aux.x_csect.x_scnlen.u64];
@@ -2236,6 +2291,7 @@ xcoff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 		 functions imported from dynamic objects.  */
 	      if (info->output_bfd->xvec == abfd->xvec
 		  && *rel_csect != bfd_und_section_ptr
+		  && (unsigned long) rel->r_symndx < obj_raw_syment_count (abfd)
 		  && obj_xcoff_sym_hashes (abfd)[rel->r_symndx] != NULL)
 		{
 		  struct xcoff_link_hash_entry *h;
@@ -2368,11 +2424,9 @@ xcoff_link_check_dynamic_ar_symbols (bfd *abfd,
     /* There are no symbols, so don't try to include it.  */
     return true;
 
-  contents = xcoff_get_section_contents (abfd, lsec);
+  contents = xcoff_get_ldhdr (abfd, lsec, &ldhdr);
   if (!contents)
     return false;
-
-  bfd_xcoff_swap_ldhdr_in (abfd, contents, &ldhdr);
 
   strings = (char *) contents + ldhdr.l_stoff;
 
@@ -2392,14 +2446,16 @@ xcoff_link_check_dynamic_ar_symbols (bfd *abfd,
       if ((ldsym.l_smtype & L_EXPORT) == 0)
 	continue;
 
-      if (ldsym._l._l_l._l_zeroes == 0)
-	name = strings + ldsym._l._l_l._l_offset;
-      else
+      if (ldsym._l._l_l._l_zeroes != 0)
 	{
 	  memcpy (nambuf, ldsym._l._l_name, SYMNMLEN);
 	  nambuf[SYMNMLEN] = '\0';
 	  name = nambuf;
 	}
+      else if (ldsym._l._l_l._l_offset < ldhdr.l_stlen)
+	name = strings + ldsym._l._l_l._l_offset;
+      else
+	continue;
 
       h = bfd_link_hash_lookup (info->hash, name, false, false, true);
 
@@ -2453,7 +2509,7 @@ xcoff_link_check_ar_symbols (bfd *abfd,
     {
       struct internal_syment sym;
 
-      bfd_coff_swap_sym_in (abfd, (void *) esym, (void *) &sym);
+      bfd_coff_swap_sym_in (abfd, esym, &sym);
       esym += (sym.n_numaux + 1) * symesz;
 
       if (EXTERN_SYM_P (sym.n_sclass) && sym.n_scnum != N_UNDEF)
@@ -2568,6 +2624,11 @@ _bfd_xcoff_bfd_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 	  if (! (_bfd_generic_link_add_archive_symbols
 		 (abfd, info, xcoff_link_check_archive_element)))
 	    return false;
+	}
+      else if (!bfd_link_mapless (abfd))
+	{
+	  bfd_set_error (bfd_error_no_armap);
+	  return false;
 	}
 
       {
@@ -3946,7 +4007,7 @@ bfd_xcoff_size_dynamic_sections (bfd *output_bfd,
     return true;
 
   xcoff_link_hash_traverse (xcoff_hash_table (info), xcoff_post_gc_symbol,
-			    (void *) ldinfo);
+			    ldinfo);
   if (ldinfo->failed)
     goto error_return;
 
@@ -3990,6 +4051,7 @@ xcoff_build_loader_section (struct xcoff_loader_info *ldinfo)
   lsec->contents = bfd_zalloc (output_bfd, lsec->size);
   if (lsec->contents == NULL)
     return false;
+  lsec->alloced = 1;
 
   /* Set up the header.  */
   bfd_xcoff_swap_ldhdr_out (output_bfd, ldhdr, lsec->contents);
@@ -4062,6 +4124,7 @@ bfd_xcoff_build_dynamic_sections (bfd *output_bfd,
       sec->contents = bfd_zalloc (output_bfd, sec->size);
       if (sec->contents == NULL)
 	return false;
+      sec->alloced = 1;
     }
   sec = xcoff_hash_table (info)->toc_section;
   if (sec->size > 0)
@@ -4069,6 +4132,7 @@ bfd_xcoff_build_dynamic_sections (bfd *output_bfd,
       sec->contents = bfd_zalloc (output_bfd, sec->size);
       if (sec->contents == NULL)
 	return false;
+      sec->alloced = 1;
     }
   sec = xcoff_hash_table (info)->descriptor_section;
   if (sec->size > 0)
@@ -4076,6 +4140,7 @@ bfd_xcoff_build_dynamic_sections (bfd *output_bfd,
       sec->contents = bfd_zalloc (output_bfd, sec->size);
       if (sec->contents == NULL)
 	return false;
+      sec->alloced = 1;
     }
 
   /* Now that we've done garbage collection, decide which symbols to keep,
@@ -4153,7 +4218,8 @@ bfd_xcoff_build_dynamic_sections (bfd *output_bfd,
 	  /* Read in the csect information, if any.  */
 	  if (CSECT_SYM_P (sym.n_sclass))
 	    {
-	      BFD_ASSERT (sym.n_numaux > 0);
+	      BFD_ASSERT (sym.n_numaux > 0
+			  && symesz * sym.n_numaux < (size_t) (esymend - esym));
 	      bfd_coff_swap_aux_in (sub, esym + symesz * sym.n_numaux,
 				    sym.n_type, sym.n_sclass,
 				    sym.n_numaux - 1, sym.n_numaux, &aux);
@@ -4244,7 +4310,7 @@ bfd_xcoff_link_generate_rtinit (bfd *abfd,
 {
   struct bfd_in_memory *bim;
 
-  bim = bfd_malloc ((bfd_size_type) sizeof (* bim));
+  bim = bfd_malloc (sizeof (*bim));
   if (bim == NULL)
     return false;
 
@@ -4253,7 +4319,7 @@ bfd_xcoff_link_generate_rtinit (bfd *abfd,
 
   abfd->link.next = 0;
   abfd->format = bfd_object;
-  abfd->iostream = (void *) bim;
+  abfd->iostream = bim;
   abfd->flags = BFD_IN_MEMORY;
   abfd->iovec = &_bfd_memory_iovec;
   abfd->direction = write_direction;
@@ -4673,7 +4739,7 @@ xcoff_build_one_stub (struct bfd_hash_entry *gen_entry, void *in_arg)
   if (hstub->target_section != NULL
       && hstub->target_section->output_section == NULL
       && info->non_contiguous_regions)
-    info->callbacks->einfo (_("%F%P: Could not assign `%pA' to an output section. "
+    info->callbacks->fatal (_("%P: Could not assign `%pA' to an output section. "
 			      "Retry without --enable-non-contiguous-regions.\n"),
 			    hstub->target_section);
 
@@ -4813,8 +4879,8 @@ bfd_xcoff_size_stubs (struct bfd_link_info *info)
 			}
 
 		      bfd_coff_swap_sym_in (input_bfd,
-					    (void *) esyms + irel->r_symndx * symesz,
-					    (void *) &sym);
+					    esyms + irel->r_symndx * symesz,
+					    &sym);
 
 		      sym_sec = xcoff_data (input_bfd)->csects[irel->r_symndx];
 		      sym_value = sym.n_value - sym_sec->vma;
@@ -4931,7 +4997,7 @@ bfd_xcoff_build_stubs (struct bfd_link_info *info)
       stub_sec->contents = bfd_zalloc (htab->params->stub_bfd, size);
       if (stub_sec->contents == NULL && size != 0)
 	return false;
-
+      stub_sec->alloced = 1;
     }
 
   /* Build the stubs as directed by the stub hash table.  */
@@ -5187,17 +5253,16 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
       int smtyp = 0;
       int add;
 
-      bfd_coff_swap_sym_in (input_bfd, (void *) esym, (void *) isymp);
+      bfd_coff_swap_sym_in (input_bfd, esym, isymp);
 
       /* Read in the csect information, if any.  */
       if (CSECT_SYM_P (isymp->n_sclass))
 	{
-	  BFD_ASSERT (isymp->n_numaux > 0);
-	  bfd_coff_swap_aux_in (input_bfd,
-				(void *) (esym + isymesz * isymp->n_numaux),
+	  BFD_ASSERT (isymp->n_numaux > 0
+		      && isymesz * isymp->n_numaux < (size_t) (esym_end - esym));
+	  bfd_coff_swap_aux_in (input_bfd, esym + isymesz * isymp->n_numaux,
 				isymp->n_type, isymp->n_sclass,
-				isymp->n_numaux - 1, isymp->n_numaux,
-				(void *) &aux);
+				isymp->n_numaux - 1, isymp->n_numaux, &aux);
 
 	  smtyp = SMTYP_SMTYP (aux.x_csect.x_smtyp);
 	}
@@ -5412,12 +5477,10 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 		  if ((bfd_size_type) flinfo->last_file_index >= syment_base)
 		    {
 		      /* The last C_FILE symbol is in this input file.  */
-		      bfd_coff_swap_sym_out (output_bfd,
-					     (void *) &flinfo->last_file,
-					     (void *) (flinfo->outsyms
-						    + ((flinfo->last_file_index
-							- syment_base)
-						       * osymesz)));
+		      bfd_coff_swap_sym_out
+			(output_bfd, &flinfo->last_file,
+			 flinfo->outsyms + (flinfo->last_file_index
+					    - syment_base) * osymesz);
 		    }
 		  else
 		    {
@@ -5426,9 +5489,8 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 			 borrow *outsym temporarily.  */
 		      file_ptr pos;
 
-		      bfd_coff_swap_sym_out (output_bfd,
-					     (void *) &flinfo->last_file,
-					     (void *) outsym);
+		      bfd_coff_swap_sym_out (output_bfd, &flinfo->last_file,
+					     outsym);
 
 		      pos = obj_sym_filepos (output_bfd);
 		      pos += flinfo->last_file_index * osymesz;
@@ -5494,7 +5556,7 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 	    }
 
 	  /* Output the symbol.  */
-	  bfd_coff_swap_sym_out (output_bfd, (void *) &isym, (void *) outsym);
+	  bfd_coff_swap_sym_out (output_bfd, &isym, outsym);
 
 	  esym += isymesz;
 	  outsym += osymesz;
@@ -5503,9 +5565,9 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 	    {
 	      union internal_auxent aux;
 
-	      bfd_coff_swap_aux_in (input_bfd, (void *) esym, isymp->n_type,
-				    isymp->n_sclass, i, isymp->n_numaux,
-				    (void *) &aux);
+	      bfd_coff_swap_aux_in (input_bfd, esym,
+				    isymp->n_type, isymp->n_sclass, i,
+				    isymp->n_numaux, &aux);
 
 	      if (isymp->n_sclass == C_FILE)
 		{
@@ -5733,9 +5795,9 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 		    }
 		}
 
-	      bfd_coff_swap_aux_out (output_bfd, (void *) &aux, isymp->n_type,
+	      bfd_coff_swap_aux_out (output_bfd, &aux, isymp->n_type,
 				     isymp->n_sclass, i, isymp->n_numaux,
-				     (void *) outsym);
+				     outsym);
 	      outsym += osymesz;
 	      esym += isymesz;
 	    }
@@ -5757,10 +5819,9 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
       && (bfd_size_type) flinfo->last_file_index >= syment_base)
     {
       flinfo->last_file.n_value = output_index;
-      bfd_coff_swap_sym_out (output_bfd, (void *) &flinfo->last_file,
-			     (void *) (flinfo->outsyms
-				    + ((flinfo->last_file_index - syment_base)
-				       * osymesz)));
+      bfd_coff_swap_sym_out (output_bfd, &flinfo->last_file,
+			     flinfo->outsyms + (flinfo->last_file_index
+						- syment_base) * osymesz);
     }
 
   /* Write the modified symbols to the output file.  */
@@ -5973,16 +6034,13 @@ xcoff_link_input_bfd (struct xcoff_final_link_info *flinfo,
 			      void * auxptr;
 			      union internal_auxent aux;
 
-			      auxptr = ((void *)
-					(((bfd_byte *)
-					  obj_coff_external_syms (input_bfd))
-					 + ((r_symndx + is->n_numaux)
-					    * isymesz)));
+			      auxptr = ((bfd_byte *)
+					obj_coff_external_syms (input_bfd)
+					+ (r_symndx + is->n_numaux) * isymesz);
 			      bfd_coff_swap_aux_in (input_bfd, auxptr,
 						    is->n_type, is->n_sclass,
 						    is->n_numaux - 1,
-						    is->n_numaux,
-						    (void *) &aux);
+						    is->n_numaux, &aux);
 			      if (SMTYP_SMTYP (aux.x_csect.x_smtyp) == XTY_SD
 				  && aux.x_csect.x_smclas == XMC_TC0)
 				indx = flinfo->toc_symindx;
@@ -6501,12 +6559,12 @@ xcoff_write_global_symbol (struct bfd_hash_entry *bh, void * inf)
 	  irsym.n_type = T_NULL;
 	  irsym.n_numaux = 1;
 
-	  bfd_coff_swap_sym_out (output_bfd, (void *) &irsym, (void *) outsym);
+	  bfd_coff_swap_sym_out (output_bfd, &irsym, outsym);
 	  outsym += bfd_coff_symesz (output_bfd);
 
 	  /* Note : iraux is initialized above.  */
-	  bfd_coff_swap_aux_out (output_bfd, (void *) &iraux, T_NULL, C_HIDEXT,
-				 0, 1, (void *) outsym);
+	  bfd_coff_swap_aux_out (output_bfd, &iraux, T_NULL, C_HIDEXT,
+				 0, 1, outsym);
 	  outsym += bfd_coff_auxesz (output_bfd);
 
 	  if (h->indx >= 0)
@@ -6744,12 +6802,11 @@ xcoff_write_global_symbol (struct bfd_hash_entry *bh, void * inf)
   isym.n_type = T_NULL;
   isym.n_numaux = 1;
 
-  bfd_coff_swap_sym_out (output_bfd, (void *) &isym, (void *) outsym);
+  bfd_coff_swap_sym_out (output_bfd, &isym, outsym);
   outsym += bfd_coff_symesz (output_bfd);
 
   aux.x_csect.x_smclas = h->smclas;
-  bfd_coff_swap_aux_out (output_bfd, (void *) &aux, T_NULL, isym.n_sclass, 0, 1,
-			 (void *) outsym);
+  bfd_coff_swap_aux_out (output_bfd, &aux, T_NULL, isym.n_sclass, 0, 1, outsym);
   outsym += bfd_coff_auxesz (output_bfd);
 
   if ((h->root.type == bfd_link_hash_defined
@@ -6764,13 +6821,12 @@ xcoff_write_global_symbol (struct bfd_hash_entry *bh, void * inf)
 	isym.n_sclass = C_WEAKEXT;
       else
 	isym.n_sclass = C_EXT;
-      bfd_coff_swap_sym_out (output_bfd, (void *) &isym, (void *) outsym);
+      bfd_coff_swap_sym_out (output_bfd, &isym, outsym);
       outsym += bfd_coff_symesz (output_bfd);
 
       aux.x_csect.x_smtyp = XTY_LD;
       aux.x_csect.x_scnlen.u64 = obj_raw_syment_count (output_bfd);
-      bfd_coff_swap_aux_out (output_bfd, (void *) &aux, T_NULL, C_EXT, 0, 1,
-			     (void *) outsym);
+      bfd_coff_swap_aux_out (output_bfd, &aux, T_NULL, C_EXT, 0, 1, outsym);
       outsym += bfd_coff_auxesz (output_bfd);
     }
 
@@ -6866,8 +6922,8 @@ xcoff_reloc_link_order (bfd *output_bfd,
 	     howto->name, addend, NULL, NULL, (bfd_vma) 0);
 	  break;
 	}
-      ok = bfd_set_section_contents (output_bfd, output_section, (void *) buf,
-				     (file_ptr) link_order->offset, size);
+      ok = bfd_set_section_contents (output_bfd, output_section, buf,
+				     link_order->offset, size);
       free (buf);
       if (! ok)
 	return false;
@@ -7332,8 +7388,7 @@ _bfd_xcoff_bfd_final_link (bfd *abfd, struct bfd_link_info *info)
   if (flinfo.last_file_index != -1)
     {
       flinfo.last_file.n_value = -(bfd_vma) 1;
-      bfd_coff_swap_sym_out (abfd, (void *) &flinfo.last_file,
-			     (void *) flinfo.outsyms);
+      bfd_coff_swap_sym_out (abfd, &flinfo.last_file, flinfo.outsyms);
       pos = obj_sym_filepos (abfd) + flinfo.last_file_index * symesz;
       if (bfd_seek (abfd, pos, SEEK_SET) != 0
 	  || bfd_write (flinfo.outsyms, symesz, abfd) != symesz)
@@ -7417,7 +7472,7 @@ _bfd_xcoff_bfd_final_link (bfd *abfd, struct bfd_link_info *info)
 	 appear in the symbol table, which is not necessarily by
 	 address.  So we sort them here.  There may be a better way to
 	 do this.  */
-      qsort ((void *) flinfo.section_info[o->target_index].relocs,
+      qsort (flinfo.section_info[o->target_index].relocs,
 	     o->reloc_count, sizeof (struct internal_reloc),
 	     xcoff_sort_relocs);
 
@@ -7425,7 +7480,7 @@ _bfd_xcoff_bfd_final_link (bfd *abfd, struct bfd_link_info *info)
       irelend = irel + o->reloc_count;
       erel = external_relocs;
       for (; irel < irelend; irel++, rel_hash++, erel += relsz)
-	bfd_coff_swap_reloc_out (abfd, (void *) irel, (void *) erel);
+	bfd_coff_swap_reloc_out (abfd, irel, erel);
 
       rel_size = relsz * o->reloc_count;
       if (bfd_seek (abfd, o->rel_filepos, SEEK_SET) != 0

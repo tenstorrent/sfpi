@@ -1,4 +1,4 @@
-# Copyright 2007-2024 Free Software Foundation, Inc.
+# Copyright 2007-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,15 +32,15 @@ set sofile [standard_output_file gdb2384-base.so]
 if { [gdb_compile_shlib $srcdir/$subdir/$srcfile2 $sofile {debug c++}] != ""
      || [gdb_compile $srcdir/$subdir/$srcfile $binfile executable [list debug "c++" shlib=${sofile}]] != ""} {
     untested "failed to compile"
-    return -1
+    return
 }
 
-clean_restart ${binfile}
+clean_restart ${::testfile}
 gdb_load_shlib ${sofile}
 
 
 if {![runto_main]} {
-    return -1
+    return
 }
 
 gdb_breakpoint [gdb_get_line_number "First breakpoint"]
@@ -73,4 +73,3 @@ gdb_continue_to_breakpoint "run to 'Second breakpoint', second time"
 gdb_test "print d2.meth ()" \
     ".*24.*" \
     "gdb2384 at 'Second breakpoint'"
-

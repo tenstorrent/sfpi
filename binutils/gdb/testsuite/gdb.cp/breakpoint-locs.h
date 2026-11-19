@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2020-2024 Free Software Foundation, Inc.
+   Copyright 2020-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,6 +20,6 @@ namespace N1
   class C1
   {
    public:
-    static void __attribute__((always_inline)) baz () { volatile unsigned i; i++; }
+    static void __attribute__((always_inline)) baz () { volatile unsigned i; i = i + 1; }
   };
 }

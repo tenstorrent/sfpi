@@ -1,5 +1,5 @@
 /* Tracepoint code for remote server for GDB.
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -20,7 +20,6 @@
 #include "gdbthread.h"
 #include "gdbsupport/rsp-low.h"
 
-#include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <chrono>
@@ -538,7 +537,7 @@ tracepoint_action_send (char *buffer, const struct tracepoint_action *action)
     case 'X':
       return x_tracepoint_action_send (buffer, action);
     }
-  error ("Unknown trace action '%c'.", action->type);
+  error (_("Unknown trace action '%c'."), action->type);
 }
 
 static CORE_ADDR
@@ -553,7 +552,7 @@ tracepoint_action_download (const struct tracepoint_action *action)
     case 'X':
       return x_tracepoint_action_download (action);
     }
-  error ("Unknown trace action '%c'.", action->type);
+  error (_("Unknown trace action '%c'."), action->type);
 }
 #endif
 
@@ -948,7 +947,7 @@ struct ipa_trace_buffer_control
    who wrote last to the buffer control structure.  We need to freeze
    any inferior writing to the buffer while GDBserver touches memory,
    so that the inferior can correctly detect that GDBserver had been
-   there, otherwise, it could mistakingly think its commit was
+   there, otherwise, it could mistakenly think its commit was
    successful; that's implemented by simply having GDBserver set a
    breakpoint the inferior hits if it is the critical region.
 
@@ -1169,38 +1168,78 @@ static char *tracing_stop_note;
 
 #endif
 
-/* Base "class" for tracepoint type specific data to be passed down to
+/* Base class for tracepoint type specific data to be passed down to
    collect_data_at_tracepoint.  */
 struct tracepoint_hit_ctx
 {
-  enum tracepoint_type type;
+  virtual struct regcache *regcache () = 0;
 };
 
 #ifdef IN_PROCESS_AGENT
+/* The target description index for IPA.  Passed from gdbserver, used
+   to select ipa_tdesc.  */
+extern "C" {
+IP_AGENT_EXPORT_VAR int ipa_tdesc_idx;
+}
 
 /* Fast/jump tracepoint specific data to be passed down to
    collect_data_at_tracepoint.  */
-struct fast_tracepoint_ctx
+struct fast_tracepoint_ctx : public tracepoint_hit_ctx
 {
-  struct tracepoint_hit_ctx base;
+  explicit fast_tracepoint_ctx (unsigned char *regs)
+    : regs (regs)
+  {}
 
-  struct regcache regcache;
-  int regcache_initted;
-  unsigned char *regspace;
+  virtual struct regcache *regcache () override
+  {
+    const struct target_desc *ipa_tdesc = get_ipa_tdesc (ipa_tdesc_idx);
 
+    if (!this->m_regcache.has_value ())
+      {
+	this->m_regcache.emplace (ipa_tdesc, this->regspace);
+	supply_fast_tracepoint_registers (&this->m_regcache.value (),
+					  this->regs);
+      }
+
+    return &this->m_regcache.value ();
+  }
+
+  /* The buffer space M_REGCACHE uses.  We use a separate buffer
+     instead of letting the regcache malloc for both signal safety and
+     performance reasons; this is allocated on the stack instead.  */
+  unsigned char *regspace = nullptr;
+
+  /* The register buffer passed by the client.  */
   unsigned char *regs;
-  struct tracepoint *tpoint;
+
+  /* The GDB tracepoint matching the probed marker that was "hit".  */
+  struct tracepoint *tpoint = nullptr;
+
+private:
+
+  /* The regcache corresponding to the registers state at the time of
+     the tracepoint hit.  Initialized lazily, from REGS.  */
+  std::optional<struct regcache> m_regcache;
 };
 
 #else
 
 /* Static tracepoint specific data to be passed down to
    collect_data_at_tracepoint.  */
-struct trap_tracepoint_ctx
+struct trap_tracepoint_ctx : public tracepoint_hit_ctx
 {
-  struct tracepoint_hit_ctx base;
+  explicit trap_tracepoint_ctx (struct regcache *regcache)
+    : m_regcache (regcache)
+  {}
 
-  struct regcache *regcache;
+  virtual struct regcache *regcache () override
+  {
+    return this->m_regcache;
+  }
+
+private:
+
+  struct regcache *m_regcache;
 };
 
 #endif
@@ -1827,7 +1866,7 @@ add_tracepoint_action (struct tracepoint *tpoint, const char *packet)
 	    trace_debug ("Want to collect registers");
 	    ++act;
 	    /* skip past hex digits of mask for now */
-	    while (isxdigit(*act))
+	    while (c_isxdigit(*act))
 	      ++act;
 	    break;
 	  }
@@ -2458,7 +2497,7 @@ cmd_qtdp (char *own_buf)
 	  if (tpoint->type == trap_tracepoint || tp == NULL)
 	    {
 	      install_tracepoint (tpoint, own_buf);
-	      if (strcmp (own_buf, "OK") != 0)
+	      if (!streq (own_buf, "OK"))
 		remove_tracepoint (tpoint);
 	    }
 	  else
@@ -2646,7 +2685,7 @@ cmd_qtv (char *own_buf)
   /* Only make tsv's be undefined before the first trace run.  After a
      trace run is over, the user might want to see the last value of
      the tsv, and it might not be available in a traceframe.  */
-  else if (!tracing && strcmp (tracing_stop_reason, "tnotrun") == 0)
+  else if (!tracing && streq (tracing_stop_reason, "tnotrun"))
     {
       strcpy (own_buf, "U");
       return;
@@ -2811,7 +2850,7 @@ have_fast_tracepoint_trampoline_buffer (char *buf)
     {
       internal_error ("error extracting trampoline_buffer_end");
     }
-  
+
   if (buf)
     {
       buf[0] = '\0';
@@ -2871,7 +2910,7 @@ install_fast_tracepoint (struct tracepoint *tpoint, char *errbuf)
   if (read_inferior_data_pointer (ipa_sym_addrs.addr_gdb_collect_ptr,
 				  &collect))
     {
-      error ("error extracting gdb_collect_ptr");
+      error (_("error extracting gdb_collect_ptr"));
       return 1;
     }
 
@@ -2987,7 +3026,7 @@ cmd_qtstart (char *packet)
       /* Tell IPA about the correct tdesc.  */
       if (write_inferior_integer (ipa_sym_addrs.addr_ipa_tdesc_idx,
 				  target_get_ipa_tdesc_idx ()))
-	error ("Error setting ipa_tdesc_idx variable in lib");
+	error (_("Error setting ipa_tdesc_idx variable in lib"));
     }
 
   /* Start out empty.  */
@@ -3113,13 +3152,13 @@ cmd_qtstart (char *packet)
       stop_tracing_bkpt = set_breakpoint_at (ipa_sym_addrs.addr_stop_tracing,
 					     stop_tracing_handler);
       if (stop_tracing_bkpt == NULL)
-	error ("Error setting stop_tracing breakpoint");
+	error (_("Error setting stop_tracing breakpoint"));
 
       flush_trace_buffer_bkpt
 	= set_breakpoint_at (ipa_sym_addrs.addr_flush_trace_buffer,
 			     flush_trace_buffer_handler);
       if (flush_trace_buffer_bkpt == NULL)
-	error ("Error setting flush_trace_buffer breakpoint");
+	error (_("Error setting flush_trace_buffer breakpoint"));
     }
 
   target_unpause_all (true);
@@ -3399,7 +3438,7 @@ cmd_qtstatus (char *packet)
     }
 
   /* If this was a forced stop, include any stop note that was supplied.  */
-  if (strcmp (stop_reason_rsp, "tstop") == 0)
+  if (streq (stop_reason_rsp, "tstop"))
     {
       stop_reason_rsp = (char *) alloca (strlen ("tstop:") + strlen (buf3) + 1);
       strcpy (stop_reason_rsp, "tstop:");
@@ -3421,8 +3460,8 @@ cmd_qtstatus (char *packet)
 	   free_space (), phex_nz (trace_buffer_hi - trace_buffer_lo, 0),
 	   circular_trace_buffer,
 	   disconnected_tracing,
-	   phex_nz (tracing_start_time, sizeof (tracing_start_time)),
-	   phex_nz (tracing_stop_time, sizeof (tracing_stop_time)),
+	   phex_nz (tracing_start_time),
+	   phex_nz (tracing_stop_time),
 	   buf1, buf2);
 }
 
@@ -3764,7 +3803,7 @@ cmd_bigqtbuffer_size (char *own_buf)
   packet += strlen ("QTBuffer:size:");
 
   /* -1 is sent as literal "-1".  */
-  if (strcmp (packet, "-1") == 0)
+  if (streq (packet, "-1"))
     sval = DEFAULT_TRACE_BUFFER_SIZE;
   else
     {
@@ -3841,7 +3880,7 @@ cmd_qtnotes (char *own_buf)
 int
 handle_tracepoint_general_set (char *packet)
 {
-  if (strcmp ("QTinit", packet) == 0)
+  if (streq ("QTinit", packet))
     {
       cmd_qtinit (packet);
       return 1;
@@ -3876,12 +3915,12 @@ handle_tracepoint_general_set (char *packet)
       cmd_qtro (packet);
       return 1;
     }
-  else if (strcmp ("QTStart", packet) == 0)
+  else if (streq ("QTStart", packet))
     {
       cmd_qtstart (packet);
       return 1;
     }
-  else if (strcmp ("QTStop", packet) == 0)
+  else if (streq ("QTStop", packet))
     {
       cmd_qtstop (packet);
       return 1;
@@ -3918,7 +3957,7 @@ handle_tracepoint_general_set (char *packet)
 int
 handle_tracepoint_query (char *packet)
 {
-  if (strcmp ("qTStatus", packet) == 0)
+  if (streq ("qTStatus", packet))
     {
       cmd_qtstatus (packet);
       return 1;
@@ -3928,22 +3967,22 @@ handle_tracepoint_query (char *packet)
       cmd_qtp (packet);
       return 1;
     }
-  else if (strcmp ("qTfP", packet) == 0)
+  else if (streq ("qTfP", packet))
     {
       cmd_qtfp (packet);
       return 1;
     }
-  else if (strcmp ("qTsP", packet) == 0)
+  else if (streq ("qTsP", packet))
     {
       cmd_qtsp (packet);
       return 1;
     }
-  else if (strcmp ("qTfV", packet) == 0)
+  else if (streq ("qTfV", packet))
     {
       cmd_qtfv (packet);
       return 1;
     }
-  else if (strcmp ("qTsV", packet) == 0)
+  else if (streq ("qTsV", packet))
     {
       cmd_qtsv (packet);
       return 1;
@@ -3958,7 +3997,7 @@ handle_tracepoint_query (char *packet)
       cmd_qtbuffer (packet);
       return 1;
     }
-  else if (strcmp ("qTMinFTPILen", packet) == 0)
+  else if (streq ("qTMinFTPILen", packet))
     {
       cmd_qtminftpilen (packet);
       return 1;
@@ -4039,7 +4078,6 @@ tracepoint_finished_step (thread_info *tinfo, CORE_ADDR stop_pc)
   struct tracepoint *tpoint;
   struct wstep_state *wstep;
   struct wstep_state **wstep_link;
-  struct trap_tracepoint_ctx ctx;
 
   /* Pull in fast tracepoint trace frames from the inferior lib buffer into
      our buffer.  */
@@ -4069,8 +4107,7 @@ tracepoint_finished_step (thread_info *tinfo, CORE_ADDR stop_pc)
 	       target_pid_to_str (tinfo->id).c_str (),
 	       wstep->tp_number, paddress (wstep->tp_address));
 
-  ctx.base.type = trap_tracepoint;
-  ctx.regcache = get_thread_regcache (tinfo);
+  trap_tracepoint_ctx ctx (get_thread_regcache (tinfo));
 
   while (wstep != NULL)
     {
@@ -4092,8 +4129,7 @@ tracepoint_finished_step (thread_info *tinfo, CORE_ADDR stop_pc)
       ++wstep->current_step;
 
       /* Collect data.  */
-      collect_data_at_step ((struct tracepoint_hit_ctx *) &ctx,
-			    stop_pc, tpoint, wstep->current_step);
+      collect_data_at_step (&ctx, stop_pc, tpoint, wstep->current_step);
 
       if (wstep->current_step >= tpoint->step_count)
 	{
@@ -4224,14 +4260,12 @@ tracepoint_was_hit (thread_info *tinfo, CORE_ADDR stop_pc)
 {
   struct tracepoint *tpoint;
   int ret = 0;
-  struct trap_tracepoint_ctx ctx;
 
   /* Not tracing, don't handle.  */
   if (!tracing)
     return 0;
 
-  ctx.base.type = trap_tracepoint;
-  ctx.regcache = get_thread_regcache (tinfo);
+  trap_tracepoint_ctx ctx (get_thread_regcache (tinfo));
 
   for (tpoint = tracepoints; tpoint; tpoint = tpoint->next)
     {
@@ -4246,10 +4280,8 @@ tracepoint_was_hit (thread_info *tinfo, CORE_ADDR stop_pc)
 
 	  /* Test the condition if present, and collect if true.  */
 	  if (!tpoint->cond
-	      || (condition_true_at_tracepoint
-		  ((struct tracepoint_hit_ctx *) &ctx, tpoint)))
-	    collect_data_at_tracepoint ((struct tracepoint_hit_ctx *) &ctx,
-					stop_pc, tpoint);
+	      || (condition_true_at_tracepoint (&ctx, tpoint)))
+	    collect_data_at_tracepoint (&ctx, stop_pc, tpoint);
 
 	  if (stopping_tracepoint
 	      || trace_buffer_is_full
@@ -4363,46 +4395,6 @@ collect_data_at_step (struct tracepoint_hit_ctx *ctx,
 
 #endif
 
-#ifdef IN_PROCESS_AGENT
-/* The target description index for IPA.  Passed from gdbserver, used
-   to select ipa_tdesc.  */
-extern "C" {
-IP_AGENT_EXPORT_VAR int ipa_tdesc_idx;
-}
-#endif
-
-static struct regcache *
-get_context_regcache (struct tracepoint_hit_ctx *ctx)
-{
-  struct regcache *regcache = NULL;
-#ifdef IN_PROCESS_AGENT
-  const struct target_desc *ipa_tdesc = get_ipa_tdesc (ipa_tdesc_idx);
-
-  if (ctx->type == fast_tracepoint)
-    {
-      struct fast_tracepoint_ctx *fctx = (struct fast_tracepoint_ctx *) ctx;
-      if (!fctx->regcache_initted)
-	{
-	  fctx->regcache_initted = 1;
-	  init_register_cache (&fctx->regcache, ipa_tdesc, fctx->regspace);
-	  supply_regblock (&fctx->regcache, NULL);
-	  supply_fast_tracepoint_registers (&fctx->regcache, fctx->regs);
-	}
-      regcache = &fctx->regcache;
-    }
-#else
-  if (ctx->type == trap_tracepoint)
-    {
-      struct trap_tracepoint_ctx *tctx = (struct trap_tracepoint_ctx *) ctx;
-      regcache = tctx->regcache;
-    }
-#endif
-
-  gdb_assert (regcache != NULL);
-
-  return regcache;
-}
-
 static void
 do_action_at_tracepoint (struct tracepoint_hit_ctx *ctx,
 			 CORE_ADDR stop_pc,
@@ -4435,13 +4427,11 @@ do_action_at_tracepoint (struct tracepoint_hit_ctx *ctx,
     case 'R':
       {
 	unsigned char *regspace;
-	struct regcache tregcache;
-	struct regcache *context_regcache;
 	int regcache_size;
 
 	trace_debug ("Want to collect registers");
 
-	context_regcache = get_context_regcache (ctx);
+	regcache *context_regcache = ctx->regcache ();
 	regcache_size = register_cache_size (context_regcache->tdesc);
 
 	/* Collect all registers for now.  */
@@ -4456,8 +4446,7 @@ do_action_at_tracepoint (struct tracepoint_hit_ctx *ctx,
 
 	/* Wrap the regblock in a register cache (in the stack, we
 	   don't want to malloc here).  */
-	init_register_cache (&tregcache, context_regcache->tdesc,
-			     regspace + 1);
+	regcache tregcache (context_regcache->tdesc, regspace + 1);
 
 	/* Copy the register data to the regblock.  */
 	tregcache.copy_from (context_regcache);
@@ -4488,7 +4477,7 @@ do_action_at_tracepoint (struct tracepoint_hit_ctx *ctx,
 	struct eval_agent_expr_context ax_ctx;
 
 	eaction = (struct eval_expr_action *) taction;
-	ax_ctx.regcache = get_context_regcache (ctx);
+	ax_ctx.regcache = ctx->regcache ();
 	ax_ctx.tframe = tframe;
 	ax_ctx.tpoint = tpoint;
 
@@ -4533,7 +4522,7 @@ condition_true_at_tracepoint (struct tracepoint_hit_ctx *ctx,
 #ifdef IN_PROCESS_AGENT
   if (tpoint->compiled_cond)
     {
-      struct fast_tracepoint_ctx *fctx = (struct fast_tracepoint_ctx *) ctx;
+      auto fctx = static_cast<fast_tracepoint_ctx *> (ctx);
       err = ((condfn) (uintptr_t) (tpoint->compiled_cond)) (fctx->regs, &value);
     }
   else
@@ -4541,7 +4530,7 @@ condition_true_at_tracepoint (struct tracepoint_hit_ctx *ctx,
     {
       struct eval_agent_expr_context ax_ctx;
 
-      ax_ctx.regcache = get_context_regcache (ctx);
+      ax_ctx.regcache = ctx->regcache ();
       ax_ctx.tframe = NULL;
       ax_ctx.tpoint = tpoint;
 
@@ -4824,7 +4813,7 @@ fetch_traceframe_registers (int tfnum, struct regcache *regcache, int regnum)
   if (dataptr == NULL)
     {
       /* Mark registers unavailable.  */
-      supply_regblock (regcache, NULL);
+      regcache->reset (REG_UNAVAILABLE);
 
       /* We can generally guess at a PC, although this will be
 	 misleading for while-stepping frames and multi-location
@@ -4842,7 +4831,6 @@ fetch_traceframe_registers (int tfnum, struct regcache *regcache, int regnum)
 static CORE_ADDR
 traceframe_get_pc (struct traceframe *tframe)
 {
-  struct regcache regcache;
   unsigned char *dataptr;
   const struct target_desc *tdesc = current_target_desc ();
 
@@ -4850,7 +4838,7 @@ traceframe_get_pc (struct traceframe *tframe)
   if (dataptr == NULL)
     return 0;
 
-  init_register_cache (&regcache, tdesc, dataptr);
+  regcache regcache (tdesc, dataptr);
   return regcache_read_pc (&regcache);
 }
 
@@ -5001,7 +4989,7 @@ build_traceframe_info_xml (char blocktype, unsigned char *dataptr, void *data)
 	dataptr += sizeof (mlen);
 	string_xml_appendf (*buffer,
 			    "<memory start=\"0x%s\" length=\"0x%s\"/>\n",
-			    paddress (maddr), phex_nz (mlen, sizeof (mlen)));
+			    paddress (maddr), phex_nz (mlen));
 	break;
       }
     case 'V':
@@ -5018,8 +5006,8 @@ build_traceframe_info_xml (char blocktype, unsigned char *dataptr, void *data)
 	break;
       }
     default:
-      warning ("Unhandled trace block type (%d) '%c ' "
-	       "while building trace frame info.",
+      warning (_("Unhandled trace block type (%d) '%c ' "
+		 "while building trace frame info."),
 	       blocktype, blocktype);
       break;
     }
@@ -5209,7 +5197,7 @@ fast_tracepoint_collecting (CORE_ADDR thread_area,
       tpoint = fast_tracepoint_from_jump_pad_address (stop_pc);
       if (tpoint == NULL)
 	{
-	  warning ("in jump pad, but no matching tpoint?");
+	  warning (_("in jump pad, but no matching tpoint?"));
 	  return fast_tpoint_collect_result::not_collecting;
 	}
       else
@@ -5237,7 +5225,7 @@ fast_tracepoint_collecting (CORE_ADDR thread_area,
       tpoint = fast_tracepoint_from_trampoline_address (stop_pc);
       if (tpoint == NULL)
 	{
-	  warning ("in trampoline, but no matching tpoint?");
+	  warning (_("in trampoline, but no matching tpoint?"));
 	  return fast_tpoint_collect_result::not_collecting;
 	}
       else
@@ -5293,8 +5281,8 @@ fast_tracepoint_collecting (CORE_ADDR thread_area,
 	= fast_tracepoint_from_ipa_tpoint_address (ipa_collecting_obj.tpoint);
       if (tpoint == NULL)
 	{
-	  warning ("fast_tracepoint_collecting: collecting, "
-		   "but tpoint %s not found?",
+	  warning (_("fast_tracepoint_collecting: collecting, "
+		     "but tpoint %s not found?"),
 		   paddress ((CORE_ADDR) ipa_collecting_obj.tpoint));
 	  return fast_tpoint_collect_result::not_collecting;
 	}
@@ -5362,7 +5350,6 @@ IP_AGENT_EXPORT_FUNC void gdb_collect (struct tracepoint *tpoint,
 IP_AGENT_EXPORT_FUNC void
 gdb_collect (struct tracepoint *tpoint, unsigned char *regs)
 {
-  struct fast_tracepoint_ctx ctx;
   const struct target_desc *ipa_tdesc;
 
   /* Don't do anything until the trace run is completely set up.  */
@@ -5370,9 +5357,8 @@ gdb_collect (struct tracepoint *tpoint, unsigned char *regs)
     return;
 
   ipa_tdesc = get_ipa_tdesc (ipa_tdesc_idx);
-  ctx.base.type = fast_tracepoint;
-  ctx.regs = regs;
-  ctx.regcache_initted = 0;
+  fast_tracepoint_ctx ctx (regs);
+
   /* Wrap the regblock in a register cache (in the stack, we don't
      want to malloc here).  */
   ctx.regspace = (unsigned char *) alloca (ipa_tdesc->registers_size);
@@ -5381,6 +5367,8 @@ gdb_collect (struct tracepoint *tpoint, unsigned char *regs)
       trace_debug ("Trace buffer block allocation failed, skipping");
       return;
     }
+
+  memset (ctx.regspace, 0, ipa_tdesc->registers_size);
 
   for (ctx.tpoint = tpoint;
        ctx.tpoint != NULL && ctx.tpoint->address == tpoint->address;
@@ -5396,11 +5384,10 @@ gdb_collect (struct tracepoint *tpoint, unsigned char *regs)
 
       /* Test the condition if present, and collect if true.  */
       if (ctx.tpoint->cond == NULL
-	  || condition_true_at_tracepoint ((struct tracepoint_hit_ctx *) &ctx,
-					   ctx.tpoint))
+	  || condition_true_at_tracepoint (&ctx, ctx.tpoint))
 	{
-	  collect_data_at_tracepoint ((struct tracepoint_hit_ctx *) &ctx,
-				      ctx.tpoint->address, ctx.tpoint);
+	  collect_data_at_tracepoint (&ctx, ctx.tpoint->address,
+				      ctx.tpoint);
 
 	  /* Note that this will cause original insns to be written back
 	     to where we jumped from, but that's OK because we're jumping
@@ -5457,7 +5444,7 @@ get_raw_reg_func_addr (void)
   CORE_ADDR res;
   if (read_inferior_data_pointer (ipa_sym_addrs.addr_get_raw_reg_ptr, &res))
     {
-      error ("error extracting get_raw_reg_ptr");
+      error (_("error extracting get_raw_reg_ptr"));
       return 0;
     }
   return res;
@@ -5470,7 +5457,7 @@ get_get_tsv_func_addr (void)
   if (read_inferior_data_pointer (
 	ipa_sym_addrs.addr_get_trace_state_variable_value_ptr, &res))
     {
-      error ("error extracting get_trace_state_variable_value_ptr");
+      error (_("error extracting get_trace_state_variable_value_ptr"));
       return 0;
     }
   return res;
@@ -5483,7 +5470,7 @@ get_set_tsv_func_addr (void)
   if (read_inferior_data_pointer (
 	ipa_sym_addrs.addr_set_trace_state_variable_value_ptr, &res))
     {
-      error ("error extracting set_trace_state_variable_value_ptr");
+      error (_("error extracting set_trace_state_variable_value_ptr"));
       return 0;
     }
   return res;
@@ -6029,7 +6016,7 @@ upload_fast_traceframes (void)
 
       if (read_inferior_memory (tf, (unsigned char *) &ipa_tframe,
 				offsetof (struct traceframe, data)))
-	error ("Uploading: couldn't read traceframe at %s\n", paddress (tf));
+	error (_("Uploading: couldn't read traceframe at %s\n"), paddress (tf));
 
       if (ipa_tframe.tpnum == 0)
 	{
@@ -6060,7 +6047,7 @@ upload_fast_traceframes (void)
 	      if (read_inferior_memory (tf
 					+ offsetof (struct traceframe, data),
 					block, ipa_tframe.data_size))
-		error ("Uploading: Couldn't read traceframe data at %s\n",
+		error (_("Uploading: Couldn't read traceframe data at %s\n"),
 		       paddress (tf + offsetof (struct traceframe, data)));
 	    }
 
@@ -6195,7 +6182,7 @@ init_named_socket (const char *name)
   result = fd = socket (PF_UNIX, SOCK_STREAM, 0);
   if (result == -1)
     {
-      warning ("socket creation failed: %s", safe_strerror (errno));
+      warning (_("socket creation failed: %s"), safe_strerror (errno));
       return -1;
     }
 
@@ -6203,7 +6190,7 @@ init_named_socket (const char *name)
 
   if (strlen (name) >= ARRAY_SIZE (addr.sun_path))
     {
-      warning ("socket name too long for sockaddr_un::sun_path field: %s", name);
+      warning (_("socket name too long for sockaddr_un::sun_path field: %s"), name);
       return -1;
     }
 
@@ -6216,17 +6203,17 @@ init_named_socket (const char *name)
       result = unlink (name);
       if (result == -1)
 	{
-	  warning ("unlink failed: %s", safe_strerror (errno));
+	  warning (_("unlink failed: %s"), safe_strerror (errno));
 	  close (fd);
 	  return -1;
 	}
-      warning ("socket %s already exists; overwriting", name);
+      warning (_("socket %s already exists; overwriting"), name);
     }
 
   result = bind (fd, (struct sockaddr *) &addr, sizeof (addr));
   if (result == -1)
     {
-      warning ("bind failed: %s", safe_strerror (errno));
+      warning (_("bind failed: %s"), safe_strerror (errno));
       close (fd);
       return -1;
     }
@@ -6234,7 +6221,7 @@ init_named_socket (const char *name)
   result = listen (fd, 1);
   if (result == -1)
     {
-      warning ("listen: %s", safe_strerror (errno));
+      warning (_("listen: %s"), safe_strerror (errno));
       close (fd);
       return -1;
     }
@@ -6259,9 +6246,9 @@ gdb_agent_socket_init (void)
 
   fd = init_named_socket (agent_socket_name);
   if (fd < 0)
-    warning ("Error initializing named socket (%s) for communication with the "
-	     "ust helper thread. Check that directory exists and that it "
-	     "is writable.", agent_socket_name);
+    warning (_("Error initializing named socket (%s) for communication with the "
+	       "ust helper thread. Check that directory exists and that it "
+	       "is writable."), agent_socket_name);
 
   return fd;
 }
@@ -6292,7 +6279,7 @@ gdb_agent_helper_thread (void *arg)
 
       if (listen_fd == -1)
 	{
-	  warning ("could not create sync socket");
+	  warning (_("could not create sync socket"));
 	  break;
 	}
 
@@ -6316,7 +6303,7 @@ gdb_agent_helper_thread (void *arg)
 
 	  if (fd < 0)
 	    {
-	      warning ("Accept returned %d, error: %s",
+	      warning (_("Accept returned %d, error: %s"),
 		       fd, safe_strerror (errno));
 	      break;
 	    }
@@ -6328,7 +6315,7 @@ gdb_agent_helper_thread (void *arg)
 
 	  if (ret == -1)
 	    {
-	      warning ("reading socket (fd=%d) failed with %s",
+	      warning (_("reading socket (fd=%d) failed with %s"),
 		       fd, safe_strerror (errno));
 	      close (fd);
 	      break;

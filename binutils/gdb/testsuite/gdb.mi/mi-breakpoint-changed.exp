@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ set lib_opts "debug"
 if { [gdb_compile_shlib $libsrc1 $lib_sl1 $lib_opts] != ""
      || [gdb_compile_shlib $libsrc2 $lib_sl2 $lib_opts] != ""} {
     untested "failed to compile shared library"
-    return -1
+    return
 }
 
 set MIFLAGS "-i=mi"
@@ -40,7 +40,7 @@ set MIFLAGS "-i=mi"
 set exec_opts [list debug shlib=$lib_sl1 shlib_load]
 if { [gdb_compile $srcdir/$subdir/$srcfile $binfile executable $exec_opts] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 proc test_insert_delete_modify { } {
@@ -48,7 +48,7 @@ proc test_insert_delete_modify { } {
     global lib_sl1 lib_sl2
     global binfile
 
-    mi_clean_restart $binfile
+    mi_clean_restart $::testfile
 
     mi_load_shlibs $lib_sl1 $lib_sl2
 
@@ -184,7 +184,7 @@ proc test_pending_resolved { } {
 	global lib_sl1 lib_sl2
 	global mi_gdb_prompt
 
-	if {[mi_clean_restart $binfile]} {
+	if {[mi_clean_restart $::testfile]} {
 	    return
 	}
 	mi_load_shlibs $lib_sl1 $lib_sl2
@@ -279,7 +279,7 @@ proc test_auto_disable { } {
     global lib_sl1 lib_sl2
     global binfile
 
-    mi_clean_restart $binfile
+    mi_clean_restart $::testfile
 
     mi_load_shlibs $lib_sl1 $lib_sl2
 

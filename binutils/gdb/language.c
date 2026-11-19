@@ -1,6 +1,6 @@
 /* Multiple source language support for GDB.
 
-   Copyright (C) 1991-2024 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    Contributed by the Department of Computer Science at the State University
    of New York at Buffalo.
@@ -28,7 +28,6 @@
    return data out of a "language-specific" struct pointer that is set
    whenever the working language changes.  That would be a lot faster.  */
 
-#include <ctype.h>
 #include "symtab.h"
 #include "gdbtypes.h"
 #include "value.h"
@@ -175,7 +174,7 @@ show_language_command (struct ui_file *file, int from_tty,
     {
       frame_info_ptr frame;
 
-      frame = get_selected_frame (NULL);
+      frame = get_selected_frame ();
       flang = get_frame_language (frame);
       if (flang != language_unknown
 	  && language_mode == language_mode_manual
@@ -192,8 +191,7 @@ set_language (const char *language)
   enum language flang = language_unknown;
 
   /* "local" is a synonym of "auto".  */
-  if (strcmp (language, "auto") == 0
-      || strcmp (language, "local") == 0)
+  if (streq (language, "auto") || streq (language, "local"))
     {
       /* Enter auto mode.  Set to the current frame's language, if
 	 known, or fallback to the initial language.  */
@@ -202,7 +200,7 @@ set_language (const char *language)
 	{
 	  frame_info_ptr frame;
 
-	  frame = get_selected_frame (NULL);
+	  frame = get_selected_frame ();
 	  flang = get_frame_language (frame);
 	}
       catch (const gdb_exception_error &ex)
@@ -222,7 +220,7 @@ set_language (const char *language)
   /* Search the list of languages for a match.  */
   for (const auto &lang : language_defn::languages)
     {
-      if (strcmp (lang->name (), language) != 0)
+      if (!streq (lang->name (), language))
 	continue;
 
       /* Found it!  Go into manual mode, and use this language.  */
@@ -294,22 +292,22 @@ static void
 set_range_command (const char *ignore,
 		   int from_tty, struct cmd_list_element *c)
 {
-  if (strcmp (range, "on") == 0)
+  if (streq (range, "on"))
     {
       range_check = range_check_on;
       range_mode = range_mode_manual;
     }
-  else if (strcmp (range, "warn") == 0)
+  else if (streq (range, "warn"))
     {
       range_check = range_check_warn;
       range_mode = range_mode_manual;
     }
-  else if (strcmp (range, "off") == 0)
+  else if (streq (range, "off"))
     {
       range_check = range_check_off;
       range_mode = range_mode_manual;
     }
-  else if (strcmp (range, "auto") == 0)
+  else if (streq (range, "auto"))
     {
       range_mode = range_mode_auto;
       set_range_case ();
@@ -368,17 +366,17 @@ show_case_command (struct ui_file *file, int from_tty,
 static void
 set_case_command (const char *ignore, int from_tty, struct cmd_list_element *c)
 {
-   if (strcmp (case_sensitive, "on") == 0)
+   if (streq (case_sensitive, "on"))
      {
        case_sensitivity = case_sensitive_on;
        case_mode = case_mode_manual;
      }
-   else if (strcmp (case_sensitive, "off") == 0)
+   else if (streq (case_sensitive, "off"))
      {
        case_sensitivity = case_sensitive_off;
        case_mode = case_mode_manual;
      }
-   else if (strcmp (case_sensitive, "auto") == 0)
+   else if (streq (case_sensitive, "auto"))
      {
        case_mode = case_mode_auto;
        set_range_case ();
@@ -479,7 +477,7 @@ enum language
 language_enum (const char *str)
 {
   for (const auto &lang : language_defn::languages)
-    if (strcmp (lang->name (), str) == 0)
+    if (streq (lang->name (), str))
       return lang->la_language;
 
   return language_unknown;
@@ -574,7 +572,7 @@ add_set_language_command ()
    any non-NULL struct language_defn.skip_trampoline() functions.
    Return the result from the first that returns non-zero, or 0 if all
    `fail'.  */
-CORE_ADDR 
+CORE_ADDR
 skip_language_trampoline (const frame_info_ptr &frame, CORE_ADDR pc)
 {
   for (const auto &lang : language_defn::languages)
@@ -675,14 +673,6 @@ bool
 language_defn::is_string_type_p (struct type *type) const
 {
   return c_is_string_type_p (type);
-}
-
-/* See language.h.  */
-
-std::unique_ptr<compile_instance>
-language_defn::get_compile_instance () const
-{
-  return {};
 }
 
 /* The default implementation of the get_symbol_name_matcher_inner method
@@ -810,15 +800,6 @@ public:
 
   /* See language.h.  */
 
-  void emitchar (int ch, struct type *chtype,
-		 struct ui_file *stream, int quoter) const override
-  {
-    error (_("emit character not implemented for language \"%s\""),
-	   natural_name ());
-  }
-
-  /* See language.h.  */
-
   void printchar (int ch, struct type *chtype,
 		  struct ui_file *stream) const override
   {
@@ -936,6 +917,14 @@ language_defn::value_string (struct gdbarch *gdbarch,
 
 /* See language.h.  */
 
+frame_info_ptr
+language_defn::follow_static_link (const frame_info_ptr &frame) const
+{
+  return {};
+}
+
+/* See language.h.  */
+
 struct type *
 language_bool_type (const struct language_defn *la,
 		    struct gdbarch *gdbarch)
@@ -984,7 +973,7 @@ language_arch_info::type_and_symbol::alloc_type_symbol
   symbol->set_section_index (0);
   symbol->set_type (type);
   symbol->set_domain (TYPE_DOMAIN);
-  symbol->set_aclass_index (LOC_TYPEDEF);
+  symbol->set_loc_class_index (LOC_TYPEDEF);
   return symbol;
 }
 
@@ -995,7 +984,7 @@ language_arch_info::lookup_primitive_type_and_symbol (const char *name)
 {
   for (struct type_and_symbol &tas : primitive_types_and_symbols)
     {
-      if (strcmp (tas.type ()->name (), name) == 0)
+      if (streq (tas.type ()->name (), name))
 	return &tas;
     }
 
@@ -1103,9 +1092,7 @@ language_lookup_primitive_type_as_symbol (const struct language_defn *la,
 
 /* Initialize the language routines.  */
 
-void _initialize_language ();
-void
-_initialize_language ()
+INIT_GDB_FILE (language)
 {
   static const char *const type_or_range_names[]
     = { "on", "off", "warn", "auto", NULL };
@@ -1127,7 +1114,7 @@ _initialize_language ()
   add_alias_cmd ("ch", setshow_check_cmds.show, no_class, 1, &showlist);
 
   range = type_or_range_names[3];
-  gdb_assert (strcmp (range, "auto") == 0);
+  gdb_assert (streq (range, "auto"));
   add_setshow_enum_cmd ("range", class_support, type_or_range_names,
 			&range,
 			_("Set range checking (on/warn/off/auto)."),
@@ -1137,7 +1124,7 @@ _initialize_language ()
 			&setchecklist, &showchecklist);
 
   case_sensitive = case_sensitive_names[2];
-  gdb_assert (strcmp (case_sensitive, "auto") == 0);
+  gdb_assert (streq (case_sensitive, "auto"));
   add_setshow_enum_cmd ("case-sensitive", class_support, case_sensitive_names,
 			&case_sensitive, _("\
 Set case sensitivity in name search (on/off/auto)."), _("\

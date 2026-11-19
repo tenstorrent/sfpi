@@ -1,6 +1,6 @@
 /* Definitions for dealing with stack frames, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -124,6 +124,11 @@ extern bool frame_debug;
 
 #define FRAME_SCOPED_DEBUG_ENTER_EXIT \
   scoped_debug_enter_exit (frame_debug, "frame")
+
+/* Print "frame" start/end debug statements.  */
+
+#define FRAME_SCOPED_DEBUG_START_END(fmt, ...) \
+  scoped_debug_start_end (frame_debug, "frame", fmt, ##__VA_ARGS__)
 
 /* Construct a frame ID.  The first parameter is the frame's constant
    stack address (typically the outer-bound), and the second the
@@ -504,7 +509,8 @@ extern CORE_ADDR get_frame_pc (const frame_info_ptr &);
 /* Same as get_frame_pc, but return a boolean indication of whether
    the PC is actually available, instead of throwing an error.  */
 
-extern bool get_frame_pc_if_available (const frame_info_ptr &frame, CORE_ADDR *pc);
+extern std::optional<CORE_ADDR> get_frame_pc_if_available
+  (const frame_info_ptr &frame);
 
 /* An address (not necessarily aligned to an instruction boundary)
    that falls within THIS frame's code block.
@@ -586,7 +592,7 @@ void set_current_sal_from_frame (const frame_info_ptr &);
    the old get_frame_base method was not sufficient.
 
    get_frame_base_address: get_frame_locals_address:
-   get_frame_args_address: A set of high-level debug-info dependant
+   get_frame_args_address: A set of high-level debug-info dependent
    addresses that fall within the frame.  These addresses almost
    certainly will not match the stack address part of a frame ID (as
    returned by get_frame_base).
@@ -689,7 +695,7 @@ const char *frame_stop_reason_string (const frame_info_ptr &);
    fetch/compute the value.  Instead just return the location of the
    value.  */
 extern void frame_register_unwind (const frame_info_ptr &frame, int regnum,
-				   int *optimizedp, int *unavailablep,
+				   bool *optimizedp, bool *unavailablep,
 				   enum lval_type *lvalp,
 				   CORE_ADDR *addrp, int *realnump,
 				   gdb::array_view<gdb_byte> value = {});
@@ -740,7 +746,7 @@ extern void put_frame_register (const frame_info_ptr &next_frame, int regnum,
 extern bool get_frame_register_bytes (const frame_info_ptr &next_frame,
 				      int regnum, CORE_ADDR offset,
 				      gdb::array_view<gdb_byte> buffer,
-				      int *optimizedp, int *unavailablep);
+				      bool *optimizedp, bool *unavailablep);
 
 /* Write bytes from BUFFER to one or multiple registers starting with REGNUM
    in NEXT_FRAME's previous frame, starting at OFFSET.  */
@@ -822,10 +828,24 @@ enum print_what
    allocate memory using this method.  */
 
 extern void *frame_obstack_zalloc (unsigned long size);
-#define FRAME_OBSTACK_ZALLOC(TYPE) \
-  ((TYPE *) frame_obstack_zalloc (sizeof (TYPE)))
-#define FRAME_OBSTACK_CALLOC(NUMBER,TYPE) \
-  ((TYPE *) frame_obstack_zalloc ((NUMBER) * sizeof (TYPE)))
+
+/* Allocate one instance of T using frame_obstack_zalloc.  */
+
+template <typename T>
+T *
+frame_obstack_zalloc ()
+{
+  return static_cast<T *> (frame_obstack_zalloc (sizeof (T)));
+}
+
+/* Allocate N instances of T using frame_obstack_zalloc.  */
+
+template <typename T>
+T *
+frame_obstack_calloc (int n)
+{
+  return static_cast<T *> (frame_obstack_zalloc (n * sizeof (T)));
+}
 
 class readonly_detached_regcache;
 /* Create a regcache, and copy the frame's registers into it.  */

@@ -1,4 +1,4 @@
-# Copyright 2006-2024 Free Software Foundation, Inc.
+# Copyright 2006-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@ standard_testfile array.f90
 
 if {[gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" \
 	 executable {debug f90}] != ""} {
-    return -1
+    return
 }
 
-if {[mi_clean_restart $binfile]} {
+if {[mi_clean_restart $::testfile]} {
     return
 }
 

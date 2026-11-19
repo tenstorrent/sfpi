@@ -1,5 +1,5 @@
 /* Helper routines for C++ support in GDB.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by MontaVista Software.
    Namespace support contributed by David Carlton.
@@ -62,6 +62,10 @@ struct demangle_parse_info
 
   /* Any memory used during processing.  */
   auto_obstack obstack;
+
+  /* True if the parser had to add a dummy '()' at the end of the
+     input text to make it parse.  */
+  bool added_parens = false;
 
   /* Any other objects referred to by this object, and whose storage
      lifetime must be linked.  */
@@ -156,9 +160,6 @@ extern struct block_symbol
 			   const char *nested_name,
 			   const struct block *block,
 			   const domain_search_flags domain);
-
-struct type *cp_lookup_transparent_type (const char *name,
-					 domain_search_flags flags);
 
 /* See description in cp-namespace.c.  */
 

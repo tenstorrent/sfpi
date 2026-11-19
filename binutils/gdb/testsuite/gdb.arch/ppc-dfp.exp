@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2024 Free Software Foundation, Inc.
+# Copyright (C) 2008-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@ require {istarget "powerpc*"}
 
 standard_testfile
 
-if ![test_compiler_info gcc*] {
+if {![test_compiler_info gcc*]} {
     # We use GCC's extended asm syntax
     warning "unknown compiler"
-    return -1
+    return
 }
 
 if { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {quiet debug}] != "" } {
     unsupported "this machine doesn't support Decimal Floating Point."
-    return -1
+    return
 }
 
-clean_restart $binfile
+clean_restart $::testfile
 
 gdb_breakpoint [gdb_get_line_number "Set DFP rounding mode."]
 
@@ -42,7 +42,7 @@ gdb_run_cmd
 gdb_expect {
   -re "$inferior_exited_re with code 01.\[\r\n\]+$gdb_prompt $" {
     unsupported "this machine doesn't support Decimal Floating Point."
-    return -1
+    return
   }
 
   -re ".*$gdb_prompt $" {}

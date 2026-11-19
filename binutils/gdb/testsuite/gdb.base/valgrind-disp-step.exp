@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,15 +27,15 @@ require {!is_remote target}
 
 standard_testfile .c
 if {[build_executable "failed to build" $testfile $srcfile {debug}] == -1} {
-    return -1
+    return
 }
 
 if { [vgdb_start] == -1 } {
-    return -1
+    return
 }
 
 gdb_test_no_output "set displaced-stepping off"
-gdb_breakpoint "main" "breakpoint at main"
+gdb_breakpoint "main"
 gdb_test "continue" " stop 0 .*" "continue to main"
 delete_breakpoints
 

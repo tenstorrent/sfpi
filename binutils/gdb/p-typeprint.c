@@ -1,5 +1,5 @@
 /* Support for printing Pascal types for GDB, the GNU debugger.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,7 +30,6 @@
 #include "p-lang.h"
 #include "typeprint.h"
 #include "gdb-demangle.h"
-#include <ctype.h>
 #include "cli/cli-style.h"
 
 /* See language.h.  */
@@ -138,13 +137,13 @@ pascal_language::type_print_method_args (const char *physname,
     {
       gdb_puts (" (", stream);
       /* We must demangle this.  */
-      while (isdigit (physname[0]))
+      while (c_isdigit (physname[0]))
 	{
 	  int len = 0;
 	  int i, j;
 	  char *argname;
 
-	  while (isdigit (physname[len]))
+	  while (c_isdigit (physname[len]))
 	    {
 	      len++;
 	    }
@@ -690,7 +689,7 @@ pascal_language::type_print_base (struct type *type, struct ui_file *stream, int
       break;
 
     case TYPE_CODE_ERROR:
-      gdb_printf (stream, "%s", TYPE_ERROR_NAME (type));
+      gdb_printf (stream, "%s", type->error_name ());
       break;
 
       /* this probably does not work for enums.  */

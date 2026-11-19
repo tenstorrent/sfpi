@@ -1,5 +1,5 @@
 /* Motorola 68HC11/HC12-specific support for 32-bit ELF
-   Copyright (C) 1999-2025 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
    Contributed by Stephane Carrez (stcarrez@nerim.fr)
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -365,7 +365,7 @@ elf32_m68hc11_size_stubs (bfd *output_bfd, bfd *stub_bfd,
       Elf_Internal_Shdr *symtab_hdr;
 
       /* We'll need the symbol table in a second.  */
-      symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (input_bfd);
       if (symtab_hdr->sh_info == 0)
 	continue;
 
@@ -398,7 +398,7 @@ elf32_m68hc11_size_stubs (bfd *output_bfd, bfd *stub_bfd,
       sym_hashes = elf_sym_hashes (input_bfd);
 
       /* We'll need the symbol table in a second.  */
-      symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (input_bfd);
       if (symtab_hdr->sh_info == 0)
 	continue;
 
@@ -658,6 +658,7 @@ elf32_m68hc11_build_stubs (bfd *abfd, struct bfd_link_info *info)
       stub_sec->contents = (unsigned char *) bfd_zalloc (htab->stub_bfd, size);
       if (stub_sec->contents == NULL && size != 0)
 	return false;
+      stub_sec->alloced = 1;
       stub_sec->size = 0;
     }
 
@@ -813,7 +814,7 @@ m68hc11_elf_ignore_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 }
 
 bfd_reloc_status_type
-m68hc11_elf_special_reloc (bfd *abfd ATTRIBUTE_UNUSED,
+m68hc11_elf_special_reloc (bfd *abfd,
 			   arelent *reloc_entry,
 			   asymbol *symbol,
 			   void *data ATTRIBUTE_UNUSED,
@@ -821,7 +822,7 @@ m68hc11_elf_special_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 			   bfd *output_bfd,
 			   char **error_message ATTRIBUTE_UNUSED)
 {
-  if (output_bfd != (bfd *) NULL
+  if (output_bfd != NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && (! reloc_entry->howto->partial_inplace
 	  || reloc_entry->addend == 0))
@@ -833,10 +834,11 @@ m68hc11_elf_special_reloc (bfd *abfd ATTRIBUTE_UNUSED,
   if (output_bfd != NULL)
     return bfd_reloc_continue;
 
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
     return bfd_reloc_outofrange;
 
-  abort();
+  return bfd_reloc_notsupported;
 }
 
 /* Look through the relocs for a section during the first phase.
@@ -855,7 +857,7 @@ elf32_m68hc11_check_relocs (bfd *abfd, struct bfd_link_info *info,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = & elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
   rel_end = relocs + sec->reloc_count;
 
@@ -922,8 +924,7 @@ reloc_warning (struct bfd_link_info *info, const char *name, bfd *input_bfd,
 
 /* Relocate a 68hc11/68hc12 ELF section.  */
 int
-elf32_m68hc11_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
-				struct bfd_link_info *info,
+elf32_m68hc11_relocate_section (struct bfd_link_info *info,
 				bfd *input_bfd, asection *input_section,
 				bfd_byte *contents, Elf_Internal_Rela *relocs,
 				Elf_Internal_Sym *local_syms,
@@ -934,11 +935,11 @@ elf32_m68hc11_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
   Elf_Internal_Rela *rel, *relend;
   const char *name = NULL;
   struct m68hc11_page_info *pinfo;
-  const struct elf_backend_data * const ebd = get_elf_backend_data (input_bfd);
+  elf_backend_data * const ebd = get_elf_backend_data (input_bfd);
   struct m68hc11_elf_link_hash_table *htab;
   unsigned long e_flags;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   e_flags = elf_elfheader (input_bfd)->e_flags;
 
@@ -1014,7 +1015,8 @@ elf32_m68hc11_relocate_section (bfd *output_bfd ATTRIBUTE_UNUSED,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_M68HC11_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	{
@@ -1323,8 +1325,7 @@ _bfd_m68hc11_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   if (!_bfd_generic_verify_endian_match (ibfd, info))
     return false;
 
-  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return true;
 
   new_flags = elf_elfheader (ibfd)->e_flags;

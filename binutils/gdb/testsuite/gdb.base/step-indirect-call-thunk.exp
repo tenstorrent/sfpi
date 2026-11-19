@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Free Software Foundation, Inc.
+# Copyright 2018-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@ if { [gcc_major_version] >= 8 } {
     append cflags " -fcf-protection=none"
 }
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile \
-        [list debug "additional_flags=$cflags"]] } {
-    return -1
+	[list debug "additional_flags=$cflags"]] } {
+    return
 }
 
 if { ![runto_main] } {
-    return -1
+    return
 }
 
 # Do repeated instruction steps in order to reach TARGET from CURRENT
@@ -48,18 +48,18 @@ proc stepi_until { current target test } {
 
     set count 0
     gdb_test_multiple "stepi" "$test" {
-        -re "$current.*$gdb_prompt $" {
-            incr count
-            if { $count < 100 } {
-                send_gdb "stepi\n"
-                exp_continue
-            } else {
-                fail "$test"
-            }
-        }
-        -re "$target.*$gdb_prompt $" {
-            pass "$test"
-        }
+	-re "$current.*$gdb_prompt $" {
+	    incr count
+	    if { $count < 100 } {
+		send_gdb "stepi\n"
+		exp_continue
+	    } else {
+		fail "$test"
+	    }
+	}
+	-re "$target.*$gdb_prompt $" {
+	    pass "$test"
+	}
     }
 }
 

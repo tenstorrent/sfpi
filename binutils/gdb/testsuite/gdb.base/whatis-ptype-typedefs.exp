@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ standard_testfile
 proc prepare {lang} {
     global srcfile testfile
 
-    if [target_info exists no_long_long] {
+    if {[target_info exists no_long_long]} {
 	set options [list debug additional_flags=-DNO_LONG_LONG]
     } else {
 	set options [list debug]
@@ -103,10 +103,10 @@ set table {
     {"v_long_double_typedef"  "long_double_typedef"   "long double"}
     {"v_long_double_typedef2" "long_double_typedef2"  "long double"}
 
-    {"colors_typedef"     "(enum )?colors"   "enum colors( : unsigned int)? {red, green, blue}"}
-    {"colors_typedef2"    "colors_typedef"   "enum colors( : unsigned int)? {red, green, blue}"}
-    {"v_colors_typedef"   "colors_typedef"   "enum colors( : unsigned int)? {red, green, blue}"}
-    {"v_colors_typedef2"  "colors_typedef2"  "enum colors( : unsigned int)? {red, green, blue}"}
+    {"colors_typedef"     "(enum )?colors"   "enum colors( : unsigned int)? {.*red = 0,.* green = 1,.* blue = 2.*}"}
+    {"colors_typedef2"    "colors_typedef"   "enum colors( : unsigned int)? {.*red = 0,.* green = 1,.* blue = 2.*}"}
+    {"v_colors_typedef"   "colors_typedef"   "enum colors( : unsigned int)? {.*red = 0,.* green = 1,.* blue = 2.*}"}
+    {"v_colors_typedef2"  "colors_typedef2"  "enum colors( : unsigned int)? {.*red = 0,.* green = 1,.* blue = 2.*}"}
 
     {"func_ftype"         "void \\(void\\)"  "void \\(void\\)"}
     {"func_ftype2"        "func_ftype"       "void \\(void\\)"}

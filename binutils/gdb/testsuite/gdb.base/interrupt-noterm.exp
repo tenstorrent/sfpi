@@ -1,4 +1,4 @@
-#   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+#   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
 
 standard_testfile
 
-if [prepare_for_testing "failed to prepare for testing" \
-    ${testfile} ${srcfile} {debug}] {
-    return -1
+if {[prepare_for_testing "failed to prepare for testing" \
+	 ${testfile} ${srcfile} {debug}]} {
+    return
 }
 
 # Pretend there's no terminal.
 gdb_test_no_output "set interactive-mode off"
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 # Delete breakpoints so that the next resume is a plain continue,

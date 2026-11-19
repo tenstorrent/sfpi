@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,12 +23,17 @@ require dwarf2_support
 require is_x86_64_m64_target
 
 if {[prepare_for_testing "failed to prepare" "$testfile" $srcfile {nodebug nopie}]} {
-    return -1
+    return
 }
 
-if ![runto "stop_frame"] {
-    return -1
+if {![runto "stop_frame"]} {
+    return
 }
+
+# If test is compiled with clang, GDB would display absolute path.
+# This command keeps output consistent across toolchains.
+
+gdb_test_no_output "set filename-display basename"
 
 # stop_frame should be the outermost frame.
 

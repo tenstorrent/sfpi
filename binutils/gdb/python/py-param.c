@@ -1,6 +1,6 @@
 /* GDB parameters implemented in Python
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -81,7 +81,7 @@ static struct {
   int value;
 } parm_constants[] =
 {
-  { "PARAM_BOOLEAN", param_boolean }, /* ARI: param_boolean */
+  { "PARAM_BOOLEAN", param_boolean },
   { "PARAM_AUTO_BOOLEAN", param_auto_boolean },
   { "PARAM_UINTEGER", param_uinteger },
   { "PARAM_INTEGER", param_integer },
@@ -124,10 +124,8 @@ union parmpy_variable
 };
 
 /* A GDB parameter.  */
-struct parmpy_object
+struct parmpy_object : public PyObject
 {
-  PyObject_HEAD
-
   /* The type of the parameter.  */
   enum var_types type;
 
@@ -142,6 +140,8 @@ struct parmpy_object
      NULL-terminated.  */
   const char **enumeration;
 };
+
+static_assert (gdb::is_python_allocatable_v<parmpy_object>);
 
 /* Wraps a setting around an existing parmpy_object.  This abstraction
    is used to manipulate the value in S->VALUE in a type safe manner using
@@ -170,8 +170,7 @@ make_setting (parmpy_object *s)
     gdb_assert_not_reached ("unhandled var type");
 }
 
-extern PyTypeObject parmpy_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("parmpy_object");
+extern PyTypeObject parmpy_object_type;
 
 /* Some handy string constants.  */
 static PyObject *set_doc_cst;
@@ -245,7 +244,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 	if (str == NULL)
 	  return -1;
 	for (i = 0; self->enumeration[i]; ++i)
-	  if (! strcmp (self->enumeration[i], str.get ()))
+	  if (streq (self->enumeration[i], str.get ()))
 	    break;
 	if (! self->enumeration[i])
 	  {
@@ -297,7 +296,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 	{
 	  cmp = PyObject_IsTrue (value);
 	  if (cmp < 0 )
-	    return -1;	
+	    return -1;
 	  if (cmp == 1)
 	    self->value.autoboolval = AUTO_BOOLEAN_TRUE;
 	  else
@@ -331,8 +330,8 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 		  buffer += ", ";
 		buffer = buffer + "'" + l->literal + "'";
 		if (allowed == TRIBOOL_UNKNOWN
-		    && ((value == Py_None && !strcmp ("unlimited", l->literal))
-			|| (s != nullptr && !strcmp (s, l->literal))))
+		    && ((value == Py_None && streq ("unlimited", l->literal))
+			|| (s != nullptr && streq (s, l->literal))))
 		  {
 		    val = l->use;
 		    allowed = TRIBOOL_TRUE;
@@ -495,10 +494,14 @@ get_doc_string (PyObject *object, enum doc_string_type doc_type,
 	}
     }
 
-  if (result == nullptr)
+  /* For the set/show docs, if these strings are empty then we set then to
+     a non-empty string.  This ensures that the command has some sane
+     documentation for its 'help' text.  */
+  if (result == nullptr
+      || (doc_type != doc_string_description && *result == '\0'))
     {
       if (doc_type == doc_string_description)
-	result.reset (xstrdup (_("This command is not documented.")));
+	result = make_unique_xstrdup (_("This command is not documented."));
       else
 	{
 	  if (doc_type == doc_string_show)
@@ -855,7 +858,7 @@ parmpy_init (PyObject *self, PyObject *args, PyObject *kwds)
       return -1;
     }
 
-  if (parmclass != param_boolean /* ARI: param_boolean */
+  if (parmclass != param_boolean
       && parmclass != param_auto_boolean
       && parmclass != param_uinteger && parmclass != param_integer
       && parmclass != param_string && parmclass != param_string_noescape
@@ -904,6 +907,18 @@ parmpy_init (PyObject *self, PyObject *args, PyObject *kwds)
   show_doc = get_doc_string (self, doc_string_show, name);
   doc = get_doc_string (self, doc_string_description, cmd_name.get ());
 
+  /* The set/show docs should always be a non-empty string.  */
+  gdb_assert (set_doc != nullptr && *set_doc != '\0');
+  gdb_assert (show_doc != nullptr && *show_doc != '\0');
+
+  /* For the DOC string only, if it is the empty string, then we convert it
+     to NULL.  This means GDB will not even display a blank line for this
+     part of the help text, instead the set/show line is all the user will
+     get.  */
+  gdb_assert (doc != nullptr);
+  if (*doc == '\0')
+    doc = nullptr;
+
   Py_INCREF (self);
 
   try
@@ -937,8 +952,8 @@ parmpy_dealloc (PyObject *obj)
 }
 
 /* Initialize the 'parameters' module.  */
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_parameters (void)
+static int
+gdbpy_initialize_parameters ()
 {
   int i;
 

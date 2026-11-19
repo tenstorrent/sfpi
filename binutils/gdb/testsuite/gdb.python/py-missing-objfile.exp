@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Free Software Foundation, Inc.
+# Copyright (C) 2024-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,6 +34,11 @@ if { [build_executable "build exec" $binfile $srcfile $opts] == -1} {
     return
 }
 
+set expect_build_id_in_core_file_binfile \
+    [expect_build_id_in_core_file $binfile]
+set expect_build_id_in_core_file_libfile \
+    [expect_build_id_in_core_file $libfile]
+
 # The cc-with-gnu-debuglink board will split the debug out into the
 # .debug directory.  This test script relies on having GDB lookup the
 # objfile and debug via the build-id, which this test sets up.  Trying
@@ -51,7 +56,7 @@ set remote_python_file \
 set corefile [core_find $binfile {}]
 if {$corefile == ""} {
     unsupported "core file not generated"
-    return 0
+    return
 }
 
 # Create a directory named DIRNAME for use as the
@@ -79,20 +84,46 @@ proc setup_debugdir { dirname files } {
 # executable (when EXEC_LOADED is true) and/or the library (when LIB_LOADED
 # is true).
 proc check_loaded_debug { exec_loaded lib_loaded } {
+    set re_warn \
+	[string_to_regexp \
+	     "Warning: the current language does not match this frame."]
+    set cmd "set lang c"
+    gdb_test_multiple $cmd "" {
+	-re -wrap "${cmd}(\r\n$re_warn)?" {
+	    pass $gdb_test_name
+	}
+    }
+
     if { $exec_loaded } {
 	gdb_test "whatis global_exec_var" "^type = volatile struct exec_type"
-
-	if { $lib_loaded } {
-	    gdb_test "whatis global_lib_var" "^type = volatile struct lib_type"
-	} else {
-	    gdb_test "whatis global_lib_var" \
-		"^No symbol \"global_lib_var\" in current context\\."
-	}
     } else {
-	gdb_test "whatis global_exec_var" \
-	    "^No symbol table is loaded\\.  Use the \"file\" command\\."
-	gdb_test "whatis global_lib_var" \
-	    "^No symbol table is loaded\\.  Use the \"file\" command\\."
+	# If the debug info for libc, etc. are available, there might
+	# be a symbol table.
+	gdb_test_multiple "whatis global_exec_var" "" {
+	    -re -wrap "No symbol \"global_exec_var\" in current context\\." {
+		pass $gdb_test_name
+	    }
+
+	    -re -wrap "No symbol table is loaded\\.  Use the \"file\" command\\." {
+		pass $gdb_test_name
+	    }
+	}
+    }
+
+    if { $lib_loaded } {
+	gdb_test "whatis global_lib_var" "^type = volatile struct lib_type"
+    } else {
+	# If the debug info for libc, etc. are available, there might
+	# be a symbol table.
+	gdb_test_multiple "whatis global_lib_var" "" {
+	    -re -wrap "No symbol \"global_lib_var\" in current context\\." {
+		pass $gdb_test_name
+	    }
+
+	    -re -wrap "No symbol table is loaded\\.  Use the \"file\" command\\." {
+		pass $gdb_test_name
+	    }
+	}
     }
 }
 
@@ -124,7 +155,7 @@ proc clean_restart_load_python {} {
 # For sanity, lets check that we can load the specify the executable
 # and then load the core-file the easy way.
 with_test_prefix "initial sanity check" {
-    clean_restart $binfile
+    clean_restart $::testfile
     load_core_file
     check_loaded_debug true true
 }
@@ -158,6 +189,8 @@ with_test_prefix "no objfiles, no debug-file-directory" {
 # Setup some debug-file-directories.
 set debugdir_no_lib \
     [setup_debugdir "debugdir.no-lib" [list "$hidden_binfile"]]
+set debugdir_no_main \
+    [setup_debugdir "debugdir.no-main" [list "$hidden_libfile"]]
 set debugdir_empty \
     [setup_debugdir "debugdir.empty" {}]
 set debugdir_all \
@@ -173,9 +206,15 @@ with_test_prefix "no objfiles available" {
     check_loaded_debug false false
 }
 
+# The following tests assume that the build-ids of binfile and libfile can be
+# found in the core file.
+require {expr {$expect_build_id_in_core_file_binfile}}
+require {expr {$expect_build_id_in_core_file_libfile}}
+
 with_test_prefix "all objfiles available" {
     # Another sanity check that GDB can find the files via the
     # debug-file-directory.
+    clean_restart
     set_debug_file_dir $debugdir_all
     load_core_file
     check_loaded_debug true true
@@ -184,9 +223,19 @@ with_test_prefix "all objfiles available" {
 with_test_prefix "lib objfile missing" {
     # Another sanity check that GDB can find the files via the
     # debug-file-directory.
+    clean_restart
     set_debug_file_dir $debugdir_no_lib
     load_core_file
     check_loaded_debug true false
+}
+
+with_test_prefix "main objfile missing" {
+    # Another sanity check that GDB can find the files via the
+    # debug-file-directory.
+    clean_restart
+    set_debug_file_dir $debugdir_no_main
+    load_core_file
+    check_loaded_debug false true
 }
 
 with_test_prefix "all objfiles missing, handler returns None" {
@@ -198,11 +247,11 @@ with_test_prefix "all objfiles missing, handler returns None" {
 
     check_loaded_debug false false
 
-    # The handler should be called three times, once for the
-    # mapped-file, once for the core-file's exec, and once for the
+    # The handler should be called four times, twice for the
+    # mapped-files, once for the core-file's exec, and once for the
     # shared library.
-    gdb_test "python print(handler_obj.call_count)" "^3" \
-	"check handler was called three times"
+    gdb_test "python print(handler_obj.call_count)" "^4" \
+	"check handler was called four times"
 }
 
 with_test_prefix "lib objfile missing, handler returns None" {
@@ -217,7 +266,7 @@ with_test_prefix "lib objfile missing, handler returns None" {
     # load the shared library during the memory-mapped file phase,
     # then again for the shared library loading.
     gdb_test "python print(handler_obj.call_count)" "^2" \
-	"check handler was called three times"
+	"check handler was called two times"
 }
 
 with_test_prefix "handler installs lib objfile" {
@@ -226,7 +275,7 @@ with_test_prefix "handler installs lib objfile" {
     remote_exec host \
 	"mkdir -p $debugdir_no_lib/[file dirname $build_id_filename]"
     gdb_test_no_output "python handler_obj.set_mode(Mode.RETURN_TRUE, \
-    	\"$hidden_libfile\", \"$debugdir_no_lib/$build_id_filename\")" \
+	\"$hidden_libfile\", \"$debugdir_no_lib/$build_id_filename\")" \
 	"configure handler"
 
     load_core_file
@@ -266,7 +315,7 @@ with_test_prefix "handler points to lib objfile" {
 
 # Register another global handler, this one raises an exception.  Reload the
 # core-file, the bad handler should be invoked first, which raises an
-# excetption, at which point GDB should skip further Python handlers.
+# exception, at which point GDB should skip further Python handlers.
 with_test_prefix "handler raises an exception" {
     gdb_test_no_output \
 	"python gdb.missing_objfile.register_handler(None, rhandler)"
@@ -477,7 +526,7 @@ with_test_prefix "return False handler in global list" {
 	     "  Foo"]
 
     gdb_test_no_output "python handler_obj.set_mode(Mode.RETURN_FALSE)" \
-	"confirgure handler"
+	"configure handler"
 
     load_core_file
     gdb_test "python print(handler_call_log)" \

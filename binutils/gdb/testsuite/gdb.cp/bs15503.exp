@@ -1,4 +1,4 @@
-# Copyright 1992-2024 Free Software Foundation, Inc.
+# Copyright 1992-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ require allow_stl_tests
 standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug c++}]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
@@ -45,8 +45,8 @@ gdb_continue_to_breakpoint "find position where blank needs to be inserted"
 
 # Call some string methods.
 
-gdb_test "print s.length()"		"\\$\[0-9\]+ = 42"
-gdb_test "print s\[0\]"			"\\$\[0-9\]+ =.* 'I'"
-gdb_test "print s\[s.length()-1\]"	"\\$\[0-9\]+ =.* 'g'"
+gdb_test "print s.length()"		"${::valnum_re} = 42"
+gdb_test "print s\[0\]"			"${::valnum_re} =.* 'I'"
+gdb_test "print s\[s.length()-1\]"	"${::valnum_re} =.* 'g'"
 gdb_test "print (const char *) s" \
-    "\\$\[0-9\]+ = $hex \"I am a short stringand now a longer string\""
+    "${::valnum_re} = $hex \"I am a short stringand now a longer string\""

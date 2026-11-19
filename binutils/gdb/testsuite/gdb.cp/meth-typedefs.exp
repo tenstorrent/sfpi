@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 #
 # Contributed by Red Hat, originally written by Keith Seitz.
 #
@@ -37,7 +37,7 @@ standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile \
 	 {c++ debug additional_flags=-std=c++11}]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
@@ -152,9 +152,9 @@ foreach test $methods {
 
     gdb_test "list -qualified $func" $result
     gdb_test "list -qualified '$func'" $result
-    gdb_assert { [gdb_breakpoint "-qualified $func" no-message] } \
+    gdb_assert { [gdb_breakpoint "-qualified $func" -no-message] } \
 	"break -qualified $func, unquoted"
-    gdb_assert { [gdb_breakpoint "-qualified '$func'" no-message] } \
+    gdb_assert { [gdb_breakpoint "-qualified '$func'" -no-message] } \
 	"break -qualified $func, single-quoted"
 }
 

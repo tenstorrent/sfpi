@@ -1,4 +1,4 @@
-# Copyright 2006-2024 Free Software Foundation, Inc.
+# Copyright 2006-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,19 +24,19 @@ if {[gdb_compile "$srcdir/$subdir/${srcfile2}" "${objfilec}" object {debug}] != 
     || [gdb_compile "$srcdir/$subdir/${srcfile}" "${objfilecpp}" object {c++ debug}] != ""
     || [gdb_compile "${objfilecpp} ${objfilec}" "${binfile}" executable {c++ debug}] != ""} {
     untested "failed to compile"
-    return -1
+    return
 }
 
-clean_restart ${binfile}
+clean_restart ${::testfile}
 
 runto_main
 
 gdb_test "b [gdb_get_line_number {breakpoint here} ${testfile}.cc ]" \
 	 ".*Breakpoint .*call-c.*"
 
-gdb_test "print foo(1)" "\\\$$decimal = 1"
+gdb_test "print foo(1)" "${::valnum_re} = 1"
 gdb_test "continue" ".*breakpoint here.*" "continue to bp"
-gdb_test "print rf->func()" "\\\$$decimal = 1"
+gdb_test "print rf->func()" "${::valnum_re} = 1"
 
 gdb_test "print sum_vararg_int(0)" "0"
 gdb_test "print sum_vararg_int(1, 10)" "10"
@@ -52,4 +52,4 @@ gdb_test "print vararg_func(11, 12, 13.5)" "2"
 gdb_test "print vararg_func(14, 15, \"16\")" "2"
 
 # Regression test for method call via a typedef.
-gdb_test "print handle->func()" "\\\$$decimal = 1"
+gdb_test "print handle->func()" "${::valnum_re} = 1"

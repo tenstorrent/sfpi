@@ -1,5 +1,5 @@
 dnl Autoconf configure script for GDB support library
-dnl Copyright (C) 2020-2024 Free Software Foundation, Inc.
+dnl Copyright (C) 2020-2026 Free Software Foundation, Inc.
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -68,6 +68,25 @@ GDB_AC_PTRACE
 AM_GDB_COMPILER_TYPE
 AM_GDB_WARNINGS
 
+# Check for `struct user_gcs`
+AC_CACHE_CHECK(
+  [for struct user_gcs],
+  [gdb_cv_struct_user_gcs],
+  [AC_COMPILE_IFELSE(
+     [AC_LANG_PROGRAM(
+	[#include <sys/ptrace.h>
+	 #include <asm/ptrace.h>],
+	[struct user_gcs u;]
+      )],
+     [gdb_cv_struct_user_gcs=yes],
+     [gdb_cv_struct_user_gcs=no]
+  )]
+)
+if test "$gdb_cv_struct_user_gcs" = yes; then
+  AC_DEFINE(HAVE_STRUCT_USER_GCS, 1,
+	    [Define to 1 if your system has struct user_gcs.])
+fi
+
 # Set the 'development' global.
 . $srcdir/../bfd/development.sh
 
@@ -79,7 +98,7 @@ fi
 case ${host} in
   *mingw32*)
     AC_DEFINE(USE_WIN32API, 1,
-              [Define if we should use the Windows API, instead of the
+	      [Define if we should use the Windows API, instead of the
 	       POSIX API.  On Windows, we use the Windows API when
 	       building for MinGW, but the POSIX API when building
 	       for Cygwin.])

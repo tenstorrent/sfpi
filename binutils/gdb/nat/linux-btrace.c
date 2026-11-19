@@ -1,6 +1,6 @@
 /* Linux-dependent part of branch trace support for GDB, and GDBserver.
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    Contributed by Intel Corp. <markus.t.metzger@intel.com>
 
@@ -99,7 +99,7 @@ btrace_this_cpu (void)
   return cpu;
 }
 
-/* Return non-zero if there is new data in PEVENT; zero otherwise.  */
+/* Return non-zero if there is new data in PEV; zero otherwise.  */
 
 static int
 perf_event_new_data (const struct perf_event_buffer *pev)
@@ -210,7 +210,7 @@ linux_determine_kernel_start (void)
       if (match != 2)
 	continue;
 
-      if (strcmp (symbol, "_text") == 0)
+      if (streq (symbol, "_text"))
 	{
 	  kernel_start = addr;
 	  break;
@@ -384,7 +384,7 @@ intel_supports_bts (const struct btrace_cpu *cpu)
 	case 0x3a: /* Ivy Bridge */
 
 	  /* AAJ122: LBR, BTM, or BTS records may have incorrect branch
-	     "from" information afer an EIST transition, T-states, C1E, or
+	     "from" information after an EIST transition, T-states, C1E, or
 	     Adaptive Thermal Throttling.  */
 	  return 0;
 	}

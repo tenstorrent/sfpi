@@ -1,4 +1,4 @@
-/* Copyright (C) 2023 Free Software Foundation, Inc.
+/* Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -15,7 +15,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "defs.h"
 #include "gdbsupport/gdb_assert.h"
 #include "gdbsupport/selftest.h"
 #include "test-target.h"
@@ -23,7 +22,6 @@
 #include "break-cond-parse.h"
 #include "tid-parse.h"
 #include "ada-lang.h"
-#include "exceptions.h"
 
 /* When parsing tokens from a string, which direction are we parsing?
 
@@ -67,12 +65,12 @@ find_next_token (const char **curr, parse_direction direction)
     {
       gdb_assert (direction == parse_direction::backward);
 
-      while (isspace (**curr))
+      while (c_isspace (**curr))
 	--(*curr);
 
       tok_end = *curr;
 
-      while (!isspace (**curr))
+      while (!c_isspace (**curr))
 	--(*curr);
 
       tok_start = (*curr) + 1;
@@ -487,9 +485,9 @@ create_breakpoint_parse_arg_string
 	case token::type::THREAD:
 	  {
 	    if (thread != -1)
-	      error ("You can specify only one thread.");
+	      error (_("You can specify only one thread."));
 	    if (task != -1 || inferior != -1)
-	      error ("You can specify only one of thread, inferior, or task.");
+	      error (_("You can specify only one of thread, inferior, or task."));
 	    const char *tmptok;
 	    thread_info *thr = parse_thread_id (tok_value.c_str (), &tmptok);
 	    gdb_assert (*tmptok == '\0');
@@ -499,9 +497,9 @@ create_breakpoint_parse_arg_string
 	case token::type::INFERIOR:
 	  {
 	    if (inferior != -1)
-	      error ("You can specify only one inferior.");
+	      error (_("You can specify only one inferior."));
 	    if (task != -1 || thread != -1)
-	      error ("You can specify only one of thread, inferior, or task.");
+	      error (_("You can specify only one of thread, inferior, or task."));
 	    char *tmptok;
 	    long inferior_id = strtol (tok_value.c_str (), &tmptok, 0);
 	    if (*tmptok != '\0')
@@ -517,9 +515,9 @@ create_breakpoint_parse_arg_string
 	case token::type::TASK:
 	  {
 	    if (task != -1)
-	      error ("You can specify only one task.");
+	      error (_("You can specify only one task."));
 	    if (inferior != -1 || thread != -1)
-	      error ("You can specify only one of thread, inferior, or task.");
+	      error (_("You can specify only one of thread, inferior, or task."));
 	    char *tmptok;
 	    long task_id = strtol (tok_value.c_str (), &tmptok, 0);
 	    if (*tmptok != '\0')
@@ -569,10 +567,10 @@ test (const char *input, const char *condition, int thread = -1,
   gdb::unique_xmalloc_ptr<char> extracted_rest;
   int extracted_thread, extracted_inferior, extracted_task;
   bool extracted_force_condition;
-  std::string exception_msg, error_str;
+  std::string exception_msg;
 
-  if (error_msg != nullptr)
-    error_str = std::string (error_msg) + "\n";
+  if (error_msg == nullptr)
+    error_msg = "";
 
   try
     {
@@ -584,22 +582,19 @@ test (const char *input, const char *condition, int thread = -1,
     }
   catch (const gdb_exception_error &ex)
     {
-      string_file buf;
-
-      exception_print (&buf, ex);
-      exception_msg = buf.release ();
+      exception_msg = ex.what ();
     }
 
   if ((condition == nullptr) != (extracted_condition.get () == nullptr)
       || (condition != nullptr
-	  && strcmp (condition, extracted_condition.get ()) != 0)
+	  && !streq (condition, extracted_condition.get ()))
       || (rest == nullptr) != (extracted_rest.get () == nullptr)
-      || (rest != nullptr && strcmp (rest, extracted_rest.get ()) != 0)
+      || (rest != nullptr && !streq (rest, extracted_rest.get ()))
       || thread != extracted_thread
       || inferior != extracted_inferior
       || task != extracted_task
       || force != extracted_force_condition
-      || exception_msg != error_str)
+      || exception_msg != error_msg)
     {
       if (run_verbose ())
 	{
@@ -684,12 +679,10 @@ create_breakpoint_parse_arg_string_tests ()
   test_error ("task 1xxx", "Junk 'xxx' after task keyword.");
 }
 
-} // namespace selftests
+} /* namespace selftests */
 #endif /* GDB_SELF_TEST */
 
-void _initialize_break_cond_parse ();
-void
-_initialize_break_cond_parse ()
+INIT_GDB_FILE (break_cond_parse)
 {
 #if GDB_SELF_TEST
   selftests::register_test

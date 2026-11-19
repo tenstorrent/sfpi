@@ -1,6 +1,6 @@
 /* Target-dependent code for the Z80.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -494,13 +494,17 @@ z80_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
 
   if (prologue_end != 0)
     {
-      struct symtab_and_line prologue_sal = find_pc_line (func_addr, 0);
-      struct compunit_symtab *compunit = prologue_sal.symtab->compunit ();
-      const char *debug_format = compunit->debugformat ();
+      struct symtab_and_line prologue_sal = find_sal_for_pc (func_addr, 0);
 
-      if (debug_format != NULL &&
-	  !strncasecmp ("dwarf", debug_format, strlen("dwarf")))
-	return std::max (pc, prologue_end);
+      if (prologue_sal.symtab != nullptr)
+	{
+	  const char *debug_format
+	    = prologue_sal.symtab->compunit ().debugformat ();
+
+	  if (debug_format != nullptr
+	      && !strncasecmp ("dwarf", debug_format, strlen ("dwarf")))
+	    return std::max (pc, prologue_end);
+	}
     }
 
   return pc;
@@ -562,7 +566,6 @@ z80_frame_unwind_cache (const frame_info_ptr &this_frame,
   ULONGEST this_base;
   int i;
   gdb_byte buf[sizeof(void*)];
-  struct z80_unwind_cache *info;
   struct gdbarch *gdbarch = get_frame_arch (this_frame);
   z80_gdbarch_tdep *tdep = gdbarch_tdep<z80_gdbarch_tdep> (gdbarch);
   int addr_len = tdep->addr_length;
@@ -570,7 +573,7 @@ z80_frame_unwind_cache (const frame_info_ptr &this_frame,
   if (*this_prologue_cache)
     return (struct z80_unwind_cache *) *this_prologue_cache;
 
-  info = FRAME_OBSTACK_ZALLOC (struct z80_unwind_cache);
+  auto *info = frame_obstack_zalloc<z80_unwind_cache> ();
   memset (info, 0, sizeof (*info));
   info->saved_regs = trad_frame_alloc_saved_regs (this_frame);
   *this_prologue_cache = info;
@@ -592,17 +595,27 @@ z80_frame_unwind_cache (const frame_info_ptr &this_frame,
     {
       CORE_ADDR addr;
       CORE_ADDR sp;
-      CORE_ADDR sp_mask = (1 << gdbarch_ptr_bit(gdbarch)) - 1;
+      CORE_ADDR addr_space_max = (1 << gdbarch_ptr_bit(gdbarch)) - 1;
       enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
+      int loop_count = 0;
       /* Assume that the FP is this frame's SP but with that pushed
 	 stack space added back.  */
       this_base = get_frame_register_unsigned (this_frame, Z80_SP_REGNUM);
       sp = this_base + info->size;
       for (;; ++sp)
 	{
-	  sp &= sp_mask;
-	  if (sp < this_base)
-	    { /* overflow, looks like end of stack */
+	  /* Limit the scan to 2 * addr_len iterations.  If the unwinder's
+	     frame size calculation is slightly off (e.g. due to unpopped
+	     arguments or temporary pushes), the return address might be
+	     hidden a few bytes deeper.  Scanning up to 2 * addr_len bytes
+	     comfortably covers two misplaced pointer-sized values.
+	     Scanning further drastically increases the risk of false
+	     positives: we might wander into the caller's local variables,
+	     hit a random CALL or conditional CALL opcode, and generate a
+	     corrupted backtrace.  It also prevents massive slow-downs on
+	     remote serial targets if the stack is severely corrupted.  */
+	  if (++loop_count > 2 * addr_len || sp > addr_space_max)
+	    { /* Limit reached or end of address space, assume end of stack.  */
 	      sp = this_base + info->size;
 	      break;
 	    }
@@ -641,9 +654,14 @@ z80_frame_unwind_cache (const frame_info_ptr &this_frame,
   /* Adjust all the saved registers so that they contain addresses and not
      offsets.  */
   for (i = 0; i < gdbarch_num_regs (gdbarch) - 1; i++)
-    if (info->saved_regs[i].addr () > 0)
-      info->saved_regs[i].set_addr
-	(info->prev_sp - info->saved_regs[i].addr () * addr_len);
+    {
+      if (info->saved_regs[i].is_addr ())
+	{
+	  if (info->saved_regs[i].addr () > 0)
+	    info->saved_regs[i].set_addr
+	      (info->prev_sp - info->saved_regs[i].addr () * addr_len);
+	}
+    }
 
   /* Except for the startup code, the return PC is always saved on
      the stack and is at the base of the frame.  */
@@ -961,12 +979,12 @@ z80_overlay_update_1 (struct obj_section *osect)
   i = 0;
 
   /* we have interest for sections with same VMA */
-  for (objfile *objfile : current_program_space->objfiles ())
-    for (obj_section *sect : objfile->sections ())
-      if (section_is_overlay (sect))
+  for (objfile &objfile : current_program_space->objfiles ())
+    for (obj_section &sect : objfile.sections ())
+      if (section_is_overlay (&sect))
 	{
-	  sect->ovly_mapped = (lma == bfd_section_lma (sect->the_bfd_section));
-	  i |= sect->ovly_mapped; /* true, if at least one section is mapped */
+	  sect.ovly_mapped = (lma == bfd_section_lma (sect.the_bfd_section));
+	  i |= sect.ovly_mapped; /* true, if at least one section is mapped */
 	}
   return i;
 }
@@ -984,25 +1002,25 @@ z80_overlay_update (struct obj_section *osect)
     return;
 
   /* Update all sections, even if only one was requested.  */
-  for (objfile *objfile : current_program_space->objfiles ())
-    for (obj_section *sect : objfile->sections ())
+  for (objfile &objfile : current_program_space->objfiles ())
+    for (obj_section &sect : objfile.sections ())
       {
-	if (!section_is_overlay (sect))
+	if (!section_is_overlay (&sect))
 	  continue;
 
-	asection *bsect = sect->the_bfd_section;
+	asection *bsect = sect.the_bfd_section;
 	bfd_vma lma = bfd_section_lma (bsect);
 	bfd_vma vma = bfd_section_vma (bsect);
 
 	for (int i = 0; i < cache_novly_regions; ++i)
 	  if (cache_ovly_region_table[i][Z80_VMA] == vma)
-	    sect->ovly_mapped =
+	    sect.ovly_mapped =
 	      (cache_ovly_region_table[i][Z80_MAPPED_TO_LMA] == lma);
       }
 }
 
-/* Return non-zero if the instruction at ADDR is a call; zero otherwise.  */
-static int
+/* Return true if the instruction at ADDR is a call; false otherwise.  */
+static bool
 z80_insn_is_call (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
   gdb_byte buf[8];
@@ -1016,13 +1034,13 @@ z80_insn_is_call (struct gdbarch *gdbarch, CORE_ADDR addr)
       case insn_call_nn:
       case insn_call_cc_nn:
       case insn_rst_n:
-	return 1;
+	return true;
       }
-  return 0;
+  return false;
 }
 
-/* Return non-zero if the instruction at ADDR is a return; zero otherwise. */
-static int
+/* Return true if the instruction at ADDR is a return; false otherwise. */
+static bool
 z80_insn_is_ret (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
   gdb_byte buf[8];
@@ -1035,13 +1053,13 @@ z80_insn_is_ret (struct gdbarch *gdbarch, CORE_ADDR addr)
       {
       case insn_ret:
       case insn_ret_cc:
-	return 1;
+	return true;
       }
-  return 0;
+  return false;
 }
 
-/* Return non-zero if the instruction at ADDR is a jump; zero otherwise.  */
-static int
+/* Return true if the instruction at ADDR is a jump; false otherwise.  */
+static bool
 z80_insn_is_jump (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
   gdb_byte buf[8];
@@ -1058,9 +1076,9 @@ z80_insn_is_jump (struct gdbarch *gdbarch, CORE_ADDR addr)
       case insn_jr_d:
       case insn_jr_cc_d:
       case insn_djnz_d:
-	return 1;
+	return true;
       }
-  return 0;
+  return false;
 }
 
 static const struct frame_unwind_legacy z80_frame_unwind (
@@ -1086,8 +1104,10 @@ z80_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   const struct target_desc *tdesc = info.target_desc;
 
   if (!tdesc_has_registers (tdesc))
-    /* Pick a default target description.  */
-    tdesc = tdesc_z80;
+    {
+      /* Pick a default target description.  */
+      tdesc = tdesc_z80.get ();
+    }
 
   /* Check any target description for validity.  */
   if (tdesc_has_registers (tdesc))
@@ -1141,7 +1161,7 @@ z80_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   type_allocator alloc (gdbarch);
   tdep->void_type = alloc.new_type (TYPE_CODE_VOID, TARGET_CHAR_BIT,
 				    "void");
-  tdep->func_void_type = make_function_type (tdep->void_type, NULL);
+  tdep->func_void_type = lookup_function_type (tdep->void_type);
   tdep->pc_type = init_pointer_type (alloc,
 				     tdep->addr_length * TARGET_CHAR_BIT,
 				     NULL, tdep->func_void_type);
@@ -1173,7 +1193,7 @@ z80_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_skip_prologue (gdbarch, z80_skip_prologue);
   set_gdbarch_inner_than (gdbarch, core_addr_lessthan); // falling stack
 
-  set_gdbarch_software_single_step (gdbarch, z80_software_single_step);
+  set_gdbarch_get_next_pcs (gdbarch, z80_software_single_step);
   set_gdbarch_breakpoint_kind_from_pc (gdbarch, z80_breakpoint_kind_from_pc);
   set_gdbarch_sw_breakpoint_from_kind (gdbarch, z80_sw_breakpoint_from_kind);
   set_gdbarch_insn_is_call (gdbarch, z80_insn_is_call);
@@ -1331,14 +1351,14 @@ ez80_ddfd_insn_table[] =
   { 0007, 0307, 2, insn_default }, //"ld rr,(ii+d)"
   { 0061, 0377, 2, insn_default }, //"ld ii,(ii+d)"
   /* common instructions */
-  { 0011, 0367, 2, insn_default }, //"add ii,rr"
+  { 0011, 0317, 1, insn_default }, //"add ii,rr"
   { 0041, 0377, 3, insn_default }, //"ld ii,nn"
   { 0042, 0367, 3, insn_default }, //"ld (nn),ii", "ld ii,(nn)"
   { 0043, 0367, 1, insn_default }, //"inc ii", "dec ii"
   { 0044, 0366, 1, insn_default }, //"inc/dec iih/iil"
   { 0046, 0367, 2, insn_default }, //"ld iih,n", "ld iil,n"
   { 0064, 0376, 2, insn_default }, //"inc (ii+d)", "dec (ii+d)"
-  { 0066, 0377, 2, insn_default }, //"ld (ii+d),n"
+  { 0066, 0377, 3, insn_default }, //"ld (ii+d),n"
   { 0166, 0377, 0, insn_default }, //not an instruction
   { 0160, 0370, 2, insn_default }, //"ld (ii+d),r"
   { 0104, 0306, 1, insn_default }, //"ld r,iih", "ld r,iil"
@@ -1360,7 +1380,7 @@ ez80_adl_ddfd_insn_table[] =
 {
   { 0007, 0307, 2, insn_default }, //"ld rr,(ii+d)"
   { 0061, 0377, 2, insn_default }, //"ld ii,(ii+d)"
-  { 0011, 0367, 1, insn_default }, //"add ii,rr"
+  { 0011, 0317, 1, insn_default }, //"add ii,rr"
   { 0041, 0377, 4, insn_default }, //"ld ii,nn"
   { 0042, 0367, 4, insn_default }, //"ld (nn),ii", "ld ii,(nn)"
   { 0043, 0367, 1, insn_default }, //"inc ii", "dec ii"
@@ -1422,7 +1442,7 @@ z80_get_insn_info (struct gdbarch *gdbarch, const gdb_byte *buf, int *size)
 	case insn_adl:
 	  info = &ez80_adl_main_insn_table[0];
 	  break;
-	/*  These two (for GameBoy Z80 & Z80 Next CPUs) haven't been tested.
+	/*  These two (for Game Boy Z80 & Z80 Next CPUs) haven't been tested.
 
 	case bfd_mach_gbz80:
 	  info = &gbz80_main_insn_table[0];
@@ -1455,10 +1475,7 @@ z80_get_insn_info (struct gdbarch *gdbarch, const gdb_byte *buf, int *size)
   while (1);
 }
 
-extern initialize_file_ftype _initialize_z80_tdep;
-
-void
-_initialize_z80_tdep ()
+INIT_GDB_FILE (z80_tdep)
 {
   gdbarch_register (bfd_arch_z80, z80_gdbarch_init);
   initialize_tdesc_z80 ();

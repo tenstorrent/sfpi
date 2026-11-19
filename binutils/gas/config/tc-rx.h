@@ -1,5 +1,5 @@
 /* tc-rx.h - header file for Renesas RX
-   Copyright (C) 2008-2025 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -51,9 +51,6 @@ extern int target_big_endian;
 /* .-foo gets turned into PC relative relocs.  */
 #define DIFF_EXPR_OK
 
-#define md_end rx_md_end
-extern void rx_md_end (void);
-
 /* Note - the definition of MD_RELAX_FRAG here includes a reference to the
    MAX_ITERATIONS variable which is defined locally in write.c:relax_segment()
    but which is not normally passed to target specific relaxing code.  This
@@ -96,7 +93,7 @@ extern void rx_cons_fix_new (fragS *, int, int, expressionS *,
       goto around;							\
     }
 
-#define MAX_MEM_FOR_RS_ALIGN_CODE 8
+#define MAX_MEM_FOR_RS_ALIGN_CODE(p2align, max) 8
 #define HANDLE_ALIGN(SEC, FRAG) rx_handle_align (FRAG)
 extern void rx_handle_align (fragS *);
 

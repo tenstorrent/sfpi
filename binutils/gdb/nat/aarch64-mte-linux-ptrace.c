@@ -1,6 +1,6 @@
 /* Common Linux native ptrace code for AArch64 MTE.
 
-   Copyright (C) 2021-2024 Free Software Foundation, Inc.
+   Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,7 +23,6 @@
 
 #include "arch/aarch64.h"
 #include "arch/aarch64-mte.h"
-#include "arch/aarch64-mte-linux.h"
 #include "nat/aarch64-linux.h"
 #include "nat/aarch64-mte-linux-ptrace.h"
 

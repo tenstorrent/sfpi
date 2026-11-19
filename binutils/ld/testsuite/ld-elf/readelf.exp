@@ -1,5 +1,5 @@
 # Expect script for `readelf' tests that depend on LD.
-#   Copyright (C) 2017-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -27,6 +27,11 @@
 # Exclude non-ELF targets.
 
 if ![is_elf_format] {
+    return
+}
+
+# ver_def fails because of __text_seg and __data_seg in .gnu.version.
+if [istarget "hppa*64*-*-*"] {
     return
 }
 

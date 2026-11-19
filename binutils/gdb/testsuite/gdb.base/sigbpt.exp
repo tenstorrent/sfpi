@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2004-2024 Free Software Foundation, Inc.
+# Copyright 2004-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ require {!target_info exists gdb,nosignals}
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 #
@@ -42,7 +42,7 @@ if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
 #
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # If we can examine what's at memory address 0, it is possible that we
@@ -233,10 +233,10 @@ proc cont_out { name args } {
     gdb_test "continue" "Breakpoint.*pc(\r\n| *)=> [at_segv] .*" \
 	"${name}; continue to breakpoint at fault"
 
-    # Now single step the faulted instrction at that breakpoint.
+    # Now single step the faulted instruction at that breakpoint.
     gdb_test "stepi" \
 	"Program received signal ${signame}.*pc(\r\n| *)=> [at_segv] .*" \
-	"${name}; stepi fault"    
+	"${name}; stepi fault"
 
     # Clear any breakpoints
     for {set i 0} {$i < [llength $args]} {incr i} {

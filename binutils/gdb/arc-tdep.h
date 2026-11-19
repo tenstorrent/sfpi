@@ -1,6 +1,6 @@
 /* Target dependent code for ARC architecture, for GDB.
 
-   Copyright 2005-2024 Free Software Foundation, Inc.
+   Copyright 2005-2026 Free Software Foundation, Inc.
    Contributed by Synopsys Inc.
 
    This file is part of GDB.
@@ -146,20 +146,20 @@ struct arc_gdbarch_tdep : gdbarch_tdep_base
 
 /* Utility functions used by other ARC-specific modules.  */
 
-static inline int
+static inline bool
 arc_mach_is_arc600 (struct gdbarch *gdbarch)
 {
   return (gdbarch_bfd_arch_info (gdbarch)->mach == bfd_mach_arc_arc600
 	  || gdbarch_bfd_arch_info (gdbarch)->mach == bfd_mach_arc_arc601);
 }
 
-static inline int
+static inline bool
 arc_mach_is_arc700 (struct gdbarch *gdbarch)
 {
   return gdbarch_bfd_arch_info (gdbarch)->mach == bfd_mach_arc_arc700;
 }
 
-static inline int
+static inline bool
 arc_mach_is_arcv2 (struct gdbarch *gdbarch)
 {
   return gdbarch_bfd_arch_info (gdbarch)->mach == bfd_mach_arc_arcv2;

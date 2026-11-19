@@ -1,6 +1,6 @@
 /* simulator.c -- Interface for the AArch64 simulator.
 
-   Copyright (C) 2015-2024 Free Software Foundation, Inc.
+   Copyright (C) 2015-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat.
 
@@ -14322,13 +14322,13 @@ aarch64_decode_and_execute (sim_cpu *cpu, uint64_t pc)
     }
 }
 
-static bfd_boolean
+static bool
 aarch64_step (sim_cpu *cpu)
 {
   uint64_t pc = aarch64_get_PC (cpu);
 
   if (pc == TOP_LEVEL_RETURN_PC)
-    return FALSE;
+    return false;
 
   aarch64_set_next_PC (cpu, pc + 4);
 
@@ -14343,7 +14343,7 @@ aarch64_step (sim_cpu *cpu)
 
   aarch64_decode_and_execute (cpu, pc);
 
-  return TRUE;
+  return true;
 }
 
 void

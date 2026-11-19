@@ -1,4 +1,4 @@
-/* Copyright (C) 2020-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2020-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -42,7 +42,7 @@ public:
     /* Get the range, and extract the bounds.  */
     struct type *range_type = type->index_type ();
     if (!get_discrete_bounds (range_type, &m_lowerbound, &m_upperbound))
-      error ("unable to read array bounds");
+      error (_("unable to read array bounds"));
 
     /* Figure out the stride for this array.  */
     struct type *elt_type = check_typedef (type->target_type ());
@@ -221,7 +221,7 @@ private:
     struct type *range_type = check_typedef (type)->index_type ();
     LONGEST lowerbound, upperbound;
     if (!get_discrete_bounds (range_type, &lowerbound, &upperbound))
-      error ("failed to get range bounds");
+      error (_("failed to get range bounds"));
 
     /* CALC is used to calculate the offsets for each element in this
        dimension.  */
@@ -267,13 +267,16 @@ private:
 	  {
 	    LONGEST elt_off = offset + calc.index_offset (i);
 
-	    if (is_dynamic_type (elt_type))
+	    struct type *this_elt_type = elt_type;
+	    if (is_dynamic_type (this_elt_type))
 	      {
 		CORE_ADDR e_address = m_address + elt_off;
-		elt_type = resolve_dynamic_type (elt_type, {}, e_address);
+		this_elt_type = resolve_dynamic_type (this_elt_type, {},
+						      e_address);
 	      }
 
-	    m_impl.process_element (elt_type, elt_off, i, i == upperbound);
+	    m_impl.process_element (this_elt_type, elt_off, i,
+				    i == upperbound);
 	  }
       }
 

@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -25,16 +25,16 @@ set additional_flags [gdb_target_symbol_prefix_flags]
 
 require gdb_trace_common_supports_arch
 
-if [prepare_for_testing "failed to prepare" $executable $srcfile \
-	[list debug $additional_flags]] {
+if {[prepare_for_testing "failed to prepare" $executable $srcfile \
+	 [list debug $additional_flags]]} {
     return -1
 }
 
-if ![runto_main] {
+if {![runto_main]} {
     return -1
 }
 
-if ![gdb_target_supports_trace] {
+if {![gdb_target_supports_trace]} {
     unsupported "target does not support trace"
     return -1
 }
@@ -55,7 +55,7 @@ if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
 
 clean_restart ${executable}
 
-if ![runto_main] {
+if {![runto_main]} {
     return 0
 }
 
@@ -69,13 +69,13 @@ proc test_tracepoints { trace_command condition num_frames { kfail_proc 0 } } {
 
     clean_restart ${executable}
 
-    if ![runto_main] {
+    if {![runto_main]} {
 	return 0
     }
 
-    gdb_breakpoint "begin" qualified
+    gdb_breakpoint "begin" -qualified
 
-    gdb_breakpoint "end" qualified
+    gdb_breakpoint "end" -qualified
 
     with_test_prefix "${trace_command}: ${condition}" {
 
@@ -83,13 +83,13 @@ proc test_tracepoints { trace_command condition num_frames { kfail_proc 0 } } {
 	    "\(Fast t|T\)racepoint .*" \
 	    "set tracepoint"
 
-	gdb_test "continue" ".*Breakpoint \[0-9\]+, begin .*" \
+	gdb_test "continue" ".*Breakpoint ${::decimal}, begin .*" \
 	    "advance to trace begin"
 
 	gdb_test_no_output "tstart" "start trace experiment"
 
 	gdb_test_multiple "continue" "advance through tracing" {
-	    -re ".*Breakpoint \[0-9\]+, end .*$gdb_prompt $" {
+	    -re ".*Breakpoint ${::decimal}, end .*$gdb_prompt $" {
 		pass "advance through tracing"
 	    }
 	    -re "Program received signal SIGSEGV, Segmentation fault\\..*$gdb_prompt $" {

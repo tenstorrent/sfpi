@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Copyright (C) 2013-2024 Free Software Foundation, Inc.
+<!-- Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
      Copying and distribution of this file, with or without modification,
      are permitted in any medium without royalty provided the copyright
@@ -40,4 +40,3 @@
   <reg name="f30" bitsize="32" type="ieee_single" regnum="62"/>
   <reg name="f31" bitsize="32" type="ieee_single" regnum="63"/>
 </feature>
-

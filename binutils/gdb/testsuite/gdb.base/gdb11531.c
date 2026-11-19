@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2010-2024 Free Software Foundation, Inc.
+   Copyright 2010-2026 Free Software Foundation, Inc.
 
    Contributed by Pierre Muller.
 
@@ -31,10 +31,9 @@ static struct rec myrec;
 int
 main ()
 {
-  myrec.x = 5;
+  myrec.x = 5; /* Break here.  */
   myrec.y = 3.4;
   myrec.z = 56;
   myrec.x = 78;
   return myrec.x;
 }
-

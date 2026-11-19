@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@ require allow_cplus_tests
 standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug c++}]} {
-    return -1
+    return
 }
 
 if {![runto 'marker']} {
-    return -1
+    return
 }
 
 # Returns a buffer corresponding to what GDB replies when asking for
@@ -52,7 +52,7 @@ proc make_info_breakpoint_reply_re {b1 b2 b21 b22 b23 b24} {
 }
 
 gdb_test "break foo::overload" \
-    "Breakpoint \[0-9\]+ at $hex: foo::overload. .4 locations." \
+    "Breakpoint ${::decimal} at $hex: foo::overload. .4 locations." \
     "set breakpoint at overload"
 
 gdb_test "info break" [make_info_breakpoint_reply_re y y y y y y] \
@@ -131,7 +131,7 @@ gdb_test "info break" [make_info_breakpoint_reply_re y y y y y y] \
 # Check that disabling an invalid breakpoint location range does not
 # cause unexpected behavior.
 gdb_test "disable 2.6-7" "Bad breakpoint location number '6'" \
-    "disable an unvalid location breakpoint range"
+    "disable an invalid location breakpoint range"
 
 gdb_test "info break" [make_info_breakpoint_reply_re y y y y y y] \
     "breakpoint info disable 2.6-7"

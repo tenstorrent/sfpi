@@ -1,6 +1,6 @@
 /* Fortran language support routines for GDB, the GNU debugger.
 
-   Copyright (C) 1993-2024 Free Software Foundation, Inc.
+   Copyright (C) 1993-2026 Free Software Foundation, Inc.
 
    Contributed by Motorola.  Adapted from the C parser by Farooq Butt
    (fmbutt@engage.sps.mot.com).
@@ -72,33 +72,6 @@ static value *fortran_prepare_argument (struct expression *exp,
 					expr::operation *subexp,
 					int arg_num, bool is_internal_call_p,
 					struct type *func_type, enum noside noside);
-
-/* Return the encoding that should be used for the character type
-   TYPE.  */
-
-const char *
-f_language::get_encoding (struct type *type)
-{
-  const char *encoding;
-
-  switch (type->length ())
-    {
-    case 1:
-      encoding = target_charset (type->arch ());
-      break;
-    case 4:
-      if (type_byte_order (type) == BFD_ENDIAN_BIG)
-	encoding = "UTF-32BE";
-      else
-	encoding = "UTF-32LE";
-      break;
-
-    default:
-      error (_("unrecognized character type"));
-    }
-
-  return encoding;
-}
 
 /* See language.h.  */
 
@@ -404,7 +377,7 @@ fortran_associated (struct gdbarch *gdbarch, const language_defn *lang,
   /* All Fortran pointers should have the associated property, this is
      how we know the pointer is pointing at something or not.  */
   struct type *pointer_type = check_typedef (pointer->type ());
-  if (TYPE_ASSOCIATED_PROP (pointer_type) == nullptr
+  if (pointer_type->dyn_prop (DYN_PROP_ASSOCIATED) == nullptr
       && pointer_type->code () != TYPE_CODE_PTR)
     error (_("ASSOCIATED can only be applied to pointers"));
 
@@ -431,7 +404,7 @@ fortran_associated (struct gdbarch *gdbarch, const language_defn *lang,
 	 This is probably true for most targets, but might not be true for
 	 everyone.  */
       if (pointer_type->code () == TYPE_CODE_PTR
-	  && TYPE_ASSOCIATED_PROP (pointer_type) == nullptr)
+	  && pointer_type->dyn_prop (DYN_PROP_ASSOCIATED) == nullptr)
 	is_associated = (pointer_addr != 0);
       else
 	is_associated = !type_not_associated (pointer_type);
@@ -469,7 +442,7 @@ fortran_associated (struct gdbarch *gdbarch, const language_defn *lang,
      most targets, but might not be true for everyone.  */
   if (target->lval () != lval_memory
       || type_not_associated (pointer_type)
-      || (TYPE_ASSOCIATED_PROP (pointer_type) == nullptr
+      || (pointer_type->dyn_prop (DYN_PROP_ASSOCIATED) == nullptr
 	  && pointer_type->code () == TYPE_CODE_PTR
 	  && pointer_addr == 0))
     return value_from_longest (result_type, 0);
@@ -799,7 +772,7 @@ eval_op_f_abs (struct type *expect_type, struct expression *exp,
 	return value_from_longest (type, l);
       }
     }
-  error (_("ABS of type %s not supported"), TYPE_SAFE_NAME (type));
+  error (_("ABS of type %s not supported"), type->safe_name ());
 }
 
 /* A helper function for BINOP_MOD.  */
@@ -836,7 +809,7 @@ eval_op_f_mod (struct type *expect_type, struct expression *exp,
 	return value_from_longest (arg1->type (), v3);
       }
     }
-  error (_("MOD of type %s not supported"), TYPE_SAFE_NAME (type));
+  error (_("MOD of type %s not supported"), type->safe_name ());
 }
 
 /* A helper function for the different FORTRAN_CEILING overloads.  Calculates
@@ -954,7 +927,7 @@ eval_op_f_modulo (struct type *expect_type, struct expression *exp,
 	return value_from_host_double (type, result);
       }
     }
-  error (_("MODULO of type %s not supported"), TYPE_SAFE_NAME (type));
+  error (_("MODULO of type %s not supported"), type->safe_name ());
 }
 
 /* A helper function for FORTRAN_CMPLX.  */
@@ -1836,9 +1809,7 @@ builtin_f_type (struct gdbarch *gdbarch)
 static struct cmd_list_element *set_fortran_list;
 static struct cmd_list_element *show_fortran_list;
 
-void _initialize_f_language ();
-void
-_initialize_f_language ()
+INIT_GDB_FILE (f_language)
 {
   add_setshow_prefix_cmd
     ("fortran", no_class,
@@ -2010,7 +1981,7 @@ fortran_adjust_dynamic_array_base_address_hack (struct type *type,
       struct type *range_type = tmp_type->index_type ();
       LONGEST lowerbound, upperbound, stride;
       if (!get_discrete_bounds (range_type, &lowerbound, &upperbound))
-	error ("failed to get range bounds");
+	error (_("failed to get range bounds"));
 
       /* Figure out the stride for this dimension.  */
       struct type *elt_type = check_typedef (tmp_type->target_type ());

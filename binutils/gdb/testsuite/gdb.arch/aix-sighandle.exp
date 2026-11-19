@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Free Software Foundation, Inc.
+# Copyright 2018-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 require {istarget "powerpc*-*-aix*"}
 
 if { [prepare_for_testing "failed to prepare" aix-sighandle aix-sighandle.c] } {
-    return -1
+    return
 }
 
 set srcfile aix-sighandle.c

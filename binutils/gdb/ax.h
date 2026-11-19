@@ -1,5 +1,5 @@
 /* Definitions for expressions designed to be executed on the agent
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -144,7 +144,7 @@ struct agent_expr
   };
 
 /* An agent_expr owning pointer.  */
-typedef std::unique_ptr<agent_expr> agent_expr_up;
+using agent_expr_up = std::unique_ptr<agent_expr>;
 
 /* The actual values of the various bytecode operations.  */
 

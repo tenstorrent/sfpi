@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@ standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile \
 	 $srcfile {debug}]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return -1
+    return
 }
 
 gdb_breakpoint foo
@@ -33,7 +33,7 @@ proc get_frame_id { level } {
     set id "**unknown**"
 
     gdb_test_multiple "maint print frame-id ${level}" "" {
-	-wrap -re "^frame-id for frame #\[0-9\]+: (\[^\r\n\]+)" {
+	-wrap -re "^frame-id for frame #${::decimal}: (\[^\r\n\]+)" {
 	    set id $expect_out(1,string)
 	    pass $gdb_test_name
 	}
@@ -61,4 +61,11 @@ for { set i 0 } { $i < 4 } { incr i } {
     }
     gdb_test "up" ".*" \
 	"move up from frame $i"
+}
+
+# Check that asking for the frame-id of a non-existent frame fails.
+foreach level { -1 5 } {
+    gdb_test "maint print frame-id ${level}" \
+	"^No frame at level ${level}\\." \
+	"no frame at $level"
 }

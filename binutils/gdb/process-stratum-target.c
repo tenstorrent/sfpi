@@ -1,6 +1,6 @@
 /* Abstract base class inherited by all process_stratum targets
 
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -114,8 +114,9 @@ process_stratum_target::maybe_add_resumed_with_pending_wait_status
 {
   gdb_assert (!thread->resumed_with_pending_wait_status_node.is_linked ());
 
-  if (thread->resumed () && thread->has_pending_waitstatus ())
+  if (thread->internal_state () == THREAD_INT_RESUMED_PENDING_STATUS)
     {
+      gdb_assert (thread->has_pending_waitstatus ());
       infrun_debug_printf ("adding to resumed threads with event list: %s",
 			   thread->ptid.to_string ().c_str ());
       m_resumed_with_pending_wait_status.push_back (*thread);
@@ -128,8 +129,9 @@ void
 process_stratum_target::maybe_remove_resumed_with_pending_wait_status
   (thread_info *thread)
 {
-  if (thread->resumed () && thread->has_pending_waitstatus ())
+  if (thread->internal_state () == THREAD_INT_RESUMED_PENDING_STATUS)
     {
+      gdb_assert (thread->has_pending_waitstatus ());
       infrun_debug_printf ("removing from resumed threads with event list: %s",
 			   thread->ptid.to_string ().c_str ());
       gdb_assert (thread->resumed_with_pending_wait_status_node.is_linked ());
@@ -195,11 +197,11 @@ process_stratum_target::find_thread (ptid_t ptid)
 
 /* See process-stratum-target.h.  */
 
-std::set<process_stratum_target *>
+gdb::unordered_set<process_stratum_target *>
 all_non_exited_process_targets ()
 {
   /* Inferiors may share targets.  To eliminate duplicates, use a set.  */
-  std::set<process_stratum_target *> targets;
+  gdb::unordered_set<process_stratum_target *> targets;
   for (inferior *inf : all_non_exited_inferiors ())
     targets.insert (inf->process_target ());
 

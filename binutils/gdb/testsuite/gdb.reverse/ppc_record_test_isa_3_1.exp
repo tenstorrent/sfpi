@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ require {istarget "powerpc*"} allow_power_isa_3_1_tests
 
 set options [list additional_flags=-mcpu=power10 debug]
 if {[build_executable "failed to prepare" $executable $srcfile $options] == -1} {
-    return -1
+    return
 }
 
 clean_restart $executable
@@ -339,5 +339,3 @@ gdb_assert ![string compare $acc_7_3_initial $acc_7_3_final] \
 
 gdb_assert ![string compare $fpscr_initial $fpscr_final] \
     "check fpscr initial versus final"
-
-

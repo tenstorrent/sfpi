@@ -1,4 +1,4 @@
-! Copyright 2019-2024 Free Software Foundation, Inc.
+! Copyright 2019-2026 Free Software Foundation, Inc.
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -231,6 +231,7 @@ program function_calls
     integer_return = one_arg_value(10)
     integer_return = sum_some(1,2,3)
     returned_string = return_string()
+    returned_string_debugger = ''
     cout = build_cart(4,5)
     fft_result = complex_argument(fft)
     print *, cout

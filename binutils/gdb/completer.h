@@ -1,5 +1,5 @@
 /* Header for GDB line completion.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ struct match_list_displayer
 /* A list of completion candidates.  Each element is a malloc string,
    because ownership of the strings is transferred to readline, which
    calls free on each element.  */
-typedef std::vector<gdb::unique_xmalloc_ptr<char>> completion_list;
+using completion_list = std::vector<gdb::unique_xmalloc_ptr<char>>;
 
 /* The result of a successful completion match.  When doing symbol
    comparison, we use the symbol search name for the symbol name match
@@ -203,7 +203,7 @@ private:
 
   /* The ignored substring ranges within M_MATCH.  E.g., if we were
      looking for completion matches for C++ functions starting with
-       "functio"
+       "functio"	codespell:ignore functio
      and successfully match:
        "function[abi:cxx11](int)"
      the ignored ranges vector will contain an entry that delimits the
@@ -722,7 +722,7 @@ extern void complete_nested_command_line (completion_tracker &tracker,
    This function is designed so that trying to complete '/' will offer no
    completions, the user needs to insert the format specification
    themselves.  Trying to complete '/FMT' (where FMT is any non-empty set
-   of alpha-numeric characters) will cause readline to insert a single
+   of alphanumeric characters) will cause readline to insert a single
    space, setting the user up to enter the expression.  */
 
 extern bool skip_over_slash_fmt (completion_tracker &tracker,

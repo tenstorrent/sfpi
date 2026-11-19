@@ -1,6 +1,6 @@
 /* Auxiliary vector support for GDB, the GNU debugger.
 
-   Copyright (C) 2004-2024 Free Software Foundation, Inc.
+   Copyright (C) 2004-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -365,7 +365,7 @@ target_read_auxv ()
 
   if (info == nullptr)
     {
-      info = auxv_inferior_data.emplace (inf);
+      info = &auxv_inferior_data.emplace (inf);
       info->data = target_read_auxv_raw (inf->top_target ());
     }
 
@@ -497,6 +497,8 @@ default_print_auxv_entry (struct gdbarch *gdbarch, struct ui_file *file,
 	   AUXV_FORMAT_STR);
       TAG (AT_RANDOM, _("Address of 16 random bytes"), AUXV_FORMAT_HEX);
       TAG (AT_HWCAP2, _("Extension of AT_HWCAP"), AUXV_FORMAT_HEX);
+      TAG (AT_HWCAP3, _("Extension of AT_HWCAP"), AUXV_FORMAT_HEX);
+      TAG (AT_HWCAP4, _("Extension of AT_HWCAP"), AUXV_FORMAT_HEX);
       TAG (AT_RSEQ_FEATURE_SIZE, _("rseq supported feature size"),
 	   AUXV_FORMAT_DEC);
       TAG (AT_RSEQ_ALIGN, _("rseq allocation alignment"),
@@ -609,9 +611,7 @@ info_auxv_command (const char *cmd, int from_tty)
     }
 }
 
-void _initialize_auxv ();
-void
-_initialize_auxv ()
+INIT_GDB_FILE (auxv)
 {
   add_info ("auxv", info_auxv_command,
 	    _("Display the inferior's auxiliary vector.\n\

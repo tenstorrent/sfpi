@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,15 +23,15 @@ require is_x86_64_m64_target
 standard_testfile .S
 
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile {nodebug nopie}] } {
-    return -1
+    return
 }
 
-if ![runto stop_frame] {
+if {![runto stop_frame]} {
     perror "Failed to stop in stop_frame"
-    return -1
+    return
 }
 
-gdb_test "bt" "#0  (0x\[0-9a-f\]+ in )?stop_frame \[^\r\n\]*\r\n#1  \[^\r\n\]*first_frame \[^\r\n\]*\r\n#2  \[^\r\n\]*main\[^\r\n\]*" \
+gdb_test "bt" "#0  (${::hex} in )?stop_frame \[^\r\n\]*\r\n#1  \[^\r\n\]*first_frame \[^\r\n\]*\r\n#2  \[^\r\n\]*main\[^\r\n\]*" \
     "backtrace from stop_frame"
 
 for {set f 0} {$f < 3} {incr f} {

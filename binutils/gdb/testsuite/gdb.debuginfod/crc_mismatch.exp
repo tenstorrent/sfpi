@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ if {[build_executable crc_mismatch.exp crc_mismatch-2 crc_mismatch-2.c debug] !=
     gdb_test "file [standard_output_file crc_mismatch-2]" \
 	[multi_line \
 	     "Reading symbols from ${escapedobjdirsubdir}/crc_mismatch-2\\.\\.\\." \
-	     "warning: the debug information found in \"${escapedobjdirsubdir}/crc_mismatch-2\\.debug\" does not match \"${escapedobjdirsubdir}/crc_mismatch-2\" \\(CRC mismatch\\)\\." \
+	     "warning: the debug information found in \"${escapedobjdirsubdir}/crc_mismatch-2\\.debug\" does not match \"${escapedobjdirsubdir}/crc_mismatch-2\" \\(CRC mismatch\\)\\.(?:\r\nExpanding full symbols from \[^\r\n\]+)*" \
 	     "\\(No debugging symbols found in .*\\)"] \
 	"CRC mismatch is reported"
 
@@ -80,7 +80,7 @@ if {[build_executable crc_mismatch.exp crc_mismatch-2 crc_mismatch-2.c debug] !=
 	    gdb_test "file [standard_output_file crc_mismatch-2]" \
 		[multi_line \
 		     "Reading symbols from ${exe_file_re}\\.\\.\\." \
-		     "warning: the debug information found in \"${debug_file_re}\" does not match \"${exe_file_re}\" \\(CRC mismatch\\)\\." \
+		     "warning: the debug information found in \"${debug_file_re}\" does not match \"${exe_file_re}\" \\(CRC mismatch\\)\\.(?:\r\nExpanding full symbols from \[^\r\n\]+)*" \
 		     "\\(No debugging symbols found in \[^\r\n\]+\\)"] \
 		"CRC mismatch is reported"
 	}
@@ -113,6 +113,7 @@ proc_with_prefix local_debuginfod { } {
 
     # Enable debuginfod and fetch the debuginfo.
     gdb_test_no_output "set debuginfod enabled on"
+    gdb_test_no_output "set progress-bars enabled off"
     gdb_test "file $binfile" ".*Reading symbols from.*debuginfo.*" \
 	"file [file tail $binfile] cmd on"
 

@@ -1,5 +1,5 @@
 /* 32-bit ELF support for ARM
-   Copyright (C) 2019-2025 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -87,13 +87,7 @@ struct elf32_arm_params {
 };
 
 void bfd_elf32_arm_set_target_params
-  (bfd *, struct bfd_link_info *, struct elf32_arm_params *);
-
-extern bool bfd_elf32_arm_get_bfd_for_interworking
-  (bfd *, struct bfd_link_info *);
-
-extern bool bfd_elf32_arm_add_glue_sections_to_bfd
-  (bfd *, struct bfd_link_info *);
+  (struct bfd_link_info *, const struct elf32_arm_params *, bfd *);
 
 extern void bfd_elf32_arm_keep_private_stub_output_sections
   (struct bfd_link_info *);

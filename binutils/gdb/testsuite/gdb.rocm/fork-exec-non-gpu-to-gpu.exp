@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This file is part of GDB.
 
@@ -20,6 +20,7 @@
 load_lib rocm.exp
 
 require allow_hipcc_tests
+require allow_fork_tests
 
 standard_testfile -execer.cpp -execee.cpp
 
@@ -29,8 +30,10 @@ set binfile_execee "$binfile-execee"
 
 # Compile two versions of execer, one that uses fork and one that uses vfork.
 foreach_with_prefix fork_func { fork vfork } {
-    set opts [list additional_flags=-DFORK=$fork_func \
-	additional_flags=-DEXECEE="${::binfile_execee}"]
+    set opts {}
+    lappend opts additional_flags=-DFORK=$fork_func
+    lappend opts additional_flags=-DEXECEE=[quote_for_host $::binfile_execee]
+
     if {[build_executable "failed to prepare" ${::binfile}-execer-${fork_func} \
 	    $srcfile_execer $opts]} {
 	return
@@ -52,13 +55,14 @@ proc do_test { detach-on-fork follow-fork-mode fork_func } {
     }
 
     with_rocm_gpu_lock {
-	clean_restart ${::binfile}-execer-${fork_func}
+	clean_restart
+	gdb_load ${::binfile}-execer-${fork_func}
 
 	gdb_test_no_output "set detach-on-fork ${detach-on-fork}"
 	gdb_test_no_output "set follow-fork-mode ${follow-fork-mode}"
 
 	if { ${follow-fork-mode} == "parent" } {
-	    runto break_here_execer allow-pending message
+	    runto break_here_execer -allow-pending -message
 	    gdb_continue_to_end "continue parent to end" "continue" 1
 
 	    if { ${detach-on-fork} == "off" } {
@@ -66,7 +70,7 @@ proc do_test { detach-on-fork follow-fork-mode fork_func } {
 		gdb_continue_to_end "continue child to end" "continue" 1
 	    }
 	} elseif { ${follow-fork-mode} == "child" } {
-	    runto break_here_execee allow-pending message
+	    runto break_here_execee -allow-pending -message
 	    gdb_continue_to_end "continue child to end" "continue" 1
 
 	    if { ${detach-on-fork} == "off" } {

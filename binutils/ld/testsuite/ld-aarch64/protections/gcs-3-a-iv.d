@@ -1,4 +1,4 @@
-#name: Specifying only '-z gcs=always -z gcs-report' with mixed inputs emits GCS feature and warnings [shared]
+#name: '-z gcs=always -z gcs-report' with mixed inputs emits GCS feature and warnings [shared]
 #source: gcs.s
 #source: gcs2.s
 #source: nogcs.s

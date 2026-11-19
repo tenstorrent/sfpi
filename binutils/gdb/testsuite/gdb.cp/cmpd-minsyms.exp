@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 #
 # Contributed by Red Hat, originally written by Keith Seitz.
 #
@@ -24,7 +24,7 @@ standard_testfile .cc
 
 # Do NOT compile with debug flag.
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {c++}]} {
-    return -1
+    return
 }
 
 # Before setting the language, try to set a few simple breakpoints
@@ -36,7 +36,7 @@ foreach sym $min_syms {
     set tst "setting breakpoint at '$sym'"
     if {[gdb_breakpoint "'$sym'"]} {
 	pass $tst
-    }    
+    }
 }
 
 
@@ -48,7 +48,7 @@ gdb_test_no_output "set language c++"
 # of the minimal symbol.
 set min_syms [list \
 		  "GDB<int>::operator ==" \
-		  "GDB<int>::operator==(GDB<int> const&)" \
+		  "GDB<int>::operator==(GDB<int> const&) const" \
 		  "GDB<char>::harder(char)" \
 		  "GDB<int>::harder(int)" \
 		  {"int GDB<char>::even_harder<int>(char)"} \

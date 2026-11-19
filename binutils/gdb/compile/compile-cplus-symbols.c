@@ -1,6 +1,6 @@
 /* Convert symbols from GDB to GCC
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -48,12 +48,12 @@ convert_one_symbol (compile_cplus_instance *instance,
 {
   /* Squash compiler warning.  */
   gcc_type sym_type = 0;
-  const char *filename = sym.symbol->symtab ()->filename;
+  const char *filename = sym.symbol->symtab ()->filename ();
   unsigned int line = sym.symbol->line ();
 
   instance->error_symbol_once (sym.symbol);
 
-  if (sym.symbol->aclass () == LOC_LABEL)
+  if (sym.symbol->loc_class () == LOC_LABEL)
     sym_type = 0;
   else
     sym_type = instance->convert_type (sym.symbol->type ());
@@ -70,7 +70,7 @@ convert_one_symbol (compile_cplus_instance *instance,
       std::string name;
       gdb::unique_xmalloc_ptr<char> symbol_name;
 
-      switch (sym.symbol->aclass ())
+      switch (sym.symbol->loc_class ())
 	{
 	case LOC_TYPEDEF:
 	  if (sym.symbol->type ()->code () == TYPE_CODE_TYPEDEF)
@@ -143,7 +143,7 @@ convert_one_symbol (compile_cplus_instance *instance,
 
 	    if (symbol_read_needs_frame (sym.symbol))
 	      {
-		frame = get_selected_frame (nullptr);
+		frame = get_selected_frame ();
 		if (frame == nullptr)
 		  error (_("Symbol \"%s\" cannot be used because "
 			   "there is no selected frame"),

@@ -1,6 +1,6 @@
 /* Python interface to blocks.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,8 +23,8 @@
 #include "python-internal.h"
 #include "objfiles.h"
 
-struct block_object {
-  PyObject_HEAD
+struct block_object : public PyObject
+{
   /* The GDB block structure that represents a frame's code block.  */
   const struct block *block;
   /* The backing object file.  There is no direct relationship in GDB
@@ -33,8 +33,10 @@ struct block_object {
   struct objfile *objfile;
 };
 
-struct block_syms_iterator_object {
-  PyObject_HEAD
+static_assert (gdb::is_python_allocatable_v<block_object>);
+
+struct block_syms_iterator_object : public PyObject
+{
   /* The block.  */
   const struct block *block;
   /* The iterator for that block.  */
@@ -46,6 +48,8 @@ struct block_syms_iterator_object {
      when an object file has been freed.  */
   block_object *source;
 };
+
+static_assert (gdb::is_python_allocatable_v<block_syms_iterator_object>);
 
 /* Require a valid block.  All access to block_object->block should be
    gated by this call.  */
@@ -72,8 +76,7 @@ struct block_syms_iterator_object {
       }									\
   } while (0)
 
-extern PyTypeObject block_syms_iterator_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("block_syms_iterator_object");
+extern PyTypeObject block_syms_iterator_object_type;
 static const registry<objfile>::key<htab, htab_deleter>
      blpy_objfile_data_key;
 
@@ -118,6 +121,43 @@ blpy_get_end (PyObject *self, void *closure)
   return gdb_py_object_from_ulongest (block->end ()).release ();
 }
 
+/* Implementation of gdb.Block.ranges.  */
+
+static PyObject *
+blpy_get_ranges (PyObject *self, void *closure)
+{
+  const struct block *block = nullptr;
+
+  BLPY_REQUIRE_VALID (self, block);
+
+  auto ranges = block->ranges ();
+
+  if (ranges.size () == 0)
+    return Py_BuildValue ("((" GDB_PY_LLU_ARG GDB_PY_LLU_ARG "))",
+			  (gdb_py_ulongest) block->start (),
+			  (gdb_py_ulongest) block->end ());
+  else
+    {
+      gdbpy_ref<> ranges_obj (PyTuple_New (ranges.size ()));
+      if (ranges_obj == nullptr)
+	return nullptr;
+
+      for (int i = 0; i < ranges.size (); i++)
+	{
+	  gdbpy_ref<> range_obj
+	    (Py_BuildValue ("(" GDB_PY_LLU_ARG GDB_PY_LLU_ARG ")",
+			    (gdb_py_ulongest) ranges[i].start (),
+			    (gdb_py_ulongest) ranges[i].end ()));
+	  if (range_obj == nullptr)
+	    return nullptr;
+
+	  PyTuple_SetItem (ranges_obj.get (), i, range_obj.release ());
+	}
+
+      return ranges_obj.release ();
+    }
+}
+
 static PyObject *
 blpy_get_function (PyObject *self, void *closure)
 {
@@ -128,9 +168,9 @@ blpy_get_function (PyObject *self, void *closure)
 
   sym = block->function ();
   if (sym)
-    return symbol_to_symbol_object (sym);
+    return symbol_to_symbol_object (sym).release ();
 
-  Py_RETURN_NONE;
+  return py_none ().release ();
 }
 
 static PyObject *
@@ -144,9 +184,40 @@ blpy_get_superblock (PyObject *self, void *closure)
 
   super_block = block->superblock ();
   if (super_block)
-    return block_to_block_object (super_block, self_obj->objfile);
+    return block_to_block_object (super_block, self_obj->objfile).release ();
 
-  Py_RETURN_NONE;
+  return py_none ().release ();
+}
+
+/* Implement gdb.Block.subblocks attribute.  Return a list of gdb.Block
+   objects that are direct children of this block.  */
+
+static PyObject *
+blpy_get_subblocks (PyObject *self, void *closure)
+{
+  const struct block *block;
+
+  BLPY_REQUIRE_VALID (self, block);
+
+  gdbpy_ref<> list (PyList_New (0));
+  if (list == nullptr)
+    return nullptr;
+
+  compunit_symtab *cu = block->global_block ()->compunit ();
+
+  for (const struct block *each : cu->blockvector ()->blocks ())
+    {
+      if (each->superblock () == block)
+	{
+	  gdbpy_ref<> item = block_to_block_object (each, cu->objfile ());
+
+	  if (item.get () == nullptr
+	      || PyList_Append (list.get (), item.get ()) == -1)
+	    return nullptr;
+	}
+    }
+
+  return list.release ();
 }
 
 /* Return the global block associated to this block.  */
@@ -162,9 +233,7 @@ blpy_get_global_block (PyObject *self, void *closure)
 
   global_block = block->global_block ();
 
-  return block_to_block_object (global_block,
-				self_obj->objfile);
-
+  return block_to_block_object (global_block, self_obj->objfile).release ();
 }
 
 /* Return the static block associated to this block.  Return None
@@ -180,11 +249,11 @@ blpy_get_static_block (PyObject *self, void *closure)
   BLPY_REQUIRE_VALID (self, block);
 
   if (block->superblock () == NULL)
-    Py_RETURN_NONE;
+    return py_none ().release ();
 
   static_block = block->static_block ();
 
-  return block_to_block_object (static_block, self_obj->objfile);
+  return block_to_block_object (static_block, self_obj->objfile).release ();
 }
 
 /* Implementation of gdb.Block.is_global (self) -> Boolean.
@@ -198,9 +267,9 @@ blpy_is_global (PyObject *self, void *closure)
   BLPY_REQUIRE_VALID (self, block);
 
   if (block->superblock ())
-    Py_RETURN_FALSE;
+    return py_false ().release ();
 
-  Py_RETURN_TRUE;
+  return py_true ().release ();
 }
 
 /* Implementation of gdb.Block.is_static (self) -> Boolean.
@@ -215,9 +284,9 @@ blpy_is_static (PyObject *self, void *closure)
 
   if (block->superblock () != NULL
      && block->superblock ()->superblock () == NULL)
-    Py_RETURN_TRUE;
+    return py_true ().release ();
 
-  Py_RETURN_FALSE;
+  return py_false ().release ();
 }
 
 /* Given a string, returns the gdb.Symbol representing that symbol in this
@@ -244,7 +313,7 @@ blpy_getitem (PyObject *self, PyObject *key)
   for (struct symbol *sym : block_iterator_range (block, &lookup_name))
     {
       /* Just stop at the first match */
-      return symbol_to_symbol_object (sym);
+      return symbol_to_symbol_object (sym).release ();
     }
 
   PyErr_SetObject (PyExc_KeyError, key);
@@ -303,7 +372,7 @@ blpy_dealloc (PyObject *obj)
 
 /* Create a new block object (gdb.Block) that encapsulates the struct
    block object from GDB.  */
-PyObject *
+gdbpy_ref<>
 block_to_block_object (const struct block *block, struct objfile *objfile)
 {
   htab_t table = blpy_objfile_data_key.get (objfile);
@@ -318,20 +387,19 @@ block_to_block_object (const struct block *block, struct objfile *objfile)
   block_object *result = (block_object *) htab_find_with_hash (table, block,
 							       hash);
   if (result != nullptr)
-    {
-      PyObject *py_result = (PyObject *) result;
-      Py_INCREF (py_result);
-      return py_result;
-    }
+    return gdbpy_ref<>::new_reference (result);
 
   result = PyObject_New (block_object, &block_object_type);
+  if (result == nullptr)
+    return nullptr;
+
   result->block = block;
   result->objfile = objfile;
 
   void **slot = htab_find_slot_with_hash (table, block, hash, INSERT);
   *slot = result;
 
-  return (PyObject *) result;
+  return gdbpy_ref<> (result);
 }
 
 /* Return struct block reference that is wrapped by this object.  */
@@ -379,7 +447,7 @@ blpy_block_syms_iternext (PyObject *self)
       return NULL;
     }
 
-  return symbol_to_symbol_object (sym);
+  return symbol_to_symbol_object (sym).release ();
 }
 
 static void
@@ -401,9 +469,9 @@ blpy_is_valid (PyObject *self, PyObject *args)
 
   block = block_object_to_block (self);
   if (block == NULL)
-    Py_RETURN_FALSE;
+    return py_false ().release ();
 
-  Py_RETURN_TRUE;
+  return py_true ().release ();
 }
 
 /* Implementation of gdb.BlockIterator.is_valid (self) -> Boolean.
@@ -416,9 +484,9 @@ blpy_iter_is_valid (PyObject *self, PyObject *args)
     (block_syms_iterator_object *) self;
 
   if (iter_obj->source->block == NULL)
-    Py_RETURN_FALSE;
+    return py_false ().release ();
 
-  Py_RETURN_TRUE;
+  return py_true ().release ();
 }
 
 /* __repr__ implementation for gdb.Block.  */
@@ -437,7 +505,13 @@ blpy_repr (PyObject *self)
   unsigned int written_symbols = 0;
   const int len = mdict_size (block->multidict ());
   static constexpr int SYMBOLS_TO_SHOW = 5;
-  for (struct symbol *symbol : block_iterator_range (block))
+
+  /* Don't use block_iterator_range here as that will find symbols through
+     included symtabs (for global and static blocks), while LEN only counts
+     symbols that are actually in BLOCK itself.  As this is really only for
+     basic debug to allow blocks to be identified, we limit ourselves to
+     just printing the symbols that are actually in BLOCK.  */
+  for (struct symbol *symbol : block->multidict_symbols ())
     {
       if (written_symbols == SYMBOLS_TO_SHOW)
 	{
@@ -452,7 +526,8 @@ blpy_repr (PyObject *self)
       if (++written_symbols < len)
 	str += ", ";
     }
-  return PyUnicode_FromFormat ("<%s %s {%s}>", Py_TYPE (self)->tp_name,
+  return PyUnicode_FromFormat ("<%s %s {%s}>",
+			       gdbpy_py_obj_tp_name (self).c_str (),
 			       name, str.c_str ());
 }
 
@@ -479,18 +554,15 @@ blpy_richcompare (PyObject *self, PyObject *other, int op)
 {
   if (!PyObject_TypeCheck (other, &block_object_type)
       || (op != Py_EQ && op != Py_NE))
-    {
-      Py_INCREF (Py_NotImplemented);
-      return Py_NotImplemented;
-    }
+    return py_notimplemented ().release ();
 
   bool expected = self == other;
   bool equal = op == Py_EQ;
   return PyBool_FromLong (equal == expected);
 }
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_blocks (void)
+static int
+gdbpy_initialize_blocks ()
 {
   block_object_type.tp_new = PyType_GenericNew;
   if (gdbpy_type_ready (&block_object_type) < 0)
@@ -529,6 +601,10 @@ static gdb_PyGetSetDef block_object_getset[] = {
     "Whether this block is a static block.", NULL },
   { "is_global", blpy_is_global, NULL,
     "Whether this block is a global block.", NULL },
+  { "subblocks", blpy_get_subblocks, nullptr,
+    "List of blocks contained in this block.", nullptr },
+  { "ranges", blpy_get_ranges, nullptr,
+    "List of address ranges for this block.", nullptr },
   { NULL }  /* Sentinel */
 };
 

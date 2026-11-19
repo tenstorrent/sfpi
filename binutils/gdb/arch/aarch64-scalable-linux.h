@@ -1,7 +1,7 @@
 /* Common AArch64 Linux arch-specific definitions for the scalable
    extensions: SVE and SME.
 
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -22,17 +22,6 @@
 #define GDB_ARCH_AARCH64_SCALABLE_LINUX_H
 
 #include "gdbsupport/common-regcache.h"
-
-/* Feature check for Scalable Matrix Extension.  */
-#ifndef HWCAP2_SME
-#define HWCAP2_SME (1 << 23)
-#endif
-
-/* Feature check for Scalable Matrix Extension 2.  */
-#ifndef HWCAP2_SME2
-#define HWCAP2_SME2   (1UL << 37)
-#define HWCAP2_SME2P1 (1UL << 38)
-#endif
 
 /* Streaming mode enabled/disabled bit.  */
 #define SVCR_SM_BIT (1 << 0)

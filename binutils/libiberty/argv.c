@@ -1,5 +1,5 @@
 /* Create and destroy argument vectors (argv's)
-   Copyright (C) 1992-2025 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
    Written by Fred Fish @ Cygnus Support
 
 This file is part of the libiberty library.
@@ -490,6 +490,81 @@ countargv (char * const *argv)
   for (argc = 0; argv[argc] != NULL; argc++)
     continue;
   return argc;
+}
+
+/*
+
+@deftypefn Extension {char *} expandargstr @
+  (const char *@var{progname}, const char *@var{val})
+
+Expand @var{val} as a response file via @code{expandargv} if it begins
+with @samp{@@}, using @var{progname} as @code{argv[0]}, and return the
+expanded option list as a shell-quoted string.  Returns a newly
+allocated string.
+
+@end deftypefn
+
+*/
+
+char *
+expandargstr (const char *progname, const char *val)
+{
+  int argc = 2;
+  char **argv;
+  char **orig;
+  size_t len;
+  char *buf;
+  char *p;
+  int i;
+
+  if (val[0] != '@')
+    return xstrdup (val);
+
+  argv = (char **) xcalloc (3, sizeof (char *));
+  orig = argv;
+  argv[0] = xstrdup (progname);
+  argv[1] = xstrdup (val);
+  argv[2] = NULL;
+  expandargv (&argc, &argv);
+  if (argv != orig)
+    freeargv (orig);
+
+  len = 1;
+  for (i = 1; argv[i] != NULL; i++)
+    {
+      const char *q;
+      if (i > 1)
+	len++;
+      len += 2;
+      for (q = argv[i]; *q; q++)
+	len += (*q == '\'') ? 4 : 1;
+    }
+
+  buf = (char *) xmalloc (len);
+  p = buf;
+  for (i = 1; argv[i] != NULL; i++)
+    {
+      const char *q;
+      if (i > 1)
+	*p++ = ' ';
+      *p++ = '\'';
+      for (q = argv[i]; *q; q++)
+	{
+	  if (*q == '\'')
+	    {
+	      *p++ = '\'';
+	      *p++ = '\\';
+	      *p++ = '\'';
+	      *p++ = '\'';
+	    }
+	  else
+	    *p++ = *q;
+	}
+      *p++ = '\'';
+    }
+  *p = '\0';
+  freeargv (argv);
+  return buf;
 }
 
 #ifdef MAIN

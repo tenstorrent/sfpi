@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ require allow_gdbserver_tests
 if { [istarget *-*-mingw*]
      || [istarget *-*-cygwin*] } {
     unsupported "gdbserver does not support --wrapper on this target (PR server/15967)"
-    return -1
+    return
 }
 
 save_vars { GDBFLAGS } {
@@ -37,7 +37,7 @@ save_vars { GDBFLAGS } {
     }
 
     if { [prepare_for_testing "failed to prepare" $testfile $srcfile debug] } {
-	return -1
+	return
     }
 }
 
@@ -57,4 +57,4 @@ gdb_breakpoint marker
 gdb_test "continue" "Breakpoint.* marker .*" "continue to marker"
 # Test env var TEST is correctly passed to the program through
 # --wrapper.
-gdb_test "print d" "\\$${decimal} = ${hex} \"1\".*"
+gdb_test "print d" "${::valnum_re} = ${hex} \"1\".*"

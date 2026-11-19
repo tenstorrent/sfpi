@@ -1,6 +1,6 @@
 /* TUI Interpreter definitions for GDB, the GNU debugger.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -40,7 +40,7 @@ public:
     : cli_interp_base (name)
   {}
 
-  void init (bool top_level) override;
+  void do_init (bool top_level) override;
   void resume () override;
   void suspend () override;
   void exec (const char *command_str) override;
@@ -63,7 +63,7 @@ tui_exit (void)
 /* These implement the TUI interpreter.  */
 
 void
-tui_interp::init (bool top_level)
+tui_interp::do_init (bool top_level)
 {
   /* Install exit handler to leave the screen in a good shape.  */
   atexit (tui_exit);
@@ -105,25 +105,10 @@ void
 tui_interp::resume ()
 {
   struct ui *ui = current_ui;
-  struct ui_file *stream;
-
-  /* gdb_setup_readline will change gdb_stdout.  If the TUI was
-     previously writing to gdb_stdout, then set it to the new
-     gdb_stdout afterwards.  */
-
-  stream = tui_old_uiout->set_stream (gdb_stdout);
-  if (stream != gdb_stdout)
-    {
-      tui_old_uiout->set_stream (stream);
-      stream = NULL;
-    }
 
   gdb_setup_readline (1);
 
   ui->input_handler = tui_command_line_handler;
-
-  if (stream != NULL)
-    tui_old_uiout->set_stream (gdb_stdout);
 
   if (tui_start_enabled)
     tui_enable ();
@@ -161,9 +146,7 @@ tui_interp_factory (const char *name)
   return new tui_interp (name);
 }
 
-void _initialize_tui_interp ();
-void
-_initialize_tui_interp ()
+INIT_GDB_FILE (tui_interp)
 {
   interp_factory_register (INTERP_TUI, tui_interp_factory);
 

@@ -1,4 +1,4 @@
-# Copyright 1992-2024 Free Software Foundation, Inc.
+# Copyright 1992-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ load_lib "cp-support.exp"
 standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug c++}]} {
-    return -1
+    return
 }
 
 proc test_ptype_of_classes {} {
@@ -176,22 +176,22 @@ proc test_virtual_calls {} {
     global gdb_prompt
     global nl
 
-    if [target_info exists gdb,cannot_call_functions] {
+    if {[target_info exists gdb,cannot_call_functions]} {
 	unsupported "this target can not call functions"
 	return 0
     }
 
-    gdb_test "print pAe->f()"   "\\$\[0-9\]+ = 20"
-    gdb_test "print pAa->f()"   "\\$\[0-9\]+ = 1"
-    gdb_test "print pDe->vg()"  "\\$\[0-9\]+ = 202"
-    gdb_test "print pADe->vg()" "\\$\[0-9\]+ = 202"
-    gdb_test "print pDd->vg()"  "\\$\[0-9\]+ = 101"
-    gdb_test "print pEe->vvb()" "\\$\[0-9\]+ = 411"
-    gdb_test "print pVB->vvb()" "\\$\[0-9\]+ = 407"
-    gdb_test "print pBe->vvb()" "\\$\[0-9\]+ = 411"
-    gdb_test "print pDe->vvb()" "\\$\[0-9\]+ = 411"
-    gdb_test "print pEe->vd()"  "\\$\[0-9\]+ = 282"
-    gdb_test "print pEe->fvb()" "\\$\[0-9\]+ = 311"
+    gdb_test "print pAe->f()"   "${::valnum_re} = 20"
+    gdb_test "print pAa->f()"   "${::valnum_re} = 1"
+    gdb_test "print pDe->vg()"  "${::valnum_re} = 202"
+    gdb_test "print pADe->vg()" "${::valnum_re} = 202"
+    gdb_test "print pDd->vg()"  "${::valnum_re} = 101"
+    gdb_test "print pEe->vvb()" "${::valnum_re} = 411"
+    gdb_test "print pVB->vvb()" "${::valnum_re} = 407"
+    gdb_test "print pBe->vvb()" "${::valnum_re} = 411"
+    gdb_test "print pDe->vvb()" "${::valnum_re} = 411"
+    gdb_test "print pEe->vd()"  "${::valnum_re} = 282"
+    gdb_test "print pEe->fvb()" "${::valnum_re} = 311"
 
     # more recent results:
     # wrong value "202"
@@ -204,10 +204,10 @@ proc test_virtual_calls {} {
     # -- chastain 2003-12-31
 
     gdb_test_multiple "print pEe->D::vg()" "print pEe->D::vg()" {
-	-re "\\$\[0-9]+ = 102$nl$gdb_prompt $" {
+	-re "${::valnum_re} = 102$nl$gdb_prompt $" {
 	    pass "print pEe->D::vg()"
 	}
-	-re "\\$\[0-9]+ = 202$nl$gdb_prompt $" {
+	-re "${::valnum_re} = 202$nl$gdb_prompt $" {
 	    # To get this result, we have called pEe->*(&D::vg) ().
 	    # That's how GDB interprets this, but it's wrong; in fact
 	    # the explicit D:: means to bypass virtual function lookup,
@@ -241,8 +241,6 @@ proc make_one_vtable_result {name args} {
     if {$count > 0} {
 	set result [string range $result 0 end-[string length $nls]]
     }
-
-    verbose -log "APB: result: '$result'"
 
     return $result
 }

@@ -1,5 +1,5 @@
 /* Generic BFD library interface and support routines.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -280,8 +280,14 @@ CODE_FRAGMENT
 .  {* Have archive map.  *}
 .  unsigned int has_armap : 1;
 .
+.  {* Accept a mapless archive for link.  *}
+.  unsigned int link_mapless : 1;
+.
 .  {* Set if this is a thin archive.  *}
 .  unsigned int is_thin_archive : 1;
+.
+.  {* Set if this is a collection of files pretending to be an archive.  *}
+.  unsigned int is_fake_archive : 1;
 .
 .  {* Set if this archive should not cache element positions.  *}
 .  unsigned int no_element_cache : 1;
@@ -323,12 +329,17 @@ CODE_FRAGMENT
 .     contained in an archive.  *}
 .  ufile_ptr origin;
 .
-.  {* The origin in the archive of the proxy entry.  This will
-.     normally be the same as origin, except for thin archives,
-.     when it will contain the current offset of the proxy in the
-.     thin archive rather than the offset of the bfd in its actual
-.     container.  *}
-.  ufile_ptr proxy_origin;
+.  {* A reference in the archive for the proxy entry as follows:
+.
+.     1. For regular archives this will be the same as origin.
+.
+.     2. For thin archives it will contain the current offset
+.	 of the proxy in the thin archive rather than the offset
+.	 of the bfd in its actual container.
+.
+.     3. For fake archives it will contain the next archive member's
+.	 BFD reference or a NULL pointer if this is the last member.  *}
+.  ufile_ptr_or_bfd proxy_handle;
 .
 .  {* A hash table for section names.  *}
 .  struct bfd_hash_table section_htab;
@@ -470,6 +481,16 @@ EXTERNAL
 .  return abfd->lto_type;
 .}
 .
+.static inline bool
+.bfd_lto_slim_symbol_p (const bfd *abfd, const char *name)
+.{
+.  return (bfd_get_lto_type (abfd) != lto_non_ir_object
+.	   && name != NULL
+.	   && name[0] == '_'
+.	   && name[1] == '_'
+.	   && strcmp (name + (name[2] == '_'), "__gnu_lto_slim") == 0);
+.}
+.
 .static inline flagword
 .bfd_get_file_flags (const bfd *abfd)
 .{
@@ -513,9 +534,21 @@ EXTERNAL
 .}
 .
 .static inline bool
+.bfd_link_mapless (const bfd *abfd)
+.{
+.  return abfd->link_mapless;
+.}
+.
+.static inline bool
 .bfd_is_thin_archive (const bfd *abfd)
 .{
 .  return abfd->is_thin_archive;
+.}
+.
+.static inline bool
+.bfd_is_fake_archive (const bfd *abfd)
+.{
+.  return abfd->is_fake_archive;
 .}
 .
 .static inline void *
@@ -533,9 +566,21 @@ EXTERNAL
 .}
 .
 .static inline void
+.bfd_set_link_mapless (bfd *abfd, bool val)
+.{
+.  abfd->link_mapless = val;
+.}
+.
+.static inline void
 .bfd_set_thin_archive (bfd *abfd, bool val)
 .{
 .  abfd->is_thin_archive = val;
+.}
+.
+.static inline void
+.bfd_set_fake_archive (bfd *abfd, bool val)
+.{
+.  abfd->is_fake_archive = val;
 .}
 .
 .static inline void
@@ -579,7 +624,8 @@ EXTERNAL
 .static inline bfd_size_type
 .bfd_get_section_limit_octets (const bfd *abfd, const asection *sec)
 .{
-.  if (abfd->direction != write_direction && sec->rawsize != 0)
+.  if (abfd->format != bfd_core && abfd->direction != write_direction
+.      && sec->rawsize != 0)
 .    return sec->rawsize;
 .  return sec->size;
 .}
@@ -598,7 +644,8 @@ EXTERNAL
 .static inline bfd_size_type
 .bfd_get_section_alloc_size (const bfd *abfd, const asection *sec)
 .{
-.  if (abfd->direction != write_direction && sec->rawsize > sec->size)
+.  if (abfd->format != bfd_core && abfd->direction != write_direction
+.      && sec->rawsize > sec->size)
 .    return sec->rawsize;
 .  return sec->size;
 .}
@@ -709,6 +756,12 @@ EXTERNAL
 #define EXIT_FAILURE 1
 #endif
 
+#ifdef TLS
+#define THREAD_LOCAL TLS
+#else
+#define THREAD_LOCAL
+#endif
+
 
 /* provide storage for subsystem, stack and heap data which may have been
    passed in on the command line.  Ld puts this data into a bfd_link_info
@@ -782,7 +835,7 @@ const char *const bfd_errmsgs[] =
   N_("invalid operation"),
   N_("memory exhausted"),
   N_("no symbols"),
-  N_("archive has no index; run ranlib to add one"),
+  N_("archive has no index; run ranlib to add one or use --link-mapless"),
   N_("no more archived files"),
   N_("malformed archive"),
   N_("DSO missing from command line"),
@@ -799,8 +852,8 @@ const char *const bfd_errmsgs[] =
   N_("#<invalid error code>")
 };
 
-static TLS bfd_error_type bfd_error;
-static TLS char *_bfd_error_buf;
+static THREAD_LOCAL bfd_error_type bfd_error;
+static THREAD_LOCAL char *_bfd_error_buf;
 
 /* Free any data associated with the BFD error.  */
 
@@ -1044,7 +1097,7 @@ _bfd_doprnt (bfd_print_callback print, void *stream, const char *format,
       if (*ptr != '%')
 	{
 	  /* While we have regular characters, print them.  */
-	  char *end = strchr (ptr, '%');
+	  const char *end = strchr (ptr, '%');
 	  if (end != NULL)
 	    result = print (stream, "%.*s", (int) (end - ptr), ptr);
 	  else
@@ -1679,7 +1732,7 @@ _bfd_per_xvec_warn (struct per_xvec_messages *messages, size_t alloc)
    error_handler_sprintf; when NULL, _bfd_error_internal will be used
    instead.  */
 
-static TLS struct per_xvec_messages *error_handler_messages;
+static THREAD_LOCAL struct per_xvec_messages *error_handler_messages;
 
 /* A special value for error_handler_messages that indicates that the
    error should simply be ignored.  */
@@ -2012,18 +2065,21 @@ DESCRIPTION
 	Initialize BFD threading.  The functions passed in will be
 	used to lock and unlock global data structures.  This may only
 	be called a single time in a given process.  Returns true on
-	success and false on error.  DATA is passed verbatim to the
-	lock and unlock functions.  The lock and unlock functions
-	should return true on success, or set the BFD error and return
-	false on failure.  Note also that the lock must be a recursive
-	lock: BFD may attempt to acquire the lock when it is already
-	held by the current thread.
+	success and false on error.  On error, the caller should
+	assume that BFD cannot be used by multiple threads.  DATA is
+	passed verbatim to the lock and unlock functions.  The lock
+	and unlock functions should return true on success, or set the
+	BFD error and return false on failure.  Note also that the
+	lock must be a recursive lock: BFD may attempt to acquire the
+	lock when it is already held by the current thread.
 */
 
 bool
-bfd_thread_init (bfd_lock_unlock_fn_type lock, bfd_lock_unlock_fn_type unlock,
-		 void *data)
+bfd_thread_init (bfd_lock_unlock_fn_type lock ATTRIBUTE_UNUSED,
+		 bfd_lock_unlock_fn_type unlock ATTRIBUTE_UNUSED,
+		 void *data ATTRIBUTE_UNUSED)
 {
+#ifdef TLS
   /* Both functions must be set, and this cannot have been called
      before.  */
   if (lock == NULL || unlock == NULL || unlock_fn != NULL)
@@ -2036,6 +2092,12 @@ bfd_thread_init (bfd_lock_unlock_fn_type lock, bfd_lock_unlock_fn_type unlock,
   unlock_fn = unlock;
   lock_data = data;
   return true;
+#else /* TLS */
+  /* If thread-local storage wasn't found by configure, we disallow
+     threaded operation.  */
+  bfd_set_error (bfd_error_invalid_operation);
+  return false;
+#endif /* TLS */
 }
 
 /*
@@ -2175,19 +2237,21 @@ bfd_canonicalize_reloc (bfd *abfd,
 
 /*
 FUNCTION
-	bfd_set_reloc
+	bfd_finalize_section_relocs
 
 SYNOPSIS
-	void bfd_set_reloc
+	bool bfd_finalize_section_relocs
 	  (bfd *abfd, asection *sec, arelent **rel, unsigned int count);
 
 DESCRIPTION
-	Set the relocation pointer and count within
-	section @var{sec} to the values @var{rel} and @var{count}.
-	The argument @var{abfd} is ignored.
+	Set the relocation pointer and count within section @var{sec}
+	to the values @var{rel} and @var{count}, and take any other
+	actions required at the conclusion of section relocation
+	processing.
 
-.#define bfd_set_reloc(abfd, asect, location, count) \
-.	BFD_SEND (abfd, _bfd_set_reloc, (abfd, asect, location, count))
+.#define bfd_finalize_section_relocs(abfd, asect, location, count) \
+.	BFD_SEND (abfd, _bfd_finalize_section_relocs, \
+.		  (abfd, asect, location, count))
 */
 
 /*
@@ -2621,9 +2685,6 @@ DESCRIPTION
 .#define bfd_lookup_section_flags(link_info, flag_info, section) \
 .	BFD_SEND (abfd, _bfd_lookup_section_flags, (link_info, flag_info, section))
 .
-.#define bfd_merge_sections(abfd, link_info) \
-.	BFD_SEND (abfd, _bfd_merge_sections, (abfd, link_info))
-.
 .#define bfd_is_group_section(abfd, sec) \
 .	BFD_SEND (abfd, _bfd_is_group_section, (abfd, sec))
 .
@@ -2774,7 +2835,7 @@ is32bit (bfd *abfd)
 {
   if (bfd_get_flavour (abfd) == bfd_target_elf_flavour)
     {
-      const struct elf_backend_data *bed = get_elf_backend_data (abfd);
+      elf_backend_data *bed = get_elf_backend_data (abfd);
       return bed->s->elfclass == ELFCLASS32;
     }
 
@@ -2926,9 +2987,7 @@ bfd_emul_get_commonpagesize (const char *emul)
   if (target != NULL
       && target->flavour == bfd_target_elf_flavour)
     {
-      const struct elf_backend_data *bed;
-
-      bed = xvec_get_elf_backend_data (target);
+      elf_backend_data *bed = xvec_get_elf_backend_data (target);
       return bed->commonpagesize;
     }
   return 0;
@@ -3067,7 +3126,7 @@ bfd_group_signature (asection *group, asymbol **isympp)
   ghdr = &elf_section_data (group)->this_hdr;
   if (ghdr->sh_link == elf_onesymtab (abfd))
     {
-      const struct elf_backend_data *bed = get_elf_backend_data (abfd);
+      elf_backend_data *bed = get_elf_backend_data (abfd);
       Elf_Internal_Shdr *symhdr = &elf_symtab_hdr (abfd);
 
       if (ghdr->sh_info > 0

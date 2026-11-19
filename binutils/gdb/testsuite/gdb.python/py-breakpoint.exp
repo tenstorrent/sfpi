@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2024 Free Software Foundation, Inc.
+# Copyright (C) 2010-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ standard_testfile
 set options {debug c++}
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} ${options}] } {
-    return -1
+    return
 }
 
 set past_throw_catch_line [gdb_get_line_number "Past throw-catch."]
@@ -629,7 +629,7 @@ proc_with_prefix test_bkpt_address {} {
 
 proc_with_prefix test_bkpt_pending {} {
     delete_breakpoints
-    gdb_breakpoint "nosuchfunction" allow-pending
+    gdb_breakpoint "nosuchfunction" -allow-pending
     gdb_test "python print (gdb.breakpoints()\[0\].pending)" "True" \
 	"Check pending status of pending breakpoint"
 }
@@ -707,7 +707,7 @@ proc_with_prefix test_bkpt_explicit_loc {} {
 
     delete_breakpoints
     gdb_test "python bp1 = gdb.Breakpoint (line=bp1)" \
-	"RuntimeError.*: Line keyword should be an integer or a string.*" \
+	"RuntimeError.*: Line keyword should be an integer or a string\\.\r\n.*" \
 	"set explicit breakpoint by invalid line type"
 
     delete_breakpoints

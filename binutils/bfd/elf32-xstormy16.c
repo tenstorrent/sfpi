@@ -1,5 +1,5 @@
 /* Xstormy16-specific support for 32-bit ELF.
-   Copyright (C) 2000-2025 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -44,7 +44,8 @@ xstormy16_elf_24_reloc (bfd *abfd,
       return bfd_reloc_ok;
     }
 
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
     return bfd_reloc_outofrange;
 
   if (bfd_is_com_section (symbol->section))
@@ -422,7 +423,7 @@ xstormy16_elf_check_relocs (bfd *abfd,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata(abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
   local_plt_offsets = elf_local_got_offsets (abfd);
   dynobj = elf_hash_table(info)->dynobj;
@@ -620,7 +621,7 @@ xstormy16_elf_relax_section (bfd *dynobj,
       if (! local_plt_offsets)
 	continue;
 
-      symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (ibfd);
       if (symtab_hdr->sh_info != 0)
 	{
 	  isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
@@ -687,7 +688,7 @@ xstormy16_elf_relax_section (bfd *dynobj,
       for (ibfd = info->input_bfds; ibfd ; ibfd = ibfd->link.next)
 	{
 	  bfd_vma *local_plt_offsets = elf_local_got_offsets (ibfd);
-	  unsigned int nlocals = elf_tdata (ibfd)->symtab_hdr.sh_info;
+	  unsigned int nlocals = elf_symtab_hdr (ibfd).sh_info;
 	  unsigned int idx;
 
 	  if (! local_plt_offsets)
@@ -706,8 +707,7 @@ xstormy16_elf_relax_section (bfd *dynobj,
 }
 
 static bool
-xstormy16_elf_early_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
-				   struct bfd_link_info *info)
+xstormy16_elf_early_size_sections (struct bfd_link_info *info)
 {
   bfd *dynobj;
   asection *splt;
@@ -725,6 +725,7 @@ xstormy16_elf_early_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
   splt->contents = bfd_zalloc (dynobj, splt->size);
   if (splt->contents == NULL)
     return false;
+  splt->alloced = 1;
 
   return true;
 }
@@ -760,8 +761,7 @@ xstormy16_elf_early_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
    accordingly.  */
 
 static int
-xstormy16_elf_relocate_section (bfd *			output_bfd ATTRIBUTE_UNUSED,
-				struct bfd_link_info *	info,
+xstormy16_elf_relocate_section (struct bfd_link_info *	info,
 				bfd *			input_bfd,
 				asection *		input_section,
 				bfd_byte *		contents,
@@ -775,7 +775,7 @@ xstormy16_elf_relocate_section (bfd *			output_bfd ATTRIBUTE_UNUSED,
   Elf_Internal_Rela *		relend;
   asection *splt;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -809,7 +809,8 @@ xstormy16_elf_relocate_section (bfd *			output_bfd ATTRIBUTE_UNUSED,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -823,7 +824,8 @@ xstormy16_elf_relocate_section (bfd *			output_bfd ATTRIBUTE_UNUSED,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_XSTORMY16_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -955,8 +957,8 @@ xstormy16_elf_relocate_section (bfd *			output_bfd ATTRIBUTE_UNUSED,
 /* This must exist if dynobj is ever set.  */
 
 static bool
-xstormy16_elf_finish_dynamic_sections (bfd *abfd ATTRIBUTE_UNUSED,
-				       struct bfd_link_info *info)
+xstormy16_elf_finish_dynamic_sections (struct bfd_link_info *info,
+				       bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   bfd *dynobj = elf_hash_table (info)->dynobj;
   asection *splt = elf_hash_table (info)->splt;
@@ -986,19 +988,19 @@ xstormy16_elf_finish_dynamic_sections (bfd *abfd ATTRIBUTE_UNUSED,
 static asection *
 xstormy16_elf_gc_mark_hook (asection *sec,
 			    struct bfd_link_info *info,
-			    Elf_Internal_Rela *rel,
+			    struct elf_reloc_cookie *cookie,
 			    struct elf_link_hash_entry *h,
-			    Elf_Internal_Sym *sym)
+			    unsigned int symndx)
 {
   if (h != NULL)
-    switch (ELF32_R_TYPE (rel->r_info))
+    switch (ELF32_R_TYPE (cookie->rel->r_info))
       {
       case R_XSTORMY16_GNU_VTINHERIT:
       case R_XSTORMY16_GNU_VTENTRY:
 	return NULL;
       }
 
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
+  return _bfd_elf_gc_mark_hook (sec, info, cookie, h, symndx);
 }
 
 #define ELF_ARCH		bfd_arch_xstormy16

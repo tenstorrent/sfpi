@@ -1,5 +1,5 @@
 /* tc-pj.c -- Assemble code for Pico Java
-   Copyright (C) 1999-2025 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -127,12 +127,12 @@ c_to_r (int x)
     case O_8:
       return BFD_RELOC_8;
     case O_R16:
-      return BFD_RELOC_PJ_CODE_REL16;
+      return BFD_RELOC_16_PCREL;
     case O_U16:
     case O_16:
       return BFD_RELOC_PJ_CODE_DIR16;
     case O_R32:
-      return BFD_RELOC_PJ_CODE_REL32;
+      return BFD_RELOC_32_PCREL;
     case O_32:
       return BFD_RELOC_PJ_CODE_DIR32;
     }
@@ -236,13 +236,13 @@ md_assemble (char *str)
   int nlen = 0;
 
   /* Drop leading whitespace.  */
-  while (*str == ' ')
+  while (is_whitespace (*str))
     str++;
 
   /* Find the op code end.  */
   op_start = str;
   for (op_end = str;
-       *op_end && !is_end_of_line[*op_end & 0xff] && *op_end != ' ';
+       !is_end_of_stmt (*op_end) && !is_whitespace (*op_end);
        op_end++)
     nlen++;
 
@@ -252,7 +252,7 @@ md_assemble (char *str)
   if (nlen == 0)
     as_bad (_("can't find opcode "));
 
-  opcode = (pj_opc_info_t *) str_hash_find (opcode_hash_control, op_start);
+  opcode = str_hash_find (opcode_hash_control, op_start);
   *op_end = pend;
 
   if (opcode == NULL)
@@ -301,7 +301,7 @@ md_assemble (char *str)
 	  pending_reloc = 0;
 	}
 
-      while (ISSPACE (*op_end))
+      while (is_whitespace (*op_end))
 	op_end++;
 
       if (*op_end != 0)
@@ -375,7 +375,7 @@ md_apply_fix (fixS *fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)
       fixP->fx_done = 0;
       return;
 
-    case BFD_RELOC_PJ_CODE_REL16:
+    case BFD_RELOC_16_PCREL:
       if (val < -0x8000 || val >= 0x7fff)
 	as_bad_where (fixP->fx_file, fixP->fx_line, _("pcrel too far"));
       buf[0] |= (val >> 8) & 0xff;
@@ -404,7 +404,7 @@ md_apply_fix (fixS *fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)
       break;
 
     case BFD_RELOC_PJ_CODE_DIR32:
-    case BFD_RELOC_PJ_CODE_REL32:
+    case BFD_RELOC_32_PCREL:
       *buf++ = val >> 24;
       *buf++ = val >> 16;
       *buf++ = val >> 8;

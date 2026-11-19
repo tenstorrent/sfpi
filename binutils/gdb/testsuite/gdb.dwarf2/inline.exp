@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,9 @@
 
 standard_testfile .c
 
-if [prepare_for_testing "failed to prepare" $testfile $srcfile \
-	{debug nowarnings}] {
-    return -1
+if {[prepare_for_testing "failed to prepare" $testfile $srcfile \
+	 {debug nowarnings}]} {
+    return
 }
 
 set cmd "ptype main"

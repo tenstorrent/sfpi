@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,39 +28,38 @@ require dwarf2_support
 
 if  {[gdb_compile ${srcdir}/${subdir}/${srcfile} ${binfile}1.o \
 	  object {debug nowarnings optimize=-O0}] != ""} {
-    return -1
+    return
 }
 
 # Compile .s files without debug information.
 if  {[gdb_compile ${srcdir}/${subdir}/$asm_file0 ${binfile}2.o \
 	  object {nodebug}] != ""} {
-    return -1
+    return
 }
 if  {[gdb_compile ${srcdir}/${subdir}/$asm_file1 ${binfile}3.o \
 	  object {nodebug}] != ""} {
-    return -1
+    return
 }
 
 if  {[gdb_compile [list ${binfile}1.o ${binfile}2.o ${binfile}3.o] \
 	  "${binfile}" executable {}] != ""} {
-    return -1
+    return
 }
 
 clean_restart $execfile
 
 gdb_test "break a/$asm_file0:func" \
-    "Breakpoint 1 at 0x\[0-9a-fA-F\]+: file .*a/$asm_file0, line 7\\\." \
+    "Breakpoint 1 at ${::hex}: file .*a/$asm_file0, line 7\\\." \
     "set a break-point at a global function only for a selected ASM file."
 
 gdb_test "delete 1"
 
 gdb_test "break b/$asm_file0:func" \
-    "Breakpoint 2 at 0x\[0-9a-fA-F\]+: file .*b/$asm_file0, line 7\\\." \
+    "Breakpoint 2 at ${::hex}: file .*b/$asm_file0, line 7\\\." \
     "set a break-point at a function only for a selected ASM file."
 
 gdb_test "delete 2"
 
 gdb_test "break $asm_file0:func" \
-    "Breakpoint 3 at 0x\[0-9a-fA-F\]+: .*$asm_file0.*(2 locations).*" \
+    "Breakpoint 3 at ${::hex}: .*$asm_file0.*(2 locations).*" \
     "set a break-point at function in all instances for a selected ASM file."
-

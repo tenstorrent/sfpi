@@ -1,6 +1,6 @@
 /* Target-dependent code for GNU/Linux, architecture independent.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -22,35 +22,14 @@
 
 #include "bfd.h"
 #include "displaced-stepping.h"
+#include "solib.h"
 
 struct inferior;
 struct regcache;
 
-/* Enum used to define the extra fields of the siginfo type used by an
-   architecture.  */
-enum linux_siginfo_extra_field_values
-{
-  /* Add bound fields into the segmentation fault field.  */
-  LINUX_SIGINFO_FIELD_ADDR_BND = 1
-};
-
-/* Defines a type for the values defined in linux_siginfo_extra_field_values.  */
-DEF_ENUM_FLAGS_TYPE (enum linux_siginfo_extra_field_values,
-		     linux_siginfo_extra_fields);
-
-/* This function is suitable for architectures that
-   extend/override the standard siginfo in a specific way.  */
-struct type *linux_get_siginfo_type_with_fields (struct gdbarch *gdbarch,
-						 linux_siginfo_extra_fields);
-
 /* Return true if ADDRESS is within the boundaries of a page mapped with
    memory tagging protection.  */
 bool linux_address_in_memtag_page (CORE_ADDR address);
-
-typedef char *(*linux_collect_thread_registers_ftype) (const struct regcache *,
-						       ptid_t,
-						       bfd *, char *, int *,
-						       enum gdb_signal);
 
 extern enum gdb_signal linux_gdb_signal_from_target (struct gdbarch *gdbarch,
 						     int signal);
@@ -88,7 +67,7 @@ extern void linux_displaced_step_restore_all_in_ptid (inferior *parent_inf,
 extern void linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch,
 			    int num_disp_step_buffers);
 
-extern int linux_is_uclinux (void);
+extern bool linux_is_uclinux ();
 
 /* Fetch the AT_HWCAP entry from auxv data AUXV.  Use TARGET and GDBARCH to
    parse auxv entries.
@@ -112,9 +91,11 @@ extern CORE_ADDR linux_get_hwcap2 (const std::optional<gdb::byte_vector> &auxv,
 
 extern CORE_ADDR linux_get_hwcap2 ();
 
-/* Fetch (and possibly build) an appropriate `struct link_map_offsets'
-   for ILP32 and LP64 Linux systems.  */
-extern struct link_map_offsets *linux_ilp32_fetch_link_map_offsets ();
-extern struct link_map_offsets *linux_lp64_fetch_link_map_offsets ();
+/* Returns true if ADDR belongs to a shadow stack memory range.  If this
+   is the case, assign the shadow stack memory range to RANGE
+   [start_address, end_address).  */
+
+extern bool linux_address_in_shadow_stack_mem_range
+  (CORE_ADDR addr, std::pair<CORE_ADDR, CORE_ADDR> *range);
 
 #endif /* GDB_LINUX_TDEP_H */

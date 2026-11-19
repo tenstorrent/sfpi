@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ require {!target_info exists gdb,nointerrupts}
 standard_testfile
 
 if {[build_executable "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 # See intro.
@@ -118,10 +118,10 @@ proc do_test {} {
 # "attach".
 
 with_test_prefix "run" {
-    clean_restart $binfile
+    clean_restart $testfile
 
     if {![runto_main]} {
-	return -1
+	return
     }
 
     do_test
@@ -129,7 +129,7 @@ with_test_prefix "run" {
 
 with_test_prefix "attach" {
     if {[can_spawn_for_attach]} {
-	clean_restart $binfile
+	clean_restart $testfile
 
 	set test_spawn_id [spawn_wait_for_attach $binfile]
 	set testpid [spawn_id_get_pid $test_spawn_id]

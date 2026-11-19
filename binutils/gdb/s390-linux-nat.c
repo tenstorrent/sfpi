@@ -1,5 +1,5 @@
 /* S390 native-dependent code for GDB, the GNU debugger.
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    Contributed by D.J. Barrow (djbarrow@de.ibm.com,barrow_dj@yahoo.com)
    for IBM Deutschland Entwicklung GmbH, IBM Corporation.
@@ -822,25 +822,21 @@ s390_linux_nat_target::low_delete_thread (struct arch_lwp_info *arch_lwp)
 
 /* Iterator callback for s390_refresh_per_info.  */
 
-static int
+static void
 s390_refresh_per_info_cb (struct lwp_info *lp)
 {
   s390_mark_per_info_changed (lp);
 
   if (!lwp_is_stopped (lp))
     linux_stop_lwp (lp);
-  return 0;
 }
 
 /* Make sure that threads are stopped and mark PER info as changed.  */
 
-static int
+static void
 s390_refresh_per_info (void)
 {
-  ptid_t pid_ptid = ptid_t (current_lwp_ptid ().pid ());
-
-  iterate_over_lwps (pid_ptid, s390_refresh_per_info_cb);
-  return 0;
+  for_each_lwp (current_lwp_ptid ().pid (), s390_refresh_per_info_cb);
 }
 
 int
@@ -856,7 +852,8 @@ s390_linux_nat_target::insert_watchpoint (CORE_ADDR addr, int len,
   area.hi_addr = addr + len - 1;
   state->watch_areas.push_back (area);
 
-  return s390_refresh_per_info ();
+  s390_refresh_per_info ();
+  return 0;
 }
 
 int
@@ -874,7 +871,8 @@ s390_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
       if (area.lo_addr == addr && area.hi_addr == addr + len - 1)
 	{
 	  unordered_remove (state->watch_areas, ix);
-	  return s390_refresh_per_info ();
+	  s390_refresh_per_info ();
+	  return 0;
 	}
     }
 
@@ -908,7 +906,8 @@ s390_linux_nat_target::insert_hw_breakpoint (struct gdbarch *gdbarch,
   state = s390_get_debug_reg_state (inferior_ptid.pid ());
   state->break_areas.push_back (area);
 
-  return s390_refresh_per_info ();
+  s390_refresh_per_info ();
+  return 0;
 }
 
 /* Implement the "remove_hw_breakpoint" target_ops method.  */
@@ -927,7 +926,8 @@ s390_linux_nat_target::remove_hw_breakpoint (struct gdbarch *gdbarch,
       if (area.lo_addr == bp_tgt->placed_address)
 	{
 	  unordered_remove (state->break_areas, ix);
-	  return s390_refresh_per_info ();
+	  s390_refresh_per_info ();
+	  return 0;
 	}
     }
 
@@ -1029,7 +1029,7 @@ s390_linux_nat_target::read_description ()
 	      have_regset_tdb ? tdesc_s390x_te_linux64 :
 	      have_regset_system_call ? tdesc_s390x_linux64v2 :
 	      have_regset_last_break ? tdesc_s390x_linux64v1 :
-	      tdesc_s390x_linux64);
+	      tdesc_s390x_linux64).get ();
 
     if (hwcap & HWCAP_S390_HIGH_GPRS)
       return (have_regset_gs ? tdesc_s390_gs_linux64 :
@@ -1039,7 +1039,7 @@ s390_linux_nat_target::read_description ()
 	      have_regset_tdb ? tdesc_s390_te_linux64 :
 	      have_regset_system_call ? tdesc_s390_linux64v2 :
 	      have_regset_last_break ? tdesc_s390_linux64v1 :
-	      tdesc_s390_linux64);
+	      tdesc_s390_linux64).get ();
   }
 #endif
 
@@ -1048,12 +1048,10 @@ s390_linux_nat_target::read_description ()
      mode, report s390 architecture with 32-bit GPRs.  */
   return (have_regset_system_call? tdesc_s390_linux32v2 :
 	  have_regset_last_break? tdesc_s390_linux32v1 :
-	  tdesc_s390_linux32);
+	  tdesc_s390_linux32).get ();
 }
 
-void _initialize_s390_nat ();
-void
-_initialize_s390_nat ()
+INIT_GDB_FILE (s390_nat)
 {
   /* Register the target.  */
   linux_target = &the_s390_linux_nat_target;

@@ -1,6 +1,6 @@
 /* Definitions for dealing with stack frames, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -95,7 +95,7 @@ struct frame_id
   CORE_ADDR special_addr;
 
   /* Flags to indicate the above fields have valid contents.  */
-  ENUM_BITFIELD(frame_id_stack_status) stack_status : 3;
+  frame_id_stack_status stack_status : 3;
   unsigned int code_addr_p : 1;
   unsigned int special_addr_p : 1;
 

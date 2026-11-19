@@ -1,4 +1,4 @@
-/* Copyright (C) 1986-2024 Free Software Foundation, Inc.
+/* Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -32,9 +32,9 @@ data type.  Use operator delete instead.");
 
   if (ptr != NULL)
 #ifdef GNULIB_NAMESPACE
-    GNULIB_NAMESPACE::free (ptr);	/* ARI: free */
+    GNULIB_NAMESPACE::free (ptr);
 #else
-    free (ptr);				/* ARI: free */
+    free (ptr);
 #endif
 }
 

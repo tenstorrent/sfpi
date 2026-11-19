@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Free Software Foundation, Inc.
+# Copyright (C) 2021-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,9 +46,6 @@ class EventWindow:
         self._win.write("Hello world...")
 
     def close(self):
-        global cleanup_properly
-        global titles_at_the_close
-
         # Ensure that window properties can be read within the close method.
         titles_at_the_close[self._win.title] = dict(
             width=self._win.width, height=self._win.height
@@ -62,7 +59,7 @@ class EventWindow:
 
         if cleanup_properly:
             # Disconnect the listeners and delete the lambda functions.
-            # This removes cyclic references to SELF, and so alows SELF to
+            # This removes cyclic references to SELF, and so allows SELF to
             # be deleted.
             gdb.events.stop.disconnect(self._stop_listener)
             gdb.events.exited.disconnect(self._exit_listener)
@@ -70,9 +67,6 @@ class EventWindow:
             self._exit_listener = None
 
     def _event(self, type, event):
-        global perform_valid_check
-        global update_title
-
         self._count += 1
         self._events.insert(0, type)
         if not perform_valid_check or self._win.is_valid():
@@ -83,7 +77,6 @@ class EventWindow:
 
     def render(self):
         self._win.erase()
-        w = self._win.width
         h = self._win.height
         for i in range(min(h, len(self._events))):
             self._win.write(self._events[i] + "\n")

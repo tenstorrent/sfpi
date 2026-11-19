@@ -1,4 +1,4 @@
-#   Copyright 1998-2024 Free Software Foundation, Inc.
+#   Copyright 1998-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if {$baseline == -1} {
     return
 }
 
-set testline1 [expr $baseline + 7]
+set testline1 [expr {$baseline + 7}]
 
 #
 # test actions command
@@ -55,7 +55,7 @@ if {$trcpt1 <= 0 || $trcpt2 <= 0 || $trcpt3 <= 0} {
 # 5.1 actions of specified tracepoint
 
 gdb_test_multiple "info tracepoints" "5.1a: set three tracepoints, no actions" {
-    -re "Actions for tracepoint \[0-9\]+:.*$gdb_prompt $" {
+    -re "Actions for tracepoint ${::decimal}:.*$gdb_prompt $" {
 	fail "5.1a: testsuite failure (tracepoint already has action)!"
     }
     -re "No tracepoints.*$gdb_prompt $" {
@@ -73,12 +73,12 @@ gdb_trace_setactions "5.1b: set actions for first tracepoint" \
 gdb_test "info tracepoints" \
     [multi_line \
 	 "Num     Type\[ \]+Disp Enb Address\[ \]+What\\s*" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_char_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+not installed on target"] \
     "5.1c: verify actions set for first tracepoint"
 
@@ -89,13 +89,13 @@ gdb_trace_setactions "5.1d: set actions for second tracepoint" \
 gdb_test "info tracepoints" \
     [multi_line \
 	 "Num     Type\[ \]+Disp Enb Address\[ \]+What\\s*" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_char_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_short_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+not installed on target"] \
     "5.1e: verify actions set for second tracepoint"
 
@@ -106,13 +106,13 @@ gdb_trace_setactions "5.2a: set actions for last (default) tracepoint" \
 gdb_test "info tracepoints" \
     [multi_line \
 	 "Num     Type\[ \]+Disp Enb Address\[ \]+What\\s*" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_char_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_short_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_long_test" \
 	 "\[\t \]+not installed on target"] \
     "5.2b: verify actions set for second tracepoint"
@@ -126,13 +126,13 @@ gdb_trace_setactions "5.3a: reset actions for first tracepoint" \
 gdb_test "info tracepoints" \
     [multi_line \
 	 "Num     Type\[ \]+Disp Enb Address\[ \]+What\\s*" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_struct1_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_short_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_long_test" \
 	 "\[\t \]+not installed on target"] \
     "5.3b: verify actions set for first tracepoint"
@@ -165,8 +165,8 @@ gdb_test_multiple "info tracepoints" "5.5c: verify NO actions for first tracepoi
 
 # 5.6 actions for invalid tracepoint number
 
-gdb_test "actions [expr $trcpt2 + $trcpt3]" \
-    "No tracepoint number [expr $trcpt2 + $trcpt3]." \
+gdb_test "actions [expr {$trcpt2 + $trcpt3}]" \
+    "No tracepoint number [expr {$trcpt2 + $trcpt3}]." \
 			"5.6: actions for invalid tracepoint number"
 
 # 5.7 invalid action (other than 'collect', 'while-stepping' or 'end')
@@ -223,13 +223,13 @@ gdb_trace_setactions "5.10a: set teval action for second tracepoint" \
 gdb_test "info tracepoints" \
     [multi_line \
 	 "Num     Type\[ \]+Disp Enb Address\[ \]+What\\s*" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+teval gdb_char_test" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+teval \\\$tsv \\\+= 1" \
 	 "\[\t \]+not installed on target" \
-	 "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+" \
+	 "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}" \
 	 "\[\t \]+collect gdb_long_test" \
 	 "\[\t \]+not installed on target"] \
     "5.10a: verify teval actions set for two tracepoints"
@@ -245,7 +245,7 @@ if {[gdb_test "" "Breakpoint .*" "run to main"] != 0} {
     return -1
 }
 
-if ![gdb_target_supports_trace] {
+if {![gdb_target_supports_trace]} {
     unsupported "target does not support trace"
     return -1
 }
@@ -274,15 +274,15 @@ proc check_tracepoint { data_source } {
 	for {set i 1} {$i < 4} {incr i 1} {
 	    set test "info tracepoints $i"
 	    gdb_test_multiple "info tracepoints $i" $test {
-		-re "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:\[0-9\]+\\r\\n\[\t \]+collect \\\$regs\\r\\n\[\t \]+installed on target" {
+		-re "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_c_test at .*$srcfile:${::decimal}\\r\\n\[\t \]+collect \\\$regs\\r\\n\[\t \]+installed on target" {
 		    incr tp_on_gdb_c_test
 		    exp_continue
 		}
-		-re "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:\[0-9\]+\\r\\n\[\t \]+teval \\\$tsv \\+= 1\\r\\n\[\t \]+installed on target" {
+		-re "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_asm_test at .*$srcfile:${::decimal}\\r\\n\[\t \]+teval \\\$tsv \\+= 1\\r\\n\[\t \]+installed on target" {
 		    incr tp_on_gdb_asm_test
 		    exp_continue
 		}
-		-re "\[0-9\]+\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:\[0-9\]+\\r\\n\[\t \]+collect gdb_long_test\\r\\n\[\t \]+installed on target" {
+		-re "${::decimal}\[\t \]+tracepoint     keep y.* in gdb_recursion_test at .*$srcfile:${::decimal}\\r\\n\[\t \]+collect gdb_long_test\\r\\n\[\t \]+installed on target" {
 		    incr tp_on_gdb_recursion_test
 		    exp_continue
 		}
@@ -318,9 +318,6 @@ set tracefile [standard_output_file ${testfile}]
 gdb_test "tsave ${tracefile}.tf" \
     "Trace data saved to file '${tracefile}.tf'\." \
     "tsave ${testfile}.tf"
-gdb_test "tsave -ctf ${tracefile}.ctf" \
-    "Trace data saved to directory '${tracefile}.ctf'\\." \
-    "save ctf trace file"
 
 # Restart GDB and read the trace data in tfile target.
 clean_restart
@@ -328,22 +325,3 @@ gdb_file_cmd $binfile
 gdb_test "target tfile ${tracefile}.tf" ".*" \
     "change to tfile target"
 check_tracepoint "tfile"
-
-# Try to read ctf data if GDB supports.
-set gdb_can_read_ctf_data 0
-gdb_test_multiple "target ctf" "" {
-    -re "Undefined target command: \"ctf\"\.  Try \"help target\"\.\r\n$gdb_prompt $" {
-	set gdb_can_read_ctf_data 0
-    }
-    -re "No CTF directory specified.*\r\n$gdb_prompt $" {
-	set gdb_can_read_ctf_data 1
-    }
-}
-
-if { $gdb_can_read_ctf_data } {
-    clean_restart
-    gdb_file_cmd $binfile
-    gdb_test "target ctf ${tracefile}.ctf" ".*" \
-	"change to ctf target"
-    check_tracepoint "ctf"
-}

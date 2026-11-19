@@ -1,4 +1,4 @@
-# Copyright 2019-2024 Free Software Foundation, Inc.
+# Copyright 2019-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@ foreach_with_prefix {insn_size} {6 8} {
     set testfile "${testfile}-${insn_size}"
     if {[prepare_for_testing "failed to prepare" $testfile \
 	     "$srcfile $srcfile2" $flags]} {
-	return -1
+	return
     }
 
     if {![runto_main]} {
-	return 0
+	return
     }
 
     gdb_breakpoint "bar"
@@ -50,8 +50,8 @@ foreach_with_prefix {insn_size} {6 8} {
     # Now check that we have a sane backtrace.
     gdb_test "bt" \
 	[multi_line \
-	     "#0\[ \t\]*func \\\(\\\) at .*$srcfile2:\[0-9\]+" \
-	     "#1\[ \t\]*$hex in main \\\(\\\) at .*$srcfile:\[0-9\]+"] \
+	     "#0\[ \t\]*func \\\(\\\) at .*$srcfile2:${::decimal}" \
+	     "#1\[ \t\]*$hex in main \\\(\\\) at .*$srcfile:${::decimal}"] \
 	"Backtrace to the main frame"
 
     # Finally finish, and we should end up back in main.

@@ -1,7 +1,7 @@
 #                                                       -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright 2002-2024 Free Software Foundation, Inc.
+# Copyright 2002-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ AC_SUBST(enable_libctf)
 
 # Enable shared libraries.
 AC_ARG_ENABLE(shared,
-[  --enable-shared         build shared libraries [deault=yes]],,
+[  --enable-shared         build shared libraries [default=yes]],,
   enable_shared=yes)
 
 # If we have shared libraries, try to set RPATH_ENVVAR reasonably,
@@ -65,7 +65,7 @@ else
   case $host_os in
     aix*)
       if test $host_cpu != ia64; then
-        RPATH_ENVVAR=LIBPATH
+	RPATH_ENVVAR=LIBPATH
       fi ;;
     darwin* | rhapsody*)
       RPATH_ENVVAR=DYLD_LIBRARY_PATH ;;

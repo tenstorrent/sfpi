@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2023-2024 Free Software Foundation, Inc.
+   Copyright 2023-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ main ()
     {
       /* We open a file and move file pos from 0 to 1.  We set the checkpoint
 	 when pos is 0, and restart it when pos is 1.  This makes sure that
-	 restarting the checkpoint excercises calling lseek in the
+	 restarting the checkpoint exercises calling lseek in the
 	 inferior. */
 
       /* Open a file. */

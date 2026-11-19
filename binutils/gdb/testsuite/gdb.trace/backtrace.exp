@@ -1,4 +1,4 @@
-#   Copyright 1998-2024 Free Software Foundation, Inc.
+#   Copyright 1998-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@ set expfile $testfile.exp
 
 require gdb_trace_common_supports_arch
 
-if [prepare_for_testing "failed to prepare" $executable $srcfile \
-	[list debug nowarnings nopie]] {
+if {[prepare_for_testing "failed to prepare" $executable $srcfile \
+	 [list debug nowarnings nopie]]} {
     return -1
 }
 
-if ![runto_main] {
+if {![runto_main]} {
     return -1
 }
 
@@ -65,27 +65,27 @@ if { $baseline == -1 } {
 set return_me 0
 
 gdb_test_multiple "list $baseline, +12" "all tests in this module will fail" {
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 1 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 1 " {
 	set testline1 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 2 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 2 " {
 	set testline2 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 3 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 3 " {
 	set testline3 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 4 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 4 " {
 	set testline4 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 5 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 5 " {
 	set testline5 $expect_out(1,string)
 	exp_continue
     }
-    -re "\[\r\n\](\[0-9\]+).*gdbtestline 6 " {
+    -re "\[\r\n\](${::decimal}).*gdbtestline 6 " {
 	set testline6 $expect_out(1,string)
 	exp_continue
     }
@@ -146,7 +146,7 @@ gdb_trace_setactions "8.6: setup TP to collect stack mem cast expr" \
 
 gdb_test_no_output "tstart" ""
 
-gdb_breakpoint "end" qualified
+gdb_breakpoint "end" -qualified
 gdb_test "continue" \
     "Continuing.*Breakpoint $decimal, end.*" \
     "run trace experiment"
@@ -155,13 +155,13 @@ gdb_test_no_output "tstop" ""
 
 proc gdb_backtrace_tdp_1 { msg } {
     global gdb_prompt
-    
+
     # We are in a trace frame at which we didn't collect anything
     # except $PC.  Therefore we expect to be able to identify stack
     # frame #0, but that's about all.  In particular we do not expect
     # to be able to display the function's arguments or locals, and we
     # do not expect to be able to identify the caller of this function.
-    
+
     gdb_test "backtrace" \
 	"#0\[\t \]+gdb_recursion_test.*depth=.*" \
 	"$msg"
@@ -172,7 +172,7 @@ proc gdb_backtrace_tdp_2 { msg } {
 
     # We are in a trace frame at which we collected only the registers
     # Therefore we expect to be able to identify stack frame #0, but
-    # we don't expect to be able to display its args unles they are
+    # we don't expect to be able to display its args unless they are
     # passed in registers (which isn't the case for m68k), and we
     # don't expect to be able to identify the caller's stack frame.
 
@@ -189,7 +189,7 @@ proc gdb_backtrace_tdp_3 { msg } {
     # stack frame #0 should be complete (including argument values).
 
     gdb_test_multiple "backtrace" "$msg" {
-	-re "#0\[\t \]+gdb_recursion_test.*depth=\[0-9\]+.*q1=\[0-9\]+.*q2=\[0-9\]+.*q3=\[0-9\]+.*q4=\[0-9\]+.*q5=\[0-9\]+.*q6=\[0-9\]+.*$gdb_prompt $" {
+	-re "#0\[\t \]+gdb_recursion_test.*depth=${::decimal}.*q1=${::decimal}.*q2=${::decimal}.*q3=${::decimal}.*q4=${::decimal}.*q5=${::decimal}.*q6=${::decimal}.*$gdb_prompt $" {
 	    pass "$msg"
 	}
 	-re "#0\[\t \]+gdb_recursion_test.*depth=Cannot access.*$gdb_prompt $" {
@@ -209,13 +209,13 @@ proc gdb_backtrace_tdp_4 { msg depth traceframe } {
 	# args), it counts as an error.
 
 	gdb_test_multiple "backtrace" "$msg" {
-	    -re "#$depth\[\t \].*gdb_recursion_test.*depth=\[0-9\]+.*q1=\[0-9\]+.*q2=\[0-9\]+.*q3=\[0-9\]+.*q4=\[0-9\]+.*q5=\[0-9\]+.*q6=\[0-9\]+.*$gdb_prompt $" {
+	    -re "#$depth\[\t \].*gdb_recursion_test.*depth=${::decimal}.*q1=${::decimal}.*q2=${::decimal}.*q3=${::decimal}.*q4=${::decimal}.*q5=${::decimal}.*q6=${::decimal}.*$gdb_prompt $" {
 		pass "$msg"
 	    }
 	    -re "#$depth\[\t \].*gdb_recursion_test.*depth=.*$gdb_prompt $" {
 		fail "$msg (args missing from #$depth stack frame)"
 	    }
-	    -re "#\[0-9\]+\[\t \].*gdb_recursion_test.*depth=.*$gdb_prompt $" {
+	    -re "#${::decimal}\[\t \].*gdb_recursion_test.*depth=.*$gdb_prompt $" {
 		fail "$msg (fewer than $depth stack frames found)"
 	    }
 	}

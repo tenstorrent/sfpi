@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Free Software Foundation, Inc.
+# Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ if { [build_executable_from_specs \
 	  $testfile {c++} \
 	  $srcfile {c++ debug} \
 	  $srcfile2 {c++}] == -1 } {
-    return -1
+    return
 }
 
 # Start with a fresh gdb.

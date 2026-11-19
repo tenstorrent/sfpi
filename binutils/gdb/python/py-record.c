@@ -1,6 +1,6 @@
 /* Python interface to record targets.
 
-   Copyright 2016-2024 Free Software Foundation, Inc.
+   Copyright 2016-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -55,10 +55,8 @@ PyTypeObject recpy_aux_type = {
 };
 
 /* Python RecordGap object.  */
-struct recpy_gap_object
+struct recpy_gap_object : public PyObject
 {
-  PyObject_HEAD
-
   /* Reason code.  */
   int reason_code;
 
@@ -68,6 +66,8 @@ struct recpy_gap_object
   /* Element number.  */
   Py_ssize_t number;
 };
+
+static_assert (gdb::is_python_allocatable_v<recpy_gap_object>);
 
 /* Implementation of record.method.  */
 
@@ -418,10 +418,7 @@ recpy_element_richcompare (PyObject *self, PyObject *other, int op)
   const recpy_element_object * const obj2 = (recpy_element_object *) other;
 
   if (Py_TYPE (self) != Py_TYPE (other))
-    {
-      Py_INCREF (Py_NotImplemented);
-      return Py_NotImplemented;
-    }
+    return py_notimplemented ().release ();
 
   switch (op)
   {
@@ -429,24 +426,23 @@ recpy_element_richcompare (PyObject *self, PyObject *other, int op)
       if (obj1->thread == obj2->thread
 	  && obj1->method == obj2->method
 	  && obj1->number == obj2->number)
-	Py_RETURN_TRUE;
+	return py_true ().release ();
       else
-	Py_RETURN_FALSE;
+	return py_false ().release ();
 
     case Py_NE:
       if (obj1->thread != obj2->thread
 	  || obj1->method != obj2->method
 	  || obj1->number != obj2->number)
-	Py_RETURN_TRUE;
+	return py_true ().release ();
       else
-	Py_RETURN_FALSE;
+	return py_false ().release ();
 
     default:
       break;
   }
 
-  Py_INCREF (Py_NotImplemented);
-  return Py_NotImplemented;
+  return py_notimplemented ().release ();
 }
 
 /* Create a new gdb.RecordGap object.  */
@@ -607,8 +603,8 @@ static gdb_PyGetSetDef recpy_aux_getset[] = {
 
 /* Sets up the record API in the gdb module.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_record (void)
+static int
+gdbpy_initialize_record ()
 {
   recpy_record_type.tp_new = PyType_GenericNew;
   recpy_record_type.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -693,9 +689,12 @@ gdbpy_current_recording (PyObject *self, PyObject *args)
   recpy_record_object *ret = NULL;
 
   if (find_record_target () == NULL)
-    Py_RETURN_NONE;
+    return py_none ().release ();
 
   ret = PyObject_New (recpy_record_object, &recpy_record_type);
+  if (ret == nullptr)
+    return nullptr;
+
   ret->thread = inferior_thread ();
   ret->method = target_record_method (ret->thread->ptid);
 
@@ -716,7 +715,7 @@ gdbpy_stop_recording (PyObject *self, PyObject *args)
       return gdbpy_handle_gdb_exception (nullptr, except);
     }
 
-  Py_RETURN_NONE;
+  return py_none ().release ();
 }
 
 GDBPY_INITIALIZE_FILE (gdbpy_initialize_record);

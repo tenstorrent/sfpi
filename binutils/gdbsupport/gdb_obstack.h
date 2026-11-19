@@ -1,6 +1,6 @@
 /* Obstack wrapper for GDB.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -75,9 +75,6 @@ obstack_new (struct obstack *ob, Args&&... args)
   obstack_grow (OBSTACK, STRING, strlen (STRING))
 #define obstack_grow_str0(OBSTACK,STRING) \
   obstack_grow0 (OBSTACK, STRING, strlen (STRING))
-
-#define obstack_grow_wstr(OBSTACK, WSTRING) \
-  obstack_grow (OBSTACK, WSTRING, sizeof (gdb_wchar_t) * gdb_wcslen (WSTRING))
 
 /* Concatenate NULL terminated variable argument list of `const char
    *' strings; return the new string.  Space is found in the OBSTACKP.

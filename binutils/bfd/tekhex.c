@@ -1,5 +1,5 @@
 /* BFD backend for Extended Tektronix Hex Format  objects.
-   Copyright (C) 1992-2025 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support <sac@cygnus.com>.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -327,9 +327,7 @@ find_chunk (bfd *abfd, bfd_vma vma, bool create)
   if (!d && create)
     {
       /* No chunk for this address, so make one up.  */
-      d = (struct data_struct *)
-	  bfd_zalloc (abfd, (bfd_size_type) sizeof (struct data_struct));
-
+      d = bfd_zalloc (abfd, sizeof (struct data_struct));
       if (!d)
 	return NULL;
 
@@ -340,17 +338,20 @@ find_chunk (bfd *abfd, bfd_vma vma, bool create)
   return d;
 }
 
-static void
+static bool
 insert_byte (bfd *abfd, int value, bfd_vma addr)
 {
   if (value != 0)
     {
       /* Find the chunk that this byte needs and put it in.  */
       struct data_struct *d = find_chunk (abfd, addr, true);
+      if (!d)
+	return false;
 
       d->chunk_data[addr & CHUNK_MASK] = value;
       d->chunk_init[(addr & CHUNK_MASK) / CHUNK_SPAN] = 1;
     }
+  return true;
 }
 
 /* The first pass is to find the names of all the sections, and see
@@ -374,7 +375,8 @@ first_phase (bfd *abfd, int type, char *src, char * src_end)
 
       while (*src && src < src_end - 1)
 	{
-	  insert_byte (abfd, HEX (src), addr);
+	  if (!insert_byte (abfd, HEX (src), addr))
+	    return false;
 	  src += 2;
 	  addr++;
 	}
@@ -628,7 +630,7 @@ tekhex_object_p (bfd *abfd)
   return _bfd_no_cleanup;
 }
 
-static void
+static bool
 move_section_contents (bfd *abfd,
 		       asection *section,
 		       const void * locationp,
@@ -653,6 +655,8 @@ move_section_contents (bfd *abfd,
 	{
 	  /* Different chunk, so move pointer. */
 	  d = find_chunk (abfd, chunk_number, must_write);
+	  if (!d && must_write)
+	    return false;
 	  prev_number = chunk_number;
 	}
 
@@ -671,22 +675,19 @@ move_section_contents (bfd *abfd,
 
       location++;
     }
+  return true;
 }
 
 static bool
 tekhex_get_section_contents (bfd *abfd,
 			     asection *section,
-			     void * locationp,
+			     void *location,
 			     file_ptr offset,
 			     bfd_size_type count)
 {
-  if (section->flags & (SEC_LOAD | SEC_ALLOC))
-    {
-      move_section_contents (abfd, section, locationp, offset, count, true);
-      return true;
-    }
-
-  return false;
+  if ((section->flags & (SEC_LOAD | SEC_ALLOC)) == 0)
+    return false;
+  return move_section_contents (abfd, section, location, offset, count, true);
 }
 
 static bool
@@ -704,18 +705,13 @@ tekhex_set_arch_mach (bfd *abfd,
 static bool
 tekhex_set_section_contents (bfd *abfd,
 			     sec_ptr section,
-			     const void * locationp,
+			     const void *location,
 			     file_ptr offset,
-			     bfd_size_type bytes_to_do)
+			     bfd_size_type count)
 {
-  if (section->flags & (SEC_LOAD | SEC_ALLOC))
-    {
-      move_section_contents (abfd, section, locationp, offset, bytes_to_do,
-			     false);
-      return true;
-    }
-
-  return false;
+  if ((section->flags & (SEC_LOAD | SEC_ALLOC)) == 0)
+    return false;
+  return move_section_contents (abfd, section, location, offset, count, false);
 }
 
 static void
@@ -967,7 +963,6 @@ tekhex_print_symbol (bfd *abfd,
 #define tekhex_bfd_relax_section		    bfd_generic_relax_section
 #define tekhex_bfd_gc_sections			    bfd_generic_gc_sections
 #define tekhex_bfd_lookup_section_flags		    bfd_generic_lookup_section_flags
-#define tekhex_bfd_merge_sections		    bfd_generic_merge_sections
 #define tekhex_bfd_is_group_section		    bfd_generic_is_group_section
 #define tekhex_bfd_group_name			    bfd_generic_group_name
 #define tekhex_bfd_discard_group		    bfd_generic_discard_group
@@ -997,6 +992,7 @@ const bfd_target tekhex_vec =
   16,				/* AR_max_namelen.  */
   0,				/* match priority.  */
   TARGET_KEEP_UNUSED_SECTION_SYMBOLS, /* keep unused section symbols.  */
+  TARGET_MERGE_SECTIONS,
   bfd_getb64, bfd_getb_signed_64, bfd_putb64,
   bfd_getb32, bfd_getb_signed_32, bfd_putb32,
   bfd_getb16, bfd_getb_signed_16, bfd_putb16,	/* Data.  */

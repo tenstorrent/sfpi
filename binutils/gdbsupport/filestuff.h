@@ -1,5 +1,5 @@
 /* Low-level file-handling.
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -112,7 +112,7 @@ struct gdb_dir_deleter
 
 /* A unique pointer to a DIR.  */
 
-typedef std::unique_ptr<DIR, gdb_dir_deleter> gdb_dir_up;
+using gdb_dir_up = std::unique_ptr<DIR, gdb_dir_deleter>;
 
 /* Return true if the file NAME exists and is a regular file.
    If the result is false then *ERRNO_PTR is set to a useful value assuming

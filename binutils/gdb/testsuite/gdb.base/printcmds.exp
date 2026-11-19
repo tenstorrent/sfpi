@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 1992-2024 Free Software Foundation, Inc.
+# Copyright 1992-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@
 standard_testfile .c
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
-     untested "failed to compile"
-     return -1
+    untested "failed to compile"
+    return
 }
 
 proc test_integer_literals_accepted {} {
@@ -96,18 +96,18 @@ proc test_integer_literals_rejected {} {
 
     # Test various octal values.
 
-    test_print_reject "p 09" 
-    test_print_reject "p 079" 
+    test_print_reject "p 09"
+    test_print_reject "p 079"
 
     # Test various hexadecimal values.
 
-    test_print_reject "p 0xG" 
-    test_print_reject "p 0xAG" 
+    test_print_reject "p 0xG"
+    test_print_reject "p 0xAG"
 
     # Test various binary values.
 
-    test_print_reject "p 0b2" 
-    test_print_reject "p 0b12" 
+    test_print_reject "p 0b2"
+    test_print_reject "p 0b12"
 }
 
 proc test_float_accepted {} {
@@ -458,14 +458,14 @@ proc test_print_repeats_10_one { setting } {
     for { set x 1 } { $x <= 16 } { incr x } {
 	gdb_test_no_output "set print $setting $x" "$setting $x repeats"
 	for { set e 1 } { $e <= 16 } {incr e } {
-	    set v [expr $e - 1]
+	    set v [expr {$e - 1}]
 	    set command "p &ctable2\[${v}*16\]"
 	    if { $x < $e } {
 		set aval $x
 	    } else {
 		set aval $e
 	    }
-	    set xval [expr $x - $e]
+	    set xval [expr {$x - $e}]
 	    if { $xval < 0 } {
 		set xval 0
 	    }
@@ -703,7 +703,7 @@ proc test_artificial_arrays {} {
     # for the test because that character isn't recognized as an
     # escape character.
     set ctrlv "\026"
-    if [ishost *-*-mingw*] {
+    if {[ishost *-*-mingw*]} {
 	set ctrlv ""
     }
     gdb_test_escape_braces "p int1dim\[0\]${ctrlv}@2" " = {0, 1}" {p int1dim[0]@2}
@@ -711,7 +711,7 @@ proc test_artificial_arrays {} {
 	"({{0, 1}, {2, 3}, {4, 5}}|\[Cc\]annot.*)" \
 	{p int1dim[0]@2@3}
     gdb_test_escape_braces "p int1dim\[0\]${ctrlv}@FE_TWO" " = {0, 1}" \
-        {p int1dim[0]@TWO}
+	{p int1dim[0]@TWO}
     gdb_test_escape_braces "p int1dim\[0\]${ctrlv}@FE_TWO${ctrlv}@three" \
 	"({{0, 1}, {2, 3}, {4, 5}}|\[Cc\]annot.*)" \
 	{p int1dim[0]@TWO@three}
@@ -742,6 +742,12 @@ proc test_print_char_arrays {} {
     gdb_test "p &parrays->array5"	" = \\(unsigned char \\(\\*\\)\\\[4\\\]\\) $hex <arrays\\+$decimal>"
 
     gdb_test_no_output "set print address off" "address off char arrays"
+}
+
+proc test_print_arrays_negative {} {
+    # Check whether correct error messages are printed
+    gdb_test "p 1 == { }" "size of the array element must not be zero"
+    gdb_test "p 1 == { 1, 'a' }" "array elements must all be the same size"
 }
 
 proc test_print_nibbles {} {
@@ -791,7 +797,7 @@ proc test_print_string_constants {} {
 
     gdb_test_no_output "set print elements 50"
 
-    if [target_info exists gdb,cannot_call_functions] {
+    if {[target_info exists gdb,cannot_call_functions]} {
 	unsupported "this target can not call functions"
 	return
     }
@@ -815,7 +821,7 @@ proc test_print_string_constants {} {
 proc test_print_array_constants {} {
     global hex
 
-    if [target_info exists gdb,cannot_call_functions] {
+    if {[target_info exists gdb,cannot_call_functions]} {
 	unsupported "this target can not call functions"
 	return
     }
@@ -868,7 +874,7 @@ proc test_printf {} {
     # Test mixing args of different sizes.
     gdb_test "printf \"x=%d,y=%f,z=%d\\n\", 5, 6.0, 7" "x=5,y=6\.0+,z=7"
     gdb_test "printf \"%x %f, %c %x, %x, %f\\n\", 0xbad, -99.541, 'z',\
-0xfeedface, 0xdeadbeef, 5.0" "bad -99.54\[0-9\]+, z feedface, deadbeef, 5.0+"
+0xfeedface, 0xdeadbeef, 5.0" "bad -99.54${::decimal}, z feedface, deadbeef, 5.0+"
 
     # Regression test for C lexer bug.
     gdb_test "printf \"%c\\n\", \"x\"\[1,0\]" "x"
@@ -901,6 +907,10 @@ proc test_printf {} {
 
     # PR cli/14977.
     gdb_test "printf \"%s\\n\", 0" "\\(null\\)"
+
+    # Test %z (size_t) and %t (ptrdiff_t) length modifiers.
+    gdb_test "printf \"%zu\\n\", test_size" "1234"
+    gdb_test "printf \"%td\\n\", test_ptrdiff" "-5678"
 
     with_max_value_size 20 {
 	gdb_test {printf "%s", teststring3} \
@@ -974,7 +984,7 @@ proc test_printf_with_strings {} {
 
     set listsize_value -1
     gdb_test_multiple "show listsize" "get listsize value" {
-	-re "Number of source lines gdb will list by default is (\[0-9\]+)\.\r\n$gdb_prompt $" {
+	-re "Number of source lines gdb will list by default is (${::decimal})\.\r\n$gdb_prompt $" {
 	    set listsize_value $expect_out(1,string)
 	}
     }
@@ -1022,7 +1032,7 @@ proc test_print_symbol {} {
     gdb_test_no_output "set print symbol off"
 }
 
-# Escape a left curly brace to prevent it from being interpreted as 
+# Escape a left curly brace to prevent it from being interpreted as
 # the beginning of a bound
 proc gdb_test_escape_braces { args } {
 
@@ -1203,7 +1213,7 @@ gdb_test "p ctable1\[120\]" "120 'x'" "p ctable1\[120\] #1"
 gdb_load ${binfile}
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # With a running target, printf convenience vars should of course work.
@@ -1235,6 +1245,7 @@ test_print_int_arrays
 test_print_typedef_arrays
 test_artificial_arrays
 test_print_char_arrays
+test_print_arrays_negative
 test_print_nibbles
 # We used to do the runto main here.
 test_print_string_constants

@@ -1,5 +1,5 @@
 /* tc-pdp11.c - pdp11-specific -
-   Copyright (C) 2001-2025 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -239,12 +239,12 @@ md_number_to_chars (char con[], valueT value, int nbytes)
 
 void
 md_apply_fix (fixS *fixP,
-	       valueT * valP,
-	       segT seg ATTRIBUTE_UNUSED)
+	      valueT *valP,
+	      segT seg ATTRIBUTE_UNUSED)
 {
   valueT code;
   valueT mask;
-  valueT val = * valP;
+  valueT val = *valP;
   char *buf;
   int shift;
   int size;
@@ -268,7 +268,7 @@ md_apply_fix (fixS *fixP,
       mask = 0xffffffff;
       shift = 0;
       break;
-    case BFD_RELOC_PDP11_DISP_8_PCREL:
+    case BFD_RELOC_8_PCREL:
       mask = 0x00ff;
       shift = 1;
       break;
@@ -287,7 +287,7 @@ md_apply_fix (fixS *fixP,
 
   code &= ~mask;
   code |= (val >> shift) & mask;
-  number_to_chars_littleendian (buf, code, size);
+  md_number_to_chars (buf, code, size);
 
   if (fixP->fx_addsy == NULL && fixP->fx_pcrel == 0)
     fixP->fx_done = 1;
@@ -320,7 +320,7 @@ md_chars_to_number (unsigned char *con, int nbytes)
 static char *
 skip_whitespace (char *str)
 {
-  while (*str == ' ' || *str == '\t')
+  while (is_whitespace (*str))
     str++;
   return str;
 }
@@ -328,7 +328,7 @@ skip_whitespace (char *str)
 static char *
 find_whitespace (char *str)
 {
-  while (*str != ' ' && *str != '\t' && *str != 0)
+  while (!is_whitespace (*str) && *str != 0)
     str++;
   return str;
 }
@@ -710,7 +710,7 @@ md_assemble (char *instruction_string)
 
   c = *p;
   *p = '\0';
-  op = (struct pdp11_opcode *)str_hash_find (insn_hash, str);
+  op = str_hash_find (insn_hash, str);
   *p = c;
   if (op == 0)
     {
@@ -790,7 +790,7 @@ md_assemble (char *instruction_string)
 	new_pointer = parse_expression (str, &op1);
 	op1.code = 0;
 	op1.reloc.pc_rel = 1;
-	op1.reloc.type = BFD_RELOC_PDP11_DISP_8_PCREL;
+	op1.reloc.type = BFD_RELOC_8_PCREL;
 	if (op1.reloc.exp.X_op != O_symbol)
 	  {
 	    op1.error = _("Symbol expected");

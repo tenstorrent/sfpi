@@ -1,6 +1,6 @@
 /* Language independent support for printing types for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -31,7 +31,6 @@
 #include "cp-abi.h"
 #include "typeprint.h"
 #include "valprint.h"
-#include <ctype.h>
 #include "cli/cli-utils.h"
 #include "extension.h"
 #include "completer.h"
@@ -219,7 +218,7 @@ typedef_hash_table::add_template_parameters (struct type *t)
       struct decl_field *tf;
 
       /* We only want type-valued template parameters in the hash.  */
-      if (TYPE_TEMPLATE_ARGUMENT (t, i)->aclass () != LOC_TYPEDEF)
+      if (TYPE_TEMPLATE_ARGUMENT (t, i)->loc_class () != LOC_TYPEDEF)
 	continue;
 
       tf = XOBNEW (&m_storage, struct decl_field);
@@ -283,7 +282,7 @@ typedef_hash_table::find_typedef (const struct type_print_options *flags,
 
 
 
-/* Print a description of a type in the format of a 
+/* Print a description of a type in the format of a
    typedef for the current language.
    NEW is the new name for a type TYPE.  */
 
@@ -367,7 +366,7 @@ whatis_exp (const char *exp, int show)
 	{
 	  int seen_one = 0;
 
-	  for (++exp; *exp && !isspace (*exp); ++exp)
+	  for (++exp; *exp && !c_isspace (*exp); ++exp)
 	    {
 	      switch (*exp)
 		{
@@ -413,7 +412,7 @@ whatis_exp (const char *exp, int show)
 
 	  if (!*exp && !seen_one)
 	    error (_("flag expected"));
-	  if (!isspace (*exp))
+	  if (!c_isspace (*exp))
 	    error (_("expected space after format"));
 	  exp = skip_spaces (exp);
 	}
@@ -452,9 +451,9 @@ whatis_exp (const char *exp, int show)
       type = val->type ();
     }
 
-  if (flags.print_offsets && is_dynamic_type (type))
+  if (flags.print_offsets && cannot_print_offsets (type))
     {
-      warning (_("ptype/o does not work with dynamic types; disabling '/o'"));
+      warning (_("ptype/o does not work with this dynamic type; disabling '/o'"));
       flags.print_offsets = 0;
     }
 
@@ -492,7 +491,7 @@ whatis_exp (const char *exp, int show)
       type_print (real_type, "", gdb_stdout, -1);
       if (! full)
 	gdb_printf (" (incomplete object)");
-      gdb_printf (" */\n");    
+      gdb_printf (" */\n");
     }
 
   current_language->print_type (type, "", gdb_stdout, show, 0, &flags);
@@ -514,6 +513,18 @@ static void
 ptype_command (const char *type_name, int from_tty)
 {
   whatis_exp (type_name, 1);
+}
+
+/* Meant to be used in debug sessions, so don't export it in a header file.  */
+extern void ATTRIBUTE_UNUSED debug_type (struct type *type);
+
+/* Print TYPE.  */
+
+void ATTRIBUTE_UNUSED
+debug_type (struct type *type)
+{
+  type_print (type, "", gdb_stdlog, 1);
+  gdb_flush (gdb_stdlog);
 }
 
 /* Print integral scalar data VAL, of type TYPE, onto stdio stream STREAM.
@@ -735,13 +746,11 @@ Display of struct members offsets and sizes in hexadecimal is %s\n"),
 	      value);
 }
 
-void _initialize_typeprint ();
-void
-_initialize_typeprint ()
+INIT_GDB_FILE (typeprint)
 {
   struct cmd_list_element *c;
 
-  c = add_com ("ptype", class_vars, ptype_command, _("\
+  c = add_com ("ptype", class_vars | class_essential, ptype_command, _("\
 Print definition of type TYPE.\n\
 Usage: ptype[/FLAGS] TYPE | EXPRESSION\n\
 Argument may be any type (for example a type name defined by typedef,\n\

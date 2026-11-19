@@ -1,5 +1,5 @@
 /* ldlex.h -
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of the GNU Binutils.
 
@@ -46,11 +46,14 @@ enum option_values
   OPTION_MAP,
   OPTION_NO_DEMANGLE,
   OPTION_NO_KEEP_MEMORY,
+  OPTION_NO_STATS,
   OPTION_NO_WARN_MISMATCH,
   OPTION_NO_WARN_SEARCH_MISMATCH,
   OPTION_NOINHIBIT_EXEC,
   OPTION_NON_SHARED,
   OPTION_NO_WHOLE_ARCHIVE,
+  OPTION_NO_LINK_MAPLESS,
+  OPTION_END_LIB,
   OPTION_OFORMAT,
   OPTION_RELAX,
   OPTION_NO_RELAX,
@@ -97,6 +100,8 @@ enum option_values
   OPTION_SPLIT_BY_RELOC,
   OPTION_SPLIT_BY_FILE ,
   OPTION_WHOLE_ARCHIVE,
+  OPTION_LINK_MAPLESS,
+  OPTION_START_LIB,
   OPTION_ADD_DT_NEEDED_FOR_DYNAMIC,
   OPTION_NO_ADD_DT_NEEDED_FOR_DYNAMIC,
   OPTION_ADD_DT_NEEDED_FOR_REGULAR,
@@ -145,11 +150,9 @@ enum option_values
   OPTION_WARN_ALTERNATE_EM,
   OPTION_REDUCE_MEMORY_OVERHEADS,
   OPTION_MAX_CACHE_SIZE,
-#if BFD_SUPPORTS_PLUGINS
   OPTION_PLUGIN,
   OPTION_PLUGIN_OPT,
   OPTION_PLUGIN_SAVE_TEMPS,
-#endif /* BFD_SUPPORTS_PLUGINS */
   OPTION_DEFAULT_SCRIPT,
   OPTION_PRINT_OUTPUT_FORMAT,
   OPTION_PRINT_SYSROOT,
@@ -216,6 +219,8 @@ enum option_values
   /* Used by emulparams/plt_unwind.sh.  */
   OPTION_LD_GENERATED_UNWIND_INFO,
   OPTION_NO_LD_GENERATED_UNWIND_INFO,
+  /* Used by emulparams/sframe-info.sh.  */
+  OPTION_DISCARD_SFRAME,
   /* Used by emultempl/aarch64elf.em.  */
   OPTION_FIX_ERRATUM_835769,
   OPTION_FIX_ERRATUM_843419,
@@ -246,7 +251,6 @@ enum option_values
   OPTION_LIBPATH,
   OPTION_NOLIBPATH,
   /* Used by emultempl/alphaelf.em.  */
-  OPTION_TASO,
   OPTION_SECUREPLT,
   OPTION_NO_SECUREPLT,
   /* Used by emultempl/armelf.em.  */
@@ -471,6 +475,12 @@ enum option_values
   OPTION_NO_LITERAL_MOVEMENT,
   OPTION_ABI_WINDOWED,
   OPTION_ABI_CALL0,
+  /* Used by emultempl/elf-x86-glibc.em.  */
+  OPTION_GNU2_TLS_VERSION_TAG,
+  OPTION_NO_GNU2_TLS_VERSION_TAG,
+  /* Used by emultempl/elf-i386-glibc.em.  */
+  OPTION_GNU_TLS_VERSION_TAG,
+  OPTION_NO_GNU_TLS_VERSION_TAG,
 };
 
 /* The initial parser states.  */

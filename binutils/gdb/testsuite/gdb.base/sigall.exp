@@ -1,4 +1,4 @@
-#   Copyright 1995-2024 Free Software Foundation, Inc.
+#   Copyright 1995-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ require {!target_info exists gdb,nosignals}
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 proc test_one_sig {nextsig} {
@@ -29,8 +29,8 @@ proc test_one_sig {nextsig} {
     set this_sig_supported $sig_supported
     gdb_test "handle SIG$thissig stop print" \
 	"SIG$thissig\[ \t\]*Yes\[ \t\]*Yes\[ \t\]*Yes.*"
-    gdb_test "b handle_$thissig" "Breakpoint \[0-9\]+ .*"
-    gdb_test "b gen_$nextsig" "Breakpoint \[0-9\]+ .*"
+    gdb_test "b handle_$thissig" "Breakpoint ${::decimal} .*"
+    gdb_test "b gen_$nextsig" "Breakpoint ${::decimal} .*"
 
     set need_another_continue 1
     set missed_handler 0
@@ -41,13 +41,14 @@ proc test_one_sig {nextsig} {
 	    setup_xfail "i*86-pc-linuxoldld-gnu" "i*86-pc-linuxaout-gnu"
 	}
 	# On Linux SPARC64 systems SIGLOST==SIGPWR and gdb identifies
-	# the raised signal as PWR.
-	if {$thissig == "LOST" && [istarget "sparc64-*-linux*"]} {
+	# the raised signal as PWR.  Same for Cygwin.
+	if {$thissig == "LOST"
+	    && ([istarget "sparc64-*-linux*"] || [istarget "*-*-cygwin*"])} {
 	    set esig "PWR"
 	}
 
 	gdb_test "continue" \
-	    "Continuing.*Program received signal SIG$esig.*" \
+	    "Continuing.* received signal SIG$esig.*" \
 		"get signal $esig"
     }
 
@@ -55,7 +56,7 @@ proc test_one_sig {nextsig} {
 	if { $thissig == "URG" } {
 	    setup_xfail "i*86-pc-linuxoldld-gnu" "i*86-pc-linuxaout-gnu"
 	}
-        # Either Lynx or GDB screws up on SIGPRIO
+	# Either Lynx or GDB screws up on SIGPRIO
 	if { $thissig == "PRIO" } {
 	    setup_xfail "*-*-*lynx*"
 	}
@@ -72,15 +73,15 @@ proc test_one_sig {nextsig} {
 
     if {$missed_handler == "0"} {
 	gdb_test_multiple "signal 0" "advance to $nextsig" {
-	    -re "Breakpoint.*gen_$nextsig.*\r\n\[0-9\]+\[ \t\]+kill \\(.*\r\n$gdb_prompt $" {
-	        pass "advance to $nextsig"
-	        set sig_supported 1
+	    -re "Breakpoint.*gen_$nextsig.*\r\n${::decimal}\[ \t\]+kill \\(.*\r\n$gdb_prompt $" {
+		pass "advance to $nextsig"
+		set sig_supported 1
 	    }
-	    -re "Breakpoint.*gen_$nextsig.*\r\n\[0-9\]+\[ \t\]+handle_.*\r\n$gdb_prompt $" {
-	        pass "advance to $nextsig"
-	        set sig_supported 0
+	    -re "Breakpoint.*gen_$nextsig.*\r\n${::decimal}\[ \t\]+handle_.*\r\n$gdb_prompt $" {
+		pass "advance to $nextsig"
+		set sig_supported 0
 	    }
-        }
+	}
     }
     set thissig $nextsig
 }
@@ -175,9 +176,9 @@ foreach sig [lrange $signals 1 end] {
 # we are not setting up for another test.
 gdb_test "handle SIGTERM stop print" \
     "SIGTERM\[ \t\]*Yes\[ \t\]*Yes\[ \t\]*Yes.*"
-gdb_test "b handle_TERM" "Breakpoint \[0-9\]+ .*"
+gdb_test "b handle_TERM" "Breakpoint ${::decimal} .*"
 gdb_test "continue" \
-    "Continuing.*Program received signal SIGTERM.*" \
+    "Continuing.* received signal SIGTERM.*" \
     "get signal TERM"
 gdb_test "continue" "Breakpoint.*handle_TERM.*" "send signal TERM"
 gdb_continue_to_end "continue to sigall exit"

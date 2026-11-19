@@ -9,18 +9,22 @@ fi
 case ${target} in
   *-*-cygwin*)
     move_default_addr_high=1
-    cygwin_behavior=1
+    mingw_behavior=0
+    ;;
+  *-*-mingw*)
+    move_default_addr_high=0
+    mingw_behavior=1
     ;;
   *)
-    move_default_addr_high=0;
-    cygwin_behavior=0;
+    move_default_addr_high=0
+    mingw_behavior=0
     ;;
 esac
 
 rm -f e${EMULATION_NAME}.c
 (echo;echo;echo;echo;echo)>e${EMULATION_NAME}.c # there, now line numbers match ;-)
 fragment <<EOF
-/* Copyright (C) 2006-2025 Free Software Foundation, Inc.
+/* Copyright (C) 2006-2026 Free Software Foundation, Inc.
    Written by Kai Tietz, OneVision Software GmbH&CoKg.
 
    This file is part of the GNU Binutils.
@@ -126,10 +130,11 @@ fragment <<EOF
 #define DLL_SUPPORT
 #endif
 
-#define DEFAULT_DLL_CHARACTERISTICS	(${cygwin_behavior} ? 0 : \
-					   IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE \
-					 | IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA \
-  					 | IMAGE_DLL_CHARACTERISTICS_NX_COMPAT)
+#define DEFAULT_DLL_CHARACTERISTICS	(${mingw_behavior} \
+					 ? IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE \
+					   | IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA \
+					   | IMAGE_DLL_CHARACTERISTICS_NX_COMPAT \
+					 : 0)
 
 #if defined(TARGET_IS_i386pep) || defined(COFF_WITH_peAArch64) || ! defined(DLL_SUPPORT)
 #define	PE_DEF_SUBSYSTEM		IMAGE_SUBSYSTEM_WINDOWS_CUI
@@ -241,6 +246,8 @@ gld${EMULATION_NAME}_before_parse (void)
   config.has_shared = 1;
   link_info.pei386_auto_import = 1;
   link_info.pei386_runtime_pseudo_reloc = 2; /* Use by default version 2.  */
+#else
+  pep_dll_enable_reloc_section = 0;
 #endif
 }
 
@@ -625,7 +632,7 @@ set_pep_subsystem (void)
 
       if (v[i].name == NULL)
 	{
-	  einfo (_("%F%P: invalid subsystem type %s\n"), optarg);
+	  fatal (_("%P: invalid subsystem type %s\n"), optarg);
 	  return;
 	}
 
@@ -646,7 +653,7 @@ set_pep_value (char *name)
   set_pep_name (name,  (bfd_vma) strtoull (optarg, &end, 0));
 
   if (end == optarg)
-    einfo (_("%F%P: invalid hex number for PE parameter '%s'\n"), optarg);
+    fatal (_("%P: invalid hex number for PE parameter '%s'\n"), optarg);
 
   optarg = end;
 }
@@ -663,7 +670,7 @@ set_pep_stack_heap (char *resname, char *comname)
       set_pep_value (comname);
     }
   else if (*optarg)
-    einfo (_("%F%P: strange hex info for PE parameter '%s'\n"), optarg);
+    fatal (_("%P: strange hex info for PE parameter '%s'\n"), optarg);
 }
 
 #define DEFAULT_BUILD_ID_STYLE	"md5"
@@ -680,7 +687,7 @@ gld${EMULATION_NAME}_handle_option (int optc)
     case OPTION_BASE_FILE:
       link_info.base_file = fopen (optarg, FOPEN_WB);
       if (link_info.base_file == NULL)
-	einfo (_("%F%P: cannot open base file %s\n"), optarg);
+	fatal (_("%P: cannot open base file %s\n"), optarg);
       break;
 
       /* PE options.  */
@@ -1082,7 +1089,7 @@ pep_fixup_stdcalls (void)
   for (undef = link_info.hash->undefs; undef; undef=undef->u.undef.next)
     if (undef->type == bfd_link_hash_undefined)
       {
-	char* at = strchr (undef->root.string, '@');
+	const char* at = strchr (undef->root.string, '@');
 	int lead_at = (*undef->root.string == '@');
 	if (lead_at)
 	  at = strchr (undef->root.string + 1, '@');
@@ -1091,12 +1098,13 @@ pep_fixup_stdcalls (void)
 	    /* The symbol is a stdcall symbol, so let's look for a
 	       cdecl symbol with the same name and resolve to that.  */
 	    char *cname = xstrdup (undef->root.string);
+	    char *at2;
 
 	    if (lead_at)
 	      *cname = '_';
-	    at = strchr (cname, '@');
-	    if (at)
-	      *at = 0;
+	    at2 = strchr (cname, '@');
+	    if (at2)
+	      *at2 = 0;
 	    sym = bfd_link_hash_lookup (link_info.hash, cname, 0, 0, 1);
 
 	    if (sym && sym->type == bfd_link_hash_defined)
@@ -1233,7 +1241,7 @@ make_runtime_ref (void)
     = bfd_wrapped_link_hash_lookup (link_info.output_bfd, &link_info,
 				    rr, true, false, true);
   if (!h)
-    einfo (_("%F%P: bfd_link_hash_lookup failed: %E\n"));
+    fatal (_("%P: bfd_link_hash_lookup failed: %E\n"));
   else
     {
       if (h->type == bfd_link_hash_new)
@@ -1533,7 +1541,7 @@ gld${EMULATION_NAME}_after_open (void)
   if (bfd_get_flavour (link_info.output_bfd) != bfd_target_coff_flavour
       || coff_data (link_info.output_bfd) == NULL
       || !obj_pe (link_info.output_bfd))
-    einfo (_("%F%P: cannot perform PE operations on non PE output file '%pB'\n"),
+    fatal (_("%P: cannot perform PE operations on non PE output file '%pB'\n"),
 	   link_info.output_bfd);
 
   pe_data (link_info.output_bfd)->pe_opthdr = pep;
@@ -1597,6 +1605,9 @@ gld${EMULATION_NAME}_after_open (void)
   else
     pep_exe_build_sections (link_info.output_bfd, &link_info);
 #endif
+#else /* !DLL_SUPPORT */
+  if (!bfd_link_relocatable (&link_info))
+    pep_exe_build_sections (link_info.output_bfd, &link_info);
 #endif /* DLL_SUPPORT */
 
   {
@@ -1645,7 +1656,7 @@ gld${EMULATION_NAME}_after_open (void)
 
 		    if (!bfd_generic_link_read_symbols (is->the_bfd))
 		      {
-			einfo (_("%F%P: %pB: could not read symbols: %E\n"),
+			fatal (_("%P: %pB: could not read symbols: %E\n"),
 			       is->the_bfd);
 			return;
 		      }
@@ -1727,7 +1738,7 @@ gld${EMULATION_NAME}_after_open (void)
       {
 	if (is->the_bfd->my_archive)
 	  {
-	    char *pnt;
+	    const char *pnt;
 
 	    /* Microsoft import libraries may contain archive members for
 	       one or more DLLs, together with static object files.
@@ -1849,7 +1860,7 @@ gld${EMULATION_NAME}_unrecognized_file (lang_input_statement_type *entry ATTRIBU
 
 	      h = bfd_link_hash_lookup (link_info.hash, buf, true, true, true);
 	      if (h == (struct bfd_link_hash_entry *) NULL)
-		einfo (_("%F%P: bfd_link_hash_lookup failed: %E\n"));
+		fatal (_("%P: bfd_link_hash_lookup failed: %E\n"));
 	      if (h->type == bfd_link_hash_new)
 		{
 		  h->type = bfd_link_hash_undefined;
@@ -1939,6 +1950,9 @@ gld${EMULATION_NAME}_finish (void)
 
   if (pep_out_def_filename)
     pep_dll_generate_def_file (pep_out_def_filename);
+#else /* !DLL_SUPPORT */
+  if (!bfd_link_relocatable (&link_info))
+    pep_exe_fill_sections (link_info.output_bfd, &link_info);
 #endif /* DLL_SUPPORT */
 
   /* I don't know where .idata gets set as code, but it shouldn't be.  */
@@ -1973,7 +1987,7 @@ gld${EMULATION_NAME}_place_orphan (asection *s,
 				    int constraint)
 {
   const char *orig_secname = secname;
-  char *dollar = NULL;
+  const char *dollar = NULL;
   lang_output_section_statement_type *os;
   lang_statement_list_type add_child;
   lang_output_section_statement_type *match_by_name = NULL;

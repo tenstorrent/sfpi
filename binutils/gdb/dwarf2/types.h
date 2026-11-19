@@ -1,6 +1,6 @@
 /* Common internal types for the DWARF reader
 
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,6 +30,8 @@ DEFINE_OFFSET_TYPE (cu_offset, unsigned int);
 /* Offset relative to the start of its .debug_info or .debug_types
    section.  */
 DEFINE_OFFSET_TYPE (sect_offset, uint64_t);
+
+constexpr auto invalid_sect_offset = static_cast<sect_offset> (-1);
 
 static inline const char *
 sect_offset_str (sect_offset offset)

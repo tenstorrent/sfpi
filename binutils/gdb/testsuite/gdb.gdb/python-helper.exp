@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ require allow_python_tests
 standard_testfile .cc
 
 if { [build_executable "failed to build" $testfile $srcfile {debug c++}] } {
-    return -1
+    return
 }
 
 # Find the helper script in the GDB build directory.
@@ -66,8 +66,8 @@ proc test_python_helper {} {
     # (a) is easy to reach by issuing a simple gdb command, and
     # (b) is unlikely to be modified very often within gdb, and
     # (c) has a parameter that is either a 'struct type *' or a 'struct value *'.
-    gdb_breakpoint value_print qualified
-    gdb_breakpoint c_print_type qualified
+    gdb_breakpoint value_print -qualified
+    gdb_breakpoint c_print_type -qualified
 
     # With gdb build with -O2 -flto=auto and gcc 7.5.0, we can get the mangled
     # names due to a problem in the debug info, so we work around this by less
@@ -264,13 +264,31 @@ proc test_python_helper {} {
     gdb_test -prompt $outer_prompt_re "print varobj_table" \
 	"htab_t with ${::decimal} elements"
 
+    set inferior_list_supported 1
+    set inferior_list_unsupported_re "type = intrusive_list"
+    gdb_test_multiple "what inferior_list" "" -prompt $outer_prompt_re {
+	-re -wrap $inferior_list_unsupported_re {
+	    set inferior_list_supported 0
+	    pass $gdb_test_name
+	}
+	-re -wrap "" {
+	    pass $gdb_test_name
+	}
+    }
+
     # Test the intrusive_list pretty-printer.  A bug occurred in the
     # pretty-printer for lists with more than one element.  Verify that
     # we see both elements of the inferior_list list being printed.
-    gdb_test -prompt $outer_prompt_re "print inferior_list" "intrusive list of inferior = {.*, num = 1,.*, num = 2,.*}"
+    set test "print inferior_list"
+    if { $inferior_list_supported } {
+	gdb_test -prompt $outer_prompt_re $test \
+	    "intrusive list of inferior = {.*, num = 1,.*, num = 2,.*}"
+    } else {
+	unsupported $test
+    }
 
     return 0
 }
 
 # Use the self-test framework to run the test.
-do_self_tests captured_main test_python_helper
+do_self_tests test_python_helper

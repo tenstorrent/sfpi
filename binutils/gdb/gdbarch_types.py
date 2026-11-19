@@ -1,6 +1,6 @@
 # Architecture commands for GDB, the GNU debugger.
 #
-# Copyright (C) 1998-2024 Free Software Foundation, Inc.
+# Copyright (C) 1998-2026 Free Software Foundation, Inc.
 #
 # This file is part of GDB.
 #
@@ -51,6 +51,7 @@ class Component:
         param_checks: Optional[List[str]] = None,
         result_checks: Optional[List[str]] = None,
         implement: bool = True,
+        unused: bool = False,
     ):
         self.name = name
         self.type = type
@@ -64,6 +65,7 @@ class Component:
         self.param_checks = param_checks
         self.result_checks = result_checks
         self.implement = implement
+        self.unused = unused
 
         components.append(self)
 
@@ -74,11 +76,7 @@ class Component:
 
     def get_predicate(self):
         "Return the expression used for validity checking."
-        if self.predefault:
-            predicate = f"gdbarch->{self.name} != {self.predefault}"
-        else:
-            predicate = f"gdbarch->{self.name} != NULL"
-        return predicate
+        return f"gdbarch->{self.name} != {self.init_value()}"
 
 
 class Info(Component):
@@ -99,6 +97,7 @@ class Value(Component):
         postdefault: Optional[str] = None,
         invalid: Union[bool, str] = True,
         printer: Optional[str] = None,
+        unused: bool = False,
     ):
         super().__init__(
             comment=comment,
@@ -109,7 +108,20 @@ class Value(Component):
             postdefault=postdefault,
             invalid=invalid,
             printer=printer,
+            unused=unused,
         )
+
+    def init_value(self):
+        if self.predefault is not None:
+            return self.predefault
+
+        if self.type == "bool":
+            return "false"
+
+        if self.type.endswith("*"):
+            return "nullptr"
+
+        return "0"
 
 
 class Function(Component):
@@ -130,6 +142,7 @@ class Function(Component):
         param_checks: Optional[List[str]] = None,
         result_checks: Optional[List[str]] = None,
         implement: bool = True,
+        unused: bool = False,
     ):
         super().__init__(
             comment=comment,
@@ -144,6 +157,7 @@ class Function(Component):
             param_checks=param_checks,
             result_checks=result_checks,
             implement=implement,
+            unused=unused,
         )
 
     def ftype(self):
@@ -164,6 +178,12 @@ class Function(Component):
     def actuals(self):
         "Return the actual parameters to forward, as a string."
         return ", ".join([p[1] for p in self.params])
+
+    def init_value(self):
+        if self.predefault is not None:
+            return self.predefault
+
+        return "nullptr"
 
 
 class Method(Function):

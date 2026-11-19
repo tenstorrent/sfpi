@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Free Software Foundation, Inc.
+# Copyright 2020-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,10 @@
 # To catch the bug, this test verifies that we can hit a breakpoint after a
 # vfork call, while a second inferior runs in the background.
 
+require allow_fork_tests
+
+require allow_multi_inferior_tests
+
 require !use_gdb_stub
 
 standard_testfile .c -sleep.c
@@ -45,14 +49,14 @@ set opts [list debug additional_flags=-DNR_LOOPS=$nr_loops]
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable \
 	$opts] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # Compile the secondary program, which just sleeps.
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile_sleep}" "${binfile_sleep}" executable \
 	{debug}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # We exercise two methods of getting a second inferior to execute while the

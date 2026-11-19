@@ -1,5 +1,5 @@
 /* MI Command Set - symbol commands.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -50,7 +50,7 @@ mi_cmd_symbol_list_lines (const char *command, const char *const *argv,
      already sorted by increasing values in the symbol table, so no
      need to perform any other sorting.  */
 
-  struct objfile *objfile = s->compunit ()->objfile ();
+  struct objfile *objfile = s->compunit ().objfile ();
   gdbarch = objfile->arch ();
 
   ui_out_emit_list list_emitter (uiout, "lines");

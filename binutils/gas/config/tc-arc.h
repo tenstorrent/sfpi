@@ -1,5 +1,5 @@
 /* tc-arc.h - Macros and type defines for the ARC.
-   Copyright (C) 2014-2025 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    Contributed by Claudiu Zissulescu (claziss@synopsys.com)
 
@@ -106,7 +106,7 @@ extern const char *arc_target_format;
 /* [ ] is index operator.  */
 #define NEED_INDEX_OPERATOR
 
-#define MAX_MEM_FOR_RS_ALIGN_CODE (1+2)
+#define MAX_MEM_FOR_RS_ALIGN_CODE(p2align, max) (1 + 2)
 
 /* HANDLE_ALIGN called after all the assembly has been done,
    so we can fill in all the rs_align_code type frags with
@@ -129,8 +129,8 @@ extern const char *arc_target_format;
    relocations.  Check also that fx_addsy is not NULL, in order to
    make sure that the fixup refers to some sort of label.  */
 #define TC_VALIDATE_FIX(FIXP,SEG,SKIP)				     \
-  if ((FIXP->fx_r_type == BFD_RELOC_ARC_GOTPC32			     \
-       || FIXP->fx_r_type == BFD_RELOC_ARC_PLT32		     \
+  if ((FIXP->fx_r_type == BFD_RELOC_32_GOT_PCREL		     \
+       || FIXP->fx_r_type == BFD_RELOC_32_PLT_PCREL		     \
        || FIXP->fx_r_type == BFD_RELOC_ARC_S25W_PCREL_PLT	     \
        || FIXP->fx_r_type == BFD_RELOC_ARC_S25H_PCREL_PLT	     \
        || FIXP->fx_r_type == BFD_RELOC_ARC_S21W_PCREL_PLT	     \
@@ -271,4 +271,7 @@ struct arc_relax_type
 extern void arc_md_end (void);
 #define md_end arc_md_end
 
-#endif
+/* The target supports Object Attributes v1.  */
+#define TC_OBJ_ATTR_v1 1
+
+#endif /* TC_ARC */

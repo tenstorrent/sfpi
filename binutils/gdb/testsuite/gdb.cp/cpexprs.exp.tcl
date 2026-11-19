@@ -1,6 +1,6 @@
 # cpexprs.exp - C++ expressions tests
 #
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 #
 # Contributed by Red Hat, originally written by Keith Seitz.
 #
@@ -28,17 +28,33 @@ proc test_breakpoint {func} {
     delete_breakpoints
     if { ! [gdb_breakpoint test_function] } {
 	fail "set test_function breakpoint for $func"
-    } elseif { [gdb_test "continue" \
-		    "Continuing.\r\n\r\nBreakpoint $DEC+,.*test_function.*" \
-		    "continue to test_function for $func"] != 0 } {
-    } else {
-	gdb_breakpoint "$func"
-	set i [expr {[string last : $func] + 1}]
-	set efunc [string_to_regexp [string range $func $i end]]
-	gdb_test "continue" \
-	    "Continuing.\r\n\r\nBreakpoint $DEC+,.*$efunc.*" \
-	    "continue to $func"
+	return
     }
+
+    # Accept any input between "Continuing" and the breakpoint hit, as
+    # on Cygwin, we may see a "New Thread" notification.  This is the
+    # Cygwin runtime spawning its own internal threads.
+    if { [gdb_test "continue" \
+	      "Continuing.\r\n.*Breakpoint $DEC+,.*test_function.*" \
+	      "continue to test_function for $func"] != 0 } {
+	return
+    }
+
+    # On some systems, the in-charge and not-in-charge dtors of a
+    # class may end up with the same address, so setting a breakpoint
+    # at a dtor like base::~base only finds one location.  On other
+    # systems (e.g. Cygwin), the two dtors for the same class may have
+    # different addresses, so we find two locations for the
+    # breakpoint.  Thus, expect that the breakpoint hit may or may not
+    # report a location number.
+    set bp_re "$DEC+(\.$DEC+)?"
+
+    gdb_breakpoint "$func"
+    set i [expr {[string last : $func] + 1}]
+    set efunc [string_to_regexp [string range $func $i end]]
+    gdb_test "continue" \
+	"Continuing.\r\n.*Breakpoint $bp_re,.*$efunc.*" \
+	"continue to $func"
 }
 
 # Add a function to the list of tested functions
@@ -100,7 +116,7 @@ proc get_functions {cmd} {
 
 # Some convenience variables for this test
 set DEC {[0-9]}; # a decimal number
-set HEX {[0-9a-fA-F]}; # a hexidecimal number
+set HEX {[0-9a-fA-F]}; # a hexadecimal number
 set CONVAR "\\\$$DEC+"; # convenience variable regexp
 set ADDR "0x$HEX+"; # address
 
@@ -114,7 +130,7 @@ set ADDR "0x$HEX+"; # address
 # are (none need character escaping -- "add" will take care of that):
 
 # add name type print_name list
-# NAME,type: value is type of function 
+# NAME,type: value is type of function
 # NAME,print: value is print name of function (careful w/inherited/virtual!)
 # NAME,list: value is comment in source code on first line of function
 #   (without the leading "//")
@@ -690,7 +706,7 @@ standard_testfile cpexprs.cc
 set flags "$flags debug c++"
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile "$flags"]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
@@ -725,7 +741,7 @@ foreach cv {{} { const} { volatile} { const volatile}} {
   set correct dummy_value
 
   gdb_test_multiple $test $test {
-      -re "( = {.*} 0x\[0-9a-f\]+ <CV::m.*>)\r\n$gdb_prompt $" {
+      -re "( = {.*} ${::hex} <CV::m.*>)\r\n$gdb_prompt $" {
 	  # = {void (CV * const, CV::t)} 0x400944 <CV::m(int)>
 	  set correct $expect_out(1,string)
 	  pass $test

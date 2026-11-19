@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2024 Free Software Foundation, Inc.
+# Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ standard_testfile
 require allow_python_tests
 
 if {[build_executable $testfile.exp $testfile $srcfile debug] == -1} {
-    return -1
+    return
 }
 
 # Start with a fresh gdb.
@@ -41,7 +41,7 @@ gdb_load ${binfile}
 # Verify gdb loaded the script.
 gdb_test "info auto-load python-scripts" "Yes.*${testfile}-gdb.py.*"
 
-if ![runto_main] {
+if {![runto_main]} {
     return
 }
 

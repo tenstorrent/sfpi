@@ -1,6 +1,6 @@
 /* Perform arithmetic and other operations on values, for GDB.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,6 +30,7 @@
 #include "gdbarch.h"
 #include "rust-lang.h"
 #include "ada-lang.h"
+#include "cli/cli-style.h"
 
 /* Forward declarations.  */
 static struct value *value_subscripted_rvalue (struct value *array,
@@ -39,7 +40,7 @@ static struct value *value_subscripted_rvalue (struct value *array,
 /* Given a pointer, return the size of its target.
    If the pointer type is void *, then return 1.
    If the target type is incomplete, then error out.
-   This isn't a general purpose function, but just a 
+   This isn't a general purpose function, but just a
    helper for value_ptradd.  */
 
 static LONGEST
@@ -59,7 +60,7 @@ find_size_for_pointer_math (struct type *ptr_type)
       else
 	{
 	  const char *name;
-	  
+
 	  name = ptr_target->name ();
 	  if (name == NULL)
 	    error (_("Cannot perform pointer math on incomplete types, "
@@ -117,7 +118,7 @@ value_ptrdiff (struct value *arg1, struct value *arg2)
 	     "an integer nor a pointer of the same type."));
 
   sz = type_length_units (check_typedef (type1->target_type ()));
-  if (sz == 0) 
+  if (sz == 0)
     {
       warning (_("Type size unknown, assuming 1. "
 	       "Try casting to a known type, or void *."));
@@ -308,7 +309,7 @@ binop_user_defined_p (enum exp_opcode op,
 }
 
 /* Check to see if argument is a structure.  This is called so
-   we know whether to go ahead with the normal unop or look for a 
+   we know whether to go ahead with the normal unop or look for a
    user defined function instead.
 
    For now, we do not overload the `&' operator.  */
@@ -384,7 +385,7 @@ value_user_defined_op (struct value **argp, gdb::array_view<value *> args,
 }
 
 /* We know either arg1 or arg2 is a structure, so try to find the right
-   user defined function.  Create an argument vector that calls 
+   user defined function.  Create an argument vector that calls
    arg1.operator @ (arg1,arg2) and return that value (where '@' is any
    binary operator which is legal for GNU C++).
 
@@ -559,7 +560,8 @@ value_x_binop (struct value *arg1, struct value *arg2, enum exp_opcode op,
 				    argvec.slice (1, 2 - static_memfuncp));
     }
   throw_error (NOT_FOUND_ERROR,
-	       _("member function %s not found"), tstr);
+	       _("member function %ps not found"),
+	       styled_string (function_name_style.style (), tstr));
 }
 
 /* We know that arg1 is a structure, so try to find a unary user
@@ -672,7 +674,8 @@ value_x_unop (struct value *arg1, enum exp_opcode op, enum noside noside)
 				    argvec.slice (1, nargs));
     }
   throw_error (NOT_FOUND_ERROR,
-	       _("member function %s not found"), tstr);
+	       _("member function %ps not found"),
+	       styled_string (function_name_style.style (), tstr));
 }
 
 
@@ -687,7 +690,7 @@ value_concat (struct value *arg1, struct value *arg2)
   struct type *type2 = check_typedef (arg2->type ());
 
   if (type1->code () != TYPE_CODE_ARRAY && type2->code () != TYPE_CODE_ARRAY)
-    error ("no array provided to concatenation");
+    error (_("no array provided to concatenation"));
 
   LONGEST low1, high1;
   struct type *elttype1 = type1;
@@ -1202,11 +1205,11 @@ scalar_binop (struct value *arg1, struct value *arg2, enum exp_opcode op)
 	case BINOP_BITWISE_XOR:
 	  v = v1 ^ v2;
 	  break;
-	      
+
 	case BINOP_EQUAL:
 	  v = v1 == v2;
 	  break;
-	  
+
 	case BINOP_NOTEQUAL:
 	  v = v1 != v2;
 	  break;
@@ -1494,7 +1497,7 @@ value_binop (struct value *arg1, struct value *arg2, enum exp_opcode op)
       /* Widen the scalar operand to a vector.  */
       struct value **v = t1_is_vec ? &arg2 : &arg1;
       struct type *t = t1_is_vec ? type2 : type1;
-      
+
       if (t->code () != TYPE_CODE_FLT
 	  && t->code () != TYPE_CODE_DECFLOAT
 	  && !is_integral_type (t))

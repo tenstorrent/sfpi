@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2024 Free Software Foundation, Inc.
+# Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,14 +23,14 @@ require allow_python_tests
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 set remote_python_file [gdb_remote_download host \
 			    ${srcdir}/${subdir}/${testfile}.py]
 
-if ![runto_main ] {
-    return -1
+if {![runto_main ]} {
+    return
 }
 
 proc prepare_test { } {
@@ -40,7 +40,7 @@ proc prepare_test { } {
     clean_restart ${testfile}
 
     set run_to_here [gdb_get_line_number {break to inspect} ${testfile}.c ]
-    if ![runto ${testfile}.c:$run_to_here] {
+    if {![runto ${testfile}.c:$run_to_here]} {
 	return 0
     }
 
@@ -63,8 +63,8 @@ proc test_printers { s_prefix } {
 # Test registration with verbose off.
 
 with_test_prefix "verbose off" {
-    if ![prepare_test] {
-	return -1
+    if {![prepare_test]} {
+	return
     }
 
     gdb_test_no_output "set verbose off"
@@ -78,8 +78,8 @@ with_test_prefix "verbose off" {
 # Test registration with verbose on.
 
 with_test_prefix "verbose on" {
-    if ![prepare_test] {
-	return -1
+    if {![prepare_test]} {
+	return
     }
 
     gdb_test_no_output "set verbose on"
@@ -95,8 +95,8 @@ with_test_prefix "verbose on" {
 # Exercise the "replace" argument to register_pretty_printer.
 
 with_test_prefix "replace" {
-    if ![prepare_test] {
-	return -1
+    if {![prepare_test]} {
+	return
     }
 
     gdb_test_no_output "py gdb.printing.register_pretty_printer(gdb, lookup_function_lookup_test)"

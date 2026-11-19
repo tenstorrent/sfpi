@@ -1,4 +1,4 @@
-#   Copyright 2003-2024 Free Software Foundation, Inc.
+#   Copyright 2003-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,17 +40,21 @@ set lib_dlopen2 [shlib_target_file ${libname2}]
 set lib_syms [shlib_symbol_file ${libname}]
 set lib_syms2 [shlib_symbol_file ${libname2}]
 
-set lib_opts debug
+set lib_opts {debug shlib}
 set exec_opts [list debug shlib_load additional_flags=-DSHLIB_NAME=\"${lib_dlopen}\" additional_flags=-DSHLIB_NAME2=\"${lib_dlopen2}\"]
 
-if { [gdb_compile_shlib $libsrc $lib_sl $lib_opts] != ""
-     || [gdb_compile_shlib $libsrc2 $lib_sl2 $lib_opts] != ""
-     || [gdb_compile $srcfile $binfile executable $exec_opts] != ""} {
-    untested "failed to compile"
-    return -1
+if { [build_executable "build shlib 1" $lib_sl $libsrc $lib_opts] != 0 } {
+    return
 }
 
-clean_restart $binfile
+if { [build_executable "build shlib 2" $lib_sl2 $libsrc2 $lib_opts] != 0 } {
+    return
+}
+
+if { [prepare_for_testing "prepare" $testfile $srcfile $exec_opts] != 0 } {
+    return
+}
+
 gdb_load_shlib $lib_sl
 gdb_load_shlib $lib_sl2
 
@@ -59,8 +63,8 @@ gdb_load_shlib $lib_sl2
 # manually loaded and unloaded
 #
 
-gdb_breakpoint "shrfunc1" allow-pending
-gdb_breakpoint "shrfunc2" allow-pending
+gdb_breakpoint "shrfunc1" -allow-pending
+gdb_breakpoint "shrfunc2" -allow-pending
 
 gdb_test "info break" \
     "Num     Type\[ \]+Disp Enb Address\[ \]+What\r?
@@ -77,11 +81,11 @@ gdb_test "" \
 
 gdb_test "info break" \
     "Num     Type\[ \]+Disp Enb Address\[ \]+What\r?
-1\[\t \]+breakpoint     keep y *0x\[0-9a-f\]+ *in shrfunc1 at .*
+1\[\t \]+breakpoint     keep y *${::hex} *in shrfunc1 at .*
 2\[\t \]+breakpoint     keep y *<PENDING> *shrfunc2.*" \
 "pending breakpoint info on first run at shrfunc1"
 
-gdb_breakpoint "$testfile.c:[gdb_get_line_number "y-set-1" $testfile.c]" temporary
+gdb_breakpoint "$testfile.c:[gdb_get_line_number "y-set-1" $testfile.c]" -temporary
 
 gdb_test "continue" \
 "Continuing.*warning: Temporarily disabling breakpoints for.*${lib_syms}.*y-set-1.*" \
@@ -100,11 +104,11 @@ gdb_test "" \
 
 gdb_test "info break" \
     "Num     Type\[ \]+Disp Enb Address\[ \]+What\r?
-1\[\t \]+breakpoint     keep y *0x\[0-9a-f\]+ *in shrfunc1 at .*
+1\[\t \]+breakpoint     keep y *${::hex} *in shrfunc1 at .*
 2\[\t \]+breakpoint     keep y *<PENDING> *shrfunc2.*" \
 "pending breakpoint info on second run at shrfunc1"
 
-gdb_breakpoint "$testfile.c:[gdb_get_line_number "y-set-1" $testfile.c]" temporary
+gdb_breakpoint "$testfile.c:[gdb_get_line_number "y-set-1" $testfile.c]" -temporary
 
 gdb_test "continue" \
 "Continuing.*warning: Temporarily disabling breakpoints for.*${lib_syms}.*y-set-1.*" \
@@ -119,8 +123,8 @@ gdb_test "continue" \
 gdb_test "info break" \
     "Num     Type\[ \]+Disp Enb Address\[ \]+What\r?
 1\[\t \]+breakpoint     keep y *<PENDING> *shrfunc1\r?
-\[\t \]+breakpoint already hit \[0-9\]+ (time|times)\r?
-2\[\t \]+breakpoint     keep y *0x\[0-9a-f\]+ *in shrfunc2 at .*" \
+\[\t \]+breakpoint already hit ${::decimal} (time|times)\r?
+2\[\t \]+breakpoint     keep y *${::hex} *in shrfunc2 at .*" \
 "pending breakpoint info on second run at shrfunc2"
 
 gdb_breakpoint "$testfile.c:[gdb_get_line_number "y-set-2" $testfile.c]"

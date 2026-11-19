@@ -1,5 +1,5 @@
 # manythreads.exp -- Expect script to test stopping many threads
-# Copyright (C) 2004-2024 Free Software Foundation, Inc.
+# Copyright (C) 2004-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,16 +22,16 @@ require {!target_info exists gdb,nointerrupts}
 standard_testfile
 
 set opts { debug }
-if [info exists DEBUG] {
+if {[info exists DEBUG]} {
     # make check RUNTESTFLAGS='gdb.threads/manythreads.exp DEBUG=1'
     lappend opts "additional_flags=-DDEBUG"
 }
 
 if {[gdb_compile_pthreads "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable $opts] != "" } {
-    return -1
+    return
 }
 
-clean_restart ${binfile}
+clean_restart ${::testfile}
 gdb_test_no_output "set print sevenbit-strings"
 runto_main
 
@@ -84,7 +84,7 @@ proc interrupt_and_wait { message } {
 	    #  [New Thread NNN]
 	    #  [New Thread NNN]
 	    #  ... pages of new threads output ...
-	    #  [Switching to Thread NNN]
+	    #  [Switching to thread NNN]
 	    #  foo () at foo.c:31
 	    #  31      bar ();
 	    #
@@ -176,10 +176,9 @@ gdb_test_multiple "quit" "GDB exits after stopping multithreaded program" {
 	exp_continue
     }
     eof {
-        pass "GDB exits after stopping multithreaded program"
+	pass "GDB exits after stopping multithreaded program"
     }
     timeout {
-        fail "GDB exits after stopping multithreaded program (timeout)"
+	fail "GDB exits after stopping multithreaded program (timeout)"
     }
 }
-

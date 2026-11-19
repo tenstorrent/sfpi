@@ -1,5 +1,5 @@
 # This shell script emits a C file. -*- C -*-
-#   Copyright (C) 2011-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -59,10 +59,8 @@ tic6x_after_open (void)
   if (is_tic6x_target ())
     {
       if (params.dsbt_index >= params.dsbt_size)
-	{
-	  einfo (_("%F%P: invalid --dsbt-index %d, outside DSBT size\n"),
-		 params.dsbt_index);
-	}
+	fatal (_("%P: invalid --dsbt-index %d, outside DSBT size\n"),
+	       params.dsbt_index);
       elf32_tic6x_setup (&link_info, &params);
     }
 
@@ -150,7 +148,7 @@ gld${EMULATION_NAME}_after_allocation (void)
   /* bfd_elf32_discard_info just plays with debugging sections,
      ie. doesn't affect any code, so we can delay resizing the
      sections.  */
-  ret = bfd_elf_discard_info (link_info.output_bfd, & link_info);
+  ret = bfd_elf_discard_info (&link_info);
   if (ret < 0)
     {
       einfo (_("%X%P: .eh_frame/.stab edit: %E\n"));
@@ -186,7 +184,7 @@ PARSE_AND_LIST_ARGS_CASES='
 	if (*end == 0
 	    && params.dsbt_index >= 0 && params.dsbt_index < 0x7fff)
 	  break;
-	einfo (_("%F%P: invalid --dsbt-index %s\n"), optarg);
+	fatal (_("%P: invalid --dsbt-index %s\n"), optarg);
       }
       break;
     case OPTION_DSBT_SIZE:
@@ -196,7 +194,7 @@ PARSE_AND_LIST_ARGS_CASES='
 	if (*end == 0
 	    && params.dsbt_size >= 0 && params.dsbt_size < 0x7fff)
 	  break;
-	einfo (_("%F%P: invalid --dsbt-size %s\n"), optarg);
+	fatal (_("%P: invalid --dsbt-size %s\n"), optarg);
       }
       break;
    case OPTION_NO_MERGE_EXIDX_ENTRIES:

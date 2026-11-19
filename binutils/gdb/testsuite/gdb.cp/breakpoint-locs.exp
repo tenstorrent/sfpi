@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Free Software Foundation, Inc.
+# Copyright 2020-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,15 @@ include_file breakpoint-locs.h
 
 if { [prepare_for_testing "failed to prepare" $testfile "$srcfile $srcfile2"\
 	  {debug c++}] } {
-    return -1
+    return
 }
 
 gdb_test "break N1::C1::baz" "\\(2 locations\\)"
+
+if {[have_index $binfile] == ""} {
+    set index_dir [host_standard_output_file ""]
+    # This is a regression test for a crash that occurred in the
+    # dwz+inlining series.  See PR symtab/30728.
+    gdb_test_no_output "save gdb-index -dwarf-5 $index_dir" \
+	"save gdb-index"
+}

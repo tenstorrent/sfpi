@@ -2,7 +2,7 @@
 #source: sframe-foo.s
 #source: sframe-bar.s
 #objdump: --sframe=.sframe
-#ld: -shared --no-rosegment
+#ld: -shared --no-rosegment -z separate-code
 #name: SFrame simple link
 
 .*: +file format .*
@@ -10,8 +10,9 @@
 Contents of the SFrame section .sframe:
   Header :
 
-    Version: SFRAME_VERSION_2
-    Flags: SFRAME_F_FDE_SORTED
+    Version: SFRAME_VERSION_3
+    Flags: SFRAME_F_FDE_SORTED,
+           SFRAME_F_FDE_FUNC_START_PCREL
     CFA fixed RA offset: \-8
 #...
 

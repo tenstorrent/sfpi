@@ -1,6 +1,6 @@
 /* Handle different target file systems for GDB, the GNU Debugger.
 
-   Copyright (C) 2010-2024 Free Software Foundation, Inc.
+   Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -18,9 +18,17 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "filesystem.h"
+#include "filenames.h"
 #include "gdbarch.h"
 #include "cli/cli-cmds.h"
 #include "inferior.h"
+
+/* Same as HAVE_DOS_BASED_FILE_SYSTEM, but usable as an rvalue.  */
+#ifdef HAVE_DOS_BASED_FILE_SYSTEM
+# define DOS_BASED_FILE_SYSTEM 1
+#else
+# define DOS_BASED_FILE_SYSTEM 0
+#endif
 
 const char file_system_kind_auto[] = "auto";
 const char file_system_kind_unix[] = "unix";
@@ -57,6 +65,40 @@ target_lbasename (const char *kind, const char *name)
     return unix_lbasename (name);
 }
 
+/* See filesystem.h.  */
+
+bool
+should_normalize_slashes ()
+{
+  if (DOS_BASED_FILE_SYSTEM)
+    return true;
+  else
+    {
+      const char *fskind = effective_target_file_system_kind ();
+      return fskind == file_system_kind_dos_based;
+    }
+}
+
+/* See filesystem.h.  */
+
+char *
+gdb_getcwd (char *buf, size_t size)
+{
+  char *cwd = getcwd (buf, size);
+
+  /* Note this is returning a host path, so we only check
+     DOS_BASED_FILE_SYSTEM without considering the target filesystem
+     kind.  */
+  if (cwd != nullptr && DOS_BASED_FILE_SYSTEM)
+    {
+      /* If CWD is non-NULL, then it's always a NULL-terminated
+	 string.  */
+      normalize_slashes (cwd);
+    }
+
+  return cwd;
+}
+
 static void
 show_target_file_system_kind_command (struct ui_file *file,
 				      int from_tty,
@@ -76,9 +118,7 @@ is \"%s\".\n"),
 		value);
 }
 
-void _initialize_filesystem ();
-void
-_initialize_filesystem ()
+INIT_GDB_FILE (filesystem)
 {
   add_setshow_enum_cmd ("target-file-system-kind",
 			class_files,

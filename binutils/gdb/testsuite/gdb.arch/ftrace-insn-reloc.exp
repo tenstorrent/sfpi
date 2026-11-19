@@ -1,4 +1,4 @@
-# Copyright 2015-2024 Free Software Foundation, Inc.
+# Copyright 2015-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -19,18 +19,18 @@ standard_testfile insn-reloc.c
 # Some targets have leading underscores on assembly symbols.
 set additional_flags [gdb_target_symbol_prefix_flags]
 
-if [prepare_for_testing "failed to prepare" $testfile-no-ipa $srcfile \
-	[list debug $additional_flags]] {
-    return -1
+if {[prepare_for_testing "failed to prepare" $testfile-no-ipa $srcfile \
+	 [list debug $additional_flags]]} {
+    return
 }
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
-if ![gdb_target_supports_trace] {
+if {![gdb_target_supports_trace]} {
     unsupported "target does not support trace"
-    return -1
+    return
 }
 
 require allow_in_proc_agent
@@ -43,20 +43,20 @@ set libipa [get_in_proc_agent]
 if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
 	  executable [list debug $additional_flags shlib=$libipa] ] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 clean_restart $testfile
 set remote_libipa [gdb_load_shlib $libipa]
 
-if ![runto_main] {
-    return 0
+if {![runto_main]} {
+    return
 }
 
 gdb_reinitialize_dir $srcdir/$subdir
 
 if { [gdb_test "info sharedlibrary" ".*[file tail $libipa].*" "IPA loaded"] != 0 } {
     untested "could not find IPA lib loaded"
-    return 1
+    return
 }
 
 # Read function name from testcases[N].
@@ -79,7 +79,7 @@ set n_testcases [gdb_readexpr "n_testcases"]
 
 if { ${n_testcases} == 0 } {
     untested "no instruction relocation to test"
-    return 1
+    return
 }
 
 # Set a fast tracepoint on each set_point${i} symbol.  There is one for
@@ -101,7 +101,7 @@ for { set i 0 } { ${i} < ${n_testcases} } { incr i } {
     set testcase [read_testcase $i]
 
     gdb_test "continue" \
-	".*Breakpoint \[0-9\]+, pass \(\).*" \
+	".*Breakpoint ${::decimal}, pass \(\).*" \
 	"relocated instruction at ${testcase}"
 }
 

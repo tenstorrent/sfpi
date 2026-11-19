@@ -1,4 +1,4 @@
-! Copyright 2021-2024 Free Software Foundation, Inc.
+! Copyright 2021-2026 Free Software Foundation, Inc.
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ program test
   call test_associated (associated (a_real_p, a_real))
 
   ! Setup for final tests, these are performed at the print line
-  ! below.  These final tests are all error conditon checks,
+  ! below.  These final tests are all error condition checks,
   ! i.e. things that can't be compiled into Fortran.
   array_1d_p => array_1d
 

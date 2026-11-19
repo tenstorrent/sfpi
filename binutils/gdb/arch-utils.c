@@ -1,6 +1,6 @@
 /* Dynamic architecture support for GDB, the GNU debugger.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -48,7 +48,7 @@
 bool
 default_displaced_step_hw_singlestep (struct gdbarch *gdbarch)
 {
-  return !gdbarch_software_single_step_p (gdbarch);
+  return !gdbarch_get_next_pcs_p (gdbarch);
 }
 
 CORE_ADDR
@@ -57,7 +57,7 @@ displaced_step_at_entry_point (struct gdbarch *gdbarch)
   CORE_ADDR addr;
   int bp_len;
 
-  addr = entry_point_address (current_program_space);
+  addr = current_program_space->entry_point_address ();
 
   /* Inferior calls also use the entry point as a breakpoint location.
      We don't want displaced stepping to interfere with those
@@ -152,24 +152,24 @@ generic_skip_solib_resolver (struct gdbarch *gdbarch, CORE_ADDR pc)
   return 0;
 }
 
-int
+bool
 generic_in_solib_return_trampoline (struct gdbarch *gdbarch,
 				    CORE_ADDR pc, const char *name)
 {
-  return 0;
+  return false;
 }
 
-int
+bool
 generic_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
-  return 0;
+  return false;
 }
 
-int
+bool
 default_code_of_frame_writable (struct gdbarch *gdbarch,
 				const frame_info_ptr &frame)
 {
-  return 1;
+  return true;
 }
 
 /* Helper functions for gdbarch_inner_than */
@@ -232,7 +232,7 @@ default_adjust_dwarf2_addr (CORE_ADDR pc)
 /* See arch-utils.h.  */
 
 CORE_ADDR
-default_adjust_dwarf2_line (CORE_ADDR addr, int rel)
+default_adjust_dwarf2_line (CORE_ADDR addr, bool rel)
 {
   return addr;
 }
@@ -246,10 +246,10 @@ default_execute_dwarf_cfa_vendor_op (struct gdbarch *gdbarch, gdb_byte op,
   return false;
 }
 
-int
+bool
 cannot_register_not (struct gdbarch *gdbarch, int regnum)
 {
-  return 0;
+  return false;
 }
 
 /* Legacy version of target_virtual_frame_pointer().  Assumes that
@@ -257,7 +257,7 @@ cannot_register_not (struct gdbarch *gdbarch, int regnum)
    cooked or raw.  */
 
 void
-legacy_virtual_frame_pointer (struct gdbarch *gdbarch, 
+legacy_virtual_frame_pointer (struct gdbarch *gdbarch,
 			      CORE_ADDR pc,
 			      int *frame_regnum,
 			      LONGEST *frame_offset)
@@ -295,7 +295,7 @@ default_floatformat_for_type (struct gdbarch *gdbarch,
   /* Check if this is a bfloat16 type.  It has the same size as the
      IEEE half float type, so we use the base type name to tell them
      apart.  */
-  if (name != nullptr && strcmp (name, "__bf16") == 0
+  if (name != nullptr && streq (name, "__bf16")
       && len == gdbarch_bfloat16_bit (gdbarch))
     format = gdbarch_bfloat16_format (gdbarch);
   else if (len == gdbarch_half_bit (gdbarch))
@@ -317,17 +317,11 @@ default_floatformat_for_type (struct gdbarch *gdbarch,
   return format;
 }
 
-int
+bool
 generic_convert_register_p (struct gdbarch *gdbarch, int regnum,
 			    struct type *type)
 {
-  return 0;
-}
-
-int
-default_stabs_argument_has_addr (struct gdbarch *gdbarch, struct type *type)
-{
-  return 0;
+  return false;
 }
 
 int
@@ -346,10 +340,10 @@ default_remote_register_number (struct gdbarch *gdbarch,
 
 /* See arch-utils.h.  */
 
-int
+bool
 default_vsyscall_range (struct gdbarch *gdbarch, struct mem_range *range)
 {
-  return 0;
+  return false;
 }
 
 
@@ -559,7 +553,7 @@ set_architecture (const char *ignore_args,
 {
   struct gdbarch_info info;
 
-  if (strcmp (set_architecture_string, "auto") == 0)
+  if (streq (set_architecture_string, "auto"))
     {
       target_architecture_user = NULL;
       if (!gdbarch_update_p (current_inferior (), info))
@@ -592,7 +586,7 @@ gdbarch_update_p (inferior *inf, struct gdbarch_info info)
     info.abfd = inf->pspace->exec_bfd ();
 
   if (info.abfd == NULL)
-    info.abfd = inf->pspace->core_bfd ();
+    info.abfd = get_inferior_core_bfd (inf);
 
   /* Check for the current target description.  */
   if (info.target_desc == NULL)
@@ -692,7 +686,7 @@ void
 initialize_current_architecture (void)
 {
   arches = gdbarch_printable_names ();
-  
+
   /* Find a default architecture.  */
   if (default_bfd_arch == NULL)
     {
@@ -850,20 +844,20 @@ struct gdbarch *
 get_current_arch (void)
 {
   if (has_stack_frames ())
-    return get_frame_arch (get_selected_frame (NULL));
+    return get_frame_arch (get_selected_frame ());
   else
     return current_inferior ()->arch ();
 }
 
-int
+bool
 default_has_shared_address_space (struct gdbarch *gdbarch)
 {
   /* Simply say no.  In most unix-like targets each inferior/process
      has its own address space.  */
-  return 0;
+  return false;
 }
 
-int
+bool
 default_fast_tracepoint_valid_at (struct gdbarch *gdbarch, CORE_ADDR addr,
 				  std::string *msg)
 {
@@ -871,7 +865,7 @@ default_fast_tracepoint_valid_at (struct gdbarch *gdbarch, CORE_ADDR addr,
      tracepoints that doesn't need gdbarch, so always say yes.  */
   if (msg)
     msg->clear ();
-  return 1;
+  return true;
 }
 
 const gdb_byte *
@@ -899,7 +893,7 @@ default_gen_return_address (struct gdbarch *gdbarch,
   error (_("This architecture has no method to collect a return address."));
 }
 
-int
+bool
 default_return_in_first_hidden_param_p (struct gdbarch *gdbarch,
 					struct type *type)
 {
@@ -909,19 +903,22 @@ default_return_in_first_hidden_param_p (struct gdbarch *gdbarch,
   return !(language_pass_by_reference (type).trivially_copyable);
 }
 
-int default_insn_is_call (struct gdbarch *gdbarch, CORE_ADDR addr)
+bool
+default_insn_is_call (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
-  return 0;
+  return false;
 }
 
-int default_insn_is_ret (struct gdbarch *gdbarch, CORE_ADDR addr)
+bool
+default_insn_is_ret (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
-  return 0;
+  return false;
 }
 
-int default_insn_is_jump (struct gdbarch *gdbarch, CORE_ADDR addr)
+bool
+default_insn_is_jump (struct gdbarch *gdbarch, CORE_ADDR addr)
 {
-  return 0;
+  return false;
 }
 
 /*  See arch-utils.h.  */
@@ -954,18 +951,6 @@ default_program_breakpoint_here_p (struct gdbarch *gdbarch,
     }
 
   return false;
-}
-
-void
-default_skip_permanent_breakpoint (struct regcache *regcache)
-{
-  struct gdbarch *gdbarch = regcache->arch ();
-  CORE_ADDR current_pc = regcache_read_pc (regcache);
-  int bp_len;
-
-  gdbarch_breakpoint_from_pc (gdbarch, &current_pc, &bp_len);
-  current_pc += bp_len;
-  regcache_write_pc (regcache, current_pc);
 }
 
 CORE_ADDR
@@ -1095,7 +1080,6 @@ void
 default_read_core_file_mappings
   (struct gdbarch *gdbarch,
    struct bfd *cbfd,
-   read_core_file_mappings_pre_loop_ftype pre_loop_cb,
    read_core_file_mappings_loop_ftype loop_cb)
 {
 }
@@ -1216,6 +1200,16 @@ default_gdbarch_return_value
 
   return gdbarch->return_value (gdbarch, function, valtype, regcache,
 				readbuf, writebuf);
+}
+
+/* See arch-utils.h.  */
+
+std::optional<CORE_ADDR>
+default_get_shadow_stack_pointer (gdbarch *gdbarch, regcache *regcache,
+				  bool &shadow_stack_enabled)
+{
+  shadow_stack_enabled = false;
+  return {};
 }
 
 obstack *gdbarch_obstack (gdbarch *arch)
@@ -1525,12 +1519,10 @@ core_file_exec_context::environment () const
   return e;
 }
 
-void _initialize_gdbarch_utils ();
-void
-_initialize_gdbarch_utils ()
+INIT_GDB_FILE (gdbarch_utils)
 {
   add_setshow_enum_cmd ("endian", class_support,
-			endian_enum, &set_endian_string, 
+			endian_enum, &set_endian_string,
 			_("Set endianness of target."),
 			_("Show endianness of target."),
 			NULL, set_endian, show_endian,

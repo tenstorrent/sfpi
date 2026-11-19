@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ if {[prepare_for_testing ${testfile}.exp ${testfile} ${srcfile} \
     return -1
 }
 
-if ![fortran_runto_main] {
+if {![fortran_runto_main]} {
     return -1
 }
 
@@ -61,7 +61,7 @@ while { $test_count < 500 } {
 	    }
 	}
 
-	if ($found_dealloc_breakpoint) {
+	if {$found_dealloc_breakpoint} {
 	    break
 	}
 
@@ -76,10 +76,6 @@ while { $test_count < 500 } {
 	    error "failed to extract expected results for ubound"
 	}
 
-	verbose -log "APB: Run a test here"
-	verbose -log "APB: Expected lbound '$expected_lbound'"
-	verbose -log "APB: Expected ubound '$expected_ubound'"
-
 	# We want to take a look at the line in the previous frame that
 	# called the current function.  I couldn't find a better way of
 	# doing this than 'up', which will print the line, then 'down'
@@ -91,7 +87,7 @@ while { $test_count < 500 } {
 	set array_name ""
 	set xfail_data ""
 	gdb_test_multiple "up" "up" {
-	    -re "\r\n\[0-9\]+\[ \t\]+DO_TEST \\((\[^\r\n\]+)\\)\r\n$gdb_prompt $" {
+	    -re "\r\n${::decimal}\[ \t\]+DO_TEST \\((\[^\r\n\]+)\\)\r\n$gdb_prompt $" {
 		set array_name $expect_out(1,string)
 	    }
 	}
@@ -116,7 +112,7 @@ while { $test_count < 500 } {
 	# us the actual bounds of the array.  Thanks GDB.
 	set upper_dim ""
 	gdb_test_multiple "p lbound ($array_name, 0)" "" {
-	    -re "\r\nLBOUND dimension must be from 1 to (\[0-9\]+)\r\n$gdb_prompt $" {
+	    -re "\r\nLBOUND dimension must be from 1 to (${::decimal})\r\n$gdb_prompt $" {
 		set upper_dim $expect_out(1,string)
 	    }
 	}
@@ -127,7 +123,7 @@ while { $test_count < 500 } {
 	# Check that asking for the ubound dimension 0 gives the same
 	# dimension range as in the lbound case.
 	gdb_test_multiple "p ubound ($array_name, 0)" "" {
-	    -re "\r\nUBOUND dimension must be from 1 to (\[0-9\]+)\r\n$gdb_prompt $" {
+	    -re "\r\nUBOUND dimension must be from 1 to (${::decimal})\r\n$gdb_prompt $" {
 		gdb_assert {$upper_dim == $expect_out(1,string)} \
 		    "ubound limit matches lbound limit"
 	    }
@@ -160,7 +156,7 @@ while { $test_count < 500 } {
 
 	# Finally, check that asking for a dimension above the valid
 	# range gives the expected error.
-	set bad_dim [expr $upper_dim + 1]
+	set bad_dim [expr {$upper_dim + 1}]
 	gdb_test "p lbound ($array_name, $bad_dim)" \
 	    "LBOUND dimension must be from 1 to $upper_dim" \
 	    "check error message for lbound of dim = $bad_dim"

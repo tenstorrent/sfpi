@@ -1,6 +1,6 @@
 /* GDB parameters implemented in Guile.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -250,7 +250,7 @@ pascm_make_param_smob (void)
   SCM p_scm;
 
   p_smob->cmd_class = no_class;
-  p_smob->type = var_boolean; /* ARI: var_boolean */
+  p_smob->type = var_boolean;
   p_smob->set_func = SCM_BOOL_F;
   p_smob->show_func = SCM_BOOL_F;
   p_scm = scm_new_smob (parameter_smob_tag, (scm_t_bits) p_smob);
@@ -308,13 +308,37 @@ pascm_is_valid (param_smob *p_smob)
   return p_smob->commands.set != nullptr;
 }
 
-/* A helper function which return the default documentation string for
-   a parameter (which is to say that it's undocumented).  */
+
+/* The different types of documentation string.  */
+
+enum doc_string_type
+{
+  doc_string_set,
+  doc_string_show,
+  doc_string_description
+};
+
+/* A helper function which returns the default documentation string for
+   a parameter CMD_NAME.  The DOC_TYPE indicates which type of
+   documentation string is needed.  The returned string is dynamically
+   allocated.  */
 
 static char *
-get_doc_string (void)
+get_doc_string (doc_string_type doc_type, const char *cmd_name)
 {
-  return xstrdup (_("This command is not documented."));
+  if (doc_type == doc_string_description)
+    return xstrdup (_("This command is not documented."));
+  else
+    {
+      gdb_assert (cmd_name != nullptr);
+
+      if (doc_type == doc_string_show)
+	return xstrprintf (_("Show the current value of '%s'."),
+			   cmd_name).release ();
+      else
+	return xstrprintf (_("Set the current value of '%s'."),
+			   cmd_name).release ();
+    }
 }
 
 /* Subroutine of pascm_set_func, pascm_show_func to simplify them.
@@ -590,7 +614,7 @@ compute_enum_list (SCM enum_values_scm, int arg_pos, const char *func_name)
 
 static const scheme_integer_constant parameter_types[] =
 {
-  { "PARAM_BOOLEAN", param_boolean }, /* ARI: param_boolean */
+  { "PARAM_BOOLEAN", param_boolean },
   { "PARAM_AUTO_BOOLEAN", param_auto_boolean },
   { "PARAM_ZINTEGER", param_zinteger },
   { "PARAM_UINTEGER", param_uinteger },
@@ -771,7 +795,7 @@ pascm_set_param_value_x (param_smob *p_smob,
 	  gdbscm_throw (exception);
 	for (i = 0; enumeration[i]; ++i)
 	  {
-	    if (strcmp (enumeration[i], str.get ()) == 0)
+	    if (streq (enumeration[i], str.get ()))
 	      break;
 	  }
 	if (enumeration[i] == nullptr)
@@ -969,7 +993,7 @@ gdbscm_make_parameter (SCM name_scm, SCM rest)
   char *s;
   char *name;
   int cmd_class = no_class;
-  int param_type = param_boolean; /* ARI: param_boolean */
+  int param_type = param_boolean;
   SCM enum_list_scm = SCM_BOOL_F;
   SCM set_func = SCM_BOOL_F, show_func = SCM_BOOL_F;
   char *doc = NULL, *set_doc = NULL, *show_doc = NULL;
@@ -990,11 +1014,14 @@ gdbscm_make_parameter (SCM name_scm, SCM rest)
 			      &show_doc_arg_pos, &show_doc,
 			      &initial_value_arg_pos, &initial_value_scm);
 
-  /* If doc is NULL, leave it NULL.  See add_setshow_cmd_full.  */
+  if (doc == nullptr)
+    doc = get_doc_string (doc_string_description, nullptr);
+  else if (*doc == '\0')
+    doc = nullptr;
   if (set_doc == NULL)
-    set_doc = get_doc_string ();
+    set_doc = get_doc_string (doc_string_set, name);
   if (show_doc == NULL)
-    show_doc = get_doc_string ();
+    show_doc = get_doc_string (doc_string_show, name);
 
   s = name;
   name = gdbscm_canonicalize_command_name (s, 0);

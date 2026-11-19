@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2025 Free Software Foundation, Inc.
+# Copyright (C) 2014-2026 Free Software Foundation, Inc.
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -82,6 +82,8 @@
 #               applied to every symbol definition
 #       ALL_TEXT_BEFORE_RO - put all code sections before read-only
 #               sections
+#       ALL_TEXT_AFTER_RO - put all code sections after read-only
+#               sections
 #
 # When adding sections, do note that the names of some sections are used
 # when specifying the start address of the next.
@@ -122,7 +124,7 @@
 #
 # The following all mean "if foo is defined then do/insert <stuff>":
 #
-#    test -z "$foo" || <stuff>
+#    test -z "$foo" || <stuff> 
 #    test -n "$foo" && <stuff>
 #    if test -n "$foo"; then <stuff>
 #    if [ -n "$foo" ]; then <stuff>
@@ -140,7 +142,7 @@
 # positive tests and a NOR for negative tests.  ie, the following all do
 # <stuff> if either or both of <foo> and <bar> are defined:
 #
-#    test -z "$foo$bar" || <stuff>
+#    test -z "$foo$bar" || <stuff> 
 #    test -n "$foo$bar" && <stuff>
 #    if test -n "$foo$bar"; then <stuff>
 #
@@ -360,7 +362,11 @@ SHLIB_TEXT_START_ADDR="SEGMENT_START(\"text-segment\", ${SHLIB_TEXT_START_ADDR:-
 if test -z "$TINY_READONLY_SECTION"; then
   case "$LD_FLAG" in
     *ro*textonly*)
-      ALL_TEXT_BEFORE_RO=" "
+      if test -n "${ALL_TEXT_AFTER_RO}"; then
+        TEXT_AFTER_RO=" "
+      else
+        ALL_TEXT_BEFORE_RO=" "
+      fi
       SEPARATE_TEXT=" "
       TEXT_SEGMENT_ALIGN=". = ALIGN(${MAXPAGESIZE});"
       ;;
@@ -417,7 +423,7 @@ EOF
 emit_header()
 {
 cat <<EOF
-/* Copyright (C) 2014-2025 Free Software Foundation, Inc.
+/* Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    Copying and distribution of this script, with or without modification,
    are permitted in any medium without royalty provided the copyright
@@ -449,7 +455,7 @@ emit_noinit()
   if test "${HAVE_NOINIT}" != "yes"; then
     return
   fi
-cat <<EOF
+cat <<EOF  
   /* This section contains data that is not initialized during load,
      or during the application's initialization sequence.  */
   .noinit ${RELOCATING-0} (NOLOAD) : ${RELOCATING+ALIGN(${ALIGNMENT})}
@@ -467,7 +473,7 @@ emit_persistent()
   if test "${HAVE_PERSISTENT}" != "yes"; then
     return
   fi
-cat <<EOF
+cat <<EOF    
   /* This section contains data that is initialized during load,
      but not during the application's initialization sequence.  */
   .persistent ${RELOCATING-0} : ${RELOCATING+ALIGN(${ALIGNMENT})}
@@ -612,7 +618,7 @@ EOF
       sed -e '/^[	 ]*\.rel\.[^}]*$/,/}/d;/^[	 ]*\.rel\./d;/__rel_iplt_/d' ldscripts/dyntmp.$$
     fi
   fi
-
+  
   rm -f ldscripts/dyntmp.$$
 
   if test -n "${HAVE_DT_RELR}"; then
@@ -642,9 +648,9 @@ cat <<EOF
   } ${FILL}
 
   ${TEXT_PLT+${PLT_NEXT_DATA-${PLT} ${OTHER_PLT_SECTIONS}}}
-
+  
   ${TINY_READONLY_SECTION}
-
+  
   .text         ${RELOCATING-0} :
   {
     ${RELOCATING+${TEXT_START_SYMBOLS}}
@@ -658,7 +664,7 @@ cat <<EOF
     *(.gnu.warning)
     ${RELOCATING+${OTHER_TEXT_SECTIONS}}
   } ${FILL}
-
+  
   .fini         ${RELOCATING-0}${RELOCATING+${FINI_ADDR}} :
   {
     ${RELOCATING+${FINI_START}}
@@ -691,14 +697,14 @@ if test -n "${SEPARATE_CODE}${SEPARATE_TEXT}"; then
     RODATA_ADDR="ALIGN(${SEGMENT_SIZE}) + (. & (${MAXPAGESIZE} - 1))"
     RODATA_ADDR="SEGMENT_START(\"rodata-segment\", ${RODATA_ADDR})"
   fi
-
+  
   if test -n "${SHLIB_RODATA_ADDR}"; then
     SHLIB_RODATA_ADDR="SEGMENT_START(\"rodata-segment\", ${SHLIB_RODATA_ADDR}) + SIZEOF_HEADERS"
   else
     SHLIB_RODATA_ADDR="ALIGN(${SEGMENT_SIZE}) + (. & (${MAXPAGESIZE} - 1))"
     SHLIB_RODATA_ADDR="SEGMENT_START(\"rodata-segment\", ${SHLIB_RODATA_ADDR})"
   fi
-
+  
 cat <<EOF
   ${RELOCATING+/* Adjust the address for the rodata segment.  We want to adjust up to
      the same address within the page on the next page up.  */
@@ -719,7 +725,7 @@ cat <<EOF
   ${OTHER_READONLY_SECTIONS}
   .eh_frame_hdr ${RELOCATING-0} : { *(.eh_frame_hdr)${RELOCATING+ *(.eh_frame_entry .eh_frame_entry.*)} }
   .eh_frame     ${RELOCATING-0} : ONLY_IF_RO { KEEP (*(.eh_frame))${RELOCATING+ *(.eh_frame.*)} }
-  .sframe       ${RELOCATING-0} : ONLY_IF_RO { *(.sframe)${RELOCATING+ *(.sframe.*)} }
+  .sframe       ${RELOCATING-0} : ONLY_IF_RO { KEEP (*(.sframe))${RELOCATING+ *(.sframe.*)} }
   .gcc_except_table ${RELOCATING-0} : ONLY_IF_RO { *(.gcc_except_table${RELOCATING+ .gcc_except_table.*}) }
   .gnu_extab ${RELOCATING-0} : ONLY_IF_RO { *(.gnu_extab*) }
 
@@ -727,23 +733,25 @@ cat <<EOF
   .exception_ranges ${RELOCATING-0} : ONLY_IF_RO { *(.exception_ranges${RELOCATING+*}) }
 
   ${TEXT_PLT+${PLT_NEXT_DATA+${PLT} ${OTHER_PLT_SECTIONS}}}
+EOF
 
+test -n "${RELOCATING}" && cat <<EOF
   /* Various note sections.  Placed here so that they are always included
      in the read-only segment and not treated as orphan sections.  The
      current orphan handling algorithm does place note sections after R/O
      data, but this is not guaranteed to always be the case.  */
-  .note.build-id :      { *(.note.build-id) } ${RELOCATING+${REGION}}
-  .note.GNU-stack :     { *(.note.GNU-stack) } ${RELOCATING+${REGION}}
-  .note.gnu-property :  { *(.note.gnu-property) } ${RELOCATING+${REGION}}
-  .note.ABI-tag :       { *(.note.ABI-tag) } ${RELOCATING+${REGION}}
-  .note.package :       { *(.note.package) } ${RELOCATING+${REGION}}
-  .note.dlopen :        { *(.note.dlopen) } ${RELOCATING+${REGION}}
-  .note.netbsd.ident :  { *(.note.netbsd.ident) } ${RELOCATING+${REGION}}
-  .note.openbsd.ident : { *(.note.openbsd.ident) } ${RELOCATING+${REGION}}
+  .note.build-id :      { *(.note.build-id) } ${REGION}
+  .note.GNU-stack :     { *(.note.GNU-stack) } ${REGION}
+  .note.gnu.property :  { *(.note.gnu.property) } ${REGION}
+  .note.ABI-tag :       { *(.note.ABI-tag) } ${REGION}
+  .note.package :       { *(.note.package) } ${REGION}
+  .note.dlopen :        { *(.note.dlopen) } ${REGION}
+  .note.netbsd.ident :  { *(.note.netbsd.ident) } ${REGION}
+  .note.openbsd.ident : { *(.note.openbsd.ident) } ${REGION}
 
-  ${RELOCATING+${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (__${ETEXT_NAME} = .);}}
-  ${RELOCATING+${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (_${ETEXT_NAME} = .);}}
-  ${RELOCATING+${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (${ETEXT_NAME} = .);}}
+  ${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (__${ETEXT_NAME} = .);}
+  ${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (_${ETEXT_NAME} = .);}
+  ${ETEXT_LAST_IN_RODATA_SEGMENT+PROVIDE (${ETEXT_NAME} = .);}
 EOF
 }
 
@@ -792,7 +800,7 @@ emit_data()
 cat <<EOF
   /* Exception handling.  */
   .eh_frame     ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.eh_frame))${RELOCATING+ *(.eh_frame.*)} }
-  .sframe       ${RELOCATING-0} : ONLY_IF_RW { *(.sframe)${RELOCATING+ *(.sframe.*)} }
+  .sframe       ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.sframe))${RELOCATING+ *(.sframe.*)} }
   .gnu_extab    ${RELOCATING-0} : ONLY_IF_RW { *(.gnu_extab) }
   .gcc_except_table ${RELOCATING-0} : ONLY_IF_RW { *(.gcc_except_table${RELOCATING+ .gcc_except_table.*}) }
   .exception_ranges ${RELOCATING-0} : ONLY_IF_RW { *(.exception_ranges${RELOCATING+*}) }
@@ -846,7 +854,7 @@ cat <<EOF
   ${SMALL_DATA_CTOR+${RELOCATING+${CTOR}}}
   ${SMALL_DATA_DTOR+${RELOCATING+${DTOR}}}
   ${SDATA_GOT+${DATA_PLT+${PLT_BEFORE_GOT+${PLT}}}}
-
+  
   ${SDATA_GOT+${RELOCATING+${OTHER_GOT_SYMBOLS+. = .; ${OTHER_GOT_SYMBOLS}}}}
 
   ${SDATA_GOT+${GOT}}
@@ -886,11 +894,11 @@ cat <<EOF
   $(emit_large_bss 0)
 
   ${RELOCATING+${OTHER_BSS_END_SYMBOLS}}
+
+  $(emit_noinit)
+
+  $(align_to_default_symbol_alignment)
 EOF
-
-  emit_noinit
-
-  align_to_default_symbol_alignment
 }
 
 align_large_data()
@@ -920,7 +928,7 @@ emit_large_bss()
     if test -z "${LARGE_BSS_AFTER_BSS}"; then
       return
     fi
-  fi
+  fi  
 
 cat <<EOF
   .lbss ${RELOCATING-0} :
@@ -937,7 +945,7 @@ emit_large_data()
   if test "${LARGE_SECTIONS}" != "yes"; then
     return
   fi
-
+    
 cat <<EOF
   .lrodata ${RELOCATING-0} ${RELOCATING+ALIGN(${MAXPAGESIZE}) + (. & (${MAXPAGESIZE} - 1))} :
   {
@@ -949,9 +957,9 @@ cat <<EOF
     *(.ldata${RELOCATING+ .ldata.* .gnu.linkonce.l.*})
     $(align_to_default_section_alignment)
   }
-EOF
 
-  emit_large_bss 1
+  $(emit_large_bss 1)
+EOF
 }
 
 emit_end_symbols()
@@ -1019,7 +1027,7 @@ EOF
 
   #------Early Read Only Data -----------------------------------------------
 
-  if test -z "${ALL_TEXT_BEFORE_RO}"; then
+  if test -n "${TEXT_AFTER_RO}" || test -z "${ALL_TEXT_BEFORE_RO}"; then
     # We are allowed to put R/O sections before code sections.
     # Doing so either puts read only data into the code segment, if the data
     # and code sections are contiguous, or creates a data segment followed by
@@ -1031,6 +1039,7 @@ EOF
 
     test -n "${SEPARATE_CODE}" || emit_early_ro
     test -n "${NON_ALLOC_DYN}${SEPARATE_CODE}" || emit_dyn
+    test -z "${TEXT_AFTER_RO}" || emit_rodata
 
     # We only need the alignment if we have emitted some sections.
     if test -z "${SEPARATE_CODE}"; then
@@ -1039,7 +1048,7 @@ EOF
       align_text
     fi
   fi
-
+  
   #------Executable Code ----------------------------------------------------
 
   # We do not invoke "align_text" here as doing so will increase the file
@@ -1056,30 +1065,32 @@ EOF
 
   align_text
 
-  #------Read Only Data -----------------------------------------------------
+  if test -z "${TEXT_AFTER_RO}"; then
+    #------Read Only Data ------------------------------------------------
 
-  align_rodata
+    align_rodata
 
-  # If we have not already emitted the early read only data sections then do
-  # so now.  Also if the dynamic section has not already been emitted and we
-  # can put it into the data segment, then do that here as well.
+    # If we have not already emitted the early read only data sections then do
+    # so now.  Also if the dynamic section has not already been emitted and we
+    # can put it into the data segment, then do that here as well.
 
-  if test -n "${ALL_TEXT_BEFORE_RO}"; then
-    test -n "${SEPARATE_CODE}" || emit_early_ro
-    test -n "${NON_ALLOC_DYN}${SEPARATE_CODE}" || emit_dyn
+    if test -n "${ALL_TEXT_BEFORE_RO}"; then
+      test -n "${SEPARATE_CODE}" || emit_early_ro
+      test -n "${NON_ALLOC_DYN}${SEPARATE_CODE}" || emit_dyn
+    fi
+    test -z "${SEPARATE_CODE}" || emit_early_ro
+    test -z "${SEPARATE_CODE}" || emit_dyn
+
+    # Now emit the rest of the read only data.
+
+    emit_rodata
   fi
-  test -z "${SEPARATE_CODE}" || emit_early_ro
-  test -z "${SEPARATE_CODE}" || emit_dyn
-
-  # Now emit the rest of the read only data.
-
-  emit_rodata
 
   #------Read Write Data ----------------------------------------------------
 
   align_data
   emit_data
-
+  
   align_large_data
   emit_large_data
 

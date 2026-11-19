@@ -1,5 +1,5 @@
 /* Matsushita 10200 specific support for 32-bit ELF
-   Copyright (C) 1996-2025 Free Software Foundation, Inc.
+   Copyright (C) 1996-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -336,8 +336,7 @@ mn10200_elf_final_link_relocate (reloc_howto_type *howto,
 
 /* Relocate an MN10200 ELF section.  */
 static int
-mn10200_elf_relocate_section (bfd *output_bfd,
-			      struct bfd_link_info *info,
+mn10200_elf_relocate_section (struct bfd_link_info *info,
 			      bfd *input_bfd,
 			      asection *input_section,
 			      bfd_byte *contents,
@@ -349,7 +348,7 @@ mn10200_elf_relocate_section (bfd *output_bfd,
   struct elf_link_hash_entry **sym_hashes;
   Elf_Internal_Rela *rel, *relend;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
 
   rel = relocs;
@@ -376,7 +375,8 @@ mn10200_elf_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -390,12 +390,13 @@ mn10200_elf_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_MN10200_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
 
-      r = mn10200_elf_final_link_relocate (howto, input_bfd, output_bfd,
+      r = mn10200_elf_final_link_relocate (howto, input_bfd, info->output_bfd,
 					   input_section,
 					   contents, rel->r_offset,
 					   relocation, rel->r_addend,
@@ -498,7 +499,7 @@ mn10200_elf_relax_delete_bytes (bfd *abfd, asection *sec,
     }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   for (isymend = isym + symtab_hdr->sh_info; isym < isymend; isym++)
     {
@@ -583,7 +584,7 @@ mn10200_elf_relax_section (bfd *abfd,
       || (sec->flags & SEC_CODE) == 0)
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get a copy of the native relocations.  */
   internal_relocs = (_bfd_elf_link_read_relocs
@@ -1236,7 +1237,7 @@ mn10200_elf_symbol_address_p (bfd *abfd,
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
 
   /* Examine all the local symbols.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   for (isymend = isym + symtab_hdr->sh_info; isym < isymend; isym++)
     {
       if (isym->st_shndx == sec_shndx
@@ -1288,7 +1289,7 @@ mn10200_elf_get_relocated_section_contents (bfd *output_bfd,
 						       relocatable,
 						       symbols);
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
 
   bfd_byte *orig_data = data;
   if (data == NULL)
@@ -1348,9 +1349,9 @@ mn10200_elf_get_relocated_section_contents (bfd *output_bfd,
 	  *secpp = isec;
 	}
 
-      if (! mn10200_elf_relocate_section (output_bfd, link_info, input_bfd,
-				     input_section, data, internal_relocs,
-				     isymbuf, sections))
+      if (! mn10200_elf_relocate_section (link_info, input_bfd,
+					  input_section, data, internal_relocs,
+					  isymbuf, sections))
 	goto error_return;
 
       free (sections);

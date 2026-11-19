@@ -1,5 +1,5 @@
 /* aarch64-opc.h -- Header file for aarch64-opc.c and aarch64-opc-2.c.
-   Copyright (C) 2012-2025 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
    Contributed by ARM Ltd.
 
    This file is part of the GNU opcodes library.
@@ -24,231 +24,120 @@
 #include <string.h>
 #include "opcode/aarch64.h"
 
-/* Instruction fields.
-   Keep this sorted alphanumerically and synced with the fields array
-   in aarch64-opc.c.  */
-enum aarch64_field_kind
-{
-  FLD_NIL,
-  FLD_CRm,
-  FLD_CRm_dsb_nxs,
-  FLD_CRn,
-  FLD_CSSC_imm8,
-  FLD_H,
-  FLD_L,
-  FLD_LSE128_Rt,
-  FLD_LSE128_Rt2,
-  FLD_M,
-  FLD_N,
-  FLD_Q,
-  FLD_Ra,
-  FLD_Rd,
-  FLD_Rm,
-  FLD_Rn,
-  FLD_Rs,
-  FLD_Rt,
-  FLD_Rt2,
-  FLD_S,
-  FLD_SM3_imm2,
-  FLD_SME_Pdx2,
-  FLD_SME_Pm,
-  FLD_SME_PNd3,
-  FLD_SME_PNn3,
-  FLD_SME_Q,
-  FLD_SME_Rm,
-  FLD_SME_Rv,
-  FLD_SME_V,
-  FLD_SME_VL_10,
-  FLD_SME_VL_13,
-  FLD_SME_ZAda_1b,
-  FLD_SME_ZAda_2b,
-  FLD_SME_ZAda_3b,
-  FLD_SME_Zdn2,
-  FLD_SME_Zdn4,
-  FLD_SME_Zm,
-  FLD_SME_Zm2,
-  FLD_SME_Zm4,
-  FLD_SME_Zn2,
-  FLD_SME_Zn4,
-  FLD_SME_ZtT,
-  FLD_SME_Zt3,
-  FLD_SME_Zt2,
-  FLD_SME_i1,
-  FLD_SME_size_12,
-  FLD_SME_size_22,
-  FLD_SME_sz_23,
-  FLD_SME_tszh,
-  FLD_SME_tszl,
-  FLD_SME_zero_mask,
-  FLD_SVE_M_4,
-  FLD_SVE_M_14,
-  FLD_SVE_M_16,
-  FLD_SVE_N,
-  FLD_SVE_Pd,
-  FLD_SVE_Pg3,
-  FLD_SVE_Pg4_5,
-  FLD_SVE_Pg4_10,
-  FLD_SVE_Pg4_16,
-  FLD_SVE_Pm,
-  FLD_SVE_Pn,
-  FLD_SVE_Pt,
-  FLD_SVE_Rm,
-  FLD_SVE_Rn,
-  FLD_SVE_Vd,
-  FLD_SVE_Vm,
-  FLD_SVE_Vn,
-  FLD_SVE_Za_5,
-  FLD_SVE_Za_16,
-  FLD_SVE_Zd,
-  FLD_SVE_Zm_5,
-  FLD_SVE_Zm_16,
-  FLD_SVE_Zn,
-  FLD_SVE_Zt,
-  FLD_SVE_i1,
-  FLD_SVE_i1_23,
-  FLD_SVE_i2,
-  FLD_SVE_i2h,
-  FLD_SVE_i3h,
-  FLD_SVE_i3h2,
-  FLD_SVE_i3h3,
-  FLD_SVE_i3l,
-  FLD_SVE_i3l2,
-  FLD_SVE_i4l2,
-  FLD_SVE_imm3,
-  FLD_SVE_imm4,
-  FLD_SVE_imm5,
-  FLD_SVE_imm5b,
-  FLD_SVE_imm6,
-  FLD_SVE_imm7,
-  FLD_SVE_imm8,
-  FLD_SVE_imm9,
-  FLD_SVE_immr,
-  FLD_SVE_imms,
-  FLD_SVE_msz,
-  FLD_SVE_pattern,
-  FLD_SVE_prfop,
-  FLD_SVE_rot1,
-  FLD_SVE_rot2,
-  FLD_SVE_rot3,
-  FLD_SVE_size,
-  FLD_SVE_sz,
-  FLD_SVE_sz2,
-  FLD_SVE_tsz,
-  FLD_SVE_tszh,
-  FLD_SVE_tszl_8,
-  FLD_SVE_tszl_19,
-  FLD_SVE_xs_14,
-  FLD_SVE_xs_22,
-  FLD_S_imm10,
-  FLD_abc,
-  FLD_asisdlso_opcode,
-  FLD_b40,
-  FLD_b5,
-  FLD_cmode,
-  FLD_cond,
-  FLD_cond2,
-  FLD_defgh,
-  FLD_hw,
-  FLD_imm1_0,
-  FLD_imm1_2,
-  FLD_imm1_3,
-  FLD_imm1_8,
-  FLD_imm1_10,
-  FLD_imm1_14,
-  FLD_imm1_15,
-  FLD_imm1_16,
-  FLD_imm2_0,
-  FLD_imm2_1,
-  FLD_imm2_2,
-  FLD_imm2_8,
-  FLD_imm2_10,
-  FLD_imm2_12,
-  FLD_imm2_13,
-  FLD_imm2_15,
-  FLD_imm2_16,
-  FLD_imm2_19,
-  FLD_imm3_0,
-  FLD_imm3_5,
-  FLD_imm3_10,
-  FLD_imm3_12,
-  FLD_imm3_14,
-  FLD_imm3_15,
-  FLD_imm3_19,
-  FLD_imm4_0,
-  FLD_imm4_5,
-  FLD_imm4_10,
-  FLD_imm4_11,
-  FLD_imm4_14,
-  FLD_imm5,
-  FLD_imm6_10,
-  FLD_imm6_15,
-  FLD_imm7,
-  FLD_imm8,
-  FLD_imm9,
-  FLD_imm12,
-  FLD_imm14,
-  FLD_imm16_0,
-  FLD_imm16_5,
-  FLD_imm17_1,
-  FLD_imm17_2,
-  FLD_imm19,
-  FLD_imm26,
-  FLD_immb,
-  FLD_immh,
-  FLD_immhi,
-  FLD_immlo,
-  FLD_immr,
-  FLD_imms,
-  FLD_index,
-  FLD_index2,
-  FLD_ldst_size,
-  FLD_len,
-  FLD_lse_sz,
-  FLD_nzcv,
-  FLD_op,
-  FLD_op0,
-  FLD_op1,
-  FLD_op2,
-  FLD_opc,
-  FLD_opc1,
-  FLD_opcode,
-  FLD_option,
-  FLD_rotate1,
-  FLD_rotate2,
-  FLD_rotate3,
-  FLD_scale,
-  FLD_sf,
-  FLD_shift,
-  FLD_size,
-  FLD_sz,
-  FLD_type,
-  FLD_vldst_size,
-  FLD_off3,
-  FLD_off2,
-  FLD_ZAn_1,
-  FLD_ol,
-  FLD_ZAn_2,
-  FLD_ZAn_3,
-  FLD_ZAn,
-  FLD_opc2,
-  FLD_rcpc3_size,
-  FLD_brbop,
-  FLD_ZA8_1,
-  FLD_ZA7_2,
-  FLD_ZA6_3,
-  FLD_ZA5_4,
-};
+/* Field description.
 
-/* Field description.  */
+   If is_const is false, this identifies a bitfield in an instruction encoding
+   that has size WIDTH and has its least significant bit at position NUM.
+
+   If is_const is true, this represents the constant bit string of size WIDTH
+   bits stored in the least significant bits of NUM.  In this case, the
+   leading 8-WIDTH bits of VALUE must be zero.
+
+   A sequence of fields can be used to describe how instruction operands are
+   represented in the 32-bit instruction encoding.
+
+   For example, consider an instruction operand Zd that is an even numbered
+   register in z16-z30, with the middle three bits of the register number
+   stored in bits [19:17] of the encoding.  The register number can then be
+   constructed by concatenating:
+   - a constant bit '1' (represented here as {1, 1, true}),
+   - bits [19:17] of the encoding (represented here as {3, 17, false}), and
+   - a constant bit '0' (represented here as {1, 0, true}).
+   This sequence of fields fully describes both the constraints on which
+   register numbers are valid, and how valid register numbers are represented
+   in the instruction encoding.  */
 struct aarch64_field
 {
-  int lsb;
-  int width;
+  unsigned int width:8;
+  unsigned int num:7;
+  bool is_const:1;
 };
 
 typedef struct aarch64_field aarch64_field;
 
-extern const aarch64_field fields[];
+#define AARCH64_FIELD(lsb, width) ((aarch64_field) {width, lsb, false})
+#define AARCH64_FIELD_CONST(val, width) ((aarch64_field) {width, val, true})
+#define AARCH64_FIELD_NIL ((aarch64_field) {0, 0, false})
+
+/* Instruction fields.  These defines are included to reduce the initial diff
+   size, but the indirection should eventually be eliminated.  */
+#define FLD_CRm                AARCH64_FIELD( 8,  4)
+#define FLD_CRm_dsb_nxs        AARCH64_FIELD(10,  2)
+#define FLD_CRn                AARCH64_FIELD(12,  4)
+#define FLD_H                  AARCH64_FIELD(11,  1)
+#define FLD_L                  AARCH64_FIELD(21,  1)
+#define FLD_M                  AARCH64_FIELD(20,  1)
+#define FLD_N                  AARCH64_FIELD(22,  1)
+#define FLD_Q                  AARCH64_FIELD(30,  1)
+#define FLD_Rm                 AARCH64_FIELD(16,  5)
+#define FLD_Rn                 AARCH64_FIELD( 5,  5)
+#define FLD_Rt                 AARCH64_FIELD( 0,  5)
+#define FLD_S                  AARCH64_FIELD(12,  1)
+#define FLD_SM3_imm2           AARCH64_FIELD(12,  2)
+#define FLD_SME_Q              AARCH64_FIELD(16,  1)
+#define FLD_SME_size_12        AARCH64_FIELD(12,  2)
+#define FLD_SME_size_22        AARCH64_FIELD(22,  2)
+#define FLD_SME_sz_23          AARCH64_FIELD(23,  1)
+#define FLD_SME_tszh           AARCH64_FIELD(22,  1)
+#define FLD_SME_tszl           AARCH64_FIELD(18,  3)
+#define FLD_SVE_M_4            AARCH64_FIELD( 4,  1)
+#define FLD_SVE_M_14           AARCH64_FIELD(14,  1)
+#define FLD_SVE_M_16           AARCH64_FIELD(16,  1)
+#define FLD_SVE_imm4           AARCH64_FIELD(16,  4)
+#define FLD_SVE_imm6           AARCH64_FIELD(16,  6)
+#define FLD_SVE_msz            AARCH64_FIELD(10,  2)
+#define FLD_SVE_size           AARCH64_FIELD(17,  2)
+#define FLD_SVE_sz             AARCH64_FIELD(22,  1)
+#define FLD_SVE_sz2            AARCH64_FIELD(30,  1)
+#define FLD_SVE_sz3            AARCH64_FIELD(17,  1)
+#define FLD_SVE_sz4            AARCH64_FIELD(14,  1)
+#define FLD_SVE_tszh           AARCH64_FIELD(22,  2)
+#define FLD_SVE_tszl_8         AARCH64_FIELD( 8,  2)
+#define FLD_SVE_tszl_19        AARCH64_FIELD(19,  2)
+#define FLD_abc                AARCH64_FIELD(16,  3)
+#define FLD_asisdlso_opcode    AARCH64_FIELD(13,  3)
+#define FLD_cmode              AARCH64_FIELD(12,  4)
+#define FLD_cond               AARCH64_FIELD(12,  4)
+#define FLD_cond2              AARCH64_FIELD( 0,  4)
+#define FLD_defgh              AARCH64_FIELD( 5,  5)
+#define FLD_hw                 AARCH64_FIELD(21,  2)
+#define FLD_imm1_22            AARCH64_FIELD(22,  1)
+#define FLD_imm3_5             AARCH64_FIELD( 5,  3)
+#define FLD_imm3_10            AARCH64_FIELD(10,  3)
+#define FLD_imm3_19            AARCH64_FIELD(19,  3)
+#define FLD_imm4_5             AARCH64_FIELD( 5,  4)
+#define FLD_imm4_11            AARCH64_FIELD(11,  4)
+#define FLD_imm5               AARCH64_FIELD(16,  5)
+#define FLD_imm6_10            AARCH64_FIELD(10,  6)
+#define FLD_imm12              AARCH64_FIELD(10, 12)
+#define FLD_immb               AARCH64_FIELD(16,  3)
+#define FLD_immh               AARCH64_FIELD(19,  4)
+#define FLD_ldst_size          AARCH64_FIELD(30,  2)
+#define FLD_len                AARCH64_FIELD(13,  2)
+#define FLD_lse_sz             AARCH64_FIELD(30,  1)
+#define FLD_op0                AARCH64_FIELD(19,  2)
+#define FLD_op1                AARCH64_FIELD(16,  3)
+#define FLD_op2                AARCH64_FIELD( 5,  3)
+#define FLD_opc                AARCH64_FIELD(22,  2)
+#define FLD_opc1               AARCH64_FIELD(23,  1)
+#define FLD_opcode             AARCH64_FIELD(12,  4)
+#define FLD_option             AARCH64_FIELD(13,  3)
+#define FLD_scale              AARCH64_FIELD(10,  6)
+#define FLD_sf                 AARCH64_FIELD(31,  1)
+#define FLD_shift              AARCH64_FIELD(22,  2)
+#define FLD_size               AARCH64_FIELD(22,  2)
+#define FLD_sz                 AARCH64_FIELD(22,  1)
+#define FLD_type               AARCH64_FIELD(22,  2)
+#define FLD_vldst_size         AARCH64_FIELD(10,  2)
+#define FLD_off2               AARCH64_FIELD( 5,  2)
+#define FLD_ol                 AARCH64_FIELD( 5,  1)
+#define FLD_opc2               AARCH64_FIELD(12,  4)
+#define FLD_rcpc3_size         AARCH64_FIELD(30,  2)
+#define FLD_ZA8_1              AARCH64_FIELD( 8,  1)
+#define FLD_ZA7_2              AARCH64_FIELD( 7,  2)
+#define FLD_ZA6_3              AARCH64_FIELD( 6,  3)
+#define FLD_ZA5_4              AARCH64_FIELD( 5,  4)
+
 
 /* Operand description.  */
 
@@ -262,9 +151,9 @@ struct aarch64_operand
 
   unsigned int flags;
 
-  /* The associated instruction bit-fields; no operand has more than 4
+  /* The associated instruction bit-fields; no operand has more than 5
      bit-fields */
-  enum aarch64_field_kind fields[5];
+  aarch64_field fields[6];
 
   /* Brief description */
   const char *desc;
@@ -304,8 +193,7 @@ verify_constraints (const struct aarch64_inst *, const aarch64_insn, bfd_vma,
 #undef F_DEPRECATED
 #define F_DEPRECATED	(1 << 0)  /* Deprecated system register.  */
 
-#undef F_ARCHEXT
-#define F_ARCHEXT	(1 << 1)  /* Architecture dependent system register.  */
+/*			(1 << 1)     Unused.  */
 
 #undef F_HASXT
 #define F_HASXT		(1 << 2)  /* System instruction register <Xt>
@@ -326,7 +214,10 @@ verify_constraints (const struct aarch64_inst *, const aarch64_insn, bfd_vma,
 #define F_REG_ALIAS	(1 << 6)  /* Register name aliases another.  */
 
 #undef F_REG_128
-#define F_REG_128	(1 << 7) /* System regsister implementable as 128-bit wide.  */
+#define F_REG_128	(1 << 7) /* System register implementable as 128-bit wide.  */
+
+#undef F_TLBID_XT
+#define F_TLBID_XT	(1 << 8)  /* System instruction register <Xt> as optional operand.  */
 
 
 /* PSTATE field name for the MSR instruction this is encoded in "op1:op2:CRm".
@@ -355,14 +246,6 @@ verify_constraints (const struct aarch64_inst *, const aarch64_insn, bfd_vma,
 /* Bits [15, 18] contain the maximum value for an immediate MSR.  */
 #define F_REG_MAX_VALUE(X) ((X) << 15)
 #define F_GET_REG_MAX_VALUE(X) (((X) >> 15) & 0x0f)
-
-/* HINT operand flags.  */
-#define HINT_OPD_F_NOPRINT	(1 << 0)  /* Should not be printed.  */
-
-/* Encode 7-bit HINT #imm in the lower 8 bits.  Use higher bits for flags.  */
-#define HINT_ENCODE(flag, val) ((flag << 8) | val)
-#define HINT_FLAG(val) (val >> 8)
-#define HINT_VAL(val) (val & 0xff)
 
 static inline bool
 operand_has_inserter (const aarch64_operand *operand)
@@ -423,8 +306,8 @@ get_operand_specific_data (const aarch64_operand *operand)
 static inline unsigned
 get_operand_field_width (const aarch64_operand *operand, unsigned n)
 {
-  assert (operand->fields[n] != FLD_NIL);
-  return fields[operand->fields[n]].width;
+  assert (operand->fields[n].width != 0);
+  return operand->fields[n].width;
 }
 
 /* Return the total width of the operand *OPERAND.  */
@@ -433,8 +316,8 @@ get_operand_fields_width (const aarch64_operand *operand)
 {
   int i = 0;
   unsigned width = 0;
-  while (operand->fields[i] != FLD_NIL)
-    width += fields[operand->fields[i++]].width;
+  while (operand->fields[i].width != 0)
+    width += operand->fields[i++].width;
   assert (width > 0 && width < 32);
   return width;
 }
@@ -462,7 +345,7 @@ static inline void
 reset_operand_qualifier (aarch64_inst *inst, int idx)
 {
   assert (idx >=0 && idx < aarch64_num_of_operands (inst->opcode));
-  inst->operands[idx].qualifier = AARCH64_OPND_QLF_NIL;
+  inst->operands[idx].qualifier = AARCH64_OPND_QLF_UNKNOWN;
 }
 
 /* Inline functions operating on instruction bit-field(s).  */
@@ -477,12 +360,11 @@ gen_mask (int width)
 
 /* LSB_REL is the relative location of the lsb in the sub field, starting from 0.  */
 static inline int
-gen_sub_field (enum aarch64_field_kind kind, int lsb_rel, int width, aarch64_field *ret)
+gen_sub_field (aarch64_field field, int lsb_rel, int width, aarch64_field *ret)
 {
-  const aarch64_field *field = &fields[kind];
-  if (lsb_rel < 0 || width <= 0 || lsb_rel + width > field->width)
+  if (lsb_rel < 0 || width <= 0 || lsb_rel + width > field.width)
     return 0;
-  ret->lsb = field->lsb + lsb_rel;
+  ret->num = field.num + lsb_rel;
   ret->width = width;
   return 1;
 }
@@ -491,13 +373,19 @@ gen_sub_field (enum aarch64_field_kind kind, int lsb_rel, int width, aarch64_fie
    of the opcode.  */
 
 static inline void
-insert_field_2 (const aarch64_field *field, aarch64_insn *code,
-		aarch64_insn value, aarch64_insn mask)
+insert_field (aarch64_field field, aarch64_insn *code,
+	      aarch64_insn value, aarch64_insn mask)
 {
-  assert (field->width < 32 && field->width >= 1 && field->lsb >= 0
-	  && field->lsb + field->width <= 32);
-  value &= gen_mask (field->width);
-  value <<= field->lsb;
+  assert (field.width < 32 && field.width >= 1
+	  && (field.is_const ? (field.num < 1 << field.width)
+			      : (field.num + field.width <= 32)));
+  value &= gen_mask (field.width);
+  if (field.is_const)
+    {
+      assert (value == field.num);
+      return;
+    }
+  value <<= field.num;
   /* In some opcodes, field can be part of the base opcode, e.g. the size
      field in FADD.  The following helps avoid corrupt the base opcode.  */
   value &= ~mask;
@@ -508,34 +396,18 @@ insert_field_2 (const aarch64_field *field, aarch64_insn *code,
    mask of the opcode.  */
 
 static inline aarch64_insn
-extract_field_2 (const aarch64_field *field, aarch64_insn code,
-		 aarch64_insn mask)
-{
-  aarch64_insn value;
-  /* Clear any bit that is a part of the base opcode.  */
-  code &= ~mask;
-  value = (code >> field->lsb) & gen_mask (field->width);
-  return value;
-}
-
-/* Insert VALUE into field KIND of CODE.  MASK can be zero or the base mask
-   of the opcode.  */
-
-static inline void
-insert_field (enum aarch64_field_kind kind, aarch64_insn *code,
-	      aarch64_insn value, aarch64_insn mask)
-{
-  insert_field_2 (&fields[kind], code, value, mask);
-}
-
-/* Extract field KIND of CODE and return the value.  MASK can be zero or the
-   base mask of the opcode.  */
-
-static inline aarch64_insn
-extract_field (enum aarch64_field_kind kind, aarch64_insn code,
+extract_field (aarch64_field field, aarch64_insn code,
 	       aarch64_insn mask)
 {
-  return extract_field_2 (&fields[kind], code, mask);
+  aarch64_insn value;
+  /* Check for constant field.  */
+  if (field.is_const)
+    return field.num;
+
+  /* Clear any bit that is a part of the base opcode.  */
+  code &= ~mask;
+  value = (code >> field.num) & gen_mask (field.width);
+  return value;
 }
 
 extern aarch64_insn
@@ -551,6 +423,11 @@ static inline int
 select_operand_for_sf_field_coding (const aarch64_opcode *opcode)
 {
   int idx = -1;
+  if (opcode->iclass == fprcvtfloat2int)
+    return 0;
+  else if (opcode->iclass == fprcvtint2float)
+    return 1;
+
   if (aarch64_get_operand_class (opcode->operands[0])
       == AARCH64_OPND_CLASS_INT_REG)
     /* normal case.  */
@@ -572,6 +449,11 @@ static inline int
 select_operand_for_fptype_field_coding (const aarch64_opcode *opcode)
 {
   int idx;
+  if (opcode->iclass == fprcvtfloat2int)
+    return 1;
+  else if (opcode->iclass == fprcvtint2float)
+    return 0;
+
   if (aarch64_get_operand_class (opcode->operands[1])
       == AARCH64_OPND_CLASS_FP_REG)
     /* normal case.  */
@@ -602,7 +484,7 @@ select_operand_for_scalar_size_field_coding (const aarch64_opcode *opcode)
     src_size = aarch64_get_qualifier_esize (opcode->qualifiers_list[0][1]);
   if (src_size == dst_size && src_size == 0)
     { assert (0); abort (); }
-  /* When the result is not a sisd register or it is a long operantion.  */
+  /* When the result is not a sisd register or it is a long operation.  */
   if (dst_size == 0 || dst_size == src_size << 1)
     return 1;
   else

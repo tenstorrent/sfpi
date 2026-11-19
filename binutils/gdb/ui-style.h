@@ -1,5 +1,5 @@
 /* Styling for ui_file
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -50,6 +50,35 @@ extern const char * color_space_name (color_space c);
 
 /* Cast C to RESULT and return true if it's value is valid; false otherwise.  */
 extern bool color_space_safe_cast (color_space *result, long c);
+
+/* Get the number of colors supported by the terminal where GDB is running.  */
+extern int gdb_get_ncolors ();
+
+/* Convenient wrapper for RGB color values.  */
+struct rgb_color
+{
+private:
+  std::array <uint8_t, 3> m_data;
+
+public:
+  constexpr rgb_color ()
+    : m_data {}
+  {}
+  constexpr rgb_color (uint8_t r, uint8_t g, uint8_t b)
+    : m_data {r, g, b}
+  {}
+
+  constexpr uint8_t r () const noexcept { return m_data[0]; }
+  constexpr uint8_t g () const noexcept { return m_data[1]; }
+  constexpr uint8_t b () const noexcept { return m_data[2]; }
+
+  constexpr size_t size () const noexcept { return m_data.size (); }
+
+  constexpr uint8_t &operator[] (std::size_t idx) noexcept
+  { return m_data[idx]; }
+  constexpr const uint8_t &operator[] (std::size_t idx) const noexcept
+  { return m_data[idx]; }
+};
 
 /* Styles that can be applied to a ui_file.  */
 struct ui_file_style
@@ -128,6 +157,14 @@ struct ui_file_style
 	       c, range.first, range.second, static_cast<int> (cs));
     }
 
+    explicit color (const rgb_color &rgb)
+      : m_color_space (color_space::RGB_24BIT),
+	m_red (rgb.r ()),
+	m_green (rgb.g ()),
+	m_blue (rgb.b ())
+    {
+    }
+
     color (uint8_t r, uint8_t g, uint8_t b)
       : m_color_space (color_space::RGB_24BIT),
 	m_red (r),
@@ -151,22 +188,12 @@ struct ui_file_style
       return ! (*this == other);
     }
 
-    bool operator< (const color &other) const
+    /* Compute a simple hash code for this object.  */
+    size_t hash () const
     {
-      if (m_color_space != other.m_color_space)
-	return m_color_space < other.m_color_space;
       if (is_simple ())
-	return m_value < other.m_value;
-      if (m_red < other.m_red)
-	return true;
-      if (m_red == other.m_red)
-	{
-	  if (m_green < other.m_green)
-	    return true;
-	  if (m_green == other.m_green)
-	    return m_blue < other.m_blue;
-	}
-      return false;
+	return m_value;
+      return (m_red << 16) + (m_green << 8) + m_red;
     }
 
     color_space colorspace () const
@@ -223,7 +250,7 @@ struct ui_file_style
     /* Fill in RGB with the red/green/blue values for this color.
        This may not be called for basic colors or for the "NONE"
        color.  */
-    void get_rgb (uint8_t *rgb) const;
+    rgb_color get_rgb () const;
 
     /* Append the ANSI terminal escape sequence for this color to STR.
        IS_FG indicates whether this is a foreground or background
@@ -276,7 +303,9 @@ struct ui_file_style
     return (m_foreground == other.m_foreground
 	    && m_background == other.m_background
 	    && m_intensity == other.m_intensity
-	    && m_reverse == other.m_reverse);
+	    && m_reverse == other.m_reverse
+	    && m_italic == other.m_italic
+	    && m_underline == other.m_underline);
   }
 
   bool operator!= (const ui_file_style &other) const
@@ -294,7 +323,9 @@ struct ui_file_style
     return (m_foreground == NONE
 	    && m_background == NONE
 	    && m_intensity == NORMAL
-	    && !m_reverse);
+	    && !m_reverse
+	    && !m_italic
+	    && !m_underline);
   }
 
   /* Return true if this style specified reverse display; false
@@ -340,6 +371,38 @@ struct ui_file_style
     return m_intensity;
   }
 
+  /* Set the intensity of this style.  */
+  void set_intensity (intensity i)
+  {
+    m_intensity = i;
+  }
+
+  /* Return true if this style specified italic display; false
+     otherwise.  */
+  bool is_italic () const
+  {
+    return m_italic;
+  }
+
+  /* Set/clear the italic display flag.  */
+  void set_italic (bool italic)
+  {
+    m_italic = italic;
+  }
+
+  /* Return true if this style specified underline display; false
+     otherwise.  */
+  bool is_underline () const
+  {
+    return m_underline;
+  }
+
+  /* Set/clear the underline display flag.  */
+  void set_underline (bool underline)
+  {
+    m_underline = underline;
+  }
+
   /* Parse an ANSI escape sequence in BUF, modifying this style.  BUF
      must begin with an ESC character.  Return true if an escape
      sequence was successfully parsed; false otherwise.  In either
@@ -361,14 +424,40 @@ private:
   color m_foreground = NONE;
   color m_background = NONE;
   intensity m_intensity = NORMAL;
+  bool m_italic = false;
+  bool m_underline = false;
   bool m_reverse = false;
 };
+
+/* Possible results for checking an ANSI escape sequence.  */
+enum class ansi_escape_result
+{
+  /* The escape sequence is definitely not recognizable.  */
+  NO_MATCH,
+
+  /* The escape sequence might be recognizable with more input.  */
+  INCOMPLETE,
+
+  /* The escape sequence is definitely recognizable.  */
+  MATCHED,
+};
+
+/* Examine an ANSI escape sequence in BUF.  BUF must begin with an ESC
+   character.  Return a value indicating whether the sequence was
+   recognizable.  If MATCHED is returned, then N_READ is updated to
+   reflect the number of chars read from BUF.  */
+
+extern ansi_escape_result examine_ansi_escape (const char *buf, int *n_read);
 
 /* Skip an ANSI escape sequence in BUF.  BUF must begin with an ESC
    character.  Return true if an escape sequence was successfully
    skipped; false otherwise.  If an escape sequence was skipped,
    N_READ is updated to reflect the number of chars read from BUF.  */
 
-extern bool skip_ansi_escape (const char *buf, int *n_read);
+static inline bool
+skip_ansi_escape (const char *buf, int *n_read)
+{
+  return examine_ansi_escape (buf, n_read) == ansi_escape_result::MATCHED;
+}
 
 #endif /* GDB_UI_STYLE_H */

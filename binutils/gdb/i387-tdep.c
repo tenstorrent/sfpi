@@ -1,6 +1,6 @@
 /* Intel 387 floating point stuff.
 
-   Copyright (C) 1988-2024 Free Software Foundation, Inc.
+   Copyright (C) 1988-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -85,7 +85,7 @@ print_i387_ext (struct gdbarch *gdbarch,
     {
       /* Denormal or zero.  */
       print_i387_value (gdbarch, raw, file);
-      
+
       if (integer)
 	/* Pseudo-denormal.  */
 	gdb_puts (" Pseudo-denormal", file);
@@ -114,6 +114,7 @@ print_i387_status_word (int status_p,
 
   gdb_printf (file, "%s", hex_string_custom (status, 4));
   gdb_puts ("  ", file);
+  /* codespell:ignore-begin.  */
   gdb_printf (file, " %s", (status & 0x0001) ? "IE" : "  ");
   gdb_printf (file, " %s", (status & 0x0002) ? "DE" : "  ");
   gdb_printf (file, " %s", (status & 0x0004) ? "ZE" : "  ");
@@ -129,6 +130,7 @@ print_i387_status_word (int status_p,
   gdb_printf (file, " %s", (status & 0x0200) ? "C1" : "  ");
   gdb_printf (file, " %s", (status & 0x0400) ? "C2" : "  ");
   gdb_printf (file, " %s", (status & 0x4000) ? "C3" : "  ");
+  /* codespell:ignore-end.  */
 
   gdb_puts ("\n", file);
 
@@ -177,7 +179,7 @@ print_i387_control_word (int control_p,
       gdb_puts ("Extended Precision (64-bits)\n", file);
       break;
     }
-      
+
   gdb_puts ("                       RC: ", file);
   switch ((control >> 10) & 3)
     {
@@ -320,10 +322,10 @@ i387_print_float_info (struct gdbarch *gdbarch, struct ui_file *file,
 }
 
 
-/* Return nonzero if a value of type TYPE stored in register REGNUM
+/* Return true if a value of type TYPE stored in register REGNUM
    needs any special handling.  */
 
-int
+bool
 i387_convert_register_p (struct gdbarch *gdbarch, int regnum,
 			 struct type *type)
 {
@@ -333,21 +335,21 @@ i387_convert_register_p (struct gdbarch *gdbarch, int regnum,
 	 accessing them in their hardware type or TYPE is not float.  */
       if (type == i387_ext_type (gdbarch)
 	  || type->code () != TYPE_CODE_FLT)
-	return 0;
+	return false;
       else
-	return 1;
+	return true;
     }
 
-  return 0;
+  return false;
 }
 
 /* Read a value of type TYPE from register REGNUM in frame FRAME, and
    return its contents in TO.  */
 
-int
+bool
 i387_register_to_value (const frame_info_ptr &frame, int regnum,
 			struct type *type, gdb_byte *to,
-			int *optimizedp, int *unavailablep)
+			bool *optimizedp, bool *unavailablep)
 {
   struct gdbarch *gdbarch = get_frame_arch (frame);
   gdb_byte from[I386_MAX_REGISTER_SIZE];
@@ -359,8 +361,8 @@ i387_register_to_value (const frame_info_ptr &frame, int regnum,
     {
       warning (_("Cannot convert floating-point register value "
 	       "to non-floating-point type."));
-      *optimizedp = *unavailablep = 0;
-      return 0;
+      *optimizedp = *unavailablep = false;
+      return false;
     }
 
   /* Convert to TYPE.  */
@@ -369,11 +371,11 @@ i387_register_to_value (const frame_info_ptr &frame, int regnum,
   frame_info_ptr next_frame = get_next_frame_sentinel_okay (frame);
   if (!get_frame_register_bytes (next_frame, regnum, 0, from_view, optimizedp,
 				 unavailablep))
-    return 0;
+    return false;
 
   target_float_convert (from, i387_ext_type (gdbarch), to, type);
-  *optimizedp = *unavailablep = 0;
-  return 1;
+  *optimizedp = *unavailablep = false;
+  return true;
 }
 
 /* Write the contents FROM of a value of type TYPE into register
@@ -638,7 +640,7 @@ i387_supply_fxsave (struct regcache *regcache, int regnum, const void *fxsave)
 
 		    if (val[0] & (1 << fpreg))
 		      {
-			int thisreg = (fpreg + 8 - top) % 8 
+			int thisreg = (fpreg + 8 - top) % 8
 				       + I387_ST0_REGNUM (tdep);
 			tag = i387_tag (FXSAVE_ADDR (tdep, regs, thisreg));
 		      }
@@ -1368,7 +1370,7 @@ i387_supply_xsave (struct regcache *regcache, int regnum,
 
 		    if (val[0] & (1 << fpreg))
 		      {
-			int thisreg = (fpreg + 8 - top) % 8 
+			int thisreg = (fpreg + 8 - top) % 8
 				       + I387_ST0_REGNUM (tdep);
 			tag = i387_tag (FXSAVE_ADDR (tdep, regs, thisreg));
 		      }

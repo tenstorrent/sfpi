@@ -1,5 +1,5 @@
 /* MI Command Set - MI Console.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
    Contributed by Cygnus Solutions (a Red Hat company).
 
    This file is part of GDB.
@@ -29,9 +29,6 @@ public:
   /* Create a console that wraps the given output stream RAW with the
      string PREFIX and quoting it with QUOTE.  */
   mi_console_file (ui_file *raw, const char *prefix, char quote);
-
-  /* MI-specific API.  */
-  void set_raw (ui_file *raw);
 
   /* ui_file-specific methods.  */
 

@@ -1,5 +1,5 @@
 /* Low level interface to ptrace, for the remote server for GDB.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,6 +21,7 @@
 #include "nat/gdb_ptrace.h"
 
 #include "gdb_proc_service.h"
+#include "tdesc.h"
 
 /* The stack pointer is offset from the stack frame by a BIAS of 2047
    (0x7ff) for 64-bit code.  BIAS is likely to be defined on SPARC
@@ -109,7 +110,7 @@ static int sparc_regmap[] = {
    17 *8, /*    pc */
    18 *8, /*   npc */
    16 *8, /* state */
-  /* FSR offset also corresponds to GET/SETFPREGSET, ans is placed
+  /* FSR offset also corresponds to GET/SETFPREGSET, and is placed
      next to f62.  */
    32 *8, /*   fsr */
       -1, /*  fprs */
@@ -142,7 +143,7 @@ static const struct regs_range_t fpregs_ranges[] = {
 
 /* Defined in auto-generated file reg-sparc64.c.  */
 void init_registers_sparc64 (void);
-extern const struct target_desc *tdesc_sparc64;
+extern const_target_desc_up tdesc_sparc64;
 
 bool
 sparc_target::low_cannot_store_register (int regno)
@@ -298,7 +299,7 @@ sparc_target::low_breakpoint_at (CORE_ADDR where)
 void
 sparc_target::low_arch_setup ()
 {
-  current_process ()->tdesc = tdesc_sparc64;
+  current_process ()->tdesc = tdesc_sparc64.get ();
 }
 
 static struct regset_info sparc_regsets[] = {

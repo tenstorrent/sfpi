@@ -1,6 +1,6 @@
 /* C language support definitions for GDB, the GNU debugger.
 
-   Copyright (C) 1992-2024 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -25,11 +25,9 @@ struct ui_file;
 struct language_arch_info;
 struct type_print_options;
 struct parser_state;
-struct compile_instance;
 
 #include "compile/compile.h"
 #include "value.h"
-#include "macroexp.h"
 #include "gdbsupport/enum-flags.h"
 
 
@@ -105,8 +103,7 @@ extern void c_type_print_base (struct type *, struct ui_file *,
 
 /* These are in cp-valprint.c */
 
-extern void cp_print_class_member (const gdb_byte *, struct type *,
-				   struct ui_file *, const char *);
+extern void cp_print_class_memberptr (struct value *, struct ui_file *);
 
 extern void cp_print_value_fields (struct value *,
 				   struct ui_file *, int,
@@ -131,43 +128,6 @@ extern bool c_is_string_type_p (struct type *type);
 /* These are in c-valprint.c.  */
 
 extern int c_textual_element_type (struct type *, char);
-
-/* Create a new instance of the C compiler and return it.  This
-   function never returns NULL, but rather throws an exception on
-   failure.  This is suitable for use as the
-   language_defn::get_compile_instance method.  */
-
-extern std::unique_ptr<compile_instance> c_get_compile_context ();
-
-/* Create a new instance of the C++ compiler and return it.  This
-   function never returns NULL, but rather throws an exception on
-   failure.  This is suitable for use as the
-   language_defn::get_compile_instance method.  */
-
-extern std::unique_ptr<compile_instance> cplus_get_compile_context ();
-
-/* This takes the user-supplied text and returns a new bit of code to
-   compile.
-
-   This is used as the compute_program language method; see that
-   for a description of the arguments.  */
-
-extern std::string c_compute_program (compile_instance *inst,
-				      const char *input,
-				      struct gdbarch *gdbarch,
-				      const struct block *expr_block,
-				      CORE_ADDR expr_pc);
-
-/* This takes the user-supplied text and returns a new bit of code to compile.
-
-   This is used as the compute_program language method; see that
-   for a description of the arguments.  */
-
-extern std::string cplus_compute_program (compile_instance *inst,
-					  const char *input,
-					  struct gdbarch *gdbarch,
-					  const struct block *expr_block,
-					  CORE_ADDR expr_pc);
 
 /* Return the canonical form of the C symbol NAME.  If NAME is already
    canonical, return nullptr.  */

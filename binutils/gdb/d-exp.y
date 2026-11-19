@@ -1,6 +1,6 @@
 /* YACC parser for D expressions, for GDB.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -38,7 +38,6 @@
 
 %{
 
-#include <ctype.h>
 #include "expression.h"
 #include "value.h"
 #include "parser-defs.h"
@@ -49,6 +48,7 @@
 #include "block.h"
 #include "type-stack.h"
 #include "expop.h"
+#include "cli/cli-style.h"
 
 #define parse_type(ps) builtin_type (ps->gdbarch ())
 #define parse_d_type(ps) builtin_d_type (ps->gdbarch ())
@@ -444,7 +444,7 @@ PrimaryExpression:
 		  sym = lookup_symbol (copy.c_str (),
 				       pstate->expression_context_block,
 				       SEARCH_VFT, &is_a_field_of_this);
-		  if (sym.symbol && sym.symbol->aclass () != LOC_TYPEDEF)
+		  if (sym.symbol && sym.symbol->loc_class () != LOC_TYPEDEF)
 		    {
 		      if (symbol_read_needs_frame (sym.symbol))
 			pstate->block_tracker->update (sym);
@@ -467,9 +467,10 @@ PrimaryExpression:
 			= lookup_minimal_symbol (current_program_space, copy.c_str ());
 		      if (msymbol.minsym != NULL)
 			pstate->push_new<var_msym_value_operation> (msymbol);
-		      else if (!have_full_symbols (current_program_space)
-			       && !have_partial_symbols (current_program_space))
-			error (_("No symbol table is loaded.  Use the \"file\" command"));
+		      else if (!current_program_space->has_full_symbols ()
+			       && !current_program_space->has_partial_symbols ())
+			error (_("No symbol table is loaded.  Use the \"%ps\" command"),
+			       styled_string (command_style.style (), "file"));
 		      else
 			error (_("No symbol \"%s\" in current context."),
 			       copy.c_str ());
@@ -484,7 +485,7 @@ PrimaryExpression:
 			  if (type->code () == TYPE_CODE_MODULE)
 			    {
 			      struct block_symbol sym;
-			      const char *type_name = TYPE_SAFE_NAME (type);
+			      const char *type_name = type->safe_name ();
 			      int type_name_len = strlen (type_name);
 			      std::string name
 				= string_printf ("%.*s.%.*s",
@@ -503,7 +504,7 @@ PrimaryExpression:
 				 of an aggregate or an enum type.  */
 			      if (!type_aggregate_p (type))
 				error (_("`%s' is not defined as an aggregate type."),
-				       TYPE_SAFE_NAME (type));
+				       type->safe_name ());
 
 			      pstate->push_new<scope_operation>
 				(type, copy_name ($3));
@@ -614,11 +615,9 @@ BasicType2:
 |	'*' BasicType2
 		{ type_stack->push (tp_pointer); }
 |	'[' INTEGER_LITERAL ']'
-		{ type_stack->push ($2.val);
-		  type_stack->push (tp_array); }
+		{ type_stack->push (tp_array, $2.val); }
 |	'[' INTEGER_LITERAL ']' BasicType2
-		{ type_stack->push ($2.val);
-		  type_stack->push (tp_array); }
+		{ type_stack->push (tp_array, $2.val); }
 ;
 
 BasicType:
@@ -684,15 +683,15 @@ parse_number (struct parser_state *ps, const char *p,
       len = strlen (s);
 
       /* Check suffix for `i' , `fi' or `li' (idouble, ifloat or ireal).  */
-      if (len >= 1 && tolower (s[len - 1]) == 'i')
+      if (len >= 1 && c_tolower (s[len - 1]) == 'i')
 	{
-	  if (len >= 2 && tolower (s[len - 2]) == 'f')
+	  if (len >= 2 && c_tolower (s[len - 2]) == 'f')
 	    {
 	      putithere->typed_val_float.type
 		= parse_d_type (ps)->builtin_ifloat;
 	      len -= 2;
 	    }
-	  else if (len >= 2 && tolower (s[len - 2]) == 'l')
+	  else if (len >= 2 && c_tolower (s[len - 2]) == 'l')
 	    {
 	      putithere->typed_val_float.type
 		= parse_d_type (ps)->builtin_ireal;
@@ -706,13 +705,13 @@ parse_number (struct parser_state *ps, const char *p,
 	    }
 	}
       /* Check suffix for `f' or `l'' (float or real).  */
-      else if (len >= 1 && tolower (s[len - 1]) == 'f')
+      else if (len >= 1 && c_tolower (s[len - 1]) == 'f')
 	{
 	  putithere->typed_val_float.type
 	    = parse_d_type (ps)->builtin_float;
 	  len -= 1;
 	}
-      else if (len >= 1 && tolower (s[len - 1]) == 'l')
+      else if (len >= 1 && c_tolower (s[len - 1]) == 'l')
 	{
 	  putithere->typed_val_float.type
 	    = parse_d_type (ps)->builtin_real;
@@ -1133,8 +1132,8 @@ lex_one_token (struct parser_state *par_state)
 	    /* Hex exponents start with 'p', because 'e' is a valid hex
 	       digit and thus does not indicate a floating point number
 	       when the radix is hex.  */
-	    if ((!hex && !got_e && tolower (p[0]) == 'e')
-		|| (hex && !got_e && tolower (p[0] == 'p')))
+	    if ((!hex && !got_e && c_tolower (p[0]) == 'e')
+		|| (hex && !got_e && c_tolower (p[0] == 'p')))
 	      got_dot = got_e = 1;
 	    /* A '.' always indicates a decimal floating point number
 	       regardless of the radix.  If we have a '..' then its the
@@ -1142,7 +1141,8 @@ lex_one_token (struct parser_state *par_state)
 	    else if (!got_dot && (p[0] == '.' && p[1] != '.'))
 		got_dot = 1;
 	    /* This is the sign of the exponent, not the end of the number.  */
-	    else if (got_e && (tolower (p[-1]) == 'e' || tolower (p[-1]) == 'p')
+	    else if (got_e && (c_tolower (p[-1]) == 'e'
+			       || c_tolower (p[-1]) == 'p')
 		     && (*p == '-' || *p == '+'))
 	      continue;
 	    /* We will take any letters or digits, ignoring any embedded '_'.
@@ -1167,9 +1167,9 @@ lex_one_token (struct parser_state *par_state)
 	const char *p = &tokstart[1];
 	size_t len = strlen ("entry");
 
-	while (isspace (*p))
+	while (c_isspace (*p))
 	  p++;
-	if (strncmp (p, "entry", len) == 0 && !isalnum (p[len])
+	if (strncmp (p, "entry", len) == 0 && !c_isalnum (p[len])
 	    && p[len] != '_')
 	  {
 	    pstate->lexptr = &p[len];
@@ -1249,10 +1249,7 @@ lex_one_token (struct parser_state *par_state)
 	  || strncmp (tokstart, "task", namelen) == 0)
       && (tokstart[namelen] == ' ' || tokstart[namelen] == '\t'))
     {
-      const char *p = tokstart + namelen + 1;
-
-      while (*p == ' ' || *p == '\t')
-	p++;
+      const char *p = skip_spaces (tokstart + namelen + 1);
       if (*p >= '0' && *p <= '9')
 	return 0;
     }
@@ -1334,7 +1331,7 @@ classify_name (struct parser_state *par_state, const struct block *block)
   std::string copy = copy_name (yylval.sval);
 
   sym = lookup_symbol (copy.c_str (), block, SEARCH_VFT, &is_a_field_of_this);
-  if (sym.symbol && sym.symbol->aclass () == LOC_TYPEDEF)
+  if (sym.symbol && sym.symbol->loc_class () == LOC_TYPEDEF)
     {
       yylval.tsym.type = sym.symbol->type ();
       return TYPENAME;
@@ -1383,7 +1380,7 @@ classify_inner_name (struct parser_state *par_state,
   if (yylval.ssym.sym.symbol == NULL)
     return ERROR;
 
-  if (yylval.ssym.sym.symbol->aclass () == LOC_TYPEDEF)
+  if (yylval.ssym.sym.symbol->loc_class () == LOC_TYPEDEF)
     {
       yylval.tsym.type = yylval.ssym.sym.symbol->type ();
       return TYPENAME;
@@ -1631,4 +1628,3 @@ yyerror (const char *msg)
 {
   pstate->parse_error (msg);
 }
-

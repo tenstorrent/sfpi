@@ -1326,7 +1326,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-gtk            enable gdbtk graphical user interface (GUI)
   --enable-libctf         Handle .ctf type-info sections [default=yes]
-  --enable-shared         build shared libraries deault=yes
+  --enable-shared         build shared libraries default=yes
 
 Some influential environment variables:
   CC          C compiler command
@@ -2230,7 +2230,7 @@ else
   case $host_os in
     aix*)
       if test $host_cpu != ia64; then
-        RPATH_ENVVAR=LIBPATH
+	RPATH_ENVVAR=LIBPATH
       fi ;;
     darwin* | rhapsody*)
       RPATH_ENVVAR=DYLD_LIBRARY_PATH ;;

@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 proc address_get { testname } {
@@ -32,7 +32,7 @@ proc address_get { testname } {
     gdb_continue_to_breakpoint "$testname - address set"
 
     gdb_test_multiple "print/x p" $testname {
-	-re "\\$\[0-9\]+ = (0x\[0-9a-f\]*)\r?\n$gdb_prompt $" {
+	-re "${::valnum_re} = (0x\[0-9a-f\]*)\r?\n$gdb_prompt $" {
 	    pass $testname
 	    return $expect_out(1,string)
 	}
@@ -43,39 +43,39 @@ set test "set disable-randomization off"
 gdb_test_multiple "${test}" "${test}" {
     -re "Disabling randomization .* unsupported .*$gdb_prompt $" {
 	untested "disabling randomization is not supported on this Linux GDB"
-	return -1
+	return
     }
     -re "No symbol .* in current context.*$gdb_prompt $" {
 	untested "disabling randomization is not supported on this GDB platform"
-	return -1
+	return
     }
     -re "$gdb_prompt $" {
 	pass $test
     }
 }
 gdb_test "show disable-randomization"	      \
-         "Disabling randomization .* is off." \
-         "show disable-randomization off"
+	 "Disabling randomization .* is off." \
+	 "show disable-randomization off"
 
 set addr1 [address_get "randomized first address"]
 set addr2 [address_get "randomized second address"]
 set test "randomized addresses should not match"
-if [string equal $addr1 $addr2] {
+if {[string equal $addr1 $addr2]} {
     untested "no randomization detected on this system"
-    return -1
+    return
 } else {
     pass $test
 }
 
 gdb_test_no_output "set disable-randomization on"
 gdb_test "show disable-randomization"	      \
-         "Disabling randomization .* is on." \
-         "show disable-randomization on"
+	 "Disabling randomization .* is on." \
+	 "show disable-randomization on"
 
 set addr1 [address_get "fixed first address"]
 set addr2 [address_get "fixed second address"]
 set test "fixed addresses should match"
-if [string equal $addr1 $addr2] {
+if {[string equal $addr1 $addr2]} {
     pass $test
 } else {
     fail $test

@@ -1,5 +1,5 @@
 /* GNU/Linux/MIPS specific low level interface, for the remote server for GDB.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,6 +23,7 @@
 
 #include "nat/mips-linux-watch.h"
 #include "gdb_proc_service.h"
+#include "tdesc.h"
 
 /* Linux target op definitions for the MIPS architecture.  */
 
@@ -62,7 +63,7 @@ protected:
 
   bool low_stopped_by_watchpoint () override;
 
-  CORE_ADDR low_stopped_data_address () override;
+  std::vector<CORE_ADDR> low_stopped_data_addresses () override;
 
   void low_collect_ptrace_register (regcache *regcache, int regno,
 				    char *buf) override;
@@ -89,19 +90,19 @@ static mips_target the_mips_target;
 
 /* Defined in auto-generated file mips-linux.c.  */
 void init_registers_mips_linux (void);
-extern const struct target_desc *tdesc_mips_linux;
+extern const_target_desc_up tdesc_mips_linux;
 
 /* Defined in auto-generated file mips-dsp-linux.c.  */
 void init_registers_mips_dsp_linux (void);
-extern const struct target_desc *tdesc_mips_dsp_linux;
+extern const_target_desc_up tdesc_mips_dsp_linux;
 
 /* Defined in auto-generated file mips64-linux.c.  */
 void init_registers_mips64_linux (void);
-extern const struct target_desc *tdesc_mips64_linux;
+extern const_target_desc_up tdesc_mips64_linux;
 
 /* Defined in auto-generated file mips64-dsp-linux.c.  */
 void init_registers_mips64_dsp_linux (void);
-extern const struct target_desc *tdesc_mips64_dsp_linux;
+extern const_target_desc_up tdesc_mips64_dsp_linux;
 
 #ifdef __mips64
 #define tdesc_mips_linux tdesc_mips64_linux
@@ -206,7 +207,7 @@ mips_read_description (void)
 	}
     }
 
-  return have_dsp ? tdesc_mips_dsp_linux : tdesc_mips_linux;
+  return have_dsp ? tdesc_mips_dsp_linux.get () : tdesc_mips_linux.get ();
 }
 
 void
@@ -658,10 +659,10 @@ mips_target::low_stopped_by_watchpoint ()
 }
 
 /* This is the implementation of linux target ops method
-   low_stopped_data_address.  */
+   low_stopped_data_addresses.  */
 
-CORE_ADDR
-mips_target::low_stopped_data_address ()
+std::vector<CORE_ADDR>
+mips_target::low_stopped_data_addresses ()
 {
   struct process_info *proc = current_process ();
   struct arch_process_info *priv = proc->priv->arch_private;
@@ -679,7 +680,7 @@ mips_target::low_stopped_data_address ()
 					&priv->watch_readback,
 					&priv->watch_readback_valid,
 					0))
-    return 0;
+    return {};
 
   num_valid = mips_linux_watch_get_num_valid (&priv->watch_readback);
 
@@ -711,12 +712,12 @@ mips_target::low_stopped_data_address ()
 	      }
 	    /* Check for overlap of even a single byte.  */
 	    if (last_byte >= t_low && addr <= t_low + t_hi)
-	      return addr;
+	      return { addr };
 	  }
       }
 
   /* Shouldn't happen.  */
-  return 0;
+  return {};
 }
 
 /* Fetch the thread-local storage pointer for libthread_db.  */

@@ -1,5 +1,5 @@
 /* Declarations for Intel 80386 opcode table
-   Copyright (C) 2007-2025 Free Software Foundation, Inc.
+   Copyright (C) 2007-2026 Free Software Foundation, Inc.
 
    This file is part of the GNU opcodes library.
 
@@ -66,14 +66,16 @@ enum i386_cpu
   CpuSSE3,
   /* VIA PadLock required */
   CpuPadLock,
-  /* Zhaoxin GMI SM2 required */
-  CpuGMISM2,
-  /* Zhaoxin GMI CCS required */
-  CpuGMICCS,
   /* Zhaoxin PadLock RNG2 required */
   CpuPadLockRNG2,
   /* Zhaoxin PadLock PHE2 required */
   CpuPadLockPHE2,
+  /* Zhaoxin PadLock XMODX required */
+  CpuPadLockXMODX,
+  /* Zhaoxin GMI SM2 required */
+  CpuGMISM2,
+  /* Zhaoxin GMI CCS required */
+  CpuGMICCS,
   /* AMD Secure Virtual Machine Ext-s required */
   CpuSVME,
   /* VMX Instructions required */
@@ -203,6 +205,8 @@ enum i386_cpu
   CpuAVX512_BF16,
   /* Intel AVX-512 VP2INTERSECT Instructions support required.  */
   CpuAVX512_VP2INTERSECT,
+  /* AMD AVX-512 BMM Instructions support required.  */
+  CpuAVX512_BMM,
   /* TDX Instructions support required.  */
   CpuTDX,
   /* Intel AVX VNNI Instructions support required.  */
@@ -316,6 +320,14 @@ enum i386_cpu
   CpuSNP,
   /* RMPQUERY instruction required */
   CpuRMPQUERY,
+  /* RMPREAD instruction required */
+  CpuRMPREAD,
+  /* Intel APX New Conditional Instructions support required.  */
+  CpuAPX_NCI,
+  /* Intel APX Non-Destructive Destination support required.  */
+  CpuAPX_NDD,
+  /* Intel APX No-Flags-update support required.  */
+  CpuAPX_NF,
 
   /* NOTE: These items, which can be combined with other ISA flags above, need
      to remain second to last and in sync with CPU_FLAGS_COMMON. */
@@ -424,10 +436,11 @@ typedef union i386_cpu_flags
       unsigned int cpusse2:1;
       unsigned int cpusse3:1;
       unsigned int cpupadlock:1;
-      unsigned int cpugmism2:1;
-      unsigned int cpugmiccs:1;
       unsigned int cpupadlockrng2:1;
       unsigned int cpupadlockphe2:1;
+      unsigned int cpupadlockxmodx:1;
+      unsigned int cpugmism2:1;
+      unsigned int cpugmiccs:1;
       unsigned int cpusvme:1;
       unsigned int cpuvmx:1;
       unsigned int cpusmx:1;
@@ -492,6 +505,7 @@ typedef union i386_cpu_flags
       unsigned int cpuavx512_bitalg:1;
       unsigned int cpuavx512_bf16:1;
       unsigned int cpuavx512_vp2intersect:1;
+      unsigned int cpuavx512_bmm:1;
       unsigned int cputdx:1;
       unsigned int cpuavx_vnni:1;
       unsigned int cpuavx512_fp16:1;
@@ -549,6 +563,10 @@ typedef union i386_cpu_flags
       unsigned int cputlbsync:1;
       unsigned int cpusnp:1;
       unsigned int cpurmpquery:1;
+      unsigned int cpurmpread:1;
+      unsigned int cpuapx_nci:1;
+      unsigned int cpuapx_ndd:1;
+      unsigned int cpuapx_nf:1;
       CPU_FLAGS_COMMON;
 #ifdef CpuUnused
       unsigned int unused:(CpuNumOfBits - CpuUnused);
@@ -657,13 +675,14 @@ enum
   BNDPrefixOk,
 #define PrefixNone		0
 #define PrefixRep		1
-#define PrefixHLERelease	2 /* Okay with an XRELEASE (0xf3) prefix. */
-#define PrefixNoTrack		3
+#define PrefixRepe		2
+#define PrefixHLERelease	3 /* Okay with an XRELEASE (0xf3) prefix. */
+#define PrefixNoTrack		4
   /* Prefixes implying "LOCK okay" must come after Lock. All others have
      to come before.  */
-#define PrefixLock		4
-#define PrefixHLELock		5 /* Okay with a LOCK prefix.  */
-#define PrefixHLEAny		6 /* Okay with or without a LOCK prefix.  */
+#define PrefixLock		5
+#define PrefixHLELock		6 /* Okay with a LOCK prefix.  */
+#define PrefixHLEAny		7 /* Okay with or without a LOCK prefix.  */
   PrefixOk,
   /* opcode is a prefix */
   IsPrefix,
@@ -857,8 +876,9 @@ typedef struct i386_opcode_modifier
 enum operand_class
 {
   ClassNone,
-  Reg, /* GPRs and FP regs, distinguished by operand size */
+  Reg, /* GPRs, distinguished by operand size */
   SReg, /* Segment register */
+  RegFP, /* FP regs */
   RegCR, /* Control register */
   RegDR, /* Debug register */
   RegTR, /* Test register */
@@ -1068,6 +1088,7 @@ typedef struct insn_template
 #define Prefix_REX2		9	/* {rex2} */
 #define Prefix_NoOptimize	10	/* {nooptimize} */
 #define Prefix_NF		11	/* {nf} */
+#define Prefix_NoImm8s		12	/* {noimm8s} */
 
   /* the bits in opcode_modifier are used to generate the final opcode from
      the base_opcode.  These bits also are used to detect alternate forms of

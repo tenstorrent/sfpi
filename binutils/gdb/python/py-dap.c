@@ -1,6 +1,6 @@
 /* Python DAP interpreter
 
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -27,14 +27,14 @@ class dap_interp final : public interp
 public:
 
   explicit dap_interp (const char *name)
-    : interp (name),
-      m_ui_out (new cli_ui_out (gdb_stdout))
+    : interp (name)
   {
+    m_ui_out = std::make_unique<cli_ui_out> (m_stdout.get ());
   }
 
   ~dap_interp () override = default;
 
-  void init (bool top_level) override;
+  void do_init (bool top_level) override;
 
   void suspend () override
   {
@@ -45,12 +45,6 @@ public:
   }
 
   void exec (const char *command) override
-  {
-    /* Just ignore it.  */
-  }
-
-  void set_logging (ui_file_up logfile, bool logging_redirect,
-		    bool debug_redirect) override
   {
     /* Just ignore it.  */
   }
@@ -92,7 +86,7 @@ call_dap_fn (const char *fn_name)
 }
 
 void
-dap_interp::init (bool top_level)
+dap_interp::do_init (bool top_level)
 {
 #if CXX_STD_THREAD
   call_dap_fn ("run");
@@ -110,9 +104,7 @@ dap_interp::pre_command_loop ()
   call_dap_fn ("pre_command_loop");
 }
 
-void _initialize_py_interp ();
-void
-_initialize_py_interp ()
+INIT_GDB_FILE (py_interp)
 {
   /* The dap code uses module typing, available starting python 3.5.  */
 #if PY_VERSION_HEX >= 0x03050000

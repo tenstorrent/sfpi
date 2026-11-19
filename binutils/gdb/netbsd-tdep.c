@@ -1,11 +1,11 @@
 /* Common target-dependent code for NetBSD systems.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Wasabi Systems, Inc.
-  
+
    This file is part of GDB.
-  
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 3 of the License, or
@@ -367,10 +367,7 @@ static const registry<gdbarch>::key<nbsd_gdbarch_data>
 static struct nbsd_gdbarch_data *
 get_nbsd_gdbarch_data (struct gdbarch *gdbarch)
 {
-  struct nbsd_gdbarch_data *result = nbsd_gdbarch_data_handle.get (gdbarch);
-  if (result == nullptr)
-    result = nbsd_gdbarch_data_handle.emplace (gdbarch);
-  return result;
+  return &nbsd_gdbarch_data_handle.try_emplace (gdbarch);
 }
 
 /* Implement the "get_siginfo_type" gdbarch method.  */

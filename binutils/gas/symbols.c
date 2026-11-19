@@ -1,5 +1,5 @@
 /* symbols.c -symbol table-
-   Copyright (C) 1987-2025 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -194,8 +194,8 @@ hash_symbol_entry (const void *e)
 static int
 eq_symbol_entry (const void *a, const void *b)
 {
-  const symbol_entry_t *ea = (const symbol_entry_t *) a;
-  const symbol_entry_t *eb = (const symbol_entry_t *) b;
+  const symbol_entry_t *ea = a;
+  const symbol_entry_t *eb = b;
 
   return (ea->sy.hash == eb->sy.hash
 	  && strcmp (ea->sy.name, eb->sy.name) == 0);
@@ -259,7 +259,7 @@ notes_calloc (size_t n, size_t size)
 {
   size_t amt;
   void *ret;
-  if (gas_mul_overflow (n, size, &amt))
+  if (_bfd_mul_overflow (n, size, &amt))
     {
       obstack_alloc_failed_handler ();
       abort ();
@@ -464,7 +464,7 @@ local_symbol_make (const char *name, segT section, fragS *frag, valueT val)
 static symbolS *
 local_symbol_convert (void *sym)
 {
-  symbol_entry_t *ent = (symbol_entry_t *) sym;
+  symbol_entry_t *ent = sym;
   struct xsymbol *xtra;
   valueT val;
 
@@ -491,7 +491,7 @@ static void
 define_sym_at_dot (symbolS *symbolP)
 {
   symbolP->frag = frag_now;
-  S_SET_VALUE (symbolP, (valueT) frag_now_fix ());
+  S_SET_VALUE (symbolP, frag_now_fix ());
   S_SET_SEGMENT (symbolP, now_seg);
 }
 
@@ -531,13 +531,8 @@ colon (/* Just seen "x:" - rattle symbols & frags.  */
 			+ new_broken_words * md_long_jump_size);
 
       frag_tmp = frag_now;
-      frag_opcode = frag_var (rs_broken_word,
-			      possible_bytes,
-			      possible_bytes,
-			      (relax_substateT) 0,
-			      (symbolS *) broken_words,
-			      (offsetT) 0,
-			      NULL);
+      frag_opcode = frag_var (rs_broken_word, possible_bytes, possible_bytes,
+			      0, (symbolS *) broken_words, 0, NULL);
 
       /* We want to store the pointer to where to insert the jump
 	 table in the fr_opcode of the rs_broken_word frag.  This
@@ -631,11 +626,8 @@ colon (/* Just seen "x:" - rattle symbols & frags.  */
 			 If the new size is larger we just change its
 			 value.  If the new size is smaller, we ignore
 			 this symbol.  */
-		      if (S_GET_VALUE (symbolP)
-			  < ((unsigned) frag_now_fix ()))
-			{
-			  S_SET_VALUE (symbolP, (valueT) frag_now_fix ());
-			}
+		      if (S_GET_VALUE (symbolP) < frag_now_fix ())
+			S_SET_VALUE (symbolP, frag_now_fix ());
 		    }
 		  else
 		    {
@@ -754,7 +746,7 @@ symbol_find_or_make (const char *name)
       symbol_table_insert (symbolP);
     }				/* if symbol wasn't found */
 
-  return (symbolP);
+  return symbolP;
 }
 
 symbolS *
@@ -768,7 +760,7 @@ symbol_make (const char *name)
   if (!symbolP)
     symbolP = symbol_new (name, undefined_section, &zero_address_frag, 0);
 
-  return (symbolP);
+  return symbolP;
 }
 
 symbolS *
@@ -799,8 +791,8 @@ symbol_clone (symbolS *orgsymP, int replace)
   bsymnew->name = bsymorg->name;
   bsymnew->flags = bsymorg->flags & ~BSF_SECTION_SYM;
   bsymnew->section = bsymorg->section;
-  bfd_copy_private_symbol_data (bfd_asymbol_bfd (bsymorg), bsymorg,
-				bfd_asymbol_bfd (bsymnew), bsymnew);
+  bfd_copy_private_symbol_data (bfd_asymbol_bfd (bsymorg), &orgsymP->bsym,
+				bfd_asymbol_bfd (bsymnew), &newsymP->bsym);
 
 #ifdef obj_symbol_clone_hook
   obj_symbol_clone_hook (newsymP, orgsymP);
@@ -812,17 +804,14 @@ symbol_clone (symbolS *orgsymP, int replace)
 
   if (replace)
     {
-      if (symbol_rootP == orgsymP)
+      if (orgsymP->x->previous != NULL)
+	orgsymP->x->previous->x->next = newsymP;
+      else
 	symbol_rootP = newsymP;
-      else if (orgsymP->x->previous)
-	{
-	  orgsymP->x->previous->x->next = newsymP;
-	  orgsymP->x->previous = NULL;
-	}
-      if (symbol_lastP == orgsymP)
-	symbol_lastP = newsymP;
-      else if (orgsymP->x->next)
+      if (orgsymP->x->next != NULL)
 	orgsymP->x->next->x->previous = newsymP;
+      else
+	symbol_lastP = newsymP;
 
       /* Symbols that won't be output can't be external.  */
       S_CLEAR_EXTERNAL (orgsymP);
@@ -1033,17 +1022,12 @@ symbol_append (symbolS *addme, symbolS *target,
       *rootPP = addme;
       *lastPP = addme;
       return;
-    }				/* if the list is empty  */
+    }
 
   if (target->x->next != NULL)
-    {
-      target->x->next->x->previous = addme;
-    }
+    target->x->next->x->previous = addme;
   else
-    {
-      know (*lastPP == target);
-      *lastPP = addme;
-    }				/* if we have a next  */
+    *lastPP = addme;
 
   addme->x->next = target->x->next;
   target->x->next = addme;
@@ -1071,25 +1055,15 @@ symbol_remove (symbolS *symbolP, symbolS **rootPP, symbolS **lastPP)
   if (symbolP->flags.local_symbol)
     abort ();
 
-  if (symbolP == *rootPP)
-    {
-      *rootPP = symbolP->x->next;
-    }				/* if it was the root  */
-
-  if (symbolP == *lastPP)
-    {
-      *lastPP = symbolP->x->previous;
-    }				/* if it was the tail  */
+  if (symbolP->x->previous != NULL)
+    symbolP->x->previous->x->next = symbolP->x->next;
+  else
+    *rootPP = symbolP->x->next;
 
   if (symbolP->x->next != NULL)
-    {
-      symbolP->x->next->x->previous = symbolP->x->previous;
-    }				/* if not last  */
-
-  if (symbolP->x->previous != NULL)
-    {
-      symbolP->x->previous->x->next = symbolP->x->next;
-    }				/* if not first  */
+    symbolP->x->next->x->previous = symbolP->x->previous;
+  else
+    *lastPP = symbolP->x->previous;
 
   debug_verify_symchain (*rootPP, *lastPP);
 }
@@ -1109,14 +1083,9 @@ symbol_insert (symbolS *addme, symbolS *target,
     abort ();
 
   if (target->x->previous != NULL)
-    {
-      target->x->previous->x->next = addme;
-    }
+    target->x->previous->x->next = addme;
   else
-    {
-      know (*rootPP == target);
-      *rootPP = addme;
-    }				/* if not first  */
+    *rootPP = addme;
 
   addme->x->previous = target->x->previous;
   target->x->previous = addme;
@@ -1752,8 +1721,8 @@ resolve_symbol_value (symbolS *symp)
 	    case O_bit_or_not:		left |= ~right; break;
 	    case O_bit_exclusive_or:	left ^= right; break;
 	    case O_bit_and:		left &= right; break;
-	    case O_add:			left += right; break;
-	    case O_subtract:		left -= right; break;
+	    case O_add:			left += (valueT) right; break;
+	    case O_subtract:		left -= (valueT) right; break;
 	    case O_eq:
 	    case O_ne:
 	      left = (left == right && seg_left == seg_right
@@ -1902,20 +1871,32 @@ snapshot_symbol (symbolS **symbolPP, valueT *valueP, segT *segP, fragS **fragPP)
 	}
 
       *symbolPP = symbolP;
+      *valueP = exp.X_add_number;
 
-      /* A bogus input file can result in resolve_expression()
-	 generating a local symbol, so we have to check again.  */
+      /* We may have picked up a local symbol above: Check again.  */
       if (symbolP->flags.local_symbol)
 	{
 	  struct local_symbol *locsym = (struct local_symbol *) symbolP;
 
-	  *valueP = locsym->value;
+	  if (locsym->section == expr_section
+	      || locsym->section == absolute_section
+	      || locsym->section == reg_section)
+	    {
+	      switch (exp.X_op)
+		{
+		case O_constant:
+		case O_register:
+		  *valueP += locsym->value;
+		  break;
+		default:
+		  break;
+		}
+	    }
 	  *segP = locsym->section;
 	  *fragPP = locsym->frag;
 	}
       else
 	{
-	  *valueP = exp.X_add_number;
 	  *segP = symbolP->bsym->section;
 	  *fragPP = symbolP->frag;
 	}
@@ -2087,7 +2068,7 @@ static size_t fb_label_max;
 static void
 fb_label_init (void)
 {
-  memset ((void *) fb_low_counter, '\0', sizeof (fb_low_counter));
+  memset (fb_low_counter, 0, sizeof (fb_low_counter));
 }
 
 /* Add one to the instance number of this fb label.  */
@@ -2200,10 +2181,10 @@ fb_label_name (unsigned int n, unsigned int augend)
    If the name wasn't generated by foo_label_name(), then return it
    unaltered.  This is used for error messages.  */
 
-char *
-decode_local_label_name (char *s)
+const char *
+decode_local_label_name (const char *s)
 {
-  char *p;
+  const char *p;
   char *symbol_decode;
   unsigned int label_number;
   unsigned int instance_number;
@@ -2272,7 +2253,7 @@ S_GET_VALUE_WHERE (symbolS *s, const char * file, unsigned int line)
 		    S_GET_NAME (s));
 	}
     }
-  return (valueT) s->x->value.X_add_number;
+  return s->x->value.X_add_number;
 }
 
 valueT
@@ -2393,7 +2374,7 @@ int
 S_IS_DEFINED (const symbolS *s)
 {
   if (s->flags.local_symbol)
-    return ((struct local_symbol *) s)->section != undefined_section;
+    return ((const struct local_symbol *) s)->section != undefined_section;
   return s->bsym->section != undefined_section;
 }
 
@@ -2410,7 +2391,7 @@ S_FORCE_RELOC (const symbolS *s, int strict)
 {
   segT sec;
   if (s->flags.local_symbol)
-    sec = ((struct local_symbol *) s)->section;
+    sec = ((const struct local_symbol *) s)->section;
   else
     {
       if ((strict
@@ -2451,7 +2432,7 @@ S_IS_LOCAL (const symbolS *s)
 
   flags = s->bsym->flags;
 
-  if (flag_strip_local_absolute
+  if (flag_strip_local_absolute > 0
       /* Keep BSF_FILE symbols in order to allow debuggers to identify
 	 the source file even when the object file is stripped.  */
       && (flags & (BSF_GLOBAL | BSF_FILE)) == 0
@@ -2484,7 +2465,7 @@ int
 S_CAN_BE_REDEFINED (const symbolS *s)
 {
   if (s->flags.local_symbol)
-    return (((struct local_symbol *) s)->frag
+    return (((const struct local_symbol *) s)->frag
 	    == &predefined_address_frag);
   /* Permit register names to be redefined.  */
   return s->x->value.X_op == O_register;
@@ -2516,7 +2497,7 @@ segT
 S_GET_SEGMENT (const symbolS *s)
 {
   if (s->flags.local_symbol)
-    return ((struct local_symbol *) s)->section;
+    return ((const struct local_symbol *) s)->section;
   return s->bsym->section;
 }
 
@@ -3051,6 +3032,34 @@ symbol_equated_reloc_p (const symbolS *s)
 	      || S_IS_COMMON (s)));
 }
 
+/* Return the final symbol in a chain of equated symbols, and the offset
+   from that symbol.  If the chain has a loop, return NULL.
+   For a non-equated SYM, return SYM.  */
+
+symbolS *
+symbol_equated_to (symbolS *sym, offsetT *off)
+{
+  valueT add = 0;
+  symbolS *ret = sym;
+  while (ret && symbol_equated_p (ret))
+    {
+      const expressionS *e = symbol_get_value_expression (ret);
+      add += e->X_add_number;
+      ret->flags.resolving = 1;
+      ret = e->X_add_symbol;
+      if (ret->flags.resolving)
+	ret = NULL;
+    }
+  while (sym && sym->flags.resolving)
+    {
+      const expressionS *e = symbol_get_value_expression (sym);
+      sym->flags.resolving = 0;
+      sym = e->X_add_symbol;
+    }
+  *off = add;
+  return ret;
+}
+
 /* Return whether a symbol has a constant value.  */
 
 int
@@ -3181,7 +3190,8 @@ symbol_begin (void)
 void
 symbol_end (void)
 {
-  htab_delete (sy_hash);
+  if (ENABLE_LEAK_CHECK)
+    htab_delete (sy_hash);
 }
 
 void
@@ -3220,7 +3230,7 @@ print_symbol_value_1 (FILE *file, symbolS *sym)
 	fprintf (file, " frag %p", locsym->frag);
       if (locsym->flags.resolved)
 	fprintf (file, " resolved");
-      fprintf (file, " local");
+      fprintf (file, " locsym");
     }
   else
     {
@@ -3258,7 +3268,7 @@ print_symbol_value_1 (FILE *file, symbolS *sym)
 
       if (s != undefined_section
 	  && s != expr_section)
-	fprintf (file, " %lx", (unsigned long) S_GET_VALUE (sym));
+	fprintf (file, " %"PRIx64, (uint64_t) S_GET_VALUE (sym));
     }
   else if (indent_level < max_indent_level
 	   && S_GET_SEGMENT (sym) != undefined_section)
@@ -3266,8 +3276,8 @@ print_symbol_value_1 (FILE *file, symbolS *sym)
       indent_level++;
       fprintf (file, "\n%*s<", indent_level * 4, "");
       if (sym->flags.local_symbol)
-	fprintf (file, "constant %lx",
-		 (unsigned long) ((struct local_symbol *) sym)->value);
+	fprintf (file, "constant %"PRIx64,
+		 (uint64_t) ((struct local_symbol *) sym)->value);
       else
 	print_expr_1 (file, &sym->x->value);
       fprintf (file, ">");
@@ -3401,6 +3411,16 @@ print_expr_1 (FILE *file, expressionS *exp)
       print_symbol_value_1 (file, exp->X_op_symbol);
       fprintf (file, ">");
       goto maybe_print_addnum;
+    case O_index:
+      indent_level++;
+      fprintf (file, "index\n%*s<", indent_level * 4, "");
+      if (exp->X_add_symbol != NULL)
+	print_symbol_value_1 (file, exp->X_add_symbol);
+      fprintf (file, ">\n%*s<", indent_level * 4, "");
+      print_symbol_value_1 (file, exp->X_op_symbol);
+      fprintf (file, ">");
+      indent_level--;
+      break;
     default:
       fprintf (file, "{unknown opcode %d}", (int) exp->X_op);
       break;

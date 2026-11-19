@@ -1,6 +1,6 @@
 /* Helper routines for D support in GDB.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -158,22 +158,22 @@ d_lookup_symbol (const struct language_defn *langdef,
   return sym;
 }
 
-/* Look up NAME in the D module MODULE.  Other arguments are as in
+/* Look up NAME in the D module MOD.  Other arguments are as in
    d_lookup_symbol_nonlocal.  If SEARCH is non-zero, search through
    base classes for a matching symbol.  */
 
 static struct block_symbol
-d_lookup_symbol_in_module (const char *module, const char *name,
+d_lookup_symbol_in_module (const char *mod, const char *name,
 			   const struct block *block,
 			   const domain_search_flags domain, int search)
 {
   char *concatenated_name = NULL;
 
-  if (module[0] != '\0')
+  if (mod[0] != '\0')
     {
       concatenated_name
-	= (char *) alloca (strlen (module) + strlen (name) + 2);
-      strcpy (concatenated_name, module);
+	= (char *) alloca (strlen (mod) + strlen (name) + 2);
+      strcpy (concatenated_name, mod);
       strcat (concatenated_name, ".");
       strcat (concatenated_name, name);
       name = concatenated_name;
@@ -200,7 +200,7 @@ lookup_module_scope (const struct language_defn *langdef,
 		     const domain_search_flags domain, const char *scope,
 		     int scope_len)
 {
-  char *module;
+  char *mod;
 
   if (scope[scope_len] != '\0')
     {
@@ -233,11 +233,10 @@ lookup_module_scope (const struct language_defn *langdef,
   if (scope_len == 0 && strchr (name, '.') == NULL)
     return d_lookup_symbol (langdef, name, block, domain, 1);
 
-  module = (char *) alloca (scope_len + 1);
-  strncpy (module, scope, scope_len);
-  module[scope_len] = '\0';
-  return d_lookup_symbol_in_module (module, name,
-				    block, domain, 1);
+  mod = (char *) alloca (scope_len + 1);
+  strncpy (mod, scope, scope_len);
+  mod[scope_len] = '\0';
+  return d_lookup_symbol_in_module (mod, name, block, domain, 1);
 }
 
 /* Search through the base classes of PARENT_TYPE for a symbol named
@@ -379,7 +378,7 @@ d_lookup_symbol_imports (const char *scope, const char *name,
       const char **excludep;
 
       /* If the import destination is the current scope then search it.  */
-      if (!current->searched && strcmp (scope, current->import_dest) == 0)
+      if (!current->searched && streq (scope, current->import_dest))
 	{
 	  /* Mark this import as searched so that the recursive call
 	     does not search it again.  */
@@ -391,9 +390,10 @@ d_lookup_symbol_imports (const char *scope, const char *name,
 	     with the sought out name.  If there is a match pass
 	     current->import_src as MODULE to direct the search towards
 	     the imported module.  */
-	  if (current->declaration
-	      && strcmp (name, current->alias
-			 ? current->alias : current->declaration) == 0)
+	  if (current->declaration != nullptr
+	      && streq (name, (current->alias != nullptr
+			       ? current->alias
+			       : current->declaration)))
 	    sym = d_lookup_symbol_in_module (current->import_src,
 					     current->declaration,
 					     block, domain, 1);
@@ -410,7 +410,7 @@ d_lookup_symbol_imports (const char *scope, const char *name,
 
 	  /* Do not follow CURRENT if NAME matches its EXCLUDES.  */
 	  for (excludep = current->excludes; *excludep; excludep++)
-	    if (strcmp (name, *excludep) == 0)
+	    if (streq (name, *excludep))
 	      break;
 	  if (*excludep)
 	    continue;
@@ -418,7 +418,7 @@ d_lookup_symbol_imports (const char *scope, const char *name,
 	  /* If the import statement is creating an alias.  */
 	  if (current->alias != NULL)
 	    {
-	      if (strcmp (name, current->alias) == 0)
+	      if (streq (name, current->alias))
 		{
 		  /* If the alias matches the sought name.  Pass
 		     current->import_src as the NAME to direct the
@@ -516,4 +516,3 @@ d_lookup_symbol_nonlocal (const struct language_defn *langdef,
 
   return d_lookup_symbol_module (scope, name, block, domain);
 }
-

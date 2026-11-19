@@ -1,5 +1,5 @@
 # This shell script emits a C file. -*- C -*-
-#   Copyright (C) 2009-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 #   Contributed by ARM Ltd.
 #
 # This file is part of the GNU Binutils.
@@ -38,8 +38,13 @@ static aarch64_protection_opts sw_protections = {
   .plt_type = PLT_NORMAL,
   .bti_report = MARKING_WARN,
   .gcs_type = GCS_IMPLICIT,
-  .gcs_report = MARKING_WARN,
+  .gcs_report = MARKING_UNSET,
   .gcs_report_dynamic = MARKING_UNSET,
+};
+
+static aarch64_memtag_opts memtag_opts = {
+  .memtag_mode = AARCH64_MEMTAG_MODE_NONE,
+  .memtag_stack = 0,
 };
 
 #define COMPILE_TIME_STRLEN(s) \
@@ -54,7 +59,6 @@ gld${EMULATION_NAME}_before_parse (void)
   input_flags.dynamic = ${DYNAMIC_LINK-true};
   config.has_shared = `if test -n "$GENERATE_SHLIB_SCRIPT" ; then echo true ; else echo false ; fi`;
   config.separate_code = `if test "x${SEPARATE_CODE}" = xyes ; then echo true ; else echo false ; fi`;
-  link_info.check_relocs_after_open_input = true;
 EOF
 if test -n "$COMMONPAGESIZE"; then
 fragment <<EOF
@@ -195,6 +199,8 @@ elf${ELFSIZE}_aarch64_add_stub_section (const char *stub_sec_name,
   if (stub_sec == NULL)
     goto err_ret;
 
+  stub_sec->veneer = 1;
+
   /* Long branch stubs contain a 64-bit address, so the section requires
      8 byte alignment.  */
   bfd_set_section_alignment (stub_sec, 3);
@@ -253,7 +259,7 @@ gld${EMULATION_NAME}_after_allocation (void)
      ie. doesn't affect any code, so we can delay resizing the
      sections.  It's likely we'll resize everything in the process of
      adding stubs.  */
-  ret = bfd_elf_discard_info (link_info.output_bfd, & link_info);
+  ret = bfd_elf_discard_info (&link_info);
   if (ret < 0)
     {
       einfo (_("%X%P: .eh_frame/.stab edit: %E\n"));
@@ -324,7 +330,7 @@ aarch64_elf_create_output_section_statements (void)
 	 These will only be created if the output format is an AArch64 format,
 	 hence we do not support linking and changing output formats at the
 	 same time.  Use a link followed by objcopy to change output formats.  */
-      einfo (_("%F%P: error: cannot change output format "
+      fatal (_("%P: error: cannot change output format "
 	       "whilst linking %s binaries\n"), "AArch64");
       return;
     }
@@ -335,7 +341,8 @@ aarch64_elf_create_output_section_statements (void)
 				 pic_veneer,
 				 fix_erratum_835769, fix_erratum_843419,
 				 no_apply_dynamic_relocs,
-				 &sw_protections);
+				 &sw_protections,
+				 &memtag_opts);
 
   stub_file = lang_add_input_file ("linker stubs",
 				   lang_input_file_is_fake_enum,
@@ -346,7 +353,7 @@ aarch64_elf_create_output_section_statements (void)
 			      bfd_get_arch (link_info.output_bfd),
 			      bfd_get_mach (link_info.output_bfd)))
     {
-      einfo (_("%F%P: can not create BFD: %E\n"));
+      fatal (_("%P: can not create BFD: %E\n"));
       return;
     }
 
@@ -411,7 +418,7 @@ aarch64_parse_gcs_report_dynamic_option (const char *_optarg)
   #define GCS_REPORT_DYNAMIC_LEN  COMPILE_TIME_STRLEN (GCS_REPORT_DYNAMIC)
 
   return aarch64_parse_feature_report_option (_optarg, GCS_REPORT_DYNAMIC,
-    GCS_REPORT_DYNAMIC_LEN, false, &sw_protections.gcs_report_dynamic);
+    GCS_REPORT_DYNAMIC_LEN, true, &sw_protections.gcs_report_dynamic);
 
   #undef GCS_REPORT_DYNAMIC
   #undef GCS_REPORT_DYNAMIC_LEN
@@ -440,6 +447,31 @@ aarch64_parse_gcs_option (const char *_optarg)
   #undef GCS
   #undef GCS_LEN
 }
+
+static bool
+aarch64_parse_memtag_mode_option (const char *_optarg)
+{
+  #define MEMTAG_MODE      "memtag-mode"
+  #define MEMTAG_MODE_LEN  COMPILE_TIME_STRLEN (MEMTAG_MODE)
+
+  if (strncmp (_optarg, MEMTAG_MODE, MEMTAG_MODE_LEN) != 0)
+    return false;
+
+  if (strcmp (_optarg + MEMTAG_MODE_LEN, "=none") == 0)
+    memtag_opts.memtag_mode = AARCH64_MEMTAG_MODE_NONE;
+  else if (strcmp (_optarg + MEMTAG_MODE_LEN, "=sync") == 0)
+    memtag_opts.memtag_mode = AARCH64_MEMTAG_MODE_SYNC;
+  else if (strcmp (_optarg + MEMTAG_MODE_LEN, "=async") == 0)
+    memtag_opts.memtag_mode = AARCH64_MEMTAG_MODE_ASYNC;
+  else
+    einfo (_("%X%P: error: unrecognized value '-z %s'\n"), _optarg);
+
+  return true;
+
+  #undef MEMTAG_MODE
+  #undef MEMTAG_MODE_LEN
+}
+
 EOF
 
 # Define some shell vars to insert bits of code into the standard elf
@@ -456,6 +488,7 @@ PARSE_AND_LIST_LONGOPTS='
   { "fix-cortex-a53-835769", no_argument, NULL, OPTION_FIX_ERRATUM_835769},
   { "fix-cortex-a53-843419", optional_argument, NULL, OPTION_FIX_ERRATUM_843419},
   { "no-apply-dynamic-relocs", no_argument, NULL, OPTION_NO_APPLY_DYNAMIC_RELOCS},
+  { "discard-sframe", no_argument, NULL, OPTION_DISCARD_SFRAME},
 '
 
 PARSE_AND_LIST_OPTIONS='
@@ -464,6 +497,7 @@ PARSE_AND_LIST_OPTIONS='
   fprintf (file, _("  --no-wchar-size-warning     Don'\''t warn about objects with incompatible\n"
 		   "                                wchar_t sizes\n"));
   fprintf (file, _("  --pic-veneer                Always generate PIC interworking veneers\n"));
+  fprintf (file, _("  --discard-sframe            Don'\''t generate SFrame stack trace info in output\n"));
   fprintf (file, _("\
   --stub-group-size=N         Maximum size of a group of input sections that\n\
                                 can be handled by one stub section.  A negative\n\
@@ -518,6 +552,17 @@ PARSE_AND_LIST_OPTIONS='
                                                  and output have GCS marking.\n\
                                                error: Emit error when the input objects are missing GCS markings\n\
                                                  and output have GCS marking.\n"));
+  fprintf (file, _("\
+  -z memtag-mode[=none|sync|async]     Select Memory Tagging Extension mode of operation to use.\n\
+                                       Emits a DT_AARCH64_MEMTAG_MODE dynamic tag for the binary.\n\
+                                       This entry is only valid on the main executable.  It is\n\
+                                       ignored in the dynamically loaded objects by the loader.\n\
+                                         none (default): Disable MTE checking of memory reads and writes.\n\
+                                         sync: Enable precise exceptions when mismatched address and\n\
+                                               allocation tags detected on load/store operations.\n\
+                                         async: Enable imprecise exceptions.\n"));
+  fprintf (file, _("\
+  -z memtag-stack               Mark program stack with MTE protection.\n"));
 '
 
 PARSE_AND_LIST_ARGS_CASE_Z_AARCH64='
@@ -533,6 +578,10 @@ PARSE_AND_LIST_ARGS_CASE_Z_AARCH64='
 	{}
      else if (aarch64_parse_gcs_option (optarg))
 	{}
+     else if (aarch64_parse_memtag_mode_option (optarg))
+	{}
+     else if (strcmp (optarg, "memtag-stack") == 0)
+	memtag_opts.memtag_stack = 1;
 '
 PARSE_AND_LIST_ARGS_CASE_Z="$PARSE_AND_LIST_ARGS_CASE_Z $PARSE_AND_LIST_ARGS_CASE_Z_AARCH64"
 
@@ -583,9 +632,14 @@ PARSE_AND_LIST_ARGS_CASES='
 
 	group_size = bfd_scan_vma (optarg, &end, 0);
 	if (*end)
-	  einfo (_("%F%P: invalid number `%s'\''\n"), optarg);
+	  fatal (_("%P: invalid number `%s'\''\n"), optarg);
       }
       break;
+
+    case OPTION_DISCARD_SFRAME:
+      link_info.discard_sframe = true;
+      break;
+
 '
 
 # We have our own before_allocation etc. functions, but they call

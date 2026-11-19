@@ -265,6 +265,14 @@
 .*Info: macro .*
 .*Warning: read-only CSR is written `csrw mconfigptr,a1'
 .*Info: macro .*
+.*Warning: invalid CSR `medelegh', needs rv32i extension
+.*Info: macro .*
+.*Warning: invalid CSR `medelegh' for the privileged spec `1.12'
+.*Info: macro .*
+.*Warning: invalid CSR `medelegh', needs rv32i extension
+.*Info: macro .*
+.*Warning: invalid CSR `medelegh' for the privileged spec `1.12'
+.*Info: macro .*
 .*Warning: invalid CSR `mstatush', needs rv32i extension
 .*Info: macro .*
 .*Warning: invalid CSR `mstatush', needs rv32i extension
@@ -440,6 +448,14 @@
 .*Warning: invalid CSR `hedeleg', needs `h' extension
 .*Info: macro .*
 .*Warning: invalid CSR `hedeleg', needs `h' extension
+.*Info: macro .*
+.*Warning: invalid CSR `hedelegh', needs rv32i extension
+.*Info: macro .*
+.*Warning: invalid CSR `hedelegh', needs `h' extension
+.*Info: macro .*
+.*Warning: invalid CSR `hedelegh', needs rv32i extension
+.*Info: macro .*
+.*Warning: invalid CSR `hedelegh', needs `h' extension
 .*Info: macro .*
 .*Warning: invalid CSR `hideleg', needs `h' extension
 .*Info: macro .*
@@ -1005,6 +1021,10 @@
 .*Info: macro .*
 .*Warning: invalid CSR `vsiph', needs `ssaia' extension
 .*Info: macro .*
+.*Warning: invalid CSR `scountinhibit', needs `ssccfg' extension
+.*Info: macro .*
+.*Warning: invalid CSR `scountinhibit', needs `ssccfg' extension
+.*Info: macro .*
 .*Warning: invalid CSR `ssp', needs `zicfiss' extension
 .*Info: macro .*
 .*Warning: invalid CSR `ssp', needs `zicfiss' extension
@@ -1476,4 +1496,8 @@
 .*Warning: invalid CSR `jvt', needs `zcmt' extension
 .*Info: macro .*
 .*Warning: invalid CSR `jvt', needs `zcmt' extension
+.*Info: macro .*
+.*Warning: invalid CSR `srmcfg', needs `ssqosid' extension
+.*Info: macro .*
+.*Warning: invalid CSR `srmcfg', needs `ssqosid' extension
 .*Info: macro .*

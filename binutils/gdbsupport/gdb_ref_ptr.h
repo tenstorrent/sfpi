@@ -1,6 +1,6 @@
 /* Reference-counted smart pointer class
 
-   Copyright (C) 2016-2024 Free Software Foundation, Inc.
+   Copyright (C) 2016-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,6 +21,7 @@
 #define GDBSUPPORT_GDB_REF_PTR_H
 
 #include <cstddef>
+#include "gdbsupport/traits.h"
 
 namespace gdb
 {
@@ -48,28 +49,42 @@ namespace gdb
 template<typename T, typename Policy>
 class ref_ptr
 {
- public:
+public:
+
+  /* Befriend all instantiations of this template, so that the
+     templated copy constructors and assignment operators can access
+     the data.  */
+  template<typename X, typename Y> friend class ref_ptr;
 
   /* Create a new NULL instance.  */
-  ref_ptr ()
+  ref_ptr () noexcept
     : m_obj (NULL)
   {
   }
 
   /* Create a new NULL instance.  Note that this is not explicit.  */
-  ref_ptr (const std::nullptr_t)
+  ref_ptr (const std::nullptr_t) noexcept
     : m_obj (NULL)
   {
   }
 
   /* Create a new instance.  OBJ is a reference, management of which
      is now transferred to this class.  */
-  explicit ref_ptr (T *obj)
+  explicit ref_ptr (T *obj) noexcept
     : m_obj (obj)
   {
   }
 
   /* Copy another instance.  */
+  template<typename U,
+	   typename = gdb::Requires<std::is_convertible<U *, T*>>>
+  ref_ptr (const ref_ptr<U, Policy> &other)
+    : m_obj (other.m_obj)
+  {
+    if (m_obj != NULL)
+      Policy::incref (m_obj);
+  }
+
   ref_ptr (const ref_ptr &other)
     : m_obj (other.m_obj)
   {
@@ -78,6 +93,14 @@ class ref_ptr
   }
 
   /* Transfer ownership from OTHER.  */
+  template<typename U,
+	   typename = gdb::Requires<std::is_convertible<U *, T*>>>
+  ref_ptr (ref_ptr<U, Policy> &&other) noexcept
+    : m_obj (other.m_obj)
+  {
+    other.m_obj = NULL;
+  }
+
   ref_ptr (ref_ptr &&other) noexcept
     : m_obj (other.m_obj)
   {
@@ -92,6 +115,19 @@ class ref_ptr
   }
 
   /* Copy another instance.  */
+  template<typename U,
+	   typename = gdb::Requires<std::is_convertible<U *, T*>>>
+  ref_ptr &operator= (const ref_ptr<U, Policy> &other)
+  {
+    /* Note that self-assignment is not checked here, as it isn't
+       possible: self-assignments will choose the non-template
+       function.  */
+    reset (other.m_obj);
+    if (m_obj != NULL)
+      Policy::incref (m_obj);
+    return *this;
+  }
+
   ref_ptr &operator= (const ref_ptr &other)
   {
     /* Do nothing on self-assignment.  */
@@ -105,6 +141,18 @@ class ref_ptr
   }
 
   /* Transfer ownership from OTHER.  */
+  template<typename U,
+	   typename = gdb::Requires<std::is_convertible<U *, T*>>>
+  ref_ptr &operator= (ref_ptr<U, Policy> &&other)
+  {
+    /* Note that self-assignment is not checked here, as it isn't
+       possible: self-assignments will choose the non-template
+       function.  */
+    reset (other.m_obj);
+    other.m_obj = NULL;
+    return *this;
+  }
+
   ref_ptr &operator= (ref_ptr &&other)
   {
     /* Do nothing on self-assignment.  */
@@ -127,7 +175,7 @@ class ref_ptr
 
   /* Return this instance's referent without changing the state of
      this class.  */
-  T *get () const
+  T *get () const noexcept
   {
     return m_obj;
   }
@@ -135,7 +183,7 @@ class ref_ptr
   /* Return this instance's referent, and stop managing this
      reference.  The caller is now responsible for the ownership of
      the reference.  */
-  ATTRIBUTE_UNUSED_RESULT T *release ()
+  ATTRIBUTE_UNUSED_RESULT T *release () noexcept
   {
     T *result = m_obj;
 
@@ -144,15 +192,18 @@ class ref_ptr
   }
 
   /* Let users refer to members of the underlying pointer.  */
-  T *operator-> () const
+  T *operator-> () const noexcept
   {
     return m_obj;
   }
 
   /* Acquire a new reference and return a ref_ptr that owns it.  */
-  static ref_ptr<T, Policy> new_reference (T *obj)
+  template <class TObj>
+  static ref_ptr<T, Policy> new_reference (TObj *obj)
   {
     Policy::incref (obj);
+    if constexpr (std::is_base_of<T, TObj>::value)
+      return ref_ptr<T, Policy> (static_cast<T *> (obj));
     return ref_ptr<T, Policy> (obj);
   }
 
@@ -161,15 +212,15 @@ class ref_ptr
   T *m_obj;
 };
 
-template<typename T, typename Policy>
+template<typename T, typename U, typename Policy>
 inline bool operator== (const ref_ptr<T, Policy> &lhs,
-			const ref_ptr<T, Policy> &rhs)
+			const ref_ptr<U, Policy> &rhs)
 {
   return lhs.get () == rhs.get ();
 }
 
-template<typename T, typename Policy>
-inline bool operator== (const ref_ptr<T, Policy> &lhs, const T *rhs)
+template<typename T, typename U, typename Policy>
+inline bool operator== (const ref_ptr<T, Policy> &lhs, const U *rhs)
 {
   return lhs.get () == rhs;
 }
@@ -180,8 +231,8 @@ inline bool operator== (const ref_ptr<T, Policy> &lhs, const std::nullptr_t)
   return lhs.get () == nullptr;
 }
 
-template<typename T, typename Policy>
-inline bool operator== (const T *lhs, const ref_ptr<T, Policy> &rhs)
+template<typename T, typename U, typename Policy>
+inline bool operator== (const T *lhs, const ref_ptr<U, Policy> &rhs)
 {
   return lhs == rhs.get ();
 }
@@ -192,15 +243,15 @@ inline bool operator== (const std::nullptr_t, const ref_ptr<T, Policy> &rhs)
   return nullptr == rhs.get ();
 }
 
-template<typename T, typename Policy>
+template<typename T, typename U, typename Policy>
 inline bool operator!= (const ref_ptr<T, Policy> &lhs,
-			const ref_ptr<T, Policy> &rhs)
+			const ref_ptr<U, Policy> &rhs)
 {
   return lhs.get () != rhs.get ();
 }
 
-template<typename T, typename Policy>
-inline bool operator!= (const ref_ptr<T, Policy> &lhs, const T *rhs)
+template<typename T, typename U, typename Policy>
+inline bool operator!= (const ref_ptr<T, Policy> &lhs, const U *rhs)
 {
   return lhs.get () != rhs;
 }
@@ -211,8 +262,8 @@ inline bool operator!= (const ref_ptr<T, Policy> &lhs, const std::nullptr_t)
   return lhs.get () != nullptr;
 }
 
-template<typename T, typename Policy>
-inline bool operator!= (const T *lhs, const ref_ptr<T, Policy> &rhs)
+template<typename T, typename U, typename Policy>
+inline bool operator!= (const T *lhs, const ref_ptr<U, Policy> &rhs)
 {
   return lhs != rhs.get ();
 }

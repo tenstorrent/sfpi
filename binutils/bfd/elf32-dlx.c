@@ -1,5 +1,5 @@
 /* DLX specific support for 32-bit ELF
-   Copyright (C) 2002-2025 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -77,6 +77,10 @@ _bfd_dlx_elf_hi16_reloc (bfd *abfd,
       return bfd_reloc_ok;
     }
 
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
+    return bfd_reloc_outofrange;
+
   ret = bfd_reloc_ok;
 
   if (bfd_is_und_section (symbol->section)
@@ -88,9 +92,6 @@ _bfd_dlx_elf_hi16_reloc (bfd *abfd,
   relocation += symbol->section->output_offset;
   relocation += reloc_entry->addend;
   relocation += bfd_get_16 (abfd, (bfd_byte *)data + reloc_entry->address);
-
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
-    return bfd_reloc_outofrange;
 
   bfd_put_16 (abfd, (short)((relocation >> 16) & 0xFFFF),
 	      (bfd_byte *)data + reloc_entry->address);
@@ -142,6 +143,10 @@ elf32_dlx_relocate16 (bfd *abfd,
 	 symbol->section->output_section->name);
       return bfd_reloc_undefined;
     }
+
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
+    return bfd_reloc_outofrange;
 
   insn  = bfd_get_32 (abfd, (bfd_byte *)data + reloc_entry->address);
   allignment = 1 << (input_section->output_section->alignment_power - 1);
@@ -205,6 +210,10 @@ elf32_dlx_relocate26 (bfd *abfd,
 	 symbol->section->output_section->name);
       return bfd_reloc_undefined;
     }
+
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
+    return bfd_reloc_outofrange;
 
   insn  = bfd_get_32 (abfd, (bfd_byte *)data + reloc_entry->address);
   allignment = 1 << (input_section->output_section->alignment_power - 1);
@@ -433,7 +442,7 @@ elf32_dlx_check_relocs (bfd *abfd,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;

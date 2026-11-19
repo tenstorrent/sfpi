@@ -1,6 +1,6 @@
 /* Python interface to line tables.
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,30 +19,32 @@
 
 #include "python-internal.h"
 
-struct linetable_entry_object {
-  PyObject_HEAD
+struct linetable_entry_object : public PyObject
+{
   /* The line table source line.  */
   int line;
   /* The pc associated with the source line.  */
   CORE_ADDR pc;
 };
 
-extern PyTypeObject linetable_entry_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("linetable_entry_object");
+static_assert (gdb::is_python_allocatable_v<linetable_entry_object>);
 
-struct linetable_object {
-  PyObject_HEAD
+extern PyTypeObject linetable_entry_object_type;
+
+struct linetable_object : public PyObject
+{
   /* The symtab python object.  We store the Python object here as the
      underlying symtab can become invalid, and we have to run validity
      checks on it.  */
   PyObject *symtab;
 };
 
-extern PyTypeObject linetable_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("linetable_object");
+static_assert (gdb::is_python_allocatable_v<linetable_object>);
 
-struct ltpy_iterator_object {
-  PyObject_HEAD
+extern PyTypeObject linetable_object_type;
+
+struct ltpy_iterator_object : public PyObject
+{
   /* The current entry in the line table for the iterator  */
   int current_index;
   /* Pointer back to the original source line table object.  Needed to
@@ -51,8 +53,9 @@ struct ltpy_iterator_object {
   PyObject *source;
 };
 
-extern PyTypeObject ltpy_iterator_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("ltpy_iterator_object");
+static_assert (gdb::is_python_allocatable_v<ltpy_iterator_object>);
+
+extern PyTypeObject ltpy_iterator_object_type;
 
 /* Internal helper function to extract gdb.Symtab from a gdb.LineTable
    object.  */
@@ -80,7 +83,7 @@ get_symtab (PyObject *linetable)
 /* Helper function to create a line table object that wraps a
    gdb.Symtab object.  */
 
-PyObject *
+gdbpy_ref<>
 symtab_to_linetable_object (PyObject *symtab)
 {
   linetable_object *ltable;
@@ -91,7 +94,7 @@ symtab_to_linetable_object (PyObject *symtab)
       ltable->symtab = symtab;
       Py_INCREF (symtab);
     }
-  return (PyObject *) ltable;
+  return gdbpy_ref<> (ltable);
 }
 
 /* Internal helper function to build a line table object from a line
@@ -120,22 +123,25 @@ build_linetable_entry (int line, CORE_ADDR address)
    address.  */
 
 static PyObject *
-build_line_table_tuple_from_pcs (int line, const std::vector<CORE_ADDR> &pcs)
+build_line_table_tuple_from_entries
+	(const struct objfile *objfile,
+	 const std::vector<const linetable_entry *> &entries)
 {
   int i;
 
-  if (pcs.size () < 1)
-    Py_RETURN_NONE;
+  if (entries.size () < 1)
+    return py_none ().release ();
 
-  gdbpy_ref<> tuple (PyTuple_New (pcs.size ()));
+  gdbpy_ref<> tuple (PyTuple_New (entries.size ()));
 
   if (tuple == NULL)
     return NULL;
 
-  for (i = 0; i < pcs.size (); ++i)
+  for (i = 0; i < entries.size (); ++i)
     {
-      CORE_ADDR pc = pcs[i];
-      gdbpy_ref<> obj (build_linetable_entry (line, pc));
+      auto entry = entries[i];
+      gdbpy_ref<> obj (build_linetable_entry
+			(entry->line, entry->pc (objfile)));
 
       if (obj == NULL)
 	return NULL;
@@ -156,7 +162,7 @@ ltpy_get_pcs_for_line (PyObject *self, PyObject *args)
   struct symtab *symtab;
   gdb_py_longest py_line;
   const linetable_entry *best_entry = nullptr;
-  std::vector<CORE_ADDR> pcs;
+  std::vector<const linetable_entry*> entries;
 
   LTPY_REQUIRE_VALID (self, symtab);
 
@@ -165,14 +171,16 @@ ltpy_get_pcs_for_line (PyObject *self, PyObject *args)
 
   try
     {
-      pcs = find_pcs_for_symtab_line (symtab, py_line, &best_entry);
+      entries = find_linetable_entries_for_symtab_line (symtab, py_line,
+							&best_entry);
     }
   catch (const gdb_exception &except)
     {
       return gdbpy_handle_gdb_exception (nullptr, except);
     }
 
-  return build_line_table_tuple_from_pcs (py_line, pcs);
+  struct objfile *objfile = symtab->compunit ().objfile ();
+  return build_line_table_tuple_from_entries (objfile, entries);
 }
 
 /* Implementation of gdb.LineTable.has_line (self, line) -> Boolean.
@@ -202,10 +210,10 @@ ltpy_has_line (PyObject *self, PyObject *args)
     {
       const linetable_entry *item = &(symtab->linetable ()->item[index]);
       if (item->line == py_line)
-	  Py_RETURN_TRUE;
+	  return py_true ().release ();
     }
 
-  Py_RETURN_FALSE;
+  return py_false ().release ();
 }
 
 /* Implementation of gdb.LineTable.source_lines (self) -> List.
@@ -264,9 +272,9 @@ ltpy_is_valid (PyObject *self, PyObject *args)
   symtab = symtab_object_to_symtab (get_symtab (self));
 
   if (symtab == NULL)
-    Py_RETURN_FALSE;
+    return py_false ().release ();
 
-  Py_RETURN_TRUE;
+  return py_true ().release ();
 }
 
 /* Deconstructor for the line table object.  Decrement the reference
@@ -284,8 +292,8 @@ ltpy_dealloc (PyObject *self)
 /* Initialize LineTable, LineTableEntry and LineTableIterator
    objects.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_linetable (void)
+static int
+gdbpy_initialize_linetable ()
 {
   if (gdbpy_type_ready (&linetable_object_type) < 0)
     return -1;
@@ -405,7 +413,7 @@ ltpy_iternext (PyObject *self)
       item = &(symtab->linetable ()->item[iter_obj->current_index]);
     }
 
-  struct objfile *objfile = symtab->compunit ()->objfile ();
+  struct objfile *objfile = symtab->compunit ().objfile ();
   obj = build_linetable_entry (item->line, item->pc (objfile));
   iter_obj->current_index++;
 
@@ -425,9 +433,9 @@ ltpy_iter_is_valid (PyObject *self, PyObject *args)
   symtab = symtab_object_to_symtab (get_symtab (iter_obj->source));
 
   if (symtab == NULL)
-    Py_RETURN_FALSE;
+    return py_false ().release ();
 
-  Py_RETURN_TRUE;
+  return py_true ().release ();
 }
 
 GDBPY_INITIALIZE_FILE (gdbpy_initialize_linetable);

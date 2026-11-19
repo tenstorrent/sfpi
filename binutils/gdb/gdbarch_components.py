@@ -1,6 +1,6 @@
 # Dynamic architecture support for GDB, the GNU debugger.
 
-# Copyright (C) 1998-2024 Free Software Foundation, Inc.
+# Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
 # This file is part of GDB.
 
@@ -47,6 +47,10 @@
 # * "printer" - an expression to turn this field into a 'const char
 # *'.  This is used for dumping.  The string must live long enough to
 # be passed to printf.
+#
+# * "unused" - a boolean.  If true, the hook is known to be unused, we
+# but agreed to keep it around nevertheless.  check-gdbarch.py uses
+# this.  This should be used sparingly, if at all.
 #
 # Value, Function, and Method share some more parameters.  Some of
 # these work in conjunction in a somewhat complicated way, so they are
@@ -195,6 +199,8 @@ useful).
     name="bfloat16_bit",
     predefault="2*TARGET_CHAR_BIT",
     invalid=False,
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -210,6 +216,8 @@ Value(
     name="half_bit",
     predefault="2*TARGET_CHAR_BIT",
     invalid=False,
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -278,12 +286,13 @@ starting with C++11.
 
 Value(
     comment="""
-One if `wchar_t' is signed, zero if unsigned.
+True if `wchar_t' is signed, false if unsigned.
+
+The default value is true (signed).
 """,
-    type="int",
+    type="bool",
     name="wchar_signed",
-    predefault="-1",
-    postdefault="1",
+    predefault="true",
     invalid=False,
 )
 
@@ -325,7 +334,6 @@ addr_bit is the size of a target address as represented in gdb
 """,
     type="int",
     name="addr_bit",
-    predefault="0",
     postdefault="gdbarch_ptr_bit (gdbarch)",
     invalid=False,
 )
@@ -354,12 +362,13 @@ and if Dwarf versions < 4 need to be supported.
 
 Value(
     comment="""
-One if `char' acts like `signed char', zero if `unsigned char'.
+True if `char' acts like `signed char', false if `unsigned char'.
+
+The default value is true (signed).
 """,
-    type="int",
+    type="bool",
     name="char_signed",
-    predefault="-1",
-    postdefault="1",
+    predefault="true",
     invalid=False,
 )
 
@@ -453,7 +462,7 @@ Implementations should be migrated to implement pseudo_register_write instead.
         ("int", "cookednum"),
         ("const gdb_byte *", "buf"),
     ],
-    predicate=True,
+    invalid=False,
 )
 
 Value(
@@ -471,16 +480,15 @@ combinations of other registers, or they may be computed by GDB.
 """,
     type="int",
     name="num_pseudo_regs",
-    predefault="0",
     invalid=False,
 )
 
 Method(
     comment="""
 Assemble agent expression bytecode to collect pseudo-register REG.
-Return -1 if something goes wrong, 0 otherwise.
+REG must be a valid register number.
 """,
-    type="int",
+    type="void",
     name="ax_pseudo_register_collect",
     params=[("struct agent_expr *", "ax"), ("int", "reg")],
     predicate=True,
@@ -490,9 +498,10 @@ Method(
     comment="""
 Assemble agent expression bytecode to push the value of pseudo-register
 REG on the interpreter stack.
-Return -1 if something goes wrong, 0 otherwise.
+REG must be a valid register number.
+Return false if something goes wrong, true otherwise.
 """,
-    type="int",
+    type="bool",
     name="ax_pseudo_register_push_stack",
     params=[("struct agent_expr *", "ax"), ("int", "reg")],
     predicate=True,
@@ -541,39 +550,6 @@ Value(
     type="int",
     name="fp0_regnum",
     predefault="-1",
-    invalid=False,
-)
-
-Method(
-    comment="""
-Convert stab register number (from `r' declaration) to a gdb REGNUM.
-""",
-    type="int",
-    name="stab_reg_to_regnum",
-    params=[("int", "stab_regnr")],
-    predefault="no_op_reg_to_regnum",
-    invalid=False,
-)
-
-Method(
-    comment="""
-Provide a default mapping from a ecoff register number to a gdb REGNUM.
-""",
-    type="int",
-    name="ecoff_reg_to_regnum",
-    params=[("int", "ecoff_regnr")],
-    predefault="no_op_reg_to_regnum",
-    invalid=False,
-)
-
-Method(
-    comment="""
-Convert from an sdb register number to an internal gdb register number.
-""",
-    type="int",
-    name="sdb_reg_to_regnum",
-    params=[("int", "sdb_regnr")],
-    predefault="no_op_reg_to_regnum",
     invalid=False,
 )
 
@@ -687,7 +663,7 @@ Method(
     comment="""
 Return true if the code of FRAME is writable.
 """,
-    type="int",
+    type="bool",
     name="code_of_frame_writable",
     params=[("const frame_info_ptr &", "frame")],
     predefault="default_code_of_frame_writable",
@@ -701,7 +677,7 @@ Method(
         ("struct ui_file *", "file"),
         ("const frame_info_ptr &", "frame"),
         ("int", "regnum"),
-        ("int", "all"),
+        ("bool", "all"),
     ],
     predefault="default_print_registers_info",
     invalid=False,
@@ -720,17 +696,6 @@ Method(
 )
 
 Method(
-    type="void",
-    name="print_vector_info",
-    params=[
-        ("struct ui_file *", "file"),
-        ("const frame_info_ptr &", "frame"),
-        ("const char *", "args"),
-    ],
-    predicate=True,
-)
-
-Method(
     comment="""
 MAP a GDB RAW register number onto a simulator register number.  See
 also include/...-sim.h.
@@ -743,7 +708,7 @@ also include/...-sim.h.
 )
 
 Method(
-    type="int",
+    type="bool",
     name="cannot_fetch_register",
     params=[("int", "regnum")],
     predefault="cannot_register_not",
@@ -751,7 +716,7 @@ Method(
 )
 
 Method(
-    type="int",
+    type="bool",
     name="cannot_store_register",
     params=[("int", "regnum")],
     predefault="cannot_register_not",
@@ -761,24 +726,18 @@ Method(
 Function(
     comment="""
 Determine the address where a longjmp will land and save this address
-in PC.  Return nonzero on success.
+in PC.  Return true on success.
 
 FRAME corresponds to the longjmp frame.
 """,
-    type="int",
+    type="bool",
     name="get_longjmp_target",
     params=[("const frame_info_ptr &", "frame"), ("CORE_ADDR *", "pc")],
     predicate=True,
 )
 
-Value(
-    type="int",
-    name="believe_pcc_promotion",
-    invalid=False,
-)
-
 Method(
-    type="int",
+    type="bool",
     name="convert_register_p",
     params=[("int", "regnum"), ("struct type *", "type")],
     predefault="generic_convert_register_p",
@@ -786,15 +745,15 @@ Method(
 )
 
 Function(
-    type="int",
+    type="bool",
     name="register_to_value",
     params=[
         ("const frame_info_ptr &", "frame"),
         ("int", "regnum"),
         ("struct type *", "type"),
         ("gdb_byte *", "buf"),
-        ("int *", "optimizedp"),
-        ("int *", "unavailablep"),
+        ("bool *", "optimizedp"),
+        ("bool *", "unavailablep"),
     ],
     invalid=False,
 )
@@ -930,7 +889,7 @@ Function(
     comment="""
 Return the address at which the value being returned from
 the current function will be stored.  This routine is only
-called if the current function uses the the "struct return
+called if the current function uses the "struct return
 convention".
 
 May return 0 when unable to determine that address.""",
@@ -992,7 +951,7 @@ by language and its ABI, such as C++.  Unfortunately, compiler may
 implement it to a target-dependent feature.  So that we need such hook here
 to be aware of this in GDB.
 """,
-    type="int",
+    type="bool",
     name="return_in_first_hidden_param_p",
     params=[("struct type *", "type")],
     predefault="default_return_in_first_hidden_param_p",
@@ -1064,7 +1023,6 @@ SIZE is set to the software breakpoint's length in memory.
     type="const gdb_byte *",
     name="sw_breakpoint_from_kind",
     params=[("int", "kind"), ("int *", "size")],
-    predefault="NULL",
     invalid=False,
 )
 
@@ -1199,14 +1157,6 @@ Method(
     name="frame_align",
     params=[("CORE_ADDR", "address")],
     predicate=True,
-)
-
-Method(
-    type="int",
-    name="stabs_argument_has_addr",
-    params=[("struct type *", "type")],
-    predefault="default_stabs_argument_has_addr",
-    invalid=False,
 )
 
 Value(
@@ -1395,17 +1345,17 @@ the condition is true, so that we ensure forward progress when stepping
 past a conditional branch to self.
 """,
     type="std::vector<CORE_ADDR>",
-    name="software_single_step",
+    name="get_next_pcs",
     params=[("struct regcache *", "regcache")],
     predicate=True,
 )
 
 Method(
     comment="""
-Return non-zero if the processor is executing a delay slot and a
+Return true if the processor is executing a delay slot and a
 further single-step is needed before the instruction finishes.
 """,
-    type="int",
+    type="bool",
     name="single_step_through_delay",
     params=[("const frame_info_ptr &", "frame")],
     predicate=True,
@@ -1431,12 +1381,12 @@ Function(
     invalid=False,
 )
 
-Value(
-    comment="Vtable of solib operations functions.",
-    type="const solib_ops *",
-    name="so_ops",
-    predefault="&solib_target_so_ops",
-    printer="host_address_to_string (gdbarch->so_ops)",
+Function(
+    comment="Return a newly-allocated solib_ops object capable of providing the solibs for this architecture.",
+    type="solib_ops_up",
+    name="make_solib_ops",
+    params=[("program_space *", "pspace")],
+    predefault="make_target_solib_ops",
     invalid=False,
 )
 
@@ -1457,7 +1407,7 @@ Method(
     comment="""
 Some systems also have trampoline code for returning from shared libs.
 """,
-    type="int",
+    type="bool",
     name="in_solib_return_trampoline",
     params=[("CORE_ADDR", "pc"), ("const char *", "name")],
     predefault="generic_in_solib_return_trampoline",
@@ -1480,14 +1430,14 @@ Method(
 A target might have problems with watchpoints as soon as the stack
 frame of the current function has been destroyed.  This mostly happens
 as the first action in a function's epilogue.  stack_frame_destroyed_p()
-is defined to return a non-zero value if either the given addr is one
+is defined to return true if either the given addr is one
 instruction after the stack destroying instruction up to the trailing
 return instruction or if we can figure out that the stack frame has
 already been invalidated regardless of the value of addr.  Targets
 which don't suffer from that problem could just let this functionality
 untouched.
 """,
-    type="int",
+    type="bool",
     name="stack_frame_destroyed_p",
     params=[("CORE_ADDR", "addr")],
     predefault="generic_stack_frame_destroyed_p",
@@ -1498,7 +1448,7 @@ Function(
     comment="""
 Process an ELF symbol in the minimal symbol table in a backend-specific
 way.  Normally this hook is supposed to do nothing, however if required,
-then this hook can be used to apply tranformations to symbols that are
+then this hook can be used to apply transformations to symbols that are
 considered special in some way.  For example the MIPS backend uses it
 to interpret `st_other' information to mark compressed code symbols so
 that they can be treated in the appropriate manner in the processing of
@@ -1506,7 +1456,7 @@ the main symbol table and DWARF-2 records.
 """,
     type="void",
     name="elf_make_msymbol_special",
-    params=[("asymbol *", "sym"), ("struct minimal_symbol *", "msym")],
+    params=[("const asymbol *", "sym"), ("struct minimal_symbol *", "msym")],
     predicate=True,
 )
 
@@ -1522,7 +1472,7 @@ Function(
     comment="""
 Process a symbol in the main symbol table in a backend-specific way.
 Normally this hook is supposed to do nothing, however if required,
-then this hook can be used to apply tranformations to symbols that
+then this hook can be used to apply transformations to symbols that
 are considered special in some way.  This is currently used by the
 MIPS backend to make sure compressed code symbols have the ISA bit
 set.  This in turn is needed for symbol values seen in GDB to match
@@ -1567,15 +1517,14 @@ stop PC.
 """,
     type="CORE_ADDR",
     name="adjust_dwarf2_line",
-    params=[("CORE_ADDR", "addr"), ("int", "rel")],
+    params=[("CORE_ADDR", "addr"), ("bool", "rel")],
     predefault="default_adjust_dwarf2_line",
     invalid=False,
 )
 
 Value(
-    type="int",
+    type="bool",
     name="cannot_step_breakpoint",
-    predefault="0",
     invalid=False,
 )
 
@@ -1584,9 +1533,8 @@ Value(
 See comment in target.h about continuable, steppable and
 non-steppable watchpoints.
 """,
-    type="int",
+    type="bool",
     name="have_nonsteppable_watchpoint",
-    predefault="0",
     invalid=False,
 )
 
@@ -1632,7 +1580,7 @@ Method(
     comment="""
 Is a register in a group
 """,
-    type="int",
+    type="bool",
     name="register_reggroup_p",
     params=[("int", "regnum"), ("const struct reggroup *", "reggroup")],
     predefault="default_register_reggroup_p",
@@ -1650,7 +1598,7 @@ Fetch the pointer to the ith function argument.
         ("int", "argi"),
         ("struct type *", "type"),
     ],
-    predicate=True,
+    invalid=False,
 )
 
 Method(
@@ -1686,9 +1634,9 @@ Method(
     comment="""
 Find core file memory regions
 """,
-    type="int",
+    type="bool",
     name="find_memory_regions",
-    params=[("find_memory_region_ftype", "func"), ("void *", "data")],
+    params=[("find_memory_region_ftype", "func")],
     predicate=True,
 )
 
@@ -1699,7 +1647,7 @@ Given a bfd OBFD, segment ADDRESS and SIZE, create a memory tag section to be du
     type="asection *",
     name="create_memtag_section",
     params=[("bfd *", "obfd"), ("CORE_ADDR", "address"), ("size_t", "size")],
-    predicate=True,
+    invalid=False,
 )
 
 Method(
@@ -1709,7 +1657,7 @@ Given a memory tag section OSEC, fill OSEC's contents with the appropriate tag d
     type="bool",
     name="fill_memtag_section",
     params=[("asection *", "osec")],
-    predicate=True,
+    invalid=False,
 )
 
 Method(
@@ -1738,7 +1686,12 @@ failed, otherwise, return the red length of READBUF.
 """,
     type="ULONGEST",
     name="core_xfer_shared_libraries",
-    params=[("gdb_byte *", "readbuf"), ("ULONGEST", "offset"), ("ULONGEST", "len")],
+    params=[
+        ("struct bfd &", "cbfd"),
+        ("gdb_byte *", "readbuf"),
+        ("ULONGEST", "offset"),
+        ("ULONGEST", "len"),
+    ],
     predicate=True,
 )
 
@@ -1750,7 +1703,12 @@ Return the number of bytes read (zero indicates failure).
 """,
     type="ULONGEST",
     name="core_xfer_shared_libraries_aix",
-    params=[("gdb_byte *", "readbuf"), ("ULONGEST", "offset"), ("ULONGEST", "len")],
+    params=[
+        ("struct bfd &", "cbfd"),
+        ("gdb_byte *", "readbuf"),
+        ("ULONGEST", "offset"),
+        ("ULONGEST", "len"),
+    ],
     predicate=True,
 )
 
@@ -1766,34 +1724,39 @@ How the core target converts a PTID from a core file to a string.
 
 Method(
     comment="""
-How the core target extracts the name of a thread from a core file.
+How the core target extracts the name of a thread from core file CBFD.
 """,
     type="const char *",
     name="core_thread_name",
-    params=[("struct thread_info *", "thr")],
+    params=[("struct bfd &", "cbfd"), ("struct thread_info *", "thr")],
     predicate=True,
 )
 
 Method(
     comment="""
 Read offset OFFSET of TARGET_OBJECT_SIGNAL_INFO signal information
-from core file into buffer READBUF with length LEN.  Return the number
+from core file CBFD into buffer READBUF with length LEN.  Return the number
 of bytes read (zero indicates EOF, a negative value indicates failure).
 """,
     type="LONGEST",
     name="core_xfer_siginfo",
-    params=[("gdb_byte *", "readbuf"), ("ULONGEST", "offset"), ("ULONGEST", "len")],
+    params=[
+        ("struct bfd &", "cbfd"),
+        ("gdb_byte *", "readbuf"),
+        ("ULONGEST", "offset"),
+        ("ULONGEST", "len"),
+    ],
     predicate=True,
 )
 
 Method(
     comment="""
-Read x86 XSAVE layout information from core file into XSAVE_LAYOUT.
+Read x86 XSAVE layout information from core file CBFD into XSAVE_LAYOUT.
 Returns true if the layout was read successfully.
 """,
     type="bool",
     name="core_read_x86_xsave_layout",
-    params=[("x86_xsave_layout &", "xsave_layout")],
+    params=[("struct bfd &", "cbfd"), ("x86_xsave_layout &", "xsave_layout")],
     predicate=True,
 )
 
@@ -1811,11 +1774,10 @@ Value(
     comment="""
 If the elements of C++ vtables are in-place function descriptors rather
 than normal function pointers (which may point to code or a descriptor),
-set this to one.
+set this to true.
 """,
-    type="int",
+    type="bool",
     name="vtable_function_descriptors",
-    predefault="0",
     invalid=False,
 )
 
@@ -1824,19 +1786,8 @@ Value(
 Set if the least significant bit of the delta is used instead of the least
 significant bit of the pfn for pointers to virtual member functions.
 """,
-    type="int",
+    type="bool",
     name="vbit_in_delta",
-    invalid=False,
-)
-
-Function(
-    comment="""
-Advance PC to next instruction in order to skip a permanent breakpoint.
-""",
-    type="void",
-    name="skip_permanent_breakpoint",
-    params=[("struct regcache *", "regcache")],
-    predefault="default_skip_permanent_breakpoint",
     invalid=False,
 )
 
@@ -1846,7 +1797,6 @@ The maximum length of an instruction on this architecture in bytes.
 """,
     type="ULONGEST",
     name="max_insn_length",
-    predefault="0",
     predicate=True,
 )
 
@@ -1879,7 +1829,7 @@ that case.
     type="displaced_step_copy_insn_closure_up",
     name="displaced_step_copy_insn",
     params=[("CORE_ADDR", "from"), ("CORE_ADDR", "to"), ("struct regcache *", "regs")],
-    predicate=True,
+    invalid=False,
 )
 
 Method(
@@ -1891,7 +1841,7 @@ receive control again (e.g. by placing a software breakpoint instruction into
 the displaced instruction buffer).
 
 The default implementation returns false on all targets that provide a
-gdbarch_software_single_step routine, and true otherwise.
+gdbarch_get_next_pcs routine, and true otherwise.
 """,
     type="bool",
     name="displaced_step_hw_singlestep",
@@ -1938,7 +1888,6 @@ see the comments in infrun.c.
         ("bool", "completed_p"),
     ],
     predicate=False,
-    predefault="NULL",
     invalid="(gdbarch->displaced_step_copy_insn == nullptr) != (gdbarch->displaced_step_fixup == nullptr)",
 )
 
@@ -1965,7 +1914,6 @@ checking if WS.kind is TARGET_WAITKIND_THREAD_EXITED.
     type="displaced_step_finish_status",
     name="displaced_step_finish",
     params=[("thread_info *", "thread"), ("const target_waitstatus &", "ws")],
-    predefault="NULL",
     invalid="(! gdbarch->displaced_step_finish) != (! gdbarch->displaced_step_prepare)",
 )
 
@@ -1999,7 +1947,6 @@ displaced-step instruction to multiple replacement instructions.
 """,
     type="ULONGEST",
     name="displaced_step_buffer_length",
-    predefault="0",
     postdefault="gdbarch->max_insn_length",
     invalid="gdbarch->displaced_step_buffer_length < gdbarch->max_insn_length",
 )
@@ -2021,8 +1968,7 @@ offset adjusted; etc.
     type="void",
     name="relocate_instruction",
     params=[("CORE_ADDR *", "to"), ("CORE_ADDR", "from")],
-    predicate=True,
-    predefault="NULL",
+    invalid=False,
 )
 
 Function(
@@ -2040,16 +1986,6 @@ Method(
     name="core_read_description",
     params=[("struct target_ops *", "target"), ("bfd *", "abfd")],
     predicate=True,
-)
-
-Value(
-    comment="""
-Set if the address in N_SO or N_FUN stabs may be zero.
-""",
-    type="int",
-    name="sofun_address_maybe_missing",
-    predefault="0",
-    invalid=False,
 )
 
 Method(
@@ -2126,7 +2062,7 @@ Record architecture-specific information from the symbol table.
 """,
     type="void",
     name="record_special_symbol",
-    params=[("struct objfile *", "objfile"), ("asymbol *", "sym")],
+    params=[("struct objfile *", "objfile"), ("const asymbol *", "sym")],
     predicate=True,
 )
 
@@ -2187,6 +2123,8 @@ on the architecture's assembly.
     name="stap_integer_suffixes",
     invalid=False,
     printer="pstring_list (gdbarch->stap_integer_suffixes)",
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -2214,6 +2152,8 @@ the architecture's assembly.
     name="stap_register_suffixes",
     invalid=False,
     printer="pstring_list (gdbarch->stap_register_suffixes)",
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -2224,7 +2164,7 @@ For example, on x86 the register indirection is written as:
 
 (%eax) ;; indirecting eax
 
-in this case, this prefix would be the charater `('.
+in this case, this prefix would be the character `('.
 
 Please note that we use the indirection prefix also for register
 displacement, e.g., `4(%eax)' on x86.
@@ -2243,7 +2183,7 @@ For example, on x86 the register indirection is written as:
 
 (%eax) ;; indirecting eax
 
-in this case, this prefix would be the charater `)'.
+in this case, this prefix would be the character `)'.
 
 Please note that we use the indirection suffix also for register
 displacement, e.g., `4(%eax)' on x86.
@@ -2267,6 +2207,8 @@ register would be represented as `r10' internally.
     name="stap_gdb_register_prefix",
     invalid=False,
     printer="pstring (gdbarch->stap_gdb_register_prefix)",
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -2277,6 +2219,8 @@ Suffix used to name a register using GDB's nomenclature.
     name="stap_gdb_register_suffix",
     invalid=False,
     printer="pstring (gdbarch->stap_gdb_register_suffix)",
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Method(
@@ -2290,11 +2234,11 @@ Single operands can be:
 - Register displacement, e.g. `4(%eax)' on x86
 
 This function should check for these patterns on the string
-and return 1 if some were found, or zero otherwise.  Please try to match
+and return true if some were found, or false otherwise.  Please try to match
 as much info as you can from the string, i.e., if you have to match
 something like `(%', do not match just the `('.
 """,
-    type="int",
+    type="bool",
     name="stap_is_single_operand",
     params=[("const char *", "s")],
     predicate=True,
@@ -2383,7 +2327,7 @@ Method(
 True if the given ADDR does not contain the instruction sequence
 corresponding to a disabled DTrace is-enabled probe.
 """,
-    type="int",
+    type="bool",
     name="dtrace_probe_is_enabled",
     params=[("CORE_ADDR", "addr")],
     predicate=True,
@@ -2417,9 +2361,8 @@ This usually means that all processes, although may or may not share
 an address space, will see the same set of symbols at the same
 addresses.
 """,
-    type="int",
+    type="bool",
     name="has_global_solist",
-    predefault="0",
     invalid=False,
 )
 
@@ -2430,9 +2373,8 @@ address space, the debug interface takes care of making breakpoints
 visible to all address spaces automatically.  For such cases,
 this property should be set to true.
 """,
-    type="int",
+    type="bool",
     name="has_global_breakpoints",
-    predefault="0",
     invalid=False,
 )
 
@@ -2440,7 +2382,7 @@ Method(
     comment="""
 True if inferiors share an address space (e.g., uClinux).
 """,
-    type="int",
+    type="bool",
     name="has_shared_address_space",
     params=[],
     predefault="default_has_shared_address_space",
@@ -2451,7 +2393,7 @@ Method(
     comment="""
 True if a fast tracepoint can be set at an address.
 """,
-    type="int",
+    type="bool",
     name="fast_tracepoint_valid_at",
     params=[("CORE_ADDR", "addr"), ("std::string *", "msg")],
     predefault="default_fast_tracepoint_valid_at",
@@ -2474,17 +2416,6 @@ On entry, regcache has all registers marked as unavailable.
 
 Function(
     comment="""
-Return the "auto" target charset.
-""",
-    type="const char *",
-    name="auto_charset",
-    params=[],
-    predefault="default_auto_charset",
-    invalid=False,
-)
-
-Function(
-    comment="""
 Return the "auto" target wide charset.
 """,
     type="const char *",
@@ -2496,28 +2427,12 @@ Return the "auto" target wide charset.
 
 Value(
     comment="""
-If non-empty, this is a file extension that will be opened in place
-of the file extension reported by the shared library list.
-
-This is most useful for toolchains that use a post-linker tool,
-where the names of the files run on the target differ in extension
-compared to the names of the files GDB should load for debug info.
-""",
-    type="const char *",
-    name="solib_symbols_extension",
-    invalid=False,
-    printer="pstring (gdbarch->solib_symbols_extension)",
-)
-
-Value(
-    comment="""
 If true, the target OS has DOS-based file system semantics.  That
 is, absolute paths include a drive name, and the backslash is
 considered a directory separator.
 """,
-    type="int",
+    type="bool",
     name="has_dos_based_file_system",
-    predefault="0",
     invalid=False,
 )
 
@@ -2552,35 +2467,18 @@ Implement the "info proc" command.
 
 Method(
     comment="""
-Implement the "info proc" command for core files.  Noe that there
+Implement the "info proc" command for core files.  Note that there
 are two "info_proc"-like methods on gdbarch -- one for core files,
-one for live targets.
+one for live targets.  CBFD is the core file being read from.
 """,
     type="void",
     name="core_info_proc",
-    params=[("const char *", "args"), ("enum info_proc_what", "what")],
-    predicate=True,
-)
-
-Method(
-    comment="""
-Iterate over all objfiles in the order that makes the most sense
-for the architecture to make global symbol searches.
-
-CB is a callback function passed an objfile to be searched.  The iteration stops
-if this function returns nonzero.
-
-If not NULL, CURRENT_OBJFILE corresponds to the objfile being
-inspected when the symbol search was requested.
-""",
-    type="void",
-    name="iterate_over_objfiles_in_search_order",
     params=[
-        ("iterate_over_objfiles_in_search_order_cb_ftype", "cb"),
-        ("struct objfile *", "current_objfile"),
+        ("struct bfd *", "cbfd"),
+        ("const char *", "args"),
+        ("enum info_proc_what", "what"),
     ],
-    predefault="default_iterate_over_objfiles_in_search_order",
-    invalid=False,
+    predicate=True,
 )
 
 Value(
@@ -2589,16 +2487,15 @@ Ravenscar arch-dependent ops.
 """,
     type="struct ravenscar_arch_ops *",
     name="ravenscar_ops",
-    predefault="NULL",
     invalid=False,
     printer="host_address_to_string (gdbarch->ravenscar_ops)",
 )
 
 Method(
     comment="""
-Return non-zero if the instruction at ADDR is a call; zero otherwise.
+Return true if the instruction at ADDR is a call; false otherwise.
 """,
-    type="int",
+    type="bool",
     name="insn_is_call",
     params=[("CORE_ADDR", "addr")],
     predefault="default_insn_is_call",
@@ -2607,9 +2504,9 @@ Return non-zero if the instruction at ADDR is a call; zero otherwise.
 
 Method(
     comment="""
-Return non-zero if the instruction at ADDR is a return; zero otherwise.
+Return true if the instruction at ADDR is a return; false otherwise.
 """,
-    type="int",
+    type="bool",
     name="insn_is_ret",
     params=[("CORE_ADDR", "addr")],
     predefault="default_insn_is_ret",
@@ -2618,9 +2515,9 @@ Return non-zero if the instruction at ADDR is a return; zero otherwise.
 
 Method(
     comment="""
-Return non-zero if the instruction at ADDR is a jump; zero otherwise.
+Return true if the instruction at ADDR is a jump; false otherwise.
 """,
-    type="int",
+    type="bool",
     name="insn_is_jump",
     params=[("CORE_ADDR", "addr")],
     predefault="default_insn_is_jump",
@@ -2676,7 +2573,7 @@ write it to *RANGE.  If the vsyscall's length can't be determined, a
 range with zero length is returned.  Returns true if the vsyscall is
 found, false otherwise.
 """,
-    type="int",
+    type="bool",
     name="vsyscall_range",
     params=[("struct mem_range *", "range")],
     predefault="default_vsyscall_range",
@@ -2748,6 +2645,8 @@ each address in memory.
     params=[],
     predefault="default_addressable_memory_unit_size",
     invalid=False,
+    # Currently unused but we wanted to keep this hook around.
+    unused=True,
 )
 
 Value(
@@ -2807,7 +2706,6 @@ Read core file mappings
     name="read_core_file_mappings",
     params=[
         ("struct bfd *", "cbfd"),
-        ("read_core_file_mappings_pre_loop_ftype", "pre_loop_cb"),
         ("read_core_file_mappings_loop_ftype", "loop_cb"),
     ],
     predefault="default_read_core_file_mappings",
@@ -2846,5 +2744,40 @@ which all assume current_inferior() is the one to read from.
     name="core_parse_exec_context",
     params=[("bfd *", "cbfd")],
     predefault="default_core_parse_exec_context",
+    invalid=False,
+)
+
+Method(
+    comment="""
+Some targets support special hardware-assisted control-flow protection
+technologies.  For example, the Intel Control-Flow Enforcement Technology
+(Intel CET) on x86 provides a shadow stack and indirect branch tracking.
+To enable shadow stack support for inferior calls the shadow_stack_push
+gdbarch hook has to be provided.  The get_shadow_stack_pointer gdbarch
+hook has to be provided to enable displaced stepping.
+
+Push NEW_ADDR to the shadow stack and update the shadow stack pointer.
+""",
+    type="void",
+    name="shadow_stack_push",
+    params=[("CORE_ADDR", "new_addr"), ("regcache *", "regcache")],
+    predicate=True,
+)
+
+Method(
+    comment="""
+If possible, return the shadow stack pointer.  If the shadow stack
+feature is enabled then set SHADOW_STACK_ENABLED to true, otherwise
+set SHADOW_STACK_ENABLED to false.  This hook has to be provided to enable
+displaced stepping for shadow stack enabled programs.
+On some architectures, the shadow stack pointer is available even if the
+feature is disabled.  So dependent on the target, an implementation of
+this function may return a valid shadow stack pointer, but set
+SHADOW_STACK_ENABLED to false.
+""",
+    type="std::optional<CORE_ADDR>",
+    name="get_shadow_stack_pointer",
+    params=[("regcache *", "regcache"), ("bool &", "shadow_stack_enabled")],
+    predefault="default_get_shadow_stack_pointer",
     invalid=False,
 )

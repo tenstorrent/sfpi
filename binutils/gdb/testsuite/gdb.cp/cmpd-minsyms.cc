@@ -1,6 +1,6 @@
 /* This test case is part of GDB, the GNU debugger.
 
-   Copyright 2011-2024 Free Software Foundation, Inc.
+   Copyright 2011-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ class GDB
    static int harder (T a) { return 1; }
    template <typename X>
    static X even_harder (T a) { return static_cast<X> (a); }
-   int operator == (GDB const& other)
+   int operator == (GDB const& other) const
    { return 1; }
   void a (void) const { }
   void b (void) volatile { }

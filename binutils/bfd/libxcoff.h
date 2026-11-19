@@ -1,5 +1,5 @@
 /* BFD XCOFF object file private structure.
-   Copyright (C) 2001-2025 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
    Written by Tom Rix, Redhat.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -21,6 +21,8 @@
 
 #ifndef LIBXCOFF_H
 #define LIBXCOFF_H
+
+#include "hidden.h"
 
 /* This is the backend information kept for XCOFF files.  This
    structure is constant for a particular backend.  The first element
@@ -215,41 +217,40 @@ struct xcoff_backend_data_rec
 #define bfd_xcoff_text_align_power(a) ((xcoff_data (a)->text_align_power))
 #define bfd_xcoff_data_align_power(a) ((xcoff_data (a)->data_align_power))
 
-/* xcoff*_ppc_relocate_section macros  */
-#define XCOFF_MAX_CALCULATE_RELOCATION (0x32)
-#define XCOFF_MAX_COMPLAIN_OVERFLOW (4)
 /* N_ONES produces N one bits, without overflowing machine arithmetic.  */
 #ifdef N_ONES
 #undef N_ONES
 #endif
 #define N_ONES(n) (((((bfd_vma) 1 << ((n) - 1)) - 1) << 1) | 1)
 
-typedef bool xcoff_reloc_function (bfd *, asection *, bfd *,
-				   struct internal_reloc *,
-				   struct internal_syment *,
-				   struct reloc_howto_struct *,
-				   bfd_vma, bfd_vma,
-				   bfd_vma *, bfd_byte *,
-				   struct bfd_link_info *);
+typedef bfd_reloc_status_type xcoff_reloc_function (bfd *, asection *, bfd *,
+						    struct internal_reloc *,
+						    struct internal_syment *,
+						    struct reloc_howto_struct *,
+						    bfd_vma, bfd_vma,
+						    bfd_vma *, bfd_byte *,
+						    struct bfd_link_info *);
 
 typedef bool xcoff_complain_function (bfd *, bfd_vma, bfd_vma,
 					     struct reloc_howto_struct *);
 
-extern xcoff_reloc_function *const xcoff_calculate_relocation[];
-extern xcoff_complain_function *const xcoff_complain_overflow[];
+extern xcoff_reloc_function *const xcoff_calculate_relocation[]
+  ATTRIBUTE_HIDDEN;
+extern xcoff_complain_function *const xcoff_complain_overflow[]
+  ATTRIBUTE_HIDDEN;
 
 #define XCOFF_NO_LONG_SECTION_NAMES  (false), bfd_coff_set_long_section_names_disallowed
 
 /* Relocation functions */
-extern xcoff_reloc_function xcoff_reloc_type_noop;
-extern xcoff_reloc_function xcoff_reloc_type_fail;
-extern xcoff_reloc_function xcoff_reloc_type_pos;
-extern xcoff_reloc_function xcoff_reloc_type_neg;
-extern xcoff_reloc_function xcoff_reloc_type_rel;
-extern xcoff_reloc_function xcoff_reloc_type_toc;
-extern xcoff_reloc_function xcoff_reloc_type_ba;
-extern xcoff_reloc_function xcoff_reloc_type_crel;
-extern xcoff_reloc_function xcoff_reloc_type_tls;
+extern xcoff_reloc_function xcoff_reloc_type_noop ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_fail ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_pos ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_neg ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_rel ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_toc ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_ba ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_crel ATTRIBUTE_HIDDEN;
+extern xcoff_reloc_function xcoff_reloc_type_tls ATTRIBUTE_HIDDEN;
 
 /* Structure to describe dwarf sections.
    Useful to convert from XCOFF section name to flag and vice-versa.
@@ -314,4 +315,11 @@ extern enum xcoff_stub_type bfd_xcoff_type_of_stub
 extern struct xcoff_stub_hash_entry *bfd_xcoff_get_stub_entry
   (asection *, struct xcoff_link_hash_entry *, struct bfd_link_info *);
 
+extern bool _bfd_xcoff_bfd_free_cached_info (bfd *) ATTRIBUTE_HIDDEN;
+
+extern bool _bfd_xcoff_relocate_section
+  (bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
+   struct internal_reloc *, struct internal_syment *, asection **,
+   bool, size_t, const struct reloc_howto_struct *,
+   xcoff_reloc_function *const *) ATTRIBUTE_HIDDEN;
 #endif /* LIBXCOFF_H */

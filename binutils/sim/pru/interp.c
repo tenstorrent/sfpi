@@ -1,5 +1,5 @@
 /* Simulator for the Texas Instruments PRU processor
-   Copyright 2009-2024 Free Software Foundation, Inc.
+   Copyright 2009-2026 Free Software Foundation, Inc.
    Inspired by the Microblaze simulator
    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 
@@ -37,7 +37,7 @@
 
 /* DMEM zero address is perfectly valid.  But if CRT leaves the first word
    alone, we can use it as a trap to catch NULL pointer access.  */
-static bfd_boolean abort_on_dmem_zero_access;
+static bool abort_on_dmem_zero_access;
 
 enum {
   OPTION_ERROR_NULL_DEREF = OPTION_START,
@@ -740,7 +740,7 @@ pru_option_handler (SIM_DESC sd, sim_cpu *cpu, int opt, char *arg,
   switch (opt)
     {
     case OPTION_ERROR_NULL_DEREF:
-      abort_on_dmem_zero_access = TRUE;
+      abort_on_dmem_zero_access = true;
       return SIM_RC_OK;
 
     default:

@@ -1,5 +1,5 @@
 /* GDB generic memory tagging definitions.
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 

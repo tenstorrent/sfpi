@@ -1,4 +1,4 @@
---  Copyright 2019-2024 Free Software Foundation, Inc.
+--  Copyright 2019-2026 Free Software Foundation, Inc.
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -18,5 +18,5 @@ with Pkg;
 procedure Main is
    V : Pkg.Value := Pkg.Create (42);
 begin
-   null;				--  STOP
+   Pkg.Do_Nothing (V'Address);      --  STOP
 end Main;

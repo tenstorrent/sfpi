@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Free Software Foundation, Inc.
+# Copyright 2012-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,14 @@ lappend opts additional_flags=-nostdlib
 
 if {[prepare_for_testing "failed to prepare" $exefile \
 	 [list $srcfile $srcfile2 $srcfile3] $opts]} {
-    return -1
+    return
 }
 
 # Wrap the entire test in a namespace to avoid contaminating other tests.
 namespace eval $testfile {
+    upvar #0 ::srcfile srcfile
+    upvar #0 ::gdb_prompt gdb_prompt
+    upvar #0 ::exefile exefile
 
     # Test the given (explicit) LINESPEC which should cause gdb to break
     # at LOCATION.
@@ -95,7 +98,7 @@ namespace eval $testfile {
 
     # Fire up gdb.
     if {![runto_main]} {
-	return -1
+	return
     }
 
     # Turn off queries
@@ -198,7 +201,7 @@ namespace eval $testfile {
 	gdb_test_multiple "" $tst {
 	    -re "break -function my_unique_function_name" {
 		send_gdb "\n"
-		gdb_test "" ".*Breakpoint \[0-9\]+.*" $tst
+		gdb_test "" ".*Breakpoint ${::decimal}.*" $tst
 		gdb_test_no_output "delete \$bpnum" "delete $tst breakpoint"
 	    }
 	}
@@ -210,14 +213,14 @@ namespace eval $testfile {
 		send_gdb "\t\t"
 		gdb_test_multiple "" $tst {
 		    -re "\\\x07\r\nmyfunction\[ \t\]+myfunction2\[ \t\]+myfunction3\[ \t\]+myfunction4\[ \t\]+\r\n$gdb_prompt " {
-			gdb_test "2" ".*Breakpoint \[0-9\]+.*" $tst
+			gdb_test "2" ".*Breakpoint ${::decimal}.*" $tst
 			gdb_test_no_output "delete \$bpnum" "delete $tst breakpoint"
 		    }
 		}
 	    }
 	}
 
-	set tst "complete non-existant function name"
+	set tst "complete non-existent function name"
 	send_gdb "break -function foo\t"
 	gdb_test_multiple "" $tst {
 	    -re "break -function foo\\\x07" {
@@ -232,7 +235,7 @@ namespace eval $testfile {
 	}
 
 	with_test_prefix "complete unique file name" {
-	    foreach qc $completion::maybe_quoted_list {
+	    foreach qc $::completion::maybe_quoted_list {
 		set cmd "break -source ${qc}3explicit.c${qc}"
 		test_gdb_complete_unique \
 		    "break -source ${qc}3ex" \
@@ -276,7 +279,7 @@ namespace eval $testfile {
 	    }
 	}
 
-	set tst "complete non-existant file name"
+	set tst "complete non-existent file name"
 	send_gdb "break -source foo\t"
 	gdb_test_multiple "" $tst {
 	    -re "break -source foo" {
@@ -309,14 +312,14 @@ namespace eval $testfile {
 		send_gdb "\t\t"
 		gdb_test_multiple "" $tst {
 		    -re "\\\x07\r\nmyfunction3\[ \t\]+myfunction4\[ \t\]+\r\n$gdb_prompt " {
-			gdb_test "3" ".*Breakpoint \[0-9\]+.*" $tst
+			gdb_test "3" ".*Breakpoint ${::decimal}.*" $tst
 			gdb_test_no_output "delete \$bpnum" "delete $tst breakpoint"
 		    }
 		}
 	    }
 	}
 
-	set tst "complete filename and non-existant function name"
+	set tst "complete filename and non-existent function name"
 	send_gdb "break -sou 3explicit.c -fun foo\t"
 	gdb_test_multiple "" $tst {
 	    -re "break -sou 3explicit.c -fun foo\\\x07" {
@@ -336,13 +339,13 @@ namespace eval $testfile {
 	gdb_test_multiple "" $tst {
 	    -re "break -func myfunction4 -source 3explicit.c " {
 		send_gdb "\n"
-		gdb_test "" "Breakpoint \[0-9\]+.*" $tst
+		gdb_test "" "Breakpoint ${::decimal}.*" $tst
 		gdb_test_no_output "delete \$bpnum" "delete $tst breakpoint"
 	    }
 	}
 
 	with_test_prefix "complete unique label name" {
-	    foreach qc $completion::maybe_quoted_list {
+	    foreach qc $::completion::maybe_quoted_list {
 		test_gdb_complete_unique \
 		    "break -function myfunction -label ${qc}to" \
 		    "break -function myfunction -label ${qc}top${qc}"
@@ -577,7 +580,7 @@ namespace eval $testfile {
 
     set tst "pending invalid conditional explicit breakpoint"
     if {![gdb_breakpoint "-func myfunction if foofoofoo == 1" \
-	      allow-pending]} {
+	      -allow-pending]} {
 	fail "set $tst"
     } else {
 	gdb_test "info break" ".*PENDING.*myfunction\r\n\\s+stop only if foofoofoo == 1.*" $tst
@@ -594,7 +597,7 @@ namespace eval $testfile {
 
     set tst "pending valid conditional explicit breakpoint"
     if {![gdb_breakpoint "-func myfunction if arg == 0" \
-	      allow-pending]} {
+	      -allow-pending]} {
 	fail "set $tst"
     } else {
 	gdb_test "info break" \
@@ -607,8 +610,8 @@ namespace eval $testfile {
 	    "$tst resolved"
     }
 
-    # Test interaction of condition command and explicit linespec conditons.
-    clean_restart [standard_output_file $exefile]
+    # Test interaction of condition command and explicit linespec conditions.
+    clean_restart $exefile
 
     set tst "condition_command overrides explicit linespec condition"
     if {![runto_main]} {

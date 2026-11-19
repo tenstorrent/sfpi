@@ -1,6 +1,6 @@
 /* Support for printing Modula 2 values for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -174,7 +174,7 @@ m2_print_unbounded_array (struct value *value,
 		       addr);
   len = unpack_field_as_long (type, valaddr, 1);
 
-  gdb_printf (stream, "{");  
+  gdb_printf (stream, "{");
   m2_print_array_contents (val, stream, recurse, options, len);
   gdb_printf (stream, ", HIGH = %d}", (int) len);
 }
@@ -199,7 +199,8 @@ print_unpacked_pointer (struct type *type,
 
   if (options->addressprint && options->format != 's')
     {
-      gdb_puts (paddress (gdbarch, address), stream);
+      fputs_styled (paddress (gdbarch, address), address_style.style (),
+		    stream);
       want_space = 1;
     }
 
@@ -216,7 +217,7 @@ print_unpacked_pointer (struct type *type,
       return val_print_string (type->target_type (), NULL, addr, -1,
 			       stream, options);
     }
-  
+
   return 0;
 }
 
@@ -232,9 +233,9 @@ print_variable_at_address (struct type *type,
   struct type *elttype = check_typedef (type->target_type ());
 
   gdb_printf (stream, "[");
-  gdb_puts (paddress (gdbarch, addr), stream);
+  fputs_styled (paddress (gdbarch, addr), address_style.style (), stream);
   gdb_printf (stream, "] : ");
-  
+
   if (elttype->code () != TYPE_CODE_UNDEF)
     {
       struct value *deref_val =

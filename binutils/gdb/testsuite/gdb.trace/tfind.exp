@@ -1,4 +1,4 @@
-#   Copyright 1998-2024 Free Software Foundation, Inc.
+#   Copyright 1998-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ if { [gdb_compile "$srcdir/$subdir/$srcfile" "$binfile" \
     return -1
 }
 
-clean_restart $binfile
+clean_restart $testfile
 
 # 6.2 test help tstart
 gdb_test "help tstart" \
@@ -75,11 +75,11 @@ if {$baseline == -1} {
     return
 }
 
-set testline1 [expr $baseline + 1]
-set testline2 [expr $baseline + 5]
-set testline3 [expr $baseline + 6]
-set testline4 [expr $baseline + 7]
-set testline5 [expr $baseline + 8]
+set testline1 [expr {$baseline + 1}]
+set testline2 [expr {$baseline + 5}]
+set testline3 [expr {$baseline + 6}]
+set testline4 [expr {$baseline + 7}]
+set testline5 [expr {$baseline + 8}]
 
 #
 # test tfind command
@@ -123,7 +123,7 @@ if {$return_me == 1} {
 # test tstatus (when trace on)
 gdb_test "tstatus" "\[Tt\]race is running.*" "test tstatus on"
 
-gdb_breakpoint "end" qualified
+gdb_breakpoint "end" -qualified
 gdb_test "continue" \
     "Continuing.*Breakpoint $decimal, end.*" \
     "run trace experiment"
@@ -249,9 +249,9 @@ gdb_tfind_test "8.25: tfind none" "none" "-1"
 gdb_test "tfind tracepoint 0" "failed to find.*" \
 	"8.25: tfind tracepoint rejects zero"
 gdb_test "tfind tracepoint 32767" "failed to find.*" \
-	"8.25: tfind tracepoint rejects nonexistant tracepoint"
+	"8.25: tfind tracepoint rejects nonexistent tracepoint"
 gdb_test "tfind tracepoint -1" "failed to find.*" \
-	"8.25: tfind tracepoint rejects nonexistant tracepoint of -1"
+	"8.25: tfind tracepoint rejects nonexistent tracepoint of -1"
 
 # 8.37 tfind tracepoint n where n no longer exists (but used to)
 gdb_test_no_output "delete trace $tdp2" ""
@@ -300,7 +300,7 @@ gdb_test "print \$trace_line" "$testline4" \
 	"8.14: tfind pc x has correct line"
 gdb_test "printf \"x \%d x\\n\", \$pc == \$test_pc" \
 	"x 1 x" \
-	"8.14: tfind pc x has corrrect address"
+	"8.14: tfind pc x has correct address"
 
 # 8.15 tfind pc <no arg>
 ## check pc same before and after, $trace_frame changed
@@ -338,7 +338,7 @@ gdb_tfind_test "8.36: tfind start" "start" "0"
 set timeout 60
 # look for disassembly of function label
 gdb_test "disassemble gdb_c_test" \
-    "<(\.\[0-9\]+|)>:.*End of assembler dump.*" \
+    "<(\.${::decimal}|)>:.*End of assembler dump.*" \
     "8.36: trace disassembly"
 
 gdb_test "tfind line 0" \
@@ -351,7 +351,7 @@ gdb_test "tfind line NoSuChFiLe.c:$baseline" \
 	"No source file named.*" \
 	"8.27: tfind line in bad source file"
 
-# 8.32 tfind invalid subcommand (tfind foo) 
+# 8.32 tfind invalid subcommand (tfind foo)
 ## check error
 gdb_test "tfind NoSuChOpTiOn 21" \
 	"No symbol.*|\[Ww\]arning.*|\[Ee\]rror.*" \

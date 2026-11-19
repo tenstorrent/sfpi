@@ -1,6 +1,6 @@
 /* Definitions for complaint handling during symbol reading in GDB.
 
-   Copyright (C) 1990-2024 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -20,8 +20,7 @@
 #ifndef GDB_COMPLAINTS_H
 #define GDB_COMPLAINTS_H
 
-#include "gdbsupport/scoped_restore.h"
-#include <unordered_set>
+#include "gdbsupport/unordered_set.h"
 
 /* Helper for complaint.  */
 extern void complaint_internal (const char *fmt, ...)
@@ -59,7 +58,7 @@ extern void clear_complaints ();
 
 /* Type of collected complaints.  */
 
-typedef std::unordered_set<std::string> complaint_collection;
+using complaint_collection = gdb::unordered_set<std::string>;
 
 /* A class that can handle calls to complaint from multiple threads.
    When this is instantiated, it hooks into the complaint mechanism,
@@ -89,16 +88,10 @@ private:
   /* The issued complaints.  */
   complaint_collection m_complaints;
 
-  /* The saved value of g_complaint_interceptor.  */
-  scoped_restore_tmpl<complaint_interceptor *> m_saved_complaint_interceptor;
-
   /* A helper function that is used by the 'complaint' implementation
      to issue a complaint.  */
   void warn (const char *, va_list) override
     ATTRIBUTE_PRINTF (2, 0);
-
-  /* This object.  Used by the static callback function.  */
-  static thread_local complaint_interceptor *g_complaint_interceptor;
 
   /* Object to initialise the warning hook.  */
   scoped_restore_warning_hook m_saved_warning_hook;

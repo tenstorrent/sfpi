@@ -1,4 +1,4 @@
-# Copyright 2004-2024 Free Software Foundation, Inc.
+# Copyright 2004-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ standard_testfile .c
 # endless loop would result.
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile \
 	  [list "debug" "additional_flags=-msoft-float"]] } {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 gdb_test_multiple "next" "check for TE support" {
@@ -40,7 +40,7 @@ gdb_test_multiple "next" "check for TE support" {
 	unsupported "no TE support."
 	return
     }
-    -re "\[0-9\]+.*\r\n$gdb_prompt $" {
+    -re "${::decimal}.*\r\n$gdb_prompt $" {
 	pass "TE support available"
     }
     -re "$gdb_prompt $" {
@@ -51,12 +51,12 @@ gdb_test_multiple "next" "check for TE support" {
 
 set crashline [gdb_get_line_number "FAULT"]
 
-gdb_test "print \$tdb0" "\\\$\[0-9\]+ = <unavailable>" "tdb0 unavailable"
-gdb_test "print \$tr0" "\\\$\[0-9\]+ = <unavailable>" "tr0 unavailable"
+gdb_test "print \$tdb0" "${::valnum_re} = <unavailable>" "tdb0 unavailable"
+gdb_test "print \$tr0" "${::valnum_re} = <unavailable>" "tr0 unavailable"
 gdb_test "next" \
     "Program received signal SIGSEGV, .*" \
     "crash in transaction"
-gdb_test "print/x \$tdb0" "\\\$\[0-9\]+ = 0x1.*" "tdb0 available"
+gdb_test "print/x \$tdb0" "${::valnum_re} = 0x1.*" "tdb0 available"
 gdb_test "set print symbol-filename" "" "set print symbol-filename"
 gdb_test "print/a \$atia" \
     "<crash_in_transaction.*:$crashline>" \

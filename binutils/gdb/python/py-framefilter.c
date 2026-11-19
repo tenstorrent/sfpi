@@ -1,6 +1,6 @@
 /* Python frame filters
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -102,7 +102,7 @@ extract_sym (PyObject *obj, gdb::unique_xmalloc_ptr<char> *name,
 
       /* Duplicate the symbol name, so the caller has consistency
 	 in garbage collection.  */
-      name->reset (xstrdup ((*sym)->print_name ()));
+      *name = make_unique_xstrdup ((*sym)->print_name ());
 
       /* If a symbol is specified attempt to determine the language
 	 from the symbol.  If mode is not "auto", then the language
@@ -168,7 +168,7 @@ mi_should_print (struct symbol *sym, enum mi_print_types type)
 {
   int print_me = 0;
 
-  switch (sym->aclass ())
+  switch (sym->loc_class ())
     {
     default:
     case LOC_UNDEF:	/* catches errors        */
@@ -279,7 +279,7 @@ get_py_iter_from_func (PyObject *filter, const char *func)
 	}
     }
   else
-    Py_RETURN_NONE;
+    return py_none ().release ();
 
   return NULL;
 }
@@ -746,7 +746,7 @@ using levels_printed_hash = gdb::unordered_set<frame_info *>;
 
     OUT is the output stream to print to.
 
-    INDENT is the level of indention for this frame  (in the case of elided
+    INDENT is the level of indentation for this frame  (in the case of elided
     frames).
 
     LEVELS_PRINTED is a hash-table containing all the frames for which the
@@ -834,7 +834,7 @@ py_print_frame (PyObject *filter, frame_filter_flags flags,
   if (print_frame_info)
     {
       /* Elided frames are also printed with this function (recursively)
-	 and are printed with indention.  */
+	 and are printed with indentation.  */
       if (indent > 0)
 	out->spaces (indent * 4);
 
@@ -1088,15 +1088,15 @@ static PyObject *
 bootstrap_python_frame_filters (const frame_info_ptr &frame,
 				int frame_low, int frame_high)
 {
-  gdbpy_ref<> frame_obj (frame_info_to_frame_object (frame));
+  gdbpy_ref<> frame_obj = frame_info_to_frame_object (frame);
   if (frame_obj == NULL)
     return NULL;
 
-  gdbpy_ref<> module (PyImport_ImportModule ("gdb.frames"));
-  if (module == NULL)
+  gdbpy_ref<> mod (PyImport_ImportModule ("gdb.frames"));
+  if (mod == NULL)
     return NULL;
 
-  gdbpy_ref<> sort_func (PyObject_GetAttrString (module.get (),
+  gdbpy_ref<> sort_func (PyObject_GetAttrString (mod.get (),
 						 "execute_frame_filters"));
   if (sort_func == NULL)
     return NULL;

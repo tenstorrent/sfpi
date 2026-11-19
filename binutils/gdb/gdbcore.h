@@ -1,6 +1,6 @@
 /* Machine independent variables that describe the core file under GDB.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,7 +35,8 @@ extern int have_core_file_p (void);
 
 /* Report a memory error with error().  */
 
-extern void memory_error (enum target_xfer_status status, CORE_ADDR memaddr);
+[[noreturn]] extern void memory_error (enum target_xfer_status status,
+				       CORE_ADDR memaddr);
 
 /* The string 'memory_error' would use as exception message.  */
 
@@ -257,5 +258,73 @@ private:
 std::optional<core_target_mapped_file_info>
 core_target_find_mapped_file (const char *filename,
 			      std::optional<CORE_ADDR> addr);
+
+/* Type holding information about a single file mapped into the inferior
+   at the point when the core file was created.  Associates a build-id
+   with the list of regions the file is mapped into.  It is acceptable to
+   have a core_mapped_file with an empty filename, so long as we have a
+   build-id for the mapping.  */
+struct core_mapped_file
+{
+  /* Type for a region of a file that was mapped into the inferior when
+     the core file was generated.  */
+  struct region
+  {
+    /* Constructor.   See member variables for argument descriptions.  */
+    region (CORE_ADDR start_, CORE_ADDR end_, CORE_ADDR file_ofs_)
+      : start (start_),
+	end (end_),
+	file_ofs (file_ofs_)
+    { /* Nothing.  */ }
+
+    /* The inferior address for the start of the mapped region.  */
+    CORE_ADDR start;
+
+    /* The inferior address immediately after the mapped region.  */
+    CORE_ADDR end;
+
+    /* The offset within the mapped file for this content.  If the
+       filename of the mapping is empty then this field will be 0, but has
+       no meaning.  */
+    CORE_ADDR file_ofs;
+  };
+
+  /* The filename as recorded in the core file.  This can be empty meaning
+     that GDB was unable to find a filename for this mapping.  If the
+     filename is empty then the build_id field MUST be non-NULL.  If this
+     is empty then the region::file_ofs fields will all be 0, and have no
+     meaning.  */
+  std::string filename;
+
+  /* If not nullptr, then this is the build-id associated with this
+     mapping.  If the filename field is empty, then this MUST be
+     non-NULL.  */
+  const bfd_build_id *build_id = nullptr;
+
+  /* All the mapped regions of this file.  */
+  std::vector<region> regions;
+
+  /* True if this is the main executable.  */
+  bool is_main_exec = false;
+
+  /* Convert the REGIONS to a vector of mem_range objects.  */
+  std::vector<mem_range>
+  mem_ranges () const
+  {
+    std::vector<mem_range> ranges;
+    for (const core_mapped_file::region &region : this->regions)
+      ranges.emplace_back (region.start, region.end - region.start);
+    normalize_mem_ranges (&ranges);
+    return ranges;
+  }
+};
+
+extern std::vector<core_mapped_file> gdb_read_core_file_mappings
+  (struct gdbarch *gdbarch, struct bfd *cbfd);
+
+/* Return the core file bfd for inferior INF, if that inferior has a core
+   file loaded.  Otherwise, return NULL.  */
+
+extern bfd *get_inferior_core_bfd (inferior *inf);
 
 #endif /* GDB_GDBCORE_H */

@@ -1,5 +1,5 @@
 /* Basic, host-specific, and target-specific definitions for GDB.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -74,27 +74,27 @@
 /* The O_BINARY flag is defined in fcntl.h on some non-Posix platforms.
    It is used as an access modifier in calls to open(), where it acts
    similarly to the "b" character in fopen()'s MODE argument.  On Posix
-   platforms it should be a no-op, so it is defined as 0 here.  This 
+   platforms it should be a no-op, so it is defined as 0 here.  This
    ensures that the symbol may be used freely elsewhere in gdb.  */
 
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
 
-/* * System root path, used to find libraries etc.  */
+/* System root path, used to find libraries etc.  */
 extern std::string gdb_sysroot;
 
-/* * GDB datadir, used to store data files.  */
+/* GDB datadir, used to store data files.  */
 extern std::string gdb_datadir;
 
-/* * If not empty, the possibly relocated path to python's "lib" directory
+/* If not empty, the possibly relocated path to python's "lib" directory
    specified with --with-python.  */
 extern std::string python_libdir;
 
-/* * Search path for separate debug files.  */
+/* Search path for separate debug files.  */
 extern std::string debug_file_directory;
 
-/* * Languages represented in the symbol table and elsewhere.
+/* Languages represented in the symbol table and elsewhere.
    This should probably be in language.h, but since enum's can't
    be forward declared to satisfy opaque references before their
    actual definition, needs to be here.
@@ -136,7 +136,7 @@ static_assert (nr_languages <= (1 << LANGUAGE_BITS));
 /* The number of bytes needed to represent all languages.  */
 #define LANGUAGE_BYTES ((LANGUAGE_BITS + HOST_CHAR_BIT - 1) / HOST_CHAR_BIT)
 
-/* * A generic, not quite boolean, enumeration.  This is used for
+/* A generic, not quite boolean, enumeration.  This is used for
    set/show commands in which the options are on/off/automatic.  */
 enum auto_boolean
 {
@@ -145,28 +145,28 @@ enum auto_boolean
   AUTO_BOOLEAN_AUTO
 };
 
-/* * Potential ways that a function can return a value of a given
+/* Potential ways that a function can return a value of a given
    type.  */
 
 enum return_value_convention
 {
-  /* * Where the return value has been squeezed into one or more
+  /* Where the return value has been squeezed into one or more
      registers.  */
   RETURN_VALUE_REGISTER_CONVENTION,
-  /* * Commonly known as the "struct return convention".  The caller
+  /* Commonly known as the "struct return convention".  The caller
      passes an additional hidden first parameter to the caller.  That
      parameter contains the address at which the value being returned
      should be stored.  While typically, and historically, used for
      large structs, this is convention is applied to values of many
      different types.  */
   RETURN_VALUE_STRUCT_CONVENTION,
-  /* * Like the "struct return convention" above, but where the ABI
+  /* Like the "struct return convention" above, but where the ABI
      guarantees that the called function stores the address at which
      the value being returned is stored in a well-defined location,
      such as a register or memory slot in the stack frame.  Don't use
      this if the ABI doesn't explicitly guarantees this.  */
   RETURN_VALUE_ABI_RETURNS_ADDRESS,
-  /* * Like the "struct return convention" above, but where the ABI
+  /* Like the "struct return convention" above, but where the ABI
      guarantees that the address at which the value being returned is
      stored will be available in a well-defined location, such as a
      register or memory slot in the stack frame.  Don't use this if
@@ -190,8 +190,6 @@ extern std::string relocate_gdb_directory (const char *initial, bool relocatable
 
 /* From top.c */
 
-typedef void initialize_file_ftype (void);
-
 extern char *gdb_readline_wrapper (const char *);
 
 extern const char *command_line_input (std::string &cmd_line_buffer,
@@ -214,82 +212,68 @@ extern int print_address_symbolic (struct gdbarch *, CORE_ADDR,
 extern void print_address (struct gdbarch *, CORE_ADDR, struct ui_file *);
 extern const char *pc_prefix (CORE_ADDR);
 
-/* From exec.c */
-
-/* * Process memory area starting at ADDR with length SIZE.  Area is
-   readable iff READ is non-zero, writable if WRITE is non-zero,
-   executable if EXEC is non-zero.  Area is possibly changed against
-   its original file based copy if MODIFIED is non-zero.
-
-   MEMORY_TAGGED is true if the memory region contains memory tags, false
-   otherwise.
-
-   DATA is passed without changes from a caller.  */
-
-typedef int (*find_memory_region_ftype) (CORE_ADDR addr, unsigned long size,
-					 int read, int write, int exec,
-					 int modified, bool memory_tagged,
-					 void *data);
-
-/* * Possible lvalue types.  Like enum language, this should be in
+/* Possible lvalue types.  Like enum language, this should be in
    value.h, but needs to be here for the same reason.  */
 
 enum lval_type
   {
-    /* * Not an lval.  */
+    /* Not an lval.  */
     not_lval,
-    /* * In memory.  */
+    /* In memory.  */
     lval_memory,
-    /* * In a register.  Registers are relative to a frame.  */
+    /* In a register.  Registers are relative to a frame.  */
     lval_register,
-    /* * In a gdb internal variable.  */
+    /* In a gdb internal variable.  */
     lval_internalvar,
-    /* * Value encapsulates a callable defined in an extension language.  */
+    /* Value encapsulates a callable defined in an extension language.  */
     lval_xcallable,
-    /* * Part of a gdb internal variable (structure field).  */
+    /* Part of a gdb internal variable (structure field).  */
     lval_internalvar_component,
-    /* * Value's bits are fetched and stored using functions provided
+    /* Value's bits are fetched and stored using functions provided
        by its creator.  */
     lval_computed
   };
 
-/* * Parameters of the "info proc" command.  */
+/* Parameters of the "info proc" command.  */
 
 enum info_proc_what
   {
-    /* * Display the default cmdline, cwd and exe outputs.  */
+    /* Display the default cmdline, cwd and exe outputs.  */
     IP_MINIMAL,
 
-    /* * Display `info proc mappings'.  */
+    /* Display `info proc mappings'.  */
     IP_MAPPINGS,
 
-    /* * Display `info proc status'.  */
+    /* Display `info proc status'.  */
     IP_STATUS,
 
-    /* * Display `info proc stat'.  */
+    /* Display `info proc stat'.  */
     IP_STAT,
 
-    /* * Display `info proc cmdline'.  */
+    /* Display `info proc cmdline'.  */
     IP_CMDLINE,
 
-    /* * Display `info proc exe'.  */
+    /* Display `info proc environ'.  */
+    IP_ENVIRON,
+
+    /* Display `info proc exe'.  */
     IP_EXE,
 
-    /* * Display `info proc cwd'.  */
+    /* Display `info proc cwd'.  */
     IP_CWD,
 
-    /* * Display `info proc files'.  */
+    /* Display `info proc files'.  */
     IP_FILES,
 
-    /* * Display all of the above.  */
+    /* Display all of the above.  */
     IP_ALL
   };
 
-/* * Default radixes for input and output.  Only some values supported.  */
+/* Default radixes for input and output.  Only some values supported.  */
 extern unsigned input_radix;
 extern unsigned output_radix;
 
-/* * Optional native machine support.  Non-native (and possibly pure
+/* Optional native machine support.  Non-native (and possibly pure
    multi-arch) targets do not need a "nm.h" file.  This will be a
    symlink to one of the nm-*.h files, built by the `configure'
    script.  */
@@ -310,7 +294,7 @@ extern unsigned output_radix;
 # include "fopen-bin.h"
 #endif
 
-/* * Convert a LONGEST to an int.  This is used in contexts (e.g. number of
+/* Convert a LONGEST to an int.  This is used in contexts (e.g. number of
    arguments to a function, number in a value history, register number, etc.)
    where the value must not be larger than can fit in an int.  */
 
@@ -345,9 +329,9 @@ extern void (*deprecated_post_add_symbol_hook) (void);
 extern void (*selected_frame_level_changed_hook) (int);
 extern int (*deprecated_ui_loop_hook) (int signo);
 extern void (*deprecated_show_load_progress) (const char *section,
-					      unsigned long section_sent, 
-					      unsigned long section_size, 
-					      unsigned long total_sent, 
+					      unsigned long section_sent,
+					      unsigned long section_size,
+					      unsigned long total_sent,
 					      unsigned long total_size);
 extern void (*deprecated_print_frame_info_listing_hook) (struct symtab * s,
 							 int line,
@@ -360,9 +344,6 @@ extern void (*deprecated_readline_begin_hook) (const char *, ...)
 extern char *(*deprecated_readline_hook) (const char *);
 extern void (*deprecated_readline_end_hook) (void);
 extern void (*deprecated_context_hook) (int);
-extern ptid_t (*deprecated_target_wait_hook) (ptid_t ptid,
-					      struct target_waitstatus *status,
-					      int options);
 
 extern void (*deprecated_attach_hook) (void);
 extern void (*deprecated_detach_hook) (void);
@@ -378,10 +359,10 @@ extern int (*deprecated_ui_load_progress_hook) (const char *section,
 #define ISATTY(FP)	(isatty (fileno (FP)))
 #endif
 
-/* * A width that can achieve a better legibility for GDB MI mode.  */
+/* A width that can achieve a better legibility for GDB MI mode.  */
 #define GDB_MI_MSG_WIDTH  80
 
-/* * Special block numbers */
+/* Special block numbers */
 
 enum block_enum
 {
@@ -407,4 +388,12 @@ DEF_ENUM_FLAGS_TYPE (enum user_selected_what_flag, user_selected_what);
 
 #include "utils.h"
 
+/* File initialization macro.  This is found by make-init-c and used
+   to construct the gdb initialization function.  */
+#define INIT_GDB_FILE(NAME) \
+  extern void _initialize_ ## NAME (); \
+  void _initialize_ ## NAME ()
+
+#else
+#  error gdb/defs.h should not be included manually
 #endif /* GDB_DEFS_H */

@@ -1,4 +1,4 @@
-# Copyright 2024 Free Software Foundation, Inc.
+# Copyright 2024-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ standard_testfile
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} \
 	  [list debug additional_flags=-march=armv9.3-a]] } {
-    return -1
+    return
 }
 
 set linespec ${srcfile}:[gdb_get_line_number "Break here"]
-if ![runto ${linespec}] {
-    return -1
+if {![runto ${linespec}]} {
+    return
 }
 
 gdb_test "watch -location a\[28\]" \

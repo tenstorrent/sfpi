@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 # Define a stop hook that outputs the value of 'x'
@@ -30,7 +30,7 @@ gdb_test_multiple "define hook-stop" "hook-stop" {
 
 if { [gdb_starti_cmd] < 0 } {
     untested starti
-    return -1
+    return
 }
 
 # The program should stop at the first instruction, so the constructor

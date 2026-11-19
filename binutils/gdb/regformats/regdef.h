@@ -1,5 +1,5 @@
 /* Register protocol definition structures for the GNU Debugger
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -51,7 +51,7 @@ struct reg
 
   bool operator== (const reg &other) const
   {
-    return (strcmp (name, other.name) == 0
+    return (streq (name, other.name)
 	    && offset == other.offset
 	    && size == other.size);
   }

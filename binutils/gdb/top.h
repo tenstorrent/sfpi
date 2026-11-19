@@ -1,6 +1,6 @@
 /* Top level stuff for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,6 +35,10 @@ extern auto_boolean interactive_mode;
    option.  If INTERACTIVE is true, then interactive commands are
    mentioned.  */
 extern void print_gdb_version (struct ui_file *stream, bool interactive);
+
+/* Print some hints for an inexperienced user on how to get more
+   information about using GDB.  */
+extern void print_gdb_hints (struct ui_file *stream);
 
 extern void print_gdb_configuration (struct ui_file *);
 
@@ -132,5 +136,9 @@ extern bool check_quiet_mode ();
    which applies some special rules for MS-Windows hosts.  */
 
 extern void unbuffer_stream (FILE *stream);
+
+#ifdef __MINGW32__
+extern void mingw_deinitialize_console ();
+#endif
 
 #endif /* GDB_TOP_H */

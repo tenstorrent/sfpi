@@ -1,5 +1,5 @@
 /* subsegs.c - subsegments -
-   Copyright (C) 1987-2025 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -47,11 +47,26 @@ subsegs_begin (void)
 void
 subsegs_end (struct obstack **obs)
 {
+  if (!ENABLE_LEAK_CHECK)
+    return;
   for (; *obs; obs++)
     _obstack_free (*obs, NULL);
   _obstack_free (&frchains, NULL);
-  bfd_set_section_userdata (bfd_abs_section_ptr, NULL);
+  bfd_set_section_userdata (bfd_com_section_ptr, NULL);
   bfd_set_section_userdata (bfd_und_section_ptr, NULL);
+  bfd_set_section_userdata (bfd_abs_section_ptr, NULL);
+  bfd_set_section_userdata (bfd_ind_section_ptr, NULL);
+  /* Reverse bfd_std_section_init, so the sections look as they did
+     initially.  This, and clearing out userdata above, is so we don't
+     leave dangling pointers into freed memory for oss-fuzz to mess
+     with.  */
+  asymbol *global_syms = bfd_com_section_ptr->symbol;
+  bfd_und_section_ptr->used_by_bfd = NULL;
+  bfd_und_section_ptr->symbol = global_syms + (bfd_und_section_ptr
+					       - bfd_com_section_ptr);
+  bfd_abs_section_ptr->used_by_bfd = NULL;
+  bfd_abs_section_ptr->symbol = global_syms + (bfd_abs_section_ptr
+					       - bfd_com_section_ptr);
 }
 
 static void
@@ -119,7 +134,7 @@ subseg_set_rest (segT seg, subsegT subseg)
     {
       /* This should be the only code that creates a frchainS.  */
 
-      newP = (frchainS *) obstack_alloc (&frchains, sizeof (frchainS));
+      newP = obstack_alloc (&frchains, sizeof (frchainS));
       newP->frch_subseg = subseg;
       newP->fix_root = NULL;
       newP->fix_tail = NULL;
@@ -234,27 +249,23 @@ section_symbol (segT sec)
 #define EMIT_SECTION_SYMBOLS 1
 #endif
 
-  if (! EMIT_SECTION_SYMBOLS || symbol_table_frozen)
+  /* A reference to the section (ie. an undefined symbol)
+     should now become defined, but any other symbol that happens to
+     have the same name as the section should not be modified.  Make
+     sure an undefined_section symbol isn't equated to some other
+     undefined symbol.  */
+  s = symbol_find (sec->symbol->name);
+  if (s == NULL
+      || S_GET_SEGMENT (s) != undefined_section
+      || !symbol_constant_p (s))
     {
-      /* Here we know it won't be going into the symbol table.  */
-      s = symbol_create (sec->symbol->name, sec, &zero_address_frag, 0);
+      if (!EMIT_SECTION_SYMBOLS || symbol_table_frozen)
+	s = symbol_create (sec->symbol->name, sec, &zero_address_frag, 0);
+      else
+	s = symbol_new (sec->symbol->name, sec, &zero_address_frag, 0);
     }
   else
-    {
-      segT seg;
-      s = symbol_find (sec->symbol->name);
-      /* We have to make sure it is the right symbol when we
-	 have multiple sections with the same section name.  */
-      if (s == NULL
-	  || ((seg = S_GET_SEGMENT (s)) != sec
-	      && seg != undefined_section))
-	s = symbol_new (sec->symbol->name, sec, &zero_address_frag, 0);
-      else if (seg == undefined_section)
-	{
-	  S_SET_SEGMENT (s, sec);
-	  symbol_set_frag (s, &zero_address_frag);
-	}
-    }
+    S_SET_SEGMENT (s, sec);
 
   S_CLEAR_EXTERNAL (s);
 

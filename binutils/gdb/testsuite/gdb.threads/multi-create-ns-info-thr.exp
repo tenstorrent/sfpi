@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2024 Free Software Foundation, Inc.
+# Copyright (C) 2007-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 standard_testfile multi-create.c
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug pthreads}] == -1} {
-    return -1
+    return
 }
 
 gdb_test_no_output "set pagination off"
 gdb_test_no_output "set non-stop on"
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 # Create a breakpoint that does "info threads" when hit, which will be

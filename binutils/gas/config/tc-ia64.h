@@ -1,5 +1,5 @@
 /* tc-ia64.h -- Header file for tc-ia64.c.
-   Copyright (C) 1998-2025 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
    Contributed by David Mosberger-Tang <davidm@hpl.hp.com>
 
    This file is part of GAS, the GNU Assembler.
@@ -176,7 +176,7 @@ void ia64_vms_note (void);
      as_bad_where ((FRAGP)->fr_file, (FRAGP)->fr_line,			\
 		   _("instruction address is not a multiple of 16"));
 
-#define MAX_MEM_FOR_RS_ALIGN_CODE  (15 + 16)
+#define MAX_MEM_FOR_RS_ALIGN_CODE(p2align, max) (15 + 16)
 
 #define WORKING_DOT_WORD	/* don't do broken word processing for now */
 

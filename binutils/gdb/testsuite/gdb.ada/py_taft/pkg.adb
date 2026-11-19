@@ -1,4 +1,4 @@
---  Copyright 2019-2024 Free Software Foundation, Inc.
+--  Copyright 2019-2026 Free Software Foundation, Inc.
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -14,6 +14,11 @@
 --  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package body Pkg is
+
+   procedure Do_Nothing (A : System.Address) is
+   begin
+      null;
+   end Do_Nothing;
 
    type Value_Record is record
       I : Integer;

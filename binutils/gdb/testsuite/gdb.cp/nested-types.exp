@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile \
 	 {debug c++}]} {
-    return -1
+    return
 }
 
 # Build the node given by ID (a number representing the struct S[ID] in
@@ -60,7 +60,7 @@ proc build_node {id} {
 	# (the source only uses that at the root struct).
 	# We also don't create nodes not in the source file
 	# (id >= 60).
-	if {[expr {$n % 10}] != 0 && $n < 60} {
+	if {$n % 10 != 0 && $n < 60} {
 	    lappend nodes($id,children) $n
 	}
     }
@@ -96,7 +96,7 @@ proc make_source {} {
     send_log "int\nmain \(\)\n\{\n"
     set plist {}
     for {set i 10} {$i < 60} {incr i} {
-	if {$i > 10 && [expr {$i % 10}] == 0} {
+	if {$i > 10 && $i % 10 == 0} {
 	    incr i
 	    set plist {"S10"}
 	    send_log "\n"
@@ -154,9 +154,9 @@ proc make_enum {result_var id parent_list indent_lvl log} {
     upvar $result_var result
 
     set s "[qual_name E$id $parent_list]"
-    set a "[qual_name A$id $parent_list]"
-    set b "[qual_name B$id $parent_list]"
-    set c "[qual_name C$id $parent_list]"
+    set a "[qual_name A$id $parent_list] = 0"
+    set b "[qual_name B$id $parent_list] = 1"
+    set c "[qual_name C$id $parent_list] = 2"
     lappend result [list "type" "public" "enum" $s [list $a $b $c]]
 
     if {$log} {
@@ -249,7 +249,7 @@ proc node_result {result_var id limit parent_list indent_lvl log} {
 
 # Test nested type definitions.  LIMIT specifies how many nested levels
 # of definitions to test.  If LOG is true, output the tree to the log in
-# a human-readable format mimicing the source code.
+# a human-readable format mimicking the source code.
 #
 # Only test when not logging.  Generating source code usable by the
 # test is not quite the same as how GDB outputs it.

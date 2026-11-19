@@ -1,6 +1,6 @@
 /* DWARF abbrev table
 
-   Copyright (C) 1994-2024 Free Software Foundation, Inc.
+   Copyright (C) 1994-2026 Free Software Foundation, Inc.
 
    Adapted by Gary Funck (gary@intrepid.com), Intrepid Technology,
    Inc.  with support from Florida State University (under contract
@@ -34,8 +34,8 @@
 
 struct attr_abbrev
 {
-  ENUM_BITFIELD(dwarf_attribute) name : 16;
-  ENUM_BITFIELD(dwarf_form) form : 16;
+  dwarf_attribute name : 16;
+  dwarf_form form : 16;
 
   /* It is valid only if FORM is DW_FORM_implicit_const.  */
   LONGEST implicit_const;
@@ -47,10 +47,18 @@ struct abbrev_info
   /* Number identifying abbrev.  */
   unsigned int number;
   /* DWARF tag.  */
-  ENUM_BITFIELD (dwarf_tag) tag : 16;
+  dwarf_tag tag : 16;
   /* True if the DIE has children.  */
   bool has_children;
   bool interesting;
+  /* In Ada, an imported subprogram DIE will be marked as a
+     declaration, but will have both a name and a linkage name.  This
+     declaration may be the only spot where that name is associated
+     with an object, so it has to show up in the index.  But, because
+     abbrevs are CU-independent, we can't check the language when
+     computing them and instead we keep a separate flag to indicate
+     that the scanner should check this DIE.  */
+  bool maybe_ada_import;
   unsigned short size_if_constant;
   unsigned short sibling_offset;
   /* Number of attributes.  */
@@ -61,7 +69,7 @@ struct abbrev_info
 };
 
 struct abbrev_table;
-typedef std::unique_ptr<struct abbrev_table> abbrev_table_up;
+using abbrev_table_up = std::unique_ptr<abbrev_table>;
 
 /* Top level data structure to contain an abbreviation table.
 
@@ -137,7 +145,7 @@ private:
 
   /* Hash table of abbrev, identified by their number.  */
   gdb::unordered_set<const abbrev_info *,
-  		     abbrev_info_number_hash,
+		     abbrev_info_number_hash,
 		     abbrev_info_number_eq>
     m_abbrevs;
 

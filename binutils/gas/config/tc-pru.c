@@ -1,5 +1,5 @@
 /* TI PRU assembler.
-   Copyright (C) 2014-2025 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
    Based on tc-nios2.c
 
@@ -71,9 +71,13 @@ struct pru_opt_s
   /* -mno-warn-regname-label: do not output a warning that a label name
      matches a register name.  */
   bool warn_regname_label;
+
+  /* -mcore-revision: Select PRU core revision, to determine which
+     opcodes are supported.  */
+  enum pru_core_revision core_rev;
 };
 
-static struct pru_opt_s pru_opt = { true, true };
+static struct pru_opt_s pru_opt = { true, true, REV_V3 };
 
 const char md_shortopts[] = "r";
 
@@ -82,6 +86,7 @@ enum options
   OPTION_LINK_RELAX = OPTION_MD_BASE + 1,
   OPTION_NO_LINK_RELAX,
   OPTION_NO_WARN_REGNAME_LABEL,
+  OPTION_CORE_REVISION,
 };
 
 const struct option md_longopts[] = {
@@ -89,10 +94,24 @@ const struct option md_longopts[] = {
   { "mno-link-relax",  no_argument, NULL, OPTION_NO_LINK_RELAX  },
   { "mno-warn-regname-label",  no_argument, NULL,
     OPTION_NO_WARN_REGNAME_LABEL  },
+  { "mcore-revision",  required_argument, NULL, OPTION_CORE_REVISION  },
   { NULL, no_argument, NULL, 0 }
 };
 
 const size_t md_longopts_size = sizeof (md_longopts);
+
+struct pru_core_rev_str_entry
+{
+  enum pru_core_revision core_rev;
+  const char *str;
+};
+
+static const struct pru_core_rev_str_entry pru_core_rev_table[] = {
+  { REV_V1, "V1" },
+  { REV_V2, "V2" },
+  { REV_V3, "V3" },
+  { REV_V4, "V4" },
+};
 
 typedef struct pru_insn_reloc
 {
@@ -134,12 +153,12 @@ typedef struct pru_insn_info
 /* Opcode hash table.  */
 static htab_t pru_opcode_hash = NULL;
 #define pru_opcode_lookup(NAME) \
-  ((struct pru_opcode *) str_hash_find (pru_opcode_hash, (NAME)))
+  (str_hash_find (pru_opcode_hash, (NAME)))
 
 /* Register hash table.  */
 static htab_t pru_reg_hash = NULL;
 #define pru_reg_lookup(NAME) \
-  ((struct pru_reg *) str_hash_find (pru_reg_hash, (NAME)))
+  (str_hash_find (pru_reg_hash, (NAME)))
 
 /* The known current alignment of the current section.  */
 static int pru_current_align;
@@ -255,7 +274,7 @@ pru_align (int log_size, const char *pfill, symbolS *label)
 
 	  old_frag = symbol_get_frag (label);
 	  old_value = S_GET_VALUE (label);
-	  new_value = (valueT) frag_now_fix ();
+	  new_value = frag_now_fix ();
 
 	  /* It is possible to have more than one label at a particular
 	     address, especially if debugging is enabled, so we must
@@ -341,10 +360,10 @@ s_pru_align (int ignore ATTRIBUTE_UNUSED)
     {
       input_line_pointer++;
       fill = get_absolute_expression ();
-      pfill = (const char *) &fill;
+      pfill = &fill;
     }
   else if (subseg_text_p (now_seg))
-    pfill = (const char *) &nop;
+    pfill = nop;
   else
     {
       pfill = NULL;
@@ -423,7 +442,7 @@ s_pru_set (int equiv)
      trying a directive.  This prevents
      us from polluting the name space.  */
   SKIP_WHITESPACE ();
-  if (is_end_of_line[(unsigned char) *input_line_pointer])
+  if (is_end_of_stmt (*input_line_pointer))
     {
       bool done = true;
       *endline = 0;
@@ -680,7 +699,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
   /* In general, fix instructions with immediate
      constants.  But leave LDI32 for the linker,
      which is prepared to shorten insns.  */
-  if (fixP->fx_addsy == (symbolS *) NULL
+  if (fixP->fx_addsy == NULL
       && fixP->fx_r_type != BFD_RELOC_PRU_LDI32)
     fixP->fx_done = 1;
 
@@ -751,7 +770,7 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
       fixP->fx_subsy = NULL;
   }
   /* We don't actually support subtracting a symbol.  */
-  if (fixP->fx_subsy != (symbolS *) NULL)
+  if (fixP->fx_subsy != NULL)
     as_bad_subtract (fixP);
 
   /* For the DIFF relocs, write the value into the object file while still
@@ -765,11 +784,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
       break;
     case BFD_RELOC_PRU_GNU_DIFF16:
     case BFD_RELOC_PRU_GNU_DIFF16_PMEM:
-      bfd_putl16 ((bfd_vma) value, where);
+      bfd_putl16 (value, where);
       break;
     case BFD_RELOC_PRU_GNU_DIFF32:
     case BFD_RELOC_PRU_GNU_DIFF32_PMEM:
-      bfd_putl32 ((bfd_vma) value, where);
+      bfd_putl32 (value, where);
       break;
     default:
       break;
@@ -949,7 +968,7 @@ pru_assemble_expression (const char *exprstr,
   if (pru_mode == PRU_MODE_TEST && ep->X_op == O_constant)
     value = ep->X_add_number;
 
-  return (unsigned long) value;
+  return value;
 }
 
 /* Try to parse a non-relocatable expression.  */
@@ -1100,7 +1119,6 @@ pru_assemble_arg_b (pru_insn_infoS *insn_info, const char *argstr)
       SET_INSN_FIELD (RS2, insn_info->insn_code, src2->index);
       SET_INSN_FIELD (RS2SEL, insn_info->insn_code, src2->regsel);
     }
-
 }
 
 static void
@@ -1255,6 +1273,92 @@ pru_assemble_arg_n (pru_insn_infoS *insn_info, const char *argstr)
 }
 
 static void
+pru_parse_mvi_operand (const char *argstr,
+		       struct pru_reg **blreg,
+		       unsigned int *mode)
+{
+  char *regstr;
+
+  *mode = MVI_OP_MODE_DIRECT;
+
+  if (*argstr == '*')
+    {
+      *mode = MVI_OP_MODE_INDIRECT;
+      argstr++;
+
+      if (argstr[0] == '-' && argstr[1] == '-')
+	{
+	  argstr += 2;
+	  *mode = MVI_OP_MODE_INDIRECT_PREDEC;
+	}
+    }
+  /* Decouple register string from the post increment operator.  */
+  regstr = strdup (argstr);
+  *strchrnul (regstr, '+') = '\0';
+  *blreg = pru_reg_lookup (regstr);
+  if (*blreg == NULL)
+    as_bad (_("unknown register %s"), regstr);
+  free (regstr);
+  regstr = NULL;
+  argstr += strlen ((*blreg)->name);
+
+  if (argstr[0] == '+' && argstr[1] == '+')
+    {
+      argstr += 2;
+      if (*mode == MVI_OP_MODE_DIRECT)
+	as_bad (_("missing indirect operator for post-increment operand"));
+      if (*mode == MVI_OP_MODE_INDIRECT_PREDEC)
+	as_bad (_("cannot both pre-decrement and post-increment an operand"));
+      *mode = MVI_OP_MODE_INDIRECT_POSTINC;
+    }
+  if (argstr[0] != '\0')
+      as_bad (_("unexpected statements at and of instruction"));
+
+  if (*mode != MVI_OP_MODE_DIRECT)
+    {
+      if ((*blreg)->index != 1)
+	as_bad (_("only R1 can be used for indirect addressing"));
+
+      if ((*blreg)->regsel != RSEL_7_0
+	  && (*blreg)->regsel != RSEL_15_8
+	  && (*blreg)->regsel != RSEL_23_16
+	  && (*blreg)->regsel != RSEL_31_24)
+	as_bad (_("only byte mode can be used for R1"));
+    }
+}
+
+static void
+pru_assemble_arg_M (pru_insn_infoS *insn_info, const char *argstr)
+{
+  unsigned int mode, rdmode;
+  struct pru_reg *blreg;
+
+  pru_parse_mvi_operand (argstr, &blreg, &mode);
+
+  SET_INSN_FIELD (MVI_RS1_MODE, insn_info->insn_code, mode);
+  SET_INSN_FIELD (RS1, insn_info->insn_code, blreg->index);
+  SET_INSN_FIELD (RS1SEL, insn_info->insn_code, blreg->regsel);
+
+  /* Assume source operand would be parsed after destination one.  */
+  rdmode = GET_INSN_FIELD (MVI_RD_MODE, insn_info->insn_code);
+  if (rdmode == MVI_OP_MODE_DIRECT && mode == MVI_OP_MODE_DIRECT)
+    as_bad (_("at least one MVI operand must be indirect"));
+}
+
+static void
+pru_assemble_arg_m (pru_insn_infoS *insn_info, const char *argstr)
+{
+  unsigned int mode;
+  struct pru_reg *blreg;
+
+  pru_parse_mvi_operand (argstr, &blreg, &mode);
+
+  SET_INSN_FIELD (MVI_RD_MODE, insn_info->insn_code, mode);
+  SET_INSN_FIELD (RD, insn_info->insn_code, blreg->index);
+  SET_INSN_FIELD (RDSEL, insn_info->insn_code, blreg->regsel);
+}
+
+static void
 pru_assemble_arg_c (pru_insn_infoS *insn_info, const char *argstr)
 {
   unsigned long cb = pru_assemble_noreloc_expression (argstr);
@@ -1263,6 +1367,17 @@ pru_assemble_arg_c (pru_insn_infoS *insn_info, const char *argstr)
     as_bad (_("invalid constant table offset %ld"), cb);
   else
     SET_INSN_FIELD (CB, insn_info->insn_code, cb);
+}
+
+static void
+pru_assemble_arg_t (pru_insn_infoS *insn_info, const char *argstr)
+{
+  unsigned long val = pru_assemble_noreloc_expression (argstr);
+
+  if (val != 0 && val != 1)
+    as_bad (_("invalid task manager mode %ld"), val);
+  else
+    SET_INSN_FIELD (TSKMGR_MODE, insn_info->insn_code, val);
 }
 
 static void
@@ -1355,7 +1470,10 @@ pru_consume_arg (char *argstr, const char *parsestr)
     case 'S':
     case 'l':
     case 'n':
+    case 'm':
+    case 'M':
     case 'R':
+    case 't':
     case 'w':
     case 'x':
       /* We can't have %pmem here.  */
@@ -1441,7 +1559,7 @@ pru_parse_args (pru_insn_infoS *insn ATTRIBUTE_UNUSED, char *argstr,
       /* Strip trailing whitespace.  */
       len = strlen (parsed_args[i]);
       for (char *temp = parsed_args[i] + len - 1;
-	   len && ISSPACE (*temp);
+	   len && is_whitespace (*temp);
 	   temp--, len--)
 	*temp = '\0';
 
@@ -1514,7 +1632,7 @@ output_insn_ldi32 (pru_insn_infoS *insn)
 /* The following functions are called by machine-independent parts of
    the assembler.  */
 int
-md_parse_option (int c, const char *arg ATTRIBUTE_UNUSED)
+md_parse_option (int c, const char *arg)
 {
   switch (c)
     {
@@ -1530,6 +1648,20 @@ md_parse_option (int c, const char *arg ATTRIBUTE_UNUSED)
       break;
     case OPTION_NO_WARN_REGNAME_LABEL:
       pru_opt.warn_regname_label = false;
+      break;
+    case OPTION_CORE_REVISION:
+	{
+	  size_t i;
+	  for (i = 0; i < ARRAY_SIZE (pru_core_rev_table); i++)
+	    {
+	      if (!strcmp (arg, pru_core_rev_table[i].str))
+		break;
+	    }
+	  if (i == ARRAY_SIZE (pru_core_rev_table))
+	    as_bad (_("invalid core revision %s"), arg);
+	  else
+	    pru_opt.core_rev = pru_core_rev_table[i].core_rev;
+	}
       break;
     default:
       return 0;
@@ -1554,7 +1686,6 @@ md_show_usage (FILE *stream)
       "  -mlink-relax     generate relocations for linker relaxation (default).\n"
       "  -mno-link-relax  don't generate relocations for linker relaxation.\n"
     ));
-
 }
 
 /* This function is called once, at assembler startup time.
@@ -1622,6 +1753,18 @@ md_assemble (char *op_str)
       /* Set the opcode for the instruction.  */
       insn->insn_code = insn->insn_pru_opcode->match;
 
+      /* Opcodes for older core revisions are not proper subsets of
+	 newer core revisions, as specified by TI.  There are opcodes
+	 in old cores which are not present in newer ones (e.g. SCAN).
+	 But the currently implemented opcodes in assembler are proper
+	 subsets, so we can use a simple "linear" check here.  */
+      if (pru_opt.core_rev < insn->insn_pru_opcode->core_rev)
+	{
+	  as_bad (_("instruction %s is not valid for selected core revision"),
+		  insn->insn_tokens[0]);
+	  return;
+	}
+
       if (pru_mode == PRU_MODE_TEST)
 	{
 	  /* Add the "expected" instruction parameter used for validation.  */
@@ -1682,8 +1825,17 @@ md_assemble (char *op_str)
 	    case 'n':
 	      pru_assemble_arg_n (insn, *argtk++);
 	      continue;
+	    case 'm':
+	      pru_assemble_arg_m (insn, *argtk++);
+	      continue;
+	    case 'M':
+	      pru_assemble_arg_M (insn, *argtk++);
+	      continue;
 	    case 'c':
 	      pru_assemble_arg_c (insn, *argtk++);
+	      continue;
+	    case 't':
+	      pru_assemble_arg_t (insn, *argtk++);
 	      continue;
 	    case 'w':
 	      pru_assemble_arg_w (insn, *argtk++);
@@ -1798,6 +1950,8 @@ md_pcrel_from (fixS *fixP ATTRIBUTE_UNUSED)
 void
 pru_md_end (void)
 {
+  if (!ENABLE_LEAK_CHECK)
+    return;
   htab_delete (pru_opcode_hash);
   htab_delete (pru_reg_hash);
 }
@@ -1817,7 +1971,7 @@ pru_frob_label (symbolS *lab)
 
   /* Update the label's address with the current output pointer.  */
   symbol_set_frag (lab, frag_now);
-  S_SET_VALUE (lab, (valueT) frag_now_fix ());
+  S_SET_VALUE (lab, frag_now_fix ());
 
   /* Record this label for future adjustment after we find out what
      kind of data it references, and the required alignment therewith.  */
@@ -1830,7 +1984,7 @@ pru_frob_label (symbolS *lab)
 static inline char *
 skip_space (char *s)
 {
-  while (*s == ' ' || *s == '\t')
+  while (is_whitespace (*s))
     ++s;
   return s;
 }

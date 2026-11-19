@@ -1,5 +1,5 @@
 /* Hash table wrappers for gdb.
-   Copyright (C) 2021-2024 Free Software Foundation, Inc.
+   Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -31,7 +31,7 @@ struct htab_deleter
 };
 
 /* A unique_ptr wrapper for htab_t.  */
-typedef std::unique_ptr<htab, htab_deleter> htab_up;
+using htab_up = std::unique_ptr<htab, htab_deleter>;
 
 /* A wrapper for 'delete' that can used as a hash table entry deletion
    function.  */

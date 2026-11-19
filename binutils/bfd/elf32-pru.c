@@ -1,5 +1,5 @@
 /* 32-bit ELF support for TI PRU.
-   Copyright (C) 2014-2025 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
    Based on elf32-nios2.c
 
@@ -470,8 +470,7 @@ pru_elf32_do_s10_pcrel_relocate (bfd *input_bfd, reloc_howto_type *howto,
   bfd_vma qboff;
   bfd_reloc_status_type flag = bfd_reloc_ok;
 
-  /* Sanity check the address.  */
-  if (address > bfd_get_section_limit (input_bfd, input_section))
+  if (!bfd_reloc_offset_in_range (howto, input_bfd, input_section, address))
     return bfd_reloc_outofrange;
 
   BFD_ASSERT (howto->pc_relative);
@@ -546,9 +545,7 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
 
   /* A hacked-up version of _bfd_final_link_relocate() follows.  */
 
-  /* Sanity check the address.  */
-  if (octets + bfd_get_reloc_size (howto)
-      > bfd_get_section_limit_octets (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (howto, abfd, input_section, octets))
     return bfd_reloc_outofrange;
 
   /* This function assumes that we are dealing with a basic relocation
@@ -681,8 +678,7 @@ pru_elf32_ldi32_relocate (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
 
 /* Implement elf_backend_relocate_section.  */
 static int
-pru_elf32_relocate_section (bfd *output_bfd,
-			    struct bfd_link_info *info,
+pru_elf32_relocate_section (struct bfd_link_info *info,
 			    bfd *input_bfd,
 			    asection *input_section,
 			    bfd_byte *contents,
@@ -697,7 +693,7 @@ pru_elf32_relocate_section (bfd *output_bfd,
   Elf_Internal_Rela *relend;
   bool is_rel_reloc;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend = relocs + input_section->reloc_count;
 
@@ -736,7 +732,8 @@ pru_elf32_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -750,7 +747,8 @@ pru_elf32_relocate_section (bfd *output_bfd,
 
       if (sec && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_PRU_NONE,
+					 howto, 0, contents);
 
       /* Nothing more to do unless this is a final link.  */
       if (bfd_link_relocatable (info))
@@ -1133,7 +1131,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
   struct elf_link_hash_entry **end_hashes;
   unsigned int symcount;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
   contents = elf_section_data (sec)->this_hdr.contents;
 
@@ -1360,7 +1358,7 @@ pru_elf32_relax_section (bfd *abfd, asection *sec,
       || (sec->flags & SEC_CODE) == 0)
     return true;
 
-  symtab_hdr = & elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get a copy of the native relocations.  */
   internal_relocs = _bfd_elf_link_read_relocs (abfd, sec, NULL, NULL,

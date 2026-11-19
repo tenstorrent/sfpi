@@ -1,6 +1,6 @@
 /* General utility routines for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -17,7 +17,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include <ctype.h>
 #include "gdbsupport/gdb_wait.h"
 #include "gdbsupport/scoped_signal_handler.h"
 #include "event-top.h"
@@ -54,7 +53,6 @@
 #include "top.h"
 #include "ui.h"
 #include "main.h"
-#include "solist.h"
 
 #include "inferior.h"
 
@@ -76,13 +74,13 @@
 #include "gdbsupport/scope-exit.h"
 #include "gdbarch.h"
 #include "cli-out.h"
-#include "gdbsupport/gdb-safe-ctype.h"
 #include "bt-utils.h"
 #include "gdbsupport/buildargv.h"
 #include "pager.h"
 #include "run-on-main-thread.h"
 #include "gdbsupport/gdb_tilde_expand.h"
 #include "gdbsupport/eintr.h"
+#include "readline/tilde.h"
 
 void (*deprecated_error_begin_hook) (void);
 
@@ -119,7 +117,7 @@ show_sevenbit_strings (struct ui_file *file, int from_tty,
 
 /* String to be printed before warning messages, if any.  */
 
-const char *warning_pre_print = "\nwarning: ";
+const char *warning_pre_print = "\n";
 
 bool pagination_enabled = true;
 static void
@@ -176,11 +174,22 @@ vwarning (const char *string, va_list args)
 	  term_state.emplace ();
 	  target_terminal::ours_for_output ();
 	}
-      if (warning_pre_print)
-	gdb_puts (warning_pre_print, gdb_stderr);
+      gdb_puts (warning_pre_print, gdb_stderr);
+      print_warning_prefix (gdb_stderr);
+      gdb_puts (_("warning: "), gdb_stderr);
       gdb_vprintf (gdb_stderr, string, args);
       gdb_printf (gdb_stderr, "\n");
     }
+}
+
+/* See common-exceptions.h.  */
+
+std::string
+vformat_exception (const char *fmt, va_list args)
+{
+  string_file text (true);
+  text.vprintf (fmt, args);
+  return text.release ();
 }
 
 /* Print an error message and return to command level.
@@ -190,7 +199,9 @@ vwarning (const char *string, va_list args)
 void
 verror (const char *string, va_list args)
 {
-  throw_verror (GENERIC_ERROR, string, args);
+  string_file text (true);
+  text.vprintf (string, args);
+  throw gdb_exception_error (GENERIC_ERROR, text.release ());
 }
 
 /* Emit a message and abort.  */
@@ -203,7 +214,7 @@ abort_with_message (const char *msg)
   else
     gdb_puts (msg, gdb_stderr);
 
-  abort ();		/* ARI: abort */
+  abort ();
 }
 
 /* Dump core trying to increase the core soft limit to hard limit first.  */
@@ -222,7 +233,7 @@ dump_core (void)
      a backtrace to the console here.  */
   signal (SIGABRT, SIG_DFL);
 
-  abort ();		/* ARI: abort */
+  abort ();
 }
 
 /* Check whether GDB will be able to dump core using the dump_core
@@ -372,7 +383,7 @@ internal_vproblem (struct internal_problem *problem,
 	   does not fix this problem.  This is the solution suggested
 	   at http://gcc.gnu.org/bugzilla/show_bug.cgi?id=25509.  */
 	if (write (STDERR_FILENO, msg, sizeof (msg)) != sizeof (msg))
-	  abort (); /* ARI: abort */
+	  abort ();
 	exit (1);
       }
   }
@@ -382,7 +393,7 @@ internal_vproblem (struct internal_problem *problem,
 #endif
 
   /* Create a string containing the full error/warning message.  Need
-     to call query with this full string, as otherwize the reason
+     to call query with this full string, as otherwise the reason
      (error/warning) and question become separated.  Format using a
      style similar to a compiler error message.  Include extra detail
      so that the user knows that they are living on the edge.  */
@@ -1008,7 +1019,7 @@ parse_escape (struct gdbarch *gdbarch, const char **string_ptr)
 	  while (++count < 3)
 	    {
 	      c = (**string_ptr);
-	      if (ISDIGIT (c) && c != '8' && c != '9')
+	      if (c_isdigit (c) && c != '8' && c != '9')
 		{
 		  (*string_ptr)++;
 		  i *= 8;
@@ -1360,7 +1371,7 @@ maintenance_info_screen (const char *args, int from_tty)
     = rl_variable_value ("horizontal-scroll-mode");
   bool force_horizontal_scroll_mode
     = (horizontal_scroll_mode_value != nullptr
-       && strcmp (horizontal_scroll_mode_value, "on") == 0);
+       && streq (horizontal_scroll_mode_value, "on"));
 
   const char *mode = nullptr;
   const char *reason = nullptr;
@@ -1401,21 +1412,28 @@ pager_file::emit_style_escape (const ui_file_style &style)
     {
       m_applied_style = style;
       if (m_paging)
-	m_stream->emit_style_escape (style);
+	{
+	  /* Previous style changes will have been sent to m_stream via
+	     escape sequences encoded in the m_wrap_buffer.  As a result,
+	     the m_stream->m_applied_style will not have been updated.
+
+	     If we now use m_stream->emit_style_escape, then the required
+	     style might not actually be emitted as the requested style
+	     might happen to match the out of date value in
+	     m_stream->m_applied_style.
+
+	     Instead, send the style change directly using m_stream->puts.
+
+	     However, we track what style is currently applied to the
+	     underlying stream in m_stream_style, this is updated whenever
+	     m_wrap_buffer is flushed to the underlying stream.  And so, if
+	     the style we are applying matches what we know is currently
+	     applied to the underlying stream, then we can skip sending
+	     this style to the stream.  */
+	  this->set_stream_style (m_applied_style);
+	}
       else
 	m_wrap_buffer.append (style.to_ansi ());
-    }
-}
-
-/* See pager.h.  */
-
-void
-pager_file::reset_style ()
-{
-  if (can_emit_style_escape ())
-    {
-      m_applied_style = ui_file_style ();
-      m_wrap_buffer.append (m_applied_style.to_ansi ());
     }
 }
 
@@ -1436,8 +1454,8 @@ pager_file::prompt_for_continue ()
 
   scoped_restore save_paging = make_scoped_restore (&m_paging, true);
 
-  /* Clear the current styling.  */
-  m_stream->emit_style_escape (ui_file_style ());
+  /* Clear the current styling on ourselves and the managed stream.  */
+  this->emit_style_escape (ui_file_style ());
 
   if (annotation_level > 1)
     m_stream->puts (("\n\032\032pre-prompt-for-continue\n"));
@@ -1467,10 +1485,8 @@ pager_file::prompt_for_continue ()
 
   if (ignore != NULL)
     {
-      char *p = ignore.get ();
+      char *p = skip_spaces (ignore.get ());
 
-      while (*p == ' ' || *p == '\t')
-	++p;
       if (p[0] == 'q')
 	/* Do not call quit here; there is no possibility of SIGINT.  */
 	throw_quit ("Quit");
@@ -1479,7 +1495,7 @@ pager_file::prompt_for_continue ()
     }
 
   /* Now we have to do this again, so that GDB will know that it doesn't
-     need to save the ---Type <return>--- line at the top of the screen.  */
+     need to save the ---Type <RET>--- line at the top of the screen.  */
   reinitialize_more_filter ();
   pagination_disabled_for_command = disable_pagination;
 
@@ -1520,6 +1536,7 @@ pager_file::flush_wrap_buffer ()
   if (!m_paging && !m_wrap_buffer.empty ())
     {
       m_stream->puts (m_wrap_buffer.c_str ());
+      m_stream_style = m_applied_style;
       m_wrap_buffer.clear ();
     }
 }
@@ -1541,9 +1558,10 @@ gdb_flush (struct ui_file *stream)
 
 /* See utils.h.  */
 
-int
+unsigned int
 get_chars_per_line ()
 {
+  gdb_assert (chars_per_line > 0);
   return chars_per_line;
 }
 
@@ -1575,50 +1593,6 @@ pager_file::wrap_here (int indent)
     }
 }
 
-/* Print input string to gdb_stdout arranging strings in columns of n
-   chars.  String can be right or left justified in the column.  Never
-   prints trailing spaces.  String should never be longer than width.
-   FIXME: this could be useful for the EXAMINE command, which
-   currently doesn't tabulate very well.  */
-
-void
-puts_tabular (char *string, int width, int right)
-{
-  int spaces = 0;
-  int stringlen;
-  char *spacebuf;
-
-  gdb_assert (chars_per_line > 0);
-  if (chars_per_line == UINT_MAX)
-    {
-      gdb_puts (string);
-      gdb_puts ("\n");
-      return;
-    }
-
-  if (((chars_printed - 1) / width + 2) * width >= chars_per_line)
-    gdb_puts ("\n");
-
-  if (width >= chars_per_line)
-    width = chars_per_line - 1;
-
-  stringlen = strlen (string);
-
-  if (chars_printed > 0)
-    spaces = width - (chars_printed - 1) % width - 1;
-  if (right)
-    spaces += width - stringlen;
-
-  spacebuf = (char *) alloca (spaces + 1);
-  spacebuf[spaces] = '\0';
-  while (spaces--)
-    spacebuf[spaces] = ' ';
-
-  gdb_puts (spacebuf);
-  gdb_puts (string);
-}
-
-
 /* Ensure that whatever gets printed next, using the filtered output
    commands, starts at the beginning of the line.  I.e. if there is
    any pending output for the current line, flush it and start a new
@@ -1633,13 +1607,95 @@ begin_line (void)
     }
 }
 
+/* See pager.h.  */
+
+void
+pager_file::check_for_overfull_line (const unsigned int lines_allowed)
+{
+  if (chars_printed >= chars_per_line)
+    {
+      unsigned int save_chars = chars_printed;
+
+      /* If we change the style, below, we'll want to reset it
+	 before continuing to print.  If there is no wrap
+	 column, then we'll only reset the style if the pager
+	 prompt is given; and to avoid emitting style
+	 sequences in the middle of a run of text, we track
+	 this as well.  */
+      ui_file_style save_style = m_applied_style;
+      bool did_paginate = false;
+
+      chars_printed = 0;
+      lines_printed++;
+      if (m_wrap_column)
+	{
+	  /* We are about to insert a newline at an historic
+	     location in the WRAP_BUFFER.  Before we do we want to
+	     restore the default style.  To know if we actually
+	     need to insert an escape sequence we must restore the
+	     current applied style to how it was at the WRAP_COLUMN
+	     location.  */
+	  m_applied_style = m_wrap_style;
+	  this->set_stream_style (ui_file_style ());
+
+	  /* If we aren't actually wrapping, don't output
+	     newline -- if chars_per_line is right, we
+	     probably just overflowed anyway; if it's wrong,
+	     let us keep going.  */
+	  m_stream->puts ("\n");
+	}
+      else
+	this->flush_wrap_buffer ();
+
+      /* Possible new page.  Note that
+	 PAGINATION_DISABLED_FOR_COMMAND might be set during
+	 this loop, so we must continue to check it here.  */
+      if (pagination_enabled
+	  && !pagination_disabled_for_command
+	  && lines_printed >= lines_allowed
+	  && m_stream->can_page ())
+	{
+	  prompt_for_continue ();
+	  did_paginate = true;
+	}
+
+      /* Now output indentation and wrapped string.  */
+      if (m_wrap_column)
+	{
+	  m_stream->puts (n_spaces (m_wrap_indent));
+
+	  /* Having finished inserting the wrapping we should
+	     restore the style as it was at the WRAP_COLUMN.  */
+	  this->set_stream_style (m_wrap_style);
+
+	  /* The WRAP_BUFFER will still contain content, and that
+	     content might set some alternative style.  Restore
+	     APPLIED_STYLE as it was before we started wrapping,
+	     this reflects the current style for the last character
+	     in WRAP_BUFFER.  */
+	  m_applied_style = save_style;
+
+	  /* Note that this can set chars_printed > chars_per_line
+	     if we are printing a long string.  */
+	  chars_printed = m_wrap_indent + (save_chars - m_wrap_column);
+	  m_wrap_column = 0;	/* And disable fancy wrap */
+	}
+      else if (did_paginate)
+	this->emit_style_escape (save_style);
+    }
+}
+
+void
+pager_file::vprintf (const char *format, va_list args)
+{
+  ui_out_flags flags = disallow_ui_out_field;
+  cli_ui_out (this, flags).vmessage (m_applied_style, format, args);
+}
+
 void
 pager_file::puts (const char *linebuffer)
 {
-  const char *lineptr;
-
-  if (linebuffer == 0)
-    return;
+  gdb_assert (linebuffer != nullptr);
 
   /* Don't do any filtering or wrapping if both are disabled.  */
   if (batch_flag
@@ -1670,130 +1726,115 @@ pager_file::puts (const char *linebuffer)
      when this is necessary; prompt user for new page when this is
      necessary.  */
 
-  lineptr = linebuffer;
-  while (*lineptr)
+  while (*linebuffer != '\0')
     {
       /* Possible new page.  Note that PAGINATION_DISABLED_FOR_COMMAND
 	 might be set during this loop, so we must continue to check
 	 it here.  */
       if (pagination_enabled
 	  && !pagination_disabled_for_command
-	  && lines_printed >= lines_allowed)
+	  && lines_printed >= lines_allowed
+	  && m_stream->can_page ())
 	prompt_for_continue ();
 
-      while (*lineptr && *lineptr != '\n')
+      while (*linebuffer != '\0' && *linebuffer != '\n')
 	{
-	  int skip_bytes;
-
 	  /* Print a single line.  */
-	  if (*lineptr == '\t')
+	  if (*linebuffer == '\t')
 	    {
+	      /* This does adjust CHARS_PRINTED, but doesn't count as
+		 printable content, so check_for_overfull_line is not
+		 called.
+
+		 If a tab is printed at the end of an already full line,
+		 then the tab does not wrap onto the next line.  We could
+		 cap CHARS_PRINTED to CHARS_PER_LINE, but we don't gain
+		 anything from doing that.  */
+
 	      m_wrap_buffer.push_back ('\t');
+
 	      /* Shifting right by 3 produces the number of tab stops
 		 we have already passed, and then adding one and
 		 shifting left 3 advances to the next tab stop.  */
 	      chars_printed = ((chars_printed >> 3) + 1) << 3;
-	      lineptr++;
+	      linebuffer++;
 	    }
-	  else if (*lineptr == '\033'
-		   && skip_ansi_escape (lineptr, &skip_bytes))
+	  else if (int skip_bytes;
+		   *linebuffer == '\033'
+		   && skip_ansi_escape (linebuffer, &skip_bytes))
 	    {
-	      m_wrap_buffer.append (lineptr, skip_bytes);
-	      /* Note that we don't consider this a character, so we
-		 don't increment chars_printed here.  */
-	      lineptr += skip_bytes;
+	      /* We don't consider escape sequences as characters, so we
+		 don't increment chars_printed here, and we don't need to
+		 call check_for_overfull_line.  */
+
+	      /* This style sequence might not set every style attribute,
+		 so start with the currently applied style, and update
+		 that.  */
+	      size_t style_len;
+	      ui_file_style style = m_applied_style;
+	      if (style.parse (linebuffer, &style_len)
+		  && style_len <= skip_bytes)
+		{
+		  this->emit_style_escape (style);
+
+		  linebuffer += style_len;
+		  skip_bytes -= style_len;
+		}
+
+	      if (skip_bytes > 0)
+		{
+		  m_wrap_buffer.append (linebuffer, skip_bytes);
+		  linebuffer += skip_bytes;
+		}
 	    }
-	  else if (*lineptr == '\r')
+	  else if (*linebuffer == '\r')
 	    {
-	      m_wrap_buffer.push_back (*lineptr);
+	      /* This restarts the current line, it doesn't start a new
+		 line, calling check_for_overfull_line is not needed as,
+		 regardless of the current line state, the line will be
+		 considered empty once this block has finished.  */
+	      m_wrap_buffer.push_back (*linebuffer);
 	      chars_printed = 0;
-	      lineptr++;
+	      linebuffer++;
 	    }
 	  else
 	    {
-	      m_wrap_buffer.push_back (*lineptr);
+	      /* We are about to add some printable content to
+		 M_WRAP_BUFFER.  Check to see if the current line is full,
+		 and if we should start a new line.  This might trigger
+		 pagination.  */
+	      this->check_for_overfull_line (lines_allowed);
+
+	      /* Check if we are at the start of a multi-byte character.
+		 mbrlen returns the number of bytes the character occupies.
+		 If it returns -1 (invalid) or 0 (null), we fall back to
+		 treating this as a single byte character.  */
+	      mbstate_t mb;
+	      memset (&mb, 0, sizeof mb);
+	      int len = mbrlen (linebuffer, MB_CUR_MAX, &mb);
+	      if (len < 1)
+		len = 1;
+
+	      /* Append to the output stream as many bytes from LINEBUFFER
+		 as this character uses.  This should be fine so long as we
+		 trust mbrlen.  */
+	      m_wrap_buffer.append (linebuffer, len);
+	      linebuffer += len;
+
+	      /* For now assume that every multi-byte character that GDB
+		 prints is only one character wide.  If this ever changes
+		 then we need to consider something like wcwidth here.  */
 	      chars_printed++;
-	      lineptr++;
-	    }
-
-	  if (chars_printed >= chars_per_line)
-	    {
-	      unsigned int save_chars = chars_printed;
-
-	      /* If we change the style, below, we'll want to reset it
-		 before continuing to print.  If there is no wrap
-		 column, then we'll only reset the style if the pager
-		 prompt is given; and to avoid emitting style
-		 sequences in the middle of a run of text, we track
-		 this as well.  */
-	      ui_file_style save_style = m_applied_style;
-	      bool did_paginate = false;
-
-	      chars_printed = 0;
-	      lines_printed++;
-	      if (m_wrap_column)
-		{
-		  /* We are about to insert a newline at an historic
-		     location in the WRAP_BUFFER.  Before we do we want to
-		     restore the default style.  To know if we actually
-		     need to insert an escape sequence we must restore the
-		     current applied style to how it was at the WRAP_COLUMN
-		     location.  */
-		  m_applied_style = m_wrap_style;
-		  m_stream->emit_style_escape (ui_file_style ());
-		  /* If we aren't actually wrapping, don't output
-		     newline -- if chars_per_line is right, we
-		     probably just overflowed anyway; if it's wrong,
-		     let us keep going.  */
-		  m_stream->puts ("\n");
-		}
-	      else
-		this->flush_wrap_buffer ();
-
-	      /* Possible new page.  Note that
-		 PAGINATION_DISABLED_FOR_COMMAND might be set during
-		 this loop, so we must continue to check it here.  */
-	      if (pagination_enabled
-		  && !pagination_disabled_for_command
-		  && lines_printed >= lines_allowed)
-		{
-		  prompt_for_continue ();
-		  did_paginate = true;
-		}
-
-	      /* Now output indentation and wrapped string.  */
-	      if (m_wrap_column)
-		{
-		  m_stream->puts (n_spaces (m_wrap_indent));
-
-		  /* Having finished inserting the wrapping we should
-		     restore the style as it was at the WRAP_COLUMN.  */
-		  m_stream->emit_style_escape (m_wrap_style);
-
-		  /* The WRAP_BUFFER will still contain content, and that
-		     content might set some alternative style.  Restore
-		     APPLIED_STYLE as it was before we started wrapping,
-		     this reflects the current style for the last character
-		     in WRAP_BUFFER.  */
-		  m_applied_style = save_style;
-
-		  /* Note that this can set chars_printed > chars_per_line
-		     if we are printing a long string.  */
-		  chars_printed = m_wrap_indent + (save_chars - m_wrap_column);
-		  m_wrap_column = 0;	/* And disable fancy wrap */
-		}
-	      else if (did_paginate)
-		m_stream->emit_style_escape (save_style);
 	    }
 	}
 
-      if (*lineptr == '\n')
+      if (*linebuffer == '\n')
 	{
 	  chars_printed = 0;
 	  wrap_here (0); /* Spit out chars, cancel further wraps.  */
 	  lines_printed++;
 	  m_stream->puts ("\n");
-	  lineptr++;
+	  linebuffer++;
 	}
     }
 
@@ -1804,7 +1845,7 @@ void
 pager_file::write (const char *buf, long length_buf)
 {
   /* We have to make a string here because the pager uses
-     skip_ansi_escape, which requires NUL-termination.  */
+     examine_ansi_escape, which requires NUL-termination.  */
   std::string str (buf, length_buf);
   this->puts (str.c_str ());
 }
@@ -1818,7 +1859,7 @@ static void
 test_pager ()
 {
   string_file *strfile = new string_file ();
-  pager_file pager (strfile);
+  pager_file pager { ui_file_up (strfile) };
 
   /* Make sure the pager is disabled.  */
   scoped_restore save_enabled
@@ -1840,6 +1881,27 @@ test_pager ()
   pager.puts ("bbbbbbbbbbbb\n");
 
   SELF_CHECK (strfile->string () == "aaaaaaaaaaaa\n  bbbbbbbbbbbb\n");
+
+  strfile->clear ();
+  pager.puts ("aaaaaaaaaaaaaaa");
+  pager.wrap_here (2);
+  pager.puts ("bbbbb\n");
+
+  SELF_CHECK (strfile->string () == "aaaaaaaaaaaaaaa\n  bbbbb\n");
+
+  strfile->clear ();
+  pager.puts ("aaaaaaaaaaaaaaa");
+  pager.wrap_here (10);
+  pager.puts ("bbbbb");
+  pager.wrap_here (10);
+  pager.puts ("ccccc");
+  pager.wrap_here (10);
+  pager.puts ("ddddd\n");
+
+  SELF_CHECK (strfile->string () == ("aaaaaaaaaaaaaaa\n"
+				     "          bbbbb\n"
+				     "          ccccc\n"
+				     "          ddddd\n"));
 }
 
 #endif /* GDB_SELF_TEST */
@@ -1880,22 +1942,20 @@ fputs_highlighted (const char *str, const compiled_regex &highlight,
       size_t n_highlight = pmatch.rm_eo - pmatch.rm_so;
 
       /* Output the part before pmatch with current style.  */
-      while (pmatch.rm_so > 0)
+      if (pmatch.rm_so > 0)
 	{
-	  gdb_putc (*str, stream);
-	  pmatch.rm_so--;
-	  str++;
+	  stream->write (str, pmatch.rm_so);
+	  str += pmatch.rm_so;
 	}
 
       /* Output pmatch with the highlight style.  */
-      stream->emit_style_escape (highlight_style.style ());
-      while (n_highlight > 0)
+      if (n_highlight > 0)
 	{
-	  gdb_putc (*str, stream);
-	  n_highlight--;
-	  str++;
+	  stream->emit_style_escape (highlight_style.style ());
+	  stream->write (str, n_highlight);
+	  str += n_highlight;
+	  stream->emit_style_escape (ui_file_style ());
 	}
-      stream->emit_style_escape (ui_file_style ());
     }
 
   /* Output the trailing part of STR not matching HIGHLIGHT.  */
@@ -2048,7 +2108,7 @@ fprintf_symbol (struct ui_file *stream, const char *name,
 static bool
 valid_identifier_name_char (int ch)
 {
-  return (ISALNUM (ch) || ch == '_');
+  return (c_isalnum (ch) || ch == '_');
 }
 
 /* Skip to end of token, or to END, whatever comes first.  Input is
@@ -2058,7 +2118,7 @@ static const char *
 cp_skip_operator_token (const char *token, const char *end)
 {
   const char *p = token;
-  while (p != end && !ISSPACE (*p) && *p != '(')
+  while (p != end && !c_isspace (*p) && *p != '(')
     {
       if (valid_identifier_name_char (*p))
 	{
@@ -2112,9 +2172,9 @@ cp_skip_operator_token (const char *token, const char *end)
 static void
 skip_ws (const char *&string1, const char *&string2, const char *end_str2)
 {
-  while (ISSPACE (*string1))
+  while (c_isspace (*string1))
     string1++;
-  while (string2 < end_str2 && ISSPACE (*string2))
+  while (string2 < end_str2 && c_isspace (*string2))
     string2++;
 }
 
@@ -2178,7 +2238,7 @@ skip_template_parameter_list (const char **name)
       /* Skip any whitespace that might occur after the closing of the
 	 parameter list, but only if it is the end of parameter list.  */
       const char *q = p;
-      while (ISSPACE (*q))
+      while (c_isspace (*q))
 	++q;
       if (*q == '>')
 	p = q;
@@ -2210,8 +2270,8 @@ strncmp_iw_with_mode (const char *string1, const char *string2,
   while (1)
     {
       if (skip_spaces
-	  || ((ISSPACE (*string1) && !valid_identifier_name_char (*string2))
-	      || (ISSPACE (*string2) && !valid_identifier_name_char (*string1))))
+	  || ((c_isspace (*string1) && !valid_identifier_name_char (*string2))
+	      || (c_isspace (*string2) && !valid_identifier_name_char (*string1))))
 	{
 	  skip_ws (string1, string2, end_str2);
 	  skip_spaces = false;
@@ -2244,7 +2304,7 @@ strncmp_iw_with_mode (const char *string1, const char *string2,
 	  if (match_for_lcd != NULL && abi_start != string1)
 	    match_for_lcd->mark_ignored_range (abi_start, string1);
 
-	  while (ISSPACE (*string1))
+	  while (c_isspace (*string1))
 	    string1++;
 	}
 
@@ -2311,9 +2371,9 @@ strncmp_iw_with_mode (const char *string1, const char *string2,
 	  string1++;
 	  string2++;
 
-	  while (ISSPACE (*string1))
+	  while (c_isspace (*string1))
 	    string1++;
-	  while (string2 < end_str2 && ISSPACE (*string2))
+	  while (string2 < end_str2 && c_isspace (*string2))
 	    string2++;
 	  continue;
 	}
@@ -2413,14 +2473,13 @@ strncmp_iw_with_mode (const char *string1, const char *string2,
       if (case_sensitivity == case_sensitive_on && *string1 != *string2)
 	break;
       if (case_sensitivity == case_sensitive_off
-	  && (TOLOWER ((unsigned char) *string1)
-	      != TOLOWER ((unsigned char) *string2)))
+	  && c_tolower (*string1) != c_tolower (*string2))
 	break;
 
       /* If we see any non-whitespace, non-identifier-name character
 	 (any of "()<>*&" etc.), then skip spaces the next time
 	 around.  */
-      if (!ISSPACE (*string1) && !valid_identifier_name_char (*string1))
+      if (!c_isspace (*string1) && !valid_identifier_name_char (*string1))
 	skip_spaces = true;
 
       string1++;
@@ -2878,7 +2937,9 @@ strncmp_iw_with_mode_tests ()
 	       "\tfoo\t<\tbar\t<\tbaz\t<\tquxi\t>\t>\t>\t(int)", NORMAL);
   CHECK_MATCH ("foo<bar<baz<quxi>>>(int)",
 	       " \tfoo \t< \tbar \t< \tbaz \t< \tquxi \t> \t> \t> \t( \tint \t)", NORMAL);
-  CHECK_MATCH ("foo<bar<baz>>::foo(quxi &)", "fo", NORMAL);
+  CHECK_MATCH ("foo<bar<baz>>::foo(quxi &)",
+	       "fo", /* codespell:ignore.  */
+	       NORMAL);
   CHECK_MATCH ("foo<bar<baz>>::foo(quxi &)", "foo", NORMAL);
   CHECK_MATCH ("foo<bar<baz>>::foo(quxi &)", "foo<bar<baz>>::", NORMAL);
   CHECK_MATCH ("foo<bar<baz>>::foo(quxi &)", "foo<bar<baz> >::foo", NORMAL);
@@ -3133,16 +3194,16 @@ strcmp_iw_ordered (const char *string1, const char *string2)
 
       while (*string1 != '\0' && *string2 != '\0')
 	{
-	  while (ISSPACE (*string1))
+	  while (c_isspace (*string1))
 	    string1++;
-	  while (ISSPACE (*string2))
+	  while (c_isspace (*string2))
 	    string2++;
 
 	  switch (case_pass)
 	  {
 	    case case_sensitive_off:
-	      c1 = TOLOWER ((unsigned char) *string1);
-	      c2 = TOLOWER ((unsigned char) *string2);
+	      c1 = c_tolower (*string1);
+	      c2 = c_tolower (*string2);
 	      break;
 	    case case_sensitive_on:
 	      c1 = *string1;
@@ -3186,7 +3247,7 @@ strcmp_iw_ordered (const char *string1, const char *string2)
 
       if (case_pass == case_sensitive_on)
 	return 0;
-      
+
       /* Otherwise the strings were equal in case insensitive way, make
 	 a more fine grained comparison in a case sensitive way.  */
 
@@ -3251,17 +3312,17 @@ string_to_core_addr (const char *my_string)
 {
   CORE_ADDR addr = 0;
 
-  if (my_string[0] == '0' && TOLOWER (my_string[1]) == 'x')
+  if (my_string[0] == '0' && c_tolower (my_string[1]) == 'x')
     {
       /* Assume that it is in hex.  */
       int i;
 
       for (i = 2; my_string[i] != '\0'; i++)
 	{
-	  if (ISDIGIT (my_string[i]))
+	  if (c_isdigit (my_string[i]))
 	    addr = (my_string[i] - '0') + (addr * 16);
-	  else if (ISXDIGIT (my_string[i]))
-	    addr = (TOLOWER (my_string[i]) - 'a' + 0xa) + (addr * 16);
+	  else if (c_isxdigit (my_string[i]))
+	    addr = (c_tolower (my_string[i]) - 'a' + 0xa) + (addr * 16);
 	  else
 	    error (_("invalid hex \"%s\""), my_string);
 	}
@@ -3273,7 +3334,7 @@ string_to_core_addr (const char *my_string)
 
       for (i = 0; my_string[i] != '\0'; i++)
 	{
-	  if (ISDIGIT (my_string[i]))
+	  if (c_isdigit (my_string[i]))
 	    addr = (my_string[i] - '0') + (addr * 10);
 	  else
 	    error (_("invalid decimal \"%s\""), my_string);
@@ -3294,7 +3355,7 @@ gdb_realpath_check_trailer (const char *input, const char *trailer)
   size_t trail_len = strlen (trailer);
 
   SELF_CHECK (len >= trail_len
-	      && strcmp (result.get () + len - trail_len, trailer) == 0);
+	      && streq (result.get () + len - trail_len, trailer));
 }
 
 static void
@@ -3336,9 +3397,9 @@ gdb_argv_as_array_view_test ()
     gdb::array_view<char *> view = argv.as_array_view ();
 
     SELF_CHECK (view.size () == 3);
-    SELF_CHECK (strcmp (view[0], "une") == 0);
-    SELF_CHECK (strcmp (view[1], "bonne") == 0);
-    SELF_CHECK (strcmp (view[2], "50") == 0);
+    SELF_CHECK (streq (view[0], "une"));
+    SELF_CHECK (streq (view[1], "bonne"));
+    SELF_CHECK (streq (view[2], "50"));
   }
 }
 
@@ -3348,7 +3409,7 @@ gdb_argv_as_array_view_test ()
    argument.  */
 
 std::string
-ldirname (const char *filename)
+gdb_ldirname (const char *filename)
 {
   std::string dirname;
   const char *base = lbasename (filename);
@@ -3388,51 +3449,6 @@ parse_pid_to_attach (const char *args)
     error (_("Illegal process-id: %s."), args);
 
   return pid;
-}
-
-/* Substitute all occurrences of string FROM by string TO in *STRINGP.  *STRINGP
-   must come from xrealloc-compatible allocator and it may be updated.  FROM
-   needs to be delimited by IS_DIR_SEPARATOR or DIRNAME_SEPARATOR (or be
-   located at the start or end of *STRINGP.  */
-
-void
-substitute_path_component (char **stringp, const char *from, const char *to)
-{
-  char *string = *stringp, *s;
-  const size_t from_len = strlen (from);
-  const size_t to_len = strlen (to);
-
-  for (s = string;;)
-    {
-      s = strstr (s, from);
-      if (s == NULL)
-	break;
-
-      if ((s == string || IS_DIR_SEPARATOR (s[-1])
-	   || s[-1] == DIRNAME_SEPARATOR)
-	  && (s[from_len] == '\0' || IS_DIR_SEPARATOR (s[from_len])
-	      || s[from_len] == DIRNAME_SEPARATOR))
-	{
-	  char *string_new;
-
-	  string_new
-	    = (char *) xrealloc (string, (strlen (string) + to_len + 1));
-
-	  /* Relocate the current S pointer.  */
-	  s = s - string + string_new;
-	  string = string_new;
-
-	  /* Replace from by to.  */
-	  memmove (&s[to_len], &s[from_len], strlen (&s[from_len]) + 1);
-	  memcpy (s, to, to_len);
-
-	  s += to_len;
-	}
-      else
-	s++;
-    }
-
-  *stringp = string;
 }
 
 #ifdef HAVE_WAITPID
@@ -3491,8 +3507,8 @@ wait_to_die_with_timeout (pid_t pid, int *status, int timeout)
 
 #endif /* HAVE_WAITPID */
 
-/* Provide fnmatch compatible function for matching of host files.
-   FNM_NOESCAPE must be set in FLAGS.
+/* Provide fnmatch compatible function for FNM_FILE_NAME matching of host files.
+   Both FNM_FILE_NAME and FNM_NOESCAPE must be set in FLAGS.
 
    It handles correctly HAVE_DOS_BASED_FILE_SYSTEM and
    HAVE_CASE_INSENSITIVE_FILE_SYSTEM.  */
@@ -3500,6 +3516,8 @@ wait_to_die_with_timeout (pid_t pid, int *status, int timeout)
 int
 gdb_filename_fnmatch (const char *pattern, const char *string, int flags)
 {
+  gdb_assert ((flags & FNM_FILE_NAME) != 0);
+
   /* It is unclear how '\' escaping vs. directory separator should coexist.  */
   gdb_assert ((flags & FNM_NOESCAPE) != 0);
 
@@ -3611,6 +3629,14 @@ strip_leading_path_elements (const char *path, int n)
 
 /* See utils.h.  */
 
+gdb::unique_xmalloc_ptr<char>
+gdb_rl_tilde_expand (const char *path)
+{
+  return gdb::unique_xmalloc_ptr<char> (tilde_expand (path));
+}
+
+/* See utils.h.  */
+
 void
 copy_bitwise (gdb_byte *dest, ULONGEST dest_offset,
 	      const gdb_byte *source, ULONGEST source_offset,
@@ -3713,11 +3739,110 @@ extract_single_filename_arg (const char *args)
   std::string filename = extract_string_maybe_quoted (&args);
   args = skip_spaces (args);
   if (*args != '\0')
-    error (_("Junk after filename \"%s\": %s"), filename.c_str (), args);
+    error (_("Junk after filename \"%ps\": %s"),
+	   styled_string (file_name_style.style (), filename.c_str ()),
+	   args);
   if (!filename.empty ())
     filename = gdb_tilde_expand (filename.c_str ());
   return filename;
 }
+
+/* See utils.h.  */
+
+unsigned char
+c_unctrl (unsigned char c)
+{
+  if (!c_iscntrl (c))
+    return c;
+
+  unsigned char res = c;
+  if (res >= 0x40)
+    {
+      /* Map 0x7f (^?) to 0x3f (?).  */
+      res -= 0x40;
+    }
+  else
+    {
+      /* Map 0x03 (^C) to 0x43 (C).  */
+      res += 0x40;
+    }
+
+  return res;
+}
+
+/* See utils.h.  */
+
+unsigned char
+c_ctrl (unsigned char c)
+{
+  unsigned char res = c;
+  if (res < 0x40)
+    {
+      /* Map 0x3f (?) to 0x7f (^?).  */
+      res += 0x40;
+    }
+  else
+    {
+      res = c_toupper (res);
+
+      /* Map 0x43 (C) to 0x03 (^C).  */
+      res -= 0x40;
+    }
+
+  return c_iscntrl (res) ? res : c;
+}
+
+#if GDB_SELF_TEST
+static void
+test_c_ctrl_unctrl ()
+{
+  /* Basic check.  */
+  SELF_CHECK (c_ctrl ('C') == 0x03);
+  SELF_CHECK (c_ctrl ('c') == 0x03);
+  SELF_CHECK (c_unctrl (0x03) == 'C');
+
+  /* Function c_iscntrl considers ^? to be a control character, but for some
+     reason, readline's CTRL_CHAR doesn't, so CTRL/UNCTRL don't handle it.
+     Check that c_ctrl/c_unctrl do handle it.  */
+  SELF_CHECK (c_ctrl ('?') == 0x7f);
+  SELF_CHECK (c_unctrl (0x7f) == '?');
+
+  /* Consistency check.
+
+     The ctype.h function iscntrl has an int parameter, and defined behavior
+     for inputs [0, 255] and EOF.  Consequently, iscntrl has undefined
+     behavior when called with a negative signed char argument (with the
+     possible exception of EOF, which is a negative int constant).  That
+     extends to chars on platforms where char == signed char.  Consequently,
+     to write portable code, iscntrl char and signed char arguments need to be
+     cast to unsigned char.
+
+     The c-ctype.h variant c_iscntrl sidesteps this problem by having defined
+     behavior for inputs [-128, 255] and not bothering about EOF.
+
+     The functions c_ctrl/c_unctrl sidestep this issue by using parameter
+     type unsigned char instead of int.
+
+     So, testing input values [0..255] tests all relevant behavior of
+     c_ctrl/c_unctrl.  However, we designed these functions to be compatible
+     with c_iscntrl, so we test for all valid inputs of that function.  */
+  for (int i = -128; i < 256; i++)
+    {
+      unsigned char ch = i;
+      unsigned char unctrl_ch = c_unctrl (ch);
+      if (!c_iscntrl (i))
+	{
+	  SELF_CHECK (unctrl_ch == ch);
+	  continue;
+	}
+
+      SELF_CHECK (!c_iscntrl (unctrl_ch));
+      SELF_CHECK (!c_islower (unctrl_ch));
+      SELF_CHECK (c_ctrl (unctrl_ch) == ch);
+      SELF_CHECK (c_ctrl (c_tolower (unctrl_ch)) == ch);
+    }
+}
+#endif
 
 #if GDB_SELF_TEST
 static void
@@ -3756,9 +3881,7 @@ test_assign_set_return_if_changed ()
 }
 #endif
 
-void _initialize_utils ();
-void
-_initialize_utils ()
+INIT_GDB_FILE (utils)
 {
   add_setshow_uinteger_cmd ("width", class_support, &chars_per_line, _("\
 Set number of characters where GDB should wrap lines of its output."), _("\
@@ -3822,5 +3945,6 @@ When set, debugging messages will be marked with seconds and microseconds."),
   selftests::register_test ("pager", test_pager);
   selftests::register_test ("assign_set_return_if_changed",
 			    test_assign_set_return_if_changed);
+  selftests::register_test ("c_ctrl_unctrl", test_c_ctrl_unctrl);
 #endif
 }

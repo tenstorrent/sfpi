@@ -1,6 +1,6 @@
 /* Exception (throw catch) mechanism, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -116,6 +116,11 @@ enum errors {
   NR_ERRORS
 };
 
+/* The client application must provide this.  It is a printf-like that
+   formats a string for an exception.  */
+std::string vformat_exception (const char *fmt, va_list args)
+  ATTRIBUTE_PRINTF (1, 0);
+
 struct gdb_exception
 {
   gdb_exception ()
@@ -130,12 +135,19 @@ struct gdb_exception
   {
   }
 
+  gdb_exception (enum return_reason r, enum errors e, std::string &&str)
+    : reason (r),
+      error (e),
+      message (std::make_shared<std::string> (std::move (str)))
+  {
+  }
+
   gdb_exception (enum return_reason r, enum errors e,
 		 const char *fmt, va_list ap)
     ATTRIBUTE_PRINTF (4, 0)
     : reason (r),
       error (e),
-      message (std::make_shared<std::string> (string_vprintf (fmt, ap)))
+      message (std::make_shared<std::string> (vformat_exception (fmt, ap)))
   {
   }
 
@@ -179,7 +191,7 @@ struct gdb_exception
 
     return (reason == other.reason
 	    && error == other.error
-	    && strcmp (msg1, msg2) == 0);
+	    && streq (msg1, msg2));
   }
 
   /* Compare two exceptions.  */
@@ -277,10 +289,15 @@ struct gdb_exception_error : public gdb_exception
   {
   }
 
+  gdb_exception_error (enum errors e, std::string &&str)
+    : gdb_exception (RETURN_ERROR, e, std::move (str))
+  {
+  }
+
   explicit gdb_exception_error (gdb_exception &&ex) noexcept
     : gdb_exception (std::move (ex))
   {
-    gdb_assert (ex.reason == RETURN_ERROR);
+    gdb_assert (reason == RETURN_ERROR);
   }
 };
 
@@ -295,7 +312,7 @@ struct gdb_exception_quit : public gdb_exception
   explicit gdb_exception_quit (gdb_exception &&ex) noexcept
     : gdb_exception (std::move (ex))
   {
-    gdb_assert (ex.reason == RETURN_QUIT);
+    gdb_assert (reason == RETURN_QUIT);
   }
 };
 
@@ -310,7 +327,7 @@ struct gdb_exception_forced_quit : public gdb_exception
   explicit gdb_exception_forced_quit (gdb_exception &&ex) noexcept
     : gdb_exception (std::move (ex))
   {
-    gdb_assert (ex.reason == RETURN_FORCED_QUIT);
+    gdb_assert (reason == RETURN_FORCED_QUIT);
   }
 };
 

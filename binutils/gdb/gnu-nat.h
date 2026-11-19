@@ -1,5 +1,5 @@
 /* Common things used by the various *gnu-nat.c files
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    Written by Miles Bader <miles@gnu.ai.mit.edu>
 
@@ -130,7 +130,7 @@ struct gnu_nat_target : public inf_child_target
 					ULONGEST offset, ULONGEST len,
 					ULONGEST *xfered_len) override;
 
-  int find_memory_regions (find_memory_region_ftype func, void *data)
+  bool find_memory_regions (find_memory_region_ftype func)
     override;
   void kill () override;
 

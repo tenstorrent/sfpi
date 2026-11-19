@@ -1,6 +1,6 @@
 /* Native-dependent code for FreeBSD.
 
-   Copyright (C) 2004-2024 Free Software Foundation, Inc.
+   Copyright (C) 2004-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -49,7 +49,7 @@ class fbsd_nat_target : public inf_ptrace_target
 public:
   const char *pid_to_exec_file (int pid) override;
 
-  int find_memory_regions (find_memory_region_ftype func, void *data) override;
+  bool find_memory_regions (find_memory_region_ftype func) override;
 
   bool info_proc (const char *, enum info_proc_what) override;
 
@@ -121,6 +121,10 @@ public:
   bool supports_multi_process () override;
 
   bool supports_disable_randomization () override;
+
+  /* FreeBSD ptrace targets are shareable.  */
+  bool is_shareable () override final
+  { return true; }
 
   /* Methods meant to be overridden by arch-specific target
      classes.  */

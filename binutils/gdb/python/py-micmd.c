@@ -1,6 +1,6 @@
 /* MI Command Set for GDB, the GNU debugger.
 
-   Copyright (C) 2019-2024 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -55,10 +55,8 @@ struct mi_command_py;
 
 /* Representation of a Python gdb.MICommand object.  */
 
-struct micmdpy_object
+struct micmdpy_object : public PyObject
 {
-  PyObject_HEAD
-
   /* The object representing this command in the MI command table.  This
      pointer can be nullptr if the command is not currently installed into
      the MI command table (see gdb.MICommand.installed property).  */
@@ -75,6 +73,8 @@ struct micmdpy_object
      object's name will point back to this string.  */
   char *mi_command_name;
 };
+
+static_assert (gdb::is_python_allocatable_v<micmdpy_object>);
 
 /* The MI command implemented in Python.  */
 
@@ -146,8 +146,7 @@ struct mi_command_py : public mi_command
        than changing the value of mi_command::m_name (which is not accessible
        from here) to point to the name owned by the new object, swap the names
        of the two objects, since we know they are identical strings.  */
-    gdb_assert (strcmp (new_pyobj->mi_command_name,
-			m_pyobj->mi_command_name) == 0);
+    gdb_assert (streq (new_pyobj->mi_command_name, m_pyobj->mi_command_name));
     std::swap (new_pyobj->mi_command_name, m_pyobj->mi_command_name);
 
     /* Take a reference to the new object, drop the reference to the current
@@ -165,8 +164,7 @@ private:
 
 using mi_command_py_up = std::unique_ptr<mi_command_py>;
 
-extern PyTypeObject micmdpy_object_type
-	CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("micmdpy_object");
+extern PyTypeObject micmdpy_object_type;
 
 /* Holds a Python object containing the string 'invoke'.  */
 
@@ -350,7 +348,7 @@ micmdpy_init (PyObject *self, PyObject *args, PyObject *kwargs)
       PyErr_SetString (PyExc_ValueError, _("MI command name is empty."));
       return -1;
     }
-  else if ((name_len < 2) || (name[0] != '-') || !isalnum (name[1]))
+  else if ((name_len < 2) || (name[0] != '-') || !c_isalnum (name[1]))
     {
       PyErr_SetString (PyExc_ValueError,
 		       _("MI command name does not start with '-'"
@@ -361,7 +359,7 @@ micmdpy_init (PyObject *self, PyObject *args, PyObject *kwargs)
     {
       for (int i = 2; i < name_len; i++)
 	{
-	  if (!isalnum (name[i]) && name[i] != '-')
+	  if (!c_isalnum (name[i]) && name[i] != '-')
 	    {
 	      PyErr_Format
 		(PyExc_ValueError,
@@ -388,7 +386,7 @@ micmdpy_init (PyObject *self, PyObject *args, PyObject *kwargs)
 
 	 So, for now at least, we don't allow this.  This doesn't seem like
 	 an excessive restriction.  */
-      if (strcmp (cmd->mi_command_name, name) != 0)
+      if (!streq (cmd->mi_command_name, name))
 	{
 	  PyErr_SetString
 	    (PyExc_ValueError,
@@ -443,7 +441,7 @@ micmdpy_dealloc (PyObject *obj)
 
 /* Python initialization for the MI commands components.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
+static int
 gdbpy_initialize_micommands ()
 {
   micmdpy_object_type.tp_new = PyType_GenericNew;
@@ -494,8 +492,8 @@ micmdpy_get_installed (PyObject *self, void *closure)
   struct micmdpy_object *micmd_obj = (struct micmdpy_object *) self;
 
   if (micmd_obj->mi_command == nullptr)
-    Py_RETURN_FALSE;
-  Py_RETURN_TRUE;
+    return py_false ().release ();
+  return py_true ().release ();
 }
 
 /* Set the gdb.MICommand.installed property.  The property can be set to
@@ -513,7 +511,9 @@ micmdpy_set_installed (PyObject *self, PyObject *newvalue, void *closure)
     {
       PyErr_Format (PyExc_TypeError,
 		    _("gdb.MICommand.installed must be set to a bool, not %s"),
-		    newvalue == Py_None ? "None" : Py_TYPE(newvalue)->tp_name);
+		    (newvalue == Py_None
+		     ? "None"
+		     : gdbpy_py_obj_tp_name (newvalue).c_str ()));
       return -1;
     }
 
@@ -578,9 +578,7 @@ PyTypeObject micmdpy_object_type = {
   0,						   /* tp_alloc */
 };
 
-void _initialize_py_micmd ();
-void
-_initialize_py_micmd ()
+INIT_GDB_FILE (py_micmd)
 {
   add_setshow_boolean_cmd
     ("py-micmd", class_maintenance, &pymicmd_debug,

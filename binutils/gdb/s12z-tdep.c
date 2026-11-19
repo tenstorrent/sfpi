@@ -1,5 +1,5 @@
 /* Target-dependent code for the S12Z, for the GDB.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -456,7 +456,7 @@ static const struct frame_unwind_legacy s12z_frame_unwind (
 
 constexpr gdb_byte s12z_break_insn[] = {0x00};
 
-typedef BP_MANIPULATION (s12z_break_insn) s12z_breakpoint;
+using s12z_breakpoint = BP_MANIPULATION (s12z_break_insn);
 
 struct s12z_gdbarch_tdep : gdbarch_tdep_base
 {
@@ -516,7 +516,7 @@ s12z_print_ccw_info (struct gdbarch *gdbarch,
 	    gdb_putc (ccw_bits[b], file);
 	}
       else
-	gdb_putc (tolower (ccw_bits[b]), file);
+	gdb_putc (c_tolower (ccw_bits[b]), file);
     }
   gdb_putc ('\n', file);
 }
@@ -525,7 +525,7 @@ static void
 s12z_print_registers_info (struct gdbarch *gdbarch,
 			    struct ui_file *file,
 			    const frame_info_ptr &frame,
-			    int regnum, int print_all)
+			    int regnum, bool print_all)
 {
   const int numregs = (gdbarch_num_regs (gdbarch)
 		       + gdbarch_num_pseudo_regs (gdbarch));
@@ -630,7 +630,7 @@ s12z_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_long_long_bit (gdbarch, 32);
   set_gdbarch_ptr_bit (gdbarch, 24);
   set_gdbarch_addr_bit (gdbarch, 24);
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
 
   set_gdbarch_ps_regnum (gdbarch, REG_CCW);
   set_gdbarch_pc_regnum (gdbarch, REG_P);
@@ -662,9 +662,7 @@ s12z_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   return gdbarch;
 }
 
-void _initialize_s12z_tdep ();
-void
-_initialize_s12z_tdep ()
+INIT_GDB_FILE (s12z_tdep)
 {
   gdbarch_register (bfd_arch_s12z, s12z_gdbarch_init, NULL);
 }

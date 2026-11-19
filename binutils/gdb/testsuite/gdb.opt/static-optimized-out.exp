@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Free Software Foundation, Inc.
+# Copyright 2023-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ if { [prepare_for_testing "failed to prepare" $testfile \
 
 set val ""
 gdb_test_multiple "print aaa" "" {
-    -re -wrap "^(?:\\$$decimal = )?(.*)" {
+    -re -wrap "^(?:${::valnum_re} = )?(.*)" {
 	set val $expect_out(1,string)
     }
 }

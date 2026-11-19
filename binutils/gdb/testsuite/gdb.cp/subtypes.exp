@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Free Software Foundation, Inc.
+# Copyright 2018-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,11 @@ include_file subtypes.h
 if {[prepare_for_testing "failed to prepare" $testfile \
 	 [list $srcfile $srcfile2] \
 	 {debug c++ additional_flags=-std=c++11}]} {
-    return -1
+    return
 }
 
 # Xfail for superfluous DW_TAG_lexical_block, gcc PR debug/55541.
-set have_xfail [expr [test_compiler_info gcc-*] && [gcc_major_version] < 5]
+set have_xfail [expr {[test_compiler_info gcc-*] && [gcc_major_version] < 5}]
 
 gdb_test "ptype Outer::Inner::InnerInner" \
     "type = struct Outer::Inner::InnerInner.*"
@@ -70,14 +70,14 @@ foreach t { int char } {
     }
 }
 
-gdb_breakpoint "Outer::Inner::doit" message
+gdb_breakpoint "Outer::Inner::doit" -message
 
 foreach s { Foo Bar Baz } {
-    gdb_breakpoint "main::${s}::doit" message
+    gdb_breakpoint "main::${s}::doit" -message
 }
 
 foreach t { int char } {
     foreach s { Foo Bar Baz } {
-	gdb_breakpoint "foobar<$t>(int)::${s}::doit" message
+	gdb_breakpoint "foobar<$t>(int)::${s}::doit" -message
     }
 }

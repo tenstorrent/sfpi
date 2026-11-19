@@ -1,6 +1,6 @@
 /* libthread_db assisted debugging support, generic parts.
 
-   Copyright (C) 1999-2024 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -43,7 +43,6 @@
 #include "auto-load.h"
 #include "cli/cli-utils.h"
 #include <signal.h>
-#include <ctype.h>
 #include "nat/linux-namespaces.h"
 #include <algorithm>
 #include "gdbsupport/pathstuff.h"
@@ -430,7 +429,7 @@ thread_from_lwp (thread_info *stopped, ptid_t ptid)
 
 /* See linux-nat.h.  */
 
-int
+bool
 thread_db_notice_clone (ptid_t parent, ptid_t child)
 {
   struct thread_db_info *info;
@@ -438,7 +437,7 @@ thread_db_notice_clone (ptid_t parent, ptid_t child)
   info = get_thread_db_info (linux_target, child.pid ());
 
   if (info == NULL)
-    return 0;
+    return false;
 
   thread_info *stopped = linux_target->find_thread (parent);
 
@@ -447,7 +446,7 @@ thread_db_notice_clone (ptid_t parent, ptid_t child)
   /* If we do not know about the main thread's pthread info yet, this
      would be a good time to find it.  */
   thread_from_lwp (stopped, parent);
-  return 1;
+  return true;
 }
 
 static void *
@@ -461,10 +460,10 @@ verbose_dlsym (void *handle, const char *name)
 }
 
 /* Verify inferior's '\0'-terminated symbol VER_SYMBOL starts with "%d.%d" and
-   return 1 if this version is lower (and not equal) to
-   VER_MAJOR_MIN.VER_MINOR_MIN.  Return 0 in all other cases.  */
+   return true if this version is lower (and not equal) to
+   VER_MAJOR_MIN.VER_MINOR_MIN.  Return false in all other cases.  */
 
-static int
+static bool
 inferior_has_bug (const char *ver_symbol, int ver_major_min, int ver_minor_min)
 {
   CORE_ADDR version_addr;
@@ -473,7 +472,7 @@ inferior_has_bug (const char *ver_symbol, int ver_major_min, int ver_minor_min)
   bound_minimal_symbol version_msym
     = lookup_minimal_symbol (current_program_space, ver_symbol);
   if (version_msym.minsym == NULL)
-    return 0;
+    return false;
 
   version_addr = version_msym.value_address ();
   gdb::unique_xmalloc_ptr<char> version
@@ -494,10 +493,10 @@ inferior_has_bug (const char *ver_symbol, int ver_major_min, int ver_minor_min)
 /* Similar as thread_db_find_new_threads_1, but try to silently ignore errors
    if appropriate.
 
-   Return 1 if the caller should abort libthread_db initialization.  Return 0
-   otherwise.  */
+   Return true if the caller should abort libthread_db initialization.
+   Return false otherwise.  */
 
-static int
+static bool
 thread_db_find_new_threads_silently (thread_info *stopped)
 {
 
@@ -517,27 +516,27 @@ thread_db_find_new_threads_silently (thread_info *stopped)
 	 where calls to td_thr_get_info fail with TD_ERR for statically linked
 	 executables if td_thr_get_info is called before glibc has initialized
 	 itself.
-	 
-	 If the nptl bug is NOT present in the inferior and still thread_db
-	 reports an error return 1.  It means the inferior has corrupted thread
-	 list and GDB should fall back only to LWPs.
 
-	 If the nptl bug is present in the inferior return 0 to silently ignore
-	 such errors, and let gdb enumerate threads again later.  In such case
-	 GDB cannot properly display LWPs if the inferior thread list is
-	 corrupted.  For core files it does not apply, no 'later enumeration'
-	 is possible.  */
+	 If the nptl bug is NOT present in the inferior and still thread_db
+	 reports an error return true.  It means the inferior has corrupted
+	 thread list and GDB should fall back only to LWPs.
+
+	 If the nptl bug is present in the inferior return false to
+	 silently ignore such errors, and let gdb enumerate threads again
+	 later.  In such case GDB cannot properly display LWPs if the
+	 inferior thread list is corrupted.  For core files it does not
+	 apply, no 'later enumeration' is possible.  */
 
       if (!target_has_execution () || !inferior_has_bug ("nptl_version", 2, 7))
 	{
 	  exception_fprintf (gdb_stderr, except,
 			     _("Warning: couldn't activate thread debugging "
 			       "using libthread_db: "));
-	  return 1;
+	  return true;
 	}
     }
 
-  return 0;
+  return false;
 }
 
 /* Lookup a library in which given symbol resides.
@@ -778,9 +777,6 @@ check_thread_db (struct thread_db_info *info, bool log_progress)
     }
   catch (const gdb_exception_error &except)
     {
-      if (warning_pre_print)
-	gdb_puts (warning_pre_print, gdb_stderr);
-
       exception_fprintf (gdb_stderr, except,
 			 _("libthread_db integrity checks failed: "));
 
@@ -922,13 +918,13 @@ try_thread_db_load_1 (struct thread_db_info *info)
 
       linux_stop_and_wait_all_lwps ();
 
-      for (const lwp_info *lp : all_lwps ())
-	if (lp->ptid.pid () == pid)
-	  thread_from_lwp (curr_thread, lp->ptid);
+      for (const lwp_info &lp : all_lwps ())
+	if (lp.ptid.pid () == pid)
+	  thread_from_lwp (curr_thread, lp.ptid);
 
       linux_unstop_all_lwps ();
     }
-  else if (thread_db_find_new_threads_silently (inferior_thread ()) != 0)
+  else if (thread_db_find_new_threads_silently (inferior_thread ()))
     {
       /* Even if libthread_db initializes, if the thread list is
 	 corrupted, we'd not manage to list any threads.  Better reject this
@@ -1078,17 +1074,17 @@ try_thread_db_load_from_pdir (const char *subdir)
   if (!auto_load_thread_db)
     return false;
 
-  for (objfile *obj : current_program_space->objfiles ())
-    if (libpthread_objfile_p (obj))
+  for (objfile &obj : current_program_space->objfiles ())
+    if (libpthread_objfile_p (&obj))
       {
-	if (try_thread_db_load_from_pdir_1 (obj, subdir))
+	if (try_thread_db_load_from_pdir_1 (&obj, subdir))
 	  return true;
 
 	/* We may have found the separate-debug-info version of
 	   libpthread, and it may live in a directory without a matching
 	   libthread_db.  */
-	if (obj->separate_debug_objfile_backlink != NULL)
-	  return try_thread_db_load_from_pdir_1 (obj->separate_debug_objfile_backlink,
+	if (obj.separate_debug_objfile_backlink != NULL)
+	  return try_thread_db_load_from_pdir_1 (obj.separate_debug_objfile_backlink,
 						 subdir);
 
 	return false;
@@ -1158,7 +1154,7 @@ thread_db_load_search (void)
 	  if (rc)
 	    break;
 	}
-      else if (strcmp (this_dir, "$sdir") == 0)
+      else if (streq (this_dir, "$sdir"))
 	{
 	  if (try_thread_db_load_from_sdir ())
 	    {
@@ -1187,8 +1183,8 @@ thread_db_load_search (void)
 static bool
 has_libpthread (void)
 {
-  for (objfile *obj : current_program_space->objfiles ())
-    if (libpthread_objfile_p (obj))
+  for (objfile &obj : current_program_space->objfiles ())
+    if (libpthread_objfile_p (&obj))
       return true;
 
   return false;
@@ -1219,7 +1215,8 @@ thread_db_load (void)
     return false;
 
   /* Don't attempt to use thread_db for remote targets.  */
-  if (!(target_can_run () || current_program_space->core_bfd () != nullptr))
+  if (!(target_can_run ()
+	|| get_inferior_core_bfd (current_inferior ()) != nullptr))
     return false;
 
   if (thread_db_load_search ())
@@ -1272,7 +1269,7 @@ check_for_thread_db (void)
 /* This function is called via the new_objfile observer.  */
 
 static void
-thread_db_new_objfile (struct objfile *objfile)
+thread_db_new_objfile (struct objfile &objfile)
 {
   /* This observer must always be called with inferior_ptid set
      correctly.  */
@@ -1282,7 +1279,7 @@ thread_db_new_objfile (struct objfile *objfile)
 	 the time gdb::observers::new_objfile.notify is called for the library itself.
 	 Static executables have their separate debug info loaded already
 	 before the inferior has started.  */
-      objfile->separate_debug_objfile_backlink == NULL
+      objfile.separate_debug_objfile_backlink == NULL
       /* Only check for thread_db if we loaded libpthread,
 	 or if this is the main symbol file.
 	 We need to check OBJF_MAINLINE to handle the case of debugging
@@ -1291,8 +1288,8 @@ thread_db_new_objfile (struct objfile *objfile)
 	 For dynamically linked executables, libpthread can be near the end
 	 of the list of shared libraries to load, and in an app of several
 	 thousand shared libraries, this can otherwise be painful.  */
-      && ((objfile->flags & OBJF_MAINLINE) != 0
-	  || libpthread_objfile_p (objfile)))
+      && ((objfile.flags & OBJF_MAINLINE) != 0
+	  || libpthread_objfile_p (&objfile)))
     check_for_thread_db ();
 }
 
@@ -1309,10 +1306,10 @@ check_pid_namespace_match (inferior *inf)
 	 libthread_db.  */
       if (!linux_ns_same (inf->pid, LINUX_NS_PID))
 	{
-	  warning (_ ("Target and debugger are in different PID "
-		      "namespaces; thread lists and other data are "
-		      "likely unreliable.  "
-		      "Connect to gdbserver inside the container."));
+	  warning (_("Target and debugger are in different PID "
+		     "namespaces; thread lists and other data are "
+		     "likely unreliable.  "
+		     "Connect to gdbserver inside the container."));
 	}
     }
 }
@@ -1364,7 +1361,7 @@ record_thread (struct thread_db_info *info,
   /* Add the thread to GDB's thread list.  If we already know about a
      thread with this PTID, but it's marked exited, then the kernel
      reused the tid of an old thread.  */
-  if (tp == NULL || tp->state == THREAD_EXITED)
+  if (tp == NULL || tp->state () == THREAD_EXITED)
     tp = add_thread_with_info (info->process_target, ptid,
 			       private_thread_info_up (priv));
   else
@@ -1628,7 +1625,7 @@ thread_db_target::update_thread_list ()
 	continue;
 
       thread_info *thread = any_live_thread_of_inferior (inf);
-      if (thread == NULL || thread->executing ())
+      if (thread == NULL || thread->internal_state () == THREAD_INT_RUNNING)
 	continue;
 
       /* It's best to avoid td_ta_thr_iter if possible.  That walks
@@ -1710,12 +1707,12 @@ thread_db_target::thread_handle_to_thread_info (const gdb_byte *thread_handle,
     error (_("Thread handle size mismatch: %d vs %zu (from libthread_db)"),
 	   handle_len, sizeof (handle_tid));
 
-  for (thread_info *tp : inf->non_exited_threads ())
+  for (thread_info &tp : inf->non_exited_threads ())
     {
-      thread_db_thread_info *priv = get_thread_db_thread_info (tp);
+      thread_db_thread_info *priv = get_thread_db_thread_info (&tp);
 
       if (priv != NULL && handle_tid == priv->tid)
-	return tp;
+	return &tp;
     }
 
   return NULL;
@@ -1908,7 +1905,7 @@ info_auto_load_libthread_db (const char *args, int from_tty)
       for (this_pid_len = 0; pid != 0; pid /= 10)
 	this_pid_len++;
 
-      if (i == 0 || strcmp (array[i - 1]->filename, array[i]->filename) != 0)
+      if (i == 0 || !streq (array[i - 1]->filename, array[i]->filename))
 	{
 	  unique_filenames++;
 	  max_filename_len = std::max (max_filename_len,
@@ -1946,8 +1943,7 @@ info_auto_load_libthread_db (const char *args, int from_tty)
 			     file_name_style.style ());
 
 	std::string pids;
-	while (i < array.size () && strcmp (info->filename,
-					    array[i]->filename) == 0)
+	while (i < array.size () && streq (info->filename, array[i]->filename))
 	  {
 	    if (!pids.empty ())
 	      pids += ", ";
@@ -1984,9 +1980,7 @@ maintenance_check_libthread_db (const char *args, int from_tty)
   check_thread_db (info, true);
 }
 
-void _initialize_thread_db ();
-void
-_initialize_thread_db ()
+INIT_GDB_FILE (thread_db)
 {
   /* Defer loading of libthread_db.so until inferior is running.
      This allows gdb to load correct libthread_db for a given

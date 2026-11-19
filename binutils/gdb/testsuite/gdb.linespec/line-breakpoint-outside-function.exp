@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,13 +26,20 @@ if {[build_executable "build shlib" $shlib_path $srcfile {debug shlib}]} {
     return
 }
 
-set opts [list debug shlib_load additional_flags=-DTHE_LIB_PATH="${shlib_path}"]
+set remote_shlib_path [gdb_download_shlib $shlib_path]
+
+set opts {}
+lappend opts debug
+lappend opts shlib_load
+lappend opts \
+    additional_flags=-DTHE_LIB_PATH=[quote_for_host ${remote_shlib_path}]
+
 if {[build_executable "failed to prepare" ${testfile} ${srcfile} $opts]} {
     return
 }
 
 proc do_test {} {
-    clean_restart $::binfile
+    clean_restart $::testfile
 
     # To make things easier, just so we don't have to deal with the question.
     gdb_test_no_output "set breakpoint pending on"

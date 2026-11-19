@@ -1,6 +1,6 @@
 /* tc-wasm32.c -- Assembler code for the wasm32 target.
 
-   Copyright (C) 2017-2025 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -178,7 +178,7 @@ valueT
 md_section_align (asection * seg, valueT addr)
 {
   int align = bfd_section_alignment (seg);
-  return ((addr + (1 << align) - 1) & -(1 << align));
+  return (addr + ((valueT) 1 << align) - 1) & -((valueT) 1 << align);
 }
 
 /* Apply a fixup, return TRUE if done (and no relocation is
@@ -204,7 +204,7 @@ void
 md_apply_fix (fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)
 {
   char *buf = fixP->fx_where + fixP->fx_frag->fr_literal;
-  long val = (long) *valP;
+  valueT val = *valP;
 
   if (fixP->fx_pcrel)
     {
@@ -229,7 +229,7 @@ md_apply_fix (fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)
 static inline char *
 skip_space (char *s)
 {
-  while (*s == ' ' || *s == '\t')
+  while (is_whitespace (*s))
     ++s;
   return s;
 }
@@ -746,7 +746,7 @@ md_assemble (char *str)
   if (!op[0])
     as_bad (_("can't find opcode "));
 
-  opcode = (struct wasm32_opcode_s *) str_hash_find (wasm32_hash, op);
+  opcode = str_hash_find (wasm32_hash, op);
 
   if (opcode == NULL)
     {

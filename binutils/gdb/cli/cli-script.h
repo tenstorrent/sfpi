@@ -1,5 +1,5 @@
 /* Header file for GDB CLI command implementation library.
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 struct ui_file;
 struct cmd_list_element;
 
-/* * Control types for commands.  */
+/* Control types for commands.  */
 
 enum misc_command_type
 {
@@ -65,12 +65,12 @@ struct command_lines_deleter
 };
 
 /* A reference-counted struct command_line.  */
-typedef std::shared_ptr<command_line> counted_command_line;
+using counted_command_line = std::shared_ptr<command_line>;
 
 /* A unique_ptr specialization for command_line.  */
-typedef std::unique_ptr<command_line, command_lines_deleter> command_line_up;
+using command_line_up = std::unique_ptr<command_line, command_lines_deleter>;
 
-/* * Structure for saved commands lines (for breakpoints, defined
+/* Structure for saved commands lines (for breakpoints, defined
    commands, etc).  */
 
 struct command_line
@@ -97,7 +97,7 @@ struct command_line
       compile;
     }
   control_u;
-  /* * For composite commands, the nested lists of commands.  For
+  /* For composite commands, the nested lists of commands.  For
      example, for "if" command this will contain the then branch and
      the else branch, if that is available.  */
   counted_command_line body_list_0;
@@ -131,11 +131,6 @@ extern counted_command_line read_command_lines_1
 
 extern void script_from_file (FILE *stream, const char *file);
 
-extern void show_user_1 (struct cmd_list_element *c,
-			 const char *prefix,
-			 const char *name,
-			 struct ui_file *stream);
-
 /* Execute the commands in CMDLINES.  */
 
 extern void execute_control_commands (struct command_line *cmdlines,
@@ -143,10 +138,12 @@ extern void execute_control_commands (struct command_line *cmdlines,
 
 /* Run execute_control_commands for COMMANDS.  Capture its output into
    the returned string, do not display it to the screen.  BATCH_FLAG
-   will be temporarily set to true.  */
+   will be temporarily set to true.  When TERM_OUT is true the output is
+   collected with terminal behavior (e.g. with styling).  When TERM_OUT is
+   false raw output will be collected (e.g. no styling).  */
 
 extern std::string execute_control_commands_to_string
-    (struct command_line *commands, int from_tty);
+    (struct command_line *commands, int from_tty, bool term_out);
 
 /* Exported to gdb/breakpoint.c */
 
@@ -181,5 +178,15 @@ extern void print_command_trace (const char *cmd, ...)
 /* Exported to event-top.c */
 
 extern void reset_command_nest_depth (void);
+
+/* Return true if A and B are identical.  Some commands carry around a
+   'void *' compilation context, in this case this function doesn't try to
+   validate if the context is actually the same or not, and will just
+   return false indicating the commands have changed.  That is, a return
+   value of true is a guarantee that the commands are equal, a return
+   value of false means the commands are possibly different (and in most
+   cases are different).  */
+
+extern bool commands_equal (const command_line *a, const command_line *b);
 
 #endif /* GDB_CLI_CLI_SCRIPT_H */

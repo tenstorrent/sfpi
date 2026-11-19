@@ -1,5 +1,5 @@
 /* RISC-V-specific support for NN-bit ELF.
-   Copyright (C) 2011-2025 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    Contributed by Andrew Waterman (andrew@sifive.com).
    Based on TILE-Gx and MIPS targets.
@@ -99,7 +99,7 @@
   ((H) != NULL \
    && (H)->dynindx != -1 \
    && (!bfd_link_pic (INFO) \
-       || !SYMBOLIC_BIND ((INFO), (H)) \
+       || !(bfd_link_pie ((INFO)) || SYMBOLIC_BIND ((INFO), (H))) \
        || !(H)->def_regular))
 
 /* True if this is actually a static link, or it is a -Bsymbolic link
@@ -176,6 +176,11 @@ struct _bfd_riscv_elf_obj_tdata
 
   /* tls_type for each local got entry.  */
   char *local_got_tls_type;
+
+  /* All GNU_PROPERTY_RISCV_FEATURE_1_AND properties. */
+  uint32_t gnu_and_prop;
+  /* PLT type.  */
+  riscv_plt_type plt_type;
 };
 
 #define _bfd_riscv_elf_tdata(abfd) \
@@ -187,11 +192,6 @@ struct _bfd_riscv_elf_obj_tdata
 #define _bfd_riscv_elf_tls_type(abfd, h, symndx)		\
   (*((h) != NULL ? &riscv_elf_hash_entry (h)->tls_type		\
      : &_bfd_riscv_elf_local_got_tls_type (abfd) [symndx]))
-
-#define is_riscv_elf(bfd)				\
-  (bfd_get_flavour (bfd) == bfd_target_elf_flavour	\
-   && elf_tdata (bfd) != NULL				\
-   && elf_object_id (bfd) == RISCV_ELF_DATA)
 
 static bool
 elfNN_riscv_mkobject (bfd *abfd)
@@ -232,6 +232,15 @@ struct riscv_elf_link_hash_table
 
   /* Relocations for variant CC symbols may be present.  */
   int variant_cc;
+
+  /* The number of bytes in the PLT header and enties.  */
+  bfd_size_type plt_header_size;
+  bfd_size_type plt_entry_size;
+
+  /* Functions to make PLT header and entries.  */
+  bool (*make_plt_header) (bfd *output_bfd, struct riscv_elf_link_hash_table *htab);
+  bool (*make_plt_entry) (bfd *output_bfd, asection *got, bfd_vma got_offset,
+			  asection *plt, bfd_vma plt_offset);
 };
 
 /* Instruction access functions. */
@@ -252,6 +261,12 @@ struct riscv_elf_link_hash_table
     && elf_hash_table_id (elf_hash_table (p)) == RISCV_ELF_DATA)	\
    ? (struct riscv_elf_link_hash_table *) (p)->hash : NULL)
 
+/* Forward declaration PLT related functions.  */
+static bool
+riscv_make_plt_header (bfd *, struct riscv_elf_link_hash_table *);
+static bool
+riscv_make_plt_entry (bfd *, asection *, bfd_vma, asection *, bfd_vma);
+
 void
 riscv_elfNN_set_options (struct bfd_link_info *link_info,
 			 struct riscv_elf_params *params)
@@ -271,7 +286,7 @@ riscv_info_to_howto_rela (bfd *abfd,
 static void
 riscv_elf_append_rela (bfd *abfd, asection *s, Elf_Internal_Rela *rel)
 {
-  const struct elf_backend_data *bed;
+  elf_backend_data *bed;
   bfd_byte *loc;
 
   bed = get_elf_backend_data (abfd);
@@ -297,6 +312,12 @@ riscv_is_insn_reloc (const reloc_howto_type *howto)
 #define PLT_ENTRY_INSNS 4
 #define PLT_HEADER_SIZE (PLT_HEADER_INSNS * 4)
 #define PLT_ENTRY_SIZE (PLT_ENTRY_INSNS * 4)
+
+#define PLT_ZICFILP_UNLABELED_HEADER_INSNS 12
+#define PLT_ZICFILP_UNLABELED_ENTRY_INSNS 4
+#define PLT_ZICFILP_UNLABELED_HEADER_SIZE (PLT_ZICFILP_UNLABELED_HEADER_INSNS * 4)
+#define PLT_ZICFILP_UNLABELED_ENTRY_SIZE (PLT_ZICFILP_UNLABELED_ENTRY_INSNS * 4)
+
 #define GOT_ENTRY_SIZE RISCV_ELF_WORD_BYTES
 #define TLS_GD_GOT_ENTRY_SIZE (RISCV_ELF_WORD_BYTES * 2)
 #define TLS_IE_GOT_ENTRY_SIZE RISCV_ELF_WORD_BYTES
@@ -314,12 +335,42 @@ riscv_is_insn_reloc (const reloc_howto_type *howto)
 # define MATCH_LREG MATCH_LD
 #endif
 
+
+/* Check whether the compact PLT is used in this object.  Tools need this
+   to dump the correct PLT header contents.  */
+
+static long
+elfNN_riscv_get_synthetic_symtab (bfd *abfd,
+				  long symcount,
+				  asymbol **syms,
+				  long dynsymcount,
+				  asymbol **dynsyms,
+				  asymbol **ret)
+{
+  /* Check Zicfilp PLT.  */
+  elf_property *prop;
+  prop = _bfd_elf_get_property (abfd, GNU_PROPERTY_RISCV_FEATURE_1_AND, 4);
+  if (prop)
+    {
+      if (prop->u.number & GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_UNLABELED)
+	 _bfd_riscv_elf_tdata (abfd)->plt_type |= PLT_ZICFILP_UNLABELED;
+    }
+
+  return _bfd_elf_get_synthetic_symtab (abfd, symcount, syms,
+					dynsymcount, dynsyms, ret);
+}
+
 /* Generate a PLT header.  */
 
 static bool
-riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
-		       uint32_t *entry)
+riscv_make_plt_header (bfd *output_bfd, struct riscv_elf_link_hash_table *htab)
 {
+  asection *splt = htab->elf.splt;
+  bfd_vma addr = sec_addr (splt);
+
+  asection *sgotplt = htab->elf.sgotplt;
+  bfd_vma gotplt_addr = sec_addr (sgotplt);
+
   bfd_vma gotplt_offset_high = RISCV_PCREL_HIGH_PART (gotplt_addr, addr);
   bfd_vma gotplt_offset_low = RISCV_PCREL_LOW_PART (gotplt_addr, addr);
 
@@ -340,6 +391,7 @@ riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
      l[w|d] t0, PTRSIZE(t0)	     # link map
      jr	    t3  */
 
+  uint32_t entry[PLT_HEADER_INSNS];
   entry[0] = RISCV_UTYPE (AUIPC, X_T2, gotplt_offset_high);
   entry[1] = RISCV_RTYPE (SUB, X_T1, X_T1, X_T3);
   entry[2] = RISCV_ITYPE (LREG, X_T3, X_T2, gotplt_offset_low);
@@ -349,15 +401,78 @@ riscv_make_plt_header (bfd *output_bfd, bfd_vma gotplt_addr, bfd_vma addr,
   entry[6] = RISCV_ITYPE (LREG, X_T0, X_T0, RISCV_ELF_WORD_BYTES);
   entry[7] = RISCV_ITYPE (JALR, 0, X_T3, 0);
 
+  for (int i = 0; i < PLT_HEADER_INSNS; i++)
+    bfd_putl32 (entry[i], splt->contents + 4 * i);
+
+  return true;
+}
+
+static bool
+riscv_make_plt_zicfilp_unlabeled_header (bfd *output_bfd,
+					 struct riscv_elf_link_hash_table *htab)
+{
+  /*
+      lpad   0  # disable label checking
+      auipc  t2, %hi(.got.plt)          # Rewrite this to using
+      sub    t1, t1, t3                 # shifted .got.plt offset + hdr size + 16
+      l[w|d] t3, %lo(1b)(t2)            # _dl_runtime_resolve
+      addi   t1, t1, -(hdr size + 12)   # shifted .got.plt offset
+      addi   t0, t2, %pcrel_lo(1b)      # &.got.plt
+      srli   t1, t1, log2(16/PTRSIZE)   # .got.plt offset
+      l[w|d] t0, PTRSIZE(t0)            # link map
+      jr     t3
+      nop
+      nop
+      nop  */
+
+  /* RVE has no t3 register, so this won't work, and is not supported.  */
+  if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
+    {
+      _bfd_error_handler (_("%pB: warning: RVE PLT generation not supported"),
+			  output_bfd);
+      return false;
+    }
+
+  asection *gotplt = htab->elf.sgotplt;
+  bfd_vma gotplt_addr = sec_addr (gotplt);
+
+  asection *splt = htab->elf.splt;
+  bfd_vma plt_header_addr = sec_addr (splt);
+
+  bfd_vma auipc_addr = plt_header_addr + 4;
+  /* Add INSN_BYTES to skip the lpad instruction.  */
+  bfd_vma gotplt_offset_high = RISCV_PCREL_HIGH_PART (gotplt_addr, auipc_addr);
+  bfd_vma gotplt_offset_low = RISCV_PCREL_LOW_PART (gotplt_addr, auipc_addr);
+
+  uint32_t header[PLT_ZICFILP_UNLABELED_HEADER_INSNS];
+  header[0] = RISCV_UTYPE (LPAD, X_ZERO, 0);
+  header[1] = RISCV_UTYPE (AUIPC, X_T2, gotplt_offset_high);
+  header[2] = RISCV_RTYPE (SUB, X_T1, X_T1, X_T3);
+  header[3] = RISCV_ITYPE (LREG, X_T3, X_T2, gotplt_offset_low);
+  header[4] = RISCV_ITYPE (ADDI, X_T1, X_T1,
+			   (uint32_t) -(PLT_ZICFILP_UNLABELED_HEADER_SIZE + 16));
+  header[5] = RISCV_ITYPE (ADDI, X_T0, X_T2, gotplt_offset_low);
+  header[6] = RISCV_ITYPE (SRLI, X_T1, X_T1, 4 - RISCV_ELF_LOG_WORD_BYTES);
+  header[7] = RISCV_ITYPE (LREG, X_T0, X_T0, RISCV_ELF_WORD_BYTES);
+  header[8] = RISCV_ITYPE (JALR, 0, X_T3, 0);
+  header[9] = RISCV_NOP;
+  header[10] = RISCV_NOP;
+  header[11] = RISCV_NOP;
+
+  for (int i = 0; i < PLT_ZICFILP_UNLABELED_HEADER_INSNS; i++)
+    bfd_putl32 (header[i], splt->contents + 4 * i);
+
   return true;
 }
 
 /* Generate a PLT entry.  */
 
 static bool
-riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma addr,
-		      uint32_t *entry)
+riscv_make_plt_entry (bfd *output_bfd, asection *gotsec, bfd_vma got_offset,
+		      asection *pltsec, bfd_vma plt_offset)
 {
+  bfd_vma got = sec_addr (gotsec) + got_offset;
+  bfd_vma addr = sec_addr (pltsec) + plt_offset;
   /* RVE has no t3 register, so this won't work, and is not supported.  */
   if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
     {
@@ -371,10 +486,49 @@ riscv_make_plt_entry (bfd *output_bfd, bfd_vma got, bfd_vma addr,
      jalr   t1, t3
      nop  */
 
+  uint32_t entry[PLT_ENTRY_INSNS];
   entry[0] = RISCV_UTYPE (AUIPC, X_T3, RISCV_PCREL_HIGH_PART (got, addr));
   entry[1] = RISCV_ITYPE (LREG,  X_T3, X_T3, RISCV_PCREL_LOW_PART (got, addr));
   entry[2] = RISCV_ITYPE (JALR, X_T1, X_T3, 0);
   entry[3] = RISCV_NOP;
+
+  bfd_byte *loc = pltsec->contents + plt_offset;
+  for (int i = 0; i < PLT_ENTRY_INSNS; i++)
+    bfd_putl32 (entry[i], loc + 4 * i);
+
+  return true;
+}
+
+static bool
+riscv_make_plt_zicfilp_unlabeled_entry (bfd *output_bfd, asection *got,
+					bfd_vma got_offset, asection *plt,
+					bfd_vma plt_offset)
+{
+  /*    lpad    0
+    1:  auipc   t3, %pcrel_hi(function@.got.plt)
+	l[w|d]  t3, %pcrel_lo(1b)(t3)
+	jalr    t1, t3 */
+
+  /* RVE has no t3 register, so this won't work, and is not supported.  */
+  if (elf_elfheader (output_bfd)->e_flags & EF_RISCV_RVE)
+    {
+      _bfd_error_handler (_("%pB: warning: RVE PLT generation not supported"),
+			  output_bfd);
+      return false;
+    }
+
+  bfd_vma got_entry_addr = sec_addr(got) + got_offset;
+  bfd_vma plt_entry_addr = sec_addr(plt) + plt_offset;
+  bfd_vma auipc_addr = plt_entry_addr + 4;
+  uint32_t entry[PLT_ZICFILP_UNLABELED_ENTRY_INSNS];
+  entry[0] = RISCV_UTYPE (LPAD, X_ZERO, 0);
+  entry[1] = RISCV_UTYPE (AUIPC, X_T3, RISCV_PCREL_HIGH_PART (got_entry_addr, auipc_addr));
+  entry[2] = RISCV_ITYPE (LREG,  X_T3, X_T3, RISCV_PCREL_LOW_PART (got_entry_addr, auipc_addr));
+  entry[3] = RISCV_ITYPE (JALR, X_T1, X_T3, 0);
+
+  bfd_byte *loc = plt->contents + plt_offset;
+  for (int i = 0; i < PLT_ZICFILP_UNLABELED_ENTRY_INSNS; i++)
+    bfd_putl32 (entry[i], loc + 4 * i);
 
   return true;
 }
@@ -489,6 +643,38 @@ riscv_elf_link_hash_table_free (bfd *obfd)
   _bfd_elf_link_hash_table_free (obfd);
 }
 
+/* Set up the PLT generation stubs in the hash table.  */
+
+static void
+setup_plt_values (struct bfd *output_bfd,
+		  struct riscv_elf_link_hash_table *htab,
+		  unsigned plt_type)
+{
+  switch (plt_type)
+    {
+    case PLT_NORMAL:
+      htab->plt_header_size = PLT_HEADER_SIZE;
+      htab->plt_entry_size = PLT_ENTRY_SIZE;
+      htab->make_plt_header = riscv_make_plt_header;
+      htab->make_plt_entry = riscv_make_plt_entry;
+      break;
+
+    case PLT_ZICFILP_UNLABELED:
+      htab->plt_header_size = PLT_ZICFILP_UNLABELED_HEADER_SIZE;
+      htab->plt_entry_size = PLT_ZICFILP_UNLABELED_ENTRY_SIZE;
+      htab->make_plt_header = riscv_make_plt_zicfilp_unlabeled_header;
+      htab->make_plt_entry = riscv_make_plt_zicfilp_unlabeled_entry;
+      break;
+
+    default:
+      _bfd_error_handler (_("%pB: error: unsupported PLT type: %u"),
+			  output_bfd,
+			  plt_type);
+      bfd_set_error (bfd_error_bad_value);
+      break;
+    }
+}
+
 /* Create a RISC-V ELF linker hash table.  */
 
 static struct bfd_link_hash_table *
@@ -510,6 +696,8 @@ riscv_elf_link_hash_table_create (bfd *abfd)
 
   ret->max_alignment = (bfd_vma) -1;
   ret->max_alignment_for_gp = (bfd_vma) -1;
+
+  setup_plt_values (abfd, ret, PLT_NORMAL);
 
   /* Create hash table for local ifunc.  */
   ret->loc_hash_table = htab_try_create (1024,
@@ -535,7 +723,7 @@ riscv_elf_create_got_section (bfd *abfd, struct bfd_link_info *info)
   flagword flags;
   asection *s, *s_got;
   struct elf_link_hash_entry *h;
-  const struct elf_backend_data *bed = get_elf_backend_data (abfd);
+  elf_backend_data *bed = get_elf_backend_data (abfd);
   struct elf_link_hash_table *htab = elf_hash_table (info);
 
   /* This function may be called more than once.  */
@@ -682,7 +870,7 @@ riscv_elf_record_got_reference (bfd *abfd, struct bfd_link_info *info,
 				struct elf_link_hash_entry *h, long symndx)
 {
   struct riscv_elf_link_hash_table *htab = riscv_elf_hash_table (info);
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (abfd);
 
   if (htab->elf.sgot == NULL)
     {
@@ -745,7 +933,7 @@ riscv_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
     return true;
 
   htab = riscv_elf_hash_table (info);
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   if (htab->elf.dynobj == NULL)
@@ -1248,23 +1436,22 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
       /* Make sure this symbol is output as a dynamic symbol.
 	 Undefined weak syms won't yet be marked as dynamic.  */
       if (h->dynindx == -1
-	  && !h->forced_local)
-	{
-	  if (! bfd_elf_link_record_dynamic_symbol (info, h))
-	    return false;
-	}
+	  && !h->forced_local
+	  && h->root.type == bfd_link_hash_undefweak
+	  && !bfd_elf_link_record_dynamic_symbol (info, h))
+	return false;
 
       if (WILL_CALL_FINISH_DYNAMIC_SYMBOL (1, bfd_link_pic (info), h))
 	{
 	  asection *s = htab->elf.splt;
 
 	  if (s->size == 0)
-	    s->size = PLT_HEADER_SIZE;
+	    s->size = htab->plt_header_size;
 
 	  h->plt.offset = s->size;
 
 	  /* Make room for this entry.  */
-	  s->size += PLT_ENTRY_SIZE;
+	  s->size += htab->plt_entry_size;
 
 	  /* We also need to make an entry in the .got.plt section.  */
 	  htab->elf.sgotplt->size += GOT_ENTRY_SIZE;
@@ -1304,21 +1491,20 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
   if (h->got.refcount > 0)
     {
       asection *s;
-      bool dyn;
+      bool dyn = htab->elf.dynamic_sections_created;
       int tls_type = riscv_elf_hash_entry (h)->tls_type;
 
       /* Make sure this symbol is output as a dynamic symbol.
 	 Undefined weak syms won't yet be marked as dynamic.  */
-      if (h->dynindx == -1
-	  && !h->forced_local)
-	{
-	  if (! bfd_elf_link_record_dynamic_symbol (info, h))
-	    return false;
-	}
+      if (dyn
+	  && h->dynindx == -1
+	  && !h->forced_local
+	  && h->root.type == bfd_link_hash_undefweak
+	  && !bfd_elf_link_record_dynamic_symbol (info, h))
+	return false;
 
       s = htab->elf.sgot;
       h->got.offset = s->size;
-      dyn = htab->elf.dynamic_sections_created;
       if (tls_type & (GOT_TLS_GD | GOT_TLS_IE | GOT_TLSDESC))
 	{
 	  int indx = 0;
@@ -1352,7 +1538,10 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
       else
 	{
 	  s->size += GOT_ENTRY_SIZE;
-	  if (WILL_CALL_FINISH_DYNAMIC_SYMBOL (dyn, bfd_link_pic (info), h)
+	  if ((ELF_ST_VISIBILITY (h->other) == STV_DEFAULT
+	       || h->root.type != bfd_link_hash_undefweak)
+	      && (bfd_link_pic (info)
+		  || WILL_CALL_FINISH_DYNAMIC_SYMBOL (dyn, 0, h))
 	      && ! UNDEFWEAK_NO_DYNAMIC_RELOC (info, h))
 	    htab->elf.srelgot->size += sizeof (ElfNN_External_Rela);
 	}
@@ -1398,11 +1587,9 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
 	  /* Make sure undefined weak symbols are output as a dynamic
 	     symbol in PIEs.  */
 	  else if (h->dynindx == -1
-		   && !h->forced_local)
-	    {
-	      if (! bfd_elf_link_record_dynamic_symbol (info, h))
-		return false;
-	    }
+		   && !h->forced_local
+		   && !bfd_elf_link_record_dynamic_symbol (info, h))
+	    return false;
 	}
     }
   else
@@ -1421,11 +1608,10 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
 	  /* Make sure this symbol is output as a dynamic symbol.
 	     Undefined weak syms won't yet be marked as dynamic.  */
 	  if (h->dynindx == -1
-	      && !h->forced_local)
-	    {
-	      if (! bfd_elf_link_record_dynamic_symbol (info, h))
-		return false;
-	    }
+	      && !h->forced_local
+	      && h->root.type == bfd_link_hash_undefweak
+	      && !bfd_elf_link_record_dynamic_symbol (info, h))
+	    return false;
 
 	  /* If that succeeded, we know we'll be keeping all the
 	     relocs.  */
@@ -1441,6 +1627,8 @@ allocate_dynrelocs (struct elf_link_hash_entry *h, void *inf)
   /* Finally, allocate space.  */
   for (p = h->dyn_relocs; p != NULL; p = p->next)
     {
+      if (discarded_section (p->sec))
+	continue;
       asection *sreloc = elf_section_data (p->sec)->sreloc;
       sreloc->size += p->count * sizeof (ElfNN_External_Rela);
     }
@@ -1456,6 +1644,7 @@ allocate_ifunc_dynrelocs (struct elf_link_hash_entry *h,
 			  void *inf)
 {
   struct bfd_link_info *info;
+  struct riscv_elf_link_hash_table *htab;
 
   if (h->root.type == bfd_link_hash_indirect)
     return true;
@@ -1464,6 +1653,7 @@ allocate_ifunc_dynrelocs (struct elf_link_hash_entry *h,
     h = (struct elf_link_hash_entry *) h->root.u.i.link;
 
   info = (struct bfd_link_info *) inf;
+  htab = riscv_elf_hash_table (info);
 
   /* Since STT_GNU_IFUNC symbol must go through PLT, we handle it
      here if it is defined and referenced in a non-shared object.  */
@@ -1471,8 +1661,8 @@ allocate_ifunc_dynrelocs (struct elf_link_hash_entry *h,
       && h->def_regular)
     return _bfd_elf_allocate_ifunc_dyn_relocs (info, h,
 					       &h->dyn_relocs,
-					       PLT_ENTRY_SIZE,
-					       PLT_HEADER_SIZE,
+					       htab->plt_entry_size,
+					       htab->plt_header_size,
 					       GOT_ENTRY_SIZE,
 					       true);
   return true;
@@ -1498,7 +1688,7 @@ allocate_local_ifunc_dynrelocs (void **slot, void *inf)
 }
 
 static bool
-riscv_elf_late_size_sections (bfd *output_bfd, struct bfd_link_info *info)
+riscv_elf_late_size_sections (struct bfd_link_info *info)
 {
   struct riscv_elf_link_hash_table *htab;
   bfd *dynobj;
@@ -1516,10 +1706,11 @@ riscv_elf_late_size_sections (bfd *output_bfd, struct bfd_link_info *info)
       /* Set the contents of the .interp section to the interpreter.  */
       if (bfd_link_executable (info) && !info->nointerp)
 	{
-	  s = bfd_get_linker_section (dynobj, ".interp");
+	  s = elf_hash_table (info)->interp;
 	  BFD_ASSERT (s != NULL);
 	  s->size = strlen (ELFNN_DYNAMIC_INTERPRETER) + 1;
 	  s->contents = (unsigned char *) ELFNN_DYNAMIC_INTERPRETER;
+	  s->alloced = 1;
 	}
     }
 
@@ -1641,7 +1832,7 @@ riscv_elf_late_size_sections (bfd *output_bfd, struct bfd_link_info *info)
 	      || htab->elf.splt->size == 0)
 	  && (htab->elf.sgot == NULL
 	      || (htab->elf.sgot->size
-		  == get_elf_backend_data (output_bfd)->got_header_size)))
+		  == get_elf_backend_data (info->output_bfd)->got_header_size)))
 	htab->elf.sgotplt->size = 0;
     }
 
@@ -1704,12 +1895,13 @@ riscv_elf_late_size_sections (bfd *output_bfd, struct bfd_link_info *info)
       s->contents = (bfd_byte *) bfd_zalloc (dynobj, s->size);
       if (s->contents == NULL)
 	return false;
+      s->alloced = 1;
     }
 
   /* Add dynamic entries.  */
   if (elf_hash_table (info)->dynamic_sections_created)
     {
-      if (!_bfd_elf_add_dynamic_tags (output_bfd, info, true))
+      if (!_bfd_elf_add_dynamic_tags (info, true))
 	return false;
 
       if (htab->variant_cc
@@ -1872,20 +2064,22 @@ perform_relocation (const reloc_howto_type *howto,
     /* R_RISCV_SET_ULEB128 won't go into here.  */
     case R_RISCV_SUB_ULEB128:
       {
-	unsigned int len = 0;
-	_bfd_read_unsigned_leb128 (input_bfd, contents + rel->r_offset, &len);
+	bfd_byte *p = contents + rel->r_offset;
+	bfd_byte *endp = contents + input_section->size;
+	_bfd_safe_read_leb128 (input_bfd, &p, false, endp);
 
 	/* Clean the contents value to zero (0x80), but keep the original
 	   length.  */
-	bfd_byte *p = contents + rel->r_offset;
-	bfd_byte *endp = p + len - 1;
+	endp = p - 1;
+	p = contents + rel->r_offset;
+	size_t len = endp + 1 - p;
 	memset (p, 0x80, len - 1);
-	*(endp) = 0;
+	*endp = 0;
 
-	/* Make sure the length of the new uleb128 value within the
+	/* Make sure the length of the new uleb128 value fits within the
 	   original (available) length.  */
-	unsigned int new_len = 0;
-	unsigned int val_t = value;
+	size_t new_len = 0;
+	bfd_vma val_t = value;
 	do
 	  {
 	    new_len++;
@@ -1936,6 +2130,7 @@ perform_relocation (const reloc_howto_type *howto,
       break;
 
     case R_RISCV_DELETE:
+    case R_RISCV_DELETE_AND_RELAX:
       return bfd_reloc_ok;
 
     default:
@@ -2220,8 +2415,7 @@ riscv_resolve_pcrel_lo_relocs (riscv_pcrel_relocs *p)
    accordingly.  */
 
 static int
-riscv_elf_relocate_section (bfd *output_bfd,
-			    struct bfd_link_info *info,
+riscv_elf_relocate_section (struct bfd_link_info *info,
 			    bfd *input_bfd,
 			    asection *input_section,
 			    bfd_byte *contents,
@@ -2261,6 +2455,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
       reloc_howto_type *howto = riscv_elf_rtype_to_howto (input_bfd, r_type);
       const char *msg = NULL;
       bool resolved_to_zero;
+      bool via_plt = false;
+      bool relative_got = false;
 
       if (howto == NULL)
 	continue;
@@ -2275,7 +2471,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  /* Relocate against local STT_GNU_IFUNC symbol.  */
 	  if (!bfd_link_relocatable (info)
@@ -2312,7 +2509,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_RISCV_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -2387,7 +2585,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 		    /* Need a dynamic relocation to get the real function
 		       address.  */
-		    outrel.r_offset = _bfd_elf_section_offset (output_bfd,
+		    outrel.r_offset = _bfd_elf_section_offset (info->output_bfd,
 							       info,
 							       input_section,
 							       rel->r_offset);
@@ -2424,23 +2622,23 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		       2. .rela.got section in dynamic executable.
 		       3. .rela.iplt section in static executable.  */
 		    if (bfd_link_pic (info))
-		      riscv_elf_append_rela (output_bfd, htab->elf.irelifunc,
-					     &outrel);
+		      riscv_elf_append_rela (info->output_bfd,
+					     htab->elf.irelifunc, &outrel);
 		    else if (htab->elf.splt != NULL)
-		      riscv_elf_append_rela (output_bfd, htab->elf.srelgot,
-					     &outrel);
+		      riscv_elf_append_rela (info->output_bfd,
+					     htab->elf.srelgot, &outrel);
 		    else
 		      {
 			/* Do not use riscv_elf_append_rela to add dynamic
 			   relocs into .rela.iplt, since it may cause the
 			   overwrite problems.  This is same as what we did
 			   in the riscv_elf_finish_dynamic_symbol.  */
-			const struct elf_backend_data *bed =
-				get_elf_backend_data (output_bfd);
+			elf_backend_data *bed
+			  = get_elf_backend_data (info->output_bfd);
 			bfd_vma iplt_idx = htab->last_iplt_index--;
 			bfd_byte *loc = htab->elf.irelplt->contents
 					+ iplt_idx * sizeof (ElfNN_External_Rela);
-			bed->s->swap_reloca_out (output_bfd, &outrel, loc);
+			bed->s->swap_reloca_out (info->output_bfd, &outrel, loc);
 		      }
 
 		    /* If this reloc is against an external symbol, we
@@ -2469,14 +2667,14 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 		    if (htab->elf.splt != NULL)
 		      {
-			plt_idx = (h->plt.offset - PLT_HEADER_SIZE)
-				  / PLT_ENTRY_SIZE;
+			plt_idx = (h->plt.offset - htab->plt_header_size)
+				  / htab->plt_entry_size;
 			off = GOTPLT_HEADER_SIZE + (plt_idx * GOT_ENTRY_SIZE);
 			base_got = htab->elf.sgotplt;
 		      }
 		    else
 		      {
-			plt_idx = h->plt.offset / PLT_ENTRY_SIZE;
+			plt_idx = h->plt.offset / htab->plt_entry_size;
 			off = plt_idx * GOT_ENTRY_SIZE;
 			base_got = htab->elf.igotplt;
 		      }
@@ -2498,7 +2696,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 			  off &= ~1;
 			else
 			  {
-			    bfd_put_NN (output_bfd, relocation,
+			    bfd_put_NN (info->output_bfd, relocation,
 					base_got->contents + off);
 			    /* Note that this is harmless for the case,
 			       as -1 | 1 still is -1.  */
@@ -2563,6 +2761,12 @@ riscv_elf_relocate_section (bfd *output_bfd,
       resolved_to_zero = (h != NULL
 			  && UNDEFWEAK_NO_DYNAMIC_RELOC (info, h));
 
+      /* Refer to the PLT entry.  This check has to match the check in
+	 _bfd_riscv_relax_section.  */
+      via_plt = (htab->elf.splt != NULL
+		 && h != NULL
+		 && h->plt.offset != MINUS_ONE);
+
       switch (r_type)
 	{
 	case R_RISCV_NONE:
@@ -2587,6 +2791,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	case R_RISCV_SET32:
 	case R_RISCV_32_PCREL:
 	case R_RISCV_DELETE:
+	case R_RISCV_DELETE_AND_RELAX:
 	  /* These require no special handling beyond perform_relocation.  */
 	  break;
 
@@ -2668,7 +2873,17 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		    off &= ~1;
 		  else
 		    {
-		      bfd_put_NN (output_bfd, relocation,
+		      /* If a symbol is not dynamic and is not undefined weak,
+			 bind it locally and generate a RELATIVE relocation
+			 under PIC mode.  */
+		      if (h->dynindx == -1
+			  && !h->forced_local
+			  && h->root.type != bfd_link_hash_undefweak
+			  && bfd_link_pic (info)
+			  && !bfd_is_abs_section(h->root.u.def.section))
+			relative_got = true;
+
+		      bfd_put_NN (info->output_bfd, relocation,
 				  htab->elf.sgot->contents + off);
 		      h->got.offset |= 1;
 		    }
@@ -2691,27 +2906,27 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	      else
 		{
 		  if (bfd_link_pic (info))
-		    {
-		      asection *s;
-		      Elf_Internal_Rela outrel;
+		    relative_got = true;
 
-		      /* We need to generate a R_RISCV_RELATIVE reloc
-			 for the dynamic linker.  */
-		      s = htab->elf.srelgot;
-		      BFD_ASSERT (s != NULL);
-
-		      outrel.r_offset = sec_addr (htab->elf.sgot) + off;
-		      outrel.r_info =
-			ELFNN_R_INFO (0, R_RISCV_RELATIVE);
-		      outrel.r_addend = relocation;
-		      relocation = 0;
-		      riscv_elf_append_rela (output_bfd, s, &outrel);
-		    }
-
-		  bfd_put_NN (output_bfd, relocation,
+		  bfd_put_NN (info->output_bfd, relocation,
 			      htab->elf.sgot->contents + off);
 		  local_got_offsets[r_symndx] |= 1;
 		}
+	    }
+
+	  /* We need to generate a R_RISCV_RELATIVE relocation later in the
+	     riscv_elf_finish_dynamic_symbol if h->dynindx != -1;  Otherwise,
+	     generate a R_RISCV_RELATIVE relocation here now.  */
+	  if (relative_got)
+	    {
+	      asection *s = htab->elf.srelgot;
+	      BFD_ASSERT (s != NULL);
+
+	      Elf_Internal_Rela outrel;
+	      outrel.r_offset = sec_addr (htab->elf.sgot) + off;
+	      outrel.r_info = ELFNN_R_INFO (0, R_RISCV_RELATIVE);
+	      outrel.r_addend = relocation;
+	      riscv_elf_append_rela (info->output_bfd, s, &outrel);
 	    }
 
 	  if (rel->r_addend != 0)
@@ -2774,8 +2989,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	case R_RISCV_CALL_PLT:
 	  /* Handle a call to an undefined weak function.  This won't be
 	     relaxed, so we have to handle it here.  */
-	  if (h != NULL && h->root.type == bfd_link_hash_undefweak
-	      && (!bfd_link_pic (info) || h->plt.offset == MINUS_ONE))
+	  if (h != NULL && h->root.type == bfd_link_hash_undefweak && !via_plt)
 	    {
 	      /* We can use x0 as the base register.  */
 	      bfd_vma insn = bfd_getl32 (contents + rel->r_offset + 4);
@@ -2789,42 +3003,40 @@ riscv_elf_relocate_section (bfd *output_bfd,
 
 	case R_RISCV_JAL:
 	case R_RISCV_RVC_JUMP:
-	  if (bfd_link_pic (info) && h != NULL)
+	  if (via_plt)
 	    {
-	      if (h->plt.offset != MINUS_ONE)
-		{
-		  /* Refer to the PLT entry.  This check has to match the
-		     check in _bfd_riscv_relax_section.  */
-		  relocation = sec_addr (htab->elf.splt) + h->plt.offset;
-		  unresolved_reloc = false;
-		}
-	      else if (!SYMBOL_REFERENCES_LOCAL (info, h)
-		       && (input_section->flags & SEC_ALLOC) != 0
-		       && (input_section->flags & SEC_READONLY) != 0
-		       && ELF_ST_VISIBILITY (h->other) == STV_DEFAULT)
-		{
-		  /* PR 28509, when generating the shared object, these
-		     referenced symbols may bind externally, which means
-		     they will be exported to the dynamic symbol table,
-		     and are preemptible by default.  These symbols cannot
-		     be referenced by the non-pic relocations, like
-		     R_RISCV_JAL and R_RISCV_RVC_JUMP relocations.
+	      relocation = sec_addr (htab->elf.splt) + h->plt.offset;
+	      unresolved_reloc = false;
+	    }
+	  else if (bfd_link_pic (info)
+		   && h != NULL
+		   && h->plt.offset == MINUS_ONE
+		   && !SYMBOL_REFERENCES_LOCAL (info, h)
+		   && (input_section->flags & SEC_ALLOC) != 0
+		   && (input_section->flags & SEC_READONLY) != 0
+		   && ELF_ST_VISIBILITY (h->other) == STV_DEFAULT)
+	    {
+	      /* PR 28509, when generating the shared object, these
+		 referenced symbols may bind externally, which means
+		 they will be exported to the dynamic symbol table,
+		 and are preemptible by default.  These symbols cannot
+		 be referenced by the non-pic relocations, like
+		 R_RISCV_JAL and R_RISCV_RVC_JUMP relocations.
 
-		     However, consider that linker may relax the R_RISCV_CALL
-		     relocations to R_RISCV_JAL or R_RISCV_RVC_JUMP, if
-		     these relocations are relocated to the plt entries,
-		     then we won't report error for them.
+		 However, consider that linker may relax the R_RISCV_CALL
+		 relocations to R_RISCV_JAL or R_RISCV_RVC_JUMP, if
+		 these relocations are relocated to the plt entries,
+		 then we won't report error for them.
 
-		     Perhaps we also need the similar checks for the
-		     R_RISCV_BRANCH and R_RISCV_RVC_BRANCH relocations.  */
-		  msg = bfd_asprintf (_("%%X%%P: relocation %s against `%s'"
-					" which may bind externally"
-					" can not be used"
-					" when making a shared object;"
-					" recompile with -fPIC\n"),
-				      howto->name, h->root.root.string);
-		  r = bfd_reloc_notsupported;
-		}
+		 Perhaps we also need the similar checks for the
+		 R_RISCV_BRANCH and R_RISCV_RVC_BRANCH relocations.  */
+	      msg = bfd_asprintf (_("%%X%%P: relocation %s against `%s'"
+				    " which may bind externally"
+				    " can not be used"
+				    " when making a shared object;"
+				    " recompile with -fPIC\n"),
+				  howto->name, h->root.root.string);
+	      r = bfd_reloc_notsupported;
 	    }
 	  break;
 
@@ -2953,8 +3165,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		 time.  */
 
 	      outrel.r_offset =
-		_bfd_elf_section_offset (output_bfd, info, input_section,
-					 rel->r_offset);
+		_bfd_elf_section_offset (info->output_bfd, info,
+					 input_section, rel->r_offset);
 	      bool skip = false;
 	      bool relocate = false;
 	      if (outrel.r_offset == (bfd_vma) -1)
@@ -2991,7 +3203,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		}
 
 	      sreloc = elf_section_data (input_section)->sreloc;
-	      riscv_elf_append_rela (output_bfd, sreloc, &outrel);
+	      riscv_elf_append_rela (info->output_bfd, sreloc, &outrel);
 	      if (!relocate)
 		continue;
 	    }
@@ -3053,25 +3265,27 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		      outrel.r_offset = sec_addr (htab->elf.sgot) + off;
 		      outrel.r_addend = 0;
 		      outrel.r_info = ELFNN_R_INFO (indx, R_RISCV_TLS_DTPMODNN);
-		      bfd_put_NN (output_bfd, 0,
+		      bfd_put_NN (info->output_bfd, 0,
 				  htab->elf.sgot->contents + off);
-		      riscv_elf_append_rela (output_bfd, htab->elf.srelgot, &outrel);
+		      riscv_elf_append_rela (info->output_bfd,
+					     htab->elf.srelgot, &outrel);
 		      if (indx == 0)
 			{
 			  BFD_ASSERT (! unresolved_reloc);
-			  bfd_put_NN (output_bfd,
+			  bfd_put_NN (info->output_bfd,
 				      dtpoff (info, relocation),
 				      (htab->elf.sgot->contents
 				       + off + RISCV_ELF_WORD_BYTES));
 			}
 		      else
 			{
-			  bfd_put_NN (output_bfd, 0,
+			  bfd_put_NN (info->output_bfd, 0,
 				      (htab->elf.sgot->contents
 				       + off + RISCV_ELF_WORD_BYTES));
 			  outrel.r_info = ELFNN_R_INFO (indx, R_RISCV_TLS_DTPRELNN);
 			  outrel.r_offset += RISCV_ELF_WORD_BYTES;
-			  riscv_elf_append_rela (output_bfd, htab->elf.srelgot, &outrel);
+			  riscv_elf_append_rela (info->output_bfd,
+						 htab->elf.srelgot, &outrel);
 			}
 		    }
 		  else
@@ -3081,9 +3295,9 @@ riscv_elf_relocate_section (bfd *output_bfd,
 			 static link or an executable link with the
 			 symbol binding locally.  Mark it as belonging
 			 to module 1, the executable.  */
-		      bfd_put_NN (output_bfd, 1,
+		      bfd_put_NN (info->output_bfd, 1,
 				  htab->elf.sgot->contents + off);
-		      bfd_put_NN (output_bfd,
+		      bfd_put_NN (info->output_bfd,
 				  dtpoff (info, relocation),
 				  (htab->elf.sgot->contents
 				   + off + RISCV_ELF_WORD_BYTES));
@@ -3094,7 +3308,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		{
 		  if (need_relocs)
 		    {
-		      bfd_put_NN (output_bfd, 0,
+		      bfd_put_NN (info->output_bfd, 0,
 				  htab->elf.sgot->contents + off + ie_off);
 		      outrel.r_offset = sec_addr (htab->elf.sgot)
 					+ off + ie_off;
@@ -3102,11 +3316,12 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		      if (indx == 0)
 			outrel.r_addend = tpoff (info, relocation);
 		      outrel.r_info = ELFNN_R_INFO (indx, R_RISCV_TLS_TPRELNN);
-		      riscv_elf_append_rela (output_bfd, htab->elf.srelgot, &outrel);
+		      riscv_elf_append_rela (info->output_bfd,
+					     htab->elf.srelgot, &outrel);
 		    }
 		  else
 		    {
-		      bfd_put_NN (output_bfd, tpoff (info, relocation),
+		      bfd_put_NN (info->output_bfd, tpoff (info, relocation),
 				  htab->elf.sgot->contents + off + ie_off);
 		    }
 		}
@@ -3115,7 +3330,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		{
 		  /* TLSDESC is always handled by the dynamic linker and always need
 		   * a relocation.  */
-		  bfd_put_NN (output_bfd, 0,
+		  bfd_put_NN (info->output_bfd, 0,
 			      htab->elf.sgot->contents + off + desc_off);
 		  outrel.r_offset = sec_addr (htab->elf.sgot)
 				    + off + desc_off;
@@ -3123,7 +3338,8 @@ riscv_elf_relocate_section (bfd *output_bfd,
 		  if (indx == 0)
 		    outrel.r_addend = tlsdescoff (info, relocation);
 		  outrel.r_info = ELFNN_R_INFO (indx, R_RISCV_TLSDESC);
-		  riscv_elf_append_rela (output_bfd, htab->elf.srelgot, &outrel);
+		  riscv_elf_append_rela (info->output_bfd,
+					 htab->elf.srelgot, &outrel);
 		}
 	    }
 
@@ -3150,7 +3366,7 @@ riscv_elf_relocate_section (bfd *output_bfd,
       if (unresolved_reloc
 	  && !((input_section->flags & SEC_DEBUGGING) != 0
 	       && h->def_dynamic)
-	  && _bfd_elf_section_offset (output_bfd, info, input_section,
+	  && _bfd_elf_section_offset (info->output_bfd, info, input_section,
 				      rel->r_offset) != (bfd_vma) -1)
 	{
 	  msg = bfd_asprintf (_("%%X%%P: unresolvable %s relocation against "
@@ -3229,20 +3445,18 @@ riscv_elf_relocate_section (bfd *output_bfd,
    dynamic sections here.  */
 
 static bool
-riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
-				 struct bfd_link_info *info,
+riscv_elf_finish_dynamic_symbol (struct bfd_link_info *info,
 				 struct elf_link_hash_entry *h,
 				 Elf_Internal_Sym *sym)
 {
   struct riscv_elf_link_hash_table *htab = riscv_elf_hash_table (info);
-  const struct elf_backend_data *bed = get_elf_backend_data (output_bfd);
+  elf_backend_data *bed = get_elf_backend_data (info->output_bfd);
 
   if (h->plt.offset != (bfd_vma) -1)
     {
       /* We've decided to create a PLT entry for this symbol.  */
       bfd_byte *loc;
-      bfd_vma i, header_address, plt_idx, got_offset, got_address;
-      uint32_t plt_entry[PLT_ENTRY_INSNS];
+      bfd_vma plt_idx, got_offset, got_address;
       Elf_Internal_Rela rela;
       asection *plt, *gotplt, *relplt;
 
@@ -3272,40 +3486,33 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	  || relplt == NULL)
 	abort ();
 
-      /* Calculate the address of the PLT header.  */
-      header_address = sec_addr (plt);
-
       /* Calculate the index of the entry and the offset of .got.plt entry.
 	 For static executables, we don't reserve anything.  */
       if (plt == htab->elf.splt)
 	{
-	  plt_idx = (h->plt.offset - PLT_HEADER_SIZE) / PLT_ENTRY_SIZE;
+	  plt_idx = (h->plt.offset - htab->plt_header_size)
+		     / htab->plt_entry_size;
 	  got_offset = GOTPLT_HEADER_SIZE + (plt_idx * GOT_ENTRY_SIZE);
 	}
       else
 	{
-	  plt_idx = h->plt.offset / PLT_ENTRY_SIZE;
+	  plt_idx = h->plt.offset / htab->plt_entry_size;
 	  got_offset = plt_idx * GOT_ENTRY_SIZE;
 	}
 
       /* Calculate the address of the .got.plt entry.  */
       got_address = sec_addr (gotplt) + got_offset;
 
-      /* Find out where the .plt entry should go.  */
-      loc = plt->contents + h->plt.offset;
 
       /* Fill in the PLT entry itself.  */
-      if (! riscv_make_plt_entry (output_bfd, got_address,
-				  header_address + h->plt.offset,
-				  plt_entry))
+      if (! htab->make_plt_entry (info->output_bfd, gotplt, got_offset,
+				  plt, h->plt.offset))
 	return false;
 
-      for (i = 0; i < PLT_ENTRY_INSNS; i++)
-	bfd_putl32 (plt_entry[i], loc + 4*i);
 
       /* Fill in the initial value of the .got.plt entry.  */
       loc = gotplt->contents + (got_address - sec_addr (gotplt));
-      bfd_put_NN (output_bfd, sec_addr (plt), loc);
+      bfd_put_NN (info->output_bfd, sec_addr (plt), loc);
 
       rela.r_offset = got_address;
 
@@ -3335,7 +3542,7 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	}
 
       loc = relplt->contents + plt_idx * sizeof (ElfNN_External_Rela);
-      bed->s->swap_reloca_out (output_bfd, &rela, loc);
+      bed->s->swap_reloca_out (info->output_bfd, &rela, loc);
 
       if (!h->def_regular)
 	{
@@ -3401,19 +3608,13 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	      else
 		{
 		  /* Generate R_RISCV_NN.  */
-		  BFD_ASSERT ((h->got.offset & 1) == 0);
-		  BFD_ASSERT (h->dynindx != -1);
-		  rela.r_info = ELFNN_R_INFO (h->dynindx, R_RISCV_NN);
-		  rela.r_addend = 0;
+		  goto do_reloc_nn;
 		}
 	    }
 	  else if (bfd_link_pic (info))
 	    {
 	      /* Generate R_RISCV_NN.  */
-	      BFD_ASSERT ((h->got.offset & 1) == 0);
-	      BFD_ASSERT (h->dynindx != -1);
-	      rela.r_info = ELFNN_R_INFO (h->dynindx, R_RISCV_NN);
-	      rela.r_addend = 0;
+	      goto do_reloc_nn;
 	    }
 	  else
 	    {
@@ -3426,9 +3627,9 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 		 contains the real function address if we need pointer
 		 equality.  We load the GOT entry with the PLT entry.  */
 	      plt = htab->elf.splt ? htab->elf.splt : htab->elf.iplt;
-	      bfd_put_NN (output_bfd, (plt->output_section->vma
-				       + plt->output_offset
-				       + h->plt.offset),
+	      bfd_put_NN (info->output_bfd, (plt->output_section->vma
+					     + plt->output_offset
+					     + h->plt.offset),
 			  htab->elf.sgot->contents
 			  + (h->got.offset & ~(bfd_vma) 1));
 	      return true;
@@ -3451,17 +3652,17 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	}
       else
 	{
+  do_reloc_nn:
 	  BFD_ASSERT ((h->got.offset & 1) == 0);
 	  BFD_ASSERT (h->dynindx != -1);
 	  rela.r_info = ELFNN_R_INFO (h->dynindx, R_RISCV_NN);
 	  rela.r_addend = 0;
+	  bfd_put_NN (info->output_bfd, 0,
+		      sgot->contents + (h->got.offset & ~(bfd_vma) 1));
 	}
 
-      bfd_put_NN (output_bfd, 0,
-		  sgot->contents + (h->got.offset & ~(bfd_vma) 1));
-
       if (use_elf_append_rela)
-	riscv_elf_append_rela (output_bfd, srela, &rela);
+	riscv_elf_append_rela (info->output_bfd, srela, &rela);
       else
 	{
 	  /* Use riscv_elf_append_rela to add the dynamic relocs into
@@ -3475,7 +3676,7 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	  bfd_vma iplt_idx = htab->last_iplt_index--;
 	  bfd_byte *loc = srela->contents
 			  + iplt_idx * sizeof (ElfNN_External_Rela);
-	  bed->s->swap_reloca_out (output_bfd, &rela, loc);
+	  bed->s->swap_reloca_out (info->output_bfd, &rela, loc);
 	}
     }
 
@@ -3494,7 +3695,7 @@ riscv_elf_finish_dynamic_symbol (bfd *output_bfd,
 	s = htab->elf.sreldynrelro;
       else
 	s = htab->elf.srelbss;
-      riscv_elf_append_rela (output_bfd, s, &rela);
+      riscv_elf_append_rela (info->output_bfd, s, &rela);
     }
 
   /* Mark some specially defined symbols as absolute.  */
@@ -3514,17 +3715,17 @@ riscv_elf_finish_local_dynamic_symbol (void **slot, void *inf)
   struct elf_link_hash_entry *h = (struct elf_link_hash_entry *) *slot;
   struct bfd_link_info *info = (struct bfd_link_info *) inf;
 
-  return riscv_elf_finish_dynamic_symbol (info->output_bfd, info, h, NULL);
+  return riscv_elf_finish_dynamic_symbol (info, h, NULL);
 }
 
 /* Finish up the dynamic sections.  */
 
 static bool
-riscv_finish_dyn (bfd *output_bfd, struct bfd_link_info *info,
+riscv_finish_dyn (struct bfd_link_info *info,
 		  bfd *dynobj, asection *sdyn)
 {
   struct riscv_elf_link_hash_table *htab = riscv_elf_hash_table (info);
-  const struct elf_backend_data *bed = get_elf_backend_data (output_bfd);
+  elf_backend_data *bed = get_elf_backend_data (info->output_bfd);
   size_t dynsize = bed->s->sizeof_dyn;
   bfd_byte *dyncon, *dynconend;
 
@@ -3554,14 +3755,14 @@ riscv_finish_dyn (bfd *output_bfd, struct bfd_link_info *info,
 	  continue;
 	}
 
-      bed->s->swap_dyn_out (output_bfd, &dyn, dyncon);
+      bed->s->swap_dyn_out (info->output_bfd, &dyn, dyncon);
     }
   return true;
 }
 
 static bool
-riscv_elf_finish_dynamic_sections (bfd *output_bfd,
-				   struct bfd_link_info *info)
+riscv_elf_finish_dynamic_sections (struct bfd_link_info *info,
+				   bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   bfd *dynobj;
   asection *sdyn;
@@ -3581,7 +3782,7 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
       splt = htab->elf.splt;
       BFD_ASSERT (splt != NULL && sdyn != NULL);
 
-      ret = riscv_finish_dyn (output_bfd, info, dynobj, sdyn);
+      ret = riscv_finish_dyn (info, dynobj, sdyn);
 
       if (!ret)
 	return ret;
@@ -3589,19 +3790,12 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
       /* Fill in the head and tail entries in the procedure linkage table.  */
       if (splt->size > 0)
 	{
-	  int i;
-	  uint32_t plt_header[PLT_HEADER_INSNS];
-	  ret = riscv_make_plt_header (output_bfd,
-				       sec_addr (htab->elf.sgotplt),
-				       sec_addr (splt), plt_header);
+	  ret = htab->make_plt_header (info->output_bfd, htab);
 	  if (!ret)
 	    return ret;
 
-	  for (i = 0; i < PLT_HEADER_INSNS; i++)
-	    bfd_putl32 (plt_header[i], splt->contents + 4*i);
-
 	  elf_section_data (splt->output_section)->this_hdr.sh_entsize
-	    = PLT_ENTRY_SIZE;
+	    = htab->plt_entry_size;
 	}
     }
 
@@ -3618,8 +3812,8 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
 
       /* Write the first two entries in .got.plt, needed for the dynamic
 	 linker.  */
-      bfd_put_NN (output_bfd, (bfd_vma) -1, htab->elf.sgotplt->contents);
-      bfd_put_NN (output_bfd, (bfd_vma) 0,
+      bfd_put_NN (info->output_bfd, -1, htab->elf.sgotplt->contents);
+      bfd_put_NN (info->output_bfd, 0,
 		  htab->elf.sgotplt->contents + GOT_ENTRY_SIZE);
 
       elf_section_data (output_section)->this_hdr.sh_entsize = GOT_ENTRY_SIZE;
@@ -3634,7 +3828,7 @@ riscv_elf_finish_dynamic_sections (bfd *output_bfd,
 	  /* Set the first entry in the global offset table to the address of
 	     the dynamic section.  */
 	  bfd_vma val = sdyn ? sec_addr (sdyn) : 0;
-	  bfd_put_NN (output_bfd, val, htab->elf.sgot->contents);
+	  bfd_put_NN (info->output_bfd, val, htab->elf.sgot->contents);
 
 	  elf_section_data (output_section)->this_hdr.sh_entsize = GOT_ENTRY_SIZE;
 	}
@@ -3655,7 +3849,18 @@ static bfd_vma
 riscv_elf_plt_sym_val (bfd_vma i, const asection *plt,
 		       const arelent *rel ATTRIBUTE_UNUSED)
 {
-  return plt->vma + PLT_HEADER_SIZE + i * PLT_ENTRY_SIZE;
+  unsigned plt_type = _bfd_riscv_elf_tdata (plt->owner)->plt_type;
+  switch (plt_type)
+    {
+    case PLT_NORMAL:
+      return plt->vma + (PLT_HEADER_SIZE) + (i * PLT_ENTRY_SIZE);
+
+    case PLT_ZICFILP_UNLABELED:
+      return plt->vma + PLT_ZICFILP_UNLABELED_HEADER_SIZE + (i * PLT_ZICFILP_UNLABELED_ENTRY_SIZE);
+
+    default:
+      abort ();
+    }
 }
 
 /* Used to decide how to sort relocs in an optimal manner for the
@@ -3674,7 +3879,7 @@ riscv_reloc_type_class (const struct bfd_link_info *info,
       /* Check relocation against STT_GNU_IFUNC symbol if there are
 	 dynamic symbols.  */
       bfd *abfd = info->output_bfd;
-      const struct elf_backend_data *bed = get_elf_backend_data (abfd);
+      elf_backend_data *bed = get_elf_backend_data (abfd);
       unsigned long r_symndx = ELFNN_R_SYM (rela->r_info);
       if (r_symndx != STN_UNDEF)
 	{
@@ -3710,556 +3915,10 @@ riscv_reloc_type_class (const struct bfd_link_info *info,
     }
 }
 
-/* Given the ELF header flags in FLAGS, it returns a string that describes the
-   float ABI.  */
-
-static const char *
-riscv_float_abi_string (flagword flags)
-{
-  switch (flags & EF_RISCV_FLOAT_ABI)
-    {
-    case EF_RISCV_FLOAT_ABI_SOFT:
-      return "soft-float";
-      break;
-    case EF_RISCV_FLOAT_ABI_SINGLE:
-      return "single-float";
-      break;
-    case EF_RISCV_FLOAT_ABI_DOUBLE:
-      return "double-float";
-      break;
-    case EF_RISCV_FLOAT_ABI_QUAD:
-      return "quad-float";
-      break;
-    default:
-      abort ();
-    }
-}
-
-/* The information of architecture elf attributes.  */
-static riscv_subset_list_t in_subsets;
-static riscv_subset_list_t out_subsets;
-static riscv_subset_list_t merged_subsets;
-
-/* Predicator for standard extension.  */
-
 static bool
-riscv_std_ext_p (const char *name)
+riscv_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
-  return (strlen (name) == 1) && (name[0] != 'x') && (name[0] != 's');
-}
-
-/* Update the output subset's version to match the input when the input
-   subset's version is newer.  */
-
-static void
-riscv_update_subset_version (struct riscv_subset_t *in,
-			     struct riscv_subset_t *out)
-{
-  if (in == NULL || out == NULL)
-    return;
-
-  /* Update the output ISA versions to the newest ones, but otherwise don't
-     provide any errors or warnings about mis-matched ISA versions as it's
-     generally too tricky to check for these at link time. */
-  if ((in->major_version > out->major_version)
-      || (in->major_version == out->major_version
-	  && in->minor_version > out->minor_version)
-      || (out->major_version == RISCV_UNKNOWN_VERSION))
-    {
-      out->major_version = in->major_version;
-      out->minor_version = in->minor_version;
-    }
-}
-
-/* Return true if subset is 'i' or 'e'.  */
-
-static bool
-riscv_i_or_e_p (bfd *ibfd,
-		const char *arch,
-		struct riscv_subset_t *subset)
-{
-  if ((strcasecmp (subset->name, "e") != 0)
-      && (strcasecmp (subset->name, "i") != 0))
-    {
-      _bfd_error_handler
-	(_("error: %pB: corrupted ISA string '%s'.  "
-	   "First letter should be 'i' or 'e' but got '%s'"),
-	   ibfd, arch, subset->name);
-      return false;
-    }
-  return true;
-}
-
-/* Merge standard extensions.
-
-   Return Value:
-     Return FALSE if failed to merge.
-
-   Arguments:
-     `bfd`: bfd handler.
-     `in_arch`: Raw ISA string for input object.
-     `out_arch`: Raw ISA string for output object.
-     `pin`: Subset list for input object.
-     `pout`: Subset list for output object.  */
-
-static bool
-riscv_merge_std_ext (bfd *ibfd,
-		     const char *in_arch,
-		     const char *out_arch,
-		     struct riscv_subset_t **pin,
-		     struct riscv_subset_t **pout)
-{
-  const char *standard_exts = "mafdqlcbjtpvnh";
-  const char *p;
-  struct riscv_subset_t *in = *pin;
-  struct riscv_subset_t *out = *pout;
-
-  /* First letter should be 'i' or 'e'.  */
-  if (!riscv_i_or_e_p (ibfd, in_arch, in))
-    return false;
-
-  if (!riscv_i_or_e_p (ibfd, out_arch, out))
-    return false;
-
-  if (strcasecmp (in->name, out->name) != 0)
-    {
-      /* TODO: We might allow merge 'i' with 'e'.  */
-      _bfd_error_handler
-	(_("error: %pB: mis-matched ISA string to merge '%s' and '%s'"),
-	 ibfd, in->name, out->name);
-      return false;
-    }
-
-  riscv_update_subset_version(in, out);
-  riscv_add_subset (&merged_subsets,
-		    out->name, out->major_version, out->minor_version);
-
-  in = in->next;
-  out = out->next;
-
-  /* Handle standard extension first.  */
-  for (p = standard_exts; *p; ++p)
-    {
-      struct riscv_subset_t *ext_in, *ext_out, *ext_merged;
-      char find_ext[2] = {*p, '\0'};
-      bool find_in, find_out;
-
-      find_in = riscv_lookup_subset (&in_subsets, find_ext, &ext_in);
-      find_out = riscv_lookup_subset (&out_subsets, find_ext, &ext_out);
-
-      if (!find_in && !find_out)
-	continue;
-
-      if (find_in && find_out)
-	riscv_update_subset_version(ext_in, ext_out);
-
-      ext_merged = find_out ? ext_out : ext_in;
-      riscv_add_subset (&merged_subsets, ext_merged->name,
-			ext_merged->major_version, ext_merged->minor_version);
-    }
-
-  /* Skip all standard extensions.  */
-  while ((in != NULL) && riscv_std_ext_p (in->name)) in = in->next;
-  while ((out != NULL) && riscv_std_ext_p (out->name)) out = out->next;
-
-  *pin = in;
-  *pout = out;
-
-  return true;
-}
-
-/* Merge multi letter extensions.  PIN is a pointer to the head of the input
-   object subset list.  Likewise for POUT and the output object.  Return TRUE
-   on success and FALSE when a conflict is found.  */
-
-static bool
-riscv_merge_multi_letter_ext (riscv_subset_t **pin,
-			      riscv_subset_t **pout)
-{
-  riscv_subset_t *in = *pin;
-  riscv_subset_t *out = *pout;
-  riscv_subset_t *tail;
-
-  int cmp;
-
-  while (in && out)
-    {
-      cmp = riscv_compare_subsets (in->name, out->name);
-
-      if (cmp < 0)
-	{
-	  /* `in' comes before `out', append `in' and increment.  */
-	  riscv_add_subset (&merged_subsets, in->name, in->major_version,
-			    in->minor_version);
-	  in = in->next;
-	}
-      else if (cmp > 0)
-	{
-	  /* `out' comes before `in', append `out' and increment.  */
-	  riscv_add_subset (&merged_subsets, out->name, out->major_version,
-			    out->minor_version);
-	  out = out->next;
-	}
-      else
-	{
-	  /* Both present, check version and increment both.  */
-	  riscv_update_subset_version (in, out);
-
-	  riscv_add_subset (&merged_subsets, out->name, out->major_version,
-			    out->minor_version);
-	  out = out->next;
-	  in = in->next;
-	}
-    }
-
-  if (in || out)
-    {
-      /* If we're here, either `in' or `out' is running longer than
-	 the other. So, we need to append the corresponding tail.  */
-      tail = in ? in : out;
-      while (tail)
-	{
-	  riscv_add_subset (&merged_subsets, tail->name, tail->major_version,
-			    tail->minor_version);
-	  tail = tail->next;
-	}
-    }
-
-  return true;
-}
-
-/* Merge Tag_RISCV_arch attribute.  */
-
-static char *
-riscv_merge_arch_attr_info (bfd *ibfd, char *in_arch, char *out_arch)
-{
-  riscv_subset_t *in, *out;
-  char *merged_arch_str;
-
-  unsigned xlen_in, xlen_out;
-  merged_subsets.head = NULL;
-  merged_subsets.tail = NULL;
-
-  riscv_parse_subset_t riscv_rps_ld_in =
-    {&in_subsets, _bfd_error_handler, &xlen_in, NULL, false};
-  riscv_parse_subset_t riscv_rps_ld_out =
-    {&out_subsets, _bfd_error_handler, &xlen_out, NULL, false};
-
-  if (in_arch == NULL && out_arch == NULL)
-    return NULL;
-  if (in_arch == NULL && out_arch != NULL)
-    return out_arch;
-  if (in_arch != NULL && out_arch == NULL)
-    return in_arch;
-
-  /* Parse subset from ISA string.  */
-  if (!riscv_parse_subset (&riscv_rps_ld_in, in_arch))
-    return NULL;
-  if (!riscv_parse_subset (&riscv_rps_ld_out, out_arch))
-    return NULL;
-
-  /* Checking XLEN.  */
-  if (xlen_out != xlen_in)
-    {
-      _bfd_error_handler
-	(_("error: %pB: ISA string of input (%s) doesn't match "
-	   "output (%s)"), ibfd, in_arch, out_arch);
-      return NULL;
-    }
-
-  /* Merge subset list.  */
-  in = in_subsets.head;
-  out = out_subsets.head;
-
-  /* Merge standard extension.  */
-  if (!riscv_merge_std_ext (ibfd, in_arch, out_arch, &in, &out))
-    return NULL;
-
-  /* Merge all non-single letter extensions with single call.  */
-  if (!riscv_merge_multi_letter_ext (&in, &out))
-    return NULL;
-
-  if (xlen_in != xlen_out)
-    {
-      _bfd_error_handler
-	(_("error: %pB: XLEN of input (%u) doesn't match "
-	   "output (%u)"), ibfd, xlen_in, xlen_out);
-      return NULL;
-    }
-
-  if (xlen_in != ARCH_SIZE)
-    {
-      _bfd_error_handler
-	(_("error: %pB: unsupported XLEN (%u), you might be "
-	   "using wrong emulation"), ibfd, xlen_in);
-      return NULL;
-    }
-
-  merged_arch_str = riscv_arch_str (ARCH_SIZE, &merged_subsets);
-
-  /* Release the subset lists.  */
-  riscv_release_subset_list (&in_subsets);
-  riscv_release_subset_list (&out_subsets);
-  riscv_release_subset_list (&merged_subsets);
-
-  return merged_arch_str;
-}
-
-/* Merge object attributes from IBFD into output_bfd of INFO.
-   Raise an error if there are conflicting attributes.  */
-
-static bool
-riscv_merge_attributes (bfd *ibfd, struct bfd_link_info *info)
-{
-  bfd *obfd = info->output_bfd;
-  obj_attribute *in_attr;
-  obj_attribute *out_attr;
-  bool result = true;
-  bool priv_attrs_merged = false;
-  const char *sec_name = get_elf_backend_data (ibfd)->obj_attrs_section;
-  unsigned int i;
-
-  /* Skip linker created files.  */
-  if (ibfd->flags & BFD_LINKER_CREATED)
-    return true;
-
-  /* Skip any input that doesn't have an attribute section.
-     This enables to link object files without attribute section with
-     any others.  */
-  if (bfd_get_section_by_name (ibfd, sec_name) == NULL)
-    return true;
-
-  if (!elf_known_obj_attributes_proc (obfd)[0].i)
-    {
-      /* This is the first object.  Copy the attributes.  */
-      _bfd_elf_copy_obj_attributes (ibfd, obfd);
-
-      out_attr = elf_known_obj_attributes_proc (obfd);
-
-      /* Use the Tag_null value to indicate the attributes have been
-	 initialized.  */
-      out_attr[0].i = 1;
-
-      return true;
-    }
-
-  in_attr = elf_known_obj_attributes_proc (ibfd);
-  out_attr = elf_known_obj_attributes_proc (obfd);
-
-  for (i = LEAST_KNOWN_OBJ_ATTRIBUTE; i < NUM_KNOWN_OBJ_ATTRIBUTES; i++)
-    {
-    switch (i)
-      {
-      case Tag_RISCV_arch:
-	if (!out_attr[Tag_RISCV_arch].s)
-	  out_attr[Tag_RISCV_arch].s = in_attr[Tag_RISCV_arch].s;
-	else if (in_attr[Tag_RISCV_arch].s
-		 && out_attr[Tag_RISCV_arch].s)
-	  {
-	    /* Check compatible.  */
-	    char *merged_arch =
-		riscv_merge_arch_attr_info (ibfd,
-					    in_attr[Tag_RISCV_arch].s,
-					    out_attr[Tag_RISCV_arch].s);
-	    if (merged_arch == NULL)
-	      {
-		result = false;
-		out_attr[Tag_RISCV_arch].s = "";
-	      }
-	    else
-	      out_attr[Tag_RISCV_arch].s = merged_arch;
-	  }
-	break;
-
-      case Tag_RISCV_priv_spec:
-      case Tag_RISCV_priv_spec_minor:
-      case Tag_RISCV_priv_spec_revision:
-	/* If we have handled the privileged elf attributes, then skip it.  */
-	if (!priv_attrs_merged)
-	  {
-	    unsigned int Tag_a = Tag_RISCV_priv_spec;
-	    unsigned int Tag_b = Tag_RISCV_priv_spec_minor;
-	    unsigned int Tag_c = Tag_RISCV_priv_spec_revision;
-	    enum riscv_spec_class in_priv_spec = PRIV_SPEC_CLASS_NONE;
-	    enum riscv_spec_class out_priv_spec = PRIV_SPEC_CLASS_NONE;
-
-	    /* Get the privileged spec class from elf attributes.  */
-	    riscv_get_priv_spec_class_from_numbers (in_attr[Tag_a].i,
-						    in_attr[Tag_b].i,
-						    in_attr[Tag_c].i,
-						    &in_priv_spec);
-	    riscv_get_priv_spec_class_from_numbers (out_attr[Tag_a].i,
-						    out_attr[Tag_b].i,
-						    out_attr[Tag_c].i,
-						    &out_priv_spec);
-
-	    /* Allow to link the object without the privileged specs.  */
-	    if (out_priv_spec == PRIV_SPEC_CLASS_NONE)
-	      {
-		out_attr[Tag_a].i = in_attr[Tag_a].i;
-		out_attr[Tag_b].i = in_attr[Tag_b].i;
-		out_attr[Tag_c].i = in_attr[Tag_c].i;
-	      }
-	    else if (in_priv_spec != PRIV_SPEC_CLASS_NONE
-		     && in_priv_spec != out_priv_spec)
-	      {
-		/* The abandoned privileged spec v1.9.1 can not be linked with
-		   others since the conflicts.  Keep the check since compatible
-		   issue.  */
-		if (in_priv_spec == PRIV_SPEC_CLASS_1P9P1
-		    || out_priv_spec == PRIV_SPEC_CLASS_1P9P1)
-		  {
-		    _bfd_error_handler
-		      (_("warning: privileged spec version 1.9.1 can not be "
-			 "linked with other spec versions"));
-		  }
-
-		/* Update the output privileged spec to the newest one.  */
-		if (in_priv_spec > out_priv_spec)
-		  {
-		    out_attr[Tag_a].i = in_attr[Tag_a].i;
-		    out_attr[Tag_b].i = in_attr[Tag_b].i;
-		    out_attr[Tag_c].i = in_attr[Tag_c].i;
-		  }
-	      }
-	    priv_attrs_merged = true;
-	  }
-	break;
-
-      case Tag_RISCV_unaligned_access:
-	out_attr[i].i |= in_attr[i].i;
-	break;
-
-      case Tag_RISCV_stack_align:
-	if (out_attr[i].i == 0)
-	  out_attr[i].i = in_attr[i].i;
-	else if (in_attr[i].i != 0
-		 && out_attr[i].i != 0
-		 && out_attr[i].i != in_attr[i].i)
-	  {
-	    _bfd_error_handler
-	      (_("error: %pB use %u-byte stack aligned but the output "
-		 "use %u-byte stack aligned"),
-	       ibfd, in_attr[i].i, out_attr[i].i);
-	    result = false;
-	  }
-	break;
-
-      default:
-	result &= _bfd_elf_merge_unknown_attribute_low (ibfd, obfd, i);
-      }
-
-      /* If out_attr was copied from in_attr then it won't have a type yet.  */
-      if (in_attr[i].type && !out_attr[i].type)
-	out_attr[i].type = in_attr[i].type;
-    }
-
-  /* Merge Tag_compatibility attributes and any common GNU ones.  */
-  if (!_bfd_elf_merge_object_attributes (ibfd, info))
-    return false;
-
-  /* Check for any attributes not known on RISC-V.  */
-  result &= _bfd_elf_merge_unknown_attribute_list (ibfd, obfd);
-
-  return result;
-}
-
-/* Merge backend specific data from an object file to the output
-   object file when linking.  */
-
-static bool
-_bfd_riscv_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
-{
-  bfd *obfd = info->output_bfd;
-  flagword new_flags, old_flags;
-
-  if (!is_riscv_elf (ibfd) || !is_riscv_elf (obfd))
-    return true;
-
-  if (strcmp (bfd_get_target (ibfd), bfd_get_target (obfd)) != 0)
-    {
-      (*_bfd_error_handler)
-	(_("%pB: ABI is incompatible with that of the selected emulation:\n"
-	   "  target emulation `%s' does not match `%s'"),
-	 ibfd, bfd_get_target (ibfd), bfd_get_target (obfd));
-      return false;
-    }
-
-  if (!_bfd_elf_merge_object_attributes (ibfd, info))
-    return false;
-
-  if (!riscv_merge_attributes (ibfd, info))
-    return false;
-
-  /* Check to see if the input BFD actually contains any sections.  If not,
-     its flags may not have been initialized either, but it cannot actually
-     cause any incompatibility.  Do not short-circuit dynamic objects; their
-     section list may be emptied by elf_link_add_object_symbols.
-
-     Also check to see if there are no code sections in the input.  In this
-     case, there is no need to check for code specific flags.  */
-  if (!(ibfd->flags & DYNAMIC))
-    {
-      bool null_input_bfd = true;
-      bool only_data_sections = true;
-      asection *sec;
-
-      for (sec = ibfd->sections; sec != NULL; sec = sec->next)
-	{
-	  null_input_bfd = false;
-
-	  if ((bfd_section_flags (sec)
-	       & (SEC_LOAD | SEC_CODE | SEC_HAS_CONTENTS))
-	      == (SEC_LOAD | SEC_CODE | SEC_HAS_CONTENTS))
-	    {
-	      only_data_sections = false;
-	      break;
-	    }
-	}
-
-      if (null_input_bfd || only_data_sections)
-	return true;
-    }
-
-  new_flags = elf_elfheader (ibfd)->e_flags;
-  old_flags = elf_elfheader (obfd)->e_flags;
-
-  if (!elf_flags_init (obfd))
-    {
-      elf_flags_init (obfd) = true;
-      elf_elfheader (obfd)->e_flags = new_flags;
-      return true;
-    }
-
-  /* Disallow linking different float ABIs.  */
-  if ((old_flags ^ new_flags) & EF_RISCV_FLOAT_ABI)
-    {
-      (*_bfd_error_handler)
-	(_("%pB: can't link %s modules with %s modules"), ibfd,
-	 riscv_float_abi_string (new_flags),
-	 riscv_float_abi_string (old_flags));
-      goto fail;
-    }
-
-  /* Disallow linking RVE and non-RVE.  */
-  if ((old_flags ^ new_flags) & EF_RISCV_RVE)
-    {
-      (*_bfd_error_handler)
-       (_("%pB: can't link RVE with other target"), ibfd);
-      goto fail;
-    }
-
-  /* Allow linking RVC and non-RVC, and keep the RVC flag.  */
-  elf_elfheader (obfd)->e_flags |= new_flags & EF_RISCV_RVC;
-
-  /* Allow linking TSO and non-TSO, and keep the TSO flag.  */
-  elf_elfheader (obfd)->e_flags |= new_flags & EF_RISCV_TSO;
-
-  return true;
-
- fail:
-  bfd_set_error (bfd_error_bad_value);
-  return false;
+  return _bfd_riscv_elf_merge_private_bfd_data (ibfd, info, ARCH_SIZE);
 }
 
 /* Ignore and report warning for the unknwon elf attribute.  */
@@ -4449,7 +4108,7 @@ _riscv_relax_delete_bytes (bfd *abfd,
 {
   unsigned int i, symcount;
   struct elf_link_hash_entry **sym_hashes = elf_sym_hashes (abfd);
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (abfd);
   unsigned int sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
   struct bfd_elf_section_data *data = elf_section_data (sec);
   bfd_byte *contents = data->this_hdr.contents;
@@ -4562,12 +4221,14 @@ typedef bool (*relax_delete_t) (bfd *, asection *,
 				bfd_vma, size_t,
 				struct bfd_link_info *,
 				riscv_pcgp_relocs *,
-				Elf_Internal_Rela *);
+				Elf_Internal_Rela *,
+				bool preserve_relax);
 
 static relax_delete_t riscv_relax_delete_bytes;
 
 /* Do not delete some bytes from a section while relaxing.
-   Just mark the deleted bytes as R_RISCV_DELETE.  */
+   Just mark the deleted bytes as R_RISCV_DELETE.  If PRESERVE_RELAX is true,
+   use R_RISCV_DELETE_AND_RELAX to preserve the ability to further relax.  */
 
 static bool
 _riscv_relax_delete_piecewise (bfd *abfd ATTRIBUTE_UNUSED,
@@ -4576,11 +4237,13 @@ _riscv_relax_delete_piecewise (bfd *abfd ATTRIBUTE_UNUSED,
 			       size_t count,
 			       struct bfd_link_info *link_info ATTRIBUTE_UNUSED,
 			       riscv_pcgp_relocs *p ATTRIBUTE_UNUSED,
-			       Elf_Internal_Rela *rel)
+			       Elf_Internal_Rela *rel,
+			       bool preserve_relax)
 {
   if (rel == NULL)
     return false;
-  rel->r_info = ELFNN_R_INFO (0, R_RISCV_DELETE);
+  rel->r_info = ELFNN_R_INFO (0, preserve_relax
+			      ? R_RISCV_DELETE_AND_RELAX : R_RISCV_DELETE);
   rel->r_offset = addr;
   rel->r_addend = count;
   return true;
@@ -4595,7 +4258,8 @@ _riscv_relax_delete_immediate (bfd *abfd,
 			       size_t count,
 			       struct bfd_link_info *link_info,
 			       riscv_pcgp_relocs *p,
-			       Elf_Internal_Rela *rel)
+			       Elf_Internal_Rela *rel,
+			       bool preserve_relax ATTRIBUTE_UNUSED)
 {
   if (rel != NULL)
     rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
@@ -4603,7 +4267,15 @@ _riscv_relax_delete_immediate (bfd *abfd,
 				    link_info, p, 0, sec->size);
 }
 
-/* Delete the bytes for R_RISCV_DELETE relocs.  */
+/* Return true if TYPE is a delete relocation.  */
+
+static bool
+riscv_is_delete_reloc (unsigned int type)
+{
+  return type == R_RISCV_DELETE || type == R_RISCV_DELETE_AND_RELAX;
+}
+
+/* Delete the bytes for R_RISCV_DELETE and R_RISCV_DELETE_AND_RELAX relocs.  */
 
 static bool
 riscv_relax_resolve_delete_relocs (bfd *abfd,
@@ -4617,10 +4289,11 @@ riscv_relax_resolve_delete_relocs (bfd *abfd,
   for (i = 0; i < sec->reloc_count; i++)
     {
       Elf_Internal_Rela *rel = relocs + i;
-      if (ELFNN_R_TYPE (rel->r_info) != R_RISCV_DELETE)
+      unsigned int type = ELFNN_R_TYPE (rel->r_info);
+      if (!riscv_is_delete_reloc (type))
 	continue;
 
-      /* Find the next R_RISCV_DELETE reloc if possible.  */
+      /* Find the next delete reloc if possible.  */
       Elf_Internal_Rela *rel_next = NULL;
       unsigned int start = rel - relocs;
       for (i = start; i < sec->reloc_count; i++)
@@ -4629,8 +4302,8 @@ riscv_relax_resolve_delete_relocs (bfd *abfd,
 	     relocs are in sequential order. We can skip the relocs prior to this
 	     one, making this search linear time.  */
 	  rel_next = relocs + i;
-	  if (ELFNN_R_TYPE ((rel_next)->r_info) == R_RISCV_DELETE
-	      && (rel_next)->r_offset > rel->r_offset)
+	  if (riscv_is_delete_reloc (ELFNN_R_TYPE (rel_next->r_info))
+	      && rel_next->r_offset > rel->r_offset)
 	    {
 	      BFD_ASSERT (rel_next - rel > 0);
 	      break;
@@ -4645,7 +4318,18 @@ riscv_relax_resolve_delete_relocs (bfd *abfd,
 	return false;
 
       delete_total += rel->r_addend;
-      rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
+
+      if (type == R_RISCV_DELETE_AND_RELAX)
+	{
+	  /* Convert to R_RISCV_RELAX at the instruction offset.
+	     The deletion started after the instruction, so subtract
+	     the number of deleted bytes to get back to the instruction.  */
+	  rel->r_info = ELFNN_R_INFO (0, R_RISCV_RELAX);
+	  rel->r_offset -= rel->r_addend;
+	  rel->r_addend = 0;
+	}
+      else
+	rel->r_info = ELFNN_R_INFO (0, R_RISCV_NONE);
 
       /* Skip ahead to the next delete reloc.  */
       i = rel_next != NULL ? (unsigned int) (rel_next - relocs - 1)
@@ -4733,10 +4417,75 @@ _bfd_riscv_relax_call (bfd *abfd, asection *sec, asection *sym_sec,
   /* Replace the AUIPC.  */
   riscv_put_insn (8 * len, auipc, contents + rel->r_offset);
 
-  /* Delete unnecessary JALR and reuse the R_RISCV_RELAX reloc.  */
+  /* Delete unnecessary JALR and reuse the R_RISCV_RELAX reloc.
+     For JAL, use R_RISCV_DELETE_AND_RELAX to preserve the ability to
+     further relax to C.J/C.JAL in a second pass.  */
   *again = true;
   return riscv_relax_delete_bytes (abfd, sec, rel->r_offset + len, 8 - len,
-				   link_info, pcgp_relocs, rel + 1);
+				   link_info, pcgp_relocs, rel + 1,
+				   r_type == R_RISCV_JAL);
+}
+
+/* Relax JAL to C.J or C.JAL.  */
+
+static bool
+_bfd_riscv_relax_jal (bfd *abfd, asection *sec, asection *sym_sec,
+		      struct bfd_link_info *link_info,
+		      Elf_Internal_Rela *rel,
+		      bfd_vma symval,
+		      bfd_vma max_alignment,
+		      bfd_vma reserve_size ATTRIBUTE_UNUSED,
+		      bool *again,
+		      riscv_pcgp_relocs *pcgp_relocs,
+		      bool undefined_weak ATTRIBUTE_UNUSED)
+{
+  bfd_byte *contents = elf_section_data (sec)->this_hdr.contents;
+  bfd_vma foff = symval - (sec_addr (sec) + rel->r_offset);
+  bool rvc = elf_elfheader (abfd)->e_flags & EF_RISCV_RVC;
+
+  /* Can't relax to compressed instruction without RVC.  */
+  if (!rvc)
+    return true;
+
+  bfd_vma jal = bfd_getl32 (contents + rel->r_offset);
+  int rd = (jal >> OP_SH_RD) & OP_MASK_RD;
+
+  /* C.J exists on RV32 and RV64, but C.JAL is RV32-only.  */
+  if (!(rd == 0 || (rd == X_RA && ARCH_SIZE == 32)))
+    return true;
+
+  /* If the jump crosses section boundaries, an alignment directive could
+     cause the PC-relative offset to later increase, so we need to add in the
+     max alignment of any section inclusive from the jump to the target.
+     Otherwise, we only need to use the alignment of the current section.  */
+  if (VALID_CJTYPE_IMM (foff))
+    {
+      if (sym_sec->output_section == sec->output_section
+	  && sym_sec->output_section != bfd_abs_section_ptr)
+	max_alignment = (bfd_vma) 1 << sym_sec->output_section->alignment_power;
+      foff += ((bfd_signed_vma) foff < 0 ? -max_alignment : max_alignment);
+    }
+
+  /* See if this jump can be shortened.  */
+  if (!VALID_CJTYPE_IMM (foff))
+    return true;
+
+  /* Shorten the jump.  */
+  BFD_ASSERT (rel->r_offset + 4 <= sec->size);
+
+  /* Relax to C.J[AL] rd, addr.  */
+  int r_type = R_RISCV_RVC_JUMP;
+  bfd_vma insn = (rd == 0) ? MATCH_C_J : MATCH_C_JAL;
+
+  /* Replace the R_RISCV_JAL reloc.  */
+  rel->r_info = ELFNN_R_INFO (ELFNN_R_SYM (rel->r_info), r_type);
+  /* Replace the JAL with C.J or C.JAL.  */
+  riscv_put_insn (8 * 2, insn, contents + rel->r_offset);
+
+  /* Delete 2 bytes and reuse the R_RISCV_RELAX reloc.  */
+  *again = true;
+  return riscv_relax_delete_bytes (abfd, sec, rel->r_offset + 2, 2,
+				   link_info, pcgp_relocs, rel + 1, false);
 }
 
 /* Traverse all output sections and return the max alignment.
@@ -4852,7 +4601,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
 	  /* Delete unnecessary LUI and reuse the reloc.  */
 	  *again = true;
 	  return riscv_relax_delete_bytes (abfd, sec, rel->r_offset, 4,
-					   link_info, pcgp_relocs, rel);
+					   link_info, pcgp_relocs, rel, false);
 
 	default:
 	  abort ();
@@ -4885,7 +4634,7 @@ _bfd_riscv_relax_lui (bfd *abfd,
       /* Delete extra bytes and reuse the R_RISCV_RELAX reloc.  */
       *again = true;
       return riscv_relax_delete_bytes (abfd, sec, rel->r_offset + 2, 2,
-				       link_info, pcgp_relocs, rel + 1);
+				       link_info, pcgp_relocs, rel + 1, false);
     }
 
   return true;
@@ -4926,7 +4675,7 @@ _bfd_riscv_relax_tls_le (bfd *abfd,
       /* Delete unnecessary instruction and reuse the reloc.  */
       *again = true;
       return riscv_relax_delete_bytes (abfd, sec, rel->r_offset, 4, link_info,
-				       pcgp_relocs, rel);
+				       pcgp_relocs, rel, false);
 
     default:
       abort ();
@@ -4990,7 +4739,7 @@ _bfd_riscv_relax_align (bfd *abfd, asection *sec,
   /* Delete excess bytes.  */
   return riscv_relax_delete_bytes (abfd, sec, rel->r_offset + nop_bytes,
 				   rel->r_addend - nop_bytes, link_info,
-				   NULL, NULL);
+				   NULL, NULL, false);
 }
 
 /* Relax PC-relative references to GP-relative references.  */
@@ -5137,7 +4886,7 @@ _bfd_riscv_relax_pc (bfd *abfd ATTRIBUTE_UNUSED,
 	  /* Delete unnecessary AUIPC and reuse the reloc.  */
 	  *again = true;
 	  riscv_relax_delete_bytes (abfd, sec, rel->r_offset, 4, link_info,
-				    pcgp_relocs, rel);
+				    pcgp_relocs, rel, false);
 	  return true;
 
 	default:
@@ -5251,6 +5000,8 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 		       || type == R_RISCV_PCREL_LO12_I
 		       || type == R_RISCV_PCREL_LO12_S))
 	    relax_func = _bfd_riscv_relax_pc;
+	  else if (type == R_RISCV_JAL)
+	    relax_func = _bfd_riscv_relax_jal;
 	  else
 	    continue;
 	  riscv_relax_delete_bytes = _riscv_relax_delete_piecewise;
@@ -5363,9 +5114,9 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	      undefined_weak = true;
 	    }
 
-	  /* This line has to match the check in riscv_elf_relocate_section
-	     in the R_RISCV_CALL[_PLT] case.  */
-	  if (bfd_link_pic (info) && h->plt.offset != MINUS_ONE)
+	  /* This line has to match the via_pltcheck in
+	     riscv_elf_relocate_section in the R_RISCV_CALL[_PLT] case.  */
+	  if (h->plt.offset != MINUS_ONE)
 	    {
 	      sym_sec = htab->elf.splt;
 	      symval = h->plt.offset;
@@ -5414,9 +5165,7 @@ _bfd_riscv_relax_section (bfd *abfd, asection *sec,
 	   if (symtype == STT_SECTION)
 	     symval += rel->r_addend;
 
-	   symval = _bfd_merged_section_offset (abfd, &sym_sec,
-						elf_section_data (sym_sec)->sec_info,
-						symval);
+	   symval = _bfd_merged_section_offset (abfd, &sym_sec, symval);
 
 	   if (symtype != STT_SECTION)
 	     symval += rel->r_addend;
@@ -5630,7 +5379,7 @@ riscv_elf_object_p (bfd *abfd)
    string or both.  */
 
 static int
-riscv_elf_obj_attrs_arg_type (int tag)
+riscv_elf_obj_attrs_arg_type (obj_attr_tag_t tag)
 {
   return (tag & 1) != 0 ? ATTR_TYPE_FLAG_STR_VAL : ATTR_TYPE_FLAG_INT_VAL;
 }
@@ -5743,44 +5492,91 @@ riscv_elf_merge_symbol_attribute (struct elf_link_hash_entry *h,
     h->other |= STO_RISCV_VARIANT_CC;
 }
 
+/* Implement elf_backend_setup_gnu_properties for RISC-V.  It serves as a
+   wrapper function for _bfd_riscv_elf_link_setup_gnu_properties to account
+   for the effect of GNU properties of the output_bfd.  */
+
+static bfd *
+elfNN_riscv_link_setup_gnu_properties (struct bfd_link_info *info)
+{
+  uint32_t and_prop = _bfd_riscv_elf_tdata (info->output_bfd)->gnu_and_prop;
+
+  bfd *pbfd = _bfd_riscv_elf_link_setup_gnu_properties (info, &and_prop);
+
+  _bfd_riscv_elf_tdata (info->output_bfd)->gnu_and_prop = and_prop;
+
+  if (and_prop & GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_UNLABELED)
+    _bfd_riscv_elf_tdata (info->output_bfd)->plt_type = PLT_ZICFILP_UNLABELED;
+
+  setup_plt_values (info->output_bfd, riscv_elf_hash_table (info),
+		    _bfd_riscv_elf_tdata (info->output_bfd)->plt_type);
+
+  return pbfd;
+}
+
+/* Implement elf_backend_merge_gnu_properties for RISC-V.  It serves as a
+   wrapper function for _bfd_riscv_elf_merge_gnu_properties to account
+   for the effect of GNU properties of the output_bfd.  */
+
+static bool
+elfNN_riscv_merge_gnu_properties (struct bfd_link_info *info, bfd *abfd,
+				  bfd *bbfd ATTRIBUTE_UNUSED,
+				  elf_property *aprop, elf_property *bprop)
+{
+  uint32_t and_prop = _bfd_riscv_elf_tdata (info->output_bfd)->gnu_and_prop;
+
+  return _bfd_riscv_elf_merge_gnu_properties (info, abfd, aprop, bprop,
+					      and_prop);
+}
+
 #define TARGET_LITTLE_SYM			riscv_elfNN_vec
 #define TARGET_LITTLE_NAME			"elfNN-littleriscv"
 #define TARGET_BIG_SYM				riscv_elfNN_be_vec
 #define TARGET_BIG_NAME				"elfNN-bigriscv"
 
-#define elf_backend_reloc_type_class		riscv_reloc_type_class
+#define elf_info_to_howto_rel			NULL
+#define elf_info_to_howto			riscv_info_to_howto_rela
 
 #define bfd_elfNN_bfd_reloc_name_lookup		riscv_reloc_name_lookup
-#define bfd_elfNN_bfd_link_hash_table_create	riscv_elf_link_hash_table_create
+#define bfd_elfNN_bfd_link_hash_table_create	\
+  riscv_elf_link_hash_table_create
 #define bfd_elfNN_bfd_reloc_type_lookup		riscv_reloc_type_lookup
-#define bfd_elfNN_bfd_merge_private_bfd_data \
-  _bfd_riscv_elf_merge_private_bfd_data
-#define bfd_elfNN_bfd_is_target_special_symbol	riscv_elf_is_target_special_symbol
+#define bfd_elfNN_bfd_merge_private_bfd_data	\
+  riscv_elf_merge_private_bfd_data
+#define bfd_elfNN_bfd_is_target_special_symbol	\
+  riscv_elf_is_target_special_symbol
+#define bfd_elfNN_bfd_relax_section		_bfd_riscv_relax_section
+#define bfd_elfNN_mkobject			elfNN_riscv_mkobject
+#define bfd_elfNN_get_synthetic_symtab		\
+  elfNN_riscv_get_synthetic_symtab
 
+#define elf_backend_reloc_type_class		riscv_reloc_type_class
 #define elf_backend_copy_indirect_symbol	riscv_elf_copy_indirect_symbol
-#define elf_backend_create_dynamic_sections	riscv_elf_create_dynamic_sections
+#define elf_backend_create_dynamic_sections	\
+  riscv_elf_create_dynamic_sections
 #define elf_backend_check_relocs		riscv_elf_check_relocs
 #define elf_backend_adjust_dynamic_symbol	riscv_elf_adjust_dynamic_symbol
 #define elf_backend_late_size_sections		riscv_elf_late_size_sections
 #define elf_backend_relocate_section		riscv_elf_relocate_section
 #define elf_backend_finish_dynamic_symbol	riscv_elf_finish_dynamic_symbol
-#define elf_backend_finish_dynamic_sections	riscv_elf_finish_dynamic_sections
+#define elf_backend_finish_dynamic_sections	\
+  riscv_elf_finish_dynamic_sections
 #define elf_backend_plt_sym_val			riscv_elf_plt_sym_val
 #define elf_backend_grok_prstatus		riscv_elf_grok_prstatus
 #define elf_backend_grok_psinfo			riscv_elf_grok_psinfo
 #define elf_backend_object_p			riscv_elf_object_p
 #define elf_backend_write_core_note		riscv_write_core_note
 #define elf_backend_maybe_function_sym		riscv_maybe_function_sym
-#define elf_info_to_howto_rel			NULL
-#define elf_info_to_howto			riscv_info_to_howto_rela
-#define bfd_elfNN_bfd_relax_section		_bfd_riscv_relax_section
-#define bfd_elfNN_mkobject			elfNN_riscv_mkobject
 #define elf_backend_additional_program_headers \
   riscv_elf_additional_program_headers
 #define elf_backend_modify_segment_map		riscv_elf_modify_segment_map
-#define elf_backend_merge_symbol_attribute	riscv_elf_merge_symbol_attribute
-
+#define elf_backend_merge_symbol_attribute	\
+  riscv_elf_merge_symbol_attribute
 #define elf_backend_init_index_section		_bfd_elf_init_1_index_section
+#define elf_backend_setup_gnu_properties	\
+  elfNN_riscv_link_setup_gnu_properties
+#define elf_backend_merge_gnu_properties	\
+  elfNN_riscv_merge_gnu_properties
 
 #define elf_backend_can_gc_sections		1
 #define elf_backend_can_refcount		1
@@ -5801,6 +5597,7 @@ riscv_elf_merge_symbol_attribute (struct elf_link_hash_entry *h,
 #define elf_backend_obj_attrs_section_type	SHT_RISCV_ATTRIBUTES
 #undef  elf_backend_obj_attrs_section
 #define elf_backend_obj_attrs_section		RISCV_ATTRIBUTES_SECTION_NAME
-#define elf_backend_obj_attrs_handle_unknown	riscv_elf_obj_attrs_handle_unknown
+#define elf_backend_obj_attrs_handle_unknown	\
+  riscv_elf_obj_attrs_handle_unknown
 
 #include "elfNN-target.h"

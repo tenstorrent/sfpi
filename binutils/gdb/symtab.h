@@ -1,6 +1,6 @@
 /* Symbol table definitions for GDB.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,10 +30,10 @@
 #include "gdbsupport/gdb_regex.h"
 #include "gdbsupport/enum-flags.h"
 #include "gdbsupport/function-view.h"
+#include "gdbsupport/iteration-status.h"
 #include <optional>
 #include <string_view>
 #include "gdbsupport/next-iterator.h"
-#include "gdbsupport/iterator-range.h"
 #include "completer.h"
 #include "gdb-demangle.h"
 #include "split-name.h"
@@ -146,7 +146,7 @@ private:
   std::string m_encoded_name;
 
   /* The decoded lookup name.  This is formed by calling ada_decode
-     with both 'operators' and 'wide' set to false.  */
+     with 'translate' set to false.  */
   std::string m_decoded_name;
 
   /* Whether the user-provided lookup name was Ada encoded.  If so,
@@ -287,7 +287,7 @@ class lookup_name_info final
   }
 
   /* A wrapper for ::split_name (see split-name.h) that splits this
-     name, and that handles any language-specific peculiarities.  */  
+     name, and that handles any language-specific peculiarities.  */
   std::vector<std::string_view> split_name (language lang) const
   {
     if (lang == language_ada)
@@ -404,11 +404,11 @@ typedef bool (symbol_name_matcher_ftype)
      struct partial_symbol
 
    These structures are laid out to encourage good packing.
-   They use ENUM_BITFIELD and short int fields, and they order the
+   They use bitfields and short int fields, and they order the
    structure members so that fields less than a word are next
    to each other so they can be packed together.  */
 
-/* Rearranged: used ENUM_BITFIELD and rearranged field order in
+/* Rearranged: used bitfields and rearranged field order in
    all the space critical structures (plus struct minimal_symbol).
    Memory usage dropped from 99360768 bytes to 90001408 bytes.
    I measured this with before-and-after tests of
@@ -563,10 +563,6 @@ struct general_symbol_info
     /* A common block.  Used with LOC_COMMON_BLOCK.  */
 
     const struct common_block *common_block;
-
-    /* For opaque typedef struct chain.  */
-
-    struct symbol *chain;
   }
   m_value;
 
@@ -590,7 +586,7 @@ struct general_symbol_info
      This is used to select one of the fields from the language specific
      union above.  */
 
-  ENUM_BITFIELD(language) m_language : LANGUAGE_BITS;
+  enum language m_language : LANGUAGE_BITS;
 
   /* This is only used by Ada.  If set, then the 'demangled_name' field
      of language_specific is valid.  Otherwise, the 'obstack' field is
@@ -737,7 +733,7 @@ struct minimal_symbol : public general_symbol_info
     return m_value.unrel_addr;
   }
 
-  /* The unrelocated address just after the end of the the minimal
+  /* The unrelocated address just after the end of the minimal
      symbol.  */
   unrelocated_addr unrelocated_end_address () const
   {
@@ -819,7 +815,7 @@ struct minimal_symbol : public general_symbol_info
 
   /* Classification type for this minimal symbol.  */
 
-  ENUM_BITFIELD(minimal_symbol_type) m_type : MINSYM_TYPE_BITS;
+  minimal_symbol_type m_type : MINSYM_TYPE_BITS;
 
   /* Non-zero if this symbol was created by gdb.
      Such symbols do not appear in the output of "info var|fun".  */
@@ -923,7 +919,7 @@ constexpr domain_search_flags SEARCH_ALL_DOMAINS
 extern std::string domain_name (domain_search_flags);
 
 /* Convert a symbol domain to search flags.  */
-static inline domain_search_flags 
+static inline domain_search_flags
 to_search_flags (domain_enum domain)
 {
   return domain_search_flags (domain_search_flag (1 << domain));
@@ -968,9 +964,9 @@ to_scripting_domain (domain_search_flags val)
    Throws an exception if VAL is not one of the allowable values.  */
 extern domain_search_flags from_scripting_domain (int val);
 
-/* An address-class says where to find the value of a symbol.  */
+/* A location class says where to find the value of a symbol.  */
 
-enum address_class
+enum location_class
 {
   /* Not used; catches errors.  */
 
@@ -1047,7 +1043,7 @@ enum address_class
      The linker might even remove the minimal symbol if the global
      symbol is never referenced, in which case the symbol remains
      unresolved.
-     
+
      GDB would normally find the symbol in the minimal symbol table if it will
      not find it in the full symbol table.  But a reference to an external
      symbol in a local block shadowing other definition requires full symbol
@@ -1079,14 +1075,14 @@ enum address_class
   LOC_FINAL_VALUE
 };
 
-/* The number of bits needed for values in enum address_class, with some
+/* The number of bits needed for values in enum location_class, with some
    padding for reasonable growth, and room for run-time registered address
    classes. See symtab.c:MAX_SYMBOL_IMPLS.
    This is a #define so that we can have a assertion elsewhere to
    verify that we have reserved enough space for synthetic address
    classes.  */
-#define SYMBOL_ACLASS_BITS 5
-static_assert (LOC_FINAL_VALUE <= (1 << SYMBOL_ACLASS_BITS));
+#define SYMBOL_LOC_CLASS_BITS 5
+static_assert (LOC_FINAL_VALUE <= (1 << SYMBOL_LOC_CLASS_BITS));
 
 /* The methods needed to implement LOC_COMPUTED.  These methods can
    use the symbol's .aux_value for additional per-symbol information.
@@ -1158,12 +1154,11 @@ struct symbol_computed_ops
 
 struct symbol_block_ops
 {
-  /* Fill in *START and *LENGTH with DWARF block data of function
-     FRAMEFUNC valid for inferior context address PC.  Set *LENGTH to
-     zero if such location is not valid for PC; *START is left
-     uninitialized in such case.  */
-  void (*find_frame_base_location) (struct symbol *framefunc, CORE_ADDR pc,
-				    const gdb_byte **start, size_t *length);
+  /* Return the DWARF block data of function FRAMEFUNC valid for inferior
+     context address PC.  Return an empty view if no such location is
+     valid for PC.  */
+  gdb::array_view<const gdb_byte> (*find_frame_base_location)
+    (struct symbol *framefunc, CORE_ADDR pc);
 
   /* Return the frame base address.  FRAME is the frame for which we want to
      compute the base address while FRAMEFUNC is the symbol for the
@@ -1203,7 +1198,7 @@ struct symbol_register_ops
 
 struct symbol_impl
 {
-  enum address_class aclass;
+  location_class loc_class;
 
   /* Used with LOC_COMPUTED.  */
   const struct symbol_computed_ops *ops_computed;
@@ -1239,7 +1234,7 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
   symbol ()
     /* Class-initialization of bitfields is only allowed in C++20.  */
     : m_domain (UNDEF_DOMAIN),
-      m_aclass_index (0),
+      m_loc_class_index (0),
       m_is_objfile_owned (1),
       m_is_argument (0),
       m_is_inlined (0),
@@ -1263,14 +1258,14 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
   symbol (const symbol &) = default;
   symbol &operator= (const symbol &) = default;
 
-  void set_aclass_index (unsigned int aclass_index)
+  void set_loc_class_index (unsigned int loc_class_index)
   {
-    m_aclass_index = aclass_index;
+    m_loc_class_index = loc_class_index;
   }
 
   const symbol_impl &impl () const
   {
-    return symbol_impls[this->m_aclass_index];
+    return symbol_impls[this->m_loc_class_index];
   }
 
   const symbol_block_ops *block_ops () const
@@ -1288,9 +1283,9 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
     return this->impl ().ops_register;
   }
 
-  address_class aclass () const
+  location_class loc_class () const
   {
-    return this->impl ().aclass;
+    return this->impl ().loc_class;
   }
 
   /* Return true if this symbol's domain matches FLAGS.  */
@@ -1415,16 +1410,6 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
     m_value.block = block;
   }
 
-  symbol *value_chain () const
-  {
-    return m_value.chain;
-  }
-
-  void set_value_chain (symbol *sym)
-  {
-    m_value.chain = sym;
-  }
-
   /* Return true if this symbol was marked as artificial.  */
   bool is_artificial () const
   {
@@ -1459,6 +1444,10 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
 
   void set_symtab (struct symtab *symtab);
 
+  /* Relocate this symbol.  OFFSETS is the relocation offsets to use.  */
+
+  void relocate (gdb::array_view<const CORE_ADDR> offsets);
+
   /* Data type of value */
 
   struct type *m_type = nullptr;
@@ -1479,13 +1468,13 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
 
   /* Domain code.  */
 
-  ENUM_BITFIELD(domain_enum) m_domain : SYMBOL_DOMAIN_BITS;
+  domain_enum m_domain : SYMBOL_DOMAIN_BITS;
 
-  /* Address class.  This holds an index into the 'symbol_impls'
-     table.  The actual enum address_class value is stored there,
+  /* Location class.  This holds an index into the 'symbol_impls'
+     table.  The actual location_class value is stored there,
      alongside any per-class ops vectors.  */
 
-  unsigned int m_aclass_index : SYMBOL_ACLASS_BITS;
+  unsigned int m_loc_class_index : SYMBOL_LOC_CLASS_BITS;
 
   /* If non-zero then symbol is objfile-owned, use owner.symtab.
        Otherwise symbol is arch-owned, use owner.arch.  */
@@ -1509,7 +1498,7 @@ struct symbol : public general_symbol_info, public allocate_on_obstack<symbol>
 
   /* The concrete type of this symbol.  */
 
-  ENUM_BITFIELD (symbol_subclass_kind) subclass : 2;
+  symbol_subclass_kind subclass : 2;
 
   /* Whether this symbol is artificial.  */
 
@@ -1566,23 +1555,13 @@ struct block_symbol
 
 #define SYMBOL_LOCATION_BATON(symbol)   (symbol)->aux_value
 
-inline const block *
-symbol::value_block () const
-{
-  if (const symbol_block_ops *block_ops = this->block_ops ();
-      block_ops != nullptr && block_ops->get_block_value != nullptr)
-    return block_ops->get_block_value (this);
-
-  return m_value.block;
-}
-
-extern int register_symbol_computed_impl (enum address_class,
+extern int register_symbol_computed_impl (location_class,
 					  const struct symbol_computed_ops *);
 
-extern int register_symbol_block_impl (enum address_class aclass,
+extern int register_symbol_block_impl (location_class loc_class,
 				       const struct symbol_block_ops *ops);
 
-extern int register_symbol_register_impl (enum address_class,
+extern int register_symbol_register_impl (location_class,
 					  const struct symbol_register_ops *);
 
 /* An instance of this type is used to represent a C++ template
@@ -1686,27 +1665,26 @@ struct linetable
   struct linetable_entry item[1];
 };
 
-/* How to relocate the symbols from each section in a symbol file.
-   The ordering and meaning of the offsets is file-type-dependent;
-   typically it is indexed by section numbers or symbol types or
-   something like that.  */
-
-typedef std::vector<CORE_ADDR> section_offsets;
-
 /* Each source file or header is represented by a struct symtab.
    The name "symtab" is historical, another name for it is "filetab".
    These objects are chained through the `next' field.  */
 
 struct symtab
 {
-  struct compunit_symtab *compunit () const
+  symtab (struct compunit_symtab &cust, const char *filename,
+	  const char *filename_for_id, enum language language)
+    : m_filename (filename),
+      m_filename_for_id (filename_for_id),
+      m_compunit (&cust),
+      m_language (language)
   {
-    return m_compunit;
+    gdb_assert (m_filename != nullptr);
+    gdb_assert (m_filename_for_id != nullptr);
   }
 
-  void set_compunit (struct compunit_symtab *compunit)
+  struct compunit_symtab &compunit () const
   {
-    m_compunit = compunit;
+    return *m_compunit;
   }
 
   const struct linetable *linetable () const
@@ -1750,16 +1728,24 @@ struct symtab
     m_fullname = name.release ();
   }
 
+  const char *filename () const
+  { return m_filename; }
+
+  const char *filename_for_id () const
+  { return m_filename_for_id; }
+
   /* Unordered chain of all filetabs in the compunit,  with the exception
      that the "main" source file is the first entry in the list.  */
 
-  struct symtab *next;
+  struct symtab *next = nullptr;
+
+private:
 
   /* Name of this source file, in a form appropriate to print to the user.
 
-     This pointer is never nullptr.  */
+     This pointer is never nullptr and is set from the constructor.  */
 
-  const char *filename;
+  const char *m_filename;
 
   /* Filename for this source file, used as an identifier to link with
      related objects such as associated macro_source_file objects.  It must
@@ -1768,28 +1754,29 @@ struct symtab
      follow that rule, or another form of the same file name, this is up to
      the specific debug info reader.
 
-     This pointer is never nullptr.*/
-  const char *filename_for_id;
+     This pointer is never nullptr, and is set from the constructor.  */
+  const char *m_filename_for_id;
 
-private:
+  /* Backlink to containing compunit symtab.
 
-  /* Backlink to containing compunit symtab.  */
+     This pointer is never nullptr, and is set from the constructor.  */
 
   struct compunit_symtab *m_compunit;
 
   /* Table mapping core addresses to line numbers for this file.
      Can be NULL if none.  Never shared between different symtabs.  */
 
-  const struct linetable *m_linetable;
+  const struct linetable *m_linetable = nullptr;
 
-  /* Language of this source file.  */
+  /* Language of this source file.  This is set in the object
+     constructor.  */
 
   enum language m_language;
 
   /* Full name of file as found by searching the source path.
      NULL if not yet known.  */
 
-  char *m_fullname;
+  char *m_fullname = nullptr;
 };
 
 /* A range adapter to allowing iterating over all the file tables in a list.  */
@@ -1831,21 +1818,23 @@ using symtab_range = next_range<symtab>;
    where "foo.c(cu)" and "bar.c(cu)" are struct compunit_symtab objects,
    and the files foo.c, etc. are struct symtab objects.  */
 
-struct compunit_symtab
+struct compunit_symtab : intrusive_list_node<compunit_symtab>
 {
+  compunit_symtab (struct objfile *objfile, const char *name);
+  ~compunit_symtab ();
+
+  DISABLE_COPY_AND_ASSIGN (compunit_symtab);
+
   struct objfile *objfile () const
   {
     return m_objfile;
   }
 
-  void set_objfile (struct objfile *objfile)
-  {
-    m_objfile = objfile;
-  }
-
   symtab_range filetabs () const
   {
-    return symtab_range (m_filetabs);
+    next_iterator<symtab> begin (m_filetabs);
+
+    return symtab_range (std::move (begin));
   }
 
   void add_filetab (symtab *filetab)
@@ -1894,18 +1883,16 @@ struct compunit_symtab
 
   struct blockvector *blockvector ()
   {
-    return m_blockvector;
+    return m_blockvector.get ();
   }
 
   const struct blockvector *blockvector () const
   {
-    return m_blockvector;
+    return m_blockvector.get ();
   }
 
-  void set_blockvector (struct blockvector *blockvector)
-  {
-    m_blockvector = blockvector;
-  }
+  /* Set m_blockvector.  */
+  void set_blockvector (std::unique_ptr<struct blockvector> blockvector);
 
   bool locations_valid () const
   {
@@ -1958,14 +1945,12 @@ struct compunit_symtab
   /* Clear any cached source file names.  */
   void forget_cached_source_info ();
 
-  /* This is called when an objfile is being destroyed and will free
-     any resources used by this compunit_symtab.  Normally a
-     destructor would be used instead, but at the moment
-     compunit_symtab objects are allocated on an obstack.  */
-  void finalize ();
+  /* Return symbol at ADDR or NULL if no symbol is found.  Only exact matches
+     for ADDR are considered.  */
+  struct symbol *symbol_at_address (CORE_ADDR addr) const;
 
-  /* Unordered chain of all compunit symtabs of this objfile.  */
-  struct compunit_symtab *next;
+  /* True if ADDR is in this compunit_symtab, false otherwise.  */
+  bool contains (CORE_ADDR addr) const;
 
   /* Object file from which this symtab information was read.  */
   struct objfile *m_objfile;
@@ -1979,30 +1964,30 @@ struct compunit_symtab
      source file (e.g., .c, .cc) is guaranteed to be first.
      Each symtab is a file, either the "main" source file (e.g., .c, .cc)
      or header (e.g., .h).  */
-  symtab *m_filetabs;
+  symtab *m_filetabs = nullptr;
 
   /* Last entry in FILETABS list.
      Subfiles are added to the end of the list so they accumulate in order,
      with the main source subfile living at the front.
      The main reason is so that the main source file symtab is at the head
      of the list, and the rest appear in order for debugging convenience.  */
-  symtab *m_last_filetab;
+  symtab *m_last_filetab = nullptr;
 
   /* Non-NULL string that identifies the format of the debugging information,
      such as "stabs", "dwarf 1", "dwarf 2", "coff", etc.  This is mostly useful
      for automated testing of gdb but may also be information that is
      useful to the user.  */
-  const char *m_debugformat;
+  const char *m_debugformat = "unknown";
 
   /* String of producer version information, or NULL if we don't know.  */
-  const char *m_producer;
+  const char *m_producer = nullptr;
 
   /* Directory in which it was compiled, or NULL if we don't know.  */
-  const char *m_dirname;
+  const char *m_dirname = nullptr;
 
   /* List of all symbol scope blocks for this symtab.  It is shared among
      all symtabs in a given compilation unit.  */
-  struct blockvector *m_blockvector;
+  std::unique_ptr<struct blockvector> m_blockvector;
 
   /* Symtab has been compiled with both optimizations and debug info so that
      GDB may stop skipping prologues as variables locations are valid already
@@ -2014,38 +1999,35 @@ struct compunit_symtab
   unsigned int m_epilogue_unwind_valid : 1;
 
   /* struct call_site entries for this compilation unit or NULL.  */
-  call_site_htab_t *m_call_site_htab;
+  std::unique_ptr<call_site_htab_t> m_call_site_htab;
 
   /* The macro table for this symtab.  Like the blockvector, this
      is shared between different symtabs in a given compilation unit.
      It's debatable whether it *should* be shared among all the symtabs in
      the given compilation unit, but it currently is.  */
-  struct macro_table *m_macro_table;
+  struct macro_table *m_macro_table = nullptr;
 
-  /* If non-NULL, then this points to a NULL-terminated vector of
-     included compunits.  When searching the static or global
+  /* Vector of included compunit symtabs.  When searching the static or global
      block of this compunit, the corresponding block of all
      included compunits will also be searched.  Note that this
      list must be flattened -- the symbol reader is responsible for
      ensuring that this vector contains the transitive closure of all
      included compunits.  */
-  struct compunit_symtab **includes;
+  std::vector<compunit_symtab *> includes;
 
   /* If this is an included compunit, this points to one includer
      of the table.  This user is considered the canonical compunit
      containing this one.  An included compunit may itself be
      included by another.  */
-  struct compunit_symtab *user;
+  struct compunit_symtab *user = nullptr;
 };
-
-using compunit_symtab_range = next_range<compunit_symtab>;
 
 /* Return true if this symtab is the "main" symtab of its compunit_symtab.  */
 
 static inline bool
 is_main_symtab_of_compunit_symtab (struct symtab *symtab)
 {
-  return symtab == symtab->compunit ()->primary_filetab ();
+  return symtab == symtab->compunit ().primary_filetab ();
 }
 
 /* Return true if epilogue unwind info of CUST is valid.  */
@@ -2063,7 +2045,7 @@ compunit_epilogue_unwind_valid (struct compunit_symtab *cust)
 
 
 /* The virtual function table is now an array of structures which have the
-   form { int16 offset, delta; void *pfn; }. 
+   form { int16 offset, delta; void *pfn; }.
 
    In normal virtual function tables, OFFSET is unused.
    DELTA is the amount which is added to the apparent object's base
@@ -2102,17 +2084,17 @@ struct field_of_this_result
      symbol was not found in 'this'.  If non-NULL, then one of the
      other fields will be non-NULL as well.  */
 
-  struct type *type;
+  struct type *type = nullptr;
 
   /* If the symbol was found as an ordinary field of 'this', then this
      is non-NULL and points to the particular field.  */
 
-  struct field *field;
+  struct field *field = nullptr;
 
   /* If the symbol was found as a function field of 'this', then this
      is non-NULL and points to the particular field.  */
 
-  struct fn_fieldlist *fn_field;
+  struct fn_fieldlist *fn_field = nullptr;
 };
 
 /* Find the definition for a specified symbol name NAME
@@ -2216,19 +2198,25 @@ extern struct type *lookup_enum (const char *, const struct block *);
    return value will not be an inlined function; the containing
    function will be returned instead.  */
 
-extern struct symbol *find_pc_function (CORE_ADDR);
+extern struct symbol *find_symbol_for_pc (CORE_ADDR);
+
+/* Lookup the function symbol corresponding to the address.  The return value
+   will be the closest enclosing function, which might be an inline
+   function.  */
+
+extern struct symbol *find_symbol_for_pc_maybe_inline (CORE_ADDR pc);
 
 /* lookup the function corresponding to the address and section.  The
    return value will not be an inlined function; the containing
    function will be returned instead.  */
 
-extern struct symbol *find_pc_sect_function (CORE_ADDR, struct obj_section *);
+extern struct symbol *find_symbol_for_pc_sect (CORE_ADDR, struct obj_section *);
 
 /* lookup the function symbol corresponding to the address and
    section.  The return value will be the closest enclosing function,
    which might be an inline function.  */
 
-extern struct symbol *find_pc_sect_containing_function
+extern struct symbol *find_symbol_for_pc_sect_maybe_inline
   (CORE_ADDR pc, struct obj_section *section);
 
 /* Find the symbol at the given address.  Returns NULL if no symbol
@@ -2243,18 +2231,18 @@ extern struct symbol *find_symbol_at_address (CORE_ADDR);
    function (exclusive).  If the optional parameter BLOCK is non-null,
    then set *BLOCK to the address of the block corresponding to the
    function symbol, if such a symbol could be found during the lookup;
-   nullptr is used as a return value for *BLOCK if no block is found. 
+   nullptr is used as a return value for *BLOCK if no block is found.
    This function either succeeds or fails (not halfway succeeds).  If
    it succeeds, it sets *NAME, *ADDRESS, and *ENDADDR to real
    information and returns true.  If it fails, it sets *NAME, *ADDRESS
    and *ENDADDR to zero and returns false.
-   
+
    If the function in question occupies non-contiguous ranges,
    *ADDRESS and *ENDADDR are (subject to the conditions noted above) set
    to the start and end of the range in which PC is found.  Thus
    *ADDRESS <= PC < *ENDADDR with no intervening gaps (in which ranges
    from other functions might be found).
-   
+
    This property allows find_pc_partial_function to be used (as it had
    been prior to the introduction of non-contiguous range support) by
    various tdep files for finding a start address and limit address
@@ -2265,9 +2253,9 @@ extern struct symbol *find_symbol_at_address (CORE_ADDR);
    argument can be made that prologue analysis ought to be performed
    starting from the entry pc even when PC is within some other range.
    This might suggest that *ADDRESS and *ENDADDR ought to be set to the
-   limits of the entry pc range, but that will cause the 
+   limits of the entry pc range, but that will cause the
    *ADDRESS <= PC < *ENDADDR condition to be violated; many of the
-   callers of find_pc_partial_function expect this condition to hold. 
+   callers of find_pc_partial_function expect this condition to hold.
 
    Callers which require the start and/or end addresses for the range
    containing the entry pc should instead call
@@ -2318,14 +2306,14 @@ extern void clear_pc_function_cache (void);
 
 /* lookup full symbol table by address.  */
 
-extern struct compunit_symtab *find_pc_compunit_symtab (CORE_ADDR);
+extern struct compunit_symtab *find_compunit_symtab_for_pc (CORE_ADDR);
 
 /* lookup full symbol table by address and section.  */
 
 extern struct compunit_symtab *
-  find_pc_sect_compunit_symtab (CORE_ADDR, struct obj_section *);
+  find_compunit_symtab_for_pc_sect (CORE_ADDR, struct obj_section *);
 
-extern bool find_pc_line_pc_range (CORE_ADDR, CORE_ADDR *, CORE_ADDR *);
+extern bool find_line_pc_range_for_pc (CORE_ADDR, CORE_ADDR *, CORE_ADDR *);
 
 extern void reread_symbols (int from_tty);
 
@@ -2335,9 +2323,6 @@ extern void reread_symbols (int from_tty);
 
 extern struct type *lookup_transparent_type
     (const char *name, domain_search_flags flags = SEARCH_STRUCT_DOMAIN);
-
-extern struct type *basic_lookup_transparent_type
-     (const char *name, domain_search_flags flags = SEARCH_STRUCT_DOMAIN);
 
 /* Macro for name of symbol to indicate a file compiled with gcc.  */
 #ifndef GCC_COMPILED_FLAG_SYMBOL
@@ -2415,12 +2400,12 @@ struct symtab_and_line
 /* Given a pc value, return line number it is in.  Second arg nonzero means
    if pc is on the boundary use the previous statement's line number.  */
 
-extern struct symtab_and_line find_pc_line (CORE_ADDR, int);
+extern struct symtab_and_line find_sal_for_pc (CORE_ADDR, int);
 
 /* Same function, but specify a section as well as an address.  */
 
-extern struct symtab_and_line find_pc_sect_line (CORE_ADDR,
-						 struct obj_section *, int);
+extern struct symtab_and_line find_sal_for_pc_sect (CORE_ADDR,
+						    obj_section *, int);
 
 /* Given PC, and assuming it is part of a range of addresses that is part of
    a line, go back through the linetable and find the starting PC of that
@@ -2438,16 +2423,16 @@ extern struct symtab_and_line find_pc_sect_line (CORE_ADDR,
 
 extern std::optional<CORE_ADDR> find_line_range_start (CORE_ADDR pc);
 
-/* Wrapper around find_pc_line to just return the symtab.  */
+/* Wrapper around find_sal_for_pc to just return the symtab.  */
 
-extern struct symtab *find_pc_line_symtab (CORE_ADDR);
+extern struct symtab *find_symtab_for_pc (CORE_ADDR);
 
 /* Given a symtab and line number, return the pc there.  */
 
-extern bool find_line_pc (struct symtab *, int, CORE_ADDR *);
+extern bool find_pc_for_line (struct symtab *, int, CORE_ADDR *);
 
-extern bool find_line_pc_range (struct symtab_and_line, CORE_ADDR *,
-				CORE_ADDR *);
+extern bool find_pc_range_for_sal (struct symtab_and_line, CORE_ADDR *,
+				   CORE_ADDR *);
 
 extern void resolve_sal_pc (struct symtab_and_line *);
 
@@ -2483,8 +2468,7 @@ extern void collect_file_symbol_completion_matches
    symbol_name_match_type name_match_type,
    const char *, const char *, const char *);
 
-extern completion_list
-  make_source_files_completion_list (const char *, const char *);
+extern completion_list make_source_files_completion_list (const char *);
 
 /* Return whether SYM is a function/method, as opposed to a data symbol.  */
 
@@ -2527,8 +2511,7 @@ extern symtab *find_line_symtab (symtab *sym_tab, int line, int *index);
 extern symtab_and_line find_function_start_sal (symbol *sym, bool
 						funfirstline);
 
-/* Same, but start with a function address/section instead of a
-   symbol.  */
+/* Same, but start with a function address instead of a symbol.  */
 extern symtab_and_line find_function_start_sal (CORE_ADDR func_addr,
 						obj_section *section,
 						bool funfirstline);
@@ -2714,7 +2697,7 @@ private:
    we return a vector of this type.  The first item in the pair is the
    module symbol, and the second item is the symbol for the function or
    variable we found.  */
-typedef std::pair<symbol_search, symbol_search> module_symbol_search;
+using module_symbol_search = std::pair<symbol_search, symbol_search>;
 
 /* Searches the symbols to find function and variables symbols (depending
    on KIND) within Fortran modules.  The MODULE_REGEXP matches against the
@@ -2750,10 +2733,6 @@ extern struct block_symbol
 				     enum block_enum block_index,
 				     const char *name,
 				     const domain_search_flags domain);
-
-/* Return 1 if the supplied producer string matches the ARM RealView
-   compiler (armcc).  */
-bool producer_is_realview (const char *producer);
 
 extern unsigned int symtab_create_debug;
 
@@ -2808,58 +2787,37 @@ extern bool basenames_may_differ;
 bool compare_filenames_for_search (const char *filename,
 				   const char *search_name);
 
-bool compare_glob_filenames_for_search (const char *filename,
-					const char *search_name);
+/* Callback type for function for_each_symtab.  */
 
-bool iterate_over_some_symtabs (const char *name,
-				const char *real_path,
-				struct compunit_symtab *first,
-				struct compunit_symtab *after_last,
-				gdb::function_view<bool (symtab *)> callback);
+using for_each_symtab_callback_ftype = std::function<void (symtab *)>;
 
-/* Check in PSPACE for a symtab of a specific name; first in symtabs, then in
-   psymtabs.  *If* there is no '/' in the name, a match after a '/' in the
-   symtab filename will also work.
+/* Check in PSPACE for symtabs of a specific name.  *If* there is no '/' in
+   the name, a match after a '/' in the symtab filename will also work.
 
-   Call CALLBACK with each symtab that is found.  If CALLBACK returns
-   true, the search stops.  */
+   Call CALLBACK with each symtab that is found.  */
 
-void iterate_over_symtabs (program_space *pspace, const char *name,
-			   gdb::function_view<bool (symtab *)> callback);
+void for_each_symtab (program_space *pspace, const char *name,
+		      for_each_symtab_callback_ftype callback);
 
-std::vector<CORE_ADDR> find_pcs_for_symtab_line
+/* Callback type for function find_symtab.  */
+
+using find_symtab_callback_ftype = std::function<bool (symtab *)>;
+
+std::vector<const linetable_entry *> find_linetable_entries_for_symtab_line
     (struct symtab *symtab, int line, const linetable_entry **best_entry);
 
-/* Prototype for callbacks for LA_ITERATE_OVER_SYMBOLS.  The callback
-   is called once per matching symbol SYM.  The callback should return
-   true to indicate that LA_ITERATE_OVER_SYMBOLS should continue
-   iterating, or false to indicate that the iteration should end.  */
+/* Callback type for function for_each_symbol.  */
 
-typedef bool (symbol_found_callback_ftype) (struct block_symbol *bsym);
+using for_each_symbol_callback_ftype
+  = gdb::function_view<void (block_symbol *)>;
 
 /* Iterate over the symbols named NAME, matching DOMAIN, in BLOCK.
 
-   For each symbol that matches, CALLBACK is called.  The symbol is
-   passed to the callback.
+   For each symbol that matches, call CALLBACK with the symbol.  */
 
-   If CALLBACK returns false, the iteration ends and this function
-   returns false.  Otherwise, the search continues, and the function
-   eventually returns true.  */
-
-bool iterate_over_symbols (const struct block *block,
-			   const lookup_name_info &name,
-			   const domain_search_flags domain,
-			   gdb::function_view<symbol_found_callback_ftype> callback);
-
-/* Like iterate_over_symbols, but if all calls to CALLBACK return
-   true, then calls CALLBACK one additional time with a block_symbol
-   that has a valid block but a NULL symbol.  */
-
-bool iterate_over_symbols_terminated
-  (const struct block *block,
-   const lookup_name_info &name,
-   const domain_search_flags domain,
-   gdb::function_view<symbol_found_callback_ftype> callback);
+void for_each_symbol (const struct block *block, const lookup_name_info &name,
+		      const domain_search_flags domain,
+		      for_each_symbol_callback_ftype callback);
 
 /* Storage type used by demangle_for_lookup.  demangle_for_lookup
    either returns a const char * pointer that points to either of the

@@ -1,4 +1,4 @@
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +19,13 @@ load_lib completion-support.exp
 
 standard_testfile cpls-ops.cc
 
+set flags {}
+lappend flags debug
+lappend flags c++
+
 if {[prepare_for_testing "failed to prepare" $testfile \
-	 [list $srcfile] {debug}]} {
-    return -1
+	 [list $srcfile] $flags]} {
+    return
 }
 
 # Tests below are about tab-completion, which doesn't work if readline
@@ -29,7 +33,7 @@ if {[prepare_for_testing "failed to prepare" $testfile \
 
 if { ![readline_is_used] } {
     untested "no tab completion support without readline"
-    return -1
+    return
 }
 
 gdb_test_no_output "set max-completions unlimited"

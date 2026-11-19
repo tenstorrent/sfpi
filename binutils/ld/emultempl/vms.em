@@ -1,5 +1,5 @@
 # This shell script emits a C file. -*- C -*-
-#   Copyright (C) 2010-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2010-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -188,19 +188,15 @@ fragment <<EOF
 static void
 gld${EMULATION_NAME}_before_allocation (void)
 {
-  const struct elf_backend_data *bed;
-
   if (!is_elf_hash_table (link_info.hash))
     return;
 
-  bed = get_elf_backend_data (link_info.output_bfd);
-
   /* The backend must work out the sizes of all the other dynamic
      sections.  */
+  elf_backend_data *bed = get_elf_backend_data (link_info.output_bfd);
   if (bed->elf_backend_late_size_sections
-      && !bed->elf_backend_late_size_sections (link_info.output_bfd,
-					       &link_info))
-    einfo (_("%F%P: failed to set dynamic section sizes: %E\n"));
+      && !bed->elf_backend_late_size_sections (&link_info))
+    fatal (_("%P: failed to set dynamic section sizes: %E\n"));
 
   before_allocation_default ();
 }
@@ -208,7 +204,7 @@ gld${EMULATION_NAME}_before_allocation (void)
 static void
 gld${EMULATION_NAME}_after_allocation (void)
 {
-  int need_layout = bfd_elf_discard_info (link_info.output_bfd, &link_info);
+  int need_layout = bfd_elf_discard_info (&link_info);
 
   if (need_layout < 0)
     einfo (_("%X%P: .eh_frame/.stab edit: %E\n"));

@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2004-2024 Free Software Foundation, Inc.
+   Copyright 2004-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 */
 
-/* Useful abreviations.  */
+/* Useful abbreviations.  */
 typedef void t;
 typedef char tc;
 typedef short ts;
@@ -39,7 +39,7 @@ T init = '9';
 
 T fun()
 {
-  return foo;  
+  return foo;
 }
 
 void Fun(T foo)
@@ -69,7 +69,7 @@ int main()
   zed ();
   while (1)
     {
-      L = fun ();	
+      L = fun ();
       zed ();
     }
 

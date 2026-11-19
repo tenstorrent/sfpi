@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ if { [build_executable "failed to prepare" ${binfile} "${srcfile}" \
 # call that will never return.  GDB should eventually timeout and stop
 # the inferior.
 #
-# When UNWIND is "off" the inferior wil be left in the frame where the
+# When UNWIND is "off" the inferior will be left in the frame where the
 # timeout occurs, otherwise, when UNWIND is "on", GDB should unwind
 # back to the frame where the inferior call was made.
 proc run_test { target_async target_non_stop non_stop unwind } {
@@ -41,7 +41,7 @@ proc run_test { target_async target_non_stop non_stop unwind } {
 	append ::GDBFLAGS \
 	    " -ex \"maintenance set target-async ${target_async}\""
 
-	clean_restart ${::binfile}
+	clean_restart $::testfile
     }
 
     if {![runto_main]} {
@@ -86,6 +86,19 @@ proc run_test { target_async target_non_stop non_stop unwind } {
 	gdb_test "bt" \
 	    ".* function_that_never_returns .*<function called from gdb>.*"
     }
+
+    # After the infcall, the thread should be stopped.  Regression
+    # test for PR gdb/34148.
+    if {$non_stop} {
+	# Check the main thread only, in case we have system-spawned
+	# threads.
+	set thread_filter "1"
+    } else {
+	set thread_filter ""
+    }
+    gdb_test "info threads -running $thread_filter" \
+	"No threads matched\\." \
+	"thread is stopped"
 }
 
 foreach_with_prefix target_async { "on" "off" } {

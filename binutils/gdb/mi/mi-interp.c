@@ -1,6 +1,6 @@
 /* MI Interpreter Definitions and Commands for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,7 +23,6 @@
 #include "exceptions.h"
 #include "interps.h"
 #include "event-top.h"
-#include "gdbsupport/event-loop.h"
 #include "inferior.h"
 #include "infrun.h"
 #include "ui-out.h"
@@ -35,7 +34,7 @@
 #include "mi-common.h"
 #include "observable.h"
 #include "gdbthread.h"
-#include "solist.h"
+#include "solib.h"
 #include "objfiles.h"
 #include "tracepoint.h"
 #include "cli-out.h"
@@ -79,25 +78,25 @@ mi_interp::on_command_error ()
 }
 
 void
-mi_interp::init (bool top_level)
+mi_interp::do_init (bool top_level)
 {
   mi_interp *mi = this;
 
   /* Store the current output channel, so that we can create a console
      channel that encapsulates and prefixes all gdb_output-type bits
      coming from the rest of the debugger.  */
-  mi->raw_stdout = gdb_stdout;
+  mi->raw_stdout = new ui::ui_stdout_file ();
 
   /* Create MI console channels, each with a different prefix so they
      can be distinguished.  */
-  mi->out = new mi_console_file (mi->raw_stdout, "~", '"');
-  mi->err = new mi_console_file (mi->raw_stdout, "&", '"');
-  mi->log = mi->err;
-  mi->targ = new mi_console_file (mi->raw_stdout, "@", '"');
+  m_stdout = std::make_unique<mi_console_file> (mi->raw_stdout, "~", '"');
+  m_stderr = std::make_unique<mi_console_file> (mi->raw_stdout, "&", '"');
+  m_stdlog = std::make_unique<mi_console_file> (mi->raw_stdout, "&", '"');
+  m_stdtarg = std::make_unique<mi_console_file> (mi->raw_stdout, "@", '"');
   mi->event_channel = new mi_console_file (mi->raw_stdout, "=", 0);
   mi->mi_uiout = mi_out_new (name ()).release ();
   gdb_assert (mi->mi_uiout != nullptr);
-  mi->cli_uiout = new cli_ui_out (mi->out);
+  mi->cli_uiout = new cli_ui_out (m_stdout.get ());
 
   if (top_level)
     {
@@ -117,22 +116,12 @@ mi_interp::init (bool top_level)
 void
 mi_interp::resume ()
 {
-  struct mi_interp *mi = this;
   struct ui *ui = current_ui;
 
-  /* As per hack note in mi_interpreter_init, swap in the output
-     channels... */
   gdb_setup_readline (0);
 
   ui->call_readline = gdb_readline_no_editing_callback;
   ui->input_handler = mi_execute_command_input_handler;
-
-  gdb_stdout = mi->out;
-  /* Route error and log output through the MI.  */
-  gdb_stderr = mi->err;
-  gdb_stdlog = mi->log;
-  /* Route target output through the MI.  */
-  gdb_stdtarg = mi->targ;
 
   deprecated_show_load_progress = mi_load_progress;
 }
@@ -257,7 +246,7 @@ mi_interp::pre_command_loop ()
 
   /* Turn off 8 bit strings in quoted output.  Any character with the
      high bit set is printed using C's octal format.  */
-  sevenbit_strings = 1;
+  sevenbit_strings = true;
 
   /* Tell the world that we're alive.  */
   display_mi_prompt (mi);
@@ -683,8 +672,8 @@ mi_on_resume_1 (struct mi_interp *mi,
       && !multiple_inferiors_p ())
     gdb_printf (mi->raw_stdout, "*running,thread-id=\"all\"\n");
   else
-    for (thread_info *tp : all_non_exited_threads (targ, ptid))
-      mi_output_running (tp);
+    for (thread_info &tp : all_non_exited_threads (targ, ptid))
+      mi_output_running (&tp);
 
   if (!mi->running_result_record_printed && mi->mi_proceeded)
     {
@@ -721,15 +710,17 @@ mi_interp::on_target_resumed (ptid_t ptid)
 
 /* See mi-interp.h.  */
 
-void
-mi_output_solib_attribs (ui_out *uiout, const solib &solib)
+static void
+mi_output_solib_attribs_1 (ui_out *uiout, const solib &solib,
+			   bool include_symbols_loaded_p)
 {
   gdbarch *gdbarch = current_inferior ()->arch ();
 
-  uiout->field_string ("id", solib.so_original_name);
-  uiout->field_string ("target-name", solib.so_original_name);
-  uiout->field_string ("host-name", solib.so_name);
-  uiout->field_signed ("symbols-loaded", solib.symbols_loaded);
+  uiout->field_string ("id", solib.original_name);
+  uiout->field_string ("target-name", solib.original_name);
+  uiout->field_string ("host-name", solib.name);
+  if (include_symbols_loaded_p)
+    uiout->field_signed ("symbols-loaded", solib.symbols_loaded);
   if (!gdbarch_has_global_solist (current_inferior ()->arch ()))
       uiout->field_fmt ("thread-group", "i%d", current_inferior ()->num);
 
@@ -740,6 +731,14 @@ mi_output_solib_attribs (ui_out *uiout, const solib &solib)
       uiout->field_core_addr ("from", gdbarch, solib.addr_low);
       uiout->field_core_addr ("to", gdbarch, solib.addr_high);
     }
+}
+
+/* See mi-interp.h.  */
+
+void
+mi_output_solib_attribs (ui_out *uiout, const solib &solib)
+{
+  mi_output_solib_attribs_1 (uiout, solib, true);
 }
 
 void
@@ -760,7 +759,7 @@ mi_interp::on_solib_loaded (const solib &solib)
 }
 
 void
-mi_interp::on_solib_unloaded (const solib &solib)
+mi_interp::on_solib_unloaded (const solib &solib, bool still_in_use)
 {
   ui_out *uiout = this->interp_ui_out ();
 
@@ -771,11 +770,9 @@ mi_interp::on_solib_unloaded (const solib &solib)
 
   ui_out_redirect_pop redir (uiout, this->event_channel);
 
-  uiout->field_string ("id", solib.so_original_name);
-  uiout->field_string ("target-name", solib.so_original_name);
-  uiout->field_string ("host-name", solib.so_name);
-  if (!gdbarch_has_global_solist (current_inferior ()->arch ()))
-    uiout->field_fmt ("thread-group", "i%d", current_inferior ()->num);
+  /* Pass false here so that 'symbols-loaded' is not included.  */
+  mi_output_solib_attribs_1 (uiout, solib, false);
+  uiout->field_string ("still-in-use", still_in_use ? "true" : "false");
 
   gdb_flush (this->event_channel);
 }
@@ -861,10 +858,10 @@ mi_interp::on_user_selected_context_changed (user_selected_what selection)
       gdb_printf (this->event_channel, "thread-selected,id=\"%d\"",
 		  tp->global_num);
 
-      if (tp->state != THREAD_RUNNING)
+      if (tp->state () != THREAD_RUNNING)
 	{
 	  if (has_stack_frames ())
-	    print_stack_frame_to_uiout (mi_uiout, get_selected_frame (NULL),
+	    print_stack_frame_to_uiout (mi_uiout, get_selected_frame (),
 					1, SRC_AND_LOC, 1);
 	}
     }
@@ -878,48 +875,6 @@ mi_interp::interp_ui_out ()
   return this->mi_uiout;
 }
 
-/* Do MI-specific logging actions; save raw_stdout, and change all
-   the consoles to use the supplied ui-file(s).  */
-
-void
-mi_interp::set_logging (ui_file_up logfile, bool logging_redirect,
-			bool debug_redirect)
-{
-  struct mi_interp *mi = this;
-
-  if (logfile != NULL)
-    {
-      mi->saved_raw_stdout = mi->raw_stdout;
-
-      ui_file *logfile_p = logfile.get ();
-      mi->logfile_holder = std::move (logfile);
-
-      /* If something is not being redirected, then a tee containing both the
-	 logfile and stdout.  */
-      ui_file *tee = nullptr;
-      if (!logging_redirect || !debug_redirect)
-	{
-	  tee = new tee_file (mi->raw_stdout, logfile_p);
-	  mi->stdout_holder.reset (tee);
-	}
-
-      mi->raw_stdout = logging_redirect ? logfile_p : tee;
-    }
-  else
-    {
-      mi->logfile_holder.reset ();
-      mi->stdout_holder.reset ();
-      mi->raw_stdout = mi->saved_raw_stdout;
-      mi->saved_raw_stdout = nullptr;
-    }
-
-  mi->out->set_raw (mi->raw_stdout);
-  mi->err->set_raw (mi->raw_stdout);
-  mi->log->set_raw (mi->raw_stdout);
-  mi->targ->set_raw (mi->raw_stdout);
-  mi->event_channel->set_raw (mi->raw_stdout);
-}
-
 /* Factory for MI interpreters.  */
 
 static struct interp *
@@ -928,9 +883,7 @@ mi_interp_factory (const char *name)
   return new mi_interp (name);
 }
 
-void _initialize_mi_interp ();
-void
-_initialize_mi_interp ()
+INIT_GDB_FILE (mi_interp)
 {
   /* The various interpreter levels.  */
   interp_factory_register (INTERP_MI2, mi_interp_factory);

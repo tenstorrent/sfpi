@@ -1,6 +1,6 @@
 /* Target dependent code for GNU/Linux ARC.
 
-   Copyright 2020-2024 Free Software Foundation, Inc.
+   Copyright 2020-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,6 +19,7 @@
 
 /* GDB header files.  */
 #include "linux-tdep.h"
+#include "solib-svr4-linux.h"
 #include "objfiles.h"
 #include "opcode/arc.h"
 #include "osabi.h"
@@ -211,18 +212,18 @@ arc_linux_is_sigtramp (const frame_info_ptr &this_frame)
   if (!safe_frame_unwind_memory (this_frame, pc, {buf, insns_sz}))
     {
       /* Failed to unwind frame.  */
-      return FALSE;
+      return false;
     }
 
   /* Is that code the sigtramp instruction sequence?  */
   if (memcmp (buf, arc_sigtramp_insns, insns_sz) == 0)
-    return TRUE;
+    return true;
 
   /* No - look one instruction earlier in the code...  */
   if (!safe_frame_unwind_memory (this_frame, pc - 4, {buf, insns_sz}))
     {
       /* Failed to unwind frame.  */
-      return FALSE;
+      return false;
     }
 
   return (memcmp (buf, arc_sigtramp_insns, insns_sz) == 0);
@@ -269,7 +270,7 @@ arc_linux_sigcontext_addr (const frame_info_ptr &this_frame)
 
 /* Implement the "cannot_fetch_register" gdbarch method.  */
 
-static int
+static bool
 arc_linux_cannot_fetch_register (struct gdbarch *gdbarch, int regnum)
 {
   /* Assume that register is readable if it is unknown.  */
@@ -289,7 +290,7 @@ arc_linux_cannot_fetch_register (struct gdbarch *gdbarch, int regnum)
 
 /* Implement the "cannot_store_register" gdbarch method.  */
 
-static int
+static bool
 arc_linux_cannot_store_register (struct gdbarch *gdbarch, int regnum)
 {
   /* Assume that register is writable if it is unknown.  */
@@ -335,6 +336,8 @@ arc_linux_sw_breakpoint_from_kind (struct gdbarch *gdbarch,
 	  ? arc_linux_trap_s_be
 	  : arc_linux_trap_s_le);
 }
+
+/* codespell:ignore-begin.  Ignore SCOND.  */
 
 /* Check for an atomic sequence of instructions beginning with an
    LLOCK instruction and ending with a SCOND instruction.
@@ -407,6 +410,8 @@ handle_atomic_sequence (arc_instruction insn, disassemble_info *di)
 
   return next_pcs;
 }
+
+/* codespell:ignore-end.  */
 
 /* Implement the "software_single_step" gdbarch method.  */
 
@@ -727,7 +732,7 @@ arc_linux_init_osabi (struct gdbarch_info info, struct gdbarch *gdbarch)
 				       arc_linux_sw_breakpoint_from_kind);
   set_gdbarch_fetch_tls_load_module_address (gdbarch,
 					     svr4_fetch_objfile_link_map);
-  set_gdbarch_software_single_step (gdbarch, arc_linux_software_single_step);
+  set_gdbarch_get_next_pcs (gdbarch, arc_linux_software_single_step);
   set_gdbarch_skip_trampoline_code (gdbarch, find_solib_trampoline_target);
   set_gdbarch_skip_solib_resolver (gdbarch, arc_linux_skip_solib_resolver);
   set_gdbarch_iterate_over_regset_sections
@@ -736,15 +741,10 @@ arc_linux_init_osabi (struct gdbarch_info info, struct gdbarch *gdbarch)
 
   /* GNU/Linux uses SVR4-style shared libraries, with 32-bit ints, longs
      and pointers (ILP32).  */
-  set_solib_svr4_fetch_link_map_offsets (gdbarch,
-					 linux_ilp32_fetch_link_map_offsets);
+  set_solib_svr4_ops (gdbarch, make_linux_ilp32_svr4_solib_ops);
 }
 
-/* Suppress warning from -Wmissing-prototypes.  */
-extern initialize_file_ftype _initialize_arc_linux_tdep;
-
-void
-_initialize_arc_linux_tdep ()
+INIT_GDB_FILE (arc_linux_tdep)
 {
   gdbarch_register_osabi (bfd_arch_arc, 0, GDB_OSABI_LINUX,
 			  arc_linux_init_osabi);

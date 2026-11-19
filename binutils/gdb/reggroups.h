@@ -1,6 +1,6 @@
 /* Register groupings for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat.
 
@@ -95,7 +95,7 @@ extern const reggroup *reggroup_find (struct gdbarch *gdbarch,
 				      const char *name);
 
 /* Is REGNUM a member of REGGROUP?  */
-extern int default_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
-					const struct reggroup *reggroup);
+extern bool default_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
+					 const struct reggroup *reggroup);
 
 #endif /* GDB_REGGROUPS_H */

@@ -1,4 +1,4 @@
-# Copyright 2007-2024 Free Software Foundation, Inc.
+# Copyright 2007-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
 # Author: P. N. Hilfinger, AdaCore Inc.
 
 # Note: This test is essentially a transcription of gdb.cp/formatted-ref.exp,
-# and is thus much more wordy than it needs to be. There are fewer 
-# tests because only a few parameter types in Ada are required to be 
+# and is thus much more wordy than it needs to be. There are fewer
+# tests because only a few parameter types in Ada are required to be
 # passed by reference, and there is no equivalent of &(&x) for reference
 # values.
 # This also tests that some other arithmetic operations on references
@@ -32,7 +32,7 @@ standard_ada_testfile formatted_ref
 
 if {[gdb_compile_ada "${srcfile}" "${binfile}" executable [list debug ]] != "" } {
     untested formatted-ref.exp
-    return -1
+    return
 }
 
 proc get_address { var } {
@@ -40,9 +40,9 @@ proc get_address { var } {
     global gdb_prompt
 
     gdb_test_multiple "print $var'access" "address of $var" {
-	-re "\\$\[0-9\]+ = \\(.*\\) (0x\[0-9a-f\]+).*$gdb_prompt $" {
-            return $expect_out(1,string)
-        }
+	-re "${::valnum_re} = \\(.*\\) (${::hex}).*$gdb_prompt $" {
+	    return $expect_out(1,string)
+	}
     }
     return ""
 }
@@ -52,15 +52,15 @@ proc test_p_x { var val addr } {
 
     set test "print/x $var"
     gdb_test_multiple "$test" $test {
-        -re "\\$\[0-9\]+ = [string_to_regexp $val].*$gdb_prompt $" {
+	-re "${::valnum_re} = [string_to_regexp $val].*$gdb_prompt $" {
 	    pass $test
-	} 
-	-re "\\$\[0-9\]+ = $addr.*$gdb_prompt $" {
-            fail "$test (prints just address)"
-        }
-	-re "\\$\[0-9\]+ = 0x\[a-f0-9\]+.*$gdb_prompt $" {
-            fail "$test (prints unexpected address)"
-        }
+	}
+	-re "${::valnum_re} = $addr.*$gdb_prompt $" {
+	    fail "$test (prints just address)"
+	}
+	-re "${::valnum_re} = 0x\[a-f0-9\]+.*$gdb_prompt $" {
+	    fail "$test (prints unexpected address)"
+	}
     }
     return 0
 }
@@ -72,10 +72,10 @@ proc test_p_x_addr { var addr } {
 	foreach space {"" "  "} {
 	    set test "print/x $var'$space$attr"
 	    gdb_test_multiple $test $test {
-		-re "\\$\[0-9\]+ = $addr.*$gdb_prompt $" {
+		-re "${::valnum_re} = $addr.*$gdb_prompt $" {
 		    pass $test
 		}
-		-re "\\$\[0-9\]+ = 0x\[a-f0-9+\]+.*$gdb_prompt $" {
+		-re "${::valnum_re} = 0x\[a-f0-9+\]+.*$gdb_prompt $" {
 		    fail "$test (prints unexpected address)"
 		}
 	    }
@@ -91,7 +91,7 @@ proc test_p_x_addr { var addr } {
 
 proc test_p_op1_equals_op2 {op1 op2} {
     set test "print $op1 = $op2"
-    gdb_test $test "\\$\[0-9\]+ = true"
+    gdb_test $test "${::valnum_re} = true"
 }
 
 clean_restart ${testfile}

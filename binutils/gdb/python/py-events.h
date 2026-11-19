@@ -1,6 +1,6 @@
 /* Python interface to inferior events.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -27,12 +27,12 @@
 /* Stores a list of objects to be notified when the event for which this
    registry tracks occurs.  */
 
-struct eventregistry_object
+struct eventregistry_object : public PyObject
 {
-  PyObject_HEAD
-
   PyObject *callbacks;
 };
+
+static_assert (gdb::is_python_allocatable_v<eventregistry_object>);
 
 /* Struct holding references to event registries both in python and c.
    This is meant to be a singleton.  */
@@ -44,7 +44,7 @@ struct events_object
 #include "py-all-events.def"
 #undef GDB_PY_DEFINE_EVENT
 
-  PyObject *module;
+  PyObject *mod;
 
 };
 

@@ -1,6 +1,6 @@
 /* Target-dependent code for Solaris.
 
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -43,9 +43,10 @@
 static int
 sol2_pc_in_sigtramp (CORE_ADDR pc, const char *name)
 {
-  return (name && (strcmp (name, "sigacthandler") == 0
-		   || strcmp (name, "ucbsigvechandler") == 0
-		   || strcmp (name, "__sighndlr") == 0));
+  return (name != nullptr
+	  && (streq (name, "sigacthandler")
+	      || streq (name, "ucbsigvechandler")
+	      || streq (name, "__sighndlr")));
 }
 
 /* Return whether THIS_FRAME corresponds to a Solaris sigtramp routine.  */
@@ -102,11 +103,6 @@ sol2_core_pid_to_str (struct gdbarch *gdbarch, ptid_t ptid)
 void
 sol2_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 {
-  /* The Sun compilers (Sun ONE Studio, Forte Developer, Sun WorkShop, SunPRO)
-     compiler puts out 0 instead of the address in N_SO stabs.  Starting with
-     SunPRO 3.0, the compiler does this for N_FUN stabs too.  */
-  set_gdbarch_sofun_address_maybe_missing (gdbarch, 1);
-
   /* Solaris uses SVR4-style shared libraries.  */
   set_gdbarch_skip_solib_resolver (gdbarch, sol2_skip_solib_resolver);
 

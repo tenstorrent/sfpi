@@ -1,5 +1,5 @@
 /* Motorola MCore specific support for 32-bit ELF
-   Copyright (C) 1994-2025 Free Software Foundation, Inc.
+   Copyright (C) 1994-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -59,8 +59,7 @@ mcore_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   if (! _bfd_generic_verify_endian_match (ibfd, info))
     return false;
 
-  if (   bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return true;
 
   new_flags = elf_elfheader (ibfd)->e_flags;
@@ -391,8 +390,7 @@ mcore_elf_info_to_howto (bfd * abfd,
    accordingly.  */
 
 static int
-mcore_elf_relocate_section (bfd * output_bfd,
-			    struct bfd_link_info * info,
+mcore_elf_relocate_section (struct bfd_link_info * info,
 			    bfd * input_bfd,
 			    asection * input_section,
 			    bfd_byte * contents,
@@ -400,7 +398,7 @@ mcore_elf_relocate_section (bfd * output_bfd,
 			    Elf_Internal_Sym * local_syms,
 			    asection ** local_sections)
 {
-  Elf_Internal_Shdr * symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  Elf_Internal_Shdr * symtab_hdr = &elf_symtab_hdr (input_bfd);
   struct elf_link_hash_entry ** sym_hashes = elf_sym_hashes (input_bfd);
   Elf_Internal_Rela * rel = relocs;
   Elf_Internal_Rela * relend = relocs + input_section->reloc_count;
@@ -465,7 +463,8 @@ mcore_elf_relocate_section (bfd * output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	  addend = rel->r_addend;
 	}
       else
@@ -480,7 +479,8 @@ mcore_elf_relocate_section (bfd * output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_MCORE_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -561,19 +561,19 @@ mcore_elf_relocate_section (bfd * output_bfd,
 static asection *
 mcore_elf_gc_mark_hook (asection *sec,
 			struct bfd_link_info *info,
-			Elf_Internal_Rela *rel,
+			struct elf_reloc_cookie *cookie,
 			struct elf_link_hash_entry *h,
-			Elf_Internal_Sym *sym)
+			unsigned int symndx)
 {
   if (h != NULL)
-    switch (ELF32_R_TYPE (rel->r_info))
+    switch (ELF32_R_TYPE (cookie->rel->r_info))
       {
       case R_MCORE_GNU_VTINHERIT:
       case R_MCORE_GNU_VTENTRY:
 	return NULL;
       }
 
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
+  return _bfd_elf_gc_mark_hook (sec, info, cookie, h, symndx);
 }
 
 /* Look through the relocs for a section during the first phase.
@@ -594,7 +594,7 @@ mcore_elf_check_relocs (bfd * abfd,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = & elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;

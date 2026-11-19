@@ -1,6 +1,6 @@
 /* Platform independent shared object routines for GDB.
 
-   Copyright (C) 2011-2024 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -29,7 +29,7 @@ struct dlclose_deleter
 
 /* A unique pointer that points to a dynamic library.  */
 
-typedef std::unique_ptr<void, dlclose_deleter> gdb_dlhandle_up;
+using gdb_dlhandle_up = std::unique_ptr<void, dlclose_deleter>;
 
 /* Load the dynamic library file named FILENAME, and return a handle
    for that dynamic library.  Throw an error if the loading fails for

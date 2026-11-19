@@ -1,4 +1,4 @@
-#   Copyright 1997-2024 Free Software Foundation, Inc.
+#   Copyright 1997-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,12 +18,7 @@
 # either execs or exits --- since those events take somewhat different
 # code paths in GDB, both variants are exercised.
 
-# Until "set follow-fork-mode" and "catch vfork" are implemented on
-# other targets...
-#
-if {![istarget "*-linux*"]} {
-    continue
-}
+require allow_fork_tests
 
 standard_testfile .c -exit.c vforked-prog.c
 
@@ -33,17 +28,17 @@ set binfile3 vforked-prog
 
 if {[build_executable "compile $binfile" $binfile $srcfile] == -1} {
     untested "failed to compile first test binary"
-    return -1
+    return
 }
 
 if {[build_executable "compile $binfile2" $binfile2 $srcfile2] == -1} {
     untested "failed to compile second test binary"
-    return -1
+    return
 }
 
 if {[build_executable "compile $binfile3" $binfile3 $srcfile3] == -1} {
     untested "failed to compile third test binary"
-    return -1
+    return
 }
 
 # If required, download the program that we exec after vfork to the
@@ -58,11 +53,11 @@ if { [is_remote target] } {
 proc setup_gdb { binfile srcfile } {
     clean_restart $binfile
 
-    if ![runto_main] {
+    if {![runto_main]} {
 	return -code return
     }
 
-    gdb_breakpoint [gdb_get_line_number " VFORK " $srcfile] temporary
+    gdb_breakpoint [gdb_get_line_number " VFORK " $srcfile] -temporary
     gdb_continue_to_breakpoint "at VFORK"
 }
 

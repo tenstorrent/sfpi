@@ -1,4 +1,4 @@
---  Copyright 2013-2024 Free Software Foundation, Inc.
+--  Copyright 2013-2026 Free Software Foundation, Inc.
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -14,5 +14,5 @@
 --  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package Pck is
-   I : Integer := 1;
+   The_Test_Index : Integer := 1;
 end Pck;

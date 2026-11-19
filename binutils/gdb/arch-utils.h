@@ -1,6 +1,6 @@
 /* Dynamic architecture support for GDB, the GNU debugger.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -193,7 +193,7 @@ CORE_ADDR default_adjust_dwarf2_addr (CORE_ADDR pc);
 
 /* Do nothing default implementation of gdbarch_adjust_dwarf2_line.  */
 
-CORE_ADDR default_adjust_dwarf2_line (CORE_ADDR addr, int rel);
+CORE_ADDR default_adjust_dwarf2_line (CORE_ADDR addr, bool rel);
 
 /* Default DWARF vendor CFI handler.  */
 
@@ -203,7 +203,7 @@ bool default_execute_dwarf_cfa_vendor_op (struct gdbarch *gdbarch, gdb_byte op,
 /* Version of cannot_fetch_register() / cannot_store_register() that
    always fails.  */
 
-int cannot_register_not (struct gdbarch *gdbarch, int regnum);
+bool cannot_register_not (struct gdbarch *gdbarch, int regnum);
 
 /* Legacy version of target_virtual_frame_pointer().  Assumes that
    there is an gdbarch_deprecated_fp_regnum and that it is the same, cooked or
@@ -248,21 +248,19 @@ extern CORE_ADDR generic_skip_trampoline_code (const frame_info_ptr &frame,
 extern CORE_ADDR generic_skip_solib_resolver (struct gdbarch *gdbarch,
 					      CORE_ADDR pc);
 
-extern int generic_in_solib_return_trampoline (struct gdbarch *gdbarch,
-					       CORE_ADDR pc, const char *name);
+extern bool generic_in_solib_return_trampoline (struct gdbarch *gdbarch,
+						CORE_ADDR pc,
+						const char *name);
 
-extern int generic_stack_frame_destroyed_p (struct gdbarch *gdbarch,
-					    CORE_ADDR pc);
+extern bool generic_stack_frame_destroyed_p (struct gdbarch *gdbarch,
+					     CORE_ADDR pc);
 
-extern int default_code_of_frame_writable (struct gdbarch *gdbarch,
-					   const frame_info_ptr &frame);
+extern bool default_code_of_frame_writable (struct gdbarch *gdbarch,
+					    const frame_info_ptr &frame);
 
 /* By default, registers are not convertible.  */
-extern int generic_convert_register_p (struct gdbarch *gdbarch, int regnum,
-				       struct type *type);
-
-extern int default_stabs_argument_has_addr (struct gdbarch *gdbarch,
-					    struct type *type);
+extern bool generic_convert_register_p (struct gdbarch *gdbarch, int regnum,
+					struct type *type);
 
 extern int generic_instruction_nullified (struct gdbarch *gdbarch,
 					  struct regcache *regcache);
@@ -302,10 +300,11 @@ extern struct gdbarch *gdbarch_from_bfd (bfd *abfd);
    routines to determine the architecture to execute a command in.  */
 extern struct gdbarch *get_current_arch (void);
 
-extern int default_has_shared_address_space (struct gdbarch *);
+extern bool default_has_shared_address_space (struct gdbarch *);
 
-extern int default_fast_tracepoint_valid_at (struct gdbarch *gdbarch,
-					     CORE_ADDR addr, std::string *msg);
+extern bool default_fast_tracepoint_valid_at (struct gdbarch *gdbarch,
+					      CORE_ADDR addr,
+					      std::string *msg);
 
 extern const gdb_byte *default_breakpoint_from_pc (struct gdbarch *gdbarch,
 						   CORE_ADDR *pcptr,
@@ -320,15 +319,14 @@ extern void default_gen_return_address (struct gdbarch *gdbarch,
 					struct axs_value *value,
 					CORE_ADDR scope);
 
-extern const char *default_auto_charset (void);
 extern const char *default_auto_wide_charset (void);
 
-extern int default_return_in_first_hidden_param_p (struct gdbarch *,
-						   struct type *);
+extern bool default_return_in_first_hidden_param_p (struct gdbarch *,
+						    struct type *);
 
-extern int default_insn_is_call (struct gdbarch *, CORE_ADDR);
-extern int default_insn_is_ret (struct gdbarch *, CORE_ADDR);
-extern int default_insn_is_jump (struct gdbarch *, CORE_ADDR);
+extern bool default_insn_is_call (struct gdbarch *, CORE_ADDR);
+extern bool default_insn_is_ret (struct gdbarch *, CORE_ADDR);
+extern bool default_insn_is_jump (struct gdbarch *, CORE_ADDR);
 
 /* Default implementation of gdbarch_program_breakpoint_here_p.  */
 extern bool default_program_breakpoint_here_p (struct gdbarch *gdbarch,
@@ -336,14 +334,8 @@ extern bool default_program_breakpoint_here_p (struct gdbarch *gdbarch,
 
 /* Do-nothing version of vsyscall_range.  Returns false.  */
 
-extern int default_vsyscall_range (struct gdbarch *gdbarch, struct mem_range *range);
-
-/* Default way to advance the PC to the next instruction in order to
-   skip a permanent breakpoint.  Increments the PC by the size of a
-   software breakpoint instruction, as determined with
-   gdbarch_breakpoint_from_pc.  This matches how the breakpoints
-   module determines whether a breakpoint is permanent.  */
-extern void default_skip_permanent_breakpoint (struct regcache *regcache);
+extern bool default_vsyscall_range (struct gdbarch *gdbarch,
+				    struct mem_range *range);
 
 /* Symbols for gdbarch_infcall_mmap; their Linux PROT_* system
    definitions would be dependent on compilation host.  */
@@ -386,7 +378,6 @@ extern std::string default_get_pc_address_flags (const frame_info_ptr &frame,
 extern void default_read_core_file_mappings
   (struct gdbarch *gdbarch,
    struct bfd *cbfd,
-   read_core_file_mappings_pre_loop_ftype pre_loop_cb,
    read_core_file_mappings_loop_ftype loop_cb);
 
 /* Default implementation of gdbarch_core_parse_exec_context.  Returns
@@ -413,5 +404,10 @@ extern enum return_value_convention default_gdbarch_return_value
      (struct gdbarch *gdbarch, struct value *function, struct type *valtype,
       struct regcache *regcache, struct value **read_value,
       const gdb_byte *writebuf);
+
+/* Default implementation of gdbarch default_get_shadow_stack_pointer
+   method.  */
+extern std::optional<CORE_ADDR> default_get_shadow_stack_pointer
+  (gdbarch *gdbarch, regcache *regcache, bool &shadow_stack_enabled);
 
 #endif /* GDB_ARCH_UTILS_H */

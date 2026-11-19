@@ -1,6 +1,6 @@
 /* Branch trace support for GDB, the GNU debugger.
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    Contributed by Intel Corp. <markus.t.metzger@intel.com>
 
@@ -39,7 +39,6 @@
 #include "record-btrace.h"
 
 #include <inttypes.h>
-#include <ctype.h>
 #include <algorithm>
 #include <string>
 
@@ -197,7 +196,7 @@ ftrace_function_switched (const struct btrace_function *bfun,
 
   /* If the minimal symbol changed, we certainly switched functions.  */
   if (mfun != NULL && msym != NULL
-      && strcmp (mfun->linkage_name (), msym->linkage_name ()) != 0)
+      && !streq (mfun->linkage_name (), msym->linkage_name ()))
     return 1;
 
   /* If the symbol changed, we certainly switched functions.  */
@@ -206,7 +205,7 @@ ftrace_function_switched (const struct btrace_function *bfun,
       const char *bfname, *fname;
 
       /* Check the function name.  */
-      if (strcmp (fun->linkage_name (), sym->linkage_name ()) != 0)
+      if (!streq (fun->linkage_name (), sym->linkage_name ()))
 	return 1;
 
       /* Check the location of those functions, as well.  */
@@ -558,7 +557,7 @@ ftrace_update_function (struct btrace_thread_info *btinfo,
      only a minimal symbol.  */
   if (pc.has_value ())
     {
-      fun = find_pc_function (*pc);
+      fun = find_symbol_for_pc (*pc);
       bound_minimal_symbol bmfun = lookup_minimal_symbol_by_pc (*pc);
       mfun = bmfun.minsym;
 
@@ -605,7 +604,7 @@ ftrace_update_function (struct btrace_thread_info *btinfo,
 	       create a stack back trace with the same function names but
 	       different frame id's.  This will confuse stepping.  */
 	    fname = ftrace_print_function_name (bfun);
-	    if (strcmp (fname, "_dl_runtime_resolve") == 0)
+	    if (streq (fname, "_dl_runtime_resolve"))
 	      return ftrace_new_tailcall (btinfo, mfun, fun);
 
 	    return ftrace_new_return (btinfo, mfun, fun);
@@ -1284,7 +1283,7 @@ decode_interrupt_vector (const uint8_t vector)
 
   return nullptr;
 }
-#endif /* defined (LIBIPT_VERSION >= 0x201) */
+#endif /* (LIBIPT_VERSION >= 0x201) */
 
 /* Handle instruction decode events (libipt-v2).  */
 
@@ -1394,7 +1393,7 @@ handle_pt_insn_events (struct btrace_thread_info *btinfo,
 	      continue;
 
 	    if (!ptw_string.has_value ())
-	      *ptw_string = hex_string (event.variant.ptwrite.payload);
+	      ptw_string = hex_string (event.variant.ptwrite.payload);
 
 	    handle_pt_aux_insn (btinfo, *ptw_string, pc);
 
@@ -1531,23 +1530,23 @@ handle_pt_insn_events (struct btrace_thread_info *btinfo,
 
 	    if (event.variant.vmexit.has_vmxr != 0)
 	      {
-		std::string seperator = aux_string.back () == ':' ? "" : ",";
-		aux_string += seperator + std::string (" vmxr = ")
+		std::string separator = aux_string.back () == ':' ? "" : ",";
+		aux_string += separator + std::string (" vmxr = ")
 			      + hex_string (event.variant.vmexit.vmxr);
 	      }
 
 	    if (event.variant.vmexit.has_vmxq != 0)
 	      {
-		std::string seperator = aux_string.back () == ':' ? "" : ",";
-		aux_string += seperator + std::string (" vmxq = ")
+		std::string separator = aux_string.back () == ':' ? "" : ",";
+		aux_string += separator + std::string (" vmxq = ")
 			      + hex_string (event.variant.vmexit.vmxq);
 	      }
 
 	    if (event.ip_suppressed == 0)
 	      {
 		pc = event.variant.vmexit.ip;
-		std::string seperator = aux_string.back () == ':' ? "" : ",";
-		aux_string += seperator + std::string (" ip = ")
+		std::string separator = aux_string.back () == ':' ? "" : ",";
+		aux_string += separator + std::string (" ip = ")
 			      + hex_string (*pc);
 	      }
 
@@ -1597,7 +1596,62 @@ handle_pt_insn_events (struct btrace_thread_info *btinfo,
 	    handle_pt_aux_insn (btinfo, aux_string, pc);
 	    break;
 	  }
-#endif /* defined (LIBIPT_VERSION >= 0x201) */
+#endif /* (LIBIPT_VERSION >= 0x201) */
+
+#if (LIBIPT_VERSION >= 0x202)
+	case ptev_trig:
+	  {
+	    std::string aux_string
+	      = (std::string (_("trig: trbv = "))
+		 + hex_string (event.variant.trig.trbv));
+
+	    if (event.variant.trig.mult != 0)
+	      aux_string += std::string (", mult");
+
+	    if (event.ip_suppressed == 0)
+	      {
+		pc = event.variant.trig.ip;
+		aux_string += (std::string (", ip = ") + hex_string (*pc));
+	      }
+
+	    if (event.variant.trig.icnt != 0)
+	      aux_string += (std::string (", icnt = ")
+			     + hex_string (event.variant.trig.icnt));
+
+	    handle_pt_aux_insn (btinfo, aux_string, pc);
+	    break;
+	  }
+
+	case ptev_swintr:
+	  {
+	    std::string aux_string
+	      = (std::string (_("swintr: vector = "))
+		 + hex_string (event.variant.swintr.vector));
+
+	    if (event.ip_suppressed == 0)
+	      {
+		pc = event.variant.swintr.ip;
+		aux_string += (std::string (", ip = ") + hex_string (*pc));
+	      }
+
+	    handle_pt_aux_insn (btinfo, aux_string, pc);
+	    break;
+	  }
+
+	case ptev_syscall:
+	  {
+	    std::string aux_string = std::string (_("syscall"));
+
+	    if (event.ip_suppressed == 0)
+	      {
+		pc = event.variant.syscall.ip;
+		aux_string += (std::string (": ip = ") + hex_string (*pc));
+	      }
+
+	    handle_pt_aux_insn (btinfo, aux_string, pc);
+	    break;
+	  }
+#endif /* (LIBIPT_VERSION >= 0x202) */
 	}
     }
 #endif /* defined (HAVE_PT_INSN_EVENT) */
@@ -2136,7 +2190,7 @@ btrace_stitch_bts (struct btrace_data_bts *btrace, struct thread_info *tp)
 /* Adjust the block trace in order to stitch old and new trace together.
    BTRACE is the new delta trace between the last and the current stop.
    TP is the traced thread.
-   May modifx BTRACE as well as the existing trace in TP.
+   May modify BTRACE as well as the existing trace in TP.
    Return 0 on success, -1 otherwise.  */
 
 static int
@@ -2366,8 +2420,8 @@ btrace_free_objfile (struct objfile *objfile)
 {
   DEBUG ("free objfile");
 
-  for (thread_info *tp : all_non_exited_threads ())
-    btrace_clear (tp);
+  for (thread_info &tp : all_non_exited_threads ())
+    btrace_clear (&tp);
 }
 
 /* See btrace.h.  */
@@ -3012,7 +3066,7 @@ pt_print_packet (const struct pt_packet *packet)
 		  packet->payload.ptw.payload,
 		  packet->payload.ptw.ip ? (" ip") : (""));
       break;
-#endif /* defined (LIBIPT_VERSION >= 0x200)  */
+#endif /* (LIBIPT_VERSION >= 0x200)  */
 
 #if (LIBIPT_VERSION >= 0x201)
     case ppt_cfe:
@@ -3025,7 +3079,21 @@ pt_print_packet (const struct pt_packet *packet)
       gdb_printf (("evd %u: 0x%" PRIx64 ""), packet->payload.evd.type,
 		  packet->payload.evd.payload);
       break;
-#endif /* defined (LIBIPT_VERSION >= 0x201)  */
+#endif /* (LIBIPT_VERSION >= 0x201)  */
+
+#if (LIBIPT_VERSION >= 0x202)
+    case ppt_trig:
+      if (packet->payload.trig.icntv == 0)
+	gdb_printf ("trig 0x%x%s%s", packet->payload.trig.trbv,
+		    (packet->payload.trig.ip != 0) ? " ip" : "",
+		    (packet->payload.trig.mult != 0) ? " mult" : "");
+      else
+	gdb_printf ("trig 0x%x%s%s icnt: %u", packet->payload.trig.trbv,
+		    (packet->payload.trig.ip != 0) ? " ip" : "",
+		    (packet->payload.trig.mult != 0) ? " mult" : "",
+		    packet->payload.trig.icnt);
+      break;
+#endif /* (LIBIPT_VERSION >= 0x202)  */
     }
 }
 
@@ -3258,7 +3326,7 @@ get_uint (const char **arg)
   begin = *arg;
   pos = skip_spaces (begin);
 
-  if (!isdigit (*pos))
+  if (!c_isdigit (*pos))
     error (_("Expected positive number, got: %s."), pos);
 
   number = strtoul (pos, &end, 10);
@@ -3277,7 +3345,7 @@ get_context_size (const char **arg)
 {
   const char *pos = skip_spaces (*arg);
 
-  if (!isdigit (*pos))
+  if (!c_isdigit (*pos))
     error (_("Expected positive number, got: %s."), pos);
 
   char *end;
@@ -3317,7 +3385,7 @@ maint_btrace_packet_history_cmd (const char *arg, int from_tty)
       return;
     }
 
-  if (arg == NULL || *arg == 0 || strcmp (arg, "+") == 0)
+  if (arg == NULL || *arg == 0 || streq (arg, "+"))
     {
       from = to;
 
@@ -3325,7 +3393,7 @@ maint_btrace_packet_history_cmd (const char *arg, int from_tty)
 	size = end - from;
       to = from + size;
     }
-  else if (strcmp (arg, "-") == 0)
+  else if (streq (arg, "-"))
     {
       to = from;
 
@@ -3501,9 +3569,7 @@ show_maint_btrace_pt_skip_pad  (struct ui_file *file, int from_tty,
 
 /* Initialize btrace maintenance commands.  */
 
-void _initialize_btrace ();
-void
-_initialize_btrace ()
+INIT_GDB_FILE (btrace)
 {
   add_cmd ("btrace", class_maintenance, maint_info_btrace_cmd,
 	   _("Info about branch tracing data."), &maintenanceinfolist);

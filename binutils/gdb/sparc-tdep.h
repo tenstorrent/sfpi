@@ -1,6 +1,6 @@
 /* Target-dependent code for SPARC.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -212,10 +212,8 @@ extern struct sparc_frame_cache *
 extern struct sparc_frame_cache *
   sparc32_frame_cache (const frame_info_ptr &this_frame, void **this_cache);
 
-extern int
-  sparc_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc);
-
-
+extern bool sparc_stack_frame_destroyed_p (struct gdbarch *gdbarch,
+					   CORE_ADDR pc);
 
 extern void sparc_supply_rwindow (struct regcache *regcache,
 				  CORE_ADDR sp, int regnum);

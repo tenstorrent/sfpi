@@ -1,5 +1,5 @@
 /* stabs.c -- Parse stabs debugging information
-   Copyright (C) 1995-2025 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
    Written by Ian Lance Taylor <ian@cygnus.com>.
 
    This file is part of GNU Binutils.
@@ -1291,6 +1291,12 @@ parse_stab_type (void *                dhandle,
 	      break;
 	    }
 	}
+    }
+
+  if (*pp >= p_end)
+    {
+      bad_stab (orig);
+      return DEBUG_TYPE_NULL;
     }
 
   descriptor = **pp;
@@ -3219,11 +3225,7 @@ parse_stab_array_type (void *dhandle,
     {
       index_type = debug_find_named_type (dhandle, "int");
       if (index_type == DEBUG_TYPE_NULL)
-	{
-	  index_type = debug_make_int_type (dhandle, 4, false);
-	  if (index_type == DEBUG_TYPE_NULL)
-	    return DEBUG_TYPE_NULL;
-	}
+	index_type = debug_make_int_type (dhandle, 4, false);
       *pp = p;
     }
   else
@@ -3231,6 +3233,8 @@ parse_stab_array_type (void *dhandle,
       index_type = parse_stab_type (dhandle, info, (const char *) NULL, pp,
 				    (debug_type **) NULL, p_end);
     }
+  if (index_type == DEBUG_TYPE_NULL)
+    return DEBUG_TYPE_NULL;
 
   if (**pp != ';')
     {

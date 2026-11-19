@@ -1,6 +1,6 @@
 /* Signal trampoline unwinder, for GDB the GNU Debugger.
 
-   Copyright (C) 2004-2024 Free Software Foundation, Inc.
+   Copyright (C) 2004-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -157,16 +157,15 @@ frame_unwind_trampoline::sniff (const frame_info_ptr &this_frame,
   const struct tramp_frame *tramp = unwind_data ()->tramp_frame;
   CORE_ADDR pc = get_frame_pc (this_frame);
   CORE_ADDR func;
-  struct tramp_frame_cache *tramp_cache;
 
-  /* tausq/2004-12-12: We used to assume if pc has a name or is in a valid 
+  /* tausq/2004-12-12: We used to assume if pc has a name or is in a valid
      section, then this is not a trampoline.  However, this assumption is
      false on HPUX which has a signal trampoline that has a name; it can
      also be false when using an alternative signal stack.  */
   func = tramp_frame_start (tramp, this_frame, pc);
   if (func == 0)
     return 0;
-  tramp_cache = FRAME_OBSTACK_ZALLOC (struct tramp_frame_cache);
+  auto *tramp_cache = frame_obstack_zalloc<struct tramp_frame_cache> ();
   tramp_cache->func = func;
   tramp_cache->tramp_frame = tramp;
   (*this_cache) = tramp_cache;

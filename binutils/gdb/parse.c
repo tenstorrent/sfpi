@@ -1,6 +1,6 @@
 /* Parse expressions for GDB.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    Modified from expread.y by the Department of Computer Science at the
    State University of New York at Buffalo, 1991.
@@ -29,7 +29,6 @@
    during the process of parsing; the lower levels of the tree always
    come first in the result.  */
 
-#include <ctype.h>
 #include "arch-utils.h"
 #include "symtab.h"
 #include "gdbtypes.h"
@@ -40,6 +39,7 @@
 #include "language.h"
 #include "parser-defs.h"
 #include "cli/cli-cmds.h"
+#include "cli/cli-style.h"
 #include "symfile.h"
 #include "inferior.h"
 #include "target-float.h"
@@ -60,8 +60,8 @@ show_expressiondebug (struct ui_file *file, int from_tty,
 }
 
 
-/* True if an expression parser should set yydebug.  */
-static bool parser_debug;
+/* See parser-defs.h.  */
+bool parser_debug;
 
 static void
 show_parserdebug (struct ui_file *file, int from_tty,
@@ -149,9 +149,10 @@ parser_state::push_symbol (const char *name, block_symbol sym)
 	= lookup_minimal_symbol (current_program_space, name);
       if (msymbol.minsym != NULL)
 	push_new<expr::var_msym_value_operation> (msymbol);
-      else if (!have_full_symbols (current_program_space)
-	       && !have_partial_symbols (current_program_space))
-	error (_("No symbol table is loaded.  Use the \"file\" command."));
+      else if (!current_program_space->has_full_symbols ()
+	       && !current_program_space->has_partial_symbols ())
+	error (_("No symbol table is loaded.  Use the \"%ps\" command."),
+	       styled_string (command_style.style (), "file"));
       else
 	error (_("No symbol \"%s\" in current context."), name);
     }
@@ -162,9 +163,16 @@ parser_state::push_symbol (const char *name, block_symbol sym)
 void
 parser_state::push_dollar (struct stoken str)
 {
+  push_dollar (std::string_view (str.ptr, str.length));
+}
+
+/* See parser-defs.h.  */
+
+void
+parser_state::push_dollar (std::string_view str)
+{
   struct block_symbol sym;
   struct internalvar *isym = NULL;
-  std::string copy;
 
   /* Handle the tokens $digits; also $ (short for $0) and $$ (short for $$1)
      and $$digits (equivalent to $<-digits> if you could type that).  */
@@ -173,12 +181,12 @@ parser_state::push_dollar (struct stoken str)
   int i = 1;
   /* Double dollar means negate the number and add -1 as well.
      Thus $$ alone means -1.  */
-  if (str.length >= 2 && str.ptr[1] == '$')
+  if (str.length () >= 2 && str[1] == '$')
     {
       negate = 1;
       i = 2;
     }
-  if (i == str.length)
+  if (i == str.length ())
     {
       /* Just dollars (one or two).  */
       i = -negate;
@@ -186,12 +194,12 @@ parser_state::push_dollar (struct stoken str)
       return;
     }
   /* Is the rest of the token digits?  */
-  for (; i < str.length; i++)
-    if (!(str.ptr[i] >= '0' && str.ptr[i] <= '9'))
+  for (; i < str.length (); i++)
+    if (!(str[i] >= '0' && str[i] <= '9'))
       break;
-  if (i == str.length)
+  if (i == str.length ())
     {
-      i = atoi (str.ptr + 1 + negate);
+      i = atoi (&str[1 + negate]);
       if (negate)
 	i = -i;
       push_new<expr::last_operation> (i);
@@ -200,13 +208,10 @@ parser_state::push_dollar (struct stoken str)
 
   /* Handle tokens that refer to machine registers:
      $ followed by a register name.  */
-  i = user_reg_map_name_to_regnum (gdbarch (),
-				   str.ptr + 1, str.length - 1);
+  i = user_reg_map_name_to_regnum (gdbarch (), str.substr (1));
   if (i >= 0)
     {
-      str.length--;
-      str.ptr++;
-      push_new<expr::register_operation> (copy_name (str));
+      push_new<expr::register_operation> (std::string (str.substr (1)));
       block_tracker->update (expression_context_block,
 			     INNERMOST_BLOCK_FOR_REGISTERS);
       return;
@@ -214,7 +219,7 @@ parser_state::push_dollar (struct stoken str)
 
   /* Any names starting with $ are probably debugger internal variables.  */
 
-  copy = copy_name (str);
+  std::string copy (str);
   isym = lookup_only_internalvar (copy.c_str () + 1);
   if (isym)
     {
@@ -381,7 +386,7 @@ parse_exp_in_context (const char **stringptr, CORE_ADDR pc,
 
 	  if (cursal.symtab)
 	    expression_context_block
-	      = cursal.symtab->compunit ()->blockvector ()->static_block ();
+	      = cursal.symtab->compunit ().blockvector ()->static_block ();
 
 	  if (expression_context_block)
 	    expression_context_pc = expression_context_block->entry_pc ();
@@ -599,16 +604,16 @@ fits_in_type (int n_sign, const gdb_mpz &n, int type_bits, bool type_signed_p)
   return n < max;
 }
 
-/* This function avoids direct calls to fprintf 
+/* This function avoids direct calls to fprintf
    in the parser generated debug code.  */
 void
 parser_fprintf (FILE *x, const char *y, ...)
-{ 
+{
   va_list args;
 
   va_start (args, y);
   if (x == stderr)
-    gdb_vprintf (gdb_stderr, y, args); 
+    gdb_vprintf (gdb_stderr, y, args);
   else
     {
       gdb_printf (gdb_stderr, " Unknown FILE used.\n");
@@ -617,9 +622,7 @@ parser_fprintf (FILE *x, const char *y, ...)
   va_end (args);
 }
 
-void _initialize_parse ();
-void
-_initialize_parse ()
+INIT_GDB_FILE (parse)
 {
   add_setshow_zuinteger_cmd ("expression", class_maintenance,
 			     &expressiondebug,

@@ -1,4 +1,4 @@
-# Copyright 2004-2024 Free Software Foundation, Inc.
+# Copyright 2004-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ standard_testfile
 
 if {[build_executable $testfile.exp $testfile $srcfile debug]} {
     untested "failed to compile"
-    return -1
+    return
 }
 
 set clear_done [gdb_get_line_number {done = 0}]
@@ -38,9 +38,7 @@ set other_handler_location [gdb_get_line_number "other handler location"]
 # Restart GDB, set a display showing $PC, and run to main.
 
 proc restart {} {
-    global binfile
-
-    clean_restart $binfile
+    clean_restart $::testfile
 
     gdb_test "display/i \$pc"
 
@@ -71,7 +69,7 @@ proc validate_backtrace {} {
 validate_backtrace
 
 # Goes to handler using ENTER_CMD, runs IN_HANDLER while in the signal
-# hander, and then steps out of the signal handler using EXIT_CMD.
+# handler, and then steps out of the signal handler using EXIT_CMD.
 
 proc advance { enter_cmd in_handler_prefix in_handler exit_cmd } {
     global gdb_prompt inferior_exited_re
@@ -301,7 +299,7 @@ proc skip_to_handler { cmd } {
 
     with_test_prefix "$cmd to handler" {
 	restart
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 
@@ -339,7 +337,7 @@ proc skip_to_handler_entry { cmd } {
 
     with_test_prefix "$cmd to handler entry" {
 	restart
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 
@@ -397,7 +395,7 @@ proc skip_over_handler { cmd } {
 
     with_test_prefix "$cmd over handler" {
 	restart
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 
@@ -432,7 +430,7 @@ proc breakpoint_to_handler { displaced cmd } {
 
 	gdb_test_no_output "set displaced-stepping $displaced"
 
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 
@@ -486,7 +484,7 @@ proc breakpoint_to_handler_entry { displaced cmd } {
 
 	gdb_test_no_output "set displaced-stepping $displaced"
 
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 
@@ -547,7 +545,7 @@ proc breakpoint_over_handler { displaced cmd with_sw_watch no_handler } {
 
 	gdb_test_no_output "set displaced-stepping $displaced"
 
-	# Use the real-time itimer, as otherwize the process never gets
+	# Use the real-time itimer, as otherwise the process never gets
 	# enough time to expire the timer.
 	gdb_test_no_output "set itimer = itimer_real"
 

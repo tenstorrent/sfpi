@@ -1,6 +1,6 @@
 /* OS ABI variant handling for GDB and gdbserver.
 
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -71,7 +71,7 @@ osabi_from_tdesc_string (const char *name)
   int i;
 
   for (i = 0; i < ARRAY_SIZE (gdb_osabi_names); i++)
-    if (strcmp (name, gdb_osabi_names[i].pretty) == 0)
+    if (streq (name, gdb_osabi_names[i].pretty))
       {
 	/* See note above: the name table matches the indices assigned
 	   to enum gdb_osabi.  */

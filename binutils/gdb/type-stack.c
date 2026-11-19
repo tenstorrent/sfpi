@@ -1,6 +1,6 @@
 /* Type stack for GDB parser.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -20,7 +20,6 @@
 #include "type-stack.h"
 
 #include "gdbtypes.h"
-#include "parser-defs.h"
 
 /* See type-stack.h.  */
 
@@ -51,7 +50,7 @@ type_stack::insert (enum type_pieces tp)
 /* See type-stack.h.  */
 
 void
-type_stack::insert (struct expr_builder *pstate, const char *string)
+type_stack::insert (struct gdbarch *gdbarch, const char *string)
 {
   union type_stack_elt element;
   int slot;
@@ -67,8 +66,7 @@ type_stack::insert (struct expr_builder *pstate, const char *string)
   element.piece = tp_space_identifier;
   insert_into (slot, element);
   element.int_val
-    = address_space_name_to_type_instance_flags (pstate->gdbarch (),
-						 string);
+    = address_space_name_to_type_instance_flags (gdbarch, string);
   insert_into (slot, element);
 }
 
@@ -148,11 +146,11 @@ type_stack::follow_types (struct type *follow_type)
 	if (make_const)
 	  follow_type = make_cv_type (make_const,
 				      TYPE_VOLATILE (follow_type),
-				      follow_type, 0);
+				      follow_type);
 	if (make_volatile)
 	  follow_type = make_cv_type (TYPE_CONST (follow_type),
 				      make_volatile,
-				      follow_type, 0);
+				      follow_type);
 	if (make_addr_space)
 	  follow_type = make_type_with_address_space (follow_type,
 						      make_addr_space);

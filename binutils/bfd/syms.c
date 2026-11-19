@@ -1,5 +1,5 @@
 /* Generic symbol-table support for the BFD library.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -303,6 +303,9 @@ CODE_FRAGMENT
 .  {* This section symbol should be included in the symbol table.  *}
 .#define BSF_SECTION_SYM_USED    (1 << 24)
 .
+.  {* This symbol underwent section merge resolution.  *}
+.#define BSF_MERGE_RESOLVED      (1 << 25)
+.
 .  flagword flags;
 .
 .  {* A pointer to the section to which this symbol is
@@ -334,12 +337,12 @@ EXTERNAL
 .typedef struct _symbol_info
 .{
 .  symvalue value;
-.  char type;
 .  const char *name;		{* Symbol name.  *}
+.  const char *stab_name;	{* String for stab type.  *}
 .  unsigned char stab_type;	{* Stab type.  *}
 .  char stab_other;		{* Stab other.  *}
 .  short stab_desc;		{* Stab desc.  *}
-.  const char *stab_name;	{* String for stab type.  *}
+.  char type;
 .} symbol_info;
 .
 .{* An empty string that will not match the address of any other
@@ -594,6 +597,7 @@ struct section_to_type
    adding entries.  Since it is so short, a linear search is used.  */
 static const struct section_to_type stt[] =
 {
+  {".didat", 'i'},		/* MSVC's .didat (delay import) section */
   {".drectve", 'i'},		/* MSVC's .drective section */
   {".edata", 'e'},		/* MSVC's .edata (export) section */
   {".idata", 'i'},		/* MSVC's .idata (import) section */
@@ -792,10 +796,6 @@ bfd_symbol_info (asymbol *symbol, symbol_info *ret)
 FUNCTION
 	bfd_copy_private_symbol_data
 
-SYNOPSIS
-	bool bfd_copy_private_symbol_data
-	  (bfd *ibfd, asymbol *isym, bfd *obfd, asymbol *osym);
-
 DESCRIPTION
 	Copy private symbol information from @var{isym} in the BFD
 	@var{ibfd} to the symbol @var{osym} in the BFD @var{obfd}.
@@ -858,7 +858,6 @@ _bfd_generic_read_minisymbols (bfd *abfd,
   return symcount;
 
  error_return:
-  bfd_set_error (bfd_error_no_symbols);
   free (syms);
   return -1;
 }

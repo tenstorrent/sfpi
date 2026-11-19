@@ -1,6 +1,6 @@
 /* Scheme interface to types.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -510,7 +510,7 @@ tyscm_field_smob_to_field (field_smob *f_smob)
   struct type *type = tyscm_field_smob_containing_type (f_smob);
 
   /* This should be non-NULL by construction.  */
-  gdb_assert (type->fields () != NULL);
+  gdb_assert (type->fields ().data () != nullptr);
 
   return &type->field (f_smob->field_num);
 }
@@ -895,7 +895,7 @@ gdbscm_type_const (SCM self)
   gdbscm_gdb_exception exc {};
   try
     {
-      type = make_cv_type (1, 0, type, NULL);
+      type = make_cv_type (1, 0, type);
     }
   catch (const gdb_exception &except)
     {
@@ -919,7 +919,7 @@ gdbscm_type_volatile (SCM self)
   gdbscm_gdb_exception exc {};
   try
     {
-      type = make_cv_type (0, 1, type, NULL);
+      type = make_cv_type (0, 1, type);
     }
   catch (const gdb_exception &except)
     {
@@ -943,7 +943,7 @@ gdbscm_type_unqualified (SCM self)
   gdbscm_gdb_exception exc {};
   try
     {
-      type = make_cv_type (0, 0, type, NULL);
+      type = make_cv_type (0, 0, type);
     }
   catch (const gdb_exception &except)
     {

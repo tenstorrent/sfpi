@@ -1,6 +1,6 @@
 /* Frame unwinder for frames with DWARF Call Frame Information.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    Contributed by Mark Kettenis.
 
@@ -24,7 +24,7 @@
 
 struct gdbarch;
 class frame_info_ptr;
-struct dwarf2_per_cu_data;
+struct dwarf2_per_cu;
 struct agent_expr;
 struct axs_value;
 
@@ -78,6 +78,10 @@ struct dwarf2_frame_state_reg
     ULONGEST reg;
     struct
     {
+      /* Return this expression.  */
+      gdb::array_view<const gdb_byte> view () const
+      { return gdb::make_array_view (start, len); }
+
       const gdb_byte *start;
       ULONGEST len;
     } exp;
@@ -143,7 +147,7 @@ struct dwarf2_frame_state_reg_info
   LONGEST cfa_offset = 0;
   ULONGEST cfa_reg = 0;
   enum cfa_how_kind cfa_how = CFA_UNSET;
-  const gdb_byte *cfa_exp = NULL;
+  gdb::array_view<const gdb_byte> cfa_exp;
 
   /* Used to implement DW_CFA_remember_state.  */
   struct dwarf2_frame_state_reg_info *prev = NULL;
@@ -198,28 +202,36 @@ struct dwarf2_frame_state
   bool armcc_cfa_offsets_reversed = false;
 };
 
+using init_reg_ftype = void (gdbarch *, int, dwarf2_frame_state_reg *,
+			     const frame_info_ptr &);
+using signal_frame_p_ftype = bool (gdbarch *, const frame_info_ptr &);
+using adjust_regnum_ftype = int (gdbarch *, int, int);
+
+/* If DWARF supoprt was requested, create the real prototype for the
+   append_unwinders function.  Otherwise, create a fake inline function.
+
+   There is no need to emit a warning for some of these, because they aren't
+   actively reading DWARF when this is called, they're just initializing GDB.
+
+   These should probably be moved to dwarf2/public.h.  */
+#if defined(DWARF_FORMAT_AVAILABLE)
+
 /* Set the architecture-specific register state initialization
    function for GDBARCH to INIT_REG.  */
 
-extern void dwarf2_frame_set_init_reg (
-  gdbarch *gdbarch, void (*init_reg) (struct gdbarch *, int,
-				      dwarf2_frame_state_reg *,
-				      const frame_info_ptr &));
+void dwarf2_frame_set_init_reg (gdbarch *gdbarch, init_reg_ftype *init_reg);
 
 /* Set the architecture-specific signal trampoline recognition
    function for GDBARCH to SIGNAL_FRAME_P.  */
 
-extern void dwarf2_frame_set_signal_frame_p
-  (gdbarch *gdbarch, int (*signal_frame_p) (struct gdbarch *,
-			  const frame_info_ptr &));
+void dwarf2_frame_set_signal_frame_p (gdbarch *gdbarch,
+				      signal_frame_p_ftype *signal_frame_p);
 
 /* Set the architecture-specific adjustment of .eh_frame and .debug_frame
    register numbers.  */
 
-extern void
-  dwarf2_frame_set_adjust_regnum (struct gdbarch *gdbarch,
-				  int (*adjust_regnum) (struct gdbarch *,
-							int, int));
+void dwarf2_frame_set_adjust_regnum (struct gdbarch *gdbarch,
+				     adjust_regnum_ftype *adjust_regnum);
 
 /* Append the DWARF-2 frame unwinders to GDBARCH's list.  */
 
@@ -237,7 +249,7 @@ CORE_ADDR dwarf2_frame_cfa (const frame_info_ptr &this_frame);
 
 /* Find the CFA information for PC.
 
-   Return 1 if a register is used for the CFA, or 0 if another
+   Return true if a register is used for the CFA, or false if another
    expression is used.  Throw an exception on error.
 
    GDBARCH is the architecture to use.
@@ -245,18 +257,15 @@ CORE_ADDR dwarf2_frame_cfa (const frame_info_ptr &this_frame);
 
    REGNUM_OUT is an out parameter that is set to the register number.
    OFFSET_OUT is the offset to use from this register.
-   These are only filled in when 1 is returned.
+   These are only filled in when true is returned.
 
-   TEXT_OFFSET_OUT, CFA_START_OUT, and CFA_END_OUT describe the CFA
-   in other cases.  These are only used when 0 is returned.  */
+   TEXT_OFFSET_OUT and CFA_EXPR describe the CFA in other cases.  These are
+   only filled in when false is returned.  */
 
-extern int dwarf2_fetch_cfa_info (struct gdbarch *gdbarch, CORE_ADDR pc,
-				  struct dwarf2_per_cu_data *data,
-				  int *regnum_out, LONGEST *offset_out,
-				  CORE_ADDR *text_offset_out,
-				  const gdb_byte **cfa_start_out,
-				  const gdb_byte **cfa_end_out);
-
+extern bool dwarf2_fetch_cfa_info
+  (struct gdbarch *gdbarch, CORE_ADDR pc, dwarf2_per_cu *data, int *regnum_out,
+   LONGEST *offset_out, CORE_ADDR *text_offset_out,
+   gdb::array_view<const gdb_byte> &cfa_expr_out);
 
 /* Allocate a new instance of the function unique data.
 
@@ -287,5 +296,59 @@ extern void *dwarf2_frame_allocate_fn_data (const frame_info_ptr &this_frame,
 extern void *dwarf2_frame_get_fn_data (const frame_info_ptr &this_frame,
 				       void **this_cache,
 				       fn_prev_register cookie);
+
+#else /* DWARF_FORMAT_AVAILABLE */
+
+static inline void dwarf2_append_unwinders (struct gdbarch *gdbarch) { }
+
+static inline void
+dwarf2_frame_set_init_reg (gdbarch *gdbarch, init_reg_ftype *init_reg)
+{
+}
+
+static inline const struct frame_base *
+  dwarf2_frame_base_sniffer (const frame_info_ptr &this_frame)
+{
+  warning (_("No dwarf support available."));
+  return nullptr;
+}
+
+static inline void
+dwarf2_frame_set_signal_frame_p (gdbarch *gdbarch,
+				 signal_frame_p_ftype *signal_frame_p)
+{
+}
+
+static inline void *dwarf2_frame_get_fn_data (const frame_info_ptr &this_frame,
+					      void **this_cache,
+					      fn_prev_register cookie)
+{
+  return nullptr;
+}
+
+static inline void *dwarf2_frame_allocate_fn_data
+  (const frame_info_ptr &this_frame, void **this_cache,
+   fn_prev_register cookie, unsigned long size)
+{
+  return nullptr;
+}
+
+static inline bool
+dwarf2_fetch_cfa_info (struct gdbarch *gdbarch, CORE_ADDR pc,
+		       struct dwarf2_per_cu_data *data, int *regnum_out,
+		       LONGEST *offset_out, CORE_ADDR *text_offset_out,
+		       const gdb_byte **cfa_start_out,
+		       const gdb_byte **cfa_end_out)
+{
+  return false;
+}
+
+static inline void
+dwarf2_frame_set_adjust_regnum (struct gdbarch *gdbarch,
+				adjust_regnum_ftype *adjust_regnum)
+{
+}
+
+#endif /* DWARF_FORMAT_AVAILABLE */
 
 #endif /* GDB_DWARF2_FRAME_H */

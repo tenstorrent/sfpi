@@ -1,6 +1,6 @@
 /* Target-dependent code for BPF.
 
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -307,7 +307,7 @@ bpf_return_value (struct gdbarch *gdbarch, struct value *function,
 }
 
 
-/* Initialize the current architecture based on INFO.  If possible, re-use an
+/* Initialize the current architecture based on INFO.  If possible, reuse an
    architecture from ARCHES, which is a list of architectures already created
    during this debugging session.  */
 
@@ -368,9 +368,7 @@ bpf_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   return gdbarch;
 }
 
-void _initialize_bpf_tdep ();
-void
-_initialize_bpf_tdep ()
+INIT_GDB_FILE (bpf_tdep)
 {
   gdbarch_register (bfd_arch_bpf, bpf_gdbarch_init);
 

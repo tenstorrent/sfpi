@@ -1,6 +1,6 @@
 /* CLI colorizing
 
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,13 +23,14 @@
 #include "cli/cli-style.h"
 #include "source-cache.h"
 #include "observable.h"
+#include "charset.h"
 
 /* True if styling is enabled.  */
 
 #if defined (__MSDOS__)
-bool cli_styling = false;
+static bool cli_styling = false;
 #else
-bool cli_styling = true;
+static bool cli_styling = true;
 #endif
 
 /* True if source styling is enabled.  Note that this is only
@@ -42,6 +43,10 @@ bool source_styling = true;
 
 bool disassembler_styling = true;
 
+/* User-settable variable controlling emoji output.  */
+
+static auto_boolean emoji_styling = AUTO_BOOLEAN_AUTO;
+
 /* Names of intensities; must correspond to
    ui_file_style::intensity.  */
 static const char * const cli_intensities[] = {
@@ -50,6 +55,81 @@ static const char * const cli_intensities[] = {
   "dim",
   nullptr
 };
+
+/* When true styling is being temporarily suppressed.  */
+
+static bool scoped_disable_styling_p = false;
+
+/* See cli/cli-style.h.  */
+
+scoped_disable_styling::scoped_disable_styling ()
+{
+  m_old_value = scoped_disable_styling_p;
+  scoped_disable_styling_p = true;
+}
+
+/* See cli/cli-style.h.  */
+
+scoped_disable_styling::~scoped_disable_styling ()
+{
+  scoped_disable_styling_p = m_old_value;
+}
+
+/* Return true if GDB's output terminal should support styling, otherwise,
+   return false.  This function really checks for things that indicate
+   styling might not be supported, so a return value of false indicates
+   we've seen something to indicate we should not perform styling.  A
+   return value of true is the default.  */
+
+static bool
+terminal_supports_styling ()
+{
+  const char *term = getenv ("TERM");
+
+  /* Windows doesn't by default define $TERM, but can support styles
+     regardless.  */
+#ifndef _WIN32
+  if (term == nullptr || streq (term, "dumb"))
+    return false;
+#else
+  /* But if they do define $TERM, let us behave the same as on Posix
+     platforms, for the benefit of programs which invoke GDB as their
+     back-end.  */
+  if (term != nullptr && streq (term, "dumb"))
+    return false;
+#endif
+
+  return true;
+}
+
+/* See cli/cli-style.h.  */
+
+void
+disable_cli_styling ()
+{
+  cli_styling = false;
+}
+
+/* See cli/cli-style.h.  */
+
+bool
+term_cli_styling ()
+{
+  return cli_styling && !scoped_disable_styling_p;
+}
+
+/* See cli/cli-style.h.  */
+
+void
+disable_styling_from_environment ()
+{
+  const char *no_color = getenv ("NO_COLOR");
+  if (no_color != nullptr && *no_color != '\0')
+    cli_styling = false;
+
+  if (!terminal_supports_styling ())
+    cli_styling = false;
+}
 
 /* See cli-style.h.  */
 
@@ -182,9 +262,8 @@ do_show (const char *what, struct ui_file *file,
 	 const char *value)
 {
   cli_style_option *cso = (cli_style_option *) cmd->context ();
-  gdb_puts (_("The "), file);
-  fprintf_styled (file, cso->style (), _("\"%s\" style"), cso->name ());
-  gdb_printf (file, _(" %s is: %s\n"), what, value);
+  gdb_printf (file, _("The %p[\"%s\" style%p] %s is: %s\n"),
+	      cso->style ().ptr (), cso->name (), nullptr, what, value);
 }
 
 /* See cli-style.h.  */
@@ -286,7 +365,20 @@ static cmd_list_element *style_disasm_show_list;
 static void
 set_style_enabled  (const char *args, int from_tty, struct cmd_list_element *c)
 {
-  g_source_cache.clear ();
+  /* This finds the 'set style enabled' command.  */
+  struct cmd_list_element *set_style_enabled_cmd
+    = lookup_cmd_exact ("enabled", style_set_list);
+
+  /* If the user does 'set style enabled on', but the terminal doesn't
+     appear to support styling, then warn the user.  */
+  if (c == set_style_enabled_cmd && cli_styling
+      && !terminal_supports_styling ())
+    warning (_("The current terminal doesn't support styling.  Styled output "
+	       "might not appear as expected."));
+
+  /* It is not necessary to flush the source cache here.  The source cache
+     tracks whether entries are styled or not.  */
+
   gdb::observers::styling_changed.notify ();
 }
 
@@ -322,9 +414,86 @@ show_style_disassembler (struct ui_file *file, int from_tty,
     gdb_printf (file, _("Disassembler output styling is disabled.\n"));
 }
 
-void _initialize_cli_style ();
+/* Implement 'show style emoji'.  */
+
+static void
+show_emoji_styling (struct ui_file *file, int from_tty,
+		    struct cmd_list_element *c, const char *value)
+{
+  if (emoji_styling == AUTO_BOOLEAN_TRUE)
+    gdb_printf (file, _("CLI emoji styling is enabled.\n"));
+  else if (emoji_styling == AUTO_BOOLEAN_FALSE)
+    gdb_printf (file, _("CLI emoji styling is disabled.\n"));
+  else
+    gdb_printf (file, _("CLI emoji styling is automatic (currently %s).\n"),
+		emojis_ok () ? _("enabled") : _("disabled"));
+}
+
+/* See cli-style.h.  */
+
+bool
+emojis_ok ()
+{
+  if (!cli_styling || emoji_styling == AUTO_BOOLEAN_FALSE)
+    return false;
+  if (emoji_styling == AUTO_BOOLEAN_TRUE)
+    return true;
+  return streq (host_charset (), "UTF-8");
+}
+
+/* See cli-style.h.  */
+
 void
-_initialize_cli_style ()
+no_emojis ()
+{
+  emoji_styling = AUTO_BOOLEAN_FALSE;
+}
+
+/* Emoji warning prefix.  */
+static std::string warning_prefix = "⚠️ ";
+
+/* Implement 'show style warning-prefix'.  */
+
+static void
+show_warning_prefix (struct ui_file *file, int from_tty,
+		     struct cmd_list_element *c, const char *value)
+{
+  gdb_printf (file, _("Warning prefix is \"%s\".\n"),
+	      warning_prefix.c_str ());
+}
+
+/* See cli-style.h.  */
+
+void
+print_warning_prefix (ui_file *file)
+{
+  if (emojis_ok ())
+    gdb_puts (warning_prefix.c_str (), file);
+}
+
+/* Emoji error prefix.  */
+static std::string error_prefix = "❌️ ";
+
+/* Implement 'show style error-prefix'.  */
+
+static void
+show_error_prefix (struct ui_file *file, int from_tty,
+		     struct cmd_list_element *c, const char *value)
+{
+  gdb_printf (file, _("Error prefix is \"%s\".\n"),
+	      error_prefix.c_str ());
+}
+
+/* See cli-style.h.  */
+
+void
+print_error_prefix (ui_file *file)
+{
+  if (emojis_ok ())
+    gdb_puts (error_prefix.c_str (), file);
+}
+
+INIT_GDB_FILE (cli_style)
 {
   add_setshow_prefix_cmd ("style", no_class,
 			  _("\
@@ -341,6 +510,13 @@ Set whether CLI styling is enabled."), _("\
 Show whether CLI is enabled."), _("\
 If enabled, output to the terminal is styled."),
 			   set_style_enabled, show_style_enabled,
+			   &style_set_list, &style_show_list);
+
+  add_setshow_auto_boolean_cmd ("emoji", no_class, &emoji_styling, _("\
+Set whether emoji output is enabled."), _("\
+Show whether emoji output is enabled."), _("\
+If enabled, emojis may be displayed."),
+			   nullptr, show_emoji_styling,
 			   &style_set_list, &style_show_list);
 
   add_setshow_boolean_cmd ("sources", no_class, &source_styling, _("\
@@ -371,9 +547,17 @@ Configure various disassembler style-related variables."),
   add_setshow_boolean_cmd ("enabled", no_class, &disassembler_styling, _("\
 Set whether disassembler output styling is enabled."), _("\
 Show whether disassembler output styling is enabled."), _("\
-If enabled, disassembler output is styled.  Disassembler highlighting\n\
-requires the Python Pygments library, if this library is not available\n\
-then disassembler highlighting will not be possible."
+If enabled, disassembler output is styled.\n\
+\n\
+Disassembler styling requires a library that is able to style the current\n\
+instruction architecture.  By default, GDB will use its builtin library\n\
+for disassembler styling, but this cannot style every architecture.\n\
+\n\
+For architectures that cannot be styled by the builtin disassembler library\n\
+GDB will use the Python Pygments library, if this library is available.\n\
+\n\
+If neither option is able to style the current architecture, then\n\
+disassembler output will be unstyled, even when this option is enabled."
 			   ), set_style_enabled, show_style_disassembler,
 			   &style_disasm_set_list, &style_disasm_show_list);
 
@@ -531,4 +715,23 @@ coming from your source code."),
 		 &style_disasm_set_list);
   add_alias_cmd ("symbol", function_prefix_cmds.show, no_class, 0,
 		 &style_disasm_show_list);
+
+  add_setshow_string_cmd ("warning-prefix", no_class,
+			  &warning_prefix,
+			  _("Set the warning prefix text."),
+			  _("Show the warning prefix text."),
+			  _("\
+The warning prefix text is displayed before any warning, when\n\
+emoji output is enabled."),
+			  nullptr, show_warning_prefix,
+			  &style_set_list, &style_show_list);
+  add_setshow_string_cmd ("error-prefix", no_class,
+			  &error_prefix,
+			  _("Set the error prefix text."),
+			  _("Show the error prefix text."),
+			  _("\
+The error prefix text is displayed before any error, when\n\
+emoji output is enabled."),
+			  nullptr, show_error_prefix,
+			  &style_set_list, &style_show_list);
 }

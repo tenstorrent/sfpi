@@ -738,7 +738,7 @@ hexToInt (char **ptr, int *intValue)
 }
 
 /*
- * This function does all command procesing for interfacing to gdb.
+ * This function does all command processing for interfacing to gdb.
  */
 void
 handle_exception (int exceptionVector)
@@ -765,17 +765,17 @@ handle_exception (int exceptionVector)
   *ptr++ = hexchars[sigval >> 4];
   *ptr++ = hexchars[sigval & 0xf];
 
-  *ptr++ = hexchars[ESP]; 
+  *ptr++ = hexchars[ESP];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[ESP], ptr, 4, 0);	/* SP */
   *ptr++ = ';';
 
-  *ptr++ = hexchars[EBP]; 
+  *ptr++ = hexchars[EBP];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[EBP], ptr, 4, 0); 	/* FP */
   *ptr++ = ';';
 
-  *ptr++ = hexchars[PC]; 
+  *ptr++ = hexchars[PC];
   *ptr++ = ':';
   ptr = mem2hex((char *)&registers[PC], ptr, 4, 0); 	/* PC */
   *ptr++ = ';';

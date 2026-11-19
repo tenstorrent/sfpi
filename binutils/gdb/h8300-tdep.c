@@ -1,6 +1,6 @@
 /* Target-machine dependent code for Renesas H8/300, for GDB.
 
-   Copyright (C) 1988-2024 Free Software Foundation, Inc.
+   Copyright (C) 1988-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -151,7 +151,7 @@ h8300_init_frame_cache (struct gdbarch *gdbarch,
    from the register in which it was passed to the stack slot in which
    it really lives.  It is a byte, word, or longword move from an
    argument register to a negative offset from the frame pointer.
-   
+
    CV, 2003-06-16: Or, in optimized code or when the `register' qualifier
    is used, it could be a byte, word or long move to registers r3-r5.  */
 
@@ -407,14 +407,13 @@ static struct h8300_frame_cache *
 h8300_frame_cache (const frame_info_ptr &this_frame, void **this_cache)
 {
   struct gdbarch *gdbarch = get_frame_arch (this_frame);
-  struct h8300_frame_cache *cache;
   int i;
   CORE_ADDR current_pc;
 
   if (*this_cache)
     return (struct h8300_frame_cache *) *this_cache;
 
-  cache = FRAME_OBSTACK_ZALLOC (struct h8300_frame_cache);
+  auto *cache = frame_obstack_zalloc<struct h8300_frame_cache> ();
   h8300_init_frame_cache (gdbarch, cache);
   *this_cache = cache;
 
@@ -536,12 +535,12 @@ h8300_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
       struct h8300_frame_cache cache;
 
       /* Found a function.  */
-      sal = find_pc_line (func_addr, 0);
+      sal = find_sal_for_pc (func_addr, 0);
       if (sal.end && sal.end < func_end)
 	/* Found a line number, use it as end of prologue.  */
 	return sal.end;
 
-      /* No useable line symbol.  Use prologue parsing method.  */
+      /* No usable line symbol.  Use prologue parsing method.  */
       h8300_init_frame_cache (gdbarch, &cache);
       return h8300_analyze_prologue (gdbarch, func_addr, func_end, &cache);
     }
@@ -597,7 +596,7 @@ h8300_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
    So, for example, on the h8/300s, if a function expects a three-byte
    structure and an int, the structure will go on the stack, and the
    int will go in r2, not r0.
-  
+
    If the function returns an aggregate type (struct, union, or class)
    by value, the caller must allocate space to hold the return value,
    and pass the callee a pointer to this space as an invisible first
@@ -1069,7 +1068,7 @@ h8300_print_register (struct gdbarch *gdbarch, struct ui_file *file,
 
 static void
 h8300_print_registers_info (struct gdbarch *gdbarch, struct ui_file *file,
-			    const frame_info_ptr &frame, int regno, int cpregs)
+			    const frame_info_ptr &frame, int regno, bool cpregs)
 {
   if (regno < 0)
     {
@@ -1229,7 +1228,7 @@ h8300s_dbg_reg_to_regnum (struct gdbarch *gdbarch, int regno)
 /*static unsigned char breakpoint[] = { 0x7A, 0xFF }; *//* ??? */
 constexpr gdb_byte h8300_break_insn[] = { 0x01, 0x80 };	/* Sleep */
 
-typedef BP_MANIPULATION (h8300_break_insn) h8300_breakpoint;
+using h8300_breakpoint = BP_MANIPULATION (h8300_break_insn);
 
 static struct gdbarch *
 h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
@@ -1253,7 +1252,6 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
       set_gdbarch_num_regs (gdbarch, 13);
       set_gdbarch_num_pseudo_regs (gdbarch, 1);
       set_gdbarch_dwarf2_reg_to_regnum (gdbarch, h8300_dbg_reg_to_regnum);
-      set_gdbarch_stab_reg_to_regnum (gdbarch, h8300_dbg_reg_to_regnum);
       set_gdbarch_register_name (gdbarch, h8300_register_name);
       set_gdbarch_ptr_bit (gdbarch, 2 * TARGET_CHAR_BIT);
       set_gdbarch_addr_bit (gdbarch, 2 * TARGET_CHAR_BIT);
@@ -1264,7 +1262,6 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
       set_gdbarch_num_regs (gdbarch, 13);
       set_gdbarch_num_pseudo_regs (gdbarch, 1);
       set_gdbarch_dwarf2_reg_to_regnum (gdbarch, h8300_dbg_reg_to_regnum);
-      set_gdbarch_stab_reg_to_regnum (gdbarch, h8300_dbg_reg_to_regnum);
       set_gdbarch_register_name (gdbarch, h8300h_register_name);
       if (info.bfd_arch_info->mach != bfd_mach_h8300hn)
 	{
@@ -1283,7 +1280,6 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
       set_gdbarch_num_regs (gdbarch, 16);
       set_gdbarch_num_pseudo_regs (gdbarch, 2);
       set_gdbarch_dwarf2_reg_to_regnum (gdbarch, h8300s_dbg_reg_to_regnum);
-      set_gdbarch_stab_reg_to_regnum (gdbarch, h8300s_dbg_reg_to_regnum);
       set_gdbarch_register_name (gdbarch, h8300s_register_name);
       if (info.bfd_arch_info->mach != bfd_mach_h8300sn)
 	{
@@ -1302,7 +1298,6 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
       set_gdbarch_num_regs (gdbarch, 18);
       set_gdbarch_num_pseudo_regs (gdbarch, 2);
       set_gdbarch_dwarf2_reg_to_regnum (gdbarch, h8300s_dbg_reg_to_regnum);
-      set_gdbarch_stab_reg_to_regnum (gdbarch, h8300s_dbg_reg_to_regnum);
       set_gdbarch_register_name (gdbarch, h8300sx_register_name);
       if (info.bfd_arch_info->mach != bfd_mach_h8300sxn)
 	{
@@ -1339,7 +1334,7 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   /* Frame unwinder.  */
   frame_base_set_default (gdbarch, &h8300_frame_base);
 
-  /* 
+  /*
    * Miscellany
    */
   /* Stack grows up.  */
@@ -1351,20 +1346,18 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 				       h8300_breakpoint::bp_from_kind);
   set_gdbarch_push_dummy_call (gdbarch, h8300_push_dummy_call);
 
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
   set_gdbarch_int_bit (gdbarch, 2 * TARGET_CHAR_BIT);
   set_gdbarch_long_bit (gdbarch, 4 * TARGET_CHAR_BIT);
   set_gdbarch_long_long_bit (gdbarch, 8 * TARGET_CHAR_BIT);
 
   set_gdbarch_wchar_bit (gdbarch, 2 * TARGET_CHAR_BIT);
-  set_gdbarch_wchar_signed (gdbarch, 0);
+  set_gdbarch_wchar_signed (gdbarch, false);
 
   set_gdbarch_double_bit (gdbarch, 4 * TARGET_CHAR_BIT);
   set_gdbarch_double_format (gdbarch, floatformats_ieee_single);
   set_gdbarch_long_double_bit (gdbarch, 4 * TARGET_CHAR_BIT);
   set_gdbarch_long_double_format (gdbarch, floatformats_ieee_single);
-
-  set_gdbarch_believe_pcc_promotion (gdbarch, 1);
 
   /* Hook in the DWARF CFI frame unwinder.  */
   dwarf2_append_unwinders (gdbarch);
@@ -1374,9 +1367,7 @@ h8300_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 
 }
 
-void _initialize_h8300_tdep ();
-void
-_initialize_h8300_tdep ()
+INIT_GDB_FILE (h8300_tdep)
 {
   gdbarch_register (bfd_arch_h8300, h8300_gdbarch_init);
 }

@@ -1,6 +1,6 @@
 /* Python memory buffer interface for reading inferior memory.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,9 +19,8 @@
 
 #include "python-internal.h"
 
-struct membuf_object {
-  PyObject_HEAD
-
+struct membuf_object : public PyObject
+{
   /* Pointer to the raw data, and array of gdb_bytes.  */
   void *buffer;
 
@@ -32,8 +31,9 @@ struct membuf_object {
   CORE_ADDR length;
 };
 
-extern PyTypeObject membuf_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("membuf_object");
+static_assert (gdb::is_python_allocatable_v<membuf_object>);
+
+extern PyTypeObject membuf_object_type;
 
 /* Wrap BUFFER, ADDRESS, and LENGTH into a gdb.Membuf object.  ADDRESS is
    the address within the inferior that the contents of BUFFER were read,
@@ -98,8 +98,8 @@ get_buffer (PyObject *self, Py_buffer *buf, int flags)
 
 /* General Python initialization callback.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_membuf (void)
+static int
+gdbpy_initialize_membuf ()
 {
   membuf_object_type.tp_new = PyType_GenericNew;
   return gdbpy_type_ready (&membuf_object_type);

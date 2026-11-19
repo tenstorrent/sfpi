@@ -1,6 +1,6 @@
 /* Generic serial interface routines
 
-   Copyright (C) 1992-2024 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -17,7 +17,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include <ctype.h>
 #include "serial.h"
 #include "cli/cli-cmds.h"
 #include "cli/cli-utils.h"
@@ -116,7 +115,7 @@ serial_logchar (struct ui_file *stream, int ch_type, int ch, int timeout)
 	    break;
 	  default:
 	    gdb_printf (stream,
-			isprint (ch) ? "%c" : "\\x%02x", ch & 0xFF);
+			c_isprint (ch) ? "%c" : "\\x%02x", ch & 0xFF);
 	    break;
 	  }
     }
@@ -143,7 +142,7 @@ static const struct serial_ops *
 serial_interface_lookup (const char *name)
 {
   for (const serial_ops *ops : serial_ops_list)
-    if (strcmp (name, ops->name) == 0)
+    if (streq (name, ops->name))
       return ops;
 
   return NULL;
@@ -239,7 +238,7 @@ serial_open_ops_1 (const struct serial_ops *ops, const char *open_name)
 
   if (!serial_logfile.empty ())
     {
-      stdio_file_up file (new stdio_file ());
+      stdio_file_up file = std::make_unique<stdio_file> ();
 
       if (!file->open (serial_logfile.c_str (), "w"))
 	perror_with_name (serial_logfile.c_str ());
@@ -642,9 +641,7 @@ set_parity (const char *ignore_args, int from_tty, struct cmd_list_element *c)
     serial_parity = GDBPARITY_NONE;
 }
 
-void _initialize_serial ();
-void
-_initialize_serial ()
+INIT_GDB_FILE (serial)
 {
 #if 0
   add_com ("connect", class_obscure, connect_command, _("\

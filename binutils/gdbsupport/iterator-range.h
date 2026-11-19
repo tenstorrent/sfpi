@@ -1,5 +1,5 @@
 /* A range adapter that wraps begin / end iterators.
-   Copyright (C) 2021-2024 Free Software Foundation, Inc.
+   Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -27,16 +27,17 @@ struct iterator_range
 {
   using iterator = IteratorType;
 
+  /* Create an empty range.  */
+  iterator_range () = default;
+
   /* Create an iterator_range using BEGIN as the begin iterator.
 
      Assume that the end iterator can be default-constructed.  */
-  template <typename... Args>
-  iterator_range (Args &&...args)
-    : m_begin (std::forward<Args> (args)...)
+  explicit iterator_range (IteratorType begin)
+    : iterator_range (std::move (begin), IteratorType {})
   {}
 
   /* Create an iterator range using explicit BEGIN and END iterators.  */
-  template <typename... Args>
   iterator_range (IteratorType begin, IteratorType end)
     : m_begin (std::move (begin)), m_end (std::move (end))
   {}
@@ -56,6 +57,10 @@ struct iterator_range
   /* The number of items in this iterator_range.  */
   std::size_t size () const
   { return std::distance (m_begin, m_end); }
+
+  /* Return true if this range is empty.  */
+  bool empty () const
+  { return m_begin == m_end; }
 
 private:
   IteratorType m_begin, m_end;

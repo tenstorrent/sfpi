@@ -1,5 +1,5 @@
 /* IA-64 support for OpenVMS
-   Copyright (C) 1998-2025 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -361,8 +361,8 @@ elf64_ia64_relax_section (bfd *abfd, asection *sec,
   *again = false;
 
   if (bfd_link_relocatable (link_info))
-    (*link_info->callbacks->einfo)
-      (_("%P%F: --relax and -r may not be used together\n"));
+    link_info->callbacks->fatal
+      (_("%P: --relax and -r may not be used together\n"));
 
   /* Don't even try to relax for non-ELF outputs.  */
   if (!is_elf_hash_table (link_info->hash))
@@ -381,7 +381,7 @@ elf64_ia64_relax_section (bfd *abfd, asection *sec,
   if (ia64_info == NULL)
     return false;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Load the relocations for this section.  */
   internal_relocs = (_bfd_elf_link_read_relocs
@@ -1248,6 +1248,7 @@ create_ia64_vms_notes (bfd *abfd, struct bfd_link_info *info,
     }
 
   ia64_info->note_sec->contents = note_contents;
+  ia64_info->note_sec->alloced = 1;
   ia64_info->note_sec->size = note_size;
 
   free (module_name);
@@ -1262,7 +1263,7 @@ elf64_ia64_create_dynamic_sections (bfd *abfd,
   struct elf64_ia64_link_hash_table *ia64_info;
   asection *s;
   flagword flags;
-  const struct elf_backend_data *bed;
+  elf_backend_data *bed;
 
   ia64_info = elf64_ia64_hash_table (info);
   if (ia64_info == NULL)
@@ -1929,7 +1930,7 @@ elf64_ia64_check_relocs (bfd *abfd, struct bfd_link_info *info,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   ia64_info = elf64_ia64_hash_table (info);
   if (ia64_info == NULL)
     return false;
@@ -2590,8 +2591,7 @@ elf64_ia64_adjust_dynamic_symbol (struct bfd_link_info *info ATTRIBUTE_UNUSED,
 }
 
 static bool
-elf64_ia64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
-			       struct bfd_link_info *info)
+elf64_ia64_late_size_sections (struct bfd_link_info *info)
 {
   struct elf64_ia64_allocate_data data;
   struct elf64_ia64_link_hash_table *ia64_info;
@@ -2761,6 +2761,7 @@ elf64_ia64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 	  sec->contents = (bfd_byte *) bfd_zalloc (dynobj, sec->size);
 	  if (sec->contents == NULL && sec->size != 0)
 	    return false;
+	  sec->alloced = 1;
 	}
     }
 
@@ -2770,7 +2771,7 @@ elf64_ia64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
       asection *dynsec;
       asection *dynstrsec;
       Elf_Internal_Dyn dyn;
-      const struct elf_backend_data *bed;
+      elf_backend_data *bed;
       unsigned int shl_num = 0;
       bfd_vma fixups_off = 0;
       bfd_vma strdyn_off;
@@ -2827,7 +2828,7 @@ elf64_ia64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 
 	  if (!(abfd->flags & DYNAMIC))
 	    continue;
-	  BFD_ASSERT (abfd->xvec == output_bfd->xvec);
+	  BFD_ASSERT (abfd->xvec == info->output_bfd->xvec);
 
 	  if (!_bfd_elf_add_dynamic_entry (info, DT_IA_64_VMS_NEEDED_IDENT,
 					   elf_ia64_vms_ident (abfd)))
@@ -2904,10 +2905,10 @@ elf64_ia64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
       bed->s->swap_dyn_out (hash_table->dynobj, &dyn,
 			    dynsec->contents + strdyn_off + bed->s->sizeof_dyn);
 
-      elf_ia64_vms_tdata (output_bfd)->needed_count = shl_num;
+      elf_ia64_vms_tdata (info->output_bfd)->needed_count = shl_num;
 
       /* Note section.  */
-      if (!create_ia64_vms_notes (output_bfd, info, time_hi, time_lo))
+      if (!create_ia64_vms_notes (info->output_bfd, info, time_hi, time_lo))
 	return false;
     }
 
@@ -3346,7 +3347,7 @@ elf64_ia64_final_link (bfd *abfd, struct bfd_link_info *info)
     }
 
   /* Invoke the regular ELF backend linker to do all the work.  */
-  if (!bfd_elf_final_link (abfd, info))
+  if (!_bfd_elf_final_link (abfd, info))
     return false;
 
   if (unwind_output_sec)
@@ -3367,8 +3368,7 @@ elf64_ia64_final_link (bfd *abfd, struct bfd_link_info *info)
 }
 
 static int
-elf64_ia64_relocate_section (bfd *output_bfd,
-			     struct bfd_link_info *info,
+elf64_ia64_relocate_section (struct bfd_link_info *info,
 			     bfd *input_bfd,
 			     asection *input_section,
 			     bfd_byte *contents,
@@ -3383,7 +3383,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
   bool ret_val = true;	/* for non-fatal errors */
   bfd_vma gp_val;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   ia64_info = elf64_ia64_hash_table (info);
   if (ia64_info == NULL)
     return false;
@@ -3400,7 +3400,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	->this_hdr.sh_flags |= flags;
     }
 
-  gp_val = _bfd_get_gp_value (output_bfd);
+  gp_val = _bfd_get_gp_value (info->output_bfd);
 
   rel = relocs;
   relend = relocs + input_section->reloc_count;
@@ -3449,7 +3449,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	  sym = local_syms + r_symndx;
 	  sym_sec = local_sections[r_symndx];
 	  msec = sym_sec;
-	  value = _bfd_elf_rela_local_sym (output_bfd, sym, &msec, rel);
+	  value = _bfd_elf_rela_local_sym (info->output_bfd, sym, &msec, rel);
 	  if (!bfd_link_relocatable (info)
 	      && (sym_sec->flags & SEC_MERGE) != 0
 	      && ELF_ST_TYPE (sym->st_info) == STT_SECTION
@@ -3469,9 +3469,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 		    {
 		      msec = sym_sec;
 		      dynent->addend =
-			_bfd_merged_section_offset (output_bfd, &msec,
-						    elf_section_data (msec)->
-						    sec_info,
+			_bfd_merged_section_offset (info->output_bfd, &msec,
 						    sym->st_value
 						    + dynent->addend);
 		      dynent->addend -= sym->st_value;
@@ -3516,7 +3514,8 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	 section contents zeroed.  Avoid any special processing.  */
       if (sym_sec != NULL && discarded_section (sym_sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_IA64_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -3595,7 +3594,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 		  break;
 		}
 	      elf64_ia64_install_fixup
-		(output_bfd, ia64_info, h,
+		(info->output_bfd, ia64_info, h,
 		 dyn_r_type, input_section, rel->r_offset, addend);
 	      r = bfd_reloc_ok;
 	      break;
@@ -3646,7 +3645,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	case R_IA64_PLTOFF64MSB:
 	case R_IA64_PLTOFF64LSB:
 	  dyn_i = get_dyn_sym_info (ia64_info, h, input_bfd, rel, false);
-	  value = set_pltoff_entry (output_bfd, info, dyn_i, value, false);
+	  value = set_pltoff_entry (info->output_bfd, info, dyn_i, value, false);
 	  value -= gp_val;
 	  r = ia64_elf_install_value (hit_addr, value, r_type);
 	  break;
@@ -3660,7 +3659,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	  if (dyn_i->want_fptr)
 	    {
 	      if (!undef_weak_ref)
-		value = set_fptr_entry (output_bfd, info, dyn_i, value);
+		value = set_fptr_entry (info->output_bfd, info, dyn_i, value);
 	    }
 	  if (!dyn_i->want_fptr || bfd_link_pie (info))
 	    {
@@ -3691,7 +3690,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 
 	      /* VMS: FIXFD.  */
 	      elf64_ia64_install_fixup
-		(output_bfd, ia64_info, h, R_IA64_VMS_FIXFD,
+		(info->output_bfd, ia64_info, h, R_IA64_VMS_FIXFD,
 		 input_section, rel->r_offset, 0);
 	      r = bfd_reloc_ok;
 	      break;
@@ -3711,12 +3710,12 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	    {
 	      BFD_ASSERT (h == NULL || !h->def_dynamic);
 	      if (!undef_weak_ref)
-		value = set_fptr_entry (output_bfd, info, dyn_i, value);
+		value = set_fptr_entry (info->output_bfd, info, dyn_i, value);
 	    }
 	  else
 	    value = 0;
 
-	  value = set_got_entry (output_bfd, info, dyn_i,
+	  value = set_got_entry (info->output_bfd, info, dyn_i,
 				 rel->r_addend, value, R_IA64_FPTR64LSB);
 	  value -= gp_val;
 	  r = ia64_elf_install_value (hit_addr, value, r_type);
@@ -3813,7 +3812,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 	    {
 	      /* Find the segment that contains the output_section.  */
 	      Elf_Internal_Phdr *p = _bfd_elf_find_segment_containing_section
-		(output_bfd, sym_sec->output_section);
+		(info->output_bfd, sym_sec->output_section);
 
 	      if (p == NULL)
 		{
@@ -3994,8 +3993,7 @@ elf64_ia64_relocate_section (bfd *output_bfd,
 }
 
 static bool
-elf64_ia64_finish_dynamic_symbol (bfd *output_bfd,
-				  struct bfd_link_info *info,
+elf64_ia64_finish_dynamic_symbol (struct bfd_link_info *info,
 				  struct elf_link_hash_entry *h,
 				  Elf_Internal_Sym *sym)
 {
@@ -4013,11 +4011,12 @@ elf64_ia64_finish_dynamic_symbol (bfd *output_bfd,
       asection *plt_sec;
       bfd_vma plt_addr, pltoff_addr, gp_val;
 
-      gp_val = _bfd_get_gp_value (output_bfd);
+      gp_val = _bfd_get_gp_value (info->output_bfd);
 
       plt_sec = ia64_info->root.splt;
       plt_addr = 0;  /* Not used as overriden by FIXUPs.  */
-      pltoff_addr = set_pltoff_entry (output_bfd, info, dyn_i, plt_addr, true);
+      pltoff_addr = set_pltoff_entry (info->output_bfd, info, dyn_i,
+				      plt_addr, true);
 
       /* Initialize the FULL PLT entry, if needed.  */
       if (dyn_i->want_plt2)
@@ -4037,7 +4036,7 @@ elf64_ia64_finish_dynamic_symbol (bfd *output_bfd,
 
       /* VMS: FIXFD.  */
       elf64_ia64_install_fixup
-	(output_bfd, ia64_info, h, R_IA64_VMS_FIXFD, ia64_info->pltoff_sec,
+	(info->output_bfd, ia64_info, h, R_IA64_VMS_FIXFD, ia64_info->pltoff_sec,
 	 pltoff_addr - (ia64_info->pltoff_sec->output_section->vma
 			+ ia64_info->pltoff_sec->output_offset), 0);
     }
@@ -4052,8 +4051,8 @@ elf64_ia64_finish_dynamic_symbol (bfd *output_bfd,
 }
 
 static bool
-elf64_ia64_finish_dynamic_sections (bfd *abfd,
-				    struct bfd_link_info *info)
+elf64_ia64_finish_dynamic_sections (struct bfd_link_info *info,
+				    bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   struct elf64_ia64_link_hash_table *ia64_info;
   bfd *dynobj;
@@ -4082,7 +4081,7 @@ elf64_ia64_finish_dynamic_sections (bfd *abfd,
       dyncon = (Elf64_External_Dyn *) sdyn->contents;
       dynconend = (Elf64_External_Dyn *) (sdyn->contents + sdyn->size);
 
-      gp_val = _bfd_get_gp_value (abfd);
+      gp_val = _bfd_get_gp_value (info->output_bfd);
       phdr = _bfd_elf_find_segment_containing_section
 	(info->output_bfd, ia64_info->pltoff_sec->output_section);
       BFD_ASSERT (phdr != NULL);
@@ -4090,17 +4089,20 @@ elf64_ia64_finish_dynamic_sections (bfd *abfd,
       gp_seg = phdr - base_phdr;
       gp_off = gp_val - phdr->p_vaddr;
 
-      unwind_sec = bfd_get_section_by_name (abfd, ELF_STRING_ia64_unwind);
+      unwind_sec = bfd_get_section_by_name (info->output_bfd,
+					    ELF_STRING_ia64_unwind);
       if (unwind_sec != NULL)
 	{
 	  asection *code_sec;
 
-	  phdr = _bfd_elf_find_segment_containing_section (abfd, unwind_sec);
+	  phdr = _bfd_elf_find_segment_containing_section (info->output_bfd,
+							   unwind_sec);
 	  BFD_ASSERT (phdr != NULL);
 	  unwind_seg = phdr - base_phdr;
 
-	  code_sec = bfd_get_section_by_name (abfd, "$CODE$");
-	  phdr = _bfd_elf_find_segment_containing_section (abfd, code_sec);
+	  code_sec = bfd_get_section_by_name (info->output_bfd, "$CODE$");
+	  phdr = _bfd_elf_find_segment_containing_section (info->output_bfd,
+							   code_sec);
 	  BFD_ASSERT (phdr != NULL);
 	  code_seg = phdr - base_phdr;
 	}
@@ -4155,7 +4157,7 @@ elf64_ia64_finish_dynamic_sections (bfd *abfd,
 	      continue;
 	    }
 
-	  bfd_elf64_swap_dyn_out (abfd, &dyn, dyncon);
+	  bfd_elf64_swap_dyn_out (info->output_bfd, &dyn, dyncon);
 	}
     }
 
@@ -4225,8 +4227,7 @@ elf64_ia64_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
     return true;
 
   /* Don't even pretend to support mixed-format linking.  */
-  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return false;
 
   in_flags  = elf_elfheader (ibfd)->e_flags;
@@ -4746,7 +4747,7 @@ elf64_vms_link_add_object_symbols (bfd *abfd, struct bfd_link_info *info)
   Elf_Internal_Sym *isymbuf = NULL;
   Elf_Internal_Sym *isym;
   Elf_Internal_Sym *isymend;
-  const struct elf_backend_data *bed;
+  elf_backend_data *bed;
   struct elf_link_hash_table *htab;
   bfd_size_type amt;
 
@@ -4880,7 +4881,7 @@ elf64_vms_link_add_object_symbols (bfd *abfd, struct bfd_link_info *info)
 	 This should be harmless and shouldn't happen in practice.  */
     }
 
-  hdr = &elf_tdata (abfd)->symtab_hdr;
+  hdr = &elf_symtab_hdr (abfd);
   symcount = hdr->sh_size / bed->s->sizeof_sym;
 
   /* The sh_info field of the symtab header tells us where the
@@ -5309,6 +5310,19 @@ elf64_vms_link_add_archive_symbols (bfd *abfd, struct bfd_link_info *info)
       return false;
     }
 
+  /* This can only ever happen for fake archives.  */
+  if (!bfd_has_map (abfd))
+    {
+      bfd *first_one = bfd_openr_next_archived_file (abfd, NULL);
+
+      /* An empty archive is a special case.  */
+      if (first_one == NULL)
+	return true;
+
+      if (!_bfd_make_armap (abfd, first_one))
+	return false;
+    }
+
   /* The archive_pass field in the archive itself is used to
      initialize PASS, since we may search the same archive multiple
      times.  */
@@ -5362,7 +5376,7 @@ elf64_vms_link_add_archive_symbols (bfd *abfd, struct bfd_link_info *info)
 	}
 
       orig_element = element;
-      if (bfd_is_thin_archive (abfd))
+      if (bfd_is_thin_archive (abfd) && !bfd_is_fake_archive (abfd))
 	{
 	  element = _bfd_vms_lib_get_imagelib_file (element);
 	  if (element == NULL || !bfd_check_format (element, bfd_object))
@@ -5567,6 +5581,8 @@ static const struct elf_size_info elf64_ia64_vms_size_info = {
 
 #undef  ELF_OSABI
 #define ELF_OSABI			ELFOSABI_OPENVMS
+#undef	ELF_OSABI_EXACT
+#define	ELF_OSABI_EXACT			1
 
 #undef  ELF_MAXPAGESIZE
 #define ELF_MAXPAGESIZE			0x10000	/* 64KB */

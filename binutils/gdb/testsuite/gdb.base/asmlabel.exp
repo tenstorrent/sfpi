@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2024 Free Software Foundation, Inc.
+# Copyright (C) 2015-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,11 +34,11 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return 0
+if {![runto_main]} {
+    return
 }
 
 set L1_bploc [gdb_get_line_number "set L1 breakpoint here" $srcfile]
@@ -53,11 +53,11 @@ gdb_test "break $L2_bploc" \
     "breakpoint at L2"
 
 gdb_test "continue" \
-    "Continuing.*Breakpoint \[0-9\]+, main .* at .*$srcfile:$L1_bploc.*" \
+    "Continuing.*Breakpoint ${::decimal}, main .* at .*$srcfile:$L1_bploc.*" \
     "continue to L1"
 
 gdb_test "continue" \
-    "Continuing.*Breakpoint \[0-9\]+, main .* at .*$srcfile:$L2_bploc.*" \
+    "Continuing.*Breakpoint ${::decimal}, main .* at .*$srcfile:$L2_bploc.*" \
     "continue to L2"
 
 gdb_test "print v" "= 1" "check value of v at L2"

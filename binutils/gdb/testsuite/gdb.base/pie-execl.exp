@@ -1,4 +1,4 @@
-# Copyright 2010-2024 Free Software Foundation, Inc.
+# Copyright 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,21 +20,13 @@ global inferior_spawn_id
 global gdb_spawn_id
 
 require {istarget *-linux*}
-
-# In remote mode we cannot use the 'set args' command, and this
-# test requires it.
-if {[target_info exists gdb_protocol]} {
-    if {[target_info gdb_protocol] == "remote"} {
-	return
-    }
-}
+require {!target_info exists noargs}
 
 standard_testfile .c
 set executable1 ${testfile}1
 set executable2 ${testfile}2
 set binfile1 ${binfile}1
 set binfile2 ${binfile}2
-set binfile2_test_msg OBJDIR/${subdir}/${executable2}
 
 # Use conditional compilation according to `BIN' as GDB remembers the source
 # file name of the breakpoint.
@@ -42,15 +34,13 @@ set binfile2_test_msg OBJDIR/${subdir}/${executable2}
 set opts [list debug pie]
 if {[build_executable ${testfile}.exp $executable1 $srcfile [concat $opts {additional_flags=-DBIN=1}]] == -1
     || [build_executable ${testfile}.exp $executable2 $srcfile [concat $opts {additional_flags=-DBIN=2}]] == -1} {
-    return -1
+    return
 }
 
 clean_restart ${executable1}
 
-gdb_test_no_output "set args ${binfile2}" "set args ${binfile2_test_msg}"
-
-if ![runto_main] {
-    return -1
+if {![runto_main -inferior-args $binfile2]} {
+    return
 }
 
 # Do not stop on `main' after re-exec.
@@ -62,7 +52,7 @@ gdb_test "info breakpoints" "" "info breakpoints first"
 set addr1 ""
 set test "pie_execl_marker address first"
 gdb_test_multiple "p/x &pie_execl_marker" $test {
-    -re " = (0x\[0-9a-f\]+)\r\n$gdb_prompt $" {
+    -re " = (${::hex})\r\n$gdb_prompt $" {
 	set addr1 $expect_out(1,string)
 	pass $test
     }
@@ -80,7 +70,7 @@ gdb_test_multiple $test $test {
     }
     -i "$inferior_spawn_id" -re "pie-execl: re-exec" {
 	# output from inferior
-        incr matches_found
+	incr matches_found
 	if { $matches_found == 2 } {
 	    pass $test
 	} else {
@@ -88,9 +78,9 @@ gdb_test_multiple $test $test {
 	}
     }
     -i "$gdb_spawn_id"
-    -re "executing new program.*\r\nBreakpoint \[0-9\]+,\[^\r\n\]* pie_execl_marker .*\r\n$gdb_prompt $" {
+    -re "executing new program.*\r\nBreakpoint ${::decimal},\[^\r\n\]* pie_execl_marker .*\r\n$gdb_prompt $" {
 	# output from gdb
-        incr matches_found
+	incr matches_found
 	if { $matches_found == 2 } {
 	    pass $test
 	} else {
@@ -104,7 +94,7 @@ gdb_test "info breakpoints" "" "info breakpoints second"
 set addr2 ""
 set test "pie_execl_marker address second"
 gdb_test_multiple "p/x &pie_execl_marker" $test {
-    -re " = (0x\[0-9a-f\]+)\r\n$gdb_prompt $" {
+    -re " = (${::hex})\r\n$gdb_prompt $" {
 	set addr2 $expect_out(1,string)
 	pass $test
     }
@@ -113,7 +103,7 @@ verbose -log "addr2 is $addr2"
 
 # Ensure we cannot get a false PASS and the inferior has really changed.
 set test "pie_execl_marker address has changed"
-if [string equal $addr1 $addr2] {
+if {[string equal $addr1 $addr2]} {
     fail $test
 } else {
     pass $test

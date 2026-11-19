@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ if {[prepare_for_testing ${testfile}.exp ${testfile} ${srcfile} \
     return -1
 }
 
-if ![fortran_runto_main] {
+if {![fortran_runto_main]} {
     untested "could not run to main"
     return -1
 }
@@ -64,7 +64,7 @@ while { $test_count < 500 } {
 	   continue
 	}
 
-	if ($found_final_breakpoint) {
+	if {$found_final_breakpoint} {
 	    break
 	}
 
@@ -76,7 +76,7 @@ while { $test_count < 500 } {
 	# which we can use to check the values we got above.
 	set test_array ""
 	gdb_test_multiple "up" "" {
-	    -re -wrap "\r\n\[0-9\]+\[ \t\]+call test_rank \\((\[^\r\n\]+)\\)" {
+	    -re -wrap "\r\n${::decimal}\[ \t\]+call test_rank \\((\[^\r\n\]+)\\)" {
 		set test_array $expect_out(1,string)
 	    }
 	}

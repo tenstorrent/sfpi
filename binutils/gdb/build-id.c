@@ -1,6 +1,6 @@
 /* build-id-related functions.
 
-   Copyright (C) 1991-2024 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -29,6 +29,7 @@
 #include "gdbsupport/scoped_fd.h"
 #include "debuginfod-support.h"
 #include "extension.h"
+#include "inferior.h"
 
 /* See build-id.h.  */
 
@@ -41,8 +42,8 @@ build_id_bfd_get (bfd *abfd)
   if (abfd == nullptr)
     return nullptr;
 
-  if (!bfd_check_format (abfd, bfd_object)
-      && !bfd_check_format (abfd, bfd_core))
+  if (!gdb_bfd_check_format (abfd, bfd_object)
+      && !gdb_bfd_check_format (abfd, bfd_core))
     return NULL;
 
   if (abfd->build_id != NULL)
@@ -128,8 +129,9 @@ build_id_to_debug_bfd_1 (const std::string &original_link,
 	  if (supports_target_stat != TRIBOOL_FALSE)
 	    {
 	      struct stat sb;
-	      int res = target_fileio_stat (nullptr, link_on_target, &sb,
-					    &target_errno);
+	      int res = target_fileio_lstat (current_inferior (),
+					     link_on_target, &sb,
+					     &target_errno);
 
 	      if (res != 0 && target_errno != FILEIO_ENOSYS)
 		{
@@ -157,7 +159,7 @@ build_id_to_debug_bfd_1 (const std::string &original_link,
 		 the path doesn't exist, but we just assume that anything
 		 other than EINVAL indicates the path doesn't exist.  */
 	      std::optional<std::string> link_target
-		= target_fileio_readlink (nullptr, link_on_target,
+		= target_fileio_readlink (current_inferior (), link_on_target,
 					  &target_errno);
 	      if (link_target.has_value ()
 		  || target_errno == FILEIO_EINVAL)

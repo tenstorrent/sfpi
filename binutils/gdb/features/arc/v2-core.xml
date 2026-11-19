@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Copyright (C) 2015-2024 Free Software Foundation, Inc.
+<!-- Copyright (C) 2015-2026 Free Software Foundation, Inc.
 
      Copying and distribution of this file, with or without modification,
      are permitted in any medium without royalty provided the copyright
@@ -41,7 +41,7 @@
 
   <!-- Code pointers.  R30 is general purpose, but it used to be ILINK2 in
   ARCompact, thus its odd position in between of special purpose registers.
-  GCC does't use this register, so it isn't a member of a general group. -->
+  GCC doesn't use this register, so it isn't a member of a general group. -->
   <reg name="r30"   bitsize="32" group=""/>
   <reg name="blink" bitsize="32" type="code_ptr"/>
 

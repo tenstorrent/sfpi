@@ -61,6 +61,12 @@ case "${gdbserver_host}" in
 			ipa_obj="${ipa_obj} linux-aarch64-tdesc-ipa.o"
 			ipa_obj="${ipa_obj} arch/aarch64-ipa.o"
 			;;
+  aarch64-*-mingw*)	srv_regobj=""
+			srv_tgtobj="arch/aarch64.o nat/aarch64-hw-point.o"
+			srv_tgtobj="${srv_tgtobj} win32-low.o win32-aarch64-low.o"
+			srv_tgtobj="${srv_tgtobj} nat/windows-nat.o"
+			srv_mingw=yes
+			;;
   aarch64*-*-netbsd*)	srv_regobj=""
 			srv_tgtobj="netbsd-low.o netbsd-aarch64-low.o fork-child.o"
 			srv_tgtobj="${srv_tgtobj} nat/fork-inferior.o"
@@ -169,6 +175,13 @@ case "${gdbserver_host}" in
 			srv_linux_regsets=yes
 			srv_linux_thread_db=yes
 			;;
+  microblaze*-*-linux*) srv_regobj="microblaze-linux.o"
+                        srv_tgtobj="$srv_linux_obj linux-microblaze-low.o"
+                        srv_xmlfiles="microblaze-linux.xml"
+                        srv_xmlfiles="${srv_xmlfiles} microblaze-core.xml"
+                        srv_linux_usrregs=yes
+                        srv_linux_thread_db=yes
+                        ;;
   mips*-*-linux*)	srv_regobj="mips-linux.o"
 			srv_regobj="${srv_regobj} mips-dsp-linux.o"
 			srv_regobj="${srv_regobj} mips64-linux.o"
@@ -352,14 +365,7 @@ case "${gdbserver_host}" in
 			srv_linux_regsets=yes
 			srv_linux_thread_db=yes
 			;;
-  tic6x-*-uclinux)	if $development; then
-			  srv_regobj="tic6x-c64xp-linux.o"
-			  srv_regobj="${srv_regobj} tic6x-c64x-linux.o"
-			  srv_regobj="${srv_regobj} tic6x-c62x-linux.o"
-                        else
-			  srv_regobj=""
-                        fi
-			srv_tgtobj="$srv_linux_obj linux-tic6x-low.o"
+  tic6x-*-uclinux)	srv_tgtobj="$srv_linux_obj linux-tic6x-low.o"
 			srv_tgtobj="${srv_tgtobj} arch/tic6x.o"
 			srv_linux_regsets=yes
 			srv_linux_usrregs=yes

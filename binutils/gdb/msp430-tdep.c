@@ -1,7 +1,7 @@
 /* Target-dependent code for the Texas Instruments MSP430 for GDB, the
    GNU debugger.
 
-   Copyright (C) 2012-2024 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat, Inc.
 
@@ -204,12 +204,12 @@ msp430_register_name (struct gdbarch *gdbarch, int regnr)
 
 /* Implement the "register_reggroup_p" gdbarch method.  */
 
-static int
+static bool
 msp430_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 			    const struct reggroup *group)
 {
   if (group == all_reggroup)
-    return 1;
+    return true;
 
   /* All other registers are saved and restored.  */
   if (group == save_reggroup || group == restore_reggroup)
@@ -281,7 +281,7 @@ msp430_register_sim_regno (struct gdbarch *gdbarch, int regnum)
 
 constexpr gdb_byte msp430_break_insn[] = { 0x43, 0x43 };
 
-typedef BP_MANIPULATION (msp430_break_insn) msp430_breakpoint;
+using msp430_breakpoint = BP_MANIPULATION (msp430_break_insn);
 
 /* Define a "handle" struct for fetching the next opcode.  */
 
@@ -465,7 +465,7 @@ msp430_analyze_frame_prologue (const frame_info_ptr &this_frame,
     {
       CORE_ADDR func_start, stop_addr;
 
-      *this_prologue_cache = FRAME_OBSTACK_ZALLOC (struct msp430_prologue);
+      *this_prologue_cache = frame_obstack_zalloc<msp430_prologue> ();
 
       func_start = get_frame_func (this_frame);
       stop_addr = get_frame_pc (this_frame);
@@ -796,7 +796,7 @@ static const char msp430_epilog_name_prefix[] = "__mspabi_func_epilog_";
 
 /* Implement the "in_return_stub" gdbarch method.  */
 
-static int
+static bool
 msp430_in_return_stub (struct gdbarch *gdbarch, CORE_ADDR pc,
 		       const char *name)
 {
@@ -943,7 +943,7 @@ msp430_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_register_sim_regno (gdbarch, msp430_register_sim_regno);
 
   /* Data types.  */
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
   set_gdbarch_short_bit (gdbarch, 16);
   set_gdbarch_int_bit (gdbarch, 16);
   set_gdbarch_long_bit (gdbarch, 32);
@@ -988,17 +988,12 @@ msp430_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_in_solib_return_trampoline (gdbarch, msp430_in_return_stub);
   set_gdbarch_skip_trampoline_code (gdbarch, msp430_skip_trampoline_code);
 
-  /* Virtual tables.  */
-  set_gdbarch_vbit_in_delta (gdbarch, 0);
-
   return gdbarch;
 }
 
 /* Register the initialization routine.  */
 
-void _initialize_msp430_tdep ();
-void
-_initialize_msp430_tdep ()
+INIT_GDB_FILE (msp430_tdep)
 {
   gdbarch_register (bfd_arch_msp430, msp430_gdbarch_init);
 }

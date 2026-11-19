@@ -1,5 +1,5 @@
 /* tc-rx.c -- Assembler for the Renesas RX
-   Copyright (C) 2008-2025 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -282,7 +282,8 @@ rx_include (int ignore)
   last_char = find_end_of_line (filename, false);
   input_line_pointer = last_char;
 
-  while (last_char >= filename && (* last_char == ' ' || * last_char == '\n'))
+  while (last_char >= filename
+	 && (is_whitespace (* last_char) || is_end_of_stmt (* last_char)))
     -- last_char;
   end_char = *(++ last_char);
   * last_char = 0;
@@ -425,14 +426,14 @@ parse_rx_section (char * name)
 	{
 	  *p = end_char;
 
-	  if (end_char == ' ')
-	    while (ISSPACE (*p))
+	  if (is_whitespace (end_char))
+	    while (is_whitespace (*p))
 	      p++;
 
 	  if (*p == '=')
 	    {
 	      ++ p;
-	      while (ISSPACE (*p))
+	      while (is_whitespace (*p))
 		p++;
 	      switch (*p)
 		{
@@ -517,7 +518,7 @@ rx_section (int ignore)
     {
       int len = p - input_line_pointer;
 
-      while (ISSPACE (*++p))
+      while (is_whitespace (*++p))
 	;
 
       if (*p != '"' && *p != '#')
@@ -1060,7 +1061,7 @@ rx_equ (char * name, char * expression)
   char * name_end;
   char * saved_ilp;
 
-  while (ISSPACE (* name))
+  while (is_whitespace (* name))
     name ++;
 
   for (name_end = name + 1; *name_end; name_end ++)
@@ -1094,7 +1095,7 @@ scan_for_infix_rx_pseudo_ops (char * str)
     return false;
 
   /* A real pseudo-op must be preceded by whitespace.  */
-  if (dot[-1] != ' ' && dot[-1] != '\t')
+  if (!is_whitespace (dot[-1]))
     return false;
 
   pseudo_op = dot + 1;
@@ -1215,11 +1216,6 @@ md_assemble (char * str)
 	frag_then->tc_frag_data->fixups[i].fixP = f;
     }
   dwarf2_emit_insn (idx);
-}
-
-void
-rx_md_end (void)
-{
 }
 
 /* Write a value out to the object file, using the appropriate endianness.  */
@@ -2251,13 +2247,13 @@ rx_cons_fix_new (fragS *	frag,
 	type = BFD_RELOC_RX_DIFF;
     }
 
-  fix_new_exp (frag, where, (int) size, exp, 0, type);
+  fix_new_exp (frag, where, size, exp, 0, type);
 }
 
 void
-md_apply_fix (struct fix * f ATTRIBUTE_UNUSED,
-	      valueT *     t ATTRIBUTE_UNUSED,
-	      segT         s ATTRIBUTE_UNUSED)
+md_apply_fix (struct fix *f,
+	      valueT *t,
+	      segT s ATTRIBUTE_UNUSED)
 {
   /* Instruction bytes are always little endian.  */
   char * op;
@@ -2273,7 +2269,7 @@ md_apply_fix (struct fix * f ATTRIBUTE_UNUSED,
 #define OP4(x) op[target_big_endian ? 3-x : x]
 
   op = f->fx_frag->fr_literal + f->fx_where;
-  val = (unsigned long) * t;
+  val = *t;
 
   /* Opcode words are always the same endian.  Data words are either
      big or little endian.  */

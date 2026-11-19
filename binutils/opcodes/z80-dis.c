@@ -1,5 +1,5 @@
 /* Print Z80, Z180, EZ80 and R800 instructions
-   Copyright (C) 2005-2025 Free Software Foundation, Inc.
+   Copyright (C) 2005-2026 Free Software Foundation, Inc.
    Contributed by Arnold Metselaar <arnold_m@operamail.com>
 
    This file is part of the GNU opcodes library.
@@ -111,13 +111,10 @@ prt (struct buffer *buf, disassemble_info * info, const char *txt)
 static int
 prt_e (struct buffer *buf, disassemble_info * info, const char *txt)
 {
-  char e;
-  int target_addr;
-
   if (fetch_data (buf, info, 1))
     {
-      e = buf->data[1];
-      target_addr = (buf->base + 2 + e) & 0xffff;
+      signed char e = buf->data[1];
+      int target_addr = (buf->base + 2 + e) & 0xffff;
       buf->n_used = buf->n_fetch;
       info->fprintf_func (info->stream, "%s0x%04x", txt, target_addr);
     }

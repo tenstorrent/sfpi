@@ -1,5 +1,5 @@
 /* Language independent support for printing types for GDB, the GNU debugger.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -162,7 +162,7 @@ private:
     {
       /* Use check_typedef: the hash must agree with equals, and types_equal
 	 strips typedefs.  */
-      return htab_hash_string (TYPE_SAFE_NAME (check_typedef (t)));
+      return htab_hash_string (check_typedef (t)->safe_name ());
     }
 
     std::size_t operator() (const decl_field *f) const noexcept
@@ -207,7 +207,7 @@ void type_print_unknown_return_type (struct ui_file *stream);
 /* Throw an error indicating that the user tried to use a symbol that
    has unknown type.  SYM_PRINT_NAME is the name of the symbol, to be
    included in the error message.  */
-extern void error_unknown_type (const char *sym_print_name);
+[[noreturn]] extern void error_unknown_type (const char *sym_print_name);
 
 extern void val_print_not_allocated (struct ui_file *stream);
 

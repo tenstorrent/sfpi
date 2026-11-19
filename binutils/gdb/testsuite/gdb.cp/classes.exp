@@ -1,4 +1,4 @@
-# Copyright 1992-2024 Free Software Foundation, Inc.
+# Copyright 1992-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,16 +25,19 @@ load_lib "cp-support.exp"
 standard_testfile .cc
 
 set flags [list debug c++]
+
 set clang_used false
 if { [test_compiler_info "clang-*" "c++"] } {
     set clang_used true
-    if { [gcc_major_version "clang-*" "c++"] >= 11} {
-	lappend flags additional_flags=-Wno-non-c-typedef-for-linkage
-    }
+}
+
+if { [gcc_major_version "clang-*" "c++"] >= 11
+     || [gcc_major_version "gcc-*" "c++"] >= 16} {
+    lappend flags additional_flags=-Wno-non-c-typedef-for-linkage
 }
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile $flags]} {
-    return -1
+    return
 }
 
 # Test ptype of class objects.
@@ -203,7 +206,7 @@ proc test_ptype_class_objects {} {
     #
     # gcc 2.X with stabs (stabs or stabs+?) used to have a problem with
     # static methods whose name is the same as their argument mangling.
- 
+
     cp_test_ptype_class \
 	"class Static" "" "class" "Static" \
 	{
@@ -413,7 +416,7 @@ proc test_ptype_class_objects {} {
 # Test simple access to class members.
 
 proc test_non_inherited_member_access {} {
-    
+
     # Print non-inherited members of g_A.
     gdb_test "print g_A.a" ".* = 1"
     gdb_test "print g_A.x" ".* = 2"
@@ -491,7 +494,7 @@ proc test_enums {} {
     # 2008-08-21 we can output the qualifiers for DWARF-2.
 
     gdb_test "print obj_with_enum" \
-	"\\$\[0-9\]+ = \{priv_enum = (ClassWithEnum::)?red, x = 0\}" \
+	"${::valnum_re} = \{priv_enum = (ClassWithEnum::)?red, x = 0\}" \
 	"print obj_with_enum (1)"
 
     # advance one line
@@ -501,25 +504,46 @@ proc test_enums {} {
     # print the object again
 
     gdb_test "print obj_with_enum" \
-	"\\$\[0-9\]+ = \{priv_enum = (ClassWithEnum::)?green, x = 0\}" \
+	"${::valnum_re} = \{priv_enum = (ClassWithEnum::)?green, x = 0\}" \
 	"print obj_with_enum, 2"
 
     # print the enum member
 
-    gdb_test "print obj_with_enum.priv_enum" "\\$\[0-9\]+ = (ClassWithEnum::)?green"
+    gdb_test "print obj_with_enum.priv_enum" "${::valnum_re} = (ClassWithEnum::)?green"
 
     # ptype on the enum member
 
+    set re1 [multi_line \
+	"type = enum ClassWithEnum::PrivEnum (: unsigned (int|short|char) )?{" \
+	"    ?(ClassWithEnum::)?red = 0," \
+	"    (ClassWithEnum::)?green = 1," \
+	"    (ClassWithEnum::)?blue = 2," \
+	"    (ClassWithEnum::)?yellow = 42" \
+	"?}$nl$gdb_prompt $"]
+    set re2 [multi_line \
+	"type = enum PrivEnum {" \
+	"    ?(ClassWithEnum::)?red = 0," \
+	"    (ClassWithEnum::)?green = 1," \
+	"    (ClassWithEnum::)?blue = 2," \
+	"    (ClassWithEnum::)?yellow = 42" \
+	"?}$nl$gdb_prompt $"]
+    set re3 [multi_line \
+	"type = enum {" \
+	"    ?red = 0," \
+	"    green = 1," \
+	"    blue = 2," \
+	"    yellow = 42" \
+	"?}$nl$gdb_prompt $"]
     gdb_test_multiple "ptype obj_with_enum.priv_enum" "ptype obj_with_enum.priv_enum" {
-        -re "type = enum ClassWithEnum::PrivEnum (: unsigned (int|short|char) )?\{ ?(ClassWithEnum::)?red, (ClassWithEnum::)?green, (ClassWithEnum::)?blue, (ClassWithEnum::)?yellow = 42 ?\}$nl$gdb_prompt $" {
+	-re $re1 {
 	    pass "ptype obj_with_enum.priv_enum"
-        }
-	-re "type = enum PrivEnum \{ ?(ClassWithEnum::)?red, (ClassWithEnum::)?green, (ClassWithEnum::)?blue, (ClassWithEnum::)?yellow = 42 ?\}$nl$gdb_prompt $" {
+	}
+	-re $re2 {
 	    # gcc 2.95.3 -gdwarf-2
 	    # gcc 3.3.2 -gdwarf-2
 	    pass "ptype obj_with_enum.priv_enum"
 	}
-	-re "type = enum \{ ?red, green, blue, yellow = 42 ?\}$nl$gdb_prompt $" {
+	-re $re3 {
 	    # This case case is a little dubious, but it's not clear what
 	    # ought to be required of a ptype on a private enum...
 	    # -sts 19990324
@@ -564,7 +588,7 @@ proc test_enums {} {
     # See PR gdb/1588.
 
     gdb_test_multiple "print (ClassWithEnum::PrivEnum) 42" "print (ClassWithEnum::PrivEnum) 42" {
-	-re "\\$\[0-9\]+ = (ClassWithEnum::)?yellow$nl$gdb_prompt $" {
+	-re "${::valnum_re} = (ClassWithEnum::)?yellow$nl$gdb_prompt $" {
 	    pass "print (ClassWithEnum::PrivEnum) 42"
 	}
 	-re "A (parse|syntax) error in expression, near `42'.$nl$gdb_prompt $" {
@@ -575,7 +599,7 @@ proc test_enums {} {
     }
 
     gdb_test_multiple "print ('ClassWithEnum::PrivEnum') 42" "print ('ClassWithEnum::PrivEnum') 42" {
-	-re "\\$\[0-9\]+ = (ClassWithEnum::)?yellow$nl$gdb_prompt $" {
+	-re "${::valnum_re} = (ClassWithEnum::)?yellow$nl$gdb_prompt $" {
 	    # gcc 3.3.2 -gstabs+
 	    # gcc HEAD 2003-12-28 21:08:30 UTC -gstabs+
 	    pass "print ('ClassWithEnum::PrivEnum') 42"
@@ -594,9 +618,9 @@ proc test_enums {} {
 
 proc test_pointers_to_class_members {} {
     gdb_test "print Bar::z" "Cannot reference non-static field \"z\""
-    gdb_test "print &Foo::x" "\\$\[0-9\]+ = &Foo::x"
-    gdb_test "print (int)&Foo::x" "\\$\[0-9\]+ = 0"
-    gdb_test "print (int)&Bar::y == 2*sizeof(int)" "\\$\[0-9\]+ = true"
+    gdb_test "print &Foo::x" "${::valnum_re} = &Foo::x"
+    gdb_test "print (int)&Foo::x" "${::valnum_re} = 0"
+    gdb_test "print (int)&Bar::y == 2*sizeof(int)" "${::valnum_re} = true"
 
     gdb_test "ptype Bar::z" "type = int"
     gdb_test "ptype &Bar::z" "type = int Bar::\\*"
@@ -609,12 +633,12 @@ proc test_pointers_to_class_members {} {
 proc test_static_members {} {
     global hex
 
-    gdb_test "print Foo::st" "\\$\[0-9\]+ = 100"
+    gdb_test "print Foo::st" "${::valnum_re} = 100"
     gdb_test_no_output "set foo.st = 200" ""
-    gdb_test "print bar.st" "\\$\[0-9\]+ = 200"
-    gdb_test "print &foo.st" "\\$\[0-9\]+ = \\(int ?\\*\\) $hex <Foo::st>"
-    gdb_test "print &Bar::st" "\\$\[0-9\]+ = \\(int ?\\*\\) $hex <Foo::st>"
-    gdb_test "print *\$" "\\$\[0-9\]+ = 200"
+    gdb_test "print bar.st" "${::valnum_re} = 200"
+    gdb_test "print &foo.st" "${::valnum_re} = \\(int ?\\*\\) $hex <Foo::st>"
+    gdb_test "print &Bar::st" "${::valnum_re} = \\(int ?\\*\\) $hex <Foo::st>"
+    gdb_test "print *\$" "${::valnum_re} = 200"
 
     gdb_test_no_output "set print static-members off"
     gdb_test "print csi" \

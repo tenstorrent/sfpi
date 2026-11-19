@@ -1,6 +1,6 @@
 /* GDB target debugging macros
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -146,6 +146,10 @@ target_debug_print_CORE_ADDR_p (CORE_ADDR *p)
 { return core_addr_to_string (*p); }
 
 static std::string
+target_debug_print_CORE_ADDR_r (CORE_ADDR &p)
+{ return core_addr_to_string (p); }
+
+static std::string
 target_debug_print_int_p (int *p)
 { return plongest (*p); }
 
@@ -167,12 +171,8 @@ target_debug_print_const_std_vector_target_section_p
 { return host_address_to_string (vec->data ()); }
 
 static std::string
-target_debug_print_void_p (void *p)
-{ return host_address_to_string (p); }
-
-static std::string
 target_debug_print_find_memory_region_ftype (find_memory_region_ftype func)
-{ return host_address_to_string (func); }
+{ return "<function_view>"; }
 
 static std::string
 target_debug_print_bfd_p (bfd *bfd)
@@ -180,6 +180,10 @@ target_debug_print_bfd_p (bfd *bfd)
 
 static std::string
 target_debug_print_std_vector_mem_region (const std::vector<mem_region> &vec)
+{ return host_address_to_string (vec.data ()); }
+
+static std::string
+target_debug_print_std_vector_CORE_ADDR (const std::vector<CORE_ADDR> &vec)
 { return host_address_to_string (vec.data ()); }
 
 static std::string
@@ -306,6 +310,10 @@ static std::string
 target_debug_print_target_waitstatus_p (struct target_waitstatus *status)
 { return status->to_string (); }
 
+static std::string
+target_debug_print_const_target_waitstatus_r (const target_waitstatus &status)
+{ return status.to_string (); }
+
 /* Functions that are used via TARGET_DEBUG_PRINTER.  */
 
 static std::string
@@ -379,4 +387,14 @@ target_debug_print_x86_xsave_layout (const x86_xsave_layout &layout)
 
   return s;
 }
+
+static std::string
+target_debug_print_displaced_step_finish_status (displaced_step_finish_status s)
+{ return displaced_step_finish_status_str (s); }
+
+static std::string
+target_debug_print_displaced_step_prepare_status
+  (displaced_step_prepare_status s)
+{ return displaced_step_prepare_status_str (s); }
+
 #endif /* GDB_TARGET_DEBUG_H */

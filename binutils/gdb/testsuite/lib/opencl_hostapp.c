@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2010-2024 Free Software Foundation, Inc.
+   Copyright 2010-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ main ()
   cl_int *data;
 
   /* In order to see which devices the OpenCL implementation on your platform
-     provides you may issue a call to the print_clinfo () fuction.  */
+     provides you may issue a call to the print_clinfo () function.  */
 
   /* Initialize the data the OpenCl program operates on.  */
   data = (cl_int*) calloc (1, size);
@@ -121,8 +121,8 @@ main ()
 	  CHK (clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG,
 				      len, clbuild_log, NULL));
 	  fprintf (stderr, "clBuildProgram failed with:\n%s\n", clbuild_log);
- 	  free (clbuild_log);
-        }
+	  free (clbuild_log);
+	}
       exit (EXIT_FAILURE);
   }
 

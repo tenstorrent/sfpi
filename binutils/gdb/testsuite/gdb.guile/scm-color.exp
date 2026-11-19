@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2024 Free Software Foundation, Inc.
+# Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,8 +19,12 @@
 load_lib gdb-guile.exp
 
 require allow_guile_tests
+require {!is_remote host}
 
-clean_restart
+# Start GDB with styling support.
+with_ansi_styling_terminal {
+    clean_restart
+}
 
 gdb_install_guile_utils
 gdb_install_guile_module
@@ -108,3 +112,8 @@ gdb_test [concat "guile " \
     "\033\\\[31m\033\\\[42mred on green\033\\\[49m red on default\033\\\[39m" \
     "escape sequences"
 
+# Ensure that turning styling off means no escape sequences.
+gdb_test_no_output "set style enabled off"
+gdb_test_no_output "guile (display (color-escape-sequence c_red #t))"
+gdb_test_no_output "guile (display (color-escape-sequence c_red #f))"
+gdb_test_no_output "set style enabled on"

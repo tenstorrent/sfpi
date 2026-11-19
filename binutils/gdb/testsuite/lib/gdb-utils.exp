@@ -1,4 +1,4 @@
-# Copyright 2014-2024 Free Software Foundation, Inc.
+# Copyright 2014-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +15,17 @@
 
 # Utility procedures, shared between test suite domains.
 
+# tclint-disable redefined-builtin
+
 # A helper procedure to retrieve commands to send to GDB before a program
 # is started.
 
 proc gdb_init_commands {} {
     set commands ""
-    if [target_info exists gdb_init_command] {
+    if {[target_info exists gdb_init_command]} {
 	lappend commands [target_info gdb_init_command]
     }
-    if [target_info exists gdb_init_commands] {
+    if {[target_info exists gdb_init_commands]} {
 	set commands [concat $commands [target_info gdb_init_commands]]
     }
     return $commands
@@ -70,6 +72,8 @@ proc style {str style} {
     set fg 39
     set bg 49
     set intensity 22
+    set italic 23
+    set underline 24
     set reverse 27
     switch -exact -- $style {
 	title { set intensity 1 }
@@ -84,7 +88,7 @@ proc style {str style} {
 	line-number { set intensity 2 }
 	none { return $str }
     }
-    return "\033\\\[${fg};${bg};${intensity};${reverse}m${str}\033\\\[m"
+    return "\033\\\[${fg};${bg};${intensity};${italic};${underline};${reverse}m${str}\033\\\[m"
 }
 
 # gdb_get_bp_addr num
@@ -108,7 +112,7 @@ proc style {str style} {
 #
 proc gdb_get_bp_addr { num } {
     gdb_test_multiple "maint info break $num" "find address of specified bp $num" {
-	-re -wrap ".*(0x\[0-9a-f\]+).*" {
+	-re -wrap ".*(${::hex}).*" {
 	    return $expect_out(1,string)
 	}
     }
@@ -117,7 +121,10 @@ proc gdb_get_bp_addr { num } {
 
 # Compare the version numbers in L1 to those in L2 using OP, and
 # return 1 if the comparison is true.  OP can be "<", "<=", ">", ">=",
-# or "==".  It is ok if the lengths of the lists differ.
+# or "==".
+# It is ok if the lengths of the lists differ, but note that we have
+# "{1} < {1 0}" instead of "{1} == {1 0}".  See also
+# gdb.testsuite/version-compare.exp.
 
 proc version_compare { l1 op l2 } {
     switch -exact $op {
@@ -160,6 +167,7 @@ proc version_compare { l1 op l2 } {
 	if {$v1 == $v2} {
 	    continue
 	}
+	# tclint-disable-next-line unbraced-expr
 	return [expr $v1 $op $v2]
     }
 
@@ -239,4 +247,10 @@ proc with_lock { lock_file body } {
     } else {
 	return -code $code $result
     }
+}
+
+# Alias for subst -nobackslashes -nocommands.
+
+proc subst_vars { str } {
+    tailcall subst -nobackslashes -nocommands $str
 }

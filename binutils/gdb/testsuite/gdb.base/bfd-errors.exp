@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -13,7 +13,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Tools which use the BFD library will output error messages of the
-# form "BFD: some messsage" when a problem with the file upon which it
+# form "BFD: some message" when a problem with the file upon which it
 # operating is found.  E.g. an actual message (modulo some shortening
 # of the pathname) from this test is:
 #
@@ -39,7 +39,7 @@
 #
 # This test then loads the shared library's symbol table (and other
 # debug info) using the 'add-symbol-file' command.  While doing this,
-# the test observes and records the BFD errors that were output. 
+# the test observes and records the BFD errors that were output.
 # Finally, data collected while adding the shared library symbols are
 # examined to make sure that identical messages were suppressed while
 # also making sure that at least two messages have been printed.
@@ -57,7 +57,7 @@ set lib_flags debug
 # Compile shared library:
 if { [gdb_compile_shlib ${srcfile_lib} ${binfile_lib} $lib_flags] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # Open the shared library and determine some basic facts.  The key
@@ -71,7 +71,7 @@ set data [read $solib_fp 4]
 if { ![string equal $data "\x7fELF"] } {
     close $solib_fp
     untested "shared library is not an ELF file"
-    return -1
+    return
 }
 
 # Read EI_CLASS for ELF32 versus ELF64.
@@ -87,13 +87,13 @@ close $solib_fp
 set objcopy_program [gdb_find_objcopy]
 
 # Extract the .dynsym and .dynstr section from the shared object.
-if { [catch "exec $objcopy_program \
-              --dump-section .dynsym=${binfile_lib}.dynsym \
-	      --dump-section .dynstr=${binfile_lib}.dynstr \
-	      ${binfile_lib}" output] } {
+if { [catch {exec $objcopy_program \
+		 --dump-section .dynsym=${binfile_lib}.dynsym \
+		 --dump-section .dynstr=${binfile_lib}.dynstr \
+		 ${binfile_lib}} output] } {
     untested "failed objcopy dump-section"
     verbose -log "objcopy output: $output"
-    return -1
+    return
 }
 
 # Determine length of .dynstr.  We'll use the length for creating invalid
@@ -119,32 +119,32 @@ if { $is_elf64 } {
 } else {
     set sz 16
 }
-set cnt [expr $dynsym_len / $sz]
+set cnt [expr {$dynsym_len / $sz}]
 
 # Create 32-bit patterns (bad offsets) to write into the st_name area.
 if { $is_big_endian } {
-    set pat(0) [binary format I [expr $dynstr_len + 1000]]
-    set pat(1) [binary format I [expr $dynstr_len + 2000]]
+    set pat(0) [binary format I [expr {$dynstr_len + 1000}]]
+    set pat(1) [binary format I [expr {$dynstr_len + 2000}]]
 } else {
-    set pat(0) [binary format i [expr $dynstr_len + 1000]]
-    set pat(1) [binary format i [expr $dynstr_len + 2000]]
+    set pat(0) [binary format i [expr {$dynstr_len + 1000}]]
+    set pat(1) [binary format i [expr {$dynstr_len + 2000}]]
 }
 
 # Mangle st_name for the symbols following the first (STN_UNDEF) entry.
 while { [incr cnt -1] > 0 } {
     seek $dynsym_fp [incr off $sz]
-    puts $dynsym_fp $pat([expr $cnt % 2])
+    puts $dynsym_fp $pat([expr {$cnt % 2}])
 }
 
 close $dynsym_fp
 
 # Replace .dynsym section in shared object with the mangled version.
-if { [catch "exec $objcopy_program \
-               --update-section .dynsym=${binfile_lib}.dynsym \
-	       ${binfile_lib}" output] } {
+if { [catch {exec $objcopy_program \
+		 --update-section .dynsym=${binfile_lib}.dynsym \
+		 ${binfile_lib}} output] } {
     untested "failed objcopy update-section"
     verbose -log "objcopy output: $output"
-    return -1
+    return
 }
 
 clean_restart
@@ -152,7 +152,7 @@ clean_restart
 # Count number of distinct BFD error messages via 'bfd_error_count'
 # array while using add-symbol-file to "load" the shared library.
 gdb_test_multiple "add-symbol-file -readnow $binfile_lib" \
-                  "load library with add-symbol-file" {
+		  "load library with add-symbol-file" {
     -re "add symbol table from file.*\(y or n\)" {
 	send_gdb "y\n" answer
 	exp_continue

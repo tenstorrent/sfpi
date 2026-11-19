@@ -1,4 +1,4 @@
-#   Copyright 2009-2024 Free Software Foundation, Inc.
+#   Copyright 2009-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ require supports_reverse
 standard_testfile
 
 if {[build_executable $testfile.exp $testfile $srcfile debug] == -1} {
-    return -1
+    return
 }
 
 proc test_one_sig {nextsig} {
@@ -32,8 +32,8 @@ proc test_one_sig {nextsig} {
     set this_sig_supported $sig_supported
     gdb_test "handle SIG$thissig stop print" \
 	"SIG$thissig\[ \t\]*Yes\[ \t\]*Yes\[ \t\]*Yes.*"
-    gdb_test "b handle_$thissig" "Breakpoint \[0-9\]+ .*"
-    gdb_test "b gen_$nextsig" "Breakpoint \[0-9\]+ .*"
+    gdb_test "b handle_$thissig" "Breakpoint ${::decimal} .*"
+    gdb_test "b gen_$nextsig" "Breakpoint ${::decimal} .*"
 
     set need_another_continue 1
     set missed_handler 0
@@ -66,7 +66,7 @@ proc test_one_sig {nextsig} {
 	if { $thissig == "URG" } {
 	    setup_xfail "i*86-pc-linuxoldld-gnu" "i*86-pc-linuxaout-gnu"
 	}
-        # Either Lynx or GDB screws up on SIGPRIO
+	# Either Lynx or GDB screws up on SIGPRIO
 	if { $thissig == "PRIO" } {
 	    setup_xfail "*-*-*lynx*"
 	}
@@ -84,16 +84,16 @@ proc test_one_sig {nextsig} {
 
     if {$missed_handler == "0"} {
 	set testmsg "advance to $nextsig"
-        gdb_test_multiple "signal 0" $testmsg {
+	gdb_test_multiple "signal 0" $testmsg {
 	    -re "Breakpoint.*gen_$nextsig.*kill.*$gdb_prompt $" {
-	        pass $testmsg
-	        set sig_supported 1
+		pass $testmsg
+		set sig_supported 1
 	    }
 	    -re "Breakpoint.*gen_$nextsig.*handle.*$gdb_prompt $" {
-	        pass $testmsg
-	        set sig_supported 0
+		pass $testmsg
+		set sig_supported 0
 	    }
-        }
+	}
     }
     set thissig $nextsig
 }
@@ -140,15 +140,15 @@ proc test_one_sig_reverse {prevsig} {
 	    } else {
 		xfail "$testmsg (handled)"
 	    }
-	}	    
+	}
     }
 }
 
-clean_restart $binfile
+clean_restart $::testfile
 
 runto gen_ABRT
 
-if [supports_process_record] {
+if {[supports_process_record]} {
     # Activate process record/replay
     gdb_test_no_output "record" "turn on process record"
 }
@@ -239,7 +239,7 @@ with_test_prefix "sig-test-1" {
     foreach sig [lrange $signals 1 end] {
 	test_one_sig $sig
 	if { $record_instruction_kfail } {
-	    return -1
+	    return
 	}
     }
 }
@@ -248,14 +248,15 @@ with_test_prefix "sig-test-1" {
 # we are not setting up for another test.
 gdb_test "handle SIGTERM stop print" \
     "SIGTERM\[ \t\]*Yes\[ \t\]*Yes\[ \t\]*Yes.*"
-gdb_test "b handle_TERM" "Breakpoint \[0-9\]+ .*"
+gdb_test "b handle_TERM" "Breakpoint ${::decimal} .*"
 gdb_test "continue" \
     "Continuing.*Program received signal SIGTERM.*" \
     "get signal TERM"
 gdb_test "continue" "Breakpoint.*handle_TERM.*" "send signal TERM"
 
 with_timeout_factor 2 {
-    gdb_test "continue" "\[process \[0-9\]+ .*" "continue to signal exit" \
+    gdb_test "continue" "Process record: inferior program stopped.*" \
+	"continue to signal exit" \
 	"The next instruction is syscall exit_group.* program...y. or n. " \
 	"yes"
 }

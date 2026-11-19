@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -33,7 +33,7 @@ py_get_event_thread (ptid_t ptid)
       PyErr_SetString (PyExc_RuntimeError, "Could not find event thread");
       return NULL;
     }
-  return gdbpy_ref<>::new_reference (Py_None);
+  return py_none ();
 }
 
 gdbpy_ref<>

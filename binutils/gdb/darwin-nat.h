@@ -1,5 +1,5 @@
 /* Common things used by the various darwin files
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ struct darwin_thread_info : public private_thread_info
   /* The last exception received.  */
   struct darwin_exception_msg event {};
 };
-typedef struct darwin_thread_info darwin_thread_t;
+using darwin_thread_t = struct darwin_thread_info;
 
 /* This needs to be overridden by the platform specific nat code.  */
 

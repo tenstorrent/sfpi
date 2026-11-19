@@ -1,6 +1,6 @@
 /* Python interface to MI commands
 
-   Copyright (C) 2023-2024 Free Software Foundation, Inc.
+   Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -218,11 +218,11 @@ py_object_to_mi_key (PyObject *key_obj)
   {
     gdb_assert (name != nullptr);
 
-    if (*name == '\0' || !isalpha (*name))
+    if (*name == '\0' || !c_isalpha (*name))
       return false;
 
     for (; *name != '\0'; ++name)
-      if (!isalnum (*name) && *name != '_' && *name != '-')
+      if (!c_isalnum (*name) && *name != '_' && *name != '-')
 	return false;
 
     return true;
@@ -278,7 +278,7 @@ serialize_mi_result_1 (PyObject *result, const char *field_name)
 	gdbpy_handle_exception ();
       for (Py_ssize_t i = 0; i < len; ++i)
 	{
-	  gdbpy_ref<> item (PySequence_ITEM (result, i));
+	  gdbpy_ref<> item (PySequence_GetItem (result, i));
 	  if (item == nullptr)
 	    gdbpy_handle_exception ();
 	  serialize_mi_result_1 (item.get (), nullptr);
@@ -363,7 +363,7 @@ gdbpy_notify_mi (PyObject *self, PyObject *args, PyObject *kwargs)
     }
   for (int i = 0; i < name_len; i++)
     {
-      if (!isalnum (name[i]) && name[i] != '-')
+      if (!c_isalnum (name[i]) && name[i] != '-')
 	{
 	  PyErr_Format
 	    (PyExc_ValueError,
@@ -379,7 +379,7 @@ gdbpy_notify_mi (PyObject *self, PyObject *args, PyObject *kwargs)
       PyErr_Format
 	(PyExc_ValueError,
 	 _("MI notification data must be either None or a dictionary, not %s"),
-	 Py_TYPE (data)->tp_name);
+	 gdbpy_py_obj_tp_name (data).c_str ());
       return nullptr;
     }
 
@@ -406,5 +406,5 @@ gdbpy_notify_mi (PyObject *self, PyObject *args, PyObject *kwargs)
       gdb_flush (mi->event_channel);
     }
 
-  Py_RETURN_NONE;
+  return py_none ().release ();
 }

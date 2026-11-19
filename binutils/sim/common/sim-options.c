@@ -1,5 +1,5 @@
 /* Simulator option handling.
-   Copyright (C) 1996-2024 Free Software Foundation, Inc.
+   Copyright (C) 1996-2026 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
 
 This file is part of GDB, the GNU debugger.
@@ -207,7 +207,7 @@ static SIM_RC
 env_set (SIM_DESC sd, const char *arg)
 {
   int i, varlen;
-  char *eq;
+  const char *eq;
   char **envp;
 
   if (STATE_PROG_ENVP (sd) == NULL)

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 Free Software Foundation, Inc.
+# Copyright (C) 2023-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require allow_python_tests
 standard_testfile
 
 if {[prepare_for_testing "preparing" $testfile $srcfile] == -1} {
-    return -1
+    return
 }
 
 set pyfile [gdb_remote_download host ${srcdir}/${subdir}/py-progspace-events.py]

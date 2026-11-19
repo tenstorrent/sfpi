@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,18 +32,18 @@
 # When the inferior continued, and eventually returned to the dummy
 # frame, it would try to execute instruction from the dummy frame
 # (which for most, or even all, targets, is on the stack), and then
-# experience undefined behaviuor, often a SIGSEGV.
+# experience undefined behaviour, often a SIGSEGV.
 
 standard_testfile .c
 
 require allow_python_tests
 
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile] } {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 set pyfile [gdb_remote_download host ${srcdir}/${subdir}/${testfile}.py]

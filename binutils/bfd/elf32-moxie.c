@@ -1,8 +1,8 @@
 /* moxie-specific support for 32-bit ELF.
-   Copyright (C) 2009-2025 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    Copied from elf32-fr30.c which is..
-   Copyright (C) 1998-2025 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -198,8 +198,7 @@ moxie_final_link_relocate (reloc_howto_type *howto,
    accordingly.  */
 
 static int
-moxie_elf_relocate_section (bfd *output_bfd,
-			    struct bfd_link_info *info,
+moxie_elf_relocate_section (struct bfd_link_info *info,
 			    bfd *input_bfd,
 			    asection *input_section,
 			    bfd_byte *contents,
@@ -212,7 +211,7 @@ moxie_elf_relocate_section (bfd *output_bfd,
   Elf_Internal_Rela *rel;
   Elf_Internal_Rela *relend;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -239,7 +238,8 @@ moxie_elf_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -259,7 +259,8 @@ moxie_elf_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_MOXIE_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -310,19 +311,6 @@ moxie_elf_relocate_section (bfd *output_bfd,
   return true;
 }
 
-/* Return the section that should be marked against GC for a given
-   relocation.  */
-
-static asection *
-moxie_elf_gc_mark_hook (asection *sec,
-			struct bfd_link_info *info,
-			Elf_Internal_Rela *rel,
-			struct elf_link_hash_entry *h,
-			Elf_Internal_Sym *sym)
-{
-  return _bfd_elf_gc_mark_hook (sec, info, rel, h, sym);
-}
-
 /* Look through the relocs for a section during the first phase.
    Since we don't do .gots or .plts, we just need to consider the
    virtual table relocs for gc.  */
@@ -341,7 +329,7 @@ moxie_elf_check_relocs (bfd *abfd,
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
 
   rel_end = relocs + sec->reloc_count;
@@ -378,7 +366,6 @@ moxie_elf_check_relocs (bfd *abfd,
 #define elf_info_to_howto_rel			NULL
 #define elf_info_to_howto			moxie_info_to_howto_rela
 #define elf_backend_relocate_section		moxie_elf_relocate_section
-#define elf_backend_gc_mark_hook		moxie_elf_gc_mark_hook
 #define elf_backend_check_relocs		moxie_elf_check_relocs
 
 #define elf_backend_can_gc_sections		1

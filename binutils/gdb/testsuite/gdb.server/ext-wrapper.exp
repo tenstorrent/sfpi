@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2015-2024 Free Software Foundation, Inc.
+# Copyright 2015-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ standard_testfile wrapper.c
 require allow_gdbserver_tests
 
 if {[build_executable $testfile.exp $testfile $srcfile debug] == -1} {
-    return -1
+    return
 }
 
 save_vars { GDBFLAGS } {
@@ -33,7 +33,7 @@ save_vars { GDBFLAGS } {
     }
 
     if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-	return -1
+	return
     }
 }
 
@@ -49,7 +49,7 @@ gdb_test_no_output "set remote exec-file $target_exec" "set remote exec-file"
 gdb_breakpoint marker
 gdb_test "run" "Breakpoint.* marker .*" "run to marker"
 
-gdb_test "print d" "\\$${decimal} = ${hex} \"1\".*"
+gdb_test "print d" "${::valnum_re} = ${hex} \"1\".*"
 
 # Restart the process.
 with_test_prefix "restart" {
@@ -71,7 +71,7 @@ with_test_prefix "restart" {
 	}
     }
 
-    gdb_test "print d" "\\$${decimal} = ${hex} \"1\".*"
+    gdb_test "print d" "${::valnum_re} = ${hex} \"1\".*"
 }
 
 gdb_test "kill" "" "kill" "Kill the program being debugged. .y or n. " "y"

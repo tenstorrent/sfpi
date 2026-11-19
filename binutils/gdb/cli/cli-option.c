@@ -1,6 +1,6 @@
 /* CLI options framework, for GDB.
 
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -227,7 +227,7 @@ parse_option (gdb::array_view<const option_def_group> options_group,
 	      match = &o;
 	      match_ctx = grp.ctx;
 
-	      if ((isspace (arg[len]) || arg[len] == '\0')
+	      if ((c_isspace (arg[len]) || arg[len] == '\0')
 		  && strlen (o.name) == len)
 		break; /* Exact match.  */
 	    }
@@ -588,12 +588,12 @@ complete_options (completion_tracker &tracker,
 	  *args = skip_spaces (*args);
 	  completion_info.word = *args;
 
-	  if (strcmp (*args, "-") == 0)
+	  if (streq (*args, "-"))
 	    {
 	      complete_on_options (options_group, tracker, *args + 1,
 				   completion_info.word);
 	    }
-	  else if (strcmp (*args, "--") == 0)
+	  else if (streq (*args, "--"))
 	    {
 	      tracker.add_completion (make_unique_xstrdup (*args));
 	    }
@@ -635,7 +635,7 @@ complete_options (completion_tracker &tracker,
 	      if (ov
 		  && !tracker.have_completions ()
 		  && **args == '\0'
-		  && *args > text && !isspace ((*args)[-1]))
+		  && *args > text && !c_isspace ((*args)[-1]))
 		{
 		  tracker.advance_custom_word_point_by
 		    (*args - text);

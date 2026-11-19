@@ -1,5 +1,5 @@
 # Expect script for simple native Linux/x86 tests.
-#   Copyright (C) 2018-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -84,9 +84,9 @@ run_cc_link_tests [list \
     ] \
     [list \
 	"Build indirect-extern-access-1a without PIE" \
-	"$NOPIE_LDFLAGS -Wl,--no-as-needed -z noexecstack \
+	"$NOPIE_LDFLAGS $DIRECT_EXTERN_ACCESS_CFLAGS -Wl,--no-as-needed -z noexecstack \
 	 tmpdir/indirect-extern-access-1.so" \
-	"$NOPIE_CFLAGS" \
+	"$NOPIE_CFLAGS $DIRECT_EXTERN_ACCESS_CFLAGS" \
 	{ indirect-extern-access.S indirect-extern-access-1b.c } \
 	{{readelf -rn indirect-extern-access-1.rd}} \
 	"indirect-extern-access-1a" \
@@ -101,9 +101,9 @@ run_cc_link_tests [list \
     ] \
     [list \
 	"Build indirect-extern-access-2a without PIE" \
-	"$NOPIE_LDFLAGS -Wl,--no-as-needed -z noexecstack \
+	"$NOPIE_LDFLAGS $DIRECT_EXTERN_ACCESS_CFLAGS -Wl,--no-as-needed -z noexecstack \
 	 tmpdir/indirect-extern-access-2.so" \
-	"$NOPIE_CFLAGS" \
+	"$NOPIE_CFLAGS $DIRECT_EXTERN_ACCESS_CFLAGS" \
 	{ indirect-extern-access.S indirect-extern-access-1b.c } \
 	{{readelf -rn indirect-extern-access-2.rd}} \
 	"indirect-extern-access-2a" \
@@ -268,6 +268,9 @@ if { [check_compiler_available] && [compiler_honours_aligned] } {
 	    "-fpie" \
 	] \
     ]
+    # Tidy up, to not leave huge files.
+    remote_file host delete tmpdir/p_align-1a tmpdir/p_align-1b
+    remote_file host delete tmpdir/p_align-1c tmpdir/p_align-1d
 } else {
     unsupported "p_align-1"
 }
@@ -285,7 +288,7 @@ proc elfedit_test { options test output } {
 	send_log "$got\n"
 	fail "$test_name"
     }
-    send_log "$READELF -n $options tmpdir/$test > tmpdir/$output.out\n"
+    send_log "$READELF -n tmpdir/$test > tmpdir/$output.out\n"
     set got [remote_exec host "$READELF -n tmpdir/$test" "" "/dev/null" "tmpdir/$output.out"]
     if { [lindex $got 0] != 0 || ![string match "" [lindex $got 1]] } then {
 	send_log "$got\n"
@@ -326,9 +329,8 @@ proc check_pr25749a {testname srcfilea srcfileb cflags ldflags lderror} {
     # Suppress warning for unsupported attribute from older GCC.
     append cflags " -w"
 
-    exec cp $srcdir/$subdir/$srcfilea $srcfilea
-    exec chmod +w $srcfilea
-    set pr25749_bin "$objcopy -B $output_arch -I binary -O $output_target $srcfilea tmpdir/pr25749-bin.o"
+    set prefix "--binary-symbol-prefix _binary_[string map {- _ . _} $srcfilea]"
+    set pr25749_bin "$objcopy -B $output_arch -I binary $prefix -O $output_target $srcdir/$subdir/$srcfilea tmpdir/pr25749-bin.o"
     send_log "$pr25749_bin\n"
     set got [remote_exec host "$pr25749_bin"]
     if { [lindex $got 0] != 0 || ![string match "" [lindex $got 1]] } then {
@@ -375,11 +377,11 @@ proc check_pr25749a {testname srcfilea srcfileb cflags ldflags lderror} {
 
 check_pr25749a "pr25749-1a" "pr25749-1.c" "pr25749-1a.c" "$NOPIE_CFLAGS" "$NOPIE_LDFLAGS" ""
 check_pr25749a "pr25749-1a" "pr25749-1.c" "pr25749-1a.c" "-fPIE" "-pie" ""
-check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "$NOPIE_CFLAGS" "$NOPIE_LDFLAGS" ""
+check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "$NOPIE_CFLAGS $DIRECT_EXTERN_ACCESS_CFLAGS" "$NOPIE_LDFLAGS" ""
 if { [istarget "i?86-*-linux*"] || ![at_least_gcc_version 5 1] } {
-    check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "-fPIE" "-pie" ""
+    check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "-fPIE $DIRECT_EXTERN_ACCESS_CFLAGS" "-pie" ""
 } else {
-    check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "-fPIE" "-pie" "pr25749-1b.err"
+    check_pr25749a "pr25749-1b" "pr25749-1.c" "pr25749-1b.c" "-fPIE $DIRECT_EXTERN_ACCESS_CFLAGS" "-pie" "pr25749-1b.err"
 }
 check_pr25749a "pr25749-1c" "pr25749-1.c" "pr25749-1c.c" "-fPIC" "-shared" "pr25749-1b.err"
 check_pr25749a "pr25749-2a" "pr25749-2.c" "pr25749-2a.s" "$NOPIE_CFLAGS" "$NOPIE_LDFLAGS" ""
@@ -430,9 +432,8 @@ proc check_pr25749b {testname srcfilea srcfileb cflags ldflags dsoldflags args} 
 	}
     }
 
-    exec cp $srcdir/$subdir/$srcfilea $srcfilea
-    exec chmod +w $srcfilea
-    set pr25749_bin "$objcopy -B $output_arch -I binary -O $output_target $srcfilea tmpdir/pr25749-bin.o"
+    set prefix "--binary-symbol-prefix _binary_[string map {- _ . _} $srcfilea]"
+    set pr25749_bin "$objcopy -B $output_arch -I binary $prefix -O $output_target $srcdir/$subdir/$srcfilea tmpdir/pr25749-bin.o"
     send_log "$pr25749_bin\n"
     set got [remote_exec host "$pr25749_bin"]
     if { [lindex $got 0] != 0 || ![string match "" [lindex $got 1]] } then {

@@ -1,5 +1,5 @@
 /* Interface to prologue value handling for GDB.
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -149,7 +149,7 @@ struct prologue_value {
   CORE_ADDR k;
 };
 
-typedef struct prologue_value pv_t;
+using pv_t = struct prologue_value;
 
 
 /* Return the unknown prologue value --- { pvk_unknown, ?, ? }.  */

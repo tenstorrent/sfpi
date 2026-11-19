@@ -1,6 +1,6 @@
 /* Parse a printf-style format string.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -20,8 +20,6 @@
 #ifndef GDBSUPPORT_FORMAT_H
 #define GDBSUPPORT_FORMAT_H
 
-#include <string_view>
-
 #if defined(__MINGW32__) && !defined(PRINTF_HAS_LONG_LONG)
 # define USE_PRINTF_I64 1
 # define PRINTF_HAS_LONG_LONG
@@ -38,7 +36,7 @@
 enum argclass
   {
     literal_piece,
-    int_arg, long_arg, long_long_arg, size_t_arg, ptr_arg,
+    int_arg, long_arg, long_long_arg, size_t_arg, ptrdiff_t_arg, ptr_arg,
     string_arg, wide_string_arg, wide_char_arg,
     double_arg, long_double_arg,
     dec32float_arg, dec64float_arg, dec128float_arg,
@@ -51,21 +49,15 @@ enum argclass
 
 struct format_piece
 {
-  format_piece (const char *str, enum argclass argc, int n)
-    : string (str),
+  format_piece (std::string::size_type start, enum argclass argc, int n)
+    : start (start),
       argclass (argc),
       n_int_args (n)
-  {
-    gdb_assert (str != nullptr);
-  }
+  {}
 
-  bool operator== (const format_piece &other) const
-  {
-    return (this->argclass == other.argclass
-	    && std::string_view (this->string) == other.string);
-  }
+  /* Where this piece starts, within FORMAT_PIECES::M_STORAGE.  */
+  std::string::size_type start;
 
-  const char *string;
   enum argclass argclass;
   /* Count the number of preceding 'int' arguments that must be passed
      along.  This is used for a width or precision of '*'.  Note that
@@ -83,7 +75,7 @@ public:
 
   DISABLE_COPY_AND_ASSIGN (format_pieces);
 
-  typedef std::vector<format_piece>::iterator iterator;
+  using iterator = std::vector<format_piece>::iterator;
 
   iterator begin ()
   {
@@ -95,10 +87,17 @@ public:
     return m_pieces.end ();
   }
 
+  /* Return the string associated to PIECE.  */
+  const char *piece_str (const format_piece &piece)
+  { return &m_storage[piece.start]; }
+
 private:
 
   std::vector<format_piece> m_pieces;
-  gdb::unique_xmalloc_ptr<char> m_storage;
+
+  /* This is used as a buffer of concatenated null-terminated strings.  The
+     individual strings are referenced by FORMAT_PIECE::START.  */
+  std::string m_storage;
 };
 
 #endif /* GDBSUPPORT_FORMAT_H */

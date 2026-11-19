@@ -1,6 +1,6 @@
 # This testcase is part of GDB, the GNU debugger.
 
-# Copyright 2017-2024 Free Software Foundation, Inc.
+# Copyright 2017-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 set invalid_register_re "Invalid register \[^\r\n\]*"
@@ -114,7 +114,7 @@ set reggroups [fetch_reggroups "fetch reggroups"]
 set regcount 0
 foreach reggroup $reggroups {
     set regs [fetch_reggroup_regs $reggroup "fetch reggroup regs $reggroup"]
-    set regcount [expr $regcount + [llength $regs]]
+    set regcount [expr {$regcount + [llength $regs]}]
 }
 
 gdb_assert "[llength $regcount] != 0" "system has reggroup registers"

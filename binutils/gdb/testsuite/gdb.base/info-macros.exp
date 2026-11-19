@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,18 +19,18 @@ standard_testfile .c
 require !using_fission
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} {debug macros}] } {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 # Test various error messages.
 gdb_test "info macro -- -all" \
-	 "The symbol `-all' has no definition .*\r\nat .*$srcfile:\[0-9\]+"
+	 "The symbol `-all' has no definition .*\r\nat .*$srcfile:${::decimal}"
 gdb_test "info macro  -- -all" \
-	 "The symbol `-all' has no definition .*\r\nat .*$srcfile:\[0-9\]+"
+	 "The symbol `-all' has no definition .*\r\nat .*$srcfile:${::decimal}"
 
 gdb_test "info macro -all --" \
 	 "You must follow.*with the name.*you want to see.*\[^\r\n\]*"

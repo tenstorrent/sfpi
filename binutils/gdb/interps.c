@@ -1,6 +1,6 @@
 /* Manages interpreters for GDB, the GNU debugger.
 
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    Written by Jim Ingham <jingham@apple.com> of Apple Computer, Inc.
 
@@ -45,9 +45,16 @@
 static struct interp *interp_lookup_existing (struct ui *ui,
 					      const char *name);
 
-interp::interp (const char *name)
+interp::interp (const char *name, bool make_outputs)
   : m_name (name)
 {
+  if (make_outputs)
+    {
+      m_stdout = std::make_unique<ui::ui_stdout_file> ();
+      m_stderr = std::make_unique<ui::ui_stderr_file> ();
+      m_stdlog = std::make_unique<ui::ui_stdlog_file> ();
+      m_stdtarg = std::make_unique<ui::ui_stdtarg_file> ();
+    }
 }
 
 interp::~interp () = default;
@@ -78,7 +85,7 @@ interp_factory_register (const char *name, interp_factory_func func)
 {
   /* Assert that no factory for NAME is already registered.  */
   for (const interp_factory &f : interpreter_factories)
-    if (strcmp (f.name, name) == 0)
+    if (streq (f.name, name))
       {
 	internal_error (_("interpreter factory already registered: \"%s\"\n"),
 			name);
@@ -132,11 +139,7 @@ interp_set (struct interp *interp, bool top_level)
     interpreter_p = interp->name ();
 
   /* Run the init proc.  */
-  if (!interp->inited)
-    {
-      interp->init (top_level);
-      interp->inited = true;
-    }
+  interp->init (top_level);
 
   /* Do this only after the interpreter is initialized.  */
   current_uiout = interp->interp_ui_out ();
@@ -154,7 +157,7 @@ static struct interp *
 interp_lookup_existing (struct ui *ui, const char *name)
 {
   for (interp &interp : ui->interp_list)
-    if (strcmp (interp.name (), name) == 0)
+    if (streq (interp.name (), name))
       return &interp;
 
   return nullptr;
@@ -174,7 +177,7 @@ interp_lookup (struct ui *ui, const char *name)
     return interp;
 
   for (const interp_factory &factory : interpreter_factories)
-    if (strcmp (factory.name, name) == 0)
+    if (streq (factory.name, name))
       {
 	interp = factory.func (factory.name);
 	interp_add (ui, interp);
@@ -201,15 +204,6 @@ set_top_level_interpreter (const char *name, bool for_new_ui)
   interp_set (interp, true);
 }
 
-void
-current_interp_set_logging (ui_file_up logfile, bool logging_redirect,
-			    bool debug_redirect)
-{
-  struct interp *interp = current_ui->current_interpreter;
-
-  interp->set_logging (std::move (logfile), logging_redirect, debug_redirect);
-}
-
 /* Temporarily overrides the current interpreter.  */
 struct interp *
 scoped_restore_interp::set_interp (const char *name)
@@ -230,7 +224,7 @@ current_interp_named_p (const char *interp_name)
   interp *interp = current_ui->current_interpreter;
 
   if (interp != NULL)
-    return (strcmp (interp->name (), interp_name) == 0);
+    return (streq (interp->name (), interp_name));
 
   return 0;
 }
@@ -254,7 +248,7 @@ command_interp (void)
     return current_ui->current_interpreter;
 }
 
-/* interp_exec - This executes COMMAND_STR in the current 
+/* interp_exec - This executes COMMAND_STR in the current
    interpreter.  */
 
 void
@@ -289,13 +283,6 @@ interpreter_exec_cmd (const char *args, int from_tty)
   struct interp *interp_to_use;
   unsigned int nrules;
   unsigned int i;
-
-  /* Interpreters may clobber stdout/stderr (e.g.  in mi_interp::resume at time
-     of writing), preserve their state here.  */
-  scoped_restore save_stdout = make_scoped_restore (&gdb_stdout);
-  scoped_restore save_stderr = make_scoped_restore (&gdb_stderr);
-  scoped_restore save_stdlog = make_scoped_restore (&gdb_stdlog);
-  scoped_restore save_stdtarg = make_scoped_restore (&gdb_stdtarg);
 
   if (args == NULL)
     error_no_arg (_("interpreter-exec command"));
@@ -496,9 +483,9 @@ interps_notify_solib_loaded (const solib &so)
 /* See interps.h.  */
 
 void
-interps_notify_solib_unloaded (const solib &so)
+interps_notify_solib_unloaded (const solib &so, bool still_in_use)
 {
-  interps_notify (&interp::on_solib_unloaded, so);
+  interps_notify (&interp::on_solib_unloaded, so, still_in_use);
 }
 
 /* See interps.h.  */
@@ -575,9 +562,7 @@ interps_notify_memory_changed (inferior *inf, CORE_ADDR addr, ssize_t len,
 }
 
 /* This just adds the "interpreter-exec" command.  */
-void _initialize_interpreter ();
-void
-_initialize_interpreter ()
+INIT_GDB_FILE (interpreter)
 {
   struct cmd_list_element *c;
 

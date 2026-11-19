@@ -1,0 +1,232 @@
+# Copyright (C) 2025-2026 Free Software Foundation, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This file is part of the GDB testsuite.  It tests gdb.Color and how this
+# interacts with GDB's pagination system.  The test also tests gdb.Style
+# because the tests are very similar.
+
+load_lib gdb-python.exp
+
+require allow_python_tests
+require {!is_remote host}
+
+standard_testfile
+
+set pyfile [gdb_remote_download host ${srcdir}/${subdir}/${testfile}.py]
+
+set str "<[string repeat - 78]>"
+
+# These define all the default attributes for a style: background
+# color, intensity, italics, and underlined.
+set other_attr ";49;22;23;24;27"
+
+# These colors set the foreground color only.  Everything else is the
+# default.
+set black "(?:\033\\\[30${other_attr}m)"
+set red "(?:\033\\\[31${other_attr}m)"
+set green "(?:\033\\\[32${other_attr}m)"
+set yellow "(?:\033\\\[33${other_attr}m)"
+set blue "(?:\033\\\[34${other_attr}m)"
+set magenta "(?:\033\\\[35${other_attr}m)"
+set cyan "(?:\033\\\[36${other_attr}m)"
+set white "(?:\033\\\[37${other_attr}m)"
+
+set any_color "(?:${black}|${red}|${green}|${yellow}|${blue}|${magenta}|${cyan}|${white})"
+
+# Run CMD which produces some styled output via a custom Python
+# command.  The styled output will trigger pagination, ensure that the
+# pagination prompt is not styled.
+#
+# When RESET_AFTER_PRINT is true we expect the Python output to reset
+# back to the default style after each block of output, and when it is
+# false, Python will only restore the default style once before
+# returning to the GDB prompt.
+proc test_pagination { cmd reset_after_print } {
+
+    # Start with a fresh GDB, but enable color support.
+    with_ansi_styling_terminal {
+	clean_restart
+    }
+
+    gdb_test_no_output "source $::pyfile" "source the script"
+
+    gdb_test_no_output "set width 80"
+    gdb_test_no_output "set height 15"
+
+    if { $reset_after_print } {
+	set prompt_prefix ""
+	set output_suffix "\033\\\[m"
+    } else {
+	set prompt_prefix "\033\\\[m\r\n"
+	set output_suffix ""
+    }
+
+    set saw_bad_color_handling false
+    set expected_color ""
+    set last_color ""
+    gdb_test_multiple "$cmd" "" {
+	-re "^[string_to_regexp $cmd]\r\n" {
+	    exp_continue
+	}
+
+	-re "^(${::any_color})$::str${output_suffix}" {
+	    set color $expect_out(1,string)
+
+	    # When EXPECTED_COLOR is not the empty string, then this
+	    # is the color that was in place prior to the pagination
+	    # prompt, check that this same color was restored before
+	    # printing the next output.
+	    if { $expected_color ne "" && $color ne $expected_color } {
+		set saw_bad_color_handling true
+	    }
+	    set expected_color ""
+	    exp_continue
+	}
+
+	-re "^\033\\\[${::decimal}m$::str" {
+	    # This catches the case where the color's escape sequence has
+	    # not been converted back into a full style.  This indicates
+	    # something went wrong in the pager_file::puts function.
+	    set saw_bad_color_handling true
+	    exp_continue
+	}
+
+	-re "^(${::any_color})\033\\\[m$::pagination_prompt$" {
+	    # After a pagination prompt we expect GDB to restore the
+	    # last color that was in use, so record it now.  The
+	    # regexp above is also checking that styling is disabled
+	    # before the pagination prompt is displayed, that is a
+	    # critical part of this test.
+	    set expected_color $expect_out(1,string)
+
+	    # Send '\n' to view more output.
+	    send_gdb "\n"
+	    exp_continue
+	}
+
+	-re "^\r\n" {
+	    # The matches the newline sent to the continuation prompt.
+	    exp_continue
+	}
+
+	-re "^${prompt_prefix}$::gdb_prompt $" {
+	    gdb_assert { !$saw_bad_color_handling } $gdb_test_name
+	}
+    }
+}
+
+# Use a custom command to emit blocks of empty lines.  Check when the
+# pagination prompt is triggered.
+proc_with_prefix test_blank_line_pagination {} {
+    clean_restart
+
+    gdb_test_no_output "source $::pyfile" "source the script"
+
+    gdb_test_no_output "set width 80"
+    gdb_test_no_output "set height 15"
+
+    foreach i { 13 14 } {
+	gdb_test "empty-lines $i" \
+	    [multi_line {*}[lrepeat $i ""]] \
+	    "$i blank lines doesn't trigger pagination"
+    }
+
+    set count 0
+    gdb_test_multiple "empty-lines 15" "15 blank lines triggers pagination" {
+	-re "^empty-lines 15\r\n" {
+	    exp_continue
+	}
+	-re "^\r\n" {
+	    incr count
+	    exp_continue
+	}
+	-re "^$::pagination_prompt$" {
+	    gdb_assert { $count == 14 } \
+		"saw 14 lines before pagination"
+	    set count 0
+	    send_gdb "c\n"
+	    exp_continue
+	}
+	-re "^c\r\n" {
+	    exp_continue
+	}
+	-re "^$::gdb_prompt $" {
+	    gdb_assert { $count == 1 } $gdb_test_name
+	}
+    }
+}
+
+# Use a custom command to emit blocks of very full lines.  The lines
+# consist of a full screen width of one character followed by a full
+# screen width of tab characters, followed by a '\r', then another
+# screen width full of a different printable character.
+#
+# Due to the '\r' each of these very full lines should only occupy a
+# single screen line.  We run the test with different numbers of lines
+# being printed, and check when (if at all) the pager triggers.
+proc_with_prefix test_full_line_pagination {} {
+    clean_restart
+
+    gdb_test_no_output "source $::pyfile" "source the script"
+
+    gdb_test_no_output "set width 80"
+    gdb_test_no_output "set height 15"
+
+    set line_re "\\.{80}\t{80}\r\\+{80}"
+
+    foreach i { 13 14 } {
+	gdb_test "full-lines 80 $i" \
+	    [multi_line {*}[lrepeat $i $line_re]] \
+	    "$i full lines didn't trigger pagination"
+    }
+
+    set count 0
+    gdb_test_multiple "full-lines 80 15" "15 full lines triggers pagination" {
+	-re "^full-lines 80 15\r\n" {
+	    exp_continue
+	}
+	-re "^$line_re\r\n" {
+	    incr count
+	    exp_continue
+	}
+	-re "^$::pagination_prompt$" {
+	    gdb_assert { $count == 14 } \
+		"saw 14 lines before pagination"
+	    set count 0
+	    send_gdb "c\n"
+	    exp_continue
+	}
+	-re "^c\r\n" {
+	    exp_continue
+	}
+	-re "^$::gdb_prompt $" {
+	    gdb_assert { $count == 1 } $gdb_test_name
+	}
+    }
+}
+
+foreach_with_prefix type { color style } {
+    foreach_with_prefix mode { write print } {
+	set cmd "$type-fill $mode"
+	test_pagination $cmd false
+    }
+}
+
+with_test_prefix "style-fill-v2" {
+    test_pagination "style-fill-v2" true
+}
+
+test_blank_line_pagination
+test_full_line_pagination

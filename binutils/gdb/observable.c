@@ -1,6 +1,6 @@
 /* GDB Notifications to Observers.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -76,6 +76,7 @@ DEFINE_OBSERVABLE (target_post_wait);
 DEFINE_OBSERVABLE (new_program_space);
 DEFINE_OBSERVABLE (free_program_space);
 DEFINE_OBSERVABLE (tui_enabled);
+DEFINE_OBSERVABLE (core_file_changed);
 
 } /* namespace observers */
 } /* namespace gdb */
@@ -87,9 +88,7 @@ show_observer_debug (struct ui_file *file, int from_tty,
   gdb_printf (file, _("Observer debugging is %s.\n"), value);
 }
 
-void _initialize_observer ();
-void
-_initialize_observer ()
+INIT_GDB_FILE (observer)
 {
   add_setshow_boolean_cmd ("observer", class_maintenance,
 			   &gdb::observers::observer_debug, _("\

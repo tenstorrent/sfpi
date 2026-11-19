@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2024 Free Software Foundation, Inc.
+# Copyright (C) 2016-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ if { [prepare_for_testing "failed to prepare" ${testfile}] } {
     return
 }
 
-if ![runto_main] {
+if {![runto_main]} {
     return
 }
 
@@ -46,6 +46,6 @@ gdb_test_multiple "show mipsfpu" "check for MIPS floating-point coprocessor" {
 
 # Now check that FCRs are accessible and 32-bit wide.
 gdb_test "info registers \$fcsr" "fcsr: $hex"
-gdb_test "print sizeof \$fcsr" "\\\$$decimal = 4"
+gdb_test "print sizeof \$fcsr" "${::valnum_re} = 4"
 gdb_test "info registers \$fir" "fir: $hex"
-gdb_test "print sizeof \$fir" "\\\$$decimal = 4"
+gdb_test "print sizeof \$fir" "${::valnum_re} = 4"

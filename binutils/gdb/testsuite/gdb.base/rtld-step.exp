@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -53,7 +53,7 @@ set binfile_rtld [standard_output_file ${rtld_basename}]
 # the flags -static-pie -fPIE were needed for Fedora 35 through Fedora
 # 38.  The source file rtld-step-rtld.c didn't need the _start()
 # function either.  And, better still, it was possible to call
-# printf() to output progress messages in the pretend/fake RTLD. 
+# printf() to output progress messages in the pretend/fake RTLD.
 # Sadly, these output statements had to be removed in order to obtain
 # code which would work on other Linux distributions / releases.
 #
@@ -93,31 +93,35 @@ if { ![gdb_can_simple_compile static-pie-static-libc \
 	   executable $rtld_flags] } {
     set reason "-static-pie not supported or static libc missing"
     untested "failed to compile ($reason)"
-    return -1
+    return
 }
 
 # Main program file names and flags:
 set main_basename ${::gdb_test_file_name}-main
 set srcfile_main ${srcdir}/${subdir}/${main_basename}.c
 set binfile_main [standard_output_file ${main_basename}]
-set main_flags [list debug additional_flags="-Wl,--dynamic-linker=${binfile_rtld}"]
+set main_flags {}
+lappend main_flags debug
+lappend main_flags \
+    additional_flags=[quote_for_host -Wl,--dynamic-linker=$binfile_rtld]
 
 # Compile pretend RTLD:
 if { [gdb_compile ${srcfile_rtld} ${binfile_rtld} executable $rtld_flags] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # Compile main program:
 if { [gdb_compile ${srcfile_main} ${binfile_main} executable $main_flags] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
-clean_restart ${binfile_main}
+clean_restart
+gdb_load $binfile_main
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 # Running the command 'info sharedlibrary' should output a path to

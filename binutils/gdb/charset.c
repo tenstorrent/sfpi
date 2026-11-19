@@ -1,6 +1,6 @@
 /* Character set conversion support for GDB.
 
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -19,12 +19,12 @@
 
 #include "charset.h"
 #include "cli/cli-cmds.h"
+#include "cli/cli-style.h"
 #include "gdbsupport/gdb_obstack.h"
 #include "gdbsupport/gdb_wait.h"
 #include "charset-list.h"
 #include "gdbsupport/environ.h"
 #include "arch-utils.h"
-#include <ctype.h>
 
 #ifdef USE_WIN32API
 #include <windows.h>
@@ -62,7 +62,7 @@
      conversions),
 
      and so on.
-     
+
    To avoid excessive code duplication and maintenance efforts,
    GDB simply requires a capable iconv function.  Users on platforms
    without a suitable iconv can use the GNU iconv library.  */
@@ -81,7 +81,7 @@
 #else
 # define GDB_DEFAULT_HOST_CHARSET "ISO-8859-1"
 #endif
-#define GDB_DEFAULT_TARGET_CHARSET GDB_DEFAULT_HOST_CHARSET 
+#define GDB_DEFAULT_TARGET_CHARSET GDB_DEFAULT_HOST_CHARSET
 #define GDB_DEFAULT_TARGET_WIDE_CHARSET "UTF-32"
 #undef DEFAULT_CHARSET_NAMES
 #define DEFAULT_CHARSET_NAMES GDB_DEFAULT_HOST_CHARSET ,
@@ -106,16 +106,16 @@
 static iconv_t
 phony_iconv_open (const char *to, const char *from)
 {
-  if (strcmp (to, "wchar_t") && strcmp (to, GDB_DEFAULT_HOST_CHARSET))
+  if (!streq (to, "wchar_t") && !streq (to, GDB_DEFAULT_HOST_CHARSET))
     return -1;
 
-  if (!strcmp (from, "UTF-32BE") || !strcmp (from, "UTF-32"))
+  if (streq (from, "UTF-32BE") || streq (from, "UTF-32"))
     return 1;
 
-  if (!strcmp (from, "UTF-32LE"))
+  if (streq (from, "UTF-32LE"))
     return 2;
 
-  if (strcmp (from, "wchar_t") && strcmp (from, GDB_DEFAULT_HOST_CHARSET))
+  if (!streq (from, "wchar_t") && !streq (from, GDB_DEFAULT_HOST_CHARSET))
     return -1;
 
   return 0;
@@ -215,6 +215,7 @@ gdb_iconv (iconv_t utf_flag, ICONV_CONST char **inbuf, size_t *inbytesleft,
 
 /* The global lists of character sets and translations.  */
 
+static const char *default_auto_charset ();
 
 #ifndef GDB_DEFAULT_TARGET_CHARSET
 #define GDB_DEFAULT_TARGET_CHARSET "ISO-8859-1"
@@ -231,7 +232,7 @@ show_host_charset_name (struct ui_file *file, int from_tty,
 			struct cmd_list_element *c,
 			const char *value)
 {
-  if (!strcmp (value, "auto"))
+  if (streq (value, "auto"))
     gdb_printf (file,
 		_("The host character set is \"auto; currently %s\".\n"),
 		auto_host_charset_name);
@@ -244,11 +245,11 @@ static void
 show_target_charset_name (struct ui_file *file, int from_tty,
 			  struct cmd_list_element *c, const char *value)
 {
-  if (!strcmp (value, "auto"))
+  if (streq (value, "auto"))
     gdb_printf (file,
 		_("The target character set is \"auto; "
 		  "currently %s\".\n"),
-		gdbarch_auto_charset (get_current_arch ()));
+		default_auto_charset ());
   else
     gdb_printf (file, _("The target character set is \"%s\".\n"),
 		value);
@@ -256,12 +257,12 @@ show_target_charset_name (struct ui_file *file, int from_tty,
 
 static const char *target_wide_charset_name = "auto";
 static void
-show_target_wide_charset_name (struct ui_file *file, 
+show_target_wide_charset_name (struct ui_file *file,
 			       int from_tty,
-			       struct cmd_list_element *c, 
+			       struct cmd_list_element *c,
 			       const char *value)
 {
-  if (!strcmp (value, "auto"))
+  if (streq (value, "auto"))
     gdb_printf (file,
 		_("The target wide character set is \"auto; "
 		  "currently %s\".\n"),
@@ -310,7 +311,7 @@ set_be_le_names (struct gdbarch *gdbarch)
   target_wide_charset_be_name = NULL;
 
   target_wide = target_wide_charset_name;
-  if (!strcmp (target_wide, "auto"))
+  if (streq (target_wide, "auto"))
     target_wide = gdbarch_auto_wide_charset (gdbarch);
 
   len = strlen (target_wide);
@@ -343,7 +344,7 @@ validate (struct gdbarch *gdbarch)
   const char *target_cset = target_charset (gdbarch);
   const char *target_wide_cset = target_wide_charset_name;
 
-  if (!strcmp (target_wide_cset, "auto"))
+  if (streq (target_wide_cset, "auto"))
     target_wide_cset = gdbarch_auto_wide_charset (gdbarch);
 
   desc = iconv_open (target_wide_cset, host_cset);
@@ -364,7 +365,7 @@ validate (struct gdbarch *gdbarch)
 
 /* This is the sfunc for the 'set charset' command.  */
 static void
-set_charset_sfunc (const char *charset, int from_tty, 
+set_charset_sfunc (const char *charset, int from_tty,
 		   struct cmd_list_element *c)
 {
   /* CAREFUL: set the target charset here as well.  */
@@ -399,13 +400,13 @@ set_target_wide_charset_sfunc (const char *charset, int from_tty,
 
 /* sfunc for the 'show charset' command.  */
 static void
-show_charset (struct ui_file *file, int from_tty, 
+show_charset (struct ui_file *file, int from_tty,
 	      struct cmd_list_element *c,
 	      const char *name)
 {
   show_host_charset_name (file, from_tty, c, host_charset_name);
   show_target_charset_name (file, from_tty, c, target_charset_name);
-  show_target_wide_charset_name (file, from_tty, c, 
+  show_target_wide_charset_name (file, from_tty, c,
 				 target_wide_charset_name);
 }
 
@@ -415,7 +416,7 @@ show_charset (struct ui_file *file, int from_tty,
 const char *
 host_charset (void)
 {
-  if (!strcmp (host_charset_name, "auto"))
+  if (streq (host_charset_name, "auto"))
     return auto_host_charset_name;
   return host_charset_name;
 }
@@ -423,8 +424,8 @@ host_charset (void)
 const char *
 target_charset (struct gdbarch *gdbarch)
 {
-  if (!strcmp (target_charset_name, "auto"))
-    return gdbarch_auto_charset (gdbarch);
+  if (streq (target_charset_name, "auto"))
+    return default_auto_charset ();
   return target_charset_name;
 }
 
@@ -445,7 +446,7 @@ target_wide_charset (struct gdbarch *gdbarch)
 	return target_wide_charset_le_name;
     }
 
-  if (!strcmp (target_wide_charset_name, "auto"))
+  if (streq (target_wide_charset_name, "auto"))
     return gdbarch_auto_wide_charset (gdbarch);
 
   return target_wide_charset_name;
@@ -504,7 +505,7 @@ convert_between_encodings (const char *from, const char *to,
   unsigned int space_request;
 
   /* Often, the host and target charsets will be the same.  */
-  if (!strcmp (from, to))
+  if (streq (from, to))
     {
       obstack_grow (output, bytes, num_bytes);
       return;
@@ -586,7 +587,7 @@ convert_between_encodings (const char *from, const char *to,
 
 
 /* Create a new iterator.  */
-wchar_iterator::wchar_iterator (const gdb_byte *input, size_t bytes, 
+wchar_iterator::wchar_iterator (const gdb_byte *input, size_t bytes,
 				const char *charset, size_t width)
 : m_input (input),
   m_bytes (bytes),
@@ -639,7 +640,7 @@ wchar_iterator::iterate (enum wchar_iterate_result *out_result,
 		 converted a character; if so, return it.  */
 	      if (out_avail < out_request * sizeof (gdb_wchar_t))
 		break;
-	      
+
 	      /* Otherwise skip the first invalid character, and let
 		 the caller know about it.  */
 	      *out_result = wchar_iterate_invalid;
@@ -916,8 +917,8 @@ find_charset_names (void)
 /* The "auto" target charset used by default_auto_charset.  */
 static const char *auto_target_charset_name = GDB_DEFAULT_TARGET_CHARSET;
 
-const char *
-default_auto_charset (void)
+static const char *
+default_auto_charset ()
 {
   return auto_target_charset_name;
 }
@@ -983,9 +984,7 @@ intermediate_encoding (void)
 
 #endif /* USE_INTERMEDIATE_ENCODING_FUNCTION */
 
-void _initialize_charset ();
-void
-_initialize_charset ()
+INIT_GDB_FILE (charset)
 {
   /* The first element is always "auto".  */
   charsets.charsets.push_back (xstrdup ("auto"));
@@ -1005,25 +1004,42 @@ _initialize_charset ()
   /* Solaris will return `646' here -- but the Solaris iconv then does
      not accept this.  Darwin (and maybe FreeBSD) may return "" here,
      which GNU libiconv doesn't like (infinite loop).  */
-  if (!strcmp (auto_host_charset_name, "646") || !*auto_host_charset_name)
+  if (streq (auto_host_charset_name, "646") || !*auto_host_charset_name)
     auto_host_charset_name = "ASCII";
   auto_target_charset_name = auto_host_charset_name;
 #elif defined (USE_WIN32API)
   {
     /* "CP" + x<=5 digits + paranoia.  */
     static char w32_host_default_charset[16];
+    unsigned codepage = mingw_get_codeset ();
 
-    snprintf (w32_host_default_charset, sizeof w32_host_default_charset,
-	      "CP%d", GetACP());
+    /* The rest of the code expects a literal "UTF-8" and doesn't know
+       anything about codepage 65001.  */
+    if (codepage == 65001)
+      {
+	strcpy (w32_host_default_charset, "UTF-8");
+	/* This is needed to force Windows CRT output functions treat
+	   output as simple stream of bytes, instead of trying to
+	   interpret it as encoded non-ASCII text, which will fail if
+	   the system locale's codeset is NOT UTF-8.  */
+	setlocale (LC_CTYPE, "C");
+      }
+    else
+      snprintf (w32_host_default_charset, sizeof w32_host_default_charset,
+		"CP%u", codepage);
     auto_host_charset_name = w32_host_default_charset;
     auto_target_charset_name = auto_host_charset_name;
+
+    /* Windows Terminal supports Emoji when using UTF-8 output.  */
+    if (!streq (w32_host_default_charset, "UTF-8"))
+      no_emojis ();
   }
 #endif
 #endif
 
   /* Recall that the first element is always "auto".  */
   host_charset_name = charset_enum[0];
-  gdb_assert (strcmp (host_charset_name, "auto") == 0);
+  gdb_assert (streq (host_charset_name, "auto"));
   add_setshow_enum_cmd ("charset", class_support,
 			charset_enum, &host_charset_name, _("\
 Set the host and target character sets."), _("\
@@ -1054,7 +1070,7 @@ To see a list of the character sets GDB supports, type `set host-charset <TAB>'.
 
   /* Recall that the first element is always "auto".  */
   target_charset_name = charset_enum[0];
-  gdb_assert (strcmp (target_charset_name, "auto") == 0);
+  gdb_assert (streq (target_charset_name, "auto"));
   add_setshow_enum_cmd ("target-charset", class_support,
 			charset_enum, &target_charset_name, _("\
 Set the target character set."), _("\
@@ -1069,7 +1085,7 @@ To see a list of the character sets GDB supports, type `set target-charset'<TAB>
 
   /* Recall that the first element is always "auto".  */
   target_wide_charset_name = charset_enum[0];
-  gdb_assert (strcmp (target_wide_charset_name, "auto") == 0);
+  gdb_assert (streq (target_wide_charset_name, "auto"));
   add_setshow_enum_cmd ("target-wide-charset", class_support,
 			charset_enum, &target_wide_charset_name,
 			_("\

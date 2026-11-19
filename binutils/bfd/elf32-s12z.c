@@ -1,5 +1,5 @@
 /* Freescale S12Z-specific support for 32-bit ELF
-   Copyright (C) 1999-2025 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
    (Heavily copied from the D10V port by Martin Hunt (hunt@cygnus.com))
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -48,6 +48,9 @@ opru18_reloc (bfd *abfd, arelent *reloc_entry, struct bfd_symbol *symbol,
 
   bfd_size_type octets = (reloc_entry->address
 			  * OCTETS_PER_BYTE (abfd, input_section));
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, octets))
+    return bfd_reloc_outofrange;
   bfd_vma result = bfd_get_24 (abfd, (unsigned char *) data + octets);
   bfd_vma val = bfd_asymbol_value (symbol);
 

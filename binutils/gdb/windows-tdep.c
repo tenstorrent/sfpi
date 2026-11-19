@@ -1,4 +1,4 @@
-/* Copyright (C) 2008-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -36,7 +36,6 @@
 #include "gdbcore.h"
 #include "coff/internal.h"
 #include "libcoff.h"
-#include "solist.h"
 
 #define CYGWIN_DLL_NAME "cygwin1.dll"
 
@@ -191,10 +190,7 @@ static const registry<gdbarch>::key<windows_gdbarch_data>
 static struct windows_gdbarch_data *
 get_windows_gdbarch_data (struct gdbarch *gdbarch)
 {
-  windows_gdbarch_data *result = windows_gdbarch_data_handle.get (gdbarch);
-  if (result == nullptr)
-    result = windows_gdbarch_data_handle.emplace (gdbarch);
-  return result;
+  return &windows_gdbarch_data_handle.try_emplace (gdbarch);
 }
 
 /* Define Thread Local Base pointer type.  */
@@ -475,10 +471,10 @@ display_one_tib (ptid_t ptid)
       tib_size = FULL_TIB_SIZE;
       max = tib_size / size;
     }
-  
+
   tib = (gdb_byte *) alloca (tib_size);
 
-  if (target_get_tib_address (ptid, &thread_local_base) == 0)
+  if (!target_get_tib_address (ptid, &thread_local_base))
     {
       gdb_printf (_("Unable to get thread local base for %s\n"),
 		  target_pid_to_str (ptid).c_str ());
@@ -490,7 +486,7 @@ display_one_tib (ptid_t ptid)
     {
       gdb_printf (_("Unable to read thread information "
 		    "block for %s at address %s\n"),
-		  target_pid_to_str (ptid).c_str (), 
+		  target_pid_to_str (ptid).c_str (),
 		  paddress (current_inferior ()->arch (), thread_local_base));
       return -1;
     }
@@ -501,7 +497,7 @@ display_one_tib (ptid_t ptid)
 
   index = (gdb_byte *) tib;
 
-  /* All fields have the size of a pointer, this allows to iterate 
+  /* All fields have the size of a pointer, this allows to iterate
      using the same for loop for both layouts.  */
   for (i = 0; i < max; i++)
     {
@@ -512,8 +508,8 @@ display_one_tib (ptid_t ptid)
 	gdb_printf (_("TIB[0x%s] is 0x%s\n"), phex (i * size, 2),
 		    phex (val, size));
       index += size;
-    } 
-  return 1;  
+    }
+  return 1;
 }
 
 /* Display thread information block of the current thread.  */
@@ -549,43 +545,6 @@ windows_xfer_shared_library (const char* so_name, CORE_ADDR load_addr,
 
   xml += paddress (gdbarch, load_addr + text_offset);
   xml += "\"/></library>";
-}
-
-/* Implement the "iterate_over_objfiles_in_search_order" gdbarch
-   method.  It searches all objfiles, starting with CURRENT_OBJFILE
-   first (if not NULL).
-
-   On Windows, the system behaves a little differently when two
-   objfiles each define a global symbol using the same name, compared
-   to other platforms such as GNU/Linux for instance.  On GNU/Linux,
-   all instances of the symbol effectively get merged into a single
-   one, but on Windows, they remain distinct.
-
-   As a result, it usually makes sense to start global symbol searches
-   with the current objfile before expanding it to all other objfiles.
-   This helps for instance when a user debugs some code in a DLL that
-   refers to a global variable defined inside that DLL.  When trying
-   to print the value of that global variable, it would be unhelpful
-   to print the value of another global variable defined with the same
-   name, but in a different DLL.  */
-
-static void
-windows_iterate_over_objfiles_in_search_order
-  (gdbarch *gdbarch, iterate_over_objfiles_in_search_order_cb_ftype cb,
-   objfile *current_objfile)
-{
-  if (current_objfile)
-    {
-      if (cb (current_objfile))
-	return;
-    }
-
-  for (objfile *objfile : current_program_space->objfiles ())
-    if (objfile != current_objfile)
-      {
-	if (cb (objfile))
-	  return;
-      }
 }
 
 static void
@@ -863,10 +822,30 @@ windows_get_siginfo_type (struct gdbarch *gdbarch)
   return siginfo_type;
 }
 
+/* solib_ops for Windows systems.  */
+
+struct windows_solib_ops : target_solib_ops
+{
+  using target_solib_ops::target_solib_ops;
+
+  void create_inferior_hook (int from_tty) const override;
+  void iterate_over_objfiles_in_search_order
+    (iterate_over_objfiles_in_search_order_cb_ftype cb,
+     objfile *current_objfile) const override;
+};
+
+/* Return a new solib_ops for Windows systems.  */
+
+static solib_ops_up
+make_windows_solib_ops (program_space *pspace)
+{
+  return std::make_unique<windows_solib_ops> (pspace);
+}
+
 /* Implement the "solib_create_inferior_hook" solib_ops method.  */
 
-static void
-windows_solib_create_inferior_hook (int from_tty)
+void
+windows_solib_ops::create_inferior_hook (int from_tty) const
 {
   CORE_ADDR exec_base = 0;
 
@@ -911,7 +890,50 @@ windows_solib_create_inferior_hook (int from_tty)
     }
 }
 
-static solib_ops windows_so_ops;
+/* Implement the "iterate_over_objfiles_in_search_order" gdbarch
+   method.  It searches all objfiles, starting with CURRENT_OBJFILE
+   first (if not NULL).
+
+   On Windows, the system behaves a little differently when two
+   objfiles each define a global symbol using the same name, compared
+   to other platforms such as GNU/Linux for instance.  On GNU/Linux,
+   all instances of the symbol effectively get merged into a single
+   one, but on Windows, they remain distinct.
+
+   As a result, it usually makes sense to start global symbol searches
+   with the current objfile before expanding it to all other objfiles.
+   This helps for instance when a user debugs some code in a DLL that
+   refers to a global variable defined inside that DLL.  When trying
+   to print the value of that global variable, it would be unhelpful
+   to print the value of another global variable defined with the same
+   name, but in a different DLL.  */
+
+void
+windows_solib_ops::iterate_over_objfiles_in_search_order
+  (iterate_over_objfiles_in_search_order_cb_ftype cb,
+   objfile *current_objfile) const
+{
+  if (current_objfile)
+    {
+      if (cb (current_objfile))
+	return;
+    }
+
+  for (objfile &objfile : m_pspace->objfiles ())
+    if (&objfile != current_objfile)
+      {
+	if (cb (&objfile))
+	  return;
+      }
+}
+
+/* Implement the "auto_wide_charset" gdbarch method.  */
+
+static const char *
+windows_auto_wide_charset ()
+{
+  return "UTF-16";
+}
 
 /* Common parts for gdbarch initialization for the Windows and Cygwin OS
    ABIs.  */
@@ -920,21 +942,83 @@ static void
 windows_init_abi_common (struct gdbarch_info info, struct gdbarch *gdbarch)
 {
   set_gdbarch_wchar_bit (gdbarch, 16);
-  set_gdbarch_wchar_signed (gdbarch, 0);
+  set_gdbarch_wchar_signed (gdbarch, false);
+  set_gdbarch_auto_wide_charset (gdbarch, windows_auto_wide_charset);
 
   /* Canonical paths on this target look like
      `c:\Program Files\Foo App\mydll.dll', for example.  */
-  set_gdbarch_has_dos_based_file_system (gdbarch, 1);
+  set_gdbarch_has_dos_based_file_system (gdbarch, true);
 
-  set_gdbarch_iterate_over_objfiles_in_search_order
-    (gdbarch, windows_iterate_over_objfiles_in_search_order);
-
-  windows_so_ops = solib_target_so_ops;
-  windows_so_ops.solib_create_inferior_hook
-    = windows_solib_create_inferior_hook;
-  set_gdbarch_so_ops (gdbarch, &windows_so_ops);
+  set_gdbarch_make_solib_ops (gdbarch, make_windows_solib_ops);
 
   set_gdbarch_get_siginfo_type (gdbarch, windows_get_siginfo_type);
+}
+
+/* Implement the fetch_tls_load_module_address gdbarch method.
+   Usually this method returns an address representing a load module, but this
+   doesn't exist on Windows.  Instead it returns the address of the
+   "_tls_index" variable of OBJFILE, which is then forwarded as LM_ADDR
+   in windows_get_thread_local_address below.  */
+
+static CORE_ADDR
+windows_tls_index_address (struct objfile *objfile)
+{
+  bound_minimal_symbol minsym
+    = lookup_minimal_symbol_linkage ("_tls_index", objfile, false);
+  if (minsym.minsym == nullptr)
+    throw_error (TLS_GENERIC_ERROR, _("Cannot find address of _tls_index"));
+
+  return minsym.value_address ();
+}
+
+/* Implement the get_thread_local_address gdbarch method.
+   Each module (with TLS variables) gets its own TLS slot represented by
+   _tls_index, which can be found in TIB->thread_local_storage[_tls_index].
+   The address of _tls_index is provided by the LM_ADDR argument.  */
+
+static CORE_ADDR
+windows_get_thread_local_address (struct gdbarch *gdbarch, ptid_t ptid,
+				  CORE_ADDR lm_addr, CORE_ADDR offset)
+{
+  int ptr_bytes;
+  int tls_offset; /* Offset of thread_local_storage in TIB.  */
+  if (gdbarch_ptr_bit (gdbarch) == 32)
+    {
+      ptr_bytes = 4;
+      tls_offset = 44;
+    }
+  else
+    {
+      ptr_bytes = 8;
+      tls_offset = 88;
+    }
+
+  gdb_byte buf[8];
+  if (target_read_memory (lm_addr, buf, 4))
+    throw_error (TLS_GENERIC_ERROR, _("Cannot read _tls_index"));
+
+  enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
+  uint32_t tls_index = extract_unsigned_integer (buf, 4, byte_order);
+
+  CORE_ADDR tlb;
+  if (!target_get_tib_address (ptid, &tlb))
+    throw_error (TLS_GENERIC_ERROR, _("Cannot get tib address"));
+
+  if (target_read_memory (tlb + tls_offset, buf, ptr_bytes))
+    throw_error (TLS_GENERIC_ERROR, _("Cannot read thread_local_storage"));
+
+  CORE_ADDR tls_ptr = extract_unsigned_integer (buf, ptr_bytes, byte_order);
+  if (tls_ptr == 0)
+    throw_error (TLS_NOT_ALLOCATED_YET_ERROR, _("TLS not allocated yet"));
+
+  if (target_read_memory (tls_ptr + tls_index * ptr_bytes, buf, ptr_bytes))
+    throw_error (TLS_GENERIC_ERROR, _("Cannot read TLS slot"));
+
+  CORE_ADDR slot_ptr = extract_unsigned_integer (buf, ptr_bytes, byte_order);
+  if (slot_ptr == 0)
+    throw_error (TLS_NOT_ALLOCATED_YET_ERROR, _("TLS slot not allocated yet"));
+
+  return slot_ptr + offset;
 }
 
 /* See windows-tdep.h.  */
@@ -943,6 +1027,15 @@ windows_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 {
   windows_init_abi_common (info, gdbarch);
   set_gdbarch_gdb_signal_to_target (gdbarch, windows_gdb_signal_to_target);
+
+  /* On Windows, "long"s are only 32bit.  */
+  set_gdbarch_long_bit (gdbarch, 32);
+
+  /* Enable TLS support.  */
+  set_gdbarch_fetch_tls_load_module_address (gdbarch,
+					     windows_tls_index_address);
+  set_gdbarch_get_thread_local_address (gdbarch,
+					windows_get_thread_local_address);
 }
 
 /* See windows-tdep.h.  */
@@ -1092,11 +1185,9 @@ struct cpms_data
 };
 
 static void
-core_process_module_section (bfd *abfd, asection *sect, void *obj)
+core_process_module_section (bfd *abfd, asection *sect, cpms_data &data)
 {
-  struct cpms_data *data = (struct cpms_data *) obj;
-  enum bfd_endian byte_order = gdbarch_byte_order (data->gdbarch);
-
+  bfd_endian byte_order = gdbarch_byte_order (data.gdbarch);
   unsigned int data_type;
   char *module_name;
   size_t module_name_size;
@@ -1143,21 +1234,22 @@ core_process_module_section (bfd *abfd, asection *sect, void *obj)
   module_name = (char *) buf.data () + module_name_offset;
 
   /* The first module is the .exe itself.  */
-  if (data->module_count != 0)
+  if (data.module_count != 0)
     windows_xfer_shared_library (module_name, base_addr,
-				 NULL, data->gdbarch, data->xml);
-  data->module_count++;
+				 NULL, data.gdbarch, data.xml);
+  data.module_count++;
 }
 
 ULONGEST
 windows_core_xfer_shared_libraries (struct gdbarch *gdbarch,
-				    gdb_byte *readbuf,
+				    struct bfd &cbfd, gdb_byte *readbuf,
 				    ULONGEST offset, ULONGEST len)
 {
   cpms_data data { gdbarch, "<library-list>\n", 0 };
-  bfd_map_over_sections (current_program_space->core_bfd (),
-			 core_process_module_section,
-			 &data);
+
+  for (asection *sect : gdb_bfd_sections (&cbfd))
+    core_process_module_section (&cbfd, sect, data);
+
   data.xml += "</library-list>\n";
 
   ULONGEST len_avail = data.xml.length ();
@@ -1183,9 +1275,7 @@ windows_core_pid_to_str (struct gdbarch *gdbarch, ptid_t ptid)
   return normal_pid_to_str (ptid);
 }
 
-void _initialize_windows_tdep ();
-void
-_initialize_windows_tdep ()
+INIT_GDB_FILE (windows_tdep)
 {
   init_w32_command_list ();
   cmd_list_element *info_w32_thread_information_block_cmd
@@ -1361,10 +1451,10 @@ cygwin_sigwrapper_frame_unwind::sniff (const frame_info_ptr &this_frame,
   if (name == nullptr)
     return 0;
 
-  if (strcmp (name, "_sigbe") != 0
-      && strcmp (name, "__sigbe") != 0
-      && strcmp (name, "sigdelayed") != 0
-      && strcmp (name, "_sigdelayed") != 0)
+  if (!streq (name, "_sigbe")
+      && !streq (name, "__sigbe")
+      && !streq (name, "sigdelayed")
+      && !streq (name, "_sigdelayed"))
     return 0;
 
   frame_debug_printf ("name=%s, start=%s, end=%s",
@@ -1380,7 +1470,7 @@ cygwin_sigwrapper_frame_unwind::sniff (const frame_info_ptr &this_frame,
 
   frame_debug_printf ("sigstackptroffset=%x", tlsoffset);
 
-  auto *cache = FRAME_OBSTACK_ZALLOC (struct cygwin_sigwrapper_frame_cache);
+  auto *cache = frame_obstack_zalloc<struct cygwin_sigwrapper_frame_cache> ();
   cache->tlsoffset = tlsoffset;
 
   *this_cache = cache;

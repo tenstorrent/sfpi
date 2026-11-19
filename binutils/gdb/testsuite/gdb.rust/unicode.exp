@@ -1,4 +1,4 @@
-# Copyright (C) 2022-2024 Free Software Foundation, Inc.
+# Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,19 +28,18 @@ setenv LC_ALL C.UTF-8
 
 standard_testfile .rs
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug rust}]} {
-    return -1
+    return
 }
 
 set line [gdb_get_line_number "set breakpoint here"]
 if {![runto ${srcfile}:$line]} {
     untested "could not run to breakpoint"
-    return -1
+    return
 }
 
 gdb_test "print 𝕯" " = 98" "print D"
 gdb_test "print \"𝕯\"" " = \"𝕯\"" "print D in string"
-# This output is maybe not ideal, but it also isn't incorrect.
-gdb_test "print '𝕯'" " = 120175 '\\\\u\\\{01d56f\\\}'" \
+gdb_test "print '𝕯'" " = 120175 '𝕯'" \
     "print D as char"
 gdb_test "print cç" " = 97" "print cc"
 

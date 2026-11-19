@@ -1,5 +1,5 @@
 /* tc-h8300.c -- Assemble code for the Renesas H8/300
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -52,7 +52,7 @@ int Smode;
 int Nmode;
 int SXmode;
 
-static int default_mach = bfd_mach_h8300;
+static int default_mach = bfd_mach_h8300h;
 
 #define PSIZE (Hmode && !Nmode ? L_32 : L_16)
 
@@ -1904,12 +1904,12 @@ md_assemble (char *str)
   int size, i;
 
   /* Drop leading whitespace.  */
-  while (*str == ' ')
+  while (is_whitespace (*str))
     str++;
 
   /* Find the op code end.  */
   for (op_start = op_end = str;
-       *op_end != 0 && *op_end != ' ';
+       !is_end_of_stmt (*op_end) && !is_whitespace (*op_end);
        op_end++)
     {
       if (*op_end == '.')
@@ -1937,8 +1937,7 @@ md_assemble (char *str)
     while (*++slash)
       *slash = TOLOWER (*slash);
 
-  instruction = (const struct h8_instruction *)
-    str_hash_find (opcode_hash_control, op_start);
+  instruction = str_hash_find (opcode_hash_control, op_start);
 
   if (instruction == NULL)
     {
@@ -2224,7 +2223,7 @@ valueT
 md_section_align (segT segment, valueT size)
 {
   int align = bfd_section_alignment (segment);
-  return ((size + (1 << align) - 1) & (-1U << align));
+  return (size + ((valueT) 1 << align) - 1) & -((valueT) 1 << align);
 }
 
 void

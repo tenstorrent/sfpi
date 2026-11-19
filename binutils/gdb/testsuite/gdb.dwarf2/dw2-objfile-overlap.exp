@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ if { [gdb_compile "${srcdir}/${subdir}/${srcfile_outer}" "${binfile_outer}" \
       object {}] != ""
      || [gdb_compile "${srcdir}/${subdir}/${srcfile_inner}" "${binfile_inner}" \
       object {}] != "" } {
-    return -1
+    return
 }
 
 clean_restart $executable_outer
@@ -37,8 +37,8 @@ clean_restart $executable_outer
 set host_binfile_inner [gdb_remote_download host $binfile_inner]
 
 gdb_test "add-symbol-file $host_binfile_inner outer_inner" \
-         {Reading symbols from .*\.\.\.} "add-symbol-file" \
-	 "\r\n\t\\.text_addr = 0x\[0-9a-f\]+\r\n\\(y or n\\) \$" "y"
+	 {Reading symbols from .*\.\.\.} "add-symbol-file" \
+	 "\r\n\t\\.text_addr = ${::hex}\r\n\\(y or n\\) \$" "y"
 
 # Expand symtab for ${binfile_outer}.
 gdb_breakpoint "*outer_before"

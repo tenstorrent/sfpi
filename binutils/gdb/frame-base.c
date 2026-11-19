@@ -1,6 +1,6 @@
 /* Definitions for frame address handler, for GDB, the GNU debugger.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -70,10 +70,7 @@ static const registry<gdbarch>::key<struct frame_base_table> frame_base_data;
 static struct frame_base_table *
 get_frame_base_table (struct gdbarch *gdbarch)
 {
-  struct frame_base_table *table = frame_base_data.get (gdbarch);
-  if (table == nullptr)
-    table = frame_base_data.emplace (gdbarch);
-  return table;
+  return &frame_base_data.try_emplace (gdbarch);
 }
 
 void

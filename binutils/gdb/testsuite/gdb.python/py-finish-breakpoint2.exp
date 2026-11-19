@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2024 Free Software Foundation, Inc.
+# Copyright (C) 2011-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ require allow_python_tests
 standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug c++}]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 set pyfile [gdb_remote_download host \
@@ -41,8 +41,8 @@ gdb_breakpoint [gdb_get_line_number "Break before exception"]
 gdb_breakpoint [gdb_get_line_number "Break after exception 2"]
 
 gdb_test "source $pyfile" ".*Python script imported.*" \
-         "import python scripts"
-         
+	 "import python scripts"
+
 gdb_breakpoint "throw_exception_1"
 
 #

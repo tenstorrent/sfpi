@@ -1,6 +1,6 @@
 /* DWARF 2 debugging format support for GDB.
 
-   Copyright (C) 1994-2024 Free Software Foundation, Inc.
+   Copyright (C) 1994-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "dwarf2/comp-unit-head.h"
+#include "dwarf2/unit-head.h"
 #include "dwarf2/leb.h"
 #include "dwarf2/line-header.h"
 #include "dwarf2/read.h"
@@ -95,7 +95,7 @@ dwarf2_statement_list_fits_in_line_number_section_complaint (void)
 
 static LONGEST
 read_checked_initial_length_and_offset (bfd *abfd, const gdb_byte *buf,
-					const struct comp_unit_head *cu_header,
+					const struct unit_head *cu_header,
 					unsigned int *bytes_read,
 					unsigned int *offset_size)
 {
@@ -253,16 +253,16 @@ read_formatted_entries (dwarf2_per_objfile *per_objfile, bfd *abfd,
 /* See line-header.h.  */
 
 line_header_up
-dwarf_decode_line_header  (sect_offset sect_off, bool is_dwz,
-			   dwarf2_per_objfile *per_objfile,
-			   struct dwarf2_section_info *section,
-			   const struct comp_unit_head *cu_header,
-			   const char *comp_dir)
+dwarf_decode_line_header (section_and_offset sect_and_offset,
+			  dwarf2_per_objfile *per_objfile,
+			  const unit_head *cu_header, const char *comp_dir)
 {
   const gdb_byte *line_ptr;
   unsigned int bytes_read, offset_size;
   int i;
   const char *cur_dir, *cur_file;
+  const dwarf2_section_info *section = sect_and_offset.section;
+  sect_offset sect_off = sect_and_offset.offset;
 
   bfd *abfd = section->get_bfd_owner ();
 
@@ -275,9 +275,6 @@ dwarf_decode_line_header  (sect_offset sect_off, bool is_dwz,
     }
 
   line_header_up lh (new line_header (comp_dir));
-
-  lh->sect_off = sect_off;
-  lh->offset_in_dwz = is_dwz;
 
   line_ptr = section->buffer + to_underlying (sect_off);
 
@@ -352,13 +349,20 @@ dwarf_decode_line_header  (sect_offset sect_off, bool is_dwz,
   line_ptr += 1;
   lh->opcode_base = read_1_byte (abfd, line_ptr);
   line_ptr += 1;
-  lh->standard_opcode_lengths.reset (new unsigned char[lh->opcode_base]);
-
-  lh->standard_opcode_lengths[0] = 1;  /* This should never be used anyway.  */
-  for (i = 1; i < lh->opcode_base; ++i)
+  if (lh->opcode_base > 0)
     {
-      lh->standard_opcode_lengths[i] = read_1_byte (abfd, line_ptr);
-      line_ptr += 1;
+      lh->standard_opcode_lengths.reset (new unsigned char[lh->opcode_base]);
+
+      /* The first element should never be used, because there's no standard
+	 opcode encoded as 0.  Give it some defined value.  */
+      lh->standard_opcode_lengths[0] = 1;
+
+      /* Read the standard_opcode_lengths array.  */
+      for (i = 1; i < lh->opcode_base; ++i)
+	{
+	  lh->standard_opcode_lengths[i] = read_1_byte (abfd, line_ptr);
+	  line_ptr += 1;
+	}
     }
 
   if (lh->version >= 5)
@@ -416,5 +420,32 @@ dwarf_decode_line_header  (sect_offset sect_off, bool is_dwz,
     complaint (_("line number info header doesn't "
 		 "fit in `.debug_line' section"));
 
+  if (line_ptr != lh->statement_program_start)
+    error (_("malformed line number program header, advertised length does"
+	     " not match actual length"));
+
   return lh;
+}
+
+/* See dwarf2/line-header.h.  */
+
+struct symtab *
+file_entry::symtab (dwarf2_cu &cu)
+{
+  if (m_symtab == nullptr)
+    {
+      buildsym_compunit *builder = cu.get_builder ();
+      compunit_symtab *cust = builder->get_compunit_symtab ();
+
+      cu.start_subfile (*this);
+
+      subfile *sf = builder->get_current_subfile ();
+      if (sf->symtab == nullptr)
+	sf->symtab = allocate_symtab (cust, sf->name.c_str (),
+				      sf->name_for_id.c_str ());
+
+      m_symtab = sf->symtab;
+    }
+
+  return m_symtab;
 }

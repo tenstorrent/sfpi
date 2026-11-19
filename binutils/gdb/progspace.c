@@ -1,6 +1,6 @@
 /* Program and address space management, for GDB, the GNU debugger.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,7 +21,6 @@
 #include "objfiles.h"
 #include "gdbcore.h"
 #include "solib.h"
-#include "solist.h"
 #include "gdbthread.h"
 #include "inferior.h"
 #include <algorithm>
@@ -37,18 +36,6 @@ std::vector<struct program_space *> program_spaces;
 /* Pointer to the current program space.  */
 struct program_space *current_program_space;
 
-/* The last address space number assigned.  */
-static int highest_address_space_num;
-
-
-
-/* Create a new address space object, and add it to the list.  */
-
-address_space::address_space ()
-  : m_num (++highest_address_space_num)
-{
-}
-
 /* Maybe create a new address space object, and add it to the list, or
    return a pointer to an existing address space, in case inferiors
    share an address space on this target system.  */
@@ -56,10 +43,7 @@ address_space::address_space ()
 address_space_ref_ptr
 maybe_new_address_space ()
 {
-  int shared_aspace
-    = gdbarch_has_shared_address_space (current_inferior ()->arch ());
-
-  if (shared_aspace)
+  if (gdbarch_has_shared_address_space (current_inferior ()->arch ()))
     {
       /* Just return the first in the list.  */
       return program_spaces[0]->aspace;
@@ -67,16 +51,6 @@ maybe_new_address_space ()
 
   return new_address_space ();
 }
-
-/* Start counting over from scratch.  */
-
-static void
-init_address_spaces (void)
-{
-  highest_address_space_num = 0;
-}
-
-
 
 /* Remove a program space from the program spaces list.  */
 
@@ -147,6 +121,31 @@ program_space::free_all_objfiles ()
 /* See progspace.h.  */
 
 void
+program_space::iterate_over_objfiles_in_search_order
+  (iterate_over_objfiles_in_search_order_cb_ftype cb, objfile *current_objfile)
+{
+  if (m_solib_ops != nullptr)
+    return m_solib_ops->iterate_over_objfiles_in_search_order
+      (cb, current_objfile);
+
+  for (auto &objfile : this->objfiles ())
+    if (cb (&objfile))
+      return;
+}
+
+/* See progspace.h.  */
+
+void
+program_space::map_symbol_filenames (symbol_filename_listener fun,
+				     bool need_fullname)
+{
+  for (objfile &objfile : objfiles ())
+    objfile.map_symbol_filenames (fun, need_fullname);
+}
+
+/* See progspace.h.  */
+
+void
 program_space::add_objfile (std::unique_ptr<objfile> &&objfile,
 			    struct objfile *before)
 {
@@ -183,13 +182,13 @@ program_space::remove_objfile (struct objfile *objfile)
 struct objfile *
 program_space::objfile_for_address (CORE_ADDR address)
 {
-  for (auto iter : objfiles ())
+  for (auto &iter : objfiles ())
     {
       /* Don't check separate debug objfiles.  */
-      if (iter->separate_debug_objfile_backlink != nullptr)
+      if (iter.separate_debug_objfile_backlink != nullptr)
 	continue;
-      if (is_addr_in_objfile (address, iter))
-	return iter;
+      if (is_addr_in_objfile (address, &iter))
+	return &iter;
     }
   return nullptr;
 }
@@ -202,12 +201,14 @@ program_space::exec_close ()
   if (ebfd != nullptr)
     {
       /* Removing target sections may close the exec_ops target.
-	 Clear ebfd before doing so to prevent recursion.  */
-      bfd *saved_ebfd = ebfd.get ();
+	 Clear ebfd before doing so to prevent recursion.  We
+	 move it to another ref_ptr instead of saving it to a raw
+	 pointer to avoid it looking like possible use-after-free.  */
+      gdb_bfd_ref_ptr saved_ebfd = std::move (ebfd);
       ebfd.reset (nullptr);
       ebfd_mtime = 0;
 
-      remove_target_sections (saved_ebfd);
+      remove_target_sections (saved_ebfd.get ());
 
       m_exec_filename.reset ();
     }
@@ -259,6 +260,68 @@ program_space::empty ()
   return find_inferior_for_program_space (this) == nullptr;
 }
 
+/* See progspace.h.  */
+
+std::optional<CORE_ADDR>
+program_space::entry_point_address_query () const
+{
+  objfile *objf = symfile_object_file;
+  if (objf == NULL || !objf->per_bfd->ei.entry_point_p)
+    return {};
+
+  int idx = objf->per_bfd->ei.the_bfd_section_index;
+  return objf->per_bfd->ei.entry_point + objf->section_offsets[idx];
+}
+
+/* See progspace.h.  */
+
+CORE_ADDR
+program_space::entry_point_address () const
+{
+  std::optional<CORE_ADDR> retval = entry_point_address_query ();
+
+  if (!retval.has_value ())
+    error (_("Entry point address is not known."));
+
+  return *retval;
+}
+
+/* See progspace.h.  */
+
+bool
+program_space::has_partial_symbols ()
+{
+  for (objfile &ofp : objfiles ())
+    if (ofp.has_partial_symbols ())
+      return true;
+
+  return false;
+}
+
+/* See progspace.h.  */
+
+bool
+program_space::has_full_symbols ()
+{
+  for (objfile &ofp : objfiles ())
+    if (ofp.has_full_symbols ())
+      return true;
+
+  return false;
+}
+
+/* See progspace.h.  */
+
+bool
+program_space::has_minimal_symbols ()
+{
+  for (objfile &ofp : objfiles ())
+    if (ofp.per_bfd->minimal_symbol_count > 0)
+      return true;
+
+  return false;
+}
+
 /* Prints the list of program spaces and their details on UIOUT.  If
    REQUESTED is not -1, it's the ID of the pspace that should be
    printed.  Otherwise, all spaces are printed.  */
@@ -287,11 +350,10 @@ print_program_space (struct ui_out *uiout, int requested)
   /* There should always be at least one.  */
   gdb_assert (count > 0);
 
-  ui_out_emit_table table_emitter (uiout, 4, count, "pspaces");
+  ui_out_emit_table table_emitter (uiout, 3, count, "pspaces");
   uiout->table_header (1, ui_left, "current", "");
   uiout->table_header (4, ui_left, "id", "Id");
   uiout->table_header (longest_exec_name, ui_left, "exec", "Executable");
-  uiout->table_header (17, ui_left, "core", "Core File");
   uiout->table_body ();
 
   for (struct program_space *pspace : program_spaces)
@@ -315,12 +377,6 @@ print_program_space (struct ui_out *uiout, int requested)
 			     file_name_style.style ());
       else
 	uiout->field_skip ("exec");
-
-      if (pspace->cbfd != nullptr)
-	uiout->field_string ("core", bfd_get_filename (pspace->cbfd.get ()),
-			     file_name_style.style ());
-      else
-	uiout->field_skip ("core");
 
       /* Print extra info that doesn't really fit in tabular form.
 	 Currently, we print the list of inferiors bound to a pspace.
@@ -386,38 +442,36 @@ maintenance_info_program_spaces_command (const char *args, int from_tty)
   print_program_space (current_uiout, requested);
 }
 
-/* Update all program spaces matching to address spaces.  The user may
-   have created several program spaces, and loaded executables into
-   them before connecting to the target interface that will create the
-   inferiors.  All that happens before GDB has a chance to know if the
-   inferiors will share an address space or not.  Call this after
-   having connected to the target interface and having fetched the
-   target description, to fixup the program/address spaces mappings.
-
-   It is assumed that there are no bound inferiors yet, otherwise,
-   they'd be left with stale referenced to released aspaces.  */
+/* See progspace.h.  */
 
 void
-update_address_spaces (void)
+update_address_spaces (process_stratum_target *target,
+		       gdbarch *gdbarch)
 {
-  int shared_aspace
-    = gdbarch_has_shared_address_space (current_inferior ()->arch ());
+  gdb_assert (target != nullptr);
+  gdb_assert (gdbarch != nullptr);
 
-  init_address_spaces ();
+  int shared_aspace = gdbarch_has_shared_address_space (gdbarch);
+
+  /* Find the program spaces that are being used by inferiors of the
+     current target.  We shouldn't alter inferiors of other targets.  */
+  gdb::unordered_set<program_space *> pspaces_to_update;
+  for (inferior *inf : all_inferiors (target))
+    pspaces_to_update.insert (inf->pspace);
 
   if (shared_aspace)
     {
       address_space_ref_ptr aspace = new_address_space ();
 
-      for (struct program_space *pspace : program_spaces)
+      for (program_space *pspace : pspaces_to_update)
 	pspace->aspace = aspace;
     }
   else
-    for (struct program_space *pspace : program_spaces)
+    for (program_space *pspace : pspaces_to_update)
       pspace->aspace = new_address_space ();
 
-  for (inferior *inf : all_inferiors ())
-    if (gdbarch_has_global_solist (current_inferior ()->arch ()))
+  for (inferior *inf : all_inferiors (target))
+    if (gdbarch_has_global_solist (gdbarch))
       inf->aspace = maybe_new_address_space ();
     else
       inf->aspace = inf->pspace->aspace;

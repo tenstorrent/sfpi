@@ -1,5 +1,5 @@
 /* Opening CTF files with BFD.
-   Copyright (C) 2019-2025 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of libctf.
 
@@ -120,13 +120,13 @@ ctf_bfdopen_ctfsect (struct bfd *abfd _libctf_unused_,
     }
   preamble = ctf_arc_bufpreamble (ctfsect);
 
-  if (preamble->ctp_flags & CTF_F_DYNSTR)
+  if (preamble && (preamble->ctp_flags & CTF_F_DYNSTR))
     {
       symhdr = &elf_tdata (abfd)->dynsymtab_hdr;
       strtab_name = ".dynstr";
       symtab_name = ".dynsym";
     }
-  else
+  else		/* Might not be CTF at all: ctf_arc_bufopen will fail if so.  */
     {
       symhdr = &elf_tdata (abfd)->symtab_hdr;
       strtab_name = ".strtab";

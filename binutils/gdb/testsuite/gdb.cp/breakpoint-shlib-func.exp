@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -32,12 +32,12 @@ standard_testfile .cc -lib.cc
 set libobj [standard_output_file libfoo.so]
 if {[build_executable "build shared library" $libobj $srcfile2 \
 	 {debug c++ shlib}] != 0} {
-    return -1
+    return
 }
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile \
 	 [list debug c++ shlib=$libobj]]} {
-    return -1
+    return
 }
 
 gdb_load_shlib $libobj
@@ -48,8 +48,8 @@ gdb_test "break foo" "Breakpoint $decimal at $hex"
 gdb_test "info breakpoints" "<foo\\(\\)@plt>"
 
 # Runto main, but don't delete all the breakpoints.
-if {![runto_main no-delete-breakpoints]} {
-    return -1
+if {![runto_main -no-delete-breakpoints]} {
+    return
 }
 
 # The breakpoint should now be showing in `foo` for real.

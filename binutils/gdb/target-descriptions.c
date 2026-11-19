@@ -1,6 +1,6 @@
 /* Target description support for GDB.
 
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    Contributed by CodeSourcery.
 
@@ -26,15 +26,12 @@
 #include "reggroups.h"
 #include "target.h"
 #include "target-descriptions.h"
-#include "xml-support.h"
 #include "xml-tdesc.h"
 #include "osabi.h"
 
-#include "gdbsupport/gdb_obstack.h"
 #include "inferior.h"
 #include <algorithm>
 #include "completer.h"
-#include "readline/tilde.h"
 #include "cli/cli-style.h"
 
 /* Types.  */
@@ -344,10 +341,9 @@ struct target_desc : tdesc_element
   target_desc ()
   {}
 
-  virtual ~target_desc () = default;
+  DISABLE_COPY_AND_ASSIGN (target_desc);
 
-  target_desc (const target_desc &) = delete;
-  void operator= (const target_desc &) = delete;
+  virtual ~target_desc () = default;
 
   /* The architecture reported by the target, if any.  */
   const struct bfd_arch_info *arch = NULL;
@@ -447,15 +443,8 @@ static const registry<gdbarch>::key<tdesc_arch_data> tdesc_data;
 static tdesc_arch_data *
 get_arch_data (struct gdbarch *gdbarch)
 {
-  tdesc_arch_data *result = tdesc_data.get (gdbarch);
-  if (result == nullptr)
-    result = tdesc_data.emplace (gdbarch);
-  return result;
+  return &tdesc_data.try_emplace (gdbarch);
 }
-
-/* The string manipulated by the "set tdesc filename ..." command.  */
-
-static std::string tdesc_filename_cmd_string;
 
 /* Fetch the current target's description, and switch the current
    architecture to one which incorporates that description.  */
@@ -967,7 +956,7 @@ tdesc_register_in_reggroup_p (struct gdbarch *gdbarch, int regno,
    group specified go to the default reggroup function and are handled
    by type.  */
 
-static int
+static bool
 tdesc_register_reggroup_p (struct gdbarch *gdbarch, int regno,
 			   const struct reggroup *reggroup)
 {
@@ -1142,7 +1131,7 @@ allocate_target_description (void)
 /* See gdbsupport/tdesc.h.  */
 
 void
-target_desc_deleter::operator() (struct target_desc *target_desc) const
+target_desc_deleter::operator() (const target_desc *target_desc) const
 {
   delete target_desc;
 }
@@ -1208,18 +1197,27 @@ set_tdesc_osabi (struct target_desc *target_desc, enum gdb_osabi osabi)
 static struct cmd_list_element *tdesc_set_cmdlist, *tdesc_show_cmdlist;
 static struct cmd_list_element *tdesc_unset_cmdlist;
 
-/* Helper functions for the CLI commands.  */
+/* Setter for the "tdesc filename" setting.  */
 
 static void
-set_tdesc_filename_cmd (const char *args, int from_tty,
-			struct cmd_list_element *c)
+set_tdesc_filename (const std::string &value)
 {
   target_desc_info *tdesc_info = &current_inferior ()->tdesc_info;
 
-  tdesc_info->filename = tdesc_filename_cmd_string;
+  tdesc_info->filename = value;
 
   target_clear_description ();
   target_find_description ();
+}
+
+/* Getter for the "tdesc filename" setting.  */
+
+static const std::string &
+get_tdesc_filename ()
+{
+  target_desc_info *tdesc_info = &current_inferior ()->tdesc_info;
+
+  return tdesc_info->filename;
 }
 
 static void
@@ -1227,8 +1225,6 @@ show_tdesc_filename_cmd (struct ui_file *file, int from_tty,
 			 struct cmd_list_element *c,
 			 const char *value)
 {
-  value = current_inferior ()->tdesc_info.filename.data ();
-
   if (value != NULL && *value != '\0')
     gdb_printf (file,
 		_("The target description will be read from \"%ps\".\n"),
@@ -1293,7 +1289,7 @@ public:
     gdb_printf ("#include \"target-descriptions.h\"\n");
     gdb_printf ("\n");
 
-    gdb_printf ("const struct target_desc *tdesc_%s;\n", m_function);
+    gdb_printf ("const_target_desc_up tdesc_%s;\n", m_function);
     gdb_printf ("static void\n");
     gdb_printf ("initialize_tdesc_%s (void)\n", m_function);
     gdb_printf ("{\n");
@@ -1341,7 +1337,7 @@ public:
 
   void visit_post (const target_desc *e) override
   {
-    gdb_printf ("\n  tdesc_%s = result.release ();\n", m_function);
+    gdb_printf ("\n  tdesc_%s = std::move (result);\n", m_function);
     gdb_printf ("}\n");
   }
 
@@ -1857,7 +1853,7 @@ maintenance_check_xml_descriptions (const char *dir, int from_tty)
   if (dir == NULL)
     error (_("Missing dir name"));
 
-  gdb::unique_xmalloc_ptr<char> dir1 (tilde_expand (dir));
+  gdb::unique_xmalloc_ptr<char> dir1 = gdb_rl_tilde_expand (dir);
   std::string feature_dir (dir1.get ());
   unsigned int failed = 0;
 
@@ -1880,9 +1876,7 @@ maintenance_check_xml_descriptions (const char *dir, int from_tty)
 	      (long) selftests::xml_tdesc.size (), failed);
 }
 
-void _initialize_target_descriptions ();
-void
-_initialize_target_descriptions ()
+INIT_GDB_FILE (target_descriptions)
 {
   cmd_list_element *cmd;
 
@@ -1898,13 +1892,13 @@ Unset target description specific variables."),
 			0 /* allow-unknown */, &unsetlist);
 
   add_setshow_filename_cmd ("filename", class_obscure,
-			    &tdesc_filename_cmd_string,
 			    _("\
 Set the file to read for an XML target description."), _("\
 Show the file to read for an XML target description."), _("\
 When set, GDB will read the target description from a local\n\
 file instead of querying the remote target."),
-			    set_tdesc_filename_cmd,
+			    set_tdesc_filename,
+			    get_tdesc_filename,
 			    show_tdesc_filename_cmd,
 			    &tdesc_set_cmdlist, &tdesc_show_cmdlist);
 

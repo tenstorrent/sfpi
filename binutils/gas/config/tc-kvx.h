@@ -1,6 +1,6 @@
 /* tc-kvx.h -- Header file for tc-kvx.c
 
-   Copyright (C) 2009-2025 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
    Contributed by Kalray SA.
 
    This file is part of GAS.
@@ -267,19 +267,6 @@ extern int kvx_force_reloc_sub_same (struct fix *, segT);
        && S_IS_DEFINED ((FIX)->fx_addsy)                                       \
        && ! S_IS_COMMON ((FIX)->fx_addsy)))
 
-/* Local symbols will be adjusted against the section symbol.  */
-#define tc_fix_adjustable(fixP) 1
-
-/* This arranges for gas/write.c to not apply a relocation if
-   tc_fix_adjustable says it is not adjustable.  The "! symbol_used_in_reloc_p"
-   test is there specifically to cover the case of non-global symbols in
-   linkonce sections.  It's the generally correct thing to do though;  If a
-   reloc is going to be emitted against a symbol then we don't want to adjust
-   the fixup by applying the reloc during assembly.  The reloc will be applied
-   by the linker during final link.  */
-#define TC_FIX_ADJUSTABLE(fixP) \
-  (! symbol_used_in_reloc_p ((fixP)->fx_addsy) && tc_fix_adjustable (fixP))
-
 /* Force this to avoid -g to fail because of dwarf2 expression .L0 - .L0 */
 extern int kvx_validate_sub_fix (struct fix *fix);
 #define TC_VALIDATE_FIX_SUB(FIX, SEG)                                          \
@@ -297,6 +284,7 @@ extern void kvx_cons_fix_new (fragS *f, int where, int nbytes,
 /* Enable special handling for the alignment directive.  */
 extern void kvx_handle_align (fragS *);
 #define HANDLE_ALIGN(s, f) kvx_handle_align (f)
+#define MAX_MEM_FOR_RS_ALIGN_CODE(p2align, max) (3 + 12 + 16)
 
 #ifdef OBJ_ELF
 

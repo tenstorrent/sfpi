@@ -1,7 +1,7 @@
 /* Functions that provide the mechanism to parse a syscall XML file
    and get its values.
 
-   Copyright (C) 2009-2024 Free Software Foundation, Inc.
+   Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -112,7 +112,7 @@ struct syscall_desc
   std::string alias;
 };
 
-typedef std::unique_ptr<syscall_desc> syscall_desc_up;
+using syscall_desc_up = std::unique_ptr<syscall_desc>;
 
 /* Structure of a syscall group.  */
 struct syscall_group_desc
@@ -131,7 +131,7 @@ struct syscall_group_desc
   std::vector<syscall_desc *> syscalls;
 };
 
-typedef std::unique_ptr<syscall_group_desc> syscall_group_desc_up;
+using syscall_group_desc_up = std::unique_ptr<syscall_group_desc>;
 
 /* Structure that represents syscalls information.  */
 struct syscalls_info
@@ -151,7 +151,7 @@ struct syscalls_info
   std::string my_gdb_datadir;
 };
 
-typedef std::unique_ptr<syscalls_info> syscalls_info_up;
+using syscalls_info_up = std::unique_ptr<syscalls_info>;
 
 /* Callback data for syscall information parsing.  */
 struct syscall_parsing_data
@@ -244,13 +244,13 @@ syscall_start_syscall (struct gdb_xml_parser *parser,
 
   for (const gdb_xml_value &attr : attributes)
     {
-      if (strcmp (attr.name, "name") == 0)
+      if (streq (attr.name, "name"))
 	name = (char *) attr.value.get ();
-      else if (strcmp (attr.name, "number") == 0)
+      else if (streq (attr.name, "number"))
 	number = * (ULONGEST *) attr.value.get ();
-      else if (strcmp (attr.name, "alias") == 0)
+      else if (streq (attr.name, "alias"))
 	alias = (char *) attr.value.get ();
-      else if (strcmp (attr.name, "groups") == 0)
+      else if (streq (attr.name, "groups"))
 	groups = (char *) attr.value.get ();
       else
 	internal_error (_("Unknown attribute name '%s'."), attr.name);
@@ -308,7 +308,7 @@ syscall_parse_xml (const char *document, xml_fetch_another fetcher)
 /* Function responsible for initializing the information
    about the syscalls.  It reads the XML file and fills the
    struct syscalls_info with the values.
-   
+
    Returns the struct syscalls_info if the file is valid, NULL otherwise.  */
 static struct syscalls_info *
 xml_init_syscalls_info (const char *filename)
@@ -319,7 +319,7 @@ xml_init_syscalls_info (const char *filename)
   if (!full_file)
     return NULL;
 
-  const std::string dirname = ldirname (filename);
+  const std::string dirname = gdb_ldirname (filename);
   auto fetch_another = [&dirname] (const char *name)
     {
       return xml_fetch_content_from_file (name, dirname.c_str ());

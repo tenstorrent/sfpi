@@ -1,5 +1,5 @@
 /* D30V-specific support for 32-bit ELF
-   Copyright (C) 1997-2025 Free Software Foundation, Inc.
+   Copyright (C) 1997-2026 Free Software Foundation, Inc.
    Contributed by Martin Hunt (hunt@cygnus.com).
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -66,8 +66,8 @@ bfd_elf_d30v_reloc (bfd *abfd,
       && output_bfd == NULL)
     flag = bfd_reloc_undefined;
 
-  /* Is the address of the relocation really within the section?  */
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
     return bfd_reloc_outofrange;
 
   /* Work out which section the relocation is targeted at and the
@@ -174,8 +174,8 @@ bfd_elf_d30v_reloc_21 (bfd *abfd,
       && output_bfd == NULL)
     flag = bfd_reloc_undefined;
 
-  /* Is the address of the relocation really within the section?  */
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, reloc_entry->address))
     return bfd_reloc_outofrange;
 
   /* Work out which section the relocation is targeted at and the

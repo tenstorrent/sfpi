@@ -1,5 +1,5 @@
 /* Target-dependent code for the 32-bit OpenRISC 1000, for the GDB.
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -29,7 +29,6 @@
 #include "gdbtypes.h"
 #include "target.h"
 #include "regcache.h"
-#include "gdbsupport/gdb-safe-ctype.h"
 #include "reggroups.h"
 #include "arch-utils.h"
 #include "frame-unwind.h"
@@ -345,9 +344,9 @@ or1k_return_value (struct gdbarch *gdbarch, struct value *functype,
 
 constexpr gdb_byte or1k_break_insn[] = {0x21, 0x00, 0x00, 0x01};
 
-typedef BP_MANIPULATION (or1k_break_insn) or1k_breakpoint;
+using or1k_breakpoint = BP_MANIPULATION (or1k_break_insn);
 
-static int
+static bool
 or1k_delay_slot_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
   const CGEN_INSN *insn;
@@ -362,7 +361,7 @@ or1k_delay_slot_p (struct gdbarch *gdbarch, CORE_ADDR pc)
   /* NULL here would mean the last instruction was not understood by cgen.
      This should not usually happen, but if it does it's not a delay slot.  */
   if (insn == NULL)
-    return 0;
+    return false;
 
   /* TODO: we should add a delay slot flag to the CGEN_INSN and remove
      this hard coded test.  */
@@ -376,7 +375,7 @@ or1k_delay_slot_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 
 /* Implement the single_step_through_delay gdbarch method.  */
 
-static int
+static bool
 or1k_single_step_through_delay (struct gdbarch *gdbarch,
 				const frame_info_ptr &this_frame)
 {
@@ -393,7 +392,7 @@ or1k_single_step_through_delay (struct gdbarch *gdbarch,
   npc = (CORE_ADDR) val;
 
   if (0x4 != (npc - ppc))
-    return 0;
+    return false;
 
   return or1k_delay_slot_p (gdbarch, ppc);
 }
@@ -468,10 +467,9 @@ or1k_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
 
       if (0 != prologue_end)
 	{
-	  struct symtab_and_line prologue_sal = find_pc_line (start_pc, 0);
-	  struct compunit_symtab *compunit
-	    = prologue_sal.symtab->compunit ();
-	  const char *debug_format = compunit->debugformat ();
+	  struct symtab_and_line prologue_sal = find_sal_for_pc (start_pc, 0);
+	  const char *debug_format
+	    = prologue_sal.symtab->compunit ().debugformat ();
 
 	  if ((NULL != debug_format)
 	      && (strlen ("dwarf") <= strlen (debug_format))
@@ -1176,7 +1174,6 @@ or1k_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_long_double_format (gdbarch, floatformats_ieee_double);
   set_gdbarch_ptr_bit (gdbarch, binfo->bits_per_address);
   set_gdbarch_addr_bit (gdbarch, binfo->bits_per_address);
-  set_gdbarch_char_signed (gdbarch, 1);
 
   /* Information about the target architecture */
   set_gdbarch_return_value (gdbarch, or1k_return_value);
@@ -1184,7 +1181,7 @@ or1k_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 				       or1k_breakpoint::kind_from_pc);
   set_gdbarch_sw_breakpoint_from_kind (gdbarch,
 				       or1k_breakpoint::bp_from_kind);
-  set_gdbarch_have_nonsteppable_watchpoint (gdbarch, 1);
+  set_gdbarch_have_nonsteppable_watchpoint (gdbarch, true);
 
   /* Register architecture */
   set_gdbarch_num_regs (gdbarch, OR1K_NUM_REGS);
@@ -1235,7 +1232,7 @@ or1k_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 
   if (!tdesc_has_registers (info.target_desc))
     /* Pick a default target description.  */
-    tdesc = tdesc_or1k;
+    tdesc = tdesc_or1k.get ();
 
   /* Check any target description for validity.  */
   if (tdesc_has_registers (tdesc))
@@ -1286,9 +1283,7 @@ or1k_dump_tdep (struct gdbarch *gdbarch, struct ui_file *file)
 }
 
 
-void _initialize_or1k_tdep ();
-void
-_initialize_or1k_tdep ()
+INIT_GDB_FILE (or1k_tdep)
 {
   /* Register this architecture.  */
   gdbarch_register (bfd_arch_or1k, or1k_gdbarch_init, or1k_dump_tdep);

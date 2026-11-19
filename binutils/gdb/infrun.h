@@ -1,4 +1,4 @@
-/* Copyright (C) 1986-2024 Free Software Foundation, Inc.
+/* Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -65,13 +65,12 @@ infrun_debug_show_threads (const char *title, ThreadRange threads)
       INFRUN_SCOPED_DEBUG_ENTER_EXIT;
 
       infrun_debug_printf ("%s:", title);
-      for (thread_info *thread : threads)
-	infrun_debug_printf ("  thread %s, executing = %d, resumed = %d, "
+      for (thread_info &thread : threads)
+	infrun_debug_printf ("  thread %s, internal_state = %s, "
 			     "state = %s",
-			     thread->ptid.to_string ().c_str (),
-			     thread->executing (),
-			     thread->resumed (),
-			     thread_state_string (thread->state));
+			     thread.ptid.to_string ().c_str (),
+			     thread_int_state_string (thread.internal_state ()),
+			     thread_state_string (thread.state ()));
     }
 }
 
@@ -129,8 +128,9 @@ extern void start_remote (int from_tty);
 /* Clear out all variables saying what to do when inferior is
    continued or stepped.  First do this, then set the ones you want,
    then call `proceed'.  STEP indicates whether we're preparing for a
-   step/stepi command.  */
-extern void clear_proceed_status (int step);
+   step/stepi command.  Set ABOUT_TO_PROCEED to false if we're not
+   calling `proceed` yet.  */
+extern void clear_proceed_status (int step, bool about_to_proceed = true);
 
 extern void proceed (CORE_ADDR, enum gdb_signal);
 
@@ -256,7 +256,8 @@ extern void print_stop_event (struct ui_out *uiout, bool displays = true);
 /* Pretty print the results of target_wait, for debugging purposes.  */
 
 extern void print_target_wait_results (ptid_t waiton_ptid, ptid_t result_ptid,
-				       const struct target_waitstatus &ws);
+				       const struct target_waitstatus &ws,
+				       process_stratum_target *proc_target);
 
 extern int signal_stop_state (int);
 
@@ -318,6 +319,12 @@ extern void all_uis_on_sync_execution_starting (void);
 /* In all-stop, restart the target if it had to be stopped to
    detach.  */
 extern void restart_after_all_stop_detach (process_stratum_target *proc_target);
+
+/* While detaching, return the signal PTID was supposed to be resumed
+   with, if it were resumed, so we can pass it down to PTID while
+   detaching.  */
+extern gdb_signal get_detach_signal (process_stratum_target *proc_target,
+				     ptid_t ptid);
 
 /* RAII object to temporarily disable the requirement for target
    stacks to commit their resumed threads.
@@ -417,5 +424,18 @@ private:
   bool m_prev_enable_commit_resumed;
 };
 
+/* Cleanup that reinstalls the readline callback handler, if the
+   target is running in the background.  If something triggered a secondary
+   prompt, like e.g., a pagination prompt, we'll have removed the callback
+   handler (see gdb_readline_wrapper_line).  Need to do this when going back
+   to the event loop, ready to process further input.  Note this has no
+   effect if the handler hasn't actually been removed, because calling
+   rl_callback_handler_install resets the line buffer, thus losing
+   input.  */
+extern void reinstall_readline_callback_handler_cleanup ();
+
+/* Set up state for normal_stop after we just attached, on
+   target_attach_no_wait targets.  */
+extern void set_normal_stop_state_just_attached ();
 
 #endif /* GDB_INFRUN_H */

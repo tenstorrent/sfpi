@@ -1,10 +1,12 @@
 #source: eh5.s
 #source: eh5a.s
 #source: eh5b.s
-#ld:
+#ld: [alpha_ld_flags]
 #readelf: -wf
 #target: [check_as_cfi]
 #xfail: alpha-*-*ecoff tile*-*-* visium-*-*
+# PR ld/25802
+#xfail: sparcv9-*-solaris2*
 
 Contents of the .eh_frame section:
 

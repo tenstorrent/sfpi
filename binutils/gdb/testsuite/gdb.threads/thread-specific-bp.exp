@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2024 Free Software Foundation, Inc.
+# Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ standard_testfile
 if {[gdb_compile_pthreads \
 	 "${srcdir}/${subdir}/${srcfile}" \
 	 "${binfile}" executable {debug} ] != "" } {
-    return -1
+    return
 }
 
 # Extract and return the thread ID of the thread stopped at function
@@ -31,17 +31,17 @@ proc get_thread_id {func} {
     global gdb_prompt
     global tdlabel_re
 
-    set thre -1
+    set res -1
     set test "get $func thread id"
     gdb_test_multiple "info threads" $test {
-	-re "(\[0-9\]+)\[^\n\r\]*${tdlabel_re}\[^\n\r\]*$func.*$gdb_prompt $" {
+	-re "(${::decimal})\[^\n\r\]*${tdlabel_re}\[^\n\r\]*$func.*$gdb_prompt $" {
 	    # Get the thread's id.
-	    set thre $expect_out(1,string)
+	    set res $expect_out(1,string)
 	    pass $test
 	}
     }
 
-    return $thre
+    return $res
 }
 
 proc check_thread_specific_breakpoint {non_stop} {
@@ -95,12 +95,21 @@ proc check_thread_specific_breakpoint {non_stop} {
 		  "-" \
 		  "thread 2 no longer in the thread list\\."]]
 
-    gdb_test_multiple "$cmd" "continue to end" {
-	-re "$\r\n${gdb_prompt} .*${msg_re}\r\n" {
+    set test "continue to end"
+    set try_again 0
+    gdb_test_multiple $cmd $test -no-prompt-anchor {
+	-re -wrap "\r\n${msg_re}(?=\r\n).*" {
 	    pass $gdb_test_name
 	}
-	-re "\r\n${msg_re}\r\n.*$gdb_prompt " {
-	    pass $gdb_test_name
+	-re -wrap "" {
+	    set try_again 1
+	}
+    }
+    if { $try_again } {
+	gdb_test_multiple "" $test {
+	    -re "\r\n${msg_re}(?=\r\n)" {
+		pass $gdb_test_name
+	    }
 	}
     }
 
@@ -118,7 +127,7 @@ proc check_thread_specific_breakpoint {non_stop} {
 foreach_with_prefix non_stop {on off} {
     save_vars { GDBFLAGS } {
 	append GDBFLAGS " -ex \"set non-stop $non_stop\""
-	clean_restart $binfile
+	clean_restart $::testfile
     }
 
     check_thread_specific_breakpoint $non_stop

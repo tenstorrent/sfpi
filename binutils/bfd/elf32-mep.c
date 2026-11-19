@@ -1,5 +1,5 @@
 /* MeP-specific support for 32-bit ELF.
-   Copyright (C) 2001-2025 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -426,8 +426,7 @@ mep_info_to_howto_rela (bfd *		    abfd,
 
 static int
 mep_elf_relocate_section
-    (bfd *		     output_bfd ATTRIBUTE_UNUSED,
-     struct bfd_link_info *  info,
+    (struct bfd_link_info *  info,
      bfd *		     input_bfd,
      asection *		     input_section,
      bfd_byte *		     contents,
@@ -440,7 +439,7 @@ mep_elf_relocate_section
   Elf_Internal_Rela *		rel;
   Elf_Internal_Rela *		relend;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -469,7 +468,8 @@ mep_elf_relocate_section
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -489,7 +489,8 @@ mep_elf_relocate_section
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_MEP_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -578,6 +579,9 @@ mep_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   /* Check if we have the same endianness.  */
   if (!_bfd_generic_verify_endian_match (ibfd, info))
     return false;
+
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
+    return true;
 
   new_flags = elf_elfheader (ibfd)->e_flags;
   old_flags = elf_elfheader (obfd)->e_flags;

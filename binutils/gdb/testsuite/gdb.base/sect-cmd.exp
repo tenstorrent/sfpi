@@ -1,4 +1,4 @@
-# Copyright 1997-2024 Free Software Foundation, Inc.
+# Copyright 1997-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 if { [prepare_for_testing "failed to prepare" "sect-cmd" \
 	  {break.c break1.c} {debug nowarnings}] } {
-    return -1
+    return
 }
 set srcfile break.c
 set srcfile1 break1.c

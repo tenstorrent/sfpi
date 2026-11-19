@@ -1,5 +1,5 @@
 /* Zilog (e)Z80-specific support for 32-bit ELF
-   Copyright (C) 1999-2025 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
    (Heavily copied from the S12Z port by Sergey Belyashov (sergey.belyashov@gmail.com))
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -384,8 +384,7 @@ z80_elf_final_link_relocate (unsigned long r_type,
 }
 
 static int
-z80_elf_relocate_section (bfd *output_bfd,
-			  struct bfd_link_info *info,
+z80_elf_relocate_section (struct bfd_link_info *info,
 			  bfd *input_bfd,
 			  asection *input_section,
 			  bfd_byte *contents,
@@ -397,7 +396,7 @@ z80_elf_relocate_section (bfd *output_bfd,
   struct elf_link_hash_entry **sym_hashes;
   Elf_Internal_Rela *rel, *relend;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
 
   rel = relocs;
@@ -421,7 +420,8 @@ z80_elf_relocate_section (bfd *output_bfd,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -441,14 +441,15 @@ z80_elf_relocate_section (bfd *output_bfd,
 	  reloc_howto_type *howto;
 	  howto = z80_rtype_to_howto (input_bfd, r_type);
 	  RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					   rel, 1, relend, howto, 0, contents);
+					   rel, 1, relend, R_Z80_NONE,
+					   howto, 0, contents);
 	}
 
       if (bfd_link_relocatable (info))
 	continue;
 
 
-      z80_elf_final_link_relocate (r_type, input_bfd, output_bfd,
+      z80_elf_final_link_relocate (r_type, input_bfd, info->output_bfd,
 				   input_section,
 				   contents, rel->r_offset,
 				   relocation, rel->r_addend,
@@ -578,6 +579,10 @@ z80_elf_16_be_reloc (bfd *abfd,
   if (output_bfd != NULL)
     return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
 				  input_section, output_bfd, error_message);
+
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, octets))
+    return bfd_reloc_outofrange;
 
   /* Get symbol value.  */
   val = 0;

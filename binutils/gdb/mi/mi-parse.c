@@ -1,6 +1,6 @@
 /* MI Command Set - MI parser.
 
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    Contributed by Cygnus Solutions (a Red Hat company).
 
@@ -21,9 +21,7 @@
 
 #include "mi-cmds.h"
 #include "mi-parse.h"
-#include "charset.h"
 
-#include <ctype.h>
 #include "cli/cli-utils.h"
 #include "language.h"
 
@@ -62,7 +60,7 @@ mi_parse_escape (const char **string_ptr)
 	  while (++count < 3)
 	    {
 	      c = (**string_ptr);
-	      if (isdigit (c) && c != '8' && c != '9')
+	      if (c_isdigit (c) && c != '8' && c != '9')
 		{
 		  (*string_ptr)++;
 		  i *= 8;
@@ -163,7 +161,7 @@ mi_parse::parse_argv ()
 		return;
 	      }
 	    /* Insist on trailing white space.  */
-	    if (chp[1] != '\0' && !isspace (chp[1]))
+	    if (chp[1] != '\0' && !c_isspace (chp[1]))
 	      {
 		freeargv (argv);
 		return;
@@ -194,7 +192,7 @@ mi_parse::parse_argv ()
 	    int len;
 	    const char *start = chp;
 
-	    while (*chp != '\0' && !isspace (*chp))
+	    while (*chp != '\0' && !c_isspace (*chp))
 	      {
 		chp++;
 	      }
@@ -314,7 +312,7 @@ mi_parse::mi_parse (const char *cmd, std::string *token)
   {
     const char *tmp = chp + 1;	/* discard ``-'' */
 
-    for (; *chp && !isspace (*chp); chp++)
+    for (; *chp && !c_isspace (*chp); chp++)
       ;
     this->command = make_unique_xstrndup (tmp, chp - tmp);
   }
@@ -351,7 +349,7 @@ mi_parse::mi_parse (const char *cmd, std::string *token)
 	  chp += as;
 	}
       /* See if --all is the last token in the input.  */
-      if (strcmp (chp, "--all") == 0)
+      if (streq (chp, "--all"))
 	{
 	  this->all = 1;
 	  chp += strlen (chp);
@@ -392,7 +390,7 @@ mi_parse::mi_parse (const char *cmd, std::string *token)
       else
 	break;
 
-      if (*chp != '\0' && !isspace (*chp))
+      if (*chp != '\0' && !c_isspace (*chp))
 	error (_("Invalid value for the '%s' option"), option);
       chp = skip_spaces (chp);
     }
@@ -431,36 +429,36 @@ mi_parse::mi_parse (gdb::unique_xmalloc_ptr<char> command,
       const char *chp = args[i].get ();
 
       /* See if --all is the last token in the input.  */
-      if (strcmp (chp, "--all") == 0)
+      if (streq (chp, "--all"))
 	{
 	  this->all = 1;
 	}
-      else if (strcmp (chp, "--thread-group") == 0)
+      else if (streq (chp, "--thread-group"))
 	{
 	  ++i;
 	  if (i == args.size ())
-	    error ("No argument to '--thread-group'");
+	    error (_("No argument to '--thread-group'"));
 	  this->set_thread_group (args[i].get (), nullptr);
 	}
-      else if (strcmp (chp, "--thread") == 0)
+      else if (streq (chp, "--thread"))
 	{
 	  ++i;
 	  if (i == args.size ())
-	    error ("No argument to '--thread'");
+	    error (_("No argument to '--thread'"));
 	  this->set_thread (args[i].get (), nullptr);
 	}
-      else if (strcmp (chp, "--frame") == 0)
+      else if (streq (chp, "--frame"))
 	{
 	  ++i;
 	  if (i == args.size ())
-	    error ("No argument to '--frame'");
+	    error (_("No argument to '--frame'"));
 	  this->set_frame (args[i].get (), nullptr);
 	}
-      else if (strcmp (chp, "--language") == 0)
+      else if (streq (chp, "--language"))
 	{
 	  ++i;
 	  if (i == args.size ())
-	    error ("No argument to '--language'");
+	    error (_("No argument to '--language'"));
 	  this->set_language (args[i].get (), nullptr);
 	}
       else
@@ -474,17 +472,14 @@ mi_parse::mi_parse (gdb::unique_xmalloc_ptr<char> command,
 enum print_values
 mi_parse_print_values (const char *name)
 {
-   if (strcmp (name, "0") == 0
-       || strcmp (name, mi_no_values) == 0)
-     return PRINT_NO_VALUES;
-   else if (strcmp (name, "1") == 0
-	    || strcmp (name, mi_all_values) == 0)
-     return PRINT_ALL_VALUES;
-   else if (strcmp (name, "2") == 0
-	    || strcmp (name, mi_simple_values) == 0)
-     return PRINT_SIMPLE_VALUES;
-   else
-     error (_("Unknown value for PRINT_VALUES: must be: \
+  if (streq (name, "0") || streq (name, mi_no_values))
+    return PRINT_NO_VALUES;
+  else if (streq (name, "1") || streq (name, mi_all_values))
+    return PRINT_ALL_VALUES;
+  else if (streq (name, "2") || streq (name, mi_simple_values))
+    return PRINT_SIMPLE_VALUES;
+  else
+    error (_("Unknown value for PRINT_VALUES: must be: \
 0 or \"%s\", 1 or \"%s\", 2 or \"%s\""),
-	    mi_no_values, mi_all_values, mi_simple_values);
+	   mi_no_values, mi_all_values, mi_simple_values);
 }

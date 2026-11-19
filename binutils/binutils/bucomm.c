@@ -1,5 +1,5 @@
 /* bucomm.c -- Bin Utils COMmon code.
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -435,6 +435,7 @@ display_info (void)
   if (!arg.error)
     display_target_tables (&arg);
 
+  free (arg.info);
   return arg.error;
 }
 
@@ -476,8 +477,10 @@ print_arelt_descr (FILE *file, bfd *abfd, bool verbose, bool offsets)
 
   if (offsets)
     {
-      if (bfd_is_thin_archive (abfd) && abfd->proxy_origin)
-        fprintf (file, " 0x%lx", (unsigned long) abfd->proxy_origin);
+      assert (!bfd_is_fake_archive (abfd));
+      if (bfd_is_thin_archive (abfd) && abfd->proxy_handle.file_offset)
+	fprintf (file, " 0x%lx",
+		 (unsigned long) abfd->proxy_handle.file_offset);
       else if (!bfd_is_thin_archive (abfd) && abfd->origin)
         fprintf (file, " 0x%lx", (unsigned long) abfd->origin);
     }
@@ -499,7 +502,7 @@ template_in_dir (const char *path)
 #ifdef HAVE_DOS_BASED_FILE_SYSTEM
   {
     /* We could have foo/bar\\baz, or foo\\bar, or d:bar.  */
-    char *bslash = strrchr (path, '\\');
+    const char *bslash = strrchr (path, '\\');
 
     if (slash == NULL || (bslash != NULL && bslash > slash))
       slash = bslash;

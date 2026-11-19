@@ -1,5 +1,5 @@
 /* Character set conversion support for GDB.
-   Copyright (C) 2001-2024 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -101,7 +101,7 @@ class wchar_iterator
   ~wchar_iterator ();
 
   /* Perform a single iteration of a wchar_t iterator.
-   
+
      Returns the number of characters converted.  A negative result
      means that EOF has been reached.  A positive result indicates the
      number of valid wchar_ts in the result; *OUT_CHARS is updated to
@@ -120,7 +120,7 @@ class wchar_iterator
 
      wchar_iterate_incomplete means that an incomplete character was
      seen at the end of the input sequence.
-   
+
      wchar_iterate_eof means that all bytes were successfully
      converted.  The other output arguments are not set.  */
   int iterate (enum wchar_iterate_result *out_result, gdb_wchar_t **out_chars,
@@ -163,6 +163,10 @@ char host_letter_to_control_character (char c);
 #define HOST_UTF32 "UTF-32BE"
 #else
 #define HOST_UTF32 "UTF-32LE"
+#endif
+
+#ifdef __MINGW32__
+  unsigned int mingw_get_codeset ();
 #endif
 
 #endif /* GDB_CHARSET_H */

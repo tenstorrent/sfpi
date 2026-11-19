@@ -1,6 +1,6 @@
 /* Path manipulation routines for GDB and gdbserver.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -32,6 +32,17 @@ char *current_directory;
 
 /* See gdbsupport/pathstuff.h.  */
 
+char *
+normalize_slashes (char *path)
+{
+  for (char *p = path; *p != '\0'; ++p)
+    if (*p == '\\')
+      *p = '/';
+  return path;
+}
+
+/* See gdbsupport/pathstuff.h.  */
+
 gdb::unique_xmalloc_ptr<char>
 gdb_realpath (const char *filename)
 {
@@ -56,7 +67,8 @@ gdb_realpath (const char *filename)
    Since the simplification would be useful even if the path is not
    valid (one can always set a breakpoint on a file, even if the file
    does not exist locally), we rely instead on GetFullPathName to
-   perform the canonicalization.  */
+   perform the canonicalization.  And then, we normalize backslashes
+   to forward slashes.  */
 
 #if defined (_WIN32)
   {
@@ -68,7 +80,7 @@ gdb_realpath (const char *filename)
        we might not be able to display the original casing in a given
        path.  */
     if (len > 0 && len < MAX_PATH)
-      return make_unique_xstrdup (buf);
+      return make_unique_xstrdup (normalize_slashes (buf));
   }
 #else
   {
@@ -89,34 +101,25 @@ std::string
 gdb_realpath_keepfile (const char *filename)
 {
   const char *base_name = lbasename (filename);
-  char *dir_name;
 
   /* Extract the basename of filename, and return immediately
      a copy of filename if it does not contain any directory prefix.  */
   if (base_name == filename)
     return filename;
 
-  dir_name = (char *) alloca ((size_t) (base_name - filename + 2));
-  /* Allocate enough space to store the dir_name + plus one extra
-     character sometimes needed under Windows (see below), and
-     then the closing \000 character.  */
-  strncpy (dir_name, filename, base_name - filename);
-  dir_name[base_name - filename] = '\000';
+  std::string dir_name (filename, base_name - filename);
 
 #ifdef HAVE_DOS_BASED_FILE_SYSTEM
   /* We need to be careful when filename is of the form 'd:foo', which
      is equivalent of d:./foo, which is totally different from d:/foo.  */
-  if (strlen (dir_name) == 2 && isalpha (dir_name[0]) && dir_name[1] == ':')
-    {
-      dir_name[2] = '.';
-      dir_name[3] = '\000';
-    }
+  if (dir_name.size () == 2 && c_isalpha (dir_name[0]) && dir_name[1] == ':')
+    dir_name += '.';
 #endif
 
   /* Canonicalize the directory prefix, and build the resulting
      filename.  If the dirname realpath already contains an ending
      directory separator, avoid doubling it.  */
-  gdb::unique_xmalloc_ptr<char> path_storage = gdb_realpath (dir_name);
+  gdb::unique_xmalloc_ptr<char> path_storage = gdb_realpath (dir_name.c_str ());
   const char *real_path = path_storage.get ();
   return path_join (real_path, base_name);
 }

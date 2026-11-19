@@ -1,5 +1,5 @@
 /* tc-metag.h -- Header file for tc-metag.c.
-   Copyright (C) 2013-2025 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
    Contributed by Imagination Technologies Ltd.
 
    This file is part of GAS, the GNU Assembler.
@@ -52,6 +52,7 @@ extern int metag_force_relocation (struct fix *);
 /* Call md_pcrel_from_section(), not md_pcrel_from().  */
 #define MD_PCREL_FROM_SECTION(FIX, SEC) md_pcrel_from_section (FIX, SEC)
 
+#define MAX_MEM_FOR_RS_ALIGN_CODE(p2align, max) (3 + 4)
 #define HANDLE_ALIGN(sec, fragp) metag_handle_align (fragp)
 extern void metag_handle_align (struct frag *);
 

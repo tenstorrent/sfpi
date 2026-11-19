@@ -1,4 +1,4 @@
-# Copyright 2010-2025 Free Software Foundation, Inc.
+# Copyright 2010-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 # trace goes through a function with no debug information.
 
 standard_testfile -caller.c -main.c
-set objmainfile ${testfile}-main.o
-set objcallerfile ${testfile}-caller.o
+set objmainfile [standard_output_file ${testfile}-main.o]
+set objcallerfile [standard_output_file ${testfile}-caller.o]
 
 # Recompile the inferior with or without CFI information, then run the
 # inferior until the point where the important test starts.
@@ -28,59 +28,86 @@ proc prepare_test {has_cfi} {
     if {$has_cfi} {
 	set extension "cfi"
 	if {[gdb_compile "${srcdir}/${subdir}/${srcfile}" \
-	     "${srcdir}/${subdir}/${objcallerfile}" \
+	     "${objcallerfile}" \
 	     object [list {additional_flags=-fomit-frame-pointer \
 		 -funwind-tables -fasynchronous-unwind-tables}]] != "" } {
-	    untested "couldn't compile with cfi"
+	    untested "couldn't compile"
 	    return false
       }
     } else {
 	set extension "no-cfi"
 	if {[gdb_compile "${srcdir}/${subdir}/${srcfile}" \
-	     "${srcdir}/${subdir}/${objcallerfile}" \
+	     "${objcallerfile}" \
 	     object [list {additional_flags=-fomit-frame-pointer \
 		 -fno-unwind-tables \
 		 -fno-asynchronous-unwind-tables}]] != "" } {
-	    untested "couldn't compile without cfi"
+	    untested "couldn't compile"
 	    return false
       }
     }
-    if {[gdb_compile [list "${srcdir}/${subdir}/${objmainfile}" \
-	    "${srcdir}/${subdir}/${objcallerfile}"] \
+    if {[gdb_compile [list "${objmainfile}" \
+	    "${objcallerfile}"] \
 	    "${binfile}-${extension}" binfile {}] != ""} {
 	untested "couldn't link object files"
 	return false
     }
 
-    clean_restart "$binfile-${extension}"
+    clean_restart $::testfile-$extension
 
-    with_test_prefix "${extension}" {
-
-	if ![runto callback] then {
-	   fail "has_cfi=$has_cfi: Can't run to callback"
-	   return false
-	}
-	gdb_test_no_output "maint frame-unwinder disable ARCH"
-	return true
+    if { ![runto callback] } {
+	fail "has_cfi=$has_cfi: Can't run to callback"
+	return false
     }
+    gdb_test_no_output "maint frame-unwinder disable ARCH"
+    return true
 }
 
 if {[gdb_compile "${srcdir}/${subdir}/${srcfile2}" \
-	"${srcdir}/${subdir}/${objmainfile}" \
+	"${objmainfile}" \
 	object {debug}] != "" } {
     untested "couldn't compile main file"
     return
 }
 
-if { [prepare_test false] } {
-    gdb_test "bt" \
+proc_with_prefix no-cfi {} {
+    if { ![prepare_test false] } {
+	return
+    }
+
+    set re_msg \
+	[string_list_to_regexp \
+	     "Required frame unwinder may have been disabled," \
+	     " see 'maint info frame-unwinders'"]
+    set hs {[^\r\n]}
+    set re_bt_line "#0\\s+[string_to_regexp {callback ()}] $hs+"
+    set re_bt_no_filters \
 	[multi_line \
-	     "\[^\r\n\]+Required frame unwinder may have been disabled, \[^\r\n\]+" \
-	     "#0\\s+callback \\(\\) \[^\r\n\]+"] \
-	"verify unwind fail without CFI"
+	     $re_bt_line \
+	     $re_msg]
+    gdb_test "bt -no-filters" \
+	$re_bt_no_filters \
+	"verify no-filters unwind fail"
+
+    # Flush frame cache to retrigger the message.
+    gdb_test "maint flush register-cache" \
+	[string_to_regexp "Register cache flushed."]
+
+    # This output may occur when we run into the message while applying the
+    # frame filters.
+    set re_bt \
+	[multi_line \
+	     $hs+$re_msg \
+	     $re_bt_line]
+    gdb_test "bt" \
+	"($re_bt|$re_bt_no_filters)" \
+	"verify unwind fail"
 }
 
-if { [prepare_test true] } {
+proc_with_prefix cfi {} {
+    if { ![prepare_test true] } {
+	return
+    }
+
     if { [istarget "arm*-*-*"] } {
 	setup_kfail backtrace/31950 *-*-*
     }
@@ -89,6 +116,12 @@ if { [prepare_test true] } {
     # #1  0x00000000004004e9 in caller ()
     # #2  0x00000000004004cd in main () at ...
     gdb_test "bt" \
-	"#0 +callback $text\r\n#1 $text in caller $text\r\n#2 $text in main $text" \
-	"Verify unwinding works based only on CFI information"
+	[multi_line \
+	     "#0 +callback $text" \
+	     "#1 $text in caller $text" \
+	     "#2 $text in main $text"] \
+	"Verify unwinding works"
 }
+
+no-cfi
+cfi

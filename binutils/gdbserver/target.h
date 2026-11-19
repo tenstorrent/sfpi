@@ -1,5 +1,5 @@
 /* Target operations for the remote server for GDB.
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by MontaVista Software.
 
@@ -31,6 +31,7 @@
 #include "gdbsupport/btrace-common.h"
 #include <vector>
 #include "gdbsupport/byte-vector.h"
+#include <sys/stat.h>
 
 struct emit_ops;
 struct process_info;
@@ -217,9 +218,9 @@ public:
      otherwise.  */
   virtual bool stopped_by_watchpoint ();
 
-  /* Returns the address associated with the watchpoint that hit, if any;
-     returns 0 otherwise.  */
-  virtual CORE_ADDR stopped_data_address ();
+  /* Returns the list of addresses associated with the watchpoint(s)
+     that were hit, if any; returns an empty vector otherwise.  */
+  virtual std::vector<CORE_ADDR> stopped_data_addresses ();
 
   /* Return true if the read_offsets target op is supported.  */
   virtual bool supports_read_offsets ();
@@ -287,7 +288,7 @@ public:
 
   /* The target-specific routine to process monitor command.
      Returns 1 if handled, or 0 to perform default processing.  */
-  virtual int handle_monitor_command (char *mon);
+  virtual int handle_monitor_command (const char *mon);
 
   /* Returns the core given a thread, or -1 if not known.  */
   virtual int core_of_thread (ptid_t ptid);
@@ -441,6 +442,12 @@ public:
   virtual int multifs_open (int pid, const char *filename,
 			    int flags, mode_t mode);
 
+  /* Multiple-filesystem-aware lstat.  Like lstat(2), but operating in
+     the filesystem as it appears to process PID.  Systems where all
+     processes share a common filesystem should not override this.
+     The default behavior is to use lstat(2).  */
+  virtual int multifs_lstat (int pid, const char *filename, struct stat *sb);
+
   /* Multiple-filesystem-aware unlink.  Like unlink(2), but operates
      in the filesystem as it appears to process PID.  Systems where
      all processes share a common filesystem should not override this.
@@ -474,6 +481,13 @@ public:
      determine it.  The returned value must not be freed by the
      caller.  */
   virtual const char *thread_name (ptid_t thread);
+
+  /* Return the string translation for THREAD's id.  This gives the
+     target a chance to completely re-interpret the thread id and
+     present a target-specific description for displaying to the user.
+     Return empty if the target is fine with how an id is displayed
+     by default.  */
+  virtual std::string thread_id_str (thread_info *thread);
 
   /* Thread ID to (numeric) thread handle: Return true on success and
      false for failure.  Return pointer to thread handle via HANDLE
@@ -734,5 +748,11 @@ bool set_desired_thread ();
 bool set_desired_process ();
 
 std::string target_pid_to_str (ptid_t);
+
+static inline std::string
+target_thread_id_str (thread_info *thread)
+{
+  return the_target->thread_id_str (thread);
+}
 
 #endif /* GDBSERVER_TARGET_H */

@@ -1,6 +1,6 @@
 /* Target-dependent code for DICOS running on i386's, for GDB.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -33,16 +33,13 @@ i386_dicos_osabi_sniffer (bfd *abfd)
   const char *target_name = bfd_get_target (abfd);
 
   /* On x86-DICOS, the Load Module's "header" section is 36 bytes.  */
-  if (strcmp (target_name, "elf32-i386") == 0
-      && dicos_load_module_p (abfd, 36))
+  if (streq (target_name, "elf32-i386") && dicos_load_module_p (abfd, 36))
     return GDB_OSABI_DICOS;
 
   return GDB_OSABI_UNKNOWN;
 }
 
-void _initialize_i386_dicos_tdep ();
-void
-_initialize_i386_dicos_tdep ()
+INIT_GDB_FILE (i386_dicos_tdep)
 {
   gdbarch_register_osabi_sniffer (bfd_arch_i386, bfd_target_elf_flavour,
 				  i386_dicos_osabi_sniffer);

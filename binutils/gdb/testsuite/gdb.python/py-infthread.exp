@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2024 Free Software Foundation, Inc.
+# Copyright (C) 2009-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require allow_python_tests
 standard_testfile
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile}] } {
-    return -1
+    return
 }
 
 gdb_test_multiline "install new_thread event handler" \
@@ -40,7 +40,7 @@ gdb_test_multiline "install new_thread event handler" \
 # The following tests require execution.
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 gdb_test "python print(seen_a_thread)" "True"
@@ -61,7 +61,7 @@ gdb_test "python print (t0)" \
     "<gdb.InferiorThread id=${decimal}\\.${decimal} target-id=\"\[^\r\n\]*\">"
 gdb_test "python print ('result = %s' % t0.num)" " = 1" "test InferiorThread.num"
 gdb_test "python print ('result = %s' % t0.global_num)" " = 1" "test InferiorThread.global_num"
-gdb_test "python print ('result = %s' % str (t0.ptid))" " = \\(\[0-9\]+, \[0-9\]+, \[0-9\]+\\)" "test InferiorThread.ptid"
+gdb_test "python print ('result = %s' % str (t0.ptid))" " = \\(${::decimal}, ${::decimal}, ${::decimal}\\)" "test InferiorThread.ptid"
 
 # Test the InferiorThread.ptid_string attribute.  We don't test the
 # actual string contents as they vary based on target, but we check

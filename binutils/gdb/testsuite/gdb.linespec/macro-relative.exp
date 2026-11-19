@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ clean_restart ${testfile}
 # Test macros respect DW_AT_comp_dir.
 
 # "list header_two_func" does not set exactly the one line we want.
-if ![runto header_two_func] {
-    return -1
+if {![runto header_two_func]} {
+    return
 }
 
 gdb_test "info macro HEADER" "\r\n#define HEADER 2"

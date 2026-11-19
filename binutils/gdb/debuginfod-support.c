@@ -1,5 +1,5 @@
 /* debuginfod utilities for GDB.
-   Copyright (C) 2020-2024 Free Software Foundation, Inc.
+   Copyright (C) 2020-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -18,6 +18,7 @@
 
 #include "diagnostics.h"
 #include <errno.h>
+#include "gdbsupport/cleanups.h"
 #include "gdbsupport/scoped_fd.h"
 #include "debuginfod-support.h"
 #include <optional>
@@ -25,6 +26,7 @@
 #include "cli/cli-style.h"
 #include "cli-out.h"
 #include "target.h"
+#include "buffered-streams.h"
 
 /* Set/show debuginfod commands.  */
 static cmd_list_element *set_debuginfod_prefix_list;
@@ -230,57 +232,61 @@ debuginfod_is_enabled ()
 {
   const char *urls = skip_spaces (getenv (DEBUGINFOD_URLS_ENV_VAR));
 
-  if (debuginfod_enabled == debuginfod_off
-      || urls == nullptr
+  if (urls == nullptr
       || *urls == '\0')
     return false;
 
-  if (debuginfod_enabled == debuginfod_ask)
+  if (debuginfod_enabled != debuginfod_ask)
+    return debuginfod_enabled == debuginfod_on;
+
+  gdb_printf (_("\nThis GDB supports auto-downloading debuginfo " \
+		"from the following URLs:\n"));
+
+  std::string_view url_view (urls);
+  while (true)
     {
-      gdb_printf (_("\nThis GDB supports auto-downloading debuginfo " \
-		    "from the following URLs:\n"));
+      size_t off = url_view.find_first_not_of (' ');
+      if (off == std::string_view::npos)
+	break;
+      url_view = url_view.substr (off);
+#if defined (__GNUC__) && !defined (__clang__)				\
+  && ((__GNUC__ <= 11) || (__GNUC__ == 12 && __GNUC_MINOR__ < 1))
+      /* With g++ 11, we encounter a Wstringop-overread in
+	 url_view.find_first_of.  G++ seems convinced url_view might be of
+	 SIZE_MAX length here.  And so complains because the length of an
+	 array can only be PTRDIFF_MAX.  Work around this by explicitly
+	 limiting the size of url_view to PTRDIFF_MAX.  This is supposed to be
+	 fixed in GCC 12.1, see PR gcc/124879.  */
+      url_view = url_view.substr (0, PTRDIFF_MAX);
+#endif
+      off = url_view.find_first_of (' ');
+      gdb_printf
+	(_("  <%ps>\n"),
+	 styled_string (file_name_style.style (),
+			std::string (url_view.substr (0, off)).c_str ()));
+      if (off == std::string_view::npos)
+	break;
+      url_view = url_view.substr (off);
+    }
 
-      std::string_view url_view (urls);
-      while (true)
-	{
-	  size_t off = url_view.find_first_not_of (' ');
-	  if (off == std::string_view::npos)
-	    break;
-	  url_view = url_view.substr (off);
-	  /* g++ 11.2.1 on s390x, g++ 11.3.1 on ppc64le and g++ 11 on
-	     hppa seem convinced url_view might be of SIZE_MAX length.
-	     And so complains because the length of an array can only
-	     be PTRDIFF_MAX.  */
-	  DIAGNOSTIC_PUSH
-	  DIAGNOSTIC_IGNORE_STRINGOP_OVERREAD
-	  off = url_view.find_first_of (' ');
-	  DIAGNOSTIC_POP
-	  gdb_printf
-	    (_("  <%ps>\n"),
-	     styled_string (file_name_style.style (),
-			    std::string (url_view.substr (0, off)).c_str ()));
-	  if (off == std::string_view::npos)
-	    break;
-	  url_view = url_view.substr (off);
-	}
-
-      int resp = nquery (_("Enable debuginfod for this session? "));
-      if (!resp)
-	{
-	  gdb_printf (_("Debuginfod has been disabled.\nTo make this " \
-			"setting permanent, add \'set debuginfod " \
-			"enabled off\' to .gdbinit.\n"));
-	  debuginfod_enabled = debuginfod_off;
-	  return false;
-	}
-
-      gdb_printf (_("Debuginfod has been enabled.\nTo make this " \
+  int resp = nquery (_("Enable debuginfod for this session? "));
+  if (!resp)
+    {
+      gdb_printf (_("Debuginfod has been disabled.\nTo make this " \
+		    "setting permanent, add \'set debuginfod " \
+		    "enabled off\' to .gdbinit.\n"));
+      debuginfod_enabled = debuginfod_off;
+    }
+  else
+    {
+      gdb_printf (_("Debuginfod has been enabled.\nTo make this "      \
 		    "setting permanent, add \'set debuginfod enabled " \
 		    "on\' to .gdbinit.\n"));
       debuginfod_enabled = debuginfod_on;
     }
 
-  return true;
+  gdb_assert (debuginfod_enabled != debuginfod_ask);
+  return debuginfod_enabled == debuginfod_on;
 }
 
 /* Print the result of the most recent attempted download.  */
@@ -594,9 +600,7 @@ maint_get_debuginfod_download_sections ()
 
 /* Register debuginfod commands.  */
 
-void _initialize_debuginfod ();
-void
-_initialize_debuginfod ()
+INIT_GDB_FILE (debuginfod)
 {
   /* set/show debuginfod */
   add_setshow_prefix_cmd ("debuginfod", class_run,

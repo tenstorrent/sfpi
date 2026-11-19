@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ standard_testfile ${srcdir}/gdb.base/array-repeat.c
 
 if {[prepare_for_testing ${testfile}.exp ${testfile} ${srcfile} \
 	[list debug ${lang}]]} {
-    return -1
+    return
 }
 
 gdb_test_no_output "set print array-indexes on"

@@ -1,4 +1,4 @@
-# Copyright 2021-2024 Free Software Foundation, Inc.
+# Copyright 2021-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 require {istarget "powerpc*"} is_lp64_target
 
 set flags { nodebug }
-if [info exists COMPILE] {
+if {[info exists COMPILE]} {
     standard_testfile .c -main.c
     lappend flags optimize=-O2
     lappend flags additional_flags=-fno-stack-protector
@@ -39,11 +39,11 @@ if [info exists COMPILE] {
 
 if { [prepare_for_testing "failed to prepare" ${testfile} \
 	  [list $srcfile $srcfile2] $flags] } {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 gdb_breakpoint "_exit"

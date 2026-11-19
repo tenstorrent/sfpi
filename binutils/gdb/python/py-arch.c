@@ -1,6 +1,6 @@
 /* Python interface to architecture
 
-   Copyright (C) 2013-2024 Free Software Foundation, Inc.
+   Copyright (C) 2013-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -22,10 +22,12 @@
 #include "disasm.h"
 #include "python-internal.h"
 
-struct arch_object {
-  PyObject_HEAD
+struct arch_object : public PyObject
+{
   struct gdbarch *gdbarch;
 };
+
+static_assert (gdb::is_python_allocatable_v<arch_object>);
 
 static const registry<gdbarch>::key<PyObject, gdb::noop_deleter<PyObject>>
      arch_object_data;
@@ -42,8 +44,7 @@ static const registry<gdbarch>::key<PyObject, gdb::noop_deleter<PyObject>>
       }								\
   } while (0)
 
-extern PyTypeObject arch_object_type
-    CPYCHECKER_TYPE_OBJECT_FOR_TYPEDEF ("arch_object");
+extern PyTypeObject arch_object_type;
 
 /* Associates an arch_object with GDBARCH as gdbarch_data via the gdbarch
    post init registration mechanism (gdbarch_data_register_post_init).  */
@@ -85,7 +86,7 @@ gdbpy_is_architecture (PyObject *obj)
    Returns a new reference to the arch_object associated as data with
    GDBARCH.  */
 
-PyObject *
+gdbpy_ref<>
 gdbarch_to_arch_object (struct gdbarch *gdbarch)
 {
   PyObject *new_ref = arch_object_data.get (gdbarch);
@@ -98,7 +99,7 @@ gdbarch_to_arch_object (struct gdbarch *gdbarch)
   /* new_ref could be NULL if creation failed.  */
   Py_XINCREF (new_ref);
 
-  return new_ref;
+  return gdbpy_ref<> (new_ref);
 }
 
 /* Implementation of gdb.Architecture.name (self) -> String.
@@ -125,18 +126,21 @@ archpy_name (PyObject *self, PyObject *args)
 static PyObject *
 archpy_disassemble (PyObject *self, PyObject *args, PyObject *kw)
 {
-  static const char *keywords[] = { "start_pc", "end_pc", "count", NULL };
+  static const char *keywords[] = {
+    "start_pc", "end_pc", "count", "styling", nullptr
+  };
   CORE_ADDR start = 0, end = 0;
   CORE_ADDR pc;
   long count = 0, i;
   PyObject *start_obj = nullptr, *end_obj = nullptr, *count_obj = nullptr;
   struct gdbarch *gdbarch = NULL;
+  int styling_p = 0;
 
   ARCHPY_REQUIRE_VALID (self, gdbarch);
 
-  if (!gdb_PyArg_ParseTupleAndKeywords (args, kw, "O|OO",
+  if (!gdb_PyArg_ParseTupleAndKeywords (args, kw, "O|OOp",
 					keywords, &start_obj, &end_obj,
-					&count_obj))
+					&count_obj, &styling_p))
     return NULL;
 
   if (get_addr_from_python (start_obj, &start) < 0)
@@ -191,7 +195,7 @@ archpy_disassemble (PyObject *self, PyObject *args, PyObject *kw)
       if (PyList_Append (result_list.get (), insn_dict.get ()))
 	return NULL;  /* PyList_Append Sets the exception.  */
 
-      string_file stb;
+      string_file stb (styling_p);
 
       try
 	{
@@ -315,7 +319,17 @@ archpy_integer_type (PyObject *self, PyObject *args, PyObject *kw)
       return nullptr;
     }
 
-  return type_to_type_object (type);
+  return type_to_type_object (type).release ();
+}
+
+/* Implementation of gdb.void_type.  */
+static PyObject *
+archpy_void_type (PyObject *self, PyObject *args)
+{
+  struct gdbarch *gdbarch;
+  ARCHPY_REQUIRE_VALID (self, gdbarch);
+
+  return type_to_type_object (builtin_type (gdbarch)->builtin_void).release ();
 }
 
 /* __repr__ implementation for gdb.Architecture.  */
@@ -329,7 +343,8 @@ archpy_repr (PyObject *self)
 
   auto arch_info = gdbarch_bfd_arch_info (gdbarch);
   return PyUnicode_FromFormat ("<%s arch_name=%s printable_name=%s>",
-			       Py_TYPE (self)->tp_name, arch_info->arch_name,
+			       gdbpy_py_obj_tp_name (self).c_str (),
+			       arch_info->arch_name,
 			       arch_info->printable_name);
 }
 
@@ -358,8 +373,8 @@ gdbpy_all_architecture_names (PyObject *self, PyObject *args)
 
 /* Initializes the Architecture class in the gdb module.  */
 
-static int CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
-gdbpy_initialize_arch (void)
+static int
+gdbpy_initialize_arch ()
 {
   arch_object_type.tp_new = PyType_GenericNew;
   return gdbpy_type_ready (&arch_object_type);
@@ -383,6 +398,10 @@ END_PC." },
     "integer_type (size [, signed]) -> type\n\
 Return an integer Type corresponding to the given bitsize and signed-ness.\n\
 If not specified, the type defaults to signed." },
+  { "void_type", (PyCFunction) archpy_void_type,
+    METH_NOARGS,
+    "void_type () -> type\n\
+Return a void Type." },
   { "registers", (PyCFunction) archpy_registers,
     METH_VARARGS | METH_KEYWORDS,
     "registers ([ group-name ]) -> Iterator.\n\

@@ -1,5 +1,5 @@
 /* Darwin support for GDB, the GNU debugger.
-   Copyright (C) 1997-2024 Free Software Foundation, Inc.
+   Copyright (C) 1997-2026 Free Software Foundation, Inc.
 
    Contributed by Apple Computer, Inc.
 
@@ -123,7 +123,7 @@ get_task_from_args (const char *args)
 
       return priv->task;
     }
-  if (strcmp (args, "gdb") == 0)
+  if (streq (args, "gdb"))
     return mach_task_self ();
   task = strtoul (args, &eptr, 0);
   if (*eptr)
@@ -246,7 +246,7 @@ info_mach_ports_command (const char *args, int from_tty)
 	      gdb_printf (_("%u"), ref);
 	    gdb_printf (_(" refs)"));
 	  }
-      
+
       if (task == task_self ())
 	{
 	  if (port == task_self())
@@ -549,7 +549,7 @@ darwin_debug_regions (task_t task, mach_vm_address_t address, int max)
 	  count = VM_REGION_BASIC_INFO_COUNT_64;
 	  kret =
 	    mach_vm_region (task, &address, &size, VM_REGION_BASIC_INFO_64,
-		 	      (vm_region_info_t) &info, &count, &object_name);
+			      (vm_region_info_t) &info, &count, &object_name);
 	  if (kret != KERN_SUCCESS)
 	    {
 	      size = 0;
@@ -630,7 +630,7 @@ darwin_debug_regions_recurse (task_t task)
     }
   uiout->table_header (3, ui_left, "min-prot", "Min");
   uiout->table_header (3, ui_left, "max-prot", "Max");
-  uiout->table_header (5, ui_left, "inheritance", "Inh");
+  uiout->table_header (5, ui_left, "inheritance", "Inh"); /* codespell:ignore inh.  */
   uiout->table_header (9, ui_left, "share-mode", "Shr");
   uiout->table_header (1, ui_left, "depth", "D");
   uiout->table_header (3, ui_left, "submap", "Sm");
@@ -700,7 +700,7 @@ info_mach_regions_command (const char *args, int from_tty)
   task = get_task_from_args (args);
   if (task == TASK_NULL)
     return;
-  
+
   darwin_debug_regions (task, 0, -1);
 }
 
@@ -712,7 +712,7 @@ info_mach_regions_recurse_command (const char *args, int from_tty)
   task = get_task_from_args (args);
   if (task == TASK_NULL)
     return;
-  
+
   darwin_debug_regions_recurse (task);
 }
 
@@ -799,7 +799,7 @@ info_mach_exceptions_command (const char *args, int from_tty)
 
   if (args != NULL)
     {
-      if (strcmp (args, "saved") == 0)
+      if (streq (args, "saved"))
 	{
 	  if (inferior_ptid == null_ptid)
 	    gdb_printf (_("No inferior running\n"));
@@ -809,7 +809,7 @@ info_mach_exceptions_command (const char *args, int from_tty)
 	  disp_exception (&priv->exception_info);
 	  return;
 	}
-      else if (strcmp (args, "host") == 0)
+      else if (streq (args, "host"))
 	{
 	  /* FIXME: This needs a privileged host port!  */
 	  kret = host_get_exception_ports
@@ -828,7 +828,7 @@ info_mach_exceptions_command (const char *args, int from_tty)
       if (inferior_ptid == null_ptid)
 	gdb_printf (_("No inferior running\n"));
       inf = current_inferior ();
-      
+
       darwin_inferior *priv = get_darwin_inferior (inf);
 
       kret = task_get_exception_ports
@@ -839,9 +839,7 @@ info_mach_exceptions_command (const char *args, int from_tty)
     }
 }
 
-void _initialize_darwin_info_commands ();
-void
-_initialize_darwin_info_commands ()
+INIT_GDB_FILE (darwin_info_commands)
 {
   add_info ("mach-tasks", info_mach_tasks_command,
 	    _("Get list of tasks in system."));

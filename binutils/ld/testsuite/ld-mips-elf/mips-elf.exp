@@ -1,5 +1,5 @@
 # Expect script for MIPS ELF linker tests
-#   Copyright (C) 2002-2025 Free Software Foundation, Inc.
+#   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 #
 # This file is part of the GNU Binutils.
 #
@@ -45,6 +45,22 @@ if {[istarget "mips*-*-vxworks"]} {
     run_ld_link_tests $mipsvxtests
     run_dump_test "vxworks1-static"
     run_dump_test "vxworks-forced-local-1"
+
+    run_dump_test "mips-hilo"
+    run_dump_test "mips-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+    run_dump_test "mips16-hilo"
+    run_dump_test "mips16-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+    run_dump_test "mips16e2-hilo"
+    run_dump_test "mips16e2-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+    run_dump_test "micromips-hilo"
+    run_dump_test "micromips-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+    run_dump_test "pcrel-hilo"
+    run_dump_test "pcrel-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
     return
 }
 
@@ -191,7 +207,6 @@ if {[istarget *-*-openbsd*] } {
      || [istarget *-mti-elf*] \
      || [istarget *-sde-elf*] \
      || [istarget *-*-netbsd*] \
-     || [istarget *-*-linux*] \
      || [istarget *-*-sysv4*] } {
     if [istarget *el-*-*] {
 	set abi_asflags(o32) -32
@@ -245,6 +260,7 @@ if {[istarget *-*-openbsd*] } {
     set abi_ldflags(o32) -melf32lr5900
     set irixemul 1
 } elseif { [istarget *-*-elf*] \
+	   || [istarget *-*-haiku*] \
 	   || [istarget *-*-rtems*] } {
     set abi_asflags(o32) -32
     set irixemul 1
@@ -253,12 +269,13 @@ if {[istarget *-*-openbsd*] } {
     set abi_asflags(n64) "-march=from-abi -64"
     set abi_ldflags(o32) -melf32bsmip
     set abi_ldflags(n64) -melf64bmip
-    set irixemul 1
+    set irixemul 2
 } else {
     set abi_asflags(o32) -32
     set irixemul 1
 }
 set tmips [expr $irixemul ? {""} : {"t"}]
+set irixn [expr $irixemul ? {"i${irixemul}"} : {""}]
 
 if { $linux_gnu } {
     run_ld_link_tests [list \
@@ -814,8 +831,81 @@ run_dump_test_n32 "jalbal" noarch
 
 run_dump_test "mode-change-error-1"
 
-run_dump_test_o32 "mips16-hilo"
-run_dump_test_n32 "mips16-hilo-n32"
+run_dump_test_o32 "mips16-hilo" noarch
+run_dump_test_n32 "mips16-hilo" [list noarch [list name (n32)]]
+run_dump_test_o32 "mips16-hilo-srec" \
+	[list noarch \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n32 "mips16-hilo-srec" \
+	[list noarch \
+	      [list name (n32)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "mips16e2-hilo" noarch
+run_dump_test_n32 "mips16e2-hilo" [list noarch [list name (n32)]]
+run_dump_test_o32 "mips16e2-hilo-srec" \
+	[list noarch \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n32 "mips16e2-hilo-srec" \
+	[list noarch \
+	      [list name (n32)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "mips-hilo"
+run_dump_test_n32 "mips-hilo" [list [list name (n32)]]
+run_dump_test_n64 "mips-hilo-n64"
+run_dump_test_o32 "mips-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n32 "mips-hilo-srec" \
+	[list [list name (n32)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n64 "mips-hilo-srec-n64" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "micromips-hilo" noarch
+run_dump_test_n32 "micromips-hilo" [list noarch [list name (n32)]]
+run_dump_test_n64 "micromips-hilo-n64" noarch
+run_dump_test_o32 "micromips-hilo-srec" \
+	[list noarch \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n32 "micromips-hilo-srec" \
+	[list noarch \
+	      [list name (n32)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n64 "micromips-hilo-srec-n64" \
+	[list noarch \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "pcrel-hilo"
+run_dump_test_n32 "pcrel-hilo" [list [list name (n32)]]
+run_dump_test_n64 "pcrel-hilo" [list [list name (n64)]]
+run_dump_test_o32 "pcrel-hilo-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n32 "pcrel-hilo-srec" \
+	[list [list name (n32)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_n64 "pcrel-hilo-srec" \
+	[list [list name (n64)] \
+	      [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+
+run_dump_test_o32 "pr19977"
+run_dump_test_n32 "pr19977" [list [list name (n32)]]
+run_dump_test_o32 "pr19977-mips16" noarch
+run_dump_test_n32 "pr19977-mips16" [list noarch [list name (n32)]]
+run_dump_test_o32 "pr19977-micromips" noarch
+run_dump_test_n32 "pr19977-micromips" [list noarch [list name (n32)]]
+run_dump_test_o32 "pr19977-r"
+run_dump_test_o32 "pr19977-r-mips16" noarch
+run_dump_test_o32 "pr19977-r-micromips" noarch
+
+run_dump_test_o32 "mips-hi16-orphan-addend"
+run_dump_test_o32 "mips-hi16-orphan-addend-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "mips16-hi16-orphan-addend"
+run_dump_test_o32 "mips16-hi16-orphan-addend-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "micromips-hi16-orphan-addend"
+run_dump_test_o32 "micromips-hi16-orphan-addend-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
+run_dump_test_o32 "pcrel-hi16-orphan-addend"
+run_dump_test_o32 "pcrel-hi16-orphan-addend-srec" \
+	[list [list objdump [expr { [istarget *el-*-*] ? "-EL" : "-EB" }]]]
 
 if { $linux_gnu } {
     run_dump_test_n32 "textrel-1"
@@ -1693,6 +1783,8 @@ run_dump_test_o32 "global-local-symtab-final-o32"
 run_dump_test_n32 "global-local-symtab-final-n32"
 run_dump_test_n64 "global-local-symtab-final-n64"
 
+run_dump_test "pr33793"
+
 # Section ordering tests.
 foreach { abi } $abis {
     set ps2 [expr \
@@ -1713,3 +1805,8 @@ foreach { abi } $abis {
 	    [list "readelf -WS sections-2-${abi}${tmips}${ps2}.rd"] \
 	    "sections-2-${abi}"]]
 }
+
+run_dump_test "dynamic-sections-1${irixn}"
+run_dump_test "dynamic-sections-2${irixn}"
+run_dump_test "dynamic-sections-3${irixn}"
+run_dump_test "dynamic-sections-4${irixn}"

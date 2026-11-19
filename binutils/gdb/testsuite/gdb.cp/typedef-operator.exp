@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,15 +20,15 @@ require allow_cplus_tests
 standard_testfile .cc
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile {c++ debug}]} {
-    return -1
+    return
 }
 
 gdb_test_no_output "set language c++"
 
 gdb_test "p *u" {You can't do that without a process to debug.} "test crash"
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 gdb_test "p *v" " = 42" "test typedef"

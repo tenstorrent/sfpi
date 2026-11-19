@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2015-2024 Free Software Foundation, Inc.
+   Copyright 2015-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 Define TestStrings, TestStringsH, and TestStringsW to test utf8, utf16,
 and utf32 strings respectively.
 To avoid compile errors due to old compiler mode, we don't use string
-literals.  The content of each array is the same as followings:
+literals.  The content of each array is the same as the following:
 
   const char TestStrings[] = {
       "ABCD"
@@ -117,14 +117,14 @@ main (void)
   for (i = 0; i < len - 1; ++i)
     {
       for (j = i; j < len; ++j)
-        {
-          if (n[j] < n[i])
-            {
-              int tmp = n[i];
-              n[i] = n[j];
-              n[j] = tmp;
-            }
-        }
+	{
+	  if (n[j] < n[i])
+	    {
+	      int tmp = n[i];
+	      n[i] = n[j];
+	      n[j] = tmp;
+	    }
+	}
     }
   return 42;
 }

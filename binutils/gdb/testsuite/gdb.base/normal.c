@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2013-2024 Free Software Foundation, Inc.
+   Copyright 2013-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,10 +15,20 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-/* This test is just a normal return 0.  */
+/* This test is just a normal return 1.  */
+
+#include <unistd.h>
+
+volatile int wait_for_gdb = 1;
 
 int
 main (int argc, char *argv[])
 {
-  return 0;
+  while (wait_for_gdb)
+    sleep (1);
+
+  /* Non-zero specifically, as it would be otherwise easier for a
+     buggy GDB to report exit code 0 when it shouldn't and that
+     wouldn't be noticed.  */
+  return 1;
 }

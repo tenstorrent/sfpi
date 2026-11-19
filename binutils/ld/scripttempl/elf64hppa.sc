@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2025 Free Software Foundation, Inc.
+# Copyright (C) 2014-2026 Free Software Foundation, Inc.
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -12,7 +12,7 @@
 #	SMALL_DATA_DTOR - .dtors contains small data.
 #	DATA_ADDR - if end-of-text-plus-one-page isn't right for data start
 #	INITIAL_READONLY_SECTIONS - at start of text segment
-#	OTHER_READONLY_SECTIONS - other than .text .init .rodata ...
+#	OTHER_READONLY_SECTIONS - other than .text .rodata ...
 #		(e.g., .PARISC.milli)
 #	OTHER_TEXT_SECTIONS - these get put in .text when relocating
 #	OTHER_READWRITE_SECTIONS - other than .data .bss .ctors .sdata ...
@@ -106,14 +106,25 @@ test -n "$CREATE_SHLIB$CREATE_PIE" && test -n "$SHLIB_DATA_ADDR" && COMMONPAGESI
 test -z "$CREATE_SHLIB$CREATE_PIE" && test -n "$DATA_ADDR" && COMMONPAGESIZE=""
 test -n "$RELRO_NOW" && unset SEPARATE_GOTPLT
 test -z "$ATTRS_SECTIONS" && ATTRS_SECTIONS=".gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }"
-DATA_SEGMENT_ALIGN="ALIGN(${SEGMENT_SIZE}) + (. & (${MAXPAGESIZE} - 1))"
-DATA_SEGMENT_RELRO_END=""
-DATA_SEGMENT_END=""
-if test -n "${COMMONPAGESIZE}"; then
-  DATA_SEGMENT_ALIGN="ALIGN (${SEGMENT_SIZE}) - ((${MAXPAGESIZE} - .) & (${MAXPAGESIZE} - 1)); . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
-  DATA_SEGMENT_END=". = DATA_SEGMENT_END (.);"
-  DATA_SEGMENT_RELRO_END=". = DATA_SEGMENT_RELRO_END (${SEPARATE_GOTPLT-0}, .);"
+
+if test -z "$DATA_SEGMENT_ALIGN"; then
+  test -n "$CREATE_SHLIB$CREATE_PIE" && test -n "$SHLIB_DATA_ADDR" && COMMONPAGESIZE=""
+  test -z "$CREATE_SHLIB$CREATE_PIE" && test -n "$DATA_ADDR" && COMMONPAGESIZE=""
+  DATA_SEGMENT_ALIGN="ALIGN(${SEGMENT_SIZE}) + (. & (${MAXPAGESIZE} - 1))"
+  DATA_SEGMENT_RELRO_END=""
+  DATA_SEGMENT_END=""
+  if test -n "${COMMONPAGESIZE}"; then
+    if test "${SEGMENT_SIZE}" != "${MAXPAGESIZE}"; then
+      DATA_SEGMENT_ALIGN="ALIGN (${SEGMENT_SIZE}) - ((${MAXPAGESIZE} - .) & (${MAXPAGESIZE} - 1)); \
+      . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
+    else
+      DATA_SEGMENT_ALIGN="DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
+    fi
+    DATA_SEGMENT_END=". = DATA_SEGMENT_END (.);"
+    DATA_SEGMENT_RELRO_END=". = DATA_SEGMENT_RELRO_END (${SEPARATE_GOTPLT-0}, .);"
+  fi
 fi
+
 if test -z "${INITIAL_READONLY_SECTIONS}${CREATE_SHLIB}"; then
   INITIAL_READONLY_SECTIONS=".interp       ${RELOCATING-0} : { *(.interp) }"
 fi
@@ -273,7 +284,7 @@ else
 fi
 
 cat <<EOF
-/* Copyright (C) 2014-2025 Free Software Foundation, Inc.
+/* Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    Copying and distribution of this script, with or without modification,
    are permitted in any medium without royalty provided the copyright
@@ -400,13 +411,6 @@ if test -z "${NON_ALLOC_DYN}"; then
 fi
 
 cat <<EOF
-  .init         ${RELOCATING-0} :
-  {
-    ${RELOCATING+${INIT_START}}
-    KEEP (*(SORT_NONE(.init)))
-    ${RELOCATING+${INIT_END}}
-  } =${NOP-0}
-
   ${TEXT_PLT+${PLT}}
   ${TINY_READONLY_SECTION}
   .text         ${RELOCATING-0} :
@@ -416,12 +420,6 @@ cat <<EOF
     /* .gnu.warning sections are handled specially by elf.em.  */
     *(.gnu.warning)
     ${RELOCATING+${OTHER_TEXT_SECTIONS}}
-  } =${NOP-0}
-  .fini         ${RELOCATING-0} :
-  {
-    ${RELOCATING+${FINI_START}}
-    KEEP (*(SORT_NONE(.fini)))
-    ${RELOCATING+${FINI_END}}
   } =${NOP-0}
   ${RELOCATING+PROVIDE (__${ETEXT_NAME} = .);}
   ${RELOCATING+PROVIDE (_${ETEXT_NAME} = .);}
@@ -440,6 +438,15 @@ cat <<EOF
   ${CREATE_SHLIB-${CREATE_PIE-${RELOCATING+. = ${DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}}
   ${CREATE_SHLIB+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
   ${CREATE_PIE+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
+
+  /* Put .data at start of segment.  */
+  .data         ${RELOCATING-0} :
+  {
+    ${RELOCATING+${DATA_START_SYMBOLS}}
+    *(.data${RELOCATING+ .data.* .gnu.linkonce.d.*})
+    ${CONSTRUCTING+SORT(CONSTRUCTORS)}
+  }
+  .data1        ${RELOCATING-0} : { *(.data1) }
 
   /* Exception handling  */
   .eh_frame     ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.eh_frame)) }
@@ -472,13 +479,6 @@ cat <<EOF
 
   ${DATA_PLT+${PLT_BEFORE_GOT-${PLT}}}
 
-  .data         ${RELOCATING-0} :
-  {
-    ${RELOCATING+${DATA_START_SYMBOLS}}
-    *(.data${RELOCATING+ .data.* .gnu.linkonce.d.*})
-    ${CONSTRUCTING+SORT(CONSTRUCTORS)}
-  }
-  .data1        ${RELOCATING-0} : { *(.data1) }
   ${WRITABLE_RODATA+${RODATA}}
   ${OTHER_READWRITE_SECTIONS}
   ${SMALL_DATA_CTOR+${RELOCATING+${CTOR}}}
@@ -500,6 +500,8 @@ cat <<EOF
     ${RELOCATING+*(.dynbss)}
     *(.bss${RELOCATING+ .bss.* .gnu.linkonce.b.*})
     ${RELOCATING+*(COMMON)
+    /* Provide 16 bytes for HP_LOAD map.  */
+    . += 16;
     /* Align here to ensure that the .bss section occupies space up to
        _end.  Align after .bss to ensure correct alignment even if the
        .bss section disappears because there are no input sections.

@@ -1,6 +1,6 @@
 /* CTF debugging format support for GDB.
 
-   Copyright (C) 2019-2024 Free Software Foundation, Inc.
+   Copyright (C) 2019-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -20,6 +20,6 @@
 #ifndef GDB_CTFREAD_H
 #define GDB_CTFREAD_H
 
-extern void elfctf_build_psymtabs (struct objfile *objfile);
+extern void elfctf_build_symtabs (struct objfile *objfile);
 
 #endif /* GDB_CTFREAD_H */

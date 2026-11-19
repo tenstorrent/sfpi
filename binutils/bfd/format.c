@@ -1,5 +1,5 @@
 /* Generic BFD support for file formats.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -46,10 +46,8 @@ SUBSECTION
 #include "sysdep.h"
 #include "bfd.h"
 #include "libbfd.h"
-#if BFD_SUPPORTS_PLUGINS
-#include "plugin-api.h"
 #include "plugin.h"
-#endif
+#include "elf-bfd.h"
 
 /* IMPORT from targets.c.  */
 extern const size_t _bfd_target_vector_entries;
@@ -331,6 +329,25 @@ print_and_clear_messages (struct per_xvec_messages *list,
 	free (iter);
       iter = next;
     }
+
+  /* Don't retain a pointer to free'd memory.  */
+  list->next = NULL;
+}
+
+/* Discard all messages associated with TARG in LIST.  Unlike
+   print_and_clear_messages, PER_XVEC_NO_TARGET is not valid for TARG.  */
+
+static void
+clear_messages (struct per_xvec_messages *list,
+		const bfd_target *targ)
+{
+  struct per_xvec_messages *iter;
+
+  for (iter = list; iter != NULL; iter = iter->next)
+    {
+      if (iter->targ == targ)
+	clear_warnmsg (&iter->messages);
+    }
 }
 
 /* This a copy of lto_section defined in GCC (lto-streamer.h).  */
@@ -348,9 +365,8 @@ struct lto_section
 /* Set lto_type in ABFD.  */
 
 static void
-bfd_set_lto_type (bfd *abfd ATTRIBUTE_UNUSED)
+bfd_set_lto_type (bfd *abfd)
 {
-#if BFD_SUPPORTS_PLUGINS
   if (abfd->format == bfd_object
       && abfd->lto_type == lto_non_object
       && (abfd->flags
@@ -358,32 +374,52 @@ bfd_set_lto_type (bfd *abfd ATTRIBUTE_UNUSED)
 	     | (bfd_get_flavour (abfd) == bfd_target_elf_flavour
 		? EXEC_P : 0))) == 0)
     {
-      asection *sec;
+      asection *sec = abfd->sections;
       enum bfd_lto_object_type type = lto_non_ir_object;
-      struct lto_section lsection = { 0, 0, 0, 0 };
-      /* GCC uses .gnu.lto_.lto.<some_hash> as a LTO bytecode information
-	 section.  */
-      for (sec = abfd->sections; sec != NULL; sec = sec->next)
-	if (strcmp (sec->name, GNU_OBJECT_ONLY_SECTION_NAME) == 0)
-	  {
-	    type = lto_mixed_object;
-	    abfd->object_only_section = sec;
-	    break;
+      if (sec == NULL)
+	{
+	  /* If there are no sections, check for slim LLVM IR object whose
+	     first 4 bytes are: 'B', 'C', 0xc0, 0xde.  */
+	  bfd_byte llvm_ir_magic[4];
+	  if (bfd_seek (abfd, 0, SEEK_SET) == 0
+	      && bfd_read (llvm_ir_magic, 4, abfd) == 4
+	      && llvm_ir_magic[0] == 'B'
+	      && llvm_ir_magic[1] == 'C'
+	      && llvm_ir_magic[2] == 0xc0
+	      && llvm_ir_magic[3] == 0xde)
+	    type = lto_slim_ir_object;
+	}
+      else
+	{
+	  struct lto_section lsection = { 0, 0, 0, 0 };
+	  /* GCC uses .gnu.lto_.lto.<some_hash> as a LTO bytecode
+	     information section.  */
+	  for (; sec != NULL; sec = sec->next)
+	    if (strcmp (sec->name, GNU_OBJECT_ONLY_SECTION_NAME) == 0)
+	      {
+		type = lto_mixed_object;
+		abfd->object_only_section = sec;
+		break;
+	      }
+	    else if (strcmp (sec->name, ".llvm.lto") == 0)
+	      {
+		type = lto_fat_ir_object;
+		break;
+	      }
+	    else if (lsection.major_version == 0
+		     && startswith (sec->name, ".gnu.lto_.lto.")
+		     && bfd_get_section_contents (abfd, sec, &lsection, 0,
+						  sizeof (struct lto_section)))
+	      {
+		if (lsection.slim_object)
+		  type = lto_slim_ir_object;
+		else
+		  type = lto_fat_ir_object;
 	  }
-	else if (lsection.major_version == 0
-		 && startswith (sec->name, ".gnu.lto_.lto.")
-		 && bfd_get_section_contents (abfd, sec, &lsection, 0,
-					      sizeof (struct lto_section)))
-	  {
-	    if (lsection.slim_object)
-	      type = lto_slim_ir_object;
-	    else
-	      type = lto_fat_ir_object;
-	  }
+	}
 
       abfd->lto_type = type;
     }
-#endif
 }
 
 /*
@@ -396,10 +432,10 @@ SYNOPSIS
 
 DESCRIPTION
 	Like <<bfd_check_format>>, except when it returns FALSE with
-	<<bfd_errno>> set to <<bfd_error_file_ambiguously_recognized>>.  In that
-	case, if @var{matching} is not NULL, it will be filled in with
-	a NULL-terminated list of the names of the formats that matched,
-	allocated with <<malloc>>.
+	<<bfd_errno>> set to <<bfd_error_file_ambiguously_recognized>>.
+	In that case, if @var{matching} is not NULL, it will be filled
+	in with a NULL-terminated list of the names of the formats
+	that matched, allocated with <<malloc>>.
 	Then the user may choose a format and try again.
 
 	When done with the list that @var{matching} points to, the caller
@@ -411,11 +447,12 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
 {
   extern const bfd_target binary_vec;
   const bfd_target * const *target;
-  const bfd_target **matching_vector = NULL;
+  const bfd_target **matching_vector;
   const bfd_target *save_targ, *right_targ, *ar_right_targ, *match_targ;
+  const bfd_target *fail_targ;
   int match_count, best_count, best_match;
   int ar_match_index;
-  unsigned int initial_section_id = _bfd_section_id;
+  unsigned int initial_section_id;
   struct bfd_preserve preserve, preserve_match;
   bfd_cleanup cleanup = NULL;
   struct per_xvec_messages messages = { abfd, PER_XVEC_NO_TARGET, NULL, NULL };
@@ -433,25 +470,29 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
     }
 
   if (abfd->format != bfd_unknown)
-    {
-      bfd_set_lto_type (abfd);
-      return abfd->format == format;
-    }
+    return abfd->format == format;
 
-  if (matching != NULL || *bfd_associated_vector != NULL)
-    {
-      size_t amt;
-
-      amt = sizeof (*matching_vector) * 2 * _bfd_target_vector_entries;
-      matching_vector = (const bfd_target **) bfd_malloc (amt);
-      if (!matching_vector)
-	return false;
-    }
+  matching_vector = bfd_malloc (sizeof (*matching_vector)
+				* 2 * _bfd_target_vector_entries);
+  if (!matching_vector)
+    return false;
 
   /* Avoid clashes with bfd_cache_close_all running in another
      thread.  */
   if (!bfd_cache_set_uncloseable (abfd, true, &old_in_format_matches))
-    return false;
+    {
+      free (matching_vector);
+      return false;
+    }
+
+  /* Locking is required here in order to manage _bfd_section_id.  */
+  if (!bfd_lock ())
+    {
+      bfd_cache_set_uncloseable (abfd, old_in_format_matches, NULL);
+      free (matching_vector);
+      return false;
+    }
+  initial_section_id = _bfd_section_id;
 
   /* Presume the answer is yes.  */
   abfd->format = format;
@@ -461,43 +502,67 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
      of an archive.  */
   orig_messages = _bfd_set_error_handler_caching (&messages);
 
-  /* Locking is required here in order to manage _bfd_section_id.  */
-  if (!bfd_lock ())
-    return false;
-
   preserve_match.marker = NULL;
   if (!bfd_preserve_save (abfd, &preserve, NULL))
     goto err_ret;
 
-  /* If the target type was explicitly specified, just check that target.  */
-  if (!abfd->target_defaulted)
+  /* First try matching the plugin target if appropriate.  Next try
+     the current target.  The current target may have been set due to
+     a user option, or due to the linker trying optimistically to load
+     input files for the same target as the output.  Either will
+     have target_defaulted false.  Failing that, bfd_find_target will
+     have chosen a default target, and target_defaulted will be true.  */
+  fail_targ = NULL;
+  if (bfd_plugin_enabled ()
+      && abfd->format == bfd_object
+      && abfd->target_defaulted
+      && !abfd->is_linker_input
+      && abfd->plugin_format != bfd_plugin_no)
     {
-      if (bfd_seek (abfd, 0, SEEK_SET) != 0)	/* rewind! */
+      if (bfd_seek (abfd, 0, SEEK_SET) != 0)
 	goto err_ret;
 
+      BFD_ASSERT (save_targ != bfd_plugin_vec ());
+      abfd->xvec = bfd_plugin_vec ();
+      bfd_set_error (bfd_error_no_error);
       cleanup = BFD_SEND_FMT (abfd, _bfd_check_format, (abfd));
-
       if (cleanup)
 	goto ok_ret;
 
-      /* For a long time the code has dropped through to check all
-	 targets if the specified target was wrong.  I don't know why,
-	 and I'm reluctant to change it.  However, in the case of an
-	 archive, it can cause problems.  If the specified target does
-	 not permit archives (e.g., the binary target), then we should
-	 not allow some other target to recognize it as an archive, but
-	 should instead allow the specified target to recognize it as an
-	 object.  When I first made this change, it broke the PE target,
-	 because the specified pei-i386 target did not recognize the
-	 actual pe-i386 archive.  Since there may be other problems of
-	 this sort, I changed this test to check only for the binary
-	 target.  */
-      if (format == bfd_archive && save_targ == &binary_vec)
-	goto err_unrecog;
+      bfd_reinit (abfd, initial_section_id, &preserve, cleanup);
+      bfd_release (abfd, preserve.marker);
+      preserve.marker = bfd_alloc (abfd, 1);
+      abfd->xvec = save_targ;
     }
 
-  /* Since the target type was defaulted, check them all in the hope
-     that one will be uniquely recognized.  */
+  /* bfd_plugin_no excluding the plugin target is an optimisation.
+     The test can be removed if desired.  */
+  if (!(abfd->plugin_format == bfd_plugin_no
+	&& bfd_plugin_target_p (save_targ)))
+    {
+      if (bfd_seek (abfd, 0, SEEK_SET) != 0)
+	goto err_ret;
+
+      bfd_set_error (bfd_error_no_error);
+      cleanup = BFD_SEND_FMT (abfd, _bfd_check_format, (abfd));
+      if (cleanup)
+	{
+	  if (abfd->format != bfd_archive
+	      /* An archive with object files matching the archive
+		 target is OK.  Other archives should be further
+		 tested.  */
+	      || bfd_get_error () != bfd_error_wrong_object_format)
+	    goto ok_ret;
+	}
+      else
+	{
+	  if (!abfd->target_defaulted && !abfd->is_linker_input)
+	    goto err_unrecog;
+	  fail_targ = save_targ;
+	}
+    }
+
+  /* Check all targets in the hope that one will be recognized.  */
   right_targ = NULL;
   ar_right_targ = NULL;
   match_targ = NULL;
@@ -511,23 +576,22 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
       void **high_water;
 
       /* The binary target matches anything, so don't return it when
-	 searching.  Don't match the plugin target if we have another
-	 alternative since we want to properly set the input format
-	 before allowing a plugin to claim the file.  Also, don't
-	 check the default target twice.  */
+	 searching.  Also, don't check the current target twice when
+	 it has failed already.
+	 Don't match the plugin target during linking if we have
+	 another alternative since we want to properly set the input
+	 format before allowing a plugin to claim the file.
+	 Also as an optimisation don't match the plugin target when
+	 abfd->plugin_format is set to bfd_plugin_no.  (This occurs
+	 when LTO sections have been stripped or when we have a
+	 recursive call here from the plugin object_p via
+	 bfd_plugin_get_symbols_in_object_only.)  */
       if (*target == &binary_vec
-#if BFD_SUPPORTS_PLUGINS
-	  || (match_count != 0 && bfd_plugin_target_p (*target))
-#endif
-	  || (!abfd->target_defaulted && *target == save_targ))
+	  || *target == fail_targ
+	  || (((abfd->is_linker_input && match_count != 0)
+	       || abfd->plugin_format == bfd_plugin_no)
+	      && bfd_plugin_target_p (*target)))
 	continue;
-
-#if BFD_SUPPORTS_PLUGINS
-      /* If the plugin target is explicitly specified when a BFD file
-	 is opened, don't check it twice.  */
-      if (bfd_plugin_specified_p () && bfd_plugin_target_p (*target))
-	continue;
-#endif
 
       /* If we already tried a match, the bfd is modified and may
 	 have sections attached, which will confuse the next
@@ -545,17 +609,21 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
       /* Change BFD's target temporarily.  */
       abfd->xvec = *target;
 
+      /* It is possible that targets appear multiple times in
+	 bfd_target_vector.  If this is the case, then we want to avoid
+	 accumulating duplicate messages for a target in MESSAGES, so
+	 discard any previous messages associated with this target.  */
+      clear_messages (&messages, abfd->xvec);
+
       if (bfd_seek (abfd, 0, SEEK_SET) != 0)
 	goto err_ret;
 
+      bfd_set_error (bfd_error_no_error);
       cleanup = BFD_SEND_FMT (abfd, _bfd_check_format, (abfd));
       if (cleanup)
 	{
-	  int match_priority = abfd->xvec->match_priority;
-
 	  if (abfd->format != bfd_archive
-	      || (bfd_has_map (abfd)
-		  && bfd_get_error () != bfd_error_wrong_object_format))
+	      || bfd_get_error () != bfd_error_wrong_object_format)
 	    {
 	      /* If this is the default target, accept it, even if
 		 other targets might match.  People who want those
@@ -563,10 +631,21 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
 	      if (abfd->xvec == bfd_default_vector[0])
 		goto ok_ret;
 
-	      if (matching_vector)
-		matching_vector[match_count] = abfd->xvec;
+	      matching_vector[match_count] = abfd->xvec;
 	      match_count++;
 
+	      int match_priority = abfd->xvec->match_priority;
+	      if (match_priority == 1
+		  && bfd_get_flavour (abfd) == bfd_target_elf_flavour)
+		{
+		  /* If the object e_ident matches the hint elf_osabi,
+		     bump priority up.  */
+		  Elf_Internal_Ehdr *i_ehdrp = elf_elfheader (abfd);
+		  elf_backend_data *bed = get_elf_backend_data (abfd);
+		  if (bed->elf_osabi != ELFOSABI_NONE
+		      && i_ehdrp->e_ident[EI_OSABI] == bed->elf_osabi)
+		    match_priority = 0;
+		}
 	      if (match_priority < best_match)
 		{
 		  best_match = match_priority;
@@ -586,8 +665,7 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
 		 better matches.  */
 	      if (ar_right_targ != bfd_default_vector[0])
 		ar_right_targ = *target;
-	      if (matching_vector)
-		matching_vector[ar_match_index] = *target;
+	      matching_vector[ar_match_index] = *target;
 	      ar_match_index++;
 	    }
 
@@ -617,7 +695,7 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
 	{
 	  match_count = ar_match_index - _bfd_target_vector_entries;
 
-	  if (matching_vector && match_count > 1)
+	  if (match_count > 1)
 	    memcpy (matching_vector,
 		    matching_vector + _bfd_target_vector_entries,
 		    sizeof (*matching_vector) * match_count);
@@ -651,7 +729,7 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
   /* We still have more than one equally good match, and at least some
      of the targets support match priority.  Choose the first of the
      best matches.  */
-  if (matching_vector && match_count > 1 && best_count != match_count)
+  if (match_count > 1 && best_count != match_count)
     {
       int i;
 
@@ -754,7 +832,8 @@ bfd_check_format_matches (bfd *abfd, bfd_format format, char ***matching)
  out:
   if (preserve_match.marker != NULL)
     bfd_preserve_finish (abfd, &preserve_match);
-  bfd_preserve_restore (abfd, &preserve);
+  if (preserve.marker != NULL)
+    bfd_preserve_restore (abfd, &preserve);
   _bfd_restore_error_handler_caching (orig_messages);
   print_and_clear_messages (&messages, PER_XVEC_NO_TARGET);
   bfd_cache_set_uncloseable (abfd, old_in_format_matches, NULL);

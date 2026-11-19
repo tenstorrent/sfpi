@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2021-2024 Free Software Foundation, Inc.
+   Copyright 2021-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -276,7 +276,7 @@ func:
    represented in the machines native byte order when words are fetched 32-bits
    at a time.  The first .long is for the 32-bit prefix word and the second
    .long is for the 32-bit suffix word thus making the word order independent
-   of the machine Endianes.  The use of the .quad statement on Big Endian
+   of the machine Endianness.  The use of the .quad statement on Big Endian
    results in the disassembler fetching the 32-bit suffix before the 32-bit
    prefix word.  */
 	.long 0x06000000	/* paddi r0,r1,0 */

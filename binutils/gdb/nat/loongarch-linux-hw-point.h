@@ -1,6 +1,6 @@
 /* Native-dependent code for GNU/Linux on LoongArch processors.
 
-   Copyright (C) 2024 Free Software Foundation, Inc.
+   Copyright (C) 2024-2026 Free Software Foundation, Inc.
    Contributed by Loongson Ltd.
 
    This file is part of GDB.
@@ -32,7 +32,7 @@ struct loongarch_user_watch_state {
 		uint64_t    mask;
 		uint32_t    ctrl;
 		uint32_t    pad;
-	} dbg_regs[8];
+	} dbg_regs[14];
 };
 
 
@@ -60,7 +60,7 @@ struct loongarch_user_watch_state {
    ptrace calls to the kernel, i.e. avoid asking the kernel to write
    to the debug registers with unchanged values.  */
 
-typedef ULONGEST dr_changed_t;
+using dr_changed_t = ULONGEST;
 
 /* Set each of the lower M bits of X to 1; assert X is wide enough.  */
 

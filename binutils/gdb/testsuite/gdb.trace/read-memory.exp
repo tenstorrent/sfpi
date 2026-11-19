@@ -1,4 +1,4 @@
-#   Copyright 2013-2024 Free Software Foundation, Inc.
+#   Copyright 2013-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@ if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug nopie}]} 
     return -1
 }
 
-if ![runto_main] {
+if {![runto_main]} {
     return -1
 }
 
-if ![gdb_target_supports_trace] {
+if {![gdb_target_supports_trace]} {
     unsupported "target does not support trace"
     return -1
 }
@@ -37,10 +37,10 @@ proc set_tracepoint_and_collect { } {
 
     # Start with a fresh gdb.
     clean_restart ${testfile}
-    if ![runto_main] {
+    if {![runto_main]} {
 	return -1
     }
-    gdb_breakpoint "end" qualified
+    gdb_breakpoint "end" -qualified
     gdb_test "trace start" "Tracepoint \[0-9\] at .*"
     gdb_trace_setactions "set action for tracepoint"  "" \
 	"collect testglob" "^$" \
@@ -62,7 +62,7 @@ with_test_prefix "live" {
 }
 
 with_test_prefix "live target tfind" {
-    gdb_test "tfind 0" "Found trace frame 0, tracepoint \[0-9\]+.*" \
+    gdb_test "tfind 0" "Found trace frame 0, tracepoint ${::decimal}.*" \
 	"tfind 0"
     gdb_test "print testglob" " = 1"
     gdb_test "print testglob_not_collected" " = <unavailable>"
@@ -106,7 +106,7 @@ proc test_from_remote { target } {
 	    gdb_test "print constglob_not_collected" " = 100"
 	}
 	with_test_prefix "w/ setting traceframe" {
-	    gdb_test "tfind 0" "Found trace frame 0, tracepoint \[0-9\]+.*" \
+	    gdb_test "tfind 0" "Found trace frame 0, tracepoint ${::decimal}.*" \
 		"tfind 0"
 	    gdb_test "print testglob" " = 1"
 	    gdb_test "print testglob_not_collected" " = <unavailable>"
@@ -141,7 +141,7 @@ proc teset_from_exec { target } {
     }
 
     with_test_prefix "exec to ${target} w/ setting traceframe" {
-	gdb_test "tfind 0" "Found trace frame 0, tracepoint \[0-9\]+.*" \
+	gdb_test "tfind 0" "Found trace frame 0, tracepoint ${::decimal}.*" \
 	    "tfind 0"
 	gdb_test "print testglob" " = 1"
 	gdb_test "print testglob_not_collected" " = <unavailable>"

@@ -1,5 +1,5 @@
 /* Machine independent support for SVR4 /proc (process file system) for GDB.
-   Copyright (C) 1999-2024 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -22,7 +22,7 @@
 /* From proc-why.c */
 
 /*
- * Pretty-print functions for /proc data 
+ * Pretty-print functions for /proc data
  */
 
 extern void proc_prettyprint_why (unsigned long why, unsigned long what,
@@ -56,7 +56,7 @@ extern void proc_prettyfprint_signal (FILE *file, int signo, int verbose);
 extern void proc_prettyfprint_flags (FILE *file, unsigned long flags,
 				     int verbose);
 
-extern void proc_prettyfprint_why (FILE *file, unsigned long why, 
+extern void proc_prettyfprint_why (FILE *file, unsigned long why,
 				   unsigned long what, int verbose);
 
 extern void proc_prettyfprint_fault (FILE *file, int faultno, int verbose);
@@ -115,6 +115,6 @@ extern  void  procfs_note      (const char *, const char *, int);
 
 /* Define the type (and more importantly the width) of the control
    word used to write to the /proc/PID/ctl file.  */
-typedef long procfs_ctl_t;
+using procfs_ctl_t = long;
 
 #endif /* GDB_PROC_UTILS_H */

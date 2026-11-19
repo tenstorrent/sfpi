@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,13 +23,14 @@ if {![istarget "*-*-linux*"]} {
 standard_testfile
 set executable ${testfile}
 if { [gdb_compile_pthreads "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
-     untested "failed to compile"
-     return -1
+    untested "failed to compile"
+    return
 }
 
 set corefile [core_find $binfile]
 if {$corefile == ""} {
-    return 0
+    untested "unable to create or find corefile"
+    return
 }
 
 clean_restart $executable
@@ -41,14 +42,14 @@ gdb_test "pipe info files | grep \"$re\""  \
     "sanity check we see the core file"
 set test "print pthread_t of thread0"
 gdb_test_multiple "p/x thread0" $test {
-    -re " = (0x\[0-9a-f\]+)\r\n$gdb_prompt $" {
+    -re " = (${::hex})\r\n$gdb_prompt $" {
 	pass $test
 	set thread0 $expect_out(1,string)
     }
 }
 set test "print pthread_t of thread1"
 gdb_test_multiple "p/x thread1" $test {
-    -re " = (0x\[0-9a-f\]+)\r\n$gdb_prompt $" {
+    -re " = (${::hex})\r\n$gdb_prompt $" {
 	pass $test
 	set thread1 $expect_out(1,string)
     }

@@ -1,5 +1,5 @@
 /* dw2gencfi.c - Support for generating Dwarf2 CFI information.
-   Copyright (C) 2003-2025 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
    Contributed by Michal Ludvig <mludvig@suse.cz>
 
    This file is part of GAS, the GNU Assembler.
@@ -89,11 +89,6 @@
 
 #ifndef tc_cfi_reloc_for_encoding
 #define tc_cfi_reloc_for_encoding(e) BFD_RELOC_NONE
-#endif
-
-/* Targets which support SFrame format will define this and return true.  */
-#ifndef support_sframe_p
-# define support_sframe_p() false
 #endif
 
 /* Private segment collection list.  */
@@ -236,7 +231,7 @@ get_debugseg_name (segT seg, const char *base_name)
     {
       if (!strcmp (base_name, ".eh_frame_entry")
 	  && strcmp (name, ".text") != 0)
-	return notes_concat (base_name, ".", name, NULL);
+	return notes_concat (base_name, ".", name, (const char *) NULL);
 
       name = "";
     }
@@ -249,7 +244,7 @@ get_debugseg_name (segT seg, const char *base_name)
   else
     name = dollar;
 
-  return notes_concat (base_name, name, NULL);
+  return notes_concat (base_name, name, (const char *) NULL);
 }
 
 /* Allocate a dwcfi_seg_list structure.  */
@@ -368,12 +363,6 @@ generic_dwarf2_emit_offset (symbolS *symbol, unsigned int size)
 }
 #endif
 
-struct cfi_escape_data
-{
-  struct cfi_escape_data *next;
-  expressionS exp;
-};
-
 struct cie_entry
 {
   struct cie_entry *next;
@@ -420,7 +409,7 @@ alloc_fde_entry (void)
   fde->lsda_encoding = DW_EH_PE_omit;
   fde->eh_header_type = EH_COMPACT_UNKNOWN;
 #ifdef tc_fde_entry_init_extra
-  tc_fde_entry_init_extra (fde)
+  tc_fde_entry_init_extra (fde);
 #endif
 
   return fde;
@@ -446,16 +435,25 @@ alloc_cfi_insn_data (void)
   *cur_fde_data->last = insn;
   cur_fde_data->last = &insn->next;
   SET_CUR_SEG (insn, is_now_linkonce_segment ());
+#ifndef NO_LISTING
+  insn->listing_ctxt = cur_fde_data->listing_ctxt ? listing_tail : NULL;
+#endif
   return insn;
 }
 
 /* Construct a new FDE structure that begins at LABEL.  */
 
 void
-cfi_new_fde (symbolS *label)
+cfi_new_fde (symbolS *label, bool do_listing)
 {
   struct fde_entry *fde = alloc_fde_entry ();
   fde->start_address = label;
+  if (do_listing)
+    {
+#ifndef NO_LISTING
+      fde->listing_ctxt = listing_tail;
+#endif
+    }
   frchain_now->frch_cfi_data->last_address = label;
 }
 
@@ -464,7 +462,12 @@ cfi_new_fde (symbolS *label)
 void
 cfi_end_fde (symbolS *label)
 {
-  frchain_now->frch_cfi_data->cur_fde_data->end_address = label;
+  struct fde_entry *cur_fde_data = frchain_now->frch_cfi_data->cur_fde_data;
+
+  cur_fde_data->end_address = label;
+#ifndef NO_LISTING
+  cur_fde_data->listing_end = cur_fde_data->listing_ctxt ? listing_tail : NULL;
+#endif
   frchain_now->frch_cfi_data = NULL;
 }
 
@@ -930,10 +933,25 @@ dot_cfi (int arg)
   demand_empty_rest_of_line ();
 }
 
+#ifndef TC_ADDRESS_BYTES
+#define TC_ADDRESS_BYTES address_bytes
+
+static inline unsigned int
+address_bytes (void)
+{
+  /* Choose smallest of 1, 2, 4, 8 bytes that is large enough to
+     contain an address.  */
+  unsigned int n = (stdoutput->arch_info->bits_per_address - 1) / 8;
+  n |= n >> 1;
+  n |= n >> 2;
+  return n + 1;
+}
+#endif
+
 static void
 dot_cfi_escape (int ignored ATTRIBUTE_UNUSED)
 {
-  struct cfi_escape_data *head, **tail, *e;
+  struct cfi_escape_data *head, **tail;
   struct cfi_insn_data *insn;
 
   if (frchain_now->frch_cfi_data == NULL)
@@ -952,8 +970,51 @@ dot_cfi_escape (int ignored ATTRIBUTE_UNUSED)
   tail = &head;
   do
     {
-      e = notes_alloc (sizeof (*e));
-      do_parse_cons_expression (&e->exp, 1);
+      struct cfi_escape_data *e = notes_alloc (sizeof (*e));
+      char *id, *ilp_save = input_line_pointer;
+      char c = get_symbol_name (&id);
+
+      if (strcmp (id, "sleb128") == 0)
+	e->type = CFI_ESC_sleb128;
+      else if (strcmp (id, "uleb128") == 0)
+	e->type = CFI_ESC_uleb128;
+      else if (strcmp (id, "data2") == 0)
+	e->type = 2;
+      else if (TC_ADDRESS_BYTES () >= 4 && strcmp (id, "data4") == 0)
+	e->type = 4;
+      else if (TC_ADDRESS_BYTES () >= 8 && strcmp (id, "data8") == 0)
+	e->type = 8;
+      else if (strcmp (id, "addr") == 0)
+	e->type = TC_ADDRESS_BYTES ();
+      else
+	e->type = CFI_ESC_byte;
+
+      c = restore_line_pointer (c);
+
+      if (e->type != CFI_ESC_byte)
+	{
+	  if (is_whitespace (c))
+	    c = *++input_line_pointer;
+	  if (c != '(')
+	    e->type = CFI_ESC_byte;
+	}
+      if (e->type == CFI_ESC_byte)
+	input_line_pointer = ilp_save;
+
+      if (e->type == CFI_ESC_sleb128 || e->type == CFI_ESC_uleb128)
+	{
+	  /* We're still at the opening parenthesis.  Leave it to expression()
+	     to parse it and find the matching closing one.  */
+	  expression (&e->exp);
+	  e->reloc = TC_PARSE_CONS_RETURN_NONE;
+	}
+      else
+	{
+	  /* We may still be at an opening parenthesis.  Leave it to expression()
+	     to parse it and find the matching closing one.  */
+	  e->reloc = do_parse_cons_expression (&e->exp, e->type);
+	}
+
       *tail = e;
       tail = &e->next;
     }
@@ -1285,7 +1346,7 @@ dot_cfi_startproc (int ignored ATTRIBUTE_UNUSED)
       return;
     }
 
-  cfi_new_fde (symbol_temp_new_now ());
+  cfi_new_fde (symbol_temp_new_now (), listing & LISTING_LISTING);
 
   SKIP_WHITESPACE ();
   if (is_name_beginner (*input_line_pointer) || *input_line_pointer == '"')
@@ -1425,7 +1486,10 @@ dot_cfi_fde_data (int ignored ATTRIBUTE_UNUSED)
 	  do
 	    {
 	      e = XNEW (struct cfi_escape_data);
-	      do_parse_cons_expression (&e->exp, 1);
+	      e->reloc = do_parse_cons_expression (&e->exp, 1);
+	      if (e->reloc != TC_PARSE_CONS_RETURN_NONE
+		  || e->exp.X_op != O_constant)
+		as_bad (_("only constants may be used with .cfi_fde_data"));
 	      *tail = e;
 	      tail = &e->next;
 	      num_ops++;
@@ -1630,12 +1694,11 @@ output_cfi_insn (struct cfi_insn_data *insn)
 	  }
 	else
 	  {
-	    expressionS exp;
-
-	    exp.X_op = O_subtract;
-	    exp.X_add_symbol = to;
-	    exp.X_op_symbol = from;
-	    exp.X_add_number = 0;
+	    expressionS exp = {
+	      .X_op = O_subtract,
+	      .X_add_symbol = to,
+	      .X_op_symbol = from,
+	    };
 
 	    /* The code in ehopt.c expects that one byte of the encoding
 	       is already allocated to the frag.  This comes from the way
@@ -1767,7 +1830,12 @@ output_cfi_insn (struct cfi_insn_data *insn)
       {
 	struct cfi_escape_data *e;
 	for (e = insn->u.esc; e ; e = e->next)
-	  emit_expr (&e->exp, 1);
+	  {
+	    if (e->type == CFI_ESC_sleb128 || e->type == CFI_ESC_uleb128)
+	      emit_leb128_expr (&e->exp, e->type == CFI_ESC_sleb128);
+	    else
+	      emit_expr_with_reloc (&e->exp, e->type, e->reloc);
+	  }
 	break;
       }
 
@@ -2061,7 +2129,19 @@ output_fde (struct fde_entry *fde, struct cie_entry *cie,
 
   for (; first; first = first->next)
     if (CUR_SEG (first) == CUR_SEG (fde))
-      output_cfi_insn (first);
+      {
+#ifndef NO_LISTING
+	if (eh_frame)
+	  listing_override_tail (first->listing_ctxt);
+#endif
+	output_cfi_insn (first);
+      }
+
+#ifndef NO_LISTING
+  /* Associate any padding with .cfi_endproc.  */
+  if (eh_frame)
+    listing_override_tail (fde->listing_end);
+#endif
 
   frag_align (align, DW_CFA_nop, 0);
   symbol_set_value_now (end_address);
@@ -2191,7 +2271,7 @@ select_cie_for_fde (struct fde_entry *fde, bool eh_frame,
   cie->personality = fde->personality;
   cie->first = fde->data;
 #ifdef tc_cie_entry_init_extra
-  tc_cie_entry_init_extra (cie, fde)
+  tc_cie_entry_init_extra (cie, fde);
 #endif
 
   for (i = cie->first; i ; i = i->next)
@@ -2308,6 +2388,12 @@ cfi_finish (void)
   segT cfi_seg, ccseg;
   struct fde_entry *fde;
   struct cfi_insn_data *first;
+#ifndef NO_LISTING
+  /* We may temporarily replace listing_tail, which otherwise isn't supposed
+     to be changing anymore.  Play safe and restore the original value
+     afterwards.  */
+  struct list_info_struct *saved_listing_tail = NULL;
+#endif
   int save_flag_traditional_format, seek_next_seg;
 
   if (all_fde_data == 0)
@@ -2389,6 +2475,16 @@ cfi_finish (void)
 			    "missing .cfi_endproc directive"));
 		  fde->end_address = fde->start_address;
 		}
+
+#ifndef NO_LISTING
+	      {
+		struct list_info_struct *listing_prev
+		  = listing_override_tail (fde->listing_ctxt);
+
+		if (!saved_listing_tail)
+		  saved_listing_tail = listing_prev;
+	      }
+#endif
 
 	      cie = select_cie_for_fde (fde, true, &first, 2);
 	      fde->eh_loc = symbol_temp_new_now ();
@@ -2499,11 +2595,17 @@ cfi_finish (void)
       flag_traditional_format = save_flag_traditional_format;
     }
 
-  /* Generate SFrame section if the user specifies:
-	- the command line option to gas, or
-	- .sframe in the .cfi_sections directive.  */
-  if (flag_gen_sframe || (all_cfi_sections & CFI_EMIT_sframe) != 0)
+  /* Generate SFrame section if the user:
+	- enables via the command line option, or
+	- default-enabled at configure-time via --enable-default-sframe, or
+	- specifies .sframe in the .cfi_sections directive and does not disable
+	  via the command line.  */
+  if (flag_gen_sframe == GEN_SFRAME_ENABLED
+      || flag_gen_sframe == GEN_SFRAME_CONFIG_ENABLED
+      || ((all_cfi_sections & CFI_EMIT_sframe) != 0
+	  && flag_gen_sframe != GEN_SFRAME_DISABLED))
     {
+#ifdef support_sframe_p
       if (support_sframe_p () && !SUPPORT_FRAME_LINKONCE)
 	{
 	  segT sframe_seg;
@@ -2513,10 +2615,14 @@ cfi_finish (void)
 				    (SEC_ALLOC | SEC_LOAD | SEC_DATA
 				     | DWARF2_EH_FRAME_READ_ONLY),
 				    alignment);
+	  elf_section_type (sframe_seg) = SHT_GNU_SFRAME;
 	  output_sframe (sframe_seg);
 	}
       else
-	as_bad (_(".sframe not supported for target"));
+#endif
+	/* Avoid erroring with DEFAULT_SFRAME for non-default options, like
+	   -32 on x86_64.  */
+	sframe_as_bad ("%s", _(".sframe not supported for target"));
     }
 
   if ((all_cfi_sections & CFI_EMIT_debug_frame) != 0)
@@ -2596,6 +2702,11 @@ cfi_finish (void)
       htab_delete (dwcfi_hash);
       dwcfi_hash = NULL;
     }
+
+#ifndef NO_LISTING
+  if (saved_listing_tail)
+    listing_tail = saved_listing_tail;
+#endif
 }
 
 #else /* TARGET_USE_CFIPOP */

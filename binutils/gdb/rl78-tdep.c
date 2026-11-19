@@ -1,6 +1,6 @@
 /* Target-dependent code for the Renesas RL78 for GDB, the GNU debugger.
 
-   Copyright (C) 2011-2024 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat, Inc.
 
@@ -207,7 +207,7 @@ enum
   RL78_NUM_PSEUDO_REGS = RL78_NUM_TOTAL_REGS - RL78_NUM_REGS
 };
 
-#define RL78_SP_ADDR 0xffff8 
+#define RL78_SP_ADDR 0xffff8
 
 /* Architecture specific data.  */
 
@@ -306,7 +306,7 @@ rl78_register_type (struct gdbarch *gdbarch, int reg_nr)
 	       && reg_nr <= RL78_BANK3_R7_REGNUM))
     return tdep->rl78_int8;
   else if (reg_nr == RL78_SP_REGNUM
-	   || (RL78_BANK0_RP0_PTR_REGNUM <= reg_nr 
+	   || (RL78_BANK0_RP0_PTR_REGNUM <= reg_nr
 	       && reg_nr <= RL78_BANK3_RP3_PTR_REGNUM))
     return tdep->rl78_data_pointer;
   else
@@ -585,12 +585,12 @@ rl78_g10_register_name (struct gdbarch *gdbarch, int regnr)
 
 /* Implement the "register_reggroup_p" gdbarch method.  */
 
-static int
+static bool
 rl78_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 			  const struct reggroup *group)
 {
   if (group == all_reggroup)
-    return 1;
+    return true;
 
   /* All other registers are saved and restored.  */
   if (group == save_reggroup || group == restore_reggroup)
@@ -601,9 +601,9 @@ rl78_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 	   && regnum != RL78_RAW_PC_REGNUM)
 	  || regnum == RL78_SP_REGNUM
 	  || regnum == RL78_PC_REGNUM)
-	return 1;
+	return true;
       else
-	return 0;
+	return false;
     }
 
   if ((RL78_BANK0_R0_REGNUM <= regnum && regnum <= RL78_BANK3_R7_REGNUM)
@@ -799,7 +799,7 @@ rl78_pseudo_register_write (struct gdbarch *gdbarch,
    0xff is used when a one byte breakpoint instruction is required.  */
 constexpr gdb_byte rl78_break_insn[] = { 0xff };
 
-typedef BP_MANIPULATION (rl78_break_insn) rl78_breakpoint;
+using rl78_breakpoint = BP_MANIPULATION (rl78_break_insn);
 
 /* Define a "handle" struct for fetching the next opcode.  */
 
@@ -951,7 +951,7 @@ rl78_analyze_prologue (CORE_ADDR start_pc,
 	       && opc.op[0].reg == RL78_Reg_SP
 	       && opc.op[1].type == RL78_Operand_Register)
 	{
-	  int rsrc = (bank * RL78_REGS_PER_BANK) 
+	  int rsrc = (bank * RL78_REGS_PER_BANK)
 	    + 2 * (opc.op[1].reg - RL78_Reg_AX);
 
 	  reg[RL78_SP_REGNUM] = pv_add_constant (reg[RL78_SP_REGNUM], -1);
@@ -1099,7 +1099,7 @@ rl78_analyze_frame_prologue (const frame_info_ptr &this_frame,
     {
       CORE_ADDR func_start, stop_addr;
 
-      *this_prologue_cache = FRAME_OBSTACK_ZALLOC (struct rl78_prologue);
+      *this_prologue_cache = frame_obstack_zalloc<rl78_prologue> ();
 
       func_start = get_frame_func (this_frame);
       stop_addr = get_frame_pc (this_frame);
@@ -1443,7 +1443,7 @@ rl78_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_register_sim_regno (gdbarch, rl78_register_sim_regno);
 
   /* Data types.  */
-  set_gdbarch_char_signed (gdbarch, 0);
+  set_gdbarch_char_signed (gdbarch, false);
   set_gdbarch_short_bit (gdbarch, 16);
   set_gdbarch_int_bit (gdbarch, 16);
   set_gdbarch_long_bit (gdbarch, 32);
@@ -1481,16 +1481,14 @@ rl78_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_return_value (gdbarch, rl78_return_value);
 
   /* Virtual tables.  */
-  set_gdbarch_vbit_in_delta (gdbarch, 1);
+  set_gdbarch_vbit_in_delta (gdbarch, true);
 
   return gdbarch;
 }
 
 /* Register the above initialization routine.  */
 
-void _initialize_rl78_tdep ();
-void
-_initialize_rl78_tdep ()
+INIT_GDB_FILE (rl78_tdep)
 {
   gdbarch_register (bfd_arch_rl78, rl78_gdbarch_init);
 }

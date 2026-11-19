@@ -1,5 +1,5 @@
 /* Interface GDB to the GNU Hurd.
-   Copyright (C) 1992-2024 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -50,7 +50,6 @@ extern "C"
 }
 
 
-#include <ctype.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <sys/ptrace.h>
@@ -585,7 +584,7 @@ gnu_nat_target::make_proc (struct inf *inf, mach_port_t port, int tid)
   return proc;
 }
 
-/* Frees PROC and any resources it uses, and returns the value of PROC's 
+/* Frees PROC and any resources it uses, and returns the value of PROC's
    next field.  */
 struct proc *
 gnu_nat_target::_proc_free (struct proc *proc)
@@ -859,7 +858,7 @@ gnu_nat_target::inf_set_traced (struct inf *inf, int on)
 {
   if (on == inf->traced)
     return;
-  
+
   if (inf->task && !inf->task->dead)
     /* Make it take effect immediately.  */
     {
@@ -2147,7 +2146,7 @@ gnu_nat_target::create_inferior (const char *exec_file,
 
   inf->pending_execs = 0;
   /* Get rid of the old shell threads.  */
-  prune_threads ();
+  prune_threads (this);
 
   inf_validate_procinfo (inf);
   inf_update_signal_thread (inf);
@@ -2566,9 +2565,8 @@ gnu_nat_target::xfer_partial (enum target_object object,
 
 /* Call FUNC on each memory region in the task.  */
 
-int
-gnu_nat_target::find_memory_regions (find_memory_region_ftype func,
-				     void *data)
+bool
+gnu_nat_target::find_memory_regions (find_memory_region_ftype func)
 {
   kern_return_t err;
   task_t task;
@@ -2576,10 +2574,10 @@ gnu_nat_target::find_memory_regions (find_memory_region_ftype func,
   vm_prot_t last_protection;
 
   if (gnu_current_inf == 0 || gnu_current_inf->task == 0)
-    return 0;
+    return true;
   task = gnu_current_inf->task->port;
   if (task == MACH_PORT_NULL)
-    return 0;
+    return true;
 
   region_address = last_region_address = last_region_end = VM_MIN_ADDRESS;
   last_protection = VM_PROT_NONE;
@@ -2607,7 +2605,7 @@ gnu_nat_target::find_memory_regions (find_memory_region_ftype func,
       if (err != KERN_SUCCESS)
 	{
 	  warning (_("vm_region failed: %s"), mach_error_string (err));
-	  return -1;
+	  return false;
 	}
 
       if (protection == last_protection && region_address == last_region_end)
@@ -2619,14 +2617,14 @@ gnu_nat_target::find_memory_regions (find_memory_region_ftype func,
 	  /* This region is distinct from the last one we saw, so report
 	     that previous one.  */
 	  if (last_protection != VM_PROT_NONE)
-	    (*func) (last_region_address,
+	    func (last_region_address,
 		     last_region_end - last_region_address,
 		     last_protection & VM_PROT_READ,
 		     last_protection & VM_PROT_WRITE,
 		     last_protection & VM_PROT_EXECUTE,
-		     1, /* MODIFIED is unknown, pass it as true.  */
+		     true, /* MODIFIED is unknown, pass it as true.  */
 		     false, /* No memory tags in the object file.  */
-		     data);
+		     false /* Not known to be all zeroes.  */);
 	  last_region_address = region_address;
 	  last_region_end = region_address += region_length;
 	  last_protection = protection;
@@ -2635,15 +2633,15 @@ gnu_nat_target::find_memory_regions (find_memory_region_ftype func,
 
   /* Report the final region.  */
   if (last_region_end > last_region_address && last_protection != VM_PROT_NONE)
-    (*func) (last_region_address, last_region_end - last_region_address,
-	     last_protection & VM_PROT_READ,
-	     last_protection & VM_PROT_WRITE,
-	     last_protection & VM_PROT_EXECUTE,
-	     1, /* MODIFIED is unknown, pass it as true.  */
-	     false, /* No memory tags in the object file.  */
-	     data);
+    func (last_region_address, last_region_end - last_region_address,
+	  last_protection & VM_PROT_READ,
+	  last_protection & VM_PROT_WRITE,
+	  last_protection & VM_PROT_EXECUTE,
+	  true, /* MODIFIED is unknown, pass it as true.  */
+	  false, /* No memory tags in the object file.  */
+	  false /* Not known to be all zeroes.  */);
 
-  return 0;
+  return true;
 }
 
 
@@ -2709,9 +2707,9 @@ static int
 _parse_bool_arg (const char *args, const char *t_val, const char *f_val,
 		 const char *cmd_prefix)
 {
-  if (!args || strcmp (args, t_val) == 0)
+  if (!args || streq (args, t_val))
     return 1;
-  else if (strcmp (args, f_val) == 0)
+  else if (streq (args, f_val))
     return 0;
   else
     error (_("Illegal argument for \"%s\" command, "
@@ -2926,11 +2924,11 @@ set_sig_thread_cmd (const char *args, int from_tty)
 {
   struct inf *inf = cur_inf ();
 
-  if (!args || (!isdigit (*args) && strcmp (args, "none") != 0))
+  if (!args || (!c_isdigit (*args) && !streq (args, "none")))
     error (_("Illegal argument to \"set signal-thread\" command.\n"
 	     "Should be a thread ID, or \"none\"."));
 
-  if (strcmp (args, "none") == 0)
+  if (streq (args, "none"))
     inf->signal_thread = 0;
   else
     {
@@ -3135,14 +3133,14 @@ The default value is \"off\"."),
   add_cmd ("pause", no_class, show_thread_default_pause_cmd, _("\
 Show whether new threads are suspended while gdb has control."),
 	   &show_thread_default_cmd_list);
-  
+
   add_cmd ("run", class_run, set_thread_default_run_cmd, _("\
 Set whether new threads are allowed to run (once gdb has noticed them)."),
 	   &set_thread_default_cmd_list);
   add_cmd ("run", no_class, show_thread_default_run_cmd, _("\
 Show whether new threads are allowed to run (once gdb has noticed them)."),
 	   &show_thread_default_cmd_list);
-  
+
   add_cmd ("detach-suspend-count", class_run, set_thread_default_detach_sc_cmd,
 	   _("Set the default detach-suspend-count value for new threads."),
 	   &set_thread_default_cmd_list);
@@ -3434,9 +3432,7 @@ to the thread's initial suspend-count when gdb notices the threads."),
 	   &thread_cmd_list);
 }
 
-void _initialize_gnu_nat ();
-void
-_initialize_gnu_nat ()
+INIT_GDB_FILE (gnu_nat)
 {
   proc_server = getproc ();
 

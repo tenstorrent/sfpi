@@ -1,6 +1,6 @@
 /* Target-dependent code for GNU/Linux i386.
 
-   Copyright (C) 2000-2024 Free Software Foundation, Inc.
+   Copyright (C) 2000-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,6 +30,7 @@
 #include "i386-tdep.h"
 #include "i386-linux-tdep.h"
 #include "linux-tdep.h"
+#include "solib-svr4-linux.h"
 #include "utils.h"
 #include "glibc-tdep.h"
 #include "solib-svr4.h"
@@ -52,13 +53,13 @@
 #include "arch/i386.h"
 #include "target-descriptions.h"
 
-/* Return non-zero, when the register is in the corresponding register
+/* Return true when the register is in the corresponding register
    group.  Put the LINUX_ORIG_EAX register in the system group.  */
-static int
+static bool
 i386_linux_register_reggroup_p (struct gdbarch *gdbarch, int regnum,
 				const struct reggroup *group)
 {
-  if (regnum == I386_LINUX_ORIG_EAX_REGNUM)
+  if (regnum == I386_LINUX_ORIG_EAX_REGNUM || i386_is_tls_regnum_p (regnum))
     return (group == system_reggroup
 	    || group == save_reggroup
 	    || group == restore_reggroup);
@@ -245,14 +246,13 @@ i386_linux_sigtramp_p (const frame_info_ptr &this_frame)
     return (i386_linux_sigtramp_start (this_frame) != 0
 	    || i386_linux_rt_sigtramp_start (this_frame) != 0);
 
-  return (strcmp ("__restore", name) == 0
-	  || strcmp ("__restore_rt", name) == 0);
+  return streq ("__restore", name) || streq ("__restore_rt", name);
 }
 
-/* Return one if the PC of THIS_FRAME is in a signal trampoline which
+/* Return true if the PC of THIS_FRAME is in a signal trampoline which
    may have DWARF-2 CFI.  */
 
-static int
+static bool
 i386_linux_dwarf_signal_frame_p (struct gdbarch *gdbarch,
 				 const frame_info_ptr &this_frame)
 {
@@ -263,11 +263,9 @@ i386_linux_dwarf_signal_frame_p (struct gdbarch *gdbarch,
 
   /* If a vsyscall DSO is in use, the signal trampolines may have these
      names.  */
-  if (name && (strcmp (name, "__kernel_sigreturn") == 0
-	       || strcmp (name, "__kernel_rt_sigreturn") == 0))
-    return 1;
-
-  return 0;
+  return (name != nullptr
+	  && (streq (name, "__kernel_sigreturn")
+	      || streq (name, "__kernel_rt_sigreturn")));
 }
 
 /* Offset to struct sigcontext in ucontext, from <asm/ucontext.h>.  */
@@ -370,6 +368,16 @@ i386_all_but_ip_registers_record (struct regcache *regcache)
   return 0;
 }
 
+enum i386_syscall
+{
+#define SYSCALL(NUMBER,NAME) \
+  i386_sys_ ## NAME = NUMBER,
+
+#include "gdb/i386-syscalls.def"
+
+#undef SYSCALL
+};
+
 /* i386_canonicalize_syscall maps from the native i386 Linux set
    of syscall ids into a canonical set of syscall ids used by
    process record (a mostly trivial mapping, since the canonical
@@ -378,12 +386,486 @@ i386_all_but_ip_registers_record (struct regcache *regcache)
 static enum gdb_syscall
 i386_canonicalize_syscall (int syscall)
 {
-  enum { i386_syscall_max = 499 };
+  switch ((enum i386_syscall) syscall)
+    {
+#define SYSCALL_MAP(SYSCALL)			\
+      case i386_sys_ ## SYSCALL:		\
+	return gdb_sys_ ## SYSCALL
 
-  if (syscall <= i386_syscall_max)
-    return (enum gdb_syscall) syscall;
-  else
-    return gdb_sys_no_syscall;
+#define SYSCALL_MAP_RENAME(SYSCALL,GDB_SYSCALL)	\
+      case i386_sys_##SYSCALL:			\
+	return GDB_SYSCALL;
+
+#define UNSUPPORTED_SYSCALL_MAP(SYSCALL)	\
+      case i386_sys_ ## SYSCALL:		\
+	return gdb_sys_no_syscall;
+
+      SYSCALL_MAP (restart_syscall);
+      SYSCALL_MAP (exit);
+      SYSCALL_MAP (fork);
+      SYSCALL_MAP (read);
+      SYSCALL_MAP (write);
+      SYSCALL_MAP (open);
+      SYSCALL_MAP (close);
+      SYSCALL_MAP (waitpid);
+      SYSCALL_MAP (creat);
+      SYSCALL_MAP (link);
+      SYSCALL_MAP (unlink);
+      SYSCALL_MAP (execve);
+      SYSCALL_MAP (chdir);
+      SYSCALL_MAP (time);
+      SYSCALL_MAP (mknod);
+      SYSCALL_MAP (chmod);
+      SYSCALL_MAP_RENAME (lchown, gdb_sys_lchown16);
+      SYSCALL_MAP_RENAME (break, gdb_sys_ni_syscall17);
+      SYSCALL_MAP_RENAME (oldstat, gdb_sys_stat);
+      SYSCALL_MAP (lseek);
+      SYSCALL_MAP (getpid);
+      SYSCALL_MAP (mount);
+      SYSCALL_MAP_RENAME (umount, gdb_sys_oldumount);
+      SYSCALL_MAP_RENAME (setuid, gdb_sys_setuid16);
+      SYSCALL_MAP_RENAME (getuid, gdb_sys_getuid16);
+      SYSCALL_MAP (stime);
+      SYSCALL_MAP (ptrace);
+      SYSCALL_MAP (alarm);
+      SYSCALL_MAP_RENAME (oldfstat, gdb_sys_fstat);
+      SYSCALL_MAP (pause);
+      SYSCALL_MAP (utime);
+      SYSCALL_MAP_RENAME (stty, gdb_sys_ni_syscall31);
+      SYSCALL_MAP_RENAME (gtty, gdb_sys_ni_syscall32);
+      SYSCALL_MAP (access);
+      SYSCALL_MAP (nice);
+      SYSCALL_MAP_RENAME (ftime, gdb_sys_ni_syscall35);
+      SYSCALL_MAP (sync);
+      SYSCALL_MAP (kill);
+      SYSCALL_MAP (rename);
+      SYSCALL_MAP (mkdir);
+      SYSCALL_MAP (rmdir);
+      SYSCALL_MAP (dup);
+      SYSCALL_MAP (pipe);
+      SYSCALL_MAP (times);
+      SYSCALL_MAP_RENAME (prof, gdb_sys_ni_syscall44);
+      SYSCALL_MAP (brk);
+      SYSCALL_MAP_RENAME (setgid, gdb_sys_setgid16);
+      SYSCALL_MAP_RENAME (getgid, gdb_sys_getgid16);
+      SYSCALL_MAP (signal);
+      SYSCALL_MAP_RENAME (geteuid, gdb_sys_geteuid16);
+      SYSCALL_MAP_RENAME (getegid, gdb_sys_getegid16);
+      SYSCALL_MAP (acct);
+      SYSCALL_MAP_RENAME (umount2, gdb_sys_umount);
+      SYSCALL_MAP_RENAME (lock, gdb_sys_ni_syscall53);
+      SYSCALL_MAP (ioctl);
+      SYSCALL_MAP (fcntl);
+      SYSCALL_MAP_RENAME (mpx, gdb_sys_ni_syscall56);
+      SYSCALL_MAP (setpgid);
+      SYSCALL_MAP_RENAME (ulimit, gdb_sys_ni_syscall58);
+      SYSCALL_MAP_RENAME (oldolduname, gdb_sys_olduname);
+      SYSCALL_MAP (umask);
+      SYSCALL_MAP (chroot);
+      SYSCALL_MAP (ustat);
+      SYSCALL_MAP (dup2);
+      SYSCALL_MAP (getppid);
+      SYSCALL_MAP (getpgrp);
+      SYSCALL_MAP (setsid);
+      SYSCALL_MAP (sigaction);
+      SYSCALL_MAP (sgetmask);
+      SYSCALL_MAP (ssetmask);
+      SYSCALL_MAP_RENAME (setreuid, gdb_sys_setreuid16);
+      SYSCALL_MAP_RENAME (setregid, gdb_sys_setregid16);
+      SYSCALL_MAP (sigsuspend);
+      SYSCALL_MAP (sigpending);
+      SYSCALL_MAP (sethostname);
+      SYSCALL_MAP (setrlimit);
+      SYSCALL_MAP_RENAME (getrlimit, gdb_sys_old_getrlimit);
+      SYSCALL_MAP (getrusage);
+      SYSCALL_MAP (gettimeofday);
+      SYSCALL_MAP (settimeofday);
+      SYSCALL_MAP_RENAME (getgroups, gdb_sys_getgroups16);
+      SYSCALL_MAP_RENAME (setgroups, gdb_sys_setgroups16);
+      SYSCALL_MAP_RENAME (select, gdb_sys_old_select);
+      SYSCALL_MAP (symlink);
+      SYSCALL_MAP_RENAME (oldlstat, gdb_sys_lstat);
+      SYSCALL_MAP (readlink);
+      SYSCALL_MAP (uselib);
+      SYSCALL_MAP (swapon);
+      SYSCALL_MAP (reboot);
+      SYSCALL_MAP_RENAME (readdir, gdb_sys_old_readdir);
+      SYSCALL_MAP_RENAME (mmap, gdb_sys_old_mmap);
+      SYSCALL_MAP (munmap);
+      SYSCALL_MAP (truncate);
+      SYSCALL_MAP (ftruncate);
+      SYSCALL_MAP (fchmod);
+      SYSCALL_MAP_RENAME (fchown, gdb_sys_fchown16);
+      SYSCALL_MAP (getpriority);
+      SYSCALL_MAP (setpriority);
+      SYSCALL_MAP_RENAME (profil, gdb_sys_ni_syscall98);
+      SYSCALL_MAP (statfs);
+      SYSCALL_MAP (fstatfs);
+      SYSCALL_MAP (ioperm);
+      SYSCALL_MAP (socketcall);
+      SYSCALL_MAP (syslog);
+      SYSCALL_MAP (setitimer);
+      SYSCALL_MAP (getitimer);
+      SYSCALL_MAP_RENAME (stat, gdb_sys_newstat);
+      SYSCALL_MAP_RENAME (lstat, gdb_sys_newlstat);
+      SYSCALL_MAP_RENAME (fstat, gdb_sys_newfstat);
+      SYSCALL_MAP_RENAME (olduname, gdb_sys_uname);
+      SYSCALL_MAP (iopl);
+      SYSCALL_MAP (vhangup);
+      SYSCALL_MAP_RENAME (idle, gdb_sys_ni_syscall112);
+      SYSCALL_MAP (vm86old);
+      SYSCALL_MAP (wait4);
+      SYSCALL_MAP (swapoff);
+      SYSCALL_MAP (sysinfo);
+      SYSCALL_MAP (ipc);
+      SYSCALL_MAP (fsync);
+      SYSCALL_MAP (sigreturn);
+      SYSCALL_MAP (clone);
+      SYSCALL_MAP (setdomainname);
+      SYSCALL_MAP_RENAME (uname, gdb_sys_newuname);
+      SYSCALL_MAP (modify_ldt);
+      SYSCALL_MAP (adjtimex);
+      SYSCALL_MAP (mprotect);
+      SYSCALL_MAP (sigprocmask);
+      SYSCALL_MAP_RENAME (create_module, gdb_sys_ni_syscall127);
+      SYSCALL_MAP (init_module);
+      SYSCALL_MAP (delete_module);
+      SYSCALL_MAP_RENAME (get_kernel_syms, gdb_sys_ni_syscall130);
+      SYSCALL_MAP (quotactl);
+      SYSCALL_MAP (getpgid);
+      SYSCALL_MAP (fchdir);
+      SYSCALL_MAP (bdflush);
+      SYSCALL_MAP (sysfs);
+      SYSCALL_MAP (personality);
+      SYSCALL_MAP_RENAME (afs_syscall, gdb_sys_ni_syscall137);
+      SYSCALL_MAP_RENAME (setfsuid, gdb_sys_setfsuid16);
+      SYSCALL_MAP_RENAME (setfsgid, gdb_sys_setfsgid16);
+      SYSCALL_MAP_RENAME (_llseek, gdb_sys_llseek);
+      SYSCALL_MAP (getdents);
+      SYSCALL_MAP_RENAME (_newselect, gdb_sys_select);
+      SYSCALL_MAP (flock);
+      SYSCALL_MAP (msync);
+      SYSCALL_MAP (readv);
+      SYSCALL_MAP (writev);
+      SYSCALL_MAP (getsid);
+      SYSCALL_MAP (fdatasync);
+      SYSCALL_MAP_RENAME (_sysctl, gdb_sys_sysctl);
+      SYSCALL_MAP (mlock);
+      SYSCALL_MAP (munlock);
+      SYSCALL_MAP (mlockall);
+      SYSCALL_MAP (munlockall);
+      SYSCALL_MAP (sched_setparam);
+      SYSCALL_MAP (sched_getparam);
+      SYSCALL_MAP (sched_setscheduler);
+      SYSCALL_MAP (sched_getscheduler);
+      SYSCALL_MAP (sched_yield);
+      SYSCALL_MAP (sched_get_priority_max);
+      SYSCALL_MAP (sched_get_priority_min);
+      SYSCALL_MAP (sched_rr_get_interval);
+      SYSCALL_MAP (nanosleep);
+      SYSCALL_MAP (mremap);
+      SYSCALL_MAP_RENAME (setresuid, gdb_sys_setresuid16);
+      SYSCALL_MAP_RENAME (getresuid, gdb_sys_getresuid16);
+      SYSCALL_MAP (vm86);
+      SYSCALL_MAP_RENAME (query_module, gdb_sys_ni_syscall167);
+      SYSCALL_MAP (poll);
+      SYSCALL_MAP (nfsservctl);
+      SYSCALL_MAP_RENAME (setresgid, gdb_sys_setresgid16);
+      SYSCALL_MAP_RENAME (getresgid, gdb_sys_getresgid16);
+      SYSCALL_MAP (prctl);
+      SYSCALL_MAP (rt_sigreturn);
+      SYSCALL_MAP (rt_sigaction);
+      SYSCALL_MAP (rt_sigprocmask);
+      SYSCALL_MAP (rt_sigpending);
+      SYSCALL_MAP (rt_sigtimedwait);
+      SYSCALL_MAP (rt_sigqueueinfo);
+      SYSCALL_MAP (rt_sigsuspend);
+      SYSCALL_MAP (pread64);
+      SYSCALL_MAP (pwrite64);
+      SYSCALL_MAP_RENAME (chown, gdb_sys_chown16);
+      SYSCALL_MAP (getcwd);
+      SYSCALL_MAP (capget);
+      SYSCALL_MAP (capset);
+      SYSCALL_MAP (sigaltstack);
+      SYSCALL_MAP (sendfile);
+      SYSCALL_MAP_RENAME (getpmsg, gdb_sys_ni_syscall188);
+      SYSCALL_MAP_RENAME (putpmsg, gdb_sys_ni_syscall189);
+      SYSCALL_MAP (vfork);
+      SYSCALL_MAP_RENAME (ugetrlimit, gdb_sys_getrlimit);
+      SYSCALL_MAP (mmap2);
+      SYSCALL_MAP (truncate64);
+      SYSCALL_MAP (ftruncate64);
+      SYSCALL_MAP (stat64);
+      SYSCALL_MAP (lstat64);
+      SYSCALL_MAP (fstat64);
+
+      SYSCALL_MAP_RENAME (lchown32, gdb_sys_lchown);
+      SYSCALL_MAP_RENAME (getuid32, gdb_sys_getuid);
+      SYSCALL_MAP_RENAME (getgid32, gdb_sys_getgid);
+      SYSCALL_MAP_RENAME (geteuid32, gdb_sys_geteuid);
+      SYSCALL_MAP_RENAME (getegid32, gdb_sys_getegid);
+      SYSCALL_MAP_RENAME (setreuid32, gdb_sys_setreuid);
+      SYSCALL_MAP_RENAME (setregid32, gdb_sys_setregid);
+      SYSCALL_MAP_RENAME (getgroups32, gdb_sys_getgroups);
+      SYSCALL_MAP_RENAME (setgroups32, gdb_sys_setgroups);
+      SYSCALL_MAP_RENAME (fchown32, gdb_sys_fchown);
+      SYSCALL_MAP_RENAME (setresuid32, gdb_sys_setresuid);
+      SYSCALL_MAP_RENAME (getresuid32, gdb_sys_getresuid);
+      SYSCALL_MAP_RENAME (setresgid32, gdb_sys_setresgid);
+      SYSCALL_MAP_RENAME (getresgid32, gdb_sys_getresgid);
+      SYSCALL_MAP_RENAME (chown32, gdb_sys_chown);
+      SYSCALL_MAP_RENAME (setuid32, gdb_sys_setuid);
+      SYSCALL_MAP_RENAME (setgid32, gdb_sys_setgid);
+      SYSCALL_MAP_RENAME (setfsuid32, gdb_sys_setfsuid);
+      SYSCALL_MAP_RENAME (setfsgid32, gdb_sys_setfsgid);
+
+      SYSCALL_MAP (pivot_root);
+      SYSCALL_MAP (mincore);
+      SYSCALL_MAP (madvise);
+      SYSCALL_MAP (getdents64);
+      SYSCALL_MAP (fcntl64);
+      SYSCALL_MAP (gettid);
+      SYSCALL_MAP (readahead);
+      SYSCALL_MAP (setxattr);
+      SYSCALL_MAP (lsetxattr);
+      SYSCALL_MAP (fsetxattr);
+      SYSCALL_MAP (getxattr);
+      SYSCALL_MAP (lgetxattr);
+      SYSCALL_MAP (fgetxattr);
+      SYSCALL_MAP (listxattr);
+      SYSCALL_MAP (llistxattr);
+      SYSCALL_MAP (flistxattr);
+      SYSCALL_MAP (removexattr);
+      SYSCALL_MAP (lremovexattr);
+      SYSCALL_MAP (fremovexattr);
+      SYSCALL_MAP (tkill);
+      SYSCALL_MAP (sendfile64);
+      SYSCALL_MAP (futex);
+      SYSCALL_MAP (sched_setaffinity);
+      SYSCALL_MAP (sched_getaffinity);
+      SYSCALL_MAP (set_thread_area);
+      SYSCALL_MAP (get_thread_area);
+      SYSCALL_MAP (io_setup);
+      SYSCALL_MAP (io_destroy);
+      SYSCALL_MAP (io_getevents);
+      SYSCALL_MAP (io_submit);
+      SYSCALL_MAP (io_cancel);
+      SYSCALL_MAP (fadvise64);
+      SYSCALL_MAP (exit_group);
+      SYSCALL_MAP (lookup_dcookie);
+      SYSCALL_MAP (epoll_create);
+      SYSCALL_MAP (epoll_ctl);
+      SYSCALL_MAP (epoll_wait);
+      SYSCALL_MAP (remap_file_pages);
+      SYSCALL_MAP (set_tid_address);
+      SYSCALL_MAP (timer_create);
+      SYSCALL_MAP (timer_settime);
+      SYSCALL_MAP (timer_gettime);
+      SYSCALL_MAP (timer_getoverrun);
+      SYSCALL_MAP (timer_delete);
+      SYSCALL_MAP (clock_settime);
+      SYSCALL_MAP (clock_gettime);
+      SYSCALL_MAP (clock_getres);
+      SYSCALL_MAP (clock_nanosleep);
+      SYSCALL_MAP (statfs64);
+      SYSCALL_MAP (fstatfs64);
+      SYSCALL_MAP (tgkill);
+      SYSCALL_MAP (utimes);
+      SYSCALL_MAP (fadvise64_64);
+      SYSCALL_MAP_RENAME (vserver, gdb_sys_ni_syscall273);
+      SYSCALL_MAP (mbind);
+      SYSCALL_MAP (get_mempolicy);
+      SYSCALL_MAP (set_mempolicy);
+      SYSCALL_MAP (mq_open);
+      SYSCALL_MAP (mq_unlink);
+      SYSCALL_MAP (mq_timedsend);
+      SYSCALL_MAP (mq_timedreceive);
+      SYSCALL_MAP (mq_notify);
+      SYSCALL_MAP (mq_getsetattr);
+      SYSCALL_MAP (kexec_load);
+      SYSCALL_MAP (waitid);
+      SYSCALL_MAP (add_key);
+      SYSCALL_MAP (request_key);
+      SYSCALL_MAP (keyctl);
+      SYSCALL_MAP (ioprio_set);
+      SYSCALL_MAP (ioprio_get);
+      SYSCALL_MAP (inotify_init);
+      SYSCALL_MAP (inotify_add_watch);
+      SYSCALL_MAP (inotify_rm_watch);
+      SYSCALL_MAP (migrate_pages);
+      SYSCALL_MAP (openat);
+      SYSCALL_MAP (mkdirat);
+      SYSCALL_MAP (mknodat);
+      SYSCALL_MAP (fchownat);
+      SYSCALL_MAP (futimesat);
+      SYSCALL_MAP (fstatat64);
+      SYSCALL_MAP (unlinkat);
+      SYSCALL_MAP (renameat);
+      SYSCALL_MAP (linkat);
+      SYSCALL_MAP (symlinkat);
+      SYSCALL_MAP (readlinkat);
+      SYSCALL_MAP (fchmodat);
+      SYSCALL_MAP (faccessat);
+      SYSCALL_MAP (pselect6);
+      SYSCALL_MAP (ppoll);
+      SYSCALL_MAP (unshare);
+      SYSCALL_MAP (set_robust_list);
+      SYSCALL_MAP (get_robust_list);
+      SYSCALL_MAP (splice);
+      SYSCALL_MAP (sync_file_range);
+      SYSCALL_MAP (tee);
+      SYSCALL_MAP (vmsplice);
+      SYSCALL_MAP (move_pages);
+      SYSCALL_MAP (getcpu);
+      SYSCALL_MAP (epoll_pwait);
+      UNSUPPORTED_SYSCALL_MAP (utimensat);
+      UNSUPPORTED_SYSCALL_MAP (signalfd);
+      UNSUPPORTED_SYSCALL_MAP (timerfd_create);
+      UNSUPPORTED_SYSCALL_MAP (eventfd);
+      SYSCALL_MAP (fallocate);
+      UNSUPPORTED_SYSCALL_MAP (timerfd_settime);
+      UNSUPPORTED_SYSCALL_MAP (timerfd_gettime);
+      UNSUPPORTED_SYSCALL_MAP (signalfd4);
+      SYSCALL_MAP (eventfd2);
+      SYSCALL_MAP (epoll_create1);
+      SYSCALL_MAP (dup3);
+      SYSCALL_MAP (pipe2);
+      SYSCALL_MAP (inotify_init1);
+      UNSUPPORTED_SYSCALL_MAP (preadv);
+      UNSUPPORTED_SYSCALL_MAP (pwritev);
+      UNSUPPORTED_SYSCALL_MAP (rt_tgsigqueueinfo);
+      UNSUPPORTED_SYSCALL_MAP (perf_event_open);
+      UNSUPPORTED_SYSCALL_MAP (recvmmsg);
+      UNSUPPORTED_SYSCALL_MAP (fanotify_init);
+      UNSUPPORTED_SYSCALL_MAP (fanotify_mark);
+      UNSUPPORTED_SYSCALL_MAP (prlimit64);
+      UNSUPPORTED_SYSCALL_MAP (name_to_handle_at);
+      UNSUPPORTED_SYSCALL_MAP (open_by_handle_at);
+      UNSUPPORTED_SYSCALL_MAP (clock_adjtime);
+      UNSUPPORTED_SYSCALL_MAP (syncfs);
+      UNSUPPORTED_SYSCALL_MAP (sendmmsg);
+      UNSUPPORTED_SYSCALL_MAP (setns);
+      UNSUPPORTED_SYSCALL_MAP (process_vm_readv);
+      UNSUPPORTED_SYSCALL_MAP (process_vm_writev);
+      UNSUPPORTED_SYSCALL_MAP (kcmp);
+      UNSUPPORTED_SYSCALL_MAP (finit_module);
+      UNSUPPORTED_SYSCALL_MAP (sched_setattr);
+      UNSUPPORTED_SYSCALL_MAP (sched_getattr);
+      UNSUPPORTED_SYSCALL_MAP (renameat2);
+      UNSUPPORTED_SYSCALL_MAP (seccomp);
+      SYSCALL_MAP (getrandom);
+      UNSUPPORTED_SYSCALL_MAP (memfd_create);
+      UNSUPPORTED_SYSCALL_MAP (bpf);
+      UNSUPPORTED_SYSCALL_MAP (execveat);
+      SYSCALL_MAP (socket);
+      SYSCALL_MAP (socketpair);
+      SYSCALL_MAP (bind);
+      SYSCALL_MAP (connect);
+      SYSCALL_MAP (listen);
+      SYSCALL_MAP (accept4);
+      SYSCALL_MAP (getsockopt);
+      SYSCALL_MAP (setsockopt);
+      SYSCALL_MAP (getsockname);
+      SYSCALL_MAP (getpeername);
+      SYSCALL_MAP (sendto);
+      SYSCALL_MAP (sendmsg);
+      SYSCALL_MAP (recvfrom);
+      SYSCALL_MAP (recvmsg);
+      SYSCALL_MAP (shutdown);
+      UNSUPPORTED_SYSCALL_MAP (userfaultfd);
+      UNSUPPORTED_SYSCALL_MAP (membarrier);
+      UNSUPPORTED_SYSCALL_MAP (mlock2);
+      UNSUPPORTED_SYSCALL_MAP (copy_file_range);
+      UNSUPPORTED_SYSCALL_MAP (preadv2);
+      UNSUPPORTED_SYSCALL_MAP (pwritev2);
+      UNSUPPORTED_SYSCALL_MAP (pkey_mprotect);
+      UNSUPPORTED_SYSCALL_MAP (pkey_alloc);
+      UNSUPPORTED_SYSCALL_MAP (pkey_free);
+      SYSCALL_MAP (statx);
+      UNSUPPORTED_SYSCALL_MAP (arch_prctl);
+      UNSUPPORTED_SYSCALL_MAP (io_pgetevents);
+      UNSUPPORTED_SYSCALL_MAP (rseq);
+      SYSCALL_MAP (semget);
+      SYSCALL_MAP (semctl);
+      SYSCALL_MAP (shmget);
+      SYSCALL_MAP (shmctl);
+      SYSCALL_MAP (shmat);
+      SYSCALL_MAP (shmdt);
+      SYSCALL_MAP (msgget);
+      SYSCALL_MAP (msgsnd);
+      SYSCALL_MAP (msgrcv);
+      SYSCALL_MAP (msgctl);
+      SYSCALL_MAP (clock_gettime64);
+      UNSUPPORTED_SYSCALL_MAP (clock_settime64);
+      UNSUPPORTED_SYSCALL_MAP (clock_adjtime64);
+      UNSUPPORTED_SYSCALL_MAP (clock_getres_time64);
+      UNSUPPORTED_SYSCALL_MAP (clock_nanosleep_time64);
+      UNSUPPORTED_SYSCALL_MAP (timer_gettime64);
+      UNSUPPORTED_SYSCALL_MAP (timer_settime64);
+      UNSUPPORTED_SYSCALL_MAP (timerfd_gettime64);
+      UNSUPPORTED_SYSCALL_MAP (timerfd_settime64);
+      UNSUPPORTED_SYSCALL_MAP (utimensat_time64);
+      UNSUPPORTED_SYSCALL_MAP (pselect6_time64);
+      UNSUPPORTED_SYSCALL_MAP (ppoll_time64);
+      UNSUPPORTED_SYSCALL_MAP (io_pgetevents_time64);
+      UNSUPPORTED_SYSCALL_MAP (recvmmsg_time64);
+      UNSUPPORTED_SYSCALL_MAP (mq_timedsend_time64);
+      UNSUPPORTED_SYSCALL_MAP (mq_timedreceive_time64);
+      SYSCALL_MAP_RENAME (semtimedop_time64, gdb_sys_semtimedop);
+      UNSUPPORTED_SYSCALL_MAP (rt_sigtimedwait_time64);
+      UNSUPPORTED_SYSCALL_MAP (futex_time64);
+      UNSUPPORTED_SYSCALL_MAP (sched_rr_get_interval_time64);
+      UNSUPPORTED_SYSCALL_MAP (pidfd_send_signal);
+      UNSUPPORTED_SYSCALL_MAP (io_uring_setup);
+      UNSUPPORTED_SYSCALL_MAP (io_uring_enter);
+      UNSUPPORTED_SYSCALL_MAP (io_uring_register);
+      UNSUPPORTED_SYSCALL_MAP (open_tree);
+      UNSUPPORTED_SYSCALL_MAP (move_mount);
+      UNSUPPORTED_SYSCALL_MAP (fsopen);
+      UNSUPPORTED_SYSCALL_MAP (fsconfig);
+      UNSUPPORTED_SYSCALL_MAP (fsmount);
+      UNSUPPORTED_SYSCALL_MAP (fspick);
+      UNSUPPORTED_SYSCALL_MAP (pidfd_open);
+      UNSUPPORTED_SYSCALL_MAP (clone3);
+      UNSUPPORTED_SYSCALL_MAP (close_range);
+      UNSUPPORTED_SYSCALL_MAP (openat2);
+      UNSUPPORTED_SYSCALL_MAP (pidfd_getfd);
+      UNSUPPORTED_SYSCALL_MAP (faccessat2);
+      UNSUPPORTED_SYSCALL_MAP (process_madvise);
+      UNSUPPORTED_SYSCALL_MAP (epoll_pwait2);
+      UNSUPPORTED_SYSCALL_MAP (mount_setattr);
+      UNSUPPORTED_SYSCALL_MAP (quotactl_fd);
+      UNSUPPORTED_SYSCALL_MAP (landlock_create_ruleset);
+      UNSUPPORTED_SYSCALL_MAP (landlock_add_rule);
+      UNSUPPORTED_SYSCALL_MAP (landlock_restrict_self);
+      UNSUPPORTED_SYSCALL_MAP (memfd_secret);
+      UNSUPPORTED_SYSCALL_MAP (process_mrelease);
+      UNSUPPORTED_SYSCALL_MAP (futex_waitv);
+      UNSUPPORTED_SYSCALL_MAP (set_mempolicy_home_node);
+      UNSUPPORTED_SYSCALL_MAP (cachestat);
+      UNSUPPORTED_SYSCALL_MAP (fchmodat2);
+      UNSUPPORTED_SYSCALL_MAP (map_shadow_stack);
+      UNSUPPORTED_SYSCALL_MAP (futex_wake);
+      UNSUPPORTED_SYSCALL_MAP (futex_wait);
+      UNSUPPORTED_SYSCALL_MAP (futex_requeue);
+      UNSUPPORTED_SYSCALL_MAP (statmount);
+      UNSUPPORTED_SYSCALL_MAP (listmount);
+      UNSUPPORTED_SYSCALL_MAP (lsm_get_self_attr);
+      UNSUPPORTED_SYSCALL_MAP (lsm_set_self_attr);
+      UNSUPPORTED_SYSCALL_MAP (lsm_list_modules);
+      UNSUPPORTED_SYSCALL_MAP (mseal);
+      UNSUPPORTED_SYSCALL_MAP (setxattrat);
+      UNSUPPORTED_SYSCALL_MAP (getxattrat);
+      UNSUPPORTED_SYSCALL_MAP (listxattrat);
+      UNSUPPORTED_SYSCALL_MAP (removexattrat);
+
+#undef SYSCALL_MAP
+#undef SYSCALL_MAP_RENAME
+#undef UNSUPPORTED_SYSCALL_MAP
+
+    default:
+      return gdb_sys_no_syscall;
+    }
 }
 
 /* Value of the sigcode in case of a boundary fault.  */
@@ -414,7 +896,7 @@ i386_linux_intx80_sysenter_syscall_record (struct regcache *regcache)
     {
       gdb_printf (gdb_stderr,
 		  _("Process record and replay target doesn't "
-		    "support syscall number %s\n"), 
+		    "support syscall number %s\n"),
 		  plongest (syscall_native));
       return -1;
     }
@@ -465,9 +947,6 @@ i386_linux_record_signal (struct gdbarch *gdbarch,
   esp -= I386_LINUX_frame_size;
   if (record_full_arch_list_add_mem (esp,
 				     I386_LINUX_xstate + I386_LINUX_frame_size))
-    return -1;
-
-  if (record_full_arch_list_add_end ())
     return -1;
 
   return 0;
@@ -559,7 +1038,10 @@ int i386_linux_gregset_reg_offset[] =
   -1, -1, -1, -1, -1, -1, -1, -1, /* k0 ... k7 (AVX512)  */
   -1, -1, -1, -1, -1, -1, -1, -1, /* zmm0 ... zmm7 (AVX512)  */
   -1,				  /* PKRU register  */
+  -1,				  /* SSP register.  */
+  -1, -1,			  /* fs/gs base registers.  */
   11 * 4,			  /* "orig_eax"  */
+  -1, -1, -1,			  /* TLS GDT regs: i386_tls_gdt_0...2.  */
 };
 
 /* Mapping between the general-purpose registers in `struct
@@ -620,11 +1102,10 @@ i386_linux_core_read_xsave_info (bfd *abfd, x86_xsave_layout &layout)
 /* See i386-linux-tdep.h.  */
 
 bool
-i386_linux_core_read_x86_xsave_layout (struct gdbarch *gdbarch,
+i386_linux_core_read_x86_xsave_layout (struct gdbarch *gdbarch, bfd &cbfd,
 				       x86_xsave_layout &layout)
 {
-  return i386_linux_core_read_xsave_info (current_program_space->core_bfd (),
-					  layout) != 0;
+  return i386_linux_core_read_xsave_info (&cbfd, layout) != 0;
 }
 
 /* See arch/x86-linux-tdesc.h.  */
@@ -677,14 +1158,149 @@ i386_linux_collect_xstateregset (const struct regset *regset,
   i387_collect_xsave (regcache, regnum, xstateregs, 1);
 }
 
+/* Within a tdep file we don't have access to system headers.  This
+   structure is a clone of 'struct user_desc' from 'asm/ldt.h' on x86
+   GNU/Linux systems.  See 'see man 2 get_thread_area' on a suitable x86
+   machine for more details.  */
+
+struct x86_user_desc
+{
+  uint32_t  entry_number;
+  uint32_t  base_addr;
+  uint32_t  limit;
+
+  /* In the actual struct, these flags are a series of 1-bit separate
+     flags.  But we don't need that level of insight for the
+     processing we do in GDB, so just make it a single field.  */
+  uint32_t flags;
+};
+
+/* Supply the 3 tls related registers from BUFFER (length LEN) into
+   REGCACHE.  The REGSET and REGNUM are ignored, all three registers are
+   always supplied from BUFFER.  */
+
+static void
+i386_linux_supply_tls_regset (const regset *regset,
+			      regcache *regcache, int regnum,
+			      const void *buffer, size_t len)
+{
+  gdbarch *gdbarch = regcache->arch ();
+  i386_gdbarch_tdep *tdep = gdbarch_tdep<i386_gdbarch_tdep> (gdbarch);
+
+  if (!tdep->i386_linux_tls)
+    return;
+
+  gdb_assert (len == sizeof (x86_user_desc) * 3);
+
+  for (int i = 0; i < 3; ++i)
+    {
+      int tls_regno = I386_LINUX_TLS_GDT_0 + i;
+
+      gdb_assert (regcache->register_size (tls_regno)
+		  == sizeof (x86_user_desc));
+
+      regcache->raw_supply (tls_regno, buffer);
+      buffer = static_cast<const x86_user_desc *> (buffer) + 1;
+    }
+}
+
+/* Collect the 3 tls related registers from REGCACHE, placing the results
+   in to BUFFER (length LEN).  The REGSET and REGNUM are ignored, all three
+   registers are always collected from REGCACHE.  */
+
+static void
+i386_linux_collect_tls_regset (const regset *regset,
+			       const regcache *regcache,
+			       int regnum, void *buffer, size_t len)
+{
+  gdbarch *gdbarch = regcache->arch ();
+  i386_gdbarch_tdep *tdep = gdbarch_tdep<i386_gdbarch_tdep> (gdbarch);
+
+  if (!tdep->i386_linux_tls)
+    return;
+
+  gdb_assert (len == sizeof (x86_user_desc) * 3);
+
+  for (int i = 0; i < 3; ++i)
+    {
+      x86_user_desc desc;
+      int tls_regno = I386_LINUX_TLS_GDT_0 + i;
+
+      gdb_assert (regcache->register_size (tls_regno) == sizeof (desc));
+
+      regcache->raw_collect (tls_regno, &desc);
+      memcpy (buffer, &desc, sizeof (desc));
+      buffer = static_cast<x86_user_desc *> (buffer) + 1;
+    }
+}
+
 /* Register set definitions.  */
 
-static const struct regset i386_linux_xstateregset =
+static const regset i386_linux_xstateregset =
   {
     NULL,
     i386_linux_supply_xstateregset,
     i386_linux_collect_xstateregset
   };
+
+static const regset i386_linux_tls_regset =
+  {
+    NULL,
+    i386_linux_supply_tls_regset,
+    i386_linux_collect_tls_regset
+  };
+
+/* Helper for i386_linux_iterate_over_regset_sections.  Should we
+   visit the NT_386_TLS note?  If REGCACHE is NULL then we are reading
+   the notes from the corefile, so we always visit the note.  If
+   REGCACHE is not NULL, in this case we are creating a corefile.  In
+   this case, we only visit the note if all the TLS registers are
+   valid, and their base address and limit are not zero, this mirrors
+   the kernel behaviour where the TLS note is elided when the TLS GDT
+   entries have not been set.
+
+   Only call for architectures where i386_gdbarch_tdep::i386_linux_tls
+   is true.  */
+
+static bool
+should_visit_i386_tls_note (const regcache *regcache)
+{
+  if (regcache == nullptr)
+    return true;
+
+  /* Check the pre-condition.  */
+  gdbarch *gdbarch = regcache->arch ();
+  i386_gdbarch_tdep *tdep = gdbarch_tdep<i386_gdbarch_tdep> (gdbarch);
+  gdb_assert (tdep->i386_linux_tls);
+
+  for (int i = 0; i < 3; ++i)
+    {
+      int tls_regno = I386_LINUX_TLS_GDT_0 + i;
+
+      /* If we failed to read any of the registers then we'll not be
+	 able to emit valid note.  */
+      if (regcache->get_register_status (tls_regno) != REG_VALID)
+	return false;
+
+      /* As i386_gdbarch_tdep::i386_linux_tls is true, the registers
+	 must be the right size.  The flag is only set true when this
+	 condition holds.  */
+      gdb_assert (regcache->register_size (tls_regno)
+		  == sizeof (x86_user_desc));
+
+      /* Read the TLS GDT entry.  If it is in use then we want to
+	 write the NT_386_TLS note.  */
+      x86_user_desc ud;
+      regcache->raw_collect (tls_regno, &ud);
+      if (ud.base_addr != 0 && ud.limit != 0)
+	return true;
+    }
+
+  /* Made it through the loop without finding any in-use TLS related
+     GDT entries.  No point creating the NT_386_TLS note, the kernel
+     doesn't.  */
+  return false;
+}
 
 /* Iterate over core file register note sections.  */
 
@@ -707,12 +1323,15 @@ i386_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
 	cb_data);
   else
     cb (".reg2", 108, 108, &i386_fpregset, NULL, cb_data);
+
+  if (tdep->i386_linux_tls && should_visit_i386_tls_note (regcache))
+    cb (".reg-i386-tls", 48, 48, &i386_linux_tls_regset, nullptr, cb_data);
 }
 
 /* Linux kernel shows PC value after the 'int $0x80' instruction even if
    inferior is still inside the syscall.  On next PTRACE_SINGLESTEP it will
    finish the syscall but PC will not change.
-   
+
    Some vDSOs contain 'int $0x80; ret' and during stepping out of the syscall
    i386_displaced_step_fixup would keep PC at the displaced pad location.
    As PC is pointing to the 'ret' instruction before the step
@@ -720,7 +1339,7 @@ i386_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
    and PC should not be adjusted.  In reality it finished syscall instead and
    PC should get relocated back to its vDSO address.  Hide the 'ret'
    instruction by 'nop' so that i386_displaced_step_fixup is not confused.
-   
+
    It is not fully correct as the bytes in struct
    displaced_step_copy_insn_closure will not match the inferior code.  But we
    would need some new flag in displaced_step_copy_insn_closure otherwise to
@@ -785,6 +1404,37 @@ i386_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 				     "orig_eax");
   if (!valid_p)
     return;
+
+  /* Helper function.  Look for TLS_REG_NAME in I386_FEATURE (with the
+     associated LOCAL_TDESC_DATA), and if the register is found assign it
+     TLS_REGNO.  Return true if the register is found, and it is the size
+     of 'struct user_desc' (see man 2 get_thread_area), otherwise, return
+     false.  */
+  static const auto valid_tls_reg
+    = [] (const tdesc_feature *i386_feature,
+	  tdesc_arch_data *local_tdesc_data,
+	  const char *tls_reg_name, int tls_regno) -> bool
+  {
+    static constexpr int required_reg_size
+      = sizeof (x86_user_desc) * HOST_CHAR_BIT;
+    return (tdesc_numbered_register (i386_feature, local_tdesc_data,
+				     tls_regno, tls_reg_name)
+	    && (tdesc_register_bitsize (i386_feature, tls_reg_name)
+		== required_reg_size));
+  };
+
+  /* Check all the expected tls related registers are found, and are the
+     correct size.  If they are then mark the tls feature as being active
+     in TDEP.  Otherwise, leave the feature as deactivated.  */
+  valid_p = (valid_tls_reg (feature, tdesc_data, "i386_tls_gdt_0",
+			    I386_LINUX_TLS_GDT_0)
+	     && valid_tls_reg (feature, tdesc_data, "i386_tls_gdt_1",
+			       I386_LINUX_TLS_GDT_1)
+	     && valid_tls_reg (feature, tdesc_data, "i386_tls_gdt_2",
+			       I386_LINUX_TLS_GDT_2));
+
+  if (valid_p)
+    tdep->i386_linux_tls = true;
 
   /* Add the %orig_eax register used for syscall restarting.  */
   set_gdbarch_write_pc (gdbarch, i386_linux_write_pc);
@@ -971,14 +1621,9 @@ i386_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   tdep->i386_sysenter_record = i386_linux_intx80_sysenter_syscall_record;
   tdep->i386_syscall_record = i386_linux_intx80_sysenter_syscall_record;
 
-  /* N_FUN symbols in shared libraries have 0 for their values and need
-     to be relocated.  */
-  set_gdbarch_sofun_address_maybe_missing (gdbarch, 1);
-
   /* GNU/Linux uses SVR4-style shared libraries.  */
   set_gdbarch_skip_trampoline_code (gdbarch, find_solib_trampoline_target);
-  set_solib_svr4_fetch_link_map_offsets
-    (gdbarch, linux_ilp32_fetch_link_map_offsets);
+  set_solib_svr4_ops (gdbarch, make_linux_ilp32_svr4_solib_ops);
 
   /* GNU/Linux uses the dynamic linker included in the GNU C Library.  */
   set_gdbarch_skip_solib_resolver (gdbarch, glibc_skip_solib_resolver);
@@ -1006,10 +1651,11 @@ i386_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 				  i386_linux_get_syscall_number);
 }
 
-void _initialize_i386_linux_tdep ();
-void
-_initialize_i386_linux_tdep ()
+INIT_GDB_FILE (i386_linux_tdep)
 {
+  gdb_assert (ARRAY_SIZE (i386_linux_gregset_reg_offset)
+	      == I386_LINUX_NUM_REGS);
+
   gdbarch_register_osabi (bfd_arch_i386, 0, GDB_OSABI_LINUX,
 			  i386_linux_init_abi);
 }

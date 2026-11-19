@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Free Software Foundation, Inc.
+# Copyright 2020-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 standard_testfile
 
 if {[prepare_for_testing "failed to prepare" $testfile $srcfile debug]} {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 set supported 0
@@ -35,7 +35,7 @@ gdb_test_multiple "l main:L1" "" {
 }
 
 if { ! $supported } {
-    return -1
+    return
 }
 
 gdb_test "break main:L1" "Location main:L1 not available"

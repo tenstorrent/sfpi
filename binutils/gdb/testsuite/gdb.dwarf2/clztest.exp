@@ -1,4 +1,4 @@
-# Copyright 2011-2024 Free Software Foundation, Inc.
+# Copyright 2011-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@ require is_x86_64_m64_target
 
 if { [prepare_for_testing "failed to prepare" "${test}" ${test}.S \
       {nodebug nopie additional_flags=-nostdlib}] } {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return -1
+if {![runto_main]} {
+    return
 }
 
 # Initialize tests to be an empty array.
@@ -61,7 +61,7 @@ proc scan_gdb_tests {} {
 	    continue
 	}
 
-	eval $test_cmd
+	{*}$test_cmd
     }
     close $fd
 }

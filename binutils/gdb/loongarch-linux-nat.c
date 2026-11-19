@@ -1,6 +1,6 @@
 /* Native-dependent code for GNU/Linux on LoongArch processors.
 
-   Copyright (C) 2022-2024 Free Software Foundation, Inc.
+   Copyright (C) 2022-2026 Free Software Foundation, Inc.
    Contributed by Loongson Ltd.
 
    This file is part of GDB.
@@ -72,12 +72,10 @@ public:
 			 struct expression *cond) override;
   int remove_watchpoint (CORE_ADDR addr, int len, enum target_hw_bp_type type,
 			 struct expression *cond) override;
-  bool watchpoint_addr_within_range (CORE_ADDR addr, CORE_ADDR start,
-				     int length) override;
 
   /* Add our hardware breakpoint and watchpoint implementation.  */
   bool stopped_by_watchpoint () override;
-  bool stopped_data_address (CORE_ADDR *) override;
+  std::vector<CORE_ADDR> stopped_data_addresses () override;
 
   int insert_hw_breakpoint (struct gdbarch *gdbarch,
 			    struct bp_target_info *bp_tgt) override;
@@ -581,35 +579,30 @@ loongarch_linux_nat_target::remove_watchpoint (CORE_ADDR addr, int len,
 
 }
 
-bool
-loongarch_linux_nat_target::watchpoint_addr_within_range (CORE_ADDR addr,
-							  CORE_ADDR start,
-							  int length)
-{
-  return start <= addr && start + length - 1 >= addr;
-}
+/* Implement the "stopped_data_addresses" target_ops method.  */
 
-
-/* Implement the "stopped_data_address" target_ops method.  */
-
-bool
-loongarch_linux_nat_target::stopped_data_address (CORE_ADDR *addr_p)
+std::vector<CORE_ADDR>
+loongarch_linux_nat_target::stopped_data_addresses ()
 {
   siginfo_t siginfo;
   struct loongarch_debug_reg_state *state;
 
   if (!linux_nat_get_siginfo (inferior_ptid, &siginfo))
-    return false;
+    return {};
 
   /* This must be a hardware breakpoint.  */
   if (siginfo.si_signo != SIGTRAP || (siginfo.si_code & 0xffff) != TRAP_HWBKPT)
-    return false;
+    return {};
 
   /* Check if the address matches any watched address.  */
   state = loongarch_get_debug_reg_state (inferior_ptid.pid ());
 
-  return
-    loongarch_stopped_data_address (state, (CORE_ADDR) siginfo.si_addr, addr_p);
+  CORE_ADDR addr;
+  if (loongarch_stopped_data_address (state, (CORE_ADDR) siginfo.si_addr,
+				      &addr))
+    return { addr };
+
+  return {};
 }
 
 /* Implement the "stopped_by_watchpoint" target_ops method.  */
@@ -617,9 +610,7 @@ loongarch_linux_nat_target::stopped_data_address (CORE_ADDR *addr_p)
 bool
 loongarch_linux_nat_target::stopped_by_watchpoint ()
 {
-  CORE_ADDR addr;
-
-  return stopped_data_address (&addr);
+  return !stopped_data_addresses ().empty ();
 }
 
 /* Insert a hardware-assisted breakpoint at BP_TGT->reqstd_address.
@@ -751,9 +742,7 @@ loongarch_linux_nat_target::low_forget_process (pid_t pid)
 
 /* Initialize LoongArch Linux native support.  */
 
-void _initialize_loongarch_linux_nat ();
-void
-_initialize_loongarch_linux_nat ()
+INIT_GDB_FILE (loongarch_linux_nat)
 {
   linux_target = &the_loongarch_linux_nat_target;
   add_inf_child_target (&the_loongarch_linux_nat_target);

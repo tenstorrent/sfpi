@@ -7,18 +7,18 @@ else
 fi
 
 case ${target} in
-  *-*-cygwin*)
-    cygwin_behavior=1
+  *-*-mingw*)
+    mingw_behavior=1
     ;;
   *)
-    cygwin_behavior=0;
+    mingw_behavior=0
     ;;
 esac
 
 rm -f e${EMULATION_NAME}.c
 (echo;echo;echo;echo;echo)>e${EMULATION_NAME}.c # there, now line numbers match ;-)
 fragment <<EOF
-/* Copyright (C) 1995-2025 Free Software Foundation, Inc.
+/* Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    This file is part of the GNU Binutils.
 
@@ -126,9 +126,10 @@ fragment <<EOF
 #define DEFAULT_PSEUDO_RELOC_VERSION 1
 #endif
 
-#define DEFAULT_DLL_CHARACTERISTICS	(${cygwin_behavior} ? 0 : \
-					   IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE \
-					 | IMAGE_DLL_CHARACTERISTICS_NX_COMPAT)
+#define DEFAULT_DLL_CHARACTERISTICS	(${mingw_behavior} \
+					 ? IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE \
+					   | IMAGE_DLL_CHARACTERISTICS_NX_COMPAT \
+					 : 0)
 
 #if defined(TARGET_IS_i386pe) || ! defined(DLL_SUPPORT)
 #define	PE_DEF_SUBSYSTEM		IMAGE_SUBSYSTEM_WINDOWS_CUI
@@ -227,6 +228,8 @@ fragment <<EOF
   link_info.pei386_auto_import = ${default_auto_import};
   /* Use by default version.  */
   link_info.pei386_runtime_pseudo_reloc = DEFAULT_PSEUDO_RELOC_VERSION;
+#else
+  pe_dll_enable_reloc_section = 0;
 #endif
 }
 
@@ -648,7 +651,7 @@ set_pe_subsystem (void)
 
       if (v[i].name == NULL)
 	{
-	  einfo (_("%F%P: invalid subsystem type %s\n"), optarg);
+	  fatal (_("%P: invalid subsystem type %s\n"), optarg);
 	  return;
 	}
 
@@ -669,7 +672,7 @@ set_pe_value (char *name)
   set_pe_name (name,  strtoul (optarg, &end, 0));
 
   if (end == optarg)
-    einfo (_("%F%P: invalid hex number for PE parameter '%s'\n"), optarg);
+    fatal (_("%P: invalid hex number for PE parameter '%s'\n"), optarg);
 
   optarg = end;
 }
@@ -686,7 +689,7 @@ set_pe_stack_heap (char *resname, char *comname)
       set_pe_value (comname);
     }
   else if (*optarg)
-    einfo (_("%F%P: strange hex info for PE parameter '%s'\n"), optarg);
+    fatal (_("%P: strange hex info for PE parameter '%s'\n"), optarg);
 }
 
 #define DEFAULT_BUILD_ID_STYLE	"md5"
@@ -702,7 +705,7 @@ gld${EMULATION_NAME}_handle_option (int optc)
     case OPTION_BASE_FILE:
       link_info.base_file = fopen (optarg, FOPEN_WB);
       if (link_info.base_file == NULL)
-	einfo (_("%F%P: cannot open base file %s\n"), optarg);
+	fatal (_("%P: cannot open base file %s\n"), optarg);
       break;
 
       /* PE options.  */
@@ -1146,7 +1149,7 @@ pe_fixup_stdcalls (void)
     if (undef->type == bfd_link_hash_undefined)
       {
 	const char * name = undef->root.string;
-	char * at;
+	const char * at;
 	int lead_at = (*name == '@');
 
 	if (lead_at)
@@ -1231,7 +1234,7 @@ make_runtime_ref (void)
     = bfd_wrapped_link_hash_lookup (link_info.output_bfd, &link_info,
 				    rr, true, false, true);
   if (!h)
-    einfo (_("%F%P: bfd_link_hash_lookup failed: %E\n"));
+    fatal (_("%P: bfd_link_hash_lookup failed: %E\n"));
   else
     {
       if (h->type == bfd_link_hash_new)
@@ -1529,7 +1532,7 @@ gld${EMULATION_NAME}_after_open (void)
   if (bfd_get_flavour (link_info.output_bfd) != bfd_target_coff_flavour
       || coff_data (link_info.output_bfd) == NULL
       || !obj_pe (link_info.output_bfd))
-    einfo (_("%F%P: cannot perform PE operations on non PE output file '%pB'\n"),
+    fatal (_("%P: cannot perform PE operations on non PE output file '%pB'\n"),
 	   link_info.output_bfd);
 
   pe_data (link_info.output_bfd)->pe_opthdr = pe;
@@ -1593,6 +1596,9 @@ gld${EMULATION_NAME}_after_open (void)
   else
     pe_exe_build_sections (link_info.output_bfd, &link_info);
 #endif
+#else /* !DLL_SUPPORT */
+  if (!bfd_link_relocatable (&link_info))
+    pe_exe_build_sections (link_info.output_bfd, &link_info);
 #endif /* DLL_SUPPORT */
 
 #if defined(TARGET_IS_armpe) || defined(TARGET_IS_arm_wince_pe)
@@ -1602,7 +1608,7 @@ gld${EMULATION_NAME}_after_open (void)
 	 These will only be created if the output format is an arm format,
 	 hence we do not support linking and changing output formats at the
 	 same time.  Use a link followed by objcopy to change output formats.  */
-      einfo (_("%F%P: error: cannot change output format "
+      fatal (_("%P: error: cannot change output format "
 	       "whilst linking %s binaries\n"), "ARM");
       return;
     }
@@ -1662,7 +1668,7 @@ gld${EMULATION_NAME}_after_open (void)
 
 		    if (!bfd_generic_link_read_symbols (is->the_bfd))
 		      {
-			einfo (_("%F%P: %pB: could not read symbols: %E\n"),
+			fatal (_("%P: %pB: could not read symbols: %E\n"),
 			       is->the_bfd);
 			return;
 		      }
@@ -1744,7 +1750,7 @@ gld${EMULATION_NAME}_after_open (void)
       {
 	if (is->the_bfd->my_archive)
 	  {
-	    char *pnt;
+	    const char *pnt;
 
 	    /* Microsoft import libraries may contain archive members for
 	       one or more DLLs, together with static object files.
@@ -1849,7 +1855,7 @@ gld${EMULATION_NAME}_after_open (void)
 
 		if (!bfd_generic_link_read_symbols (is->the_bfd))
 		  {
-		    einfo (_("%F%P: %pB: could not read symbols: %E\n"),
+		    fatal (_("%P: %pB: could not read symbols: %E\n"),
 			   is->the_bfd);
 		    return;
 		  }
@@ -1960,7 +1966,7 @@ gld${EMULATION_NAME}_unrecognized_file (lang_input_statement_type *entry ATTRIBU
 
 	      h = bfd_link_hash_lookup (link_info.hash, buf, true, true, true);
 	      if (h == (struct bfd_link_hash_entry *) NULL)
-		einfo (_("%F%P: bfd_link_hash_lookup failed: %E\n"));
+		fatal (_("%P: bfd_link_hash_lookup failed: %E\n"));
 	      if (h->type == bfd_link_hash_new)
 		{
 		  h->type = bfd_link_hash_undefined;
@@ -2103,6 +2109,9 @@ gld${EMULATION_NAME}_finish (void)
 
   if (pe_out_def_filename)
     pe_dll_generate_def_file (pe_out_def_filename);
+#else /* !DLL_SUPPORT */
+  if (!bfd_link_relocatable (&link_info))
+    pe_exe_fill_sections (link_info.output_bfd, &link_info);
 #endif /* DLL_SUPPORT */
 
   /* I don't know where .idata gets set as code, but it shouldn't be.  */
@@ -2137,7 +2146,7 @@ gld${EMULATION_NAME}_place_orphan (asection *s,
 				   int constraint)
 {
   const char *orig_secname = secname;
-  char *dollar = NULL;
+  const char *dollar = NULL;
   lang_output_section_statement_type *os;
   lang_statement_list_type add_child;
   lang_output_section_statement_type *match_by_name = NULL;
@@ -2447,6 +2456,55 @@ gld${EMULATION_NAME}_find_potential_libraries
 {
   return ldfile_open_file_search (name, entry, "", ".lib");
 }
+
+static struct bfd_link_hash_entry *
+gld${EMULATION_NAME}_find_alt_start_symbol
+  (struct bfd_sym_chain *entry)
+{
+#if defined (TARGET_IS_i386pe)
+  bool entry_has_stdcall_suffix;
+#endif
+  struct bfd_link_hash_entry *h;
+  size_t entry_name_len;
+  char *symbol_name;
+  const char *prefix;
+  const char *suffix;
+
+  entry_name_len = strlen (entry->name);
+
+  if (is_underscoring ())
+    prefix = "_";
+  else
+    prefix = "";
+
+#if defined (TARGET_IS_i386pe)
+  if ((entry_name_len > 2 && entry->name[entry_name_len-2] == '@' && ISDIGIT (entry->name[entry_name_len-1]))
+      || (entry_name_len > 3 && entry->name[entry_name_len-3] == '@' && ISDIGIT (entry->name[entry_name_len-2]) && ISDIGIT (entry->name[entry_name_len-1]))
+      || (entry_name_len > 4 && entry->name[entry_name_len-4] == '@' && ISDIGIT (entry->name[entry_name_len-3]) && ISDIGIT (entry->name[entry_name_len-2]) && ISDIGIT (entry->name[entry_name_len-1])))
+    entry_has_stdcall_suffix = true;
+  else
+    entry_has_stdcall_suffix = false;
+
+  if (!entry_has_stdcall_suffix && (bfd_link_dll (&link_info) || dll))
+    suffix = "@12";
+  else if (!entry_has_stdcall_suffix && pe_subsystem == 1 /* NT kernel driver */)
+    suffix = "@8";
+  else
+#endif
+    suffix = "";
+
+  if (*prefix == '\0' && *suffix == '\0')
+    return NULL;
+
+  symbol_name = xmalloc (entry_name_len + 5);
+  strcpy (symbol_name, prefix);
+  strcat (symbol_name, entry->name);
+  strcat (symbol_name, suffix);
+
+  h = bfd_link_hash_lookup (link_info.hash, symbol_name, false, false, true);
+  free (symbol_name);
+  return h;
+}
 
 static char *
 gld${EMULATION_NAME}_get_script (int *isfile)
@@ -2525,5 +2583,6 @@ LDEMUL_UNRECOGNIZED_FILE=gld${EMULATION_NAME}_unrecognized_file
 LDEMUL_LIST_OPTIONS=gld${EMULATION_NAME}_list_options
 LDEMUL_RECOGNIZED_FILE=gld${EMULATION_NAME}_recognized_file
 LDEMUL_FIND_POTENTIAL_LIBRARIES=gld${EMULATION_NAME}_find_potential_libraries
+LDEMUL_FIND_START_SYMBOL=gld${EMULATION_NAME}_find_alt_start_symbol
 
 source_em ${srcdir}/emultempl/emulation.em

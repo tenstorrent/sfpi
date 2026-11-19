@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -117,6 +117,7 @@ proc dap_to_ton {obj} {
 
 # Format the object OBJ, in TON format, as JSON and send it to gdb.
 proc _dap_send_ton {obj} {
+    # tclint-disable-next-line command-args
     set json [namespace eval ton::2json $obj]
     # FIXME this is wrong for non-ASCII characters.
     set len [string length $json]
@@ -150,7 +151,7 @@ proc _dap_read_json {} {
     set seen_timeout 0
     set seen_eof 0
     gdb_expect {
-	-re "^Content-Length: (\[0-9\]+)\r\n" {
+	-re "^Content-Length: (${::decimal})\r\n" {
 	    set length $expect_out(1,string)
 	    exp_continue
 	}
@@ -170,7 +171,7 @@ proc _dap_read_json {} {
     }
 
     if {$seen_timeout} {
-	error "timeout reading json header"	
+	error "timeout reading json header"
     }
     if {$seen_eof} {
 	error "eof reading json header"
@@ -200,7 +201,7 @@ proc _dap_read_json {} {
 	}
 
 	if {$seen_timeout} {
-	    error "timeout reading json header"	
+	    error "timeout reading json header"
 	}
 	if {$seen_eof} {
 	    error "eof reading json header"
@@ -211,6 +212,7 @@ proc _dap_read_json {} {
 
     global last_ton
     set last_ton [ton::json2ton $json]
+    # tclint-disable-next-line command-args
     return [namespace eval ton::2dict $last_ton]
 }
 
@@ -229,9 +231,9 @@ proc dap_read_response {cmd num} {
 	set d [_dap_read_json]
 	if {[dict get $d type] == "response"} {
 	    if {[dict get $d request_seq] != $num} {
-		error "saw wrong request_seq in $obj"
+		error "saw wrong request_seq in $d"
 	    } elseif {[dict get $d command] != $cmd} {
-		error "saw wrong command in $obj"
+		error "saw wrong command in $d"
 	    } else {
 		return [list $d $result]
 	    }
@@ -300,6 +302,7 @@ proc dap_initialize {{name "initialize"} {extra ""}} {
 #   "stopAtBeginningOfMainSubprogram" will be passed to the launch
 #   request.
 # * cwd - value is the working directory to use.
+# * ada_source_charset - value is passed as adaSourceCharset
 #
 # After this proc is called, gdb will be ready to accept breakpoint
 # requests.
@@ -337,6 +340,10 @@ proc dap_launch {file {args {}}} {
 		append envlist " cwd [format {[%s]} [list s $value]]"
 	    }
 
+	    ada_source_charset {
+		append envlist " adaSourceCharset [format {[%s]} [list s $value]]"
+	    }
+
 	    default {
 		error "unrecognized parameter $key"
 	    }
@@ -363,6 +370,22 @@ proc dap_attach {pid {prog ""}} {
 }
 
 # Start gdb, send a DAP initialize request, and then an attach request
+# specifying COREFILE as the core file to attach to.  Returns the
+# empty string on failure, or the attach request sequence ID.
+proc dap_corefile {corefile {prog ""}} {
+    if {[dap_initialize "startup - initialize"] == ""} {
+	return ""
+    }
+
+    set args [format {o coreFile [s "%s"]} $corefile]
+    if {$prog != ""} {
+	append args [format { program [s "%s"]} $prog]
+    }
+
+    return [dap_send_request attach $args]
+}
+
+# Start gdb, send a DAP initialize request, and then an attach request
 # specifying TARGET as the remote target.  Returns the empty string on
 # failure, or the attach request sequence ID.
 proc dap_target_remote {target} {
@@ -372,26 +395,33 @@ proc dap_target_remote {target} {
     return [dap_send_request attach [format {o target [s %s]} $target]]
 }
 
-# Read the most recent DAP log file and check it for exceptions.
-proc dap_check_log_file {} {
+# Read the most recent DAP log file and check it for exceptions.  We
+# expect to see exactly EXPECTED_EXCEPTION_COUNT exceptions in the log.
+proc dap_check_log_file { {expected_exception_count 0} } {
     set fd [open [current_dap_log_file]]
     set contents [read $fd]
     close $fd
 
-    set ok 1
+    set exception_count 0
     foreach line [split $contents "\n"] {
 	if {[regexp "^Traceback" $line]} {
-	    set ok 0
-	    break
+	    incr exception_count
+	    if { $exception_count > $expected_exception_count} {
+		break
+	    }
 	}
     }
 
-    if {$ok} {
+    if {$exception_count == $expected_exception_count} {
 	pass "exceptions in log file"
     } else {
 	verbose -log --  "--- DAP LOG START ---"
 	verbose -log -- $contents
 	verbose -log --  "--- DAP LOG END ---"
+	if { $expected_exception_count > 0 } {
+	    verbose -log -- [join [list "Expected $expected_exception_count" \
+					"exception(s), saw $exception_count"]]
+	}
 	fail "exceptions in log file"
     }
 }
@@ -407,8 +437,9 @@ proc dap_check_log_file_re { re } {
 }
 
 # Cleanly shut down gdb.  TERMINATE is passed as the terminateDebuggee
-# parameter to the request.
-proc dap_shutdown {{terminate false}} {
+# parameter to the request.  The EXPECTED_EXCEPTION_COUNT is the
+# number of exceptions that we expect to see in the latest DAP log.
+proc dap_shutdown {{terminate false} {expected_exception_count 0}} {
     dap_check_request_and_response "shutdown" disconnect \
 	[format {o terminateDebuggee [l %s]} $terminate]
 
@@ -420,7 +451,7 @@ proc dap_shutdown {{terminate false}} {
 
     clear_gdb_spawn_id
 
-    dap_check_log_file
+    dap_check_log_file $expected_exception_count
 }
 
 # Search the event list EVENTS for an output event matching the regexp
@@ -443,7 +474,7 @@ proc dap_search_output {name rx events} {
 # key/value pairs given in ARGS.  NAME is used as the test name.
 proc dap_match_values {name d args} {
     foreach {key value} $args {
-	if {[eval dict get [list $d] $key] != $value} {
+	if {[dict get $d {*}$key] != $value} {
 	    fail "$name (checking $key)"
 	    return ""
 	}
@@ -494,7 +525,7 @@ proc dap_wait_for_event_and_check {name type args} {
 
     set result [_dap_wait_for_event $type]
     set event [lindex $result 0]
-    eval dap_match_values [list $name $event] $args
+    dap_match_values $name $event {*}$args
 
     return $result
 }

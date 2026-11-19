@@ -1,6 +1,6 @@
 /* Builtin frame register, for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    Contributed by Red Hat.
 
@@ -79,7 +79,7 @@ value_of_builtin_frame_sp_reg (const frame_info_ptr &frame, const void *baton)
   if (gdbarch_sp_regnum (gdbarch) >= 0)
     return value_of_register (gdbarch_sp_regnum (gdbarch),
 			      get_next_frame_sentinel_okay (frame));
-  error (_("Standard register ``$sp'' is not available for this target"));
+  error (_("Standard register \"$sp\" is not available for this target"));
 }
 
 static struct value *
@@ -90,12 +90,10 @@ value_of_builtin_frame_ps_reg (const frame_info_ptr &frame, const void *baton)
   if (gdbarch_ps_regnum (gdbarch) >= 0)
     return value_of_register (gdbarch_ps_regnum (gdbarch),
 			      get_next_frame_sentinel_okay (frame));
-  error (_("Standard register ``$ps'' is not available for this target"));
+  error (_("Standard register \"$ps\" is not available for this target"));
 }
 
-void _initialize_frame_reg ();
-void
-_initialize_frame_reg ()
+INIT_GDB_FILE (frame_reg)
 {
   /* Frame based $fp, $pc, $sp and $ps.  These only come into play
      when the target does not define its own version of these

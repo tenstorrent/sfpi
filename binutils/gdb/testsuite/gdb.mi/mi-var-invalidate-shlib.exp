@@ -1,4 +1,4 @@
-# Copyright 2007-2024 Free Software Foundation, Inc.
+# Copyright 2007-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,15 +27,19 @@ set shlib_path [standard_output_file ${testfile}-lib.so]
 
 if { [gdb_compile_shlib $srcdir/$subdir/$srcfile2 $shlib_path {debug}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 set shlib_path_target [gdb_download_shlib $shlib_path]
 
-set opts [list shlib_load debug additional_flags=-DSHLIB_PATH="${shlib_path_target}"]
+set opts {}
+lappend opts shlib_load
+lappend opts debug
+lappend opts additional_flags=-DSHLIB_PATH=[quote_for_host $shlib_path_target]
+
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable $opts] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 proc do_test { separate_debuginfo } {
@@ -113,7 +117,7 @@ proc do_test { separate_debuginfo } {
 	mi_gdb_test "299-break-insert -f -t foo" \
 	    "&\"Function \\\\\"foo\\\\\" not defined.\\\\n\"\r\n299\\^done,[mi_make_breakpoint_pending -type breakpoint -disp del -pending foo]"
 	mi_send_resuming_command "exec-continue" "continue to foo"
-	mi_expect_stop "breakpoint-hit" foo ".*" ".*" "\[0-9\]+" { "" "disp=\"del\"" } "arrived at foo"
+	mi_expect_stop "breakpoint-hit" foo ".*" ".*" "${::decimal}" { "" "disp=\"del\"" } "arrived at foo"
 
 	# Floating varobj is still valid, and now in scope.
 	mi_gdb_test "-var-update floating_local" \

@@ -1,5 +1,5 @@
 /* Renesas RL78 specific support for 32-bit ELF.
-   Copyright (C) 2011-2025 Free Software Foundation, Inc.
+   Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -442,14 +442,14 @@ rl78_compute_complex_reloc (unsigned long  r_type,
 
     case R_RL78_OPneg:
       tmp1 = rl78_stack_pop (&status);
-      tmp1 = - tmp1;
+      tmp1 = -(uint32_t) tmp1;
       rl78_stack_push (tmp1, &status);
       break;
 
     case R_RL78_OPadd:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      tmp1 += tmp2;
+      tmp1 += (uint32_t) tmp2;
       rl78_stack_push (tmp1, &status);
       break;
 
@@ -458,41 +458,51 @@ rl78_compute_complex_reloc (unsigned long  r_type,
 	 then B, then OPSUB.  So the first op we pop is B, not A.  */
       tmp2 = rl78_stack_pop (&status);	/* B */
       tmp1 = rl78_stack_pop (&status);	/* A */
-      tmp1 -= tmp2;		/* A - B */
+      tmp1 -= (uint32_t) tmp2;		/* A - B */
       rl78_stack_push (tmp1, &status);
       break;
 
     case R_RL78_OPmul:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      tmp1 *= tmp2;
+      tmp1 *= (uint32_t) tmp2;
       rl78_stack_push (tmp1, &status);
       break;
 
     case R_RL78_OPdiv:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      if (tmp2 != 0)
-	tmp1 /= tmp2;
-      else
+      if (tmp2 == 0)
 	{
 	  tmp1 = 0;
 	  status = bfd_reloc_overflow;
 	}
+      else if (tmp2 == 1)
+	;
+      else if (tmp2 == -1)
+	tmp1 = -(uint32_t) tmp1;
+      else
+	tmp1 /= tmp2;
       rl78_stack_push (tmp1, &status);
       break;
 
     case R_RL78_OPshla:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      tmp1 <<= tmp2;
+      if ((uint32_t) tmp2 >= 32)
+	tmp1 = 0;
+      else
+	tmp1 = (uint32_t) tmp1 << tmp2;
       rl78_stack_push (tmp1, &status);
       break;
 
     case R_RL78_OPshra:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      tmp1 >>= tmp2;
+      if ((uint32_t) tmp2 >= 31)
+	tmp1 = tmp1 < 0 ? -1 : 1;
+      else
+	tmp1 >>= tmp2;
       rl78_stack_push (tmp1, &status);
       break;
 
@@ -534,13 +544,15 @@ rl78_compute_complex_reloc (unsigned long  r_type,
     case R_RL78_OPmod:
       tmp2 = rl78_stack_pop (&status);
       tmp1 = rl78_stack_pop (&status);
-      if (tmp2 != 0)
-	tmp1 %= tmp2;
-      else
+      if (tmp2 == 0)
 	{
 	  tmp1 = 0;
 	  status = bfd_reloc_overflow;
 	}
+      else if (tmp2 == 1 || tmp2 == -1)
+	tmp1 = 0;
+      else
+	tmp1 %= tmp2;
       rl78_stack_push (tmp1, &status);
       break;
     }
@@ -702,8 +714,7 @@ rl78_special_reloc (bfd *      input_bfd,
 
 static int
 rl78_elf_relocate_section
-    (bfd *		     output_bfd,
-     struct bfd_link_info *  info,
+    (struct bfd_link_info *  info,
      bfd *		     input_bfd,
      asection *		     input_section,
      bfd_byte *		     contents,
@@ -718,7 +729,7 @@ rl78_elf_relocate_section
   asection *splt;
   bool ret;
 
-  symtab_hdr = & elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
   relend     = relocs + input_section->reloc_count;
 
@@ -751,7 +762,8 @@ rl78_elf_relocate_section
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections [r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, & sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 
 	  name = bfd_elf_string_from_elf_section
 	    (input_bfd, symtab_hdr->sh_link, sym->st_name);
@@ -772,7 +784,8 @@ rl78_elf_relocate_section
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_RL78_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	{
@@ -1185,6 +1198,9 @@ rl78_elf_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
   flagword old_flags;
   bool error = false;
 
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
+    return true;
+
   new_flags = elf_elfheader (ibfd)->e_flags;
   old_flags = elf_elfheader (obfd)->e_flags;
 
@@ -1323,7 +1339,7 @@ rl78_elf_check_relocs
   if (bfd_link_relocatable (info))
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   sym_hashes = elf_sym_hashes (abfd);
   local_plt_offsets = elf_local_got_offsets (abfd);
   dynobj = elf_hash_table(info)->dynobj;
@@ -1404,8 +1420,8 @@ rl78_elf_check_relocs
 /* This must exist if dynobj is ever set.  */
 
 static bool
-rl78_elf_finish_dynamic_sections (bfd *abfd ATTRIBUTE_UNUSED,
-				  struct bfd_link_info *info)
+rl78_elf_finish_dynamic_sections (struct bfd_link_info *info,
+				  bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   bfd *dynobj;
   asection *splt;
@@ -1440,8 +1456,7 @@ rl78_elf_finish_dynamic_sections (bfd *abfd ATTRIBUTE_UNUSED,
 }
 
 static bool
-rl78_elf_early_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
-			      struct bfd_link_info *info)
+rl78_elf_early_size_sections (struct bfd_link_info *info)
 {
   bfd *dynobj;
   asection *splt;
@@ -1459,6 +1474,7 @@ rl78_elf_early_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
   splt->contents = (bfd_byte *) bfd_zalloc (dynobj, splt->size);
   if (splt->contents == NULL)
     return false;
+  splt->alloced = 1;
 
   return true;
 }
@@ -1564,7 +1580,7 @@ rl78_elf_relax_plt_section (bfd *dynobj,
       if (! local_plt_offsets)
 	continue;
 
-      symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (ibfd);
       if (symtab_hdr->sh_info != 0)
 	{
 	  isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
@@ -1631,7 +1647,7 @@ rl78_elf_relax_plt_section (bfd *dynobj,
       for (ibfd = info->input_bfds; ibfd ; ibfd = ibfd->link.next)
 	{
 	  bfd_vma *local_plt_offsets = elf_local_got_offsets (ibfd);
-	  unsigned int nlocals = elf_tdata (ibfd)->symtab_hdr.sh_info;
+	  unsigned int nlocals = elf_symtab_hdr (ibfd).sh_info;
 	  unsigned int idx;
 
 	  if (! local_plt_offsets)
@@ -1720,7 +1736,7 @@ elf32_rl78_relax_delete_bytes (bfd *abfd, asection *sec, bfd_vma addr, int count
     }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   isymend = isym + symtab_hdr->sh_info;
 
@@ -1888,9 +1904,7 @@ rl78_offset_for_reloc (bfd *			abfd,
 	    {
 	      if ((ssec->flags & SEC_MERGE)
 		  && ssec->sec_info_type == SEC_INFO_TYPE_MERGE)
-		symval = _bfd_merged_section_offset (abfd, & ssec,
-						     elf_section_data (ssec)->sec_info,
-						     symval);
+		symval = _bfd_merged_section_offset (abfd, & ssec, symval);
 	    }
 
 	  /* Now make the offset relative to where the linker is putting it.  */

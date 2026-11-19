@@ -1,6 +1,6 @@
 /* Scheme interface to stack frames.
 
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -665,7 +665,7 @@ gdbscm_frame_function (SCM self)
       if (frame != NULL)
 	{
 	  found = true;
-	  sym = find_pc_function (get_frame_address_in_block (frame));
+	  sym = find_symbol_for_pc (get_frame_address_in_block (frame));
 	}
     }
   catch (const gdb_exception &except)
@@ -831,8 +831,7 @@ gdbscm_frame_read_register (SCM self, SCM register_scm)
 	{
 	  found = true;
 	  regnum = user_reg_map_name_to_regnum (get_frame_arch (frame),
-						register_str,
-						strlen (register_str));
+						register_str);
 	  if (regnum >= 0)
 	    value = value_of_register (regnum,
 				       get_next_frame_sentinel_okay (frame));

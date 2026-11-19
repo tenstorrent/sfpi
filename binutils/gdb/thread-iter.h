@@ -1,5 +1,5 @@
 /* Thread iterators and ranges for GDB, the GNU debugger.
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,15 +21,12 @@
 
 #include "gdbsupport/filtered-iterator.h"
 #include "gdbsupport/iterator-range.h"
-#include "gdbsupport/next-iterator.h"
-#include "gdbsupport/reference-to-pointer-iterator.h"
 #include "gdbsupport/safe-iterator.h"
 
 /* A forward iterator that iterates over a given inferior's
    threads.  */
 
-using inf_threads_iterator
-  = reference_to_pointer_iterator<intrusive_list<thread_info>::iterator>;
+using inf_threads_iterator = intrusive_list<thread_info>::iterator;
 
 /* A forward iterator that iterates over all threads of all
    inferiors.  */
@@ -37,12 +34,12 @@ using inf_threads_iterator
 class all_threads_iterator
 {
 public:
-  typedef all_threads_iterator self_type;
-  typedef struct thread_info *value_type;
-  typedef struct thread_info *&reference;
-  typedef struct thread_info **pointer;
-  typedef std::forward_iterator_tag iterator_category;
-  typedef int difference_type;
+  using self_type = all_threads_iterator;
+  using value_type = struct thread_info;
+  using reference = struct thread_info &;
+  using pointer = struct thread_info *;
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type = int;
 
   /* Tag type.  */
   struct begin_t {};
@@ -56,7 +53,7 @@ public:
     : m_thr (nullptr)
   {}
 
-  thread_info *operator* () const { return m_thr; }
+  reference operator* () const { return *m_thr; }
 
   all_threads_iterator &operator++ ()
   {
@@ -86,12 +83,12 @@ private:
 class all_matching_threads_iterator
 {
 public:
-  typedef all_matching_threads_iterator self_type;
-  typedef struct thread_info *value_type;
-  typedef struct thread_info *&reference;
-  typedef struct thread_info **pointer;
-  typedef std::forward_iterator_tag iterator_category;
-  typedef int difference_type;
+  using self_type = all_matching_threads_iterator;
+  using value_type = struct thread_info;
+  using reference = struct thread_info &;
+  using pointer = struct thread_info *;
+  using iterator_category = std::forward_iterator_tag;
+  using difference_type = int;
 
   /* Creates an iterator that iterates over all threads that match
      FILTER_PTID.  */
@@ -101,7 +98,7 @@ public:
   /* Create a one-past-end iterator.  */
   all_matching_threads_iterator () = default;
 
-  thread_info *operator* () const { return m_thr; }
+  reference operator* () const { return *m_thr; }
 
   all_matching_threads_iterator &operator++ ()
   {
@@ -149,9 +146,9 @@ private:
 
 struct non_exited_thread_filter
 {
-  bool operator() (struct thread_info *thr) const
+  bool operator() (struct thread_info &thr) const
   {
-    return thr->state != THREAD_EXITED;
+    return thr.state () != THREAD_EXITED;
   }
 };
 
@@ -165,10 +162,11 @@ using all_non_exited_threads_iterator
 using inf_non_exited_threads_iterator
   = filtered_iterator<inf_threads_iterator, non_exited_thread_filter>;
 
-/* Iterate over all threads of all inferiors, safely.  */
+/* Iterate over all threads that are matched by the wrapped
+   iterator, safely.  */
 
-using all_threads_safe_iterator
-  = basic_safe_iterator<all_threads_iterator>;
+using all_matching_threads_safe_iterator
+  = basic_safe_iterator<all_matching_threads_iterator>;
 
 /* Iterate over all threads of an inferior, safely.  */
 
@@ -192,10 +190,11 @@ using inf_non_exited_threads_range
 using safe_inf_threads_range = iterator_range<safe_inf_threads_iterator>;
 
 /* A range adapter that makes it possible to iterate over all threads
-   with range-for "safely".  I.e., it is safe to delete the
-   currently-iterated thread.  */
+   that are matched by the given iterator with range-for "safely".  I.e.,
+   it is safe to delete the currently-iterated thread.  */
 
-using all_threads_safe_range = iterator_range<all_threads_safe_iterator>;
+using all_matching_threads_safe_range
+  = iterator_range<all_matching_threads_safe_iterator>;
 
 /* A range adapter that makes it possible to iterate over all threads
    that match a PTID filter with range-for.  */
@@ -240,7 +239,12 @@ public:
   {}
 
   all_non_exited_threads_iterator begin () const
-  { return all_non_exited_threads_iterator (m_filter_target, m_filter_ptid); }
+  {
+    all_matching_threads_iterator begin (m_filter_target, m_filter_ptid);
+
+    return all_non_exited_threads_iterator (std::move (begin));
+  }
+
   all_non_exited_threads_iterator end () const
   { return all_non_exited_threads_iterator (); }
 

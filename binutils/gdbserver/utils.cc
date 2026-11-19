@@ -1,5 +1,5 @@
 /* General utility routines for the remote server for GDB.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -102,5 +102,17 @@ internal_vwarning (const char *file, int line, const char *fmt, va_list args)
 const char *
 paddress (CORE_ADDR addr)
 {
-  return phex_nz (addr, sizeof (CORE_ADDR));
+  return phex_nz (addr);
 }
+
+#ifndef IN_PROCESS_AGENT
+
+/* See common-exceptions.h.  */
+
+std::string
+vformat_exception (const char *fmt, va_list args)
+{
+  return string_vprintf (fmt, args);
+}
+
+#endif /* IN_PROCESS_AGENT */

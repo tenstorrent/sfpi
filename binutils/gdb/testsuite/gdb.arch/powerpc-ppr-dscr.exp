@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2024 Free Software Foundation, Inc.
+# Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 # Test access to special purpose registers PPR and DSCR.  The test
 # inferior writes to these registers, we check that GDB reads the same
-# values, then write to the registers trough GDB, step once, and check
+# values, then write to the registers through GDB, step once, and check
 # again if we read back the same values.
 
 require {istarget "powerpc*-*-linux*"}
@@ -66,9 +66,9 @@ proc ppr_dscr_available {} {
 }
 
 with_test_prefix "check PPR/DSCR access" {
-    clean_restart $binfile
+    clean_restart $::testfile
 
-    if ![runto_main] {
+    if {![runto_main]} {
 	return
     }
 
@@ -86,9 +86,9 @@ with_test_prefix "check PPR/DSCR access" {
 }
 
 # Now do the actual test
-clean_restart $binfile
+clean_restart $::testfile
 
-if ![runto_main] {
+if {![runto_main]} {
     return
 }
 

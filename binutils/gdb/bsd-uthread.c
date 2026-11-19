@@ -1,6 +1,6 @@
 /* BSD user-level threads support.
 
-   Copyright (C) 2005-2024 Free Software Foundation, Inc.
+   Copyright (C) 2005-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -25,7 +25,6 @@
 #include "observable.h"
 #include "regcache.h"
 #include "solib.h"
-#include "solist.h"
 #include "symfile.h"
 #include "target.h"
 
@@ -85,10 +84,7 @@ static const registry<gdbarch>::key<struct bsd_uthread_ops> bsd_uthread_data;
 static struct bsd_uthread_ops *
 get_bsd_uthread (struct gdbarch *gdbarch)
 {
-  struct bsd_uthread_ops *ops = bsd_uthread_data.get (gdbarch);
-  if (ops == nullptr)
-    ops = bsd_uthread_data.emplace (gdbarch);
-  return ops;
+  return &bsd_uthread_data.try_emplace (gdbarch);
 }
 
 /* Set the function that supplies registers from an inactive thread
@@ -280,13 +276,13 @@ bsd_uthread_solib_loaded (solib &so)
 
   for (names = bsd_uthread_solib_names; *names; names++)
     {
-      if (startswith (so.so_original_name, *names))
+      if (startswith (so.original_name, *names))
 	{
 	  solib_read_symbols (so, 0);
 
 	  if (bsd_uthread_activate (so.objfile))
 	    {
-	      bsd_uthread_solib_name = so.so_original_name;
+	      bsd_uthread_solib_name = so.original_name;
 	      return;
 	    }
 	}
@@ -294,12 +290,13 @@ bsd_uthread_solib_loaded (solib &so)
 }
 
 static void
-bsd_uthread_solib_unloaded (program_space *pspace, const solib &so)
+bsd_uthread_solib_unloaded (program_space *pspace, const solib &so,
+			    bool still_in_use, bool /* silent */)
 {
-  if (bsd_uthread_solib_name.empty ())
+  if (bsd_uthread_solib_name.empty () || still_in_use)
     return;
 
-  if (so.so_original_name == bsd_uthread_solib_name)
+  if (so.original_name == bsd_uthread_solib_name)
     bsd_uthread_deactivate ();
 }
 
@@ -416,7 +413,7 @@ bsd_uthread_target::wait (ptid_t ptid, struct target_waitstatus *status,
 
   /* Don't let the core see a ptid without a corresponding thread.  */
   thread_info *thread = beneath->find_thread (ptid);
-  if (thread == NULL || thread->state == THREAD_EXITED)
+  if (thread == NULL || thread->state () == THREAD_EXITED)
     add_thread (beneath, ptid);
 
   return ptid;
@@ -457,7 +454,7 @@ bsd_uthread_target::update_thread_list ()
   int offset = bsd_uthread_thread_next_offset;
   CORE_ADDR addr;
 
-  prune_threads ();
+  prune_threads (current_inferior ()->process_target ());
 
   addr = bsd_uthread_read_memory_address (bsd_uthread_thread_list_addr);
   while (addr != 0)
@@ -467,7 +464,7 @@ bsd_uthread_target::update_thread_list ()
       process_stratum_target *proc_target
 	= as_process_stratum_target (this->beneath ());
       thread_info *thread = proc_target->find_thread (ptid);
-      if (thread == nullptr || thread->state == THREAD_EXITED)
+      if (thread == nullptr || thread->state () == THREAD_EXITED)
 	{
 	  /* If INFERIOR_PTID doesn't have a tid member yet, then ptid
 	     is still the initial thread of the process.  Notify GDB
@@ -535,14 +532,12 @@ bsd_uthread_target::pid_to_str (ptid_t ptid)
   if (ptid.tid () != 0)
     return string_printf ("process %d, thread 0x%s",
 			  ptid.pid (),
-			  phex_nz (ptid.tid (), sizeof (ULONGEST)));
+			  phex_nz (ptid.tid ()));
 
   return normal_pid_to_str (ptid);
 }
 
-void _initialize_bsd_uthread ();
-void
-_initialize_bsd_uthread ()
+INIT_GDB_FILE (bsd_uthread)
 {
   gdb::observers::inferior_created.attach (bsd_uthread_inferior_created,
 					   "bsd-uthread");

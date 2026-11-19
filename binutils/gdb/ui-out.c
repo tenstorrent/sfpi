@@ -1,6 +1,6 @@
 /* Output generating routines for GDB.
 
-   Copyright (C) 1999-2024 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
 
    Contributed by Cygnus Solutions.
    Written by Fernando Nasser for Cygnus.
@@ -26,6 +26,7 @@
 #include "gdbsupport/format.h"
 #include "cli/cli-style.h"
 #include "diagnostics.h"
+#include "buffered-streams.h"
 
 #include <vector>
 #include <memory>
@@ -558,7 +559,8 @@ ui_out::field_fmt (const char *fldname, const ui_file_style &style,
 }
 
 void
-ui_out::call_do_message (const ui_file_style &style, const char *format,
+ui_out::call_do_message (ui_file_style &current_style,
+			 const ui_file_style &style, const char *format,
 			 ...)
 {
   va_list args;
@@ -570,7 +572,7 @@ ui_out::call_do_message (const ui_file_style &style, const char *format,
      to put a "format" attribute on call_do_message.  */
   DIAGNOSTIC_PUSH
   DIAGNOSTIC_IGNORE_FORMAT_NONLITERAL
-  do_message (style, format, args);
+  do_message (current_style, style, format, args);
   DIAGNOSTIC_POP
 
   va_end (args);
@@ -582,11 +584,12 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 {
   format_pieces fpieces (&format, true);
 
+  ui_file_style current_style = in_style;
   ui_file_style style = in_style;
 
   for (auto &&piece : fpieces)
     {
-      const char *current_substring = piece.string;
+      const char *current_substring = fpieces.piece_str (piece);
 
       gdb_assert (piece.n_int_args >= 0 && piece.n_int_args <= 2);
       int intvals[2] = { 0, 0 };
@@ -607,13 +610,15 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	    switch (piece.n_int_args)
 	      {
 	      case 0:
-		call_do_message (style, current_substring, str);
+		call_do_message (current_style, style, current_substring,
+				 str);
 		break;
 	      case 1:
-		call_do_message (style, current_substring, intvals[0], str);
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], str);
 		break;
 	      case 2:
-		call_do_message (style, current_substring,
+		call_do_message (current_style, style, current_substring,
 				 intvals[0], intvals[1], str);
 		break;
 	      }
@@ -626,7 +631,8 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	  gdb_assert_not_reached ("wide_char_arg not supported in vmessage");
 	  break;
 	case long_long_arg:
-	  call_do_message (style, current_substring, va_arg (args, long long));
+	  call_do_message (current_style, style, current_substring,
+			   va_arg (args, long long));
 	  break;
 	case int_arg:
 	  {
@@ -634,13 +640,15 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	    switch (piece.n_int_args)
 	      {
 	      case 0:
-		call_do_message (style, current_substring, val);
+		call_do_message (current_style, style, current_substring,
+				 val);
 		break;
 	      case 1:
-		call_do_message (style, current_substring, intvals[0], val);
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], val);
 		break;
 	      case 2:
-		call_do_message (style, current_substring,
+		call_do_message (current_style, style, current_substring,
 				 intvals[0], intvals[1], val);
 		break;
 	      }
@@ -652,13 +660,15 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	    switch (piece.n_int_args)
 	      {
 	      case 0:
-		call_do_message (style, current_substring, val);
+		call_do_message (current_style, style, current_substring,
+				 val);
 		break;
 	      case 1:
-		call_do_message (style, current_substring, intvals[0], val);
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], val);
 		break;
 	      case 2:
-		call_do_message (style, current_substring,
+		call_do_message (current_style, style, current_substring,
 				 intvals[0], intvals[1], val);
 		break;
 	      }
@@ -670,20 +680,43 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	    switch (piece.n_int_args)
 	      {
 	      case 0:
-		call_do_message (style, current_substring, val);
+		call_do_message (current_style, style, current_substring,
+				 val);
 		break;
 	      case 1:
-		call_do_message (style, current_substring, intvals[0], val);
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], val);
 		break;
 	      case 2:
-		call_do_message (style, current_substring,
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], intvals[1], val);
+		break;
+	      }
+	  }
+	  break;
+	case ptrdiff_t_arg:
+	  {
+	    ptrdiff_t val = va_arg (args, ptrdiff_t);
+	    switch (piece.n_int_args)
+	      {
+	      case 0:
+		call_do_message (current_style, style, current_substring,
+				 val);
+		break;
+	      case 1:
+		call_do_message (current_style, style, current_substring,
+				 intvals[0], val);
+		break;
+	      case 2:
+		call_do_message (current_style, style, current_substring,
 				 intvals[0], intvals[1], val);
 		break;
 	      }
 	  }
 	  break;
 	case double_arg:
-	  call_do_message (style, current_substring, va_arg (args, double));
+	  call_do_message (current_style, style, current_substring,
+			   va_arg (args, double));
 	  break;
 	case long_double_arg:
 	  gdb_assert_not_reached ("long_double_arg not supported in vmessage");
@@ -724,7 +757,7 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	    case 's':
 	      {
 		styled_string_s *ss = va_arg (args, styled_string_s *);
-		call_do_message (ss->style, "%s", ss->str);
+		call_do_message (current_style, ss->style, "%s", ss->str);
 	      }
 	      break;
 	    case '[':
@@ -739,7 +772,8 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	      }
 	      break;
 	    default:
-	      call_do_message (style, current_substring, va_arg (args, void *));
+	      call_do_message (current_style, style, current_substring,
+			       va_arg (args, void *));
 	      break;
 	    }
 	  break;
@@ -751,12 +785,16 @@ ui_out::vmessage (const ui_file_style &in_style, const char *format,
 	     because some platforms have modified GCC to include
 	     -Wformat-security by default, which will warn here if
 	     there is no argument.  */
-	  call_do_message (style, current_substring, 0);
+	  call_do_message (current_style, style, current_substring, 0);
 	  break;
 	default:
 	  internal_error (_("failed internal consistency check"));
 	}
     }
+
+  ui_file_style plain;
+  if (can_emit_style_escape () && current_style != plain)
+    emit_style_escape (plain);
 }
 
 void
@@ -828,137 +866,4 @@ ui_out::ui_out (ui_out_flags flags)
 
 ui_out::~ui_out ()
 {
-}
-
-/* See ui-out.h.  */
-
-void
-buffer_group::output_unit::flush () const
-{
-  if (!m_msg.empty ())
-    m_stream->puts (m_msg.c_str ());
-
-  if (m_wrap_hint >= 0)
-    m_stream->wrap_here (m_wrap_hint);
-
-  if (m_flush)
-    m_stream->flush ();
-}
-
-/* See ui-out.h.  */
-
-void
-buffer_group::write (const char *buf, long length_buf, ui_file *stream)
-{
-  /* Record each line separately.  */
-  for (size_t prev = 0, cur = 0; cur < length_buf; ++cur)
-    if (buf[cur] == '\n' || cur == length_buf - 1)
-      {
-	std::string msg (buf + prev, cur - prev + 1);
-
-	if (m_buffered_output.size () > 0
-	    && m_buffered_output.back ().m_wrap_hint == -1
-	    && m_buffered_output.back ().m_stream == stream
-	    && m_buffered_output.back ().m_msg.size () > 0
-	    && m_buffered_output.back ().m_msg.back () != '\n')
-	  m_buffered_output.back ().m_msg.append (msg);
-	else
-	  m_buffered_output.emplace_back (msg).m_stream = stream;
-	prev = cur + 1;
-      }
-}
-
-/* See ui-out.h.  */
-
-void
-buffer_group::wrap_here (int indent, ui_file *stream)
-{
-  m_buffered_output.emplace_back ("", indent).m_stream = stream;
-}
-
-/* See ui-out.h.  */
-
-void
-buffer_group::flush_here (ui_file *stream)
-{
-  m_buffered_output.emplace_back ("", -1, true).m_stream = stream;
-}
-
-/* See ui-out.h.  */
-
-ui_file *
-get_unbuffered (ui_file *stream)
-{
-  buffering_file *buf = dynamic_cast<buffering_file *> (stream);
-
-  if (buf == nullptr)
-    return stream;
-
-  return get_unbuffered (buf->stream ());
-}
-
-buffered_streams::buffered_streams (buffer_group *group, ui_out *uiout)
-  : m_buffered_stdout (group, gdb_stdout),
-    m_buffered_stderr (group, gdb_stderr),
-    m_buffered_stdlog (group, gdb_stdlog),
-    m_buffered_stdtarg (group, gdb_stdtarg),
-    m_uiout (uiout)
-{
-  gdb_stdout = &m_buffered_stdout;
-  gdb_stderr = &m_buffered_stderr;
-  gdb_stdlog = &m_buffered_stdlog;
-  gdb_stdtarg = &m_buffered_stdtarg;
-
-  ui_file *stream = current_uiout->current_stream ();
-  if (stream != nullptr)
-    {
-      m_buffered_current_uiout.emplace (group, stream);
-      current_uiout->redirect (&(*m_buffered_current_uiout));
-    }
-
-  stream = m_uiout->current_stream ();
-  if (stream != nullptr && current_uiout != m_uiout)
-    {
-      m_buffered_uiout.emplace (group, stream);
-      m_uiout->redirect (&(*m_buffered_uiout));
-    }
-
-  m_buffers_in_place = true;
-}
-
-/* See ui-out.h.  */
-
-void
-buffered_streams::remove_buffers ()
-{
-  if (!m_buffers_in_place)
-    return;
-
-  m_buffers_in_place = false;
-
-  gdb_stdout = m_buffered_stdout.stream ();
-  gdb_stderr = m_buffered_stderr.stream ();
-  gdb_stdlog = m_buffered_stdlog.stream ();
-  gdb_stdtarg = m_buffered_stdtarg.stream ();
-
-  if (m_buffered_current_uiout.has_value ())
-    current_uiout->redirect (nullptr);
-
-  if (m_buffered_uiout.has_value ())
-    m_uiout->redirect (nullptr);
-}
-
-buffer_group::buffer_group (ui_out *uiout)
-  : m_buffered_streams (new buffered_streams (this, uiout))
-{ /* Nothing.  */ }
-
-/* See ui-out.h.  */
-
-void
-buffer_group::flush () const
-{
-  m_buffered_streams->remove_buffers ();
-
-  for (const output_unit &ou : m_buffered_output)
-    ou.flush ();
 }

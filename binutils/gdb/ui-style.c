@@ -1,5 +1,5 @@
 /* Styling for ui_file
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,12 +21,14 @@
 #include "gdbsupport/gdb_regex.h"
 
 /* A regular expression that is used for matching ANSI terminal escape
-   sequences.  */
+   sequences.  Note that this will actually match any prefix of such a
+   sequence.  This property is used so that other code can buffer
+   incomplete sequences as needed.  */
 
 static const char ansi_regex_text[] =
-  /* Introduction.  */
-  "^\033\\["
-#define DATA_SUBEXP 1
+  /* Introduction.  Only the escape character is truly required.  */
+  "^\033(\\["
+#define DATA_SUBEXP 2
   /* Capture parameter and intermediate bytes.  */
   "("
   /* Parameter bytes.  */
@@ -36,21 +38,22 @@ static const char ansi_regex_text[] =
   /* End the first capture.  */
   ")"
   /* The final byte.  */
-#define FINAL_SUBEXP 2
-  "([\x40-\x7e])";
+#define FINAL_SUBEXP 3
+  "([\x40-\x7e]))?";
 
 /* The number of subexpressions to allocate space for, including the
    "0th" whole match subexpression.  */
-#define NUM_SUBEXPRESSIONS 3
+#define NUM_SUBEXPRESSIONS 4
 
 /* The compiled form of ansi_regex_text.  */
 
-static regex_t ansi_regex;
+static compiled_regex ansi_regex (ansi_regex_text, REG_EXTENDED,
+  _("Error in ANSI terminal escape sequences regex"));
 
 /* This maps 8-color palette to RGB triples.  The values come from
    plain linux terminal.  */
 
-static const uint8_t palette_8colors[][3] = {
+static const rgb_color palette_8colors[] = {
   { 1, 1, 1 },			/* Black.  */
   { 222, 56, 43 },		/* Red.  */
   { 57, 181, 74 },		/* Green.  */
@@ -63,7 +66,7 @@ static const uint8_t palette_8colors[][3] = {
 
 /* This maps 16-color palette to RGB triples.  The values come from xterm.  */
 
-static const uint8_t palette_16colors[][3] = {
+static const rgb_color palette_16colors[] = {
   { 0, 0, 0 },			/* Black.  */
   { 205, 0, 0 },		/* Red.  */
   { 0, 205, 0 },		/* Green.  */
@@ -163,25 +166,22 @@ ui_file_style::color::to_string () const
 
 /* See ui-style.h.  */
 
-void
-ui_file_style::color::get_rgb (uint8_t *rgb) const
+rgb_color
+ui_file_style::color::get_rgb () const
 {
+  rgb_color rgb;
   if (m_color_space == color_space::RGB_24BIT)
-    {
-      rgb[0] = m_red;
-      rgb[1] = m_green;
-      rgb[2] = m_blue;
-    }
+    rgb = rgb_color (m_red, m_green, m_blue);
   else if (m_color_space == color_space::ANSI_8COLOR
 	   && 0 <= m_value && m_value <= 7)
-    memcpy (rgb, palette_8colors[m_value], 3 * sizeof (uint8_t));
+    rgb = palette_8colors[m_value];
   else if (m_color_space == color_space::AIXTERM_16COLOR
 	   && 0 <= m_value && m_value <= 15)
-    memcpy (rgb, palette_16colors[m_value], 3 * sizeof (uint8_t));
+    rgb = palette_16colors[m_value];
   else if (m_color_space != color_space::XTERM_256COLOR)
     gdb_assert_not_reached ("get_rgb called on invalid color");
   else if (0 <= m_value && m_value <= 15)
-    memcpy (rgb, palette_16colors[m_value], 3 * sizeof (uint8_t));
+    rgb = palette_16colors[m_value];
   else if (m_value >= 16 && m_value <= 231)
     {
       int value = m_value;
@@ -199,12 +199,12 @@ ui_file_style::color::get_rgb (uint8_t *rgb) const
   else if (232 <= m_value && m_value <= 255)
     {
       uint8_t v = (m_value - 232) * 10 + 8;
-      rgb[0] = v;
-      rgb[1] = v;
-      rgb[2] = v;
+      rgb = rgb_color (v, v, v);
     }
   else
     gdb_assert_not_reached ("get_rgb called on invalid color");
+
+  return rgb;
 }
 
 /* See ui-style.h.  */
@@ -223,11 +223,7 @@ ui_file_style::color::approximate (const std::vector<color_space> &spaces) const
       target_space = sp;
 
   if (target_space == color_space::RGB_24BIT)
-    {
-      uint8_t rgb[3];
-      get_rgb (rgb);
-      return color (rgb[0], rgb[1], rgb[2]);
-    }
+    return color (get_rgb ());
 
   int target_size = 0;
   switch (target_space)
@@ -248,14 +244,12 @@ ui_file_style::color::approximate (const std::vector<color_space> &spaces) const
 
   color result = NONE;
   int best_distance = std::numeric_limits<int>::max ();
-  uint8_t rgb[3];
-  get_rgb (rgb);
+  rgb_color rgb = get_rgb ();
 
   for (int i = 0; i < target_size; ++i)
     {
-      uint8_t c_rgb[3];
       color c (target_space, i);
-      c.get_rgb (c_rgb);
+      rgb_color c_rgb = c.get_rgb ();
       int d_red = std::abs (rgb[0] - c_rgb[0]);
       int d_green = std::abs (rgb[1] - c_rgb[1]);
       int d_blue = std::abs (rgb[2] - c_rgb[2]);
@@ -286,6 +280,16 @@ ui_file_style::to_ansi () const
 	result.append ("22");
       else
 	result.append (std::to_string (m_intensity));
+      result.push_back (';');
+      if (m_italic)
+	result.append ("3");
+      else
+	result.append ("23");
+      result.push_back (';');
+      if (m_underline)
+	result.append ("4");
+      else
+	result.append ("24");
       result.push_back (';');
       if (m_reverse)
 	result.push_back ('7');
@@ -364,12 +368,21 @@ ui_file_style::parse (const char *buf, size_t *n_read)
 {
   regmatch_t subexps[NUM_SUBEXPRESSIONS];
 
-  int match = regexec (&ansi_regex, buf, ARRAY_SIZE (subexps), subexps, 0);
+  int match = ansi_regex.exec (buf, ARRAY_SIZE (subexps), subexps, 0);
   if (match == REG_NOMATCH)
     {
       *n_read = 0;
       return false;
     }
+
+  /* If the final subexpression did not match, then that means there
+     was an incomplete sequence.  These are ignored here.  */
+  if (subexps[FINAL_SUBEXP].rm_so == -1)
+    {
+      *n_read = 0;
+      return false;
+    }
+
   /* Other failures mean the regexp is broken.  */
   gdb_assert (match == 0);
   /* The regexp is anchored.  */
@@ -423,6 +436,14 @@ ui_file_style::parse (const char *buf, size_t *n_read)
 	      /* Dim.  */
 	      m_intensity = DIM;
 	      break;
+	    case 3:
+	      /* Italic.  */
+	      m_italic = true;
+	      break;
+	    case 4:
+	      /* Underline.  */
+	      m_underline = true;
+	      break;
 	    case 7:
 	      /* Reverse.  */
 	      m_reverse = true;
@@ -433,6 +454,14 @@ ui_file_style::parse (const char *buf, size_t *n_read)
 	    case 22:
 	      /* Normal.  */
 	      m_intensity = NORMAL;
+	      break;
+	    case 23:
+	      /* Non-italic.  */
+	      m_italic = false;
+	      break;
+	    case 24:
+	      /* Non-underline.  */
+	      m_underline = false;
 	      break;
 	    case 27:
 	      /* Inverse off.  */
@@ -526,27 +555,25 @@ ui_file_style::parse (const char *buf, size_t *n_read)
 
 /* See ui-style.h.  */
 
-bool
-skip_ansi_escape (const char *buf, int *n_read)
+ansi_escape_result
+examine_ansi_escape (const char *buf, int *n_read)
 {
+  gdb_assert (*buf == '\033');
+
   regmatch_t subexps[NUM_SUBEXPRESSIONS];
 
-  int match = regexec (&ansi_regex, buf, ARRAY_SIZE (subexps), subexps, 0);
-  if (match == REG_NOMATCH || buf[subexps[FINAL_SUBEXP].rm_so] != 'm')
-    return false;
+  int match = ansi_regex.exec (buf, ARRAY_SIZE (subexps), subexps, 0);
+  if (match == REG_NOMATCH)
+    return ansi_escape_result::NO_MATCH;
+
+  if (subexps[FINAL_SUBEXP].rm_so == -1)
+    return ansi_escape_result::INCOMPLETE;
+
+  if (buf[subexps[FINAL_SUBEXP].rm_so] != 'm')
+    return ansi_escape_result::NO_MATCH;
 
   *n_read = subexps[FINAL_SUBEXP].rm_eo;
-  return true;
-}
-
-void _initialize_ui_style ();
-void
-_initialize_ui_style ()
-{
-  int code = regcomp (&ansi_regex, ansi_regex_text, REG_EXTENDED);
-  /* If the regular expression was incorrect, it was a programming
-     error.  */
-  gdb_assert (code == 0);
+  return ansi_escape_result::MATCHED;
 }
 
 /* See ui-style.h.  */
@@ -558,7 +585,13 @@ colorsupport ()
     {
       std::vector<color_space> result = {color_space::MONOCHROME};
 
-      int colors = tgetnum ("Co");
+      int colors = gdb_get_ncolors ();
+#ifdef __MINGW32__
+      /* MS-Windows terminal generally doesn't have "Co" in its
+	 terminfo, but always supports at least 8 colors.  */
+      if (colors <= 0)
+	colors = 8;
+#endif
       if (colors >= 8)
 	result.push_back (color_space::ANSI_8COLOR);
       if (colors >= 16)
@@ -567,8 +600,10 @@ colorsupport ()
 	result.push_back (color_space::XTERM_256COLOR);
 
       const char *colorterm = getenv ("COLORTERM");
-      if (colorterm != nullptr && (!strcmp (colorterm, "truecolor")
-	  || !strcmp (colorterm, "24bit")))
+      if (colors >= 16777216
+	  || (colorterm != nullptr
+	      && (streq (colorterm, "truecolor")
+		  || streq (colorterm, "24bit"))))
 	result.push_back (color_space::RGB_24BIT);
 
       return result;

@@ -1,6 +1,6 @@
 /* Declarations for value printing routines for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -29,7 +29,7 @@ enum val_prettyformat
   {
     Val_no_prettyformat = 0,
     Val_prettyformat,
-    /* * Use the default setting which the user has specified.  */
+    /* Use the default setting which the user has specified.  */
     Val_prettyformat_default
   };
 
@@ -197,17 +197,17 @@ extern void print_function_pointer_address (const struct value_print_options *op
 
 /* Helper function to check the validity of some bits of a value.
 
-   If TYPE represents some aggregate type (e.g., a structure), return 1.
+   If TYPE is a structure, union, array, or complex type, return 1.  These
+   types can have components with different availability states, so callers
+   should check components individually.
 
-   Otherwise, any of the bytes starting at OFFSET and extending for
-   TYPE->length () bytes are invalid, print a message to STREAM and
-   return 0.  The checking is done using FUNCS.
+   Otherwise, if any of the bytes starting at FIELD_BYTE_OFFSET and
+   extending for TYPE->length () bytes are invalid, print a message to
+   STREAM and return false.  Otherwise, return true.  */
 
-   Otherwise, return 1.  */
-
-extern int valprint_check_validity (struct ui_file *stream, struct type *type,
-				    LONGEST embedded_offset,
-				    const struct value *val);
+extern bool valprint_check_validity (struct ui_file *stream, struct type *type,
+				     LONGEST field_byte_offset,
+				     const struct value *val);
 
 extern void val_print_optimized_out (const struct value *val,
 				     struct ui_file *stream);
@@ -258,10 +258,10 @@ extern void generic_value_print (struct value *val, struct ui_file *stream,
 				 const struct generic_val_print_decorations *d);
 
 extern void generic_emit_char (int c, struct type *type, struct ui_file *stream,
-			       int quoter, const char *encoding);
+			       const char *encoding);
 
-extern void generic_printstr (struct ui_file *stream, struct type *type, 
-			      const gdb_byte *string, unsigned int length, 
+extern void generic_printstr (struct ui_file *stream, struct type *type,
+			      const gdb_byte *string, unsigned int length,
 			      const char *encoding, int force_ellipses,
 			      int quote_char, int c_style_terminator,
 			      const struct value_print_options *options);
@@ -272,7 +272,11 @@ extern void generic_printstr (struct ui_file *stream, struct type *type,
 
 extern void output_command (const char *args, int from_tty);
 
-extern int val_print_scalar_type_p (struct type *type);
+/* When printing in "summary" mode we want to print scalar arguments
+   but not aggregate arguments.  Return true if TYPE is a scalar type,
+   false if it is an aggregate.  */
+
+extern bool val_print_scalar_type_p (struct type *type);
 
 struct format_data
   {

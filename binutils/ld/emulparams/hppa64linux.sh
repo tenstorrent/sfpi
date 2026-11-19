@@ -5,8 +5,21 @@ NO_REL_RELOCS=yes
 TEXT_START_ADDR=0x10000
 TARGET_PAGE_SIZE=0x10000
 MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
+COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+if test "$LD_FLAG" = "N"; then
+  unset DATA_SEGMENT_ALIGN
+  unset DATA_SEGMENT_END
+  unset DATA_SEGMENT_RELRO_END
+else
+  DATA_SEGMENT_ALIGN="ALIGN(${MAXPAGESIZE});\
+  . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
+  DATA_SEGMENT_END=". = DATA_SEGMENT_END (.);"
+  DATA_SEGMENT_RELRO_END=". = DATA_SEGMENT_RELRO_END (${SEPARATE_GOTPLT-0}, .);"
+fi
+DATA_SECTION_ALIGNMENT="${CREATE_SHLIB-${CREATE_PIE-ALIGN(8)}}"
 ARCH=hppa
 MACHINE=hppa2.0w
+NOP=0x08000240
 ENTRY="main"
 TEMPLATE_NAME=elf
 GENERATE_SHLIB_SCRIPT=yes
@@ -39,11 +52,6 @@ OTHER_SYMBOLS='
 OTHER_GOT_RELOC_SECTIONS="
   .rela.dlt     ${RELOCATING-0} : { *(.rela.dlt) }
   .rela.opd     ${RELOCATING-0} : { *(.rela.opd) }"
-
-# We're not actually providing a symbol anymore (due to the inability to be
-# safe in regards to shared libraries). So we just allocate the hunk of space
-# unconditionally, but do not mess around with the symbol table.
-DATA_START_SYMBOLS='. += 16;'
 
 DATA_PLT=
 PLT_BEFORE_GOT=

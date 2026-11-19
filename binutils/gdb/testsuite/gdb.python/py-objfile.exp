@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2024 Free Software Foundation, Inc.
+# Copyright (C) 2011-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ require allow_python_tests
 standard_testfile
 
 if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile}] } {
-    return -1
+    return
 }
 
 if {![runto_main]} {
-    return 0
+    return
 }
 
 set python_error_text "Error occurred in Python.*"
@@ -68,7 +68,7 @@ gdb_test "python print (gdb.lookup_objfile (\"${testfile}\").lookup_static_symbo
     "None" "lookup_static_symbol can handle nonexistent symbol"
 
 set binfile_build_id [get_build_id $binfile]
-if [string compare $binfile_build_id ""] {
+if {[string compare $binfile_build_id ""]} {
     verbose -log "binfile_build_id = $binfile_build_id"
     gdb_test "python print (objfile.build_id)" "$binfile_build_id" \
     "Get objfile build id"
@@ -116,11 +116,11 @@ gdb_test "python print(objfile.username)" "None" \
 # Now build another copy of the testcase, this time without debug info.
 
 if { [prepare_for_testing "failed to prepare" ${testfile}2 ${srcfile} {nodebug ldflags=-Wl,--strip-debug}] } {
-    return -1
+    return
 }
 
-if ![runto_main] {
-    return 0
+if {![runto_main]} {
+    return
 }
 
 gdb_py_test_silent_cmd "python objfile = gdb.objfiles()\[0\]" \
@@ -144,7 +144,8 @@ gdb_test "python print (sep_objfile.owner.filename)" "${testfile}2" \
 gdb_test "python print (sep_objfile.owner.username)" "${testfile}2" \
     "Test user-name of owner of separate debug file"
 
-gdb_test "p main" "= {int \\(\\)} $hex <main>" \
+set re_prototype [string_to_regexp "int (void)"]
+gdb_test "p main" "= {$re_prototype} $hex <main>" \
     "print main with debug info"
 
 # Separate debug files are not findable.
@@ -157,12 +158,13 @@ if { [get_python_valueof "sep_objfile.build_id" "None"] != "None" } {
 # An objfile that was a symlink to a differently named file is still
 # findable with its original name.
 # On Windows we don't have proper symlinks, so skip this.
-if ![ishost *-*-mingw*] {
+if {![ishost *-*-mingw*]} {
     set symlink_binary [standard_output_file "symlink-binary"]
     remote_exec host "rm -f ${symlink_binary}"
     remote_exec host "ln -sf ${testfile} ${symlink_binary}"
-    if [remote_file host exists "${symlink_binary}"] {
-	clean_restart "${symlink_binary}"
+    if {[remote_file host exists "${symlink_binary}"]} {
+	clean_restart
+	gdb_load "${symlink_binary}"
 	gdb_test "python print (gdb.lookup_objfile (\"${symlink_binary}\").filename)" \
 	    "${testfile}" "gdb.lookup_objfile of symlinked binary"
     }

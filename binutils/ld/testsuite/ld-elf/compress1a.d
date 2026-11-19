@@ -1,8 +1,10 @@
 #source: compress1.s
 #as: --compress-debug-sections
-#ld: -e func_cu2
+#ld: -e func_cu2 [alpha_ld_flags]
 #readelf: -S --wide
 #xfail: alpha-*-*ecoff
+# PR ld/25802
+#xfail: sparcv9-*-solaris2*
 
 #failif
 #...

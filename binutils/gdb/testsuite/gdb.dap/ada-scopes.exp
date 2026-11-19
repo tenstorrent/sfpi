@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Free Software Foundation, Inc.
+# Copyright 2023-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ standard_ada_testfile prog
 
 if {[gdb_compile_ada "${srcfile}" "${binfile}" executable \
 	 {debug additional_flags=-gnata}] != ""} {
-    return -1
+    return
 }
 
 if {[dap_initialize] == ""} {
@@ -62,7 +62,7 @@ lassign $scopes scope _ignore
 gdb_assert {[dict get $scope name] == "Locals"} "scope is locals"
 gdb_assert {[dict get $scope source name] == "prog.adb"} "scope has source"
 
-gdb_assert {[dict get $scope namedVariables] == 2} "two vars in scope"
+gdb_assert {[dict get $scope namedVariables] == 5} "five vars in scope"
 
 set num [dict get $scope variablesReference]
 set refs [lindex [dap_check_request_and_response "fetch variables" \
@@ -79,6 +79,10 @@ foreach var [dict get $refs body variables] {
 	    gdb_assert {[dict get $var value] == "three"} "check value of value"
 	}
 	"my_string" {
+	}
+	"one" -
+	"two" {
+	    # Local enumerators appear in the scope.
 	}
 	default {
 	    fail "unknown variable $name"

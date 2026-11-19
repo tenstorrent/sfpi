@@ -1,5 +1,5 @@
 /* objcopy.c -- copy object file from input to output, optionally massaging it.
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of GNU Binutils.
 
@@ -30,6 +30,7 @@
 #include "coff/internal.h"
 #include "libcoff.h"
 #include "safe-ctype.h"
+#include "plugin.h"
 
 /* FIXME: See bfd/peXXigen.c for why we include an architecture specific
    header in generic PE code.  */
@@ -333,6 +334,7 @@ enum command_line_switch
   OPTION_HEAP,
   OPTION_IMAGE_BASE,
   OPTION_IMPURE,
+  OPTION_BINARY_SYMBOL_PREFIX,
   OPTION_INTERLEAVE_WIDTH,
   OPTION_KEEPGLOBAL_SYMBOLS,
   OPTION_KEEP_FILE_SYMBOLS,
@@ -359,6 +361,7 @@ enum command_line_switch
   OPTION_RENAME_SECTION,
   OPTION_REVERSE_BYTES,
   OPTION_PE_SECTION_ALIGNMENT,
+  OPTION_PLUGIN,
   OPTION_SET_SECTION_FLAGS,
   OPTION_SET_SECTION_ALIGNMENT,
   OPTION_SET_START,
@@ -402,6 +405,7 @@ static struct option strip_options[] =
   {"output-file", required_argument, 0, 'o'},
   {"output-format", required_argument, 0, 'O'},	/* Obsolete */
   {"output-target", required_argument, 0, 'O'},
+  {"plugin", required_argument, 0, OPTION_PLUGIN},
   {"preserve-dates", no_argument, 0, 'p'},
   {"remove-section", required_argument, 0, 'R'},
   {"remove-relocations", required_argument, 0, OPTION_REMOVE_RELOCS},
@@ -462,6 +466,7 @@ static struct option copy_options[] =
   {"info", no_argument, 0, OPTION_FORMATS_INFO},
   {"input-format", required_argument, 0, 'I'}, /* Obsolete */
   {"input-target", required_argument, 0, 'I'},
+  {"binary-symbol-prefix", required_argument, 0, OPTION_BINARY_SYMBOL_PREFIX},
   {"interleave", optional_argument, 0, 'i'},
   {"interleave-width", required_argument, 0, OPTION_INTERLEAVE_WIDTH},
   {"keep-file-symbols", no_argument, 0, OPTION_KEEP_FILE_SYMBOLS},
@@ -533,7 +538,14 @@ extern char *program_name;
 /* This flag distinguishes between strip and objcopy:
    1 means this is 'strip'; 0 means this is 'objcopy'.
    -1 means if we should use argv[0] to decide.  */
+#ifndef is_strip
 extern int is_strip;
+#endif
+
+/* The symbol prefix of a binary input blob.
+ * <p>_start, <p>_end, <p>_size
+ */
+extern char *bfd_binary_symbol_prefix;
 
 /* The maximum length of an S record.  This variable is defined in srec.c
    and can be modified by the --srec-len parameter.  */
@@ -565,6 +577,12 @@ static bool write_debugging_info (bfd *, void *, long *, asymbol ***);
 static const char *lookup_sym_redefinition (const char *);
 static const char *find_section_rename (const char *, flagword *);
 
+#ifdef HAVE_ZSTD
+#define ZSTD_OPT "|zstd"
+#else
+#define ZSTD_OPT ""
+#endif
+
 ATTRIBUTE_NORETURN static void
 copy_usage (FILE *stream, int exit_status)
 {
@@ -667,6 +685,9 @@ copy_usage (FILE *stream, int exit_status)
      --globalize-symbols <file>    --globalize-symbol for all in <file>\n\
      --keep-global-symbols <file>  -G for all symbols listed in <file>\n\
      --weaken-symbols <file>       -W for all symbols listed in <file>\n\
+     --binary-symbol-prefix <prefix>\n\
+                                    Use <prefix> as the base symbol name for the input file\n\
+                                     (default: derived from file name)\n\
      --add-symbol <name>=[<section>:]<value>[,<flags>]  Add a symbol\n\
      --alt-machine-code <index>    Use the target's <index>'th alternative machine\n\
      --writable-text               Mark the output text as writable\n\
@@ -687,8 +708,8 @@ copy_usage (FILE *stream, int exit_status)
                                    <commit>\n\
      --subsystem <name>[:<version>]\n\
                                    Set PE subsystem to <name> [& <version>]\n\
-     --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi|zstd}]\n\
-				   Compress DWARF debug sections\n\
+     --compress-debug-sections[={none|zlib|zlib-gnu|zlib-gabi%s}]\n\
+                                   Compress DWARF debug sections\n\
      --decompress-debug-sections   Decompress DWARF debug sections using zlib\n\
      --elf-stt-common=[yes|no]     Generate ELF common symbols with STT_COMMON\n\
                                      type\n\
@@ -700,7 +721,7 @@ copy_usage (FILE *stream, int exit_status)
   -V --version                     Display this program's version number\n\
   -h --help                        Display this output\n\
      --info                        List object formats & architectures supported\n\
-"));
+"), ZSTD_OPT);
   list_supported_targets (program_name, stream);
   if (REPORT_BUGS_TO[0] && exit_status == 0)
     fprintf (stream, _("Report bugs to %s\n"), REPORT_BUGS_TO);
@@ -756,6 +777,9 @@ strip_usage (FILE *stream, int exit_status)
      --info                        List object formats & architectures supported\n\
   -o <file>                        Place stripped output into <file>\n\
 "));
+  if (bfd_plugin_enabled ())
+    fprintf (stream, _("\
+      --plugin NAME                Load the specified plugin\n"));
 
   list_supported_targets (program_name, stream);
   if (REPORT_BUGS_TO[0] && exit_status == 0)
@@ -1322,8 +1346,39 @@ is_mergeable_note_section (bfd * abfd, asection * sec)
 /* See if a non-group section is being removed.  */
 
 static bool
-is_strip_section_1 (bfd *abfd ATTRIBUTE_UNUSED, asection *sec)
+is_strip_section_1 (bfd *abfd, asection *sec)
 {
+  if (strip_symbols == STRIP_ALL
+      && bfd_get_flavour (abfd) == bfd_target_elf_flavour
+      && elf_elfheader (abfd)->e_ident[EI_OSABI] == ELFOSABI_SOLARIS)
+    {
+      struct bfd_elf_section_data *e = elf_section_data (sec);
+      Elf_Internal_Shdr **sections = elf_elfsections (abfd);
+      switch (e->this_hdr.sh_type)
+	{
+	case SHT_SUNW_symsort:
+	case SHT_SUNW_symnsort:
+	  /* On Solaris, non-SHF_ALLOC SHT_SUNW_symsort and
+	     SHT_SUNW_symnsort sections are linked with a non-SHF_ALLOC
+	     SHT_SYMTAB section.  Since strip removes non-SHF_ALLOC
+	     SHT_SYMTAB section with STRIP_ALL, also remove non-SHF_ALLOC
+	     SHT_SUNW_symsort and SHT_SUNW_symnsort sections.  */
+	  if ((e->this_hdr.sh_flags & SHF_ALLOC) == 0
+	      && sections != NULL
+	      && e->this_hdr.sh_link < elf_numsections (abfd))
+	    {
+	      Elf_Internal_Shdr *l = sections[e->this_hdr.sh_link];
+	      if (l->sh_type == SHT_SYMTAB
+		  && (l->sh_flags & SHF_ALLOC) == 0)
+		return true;
+	    }
+	  break;
+
+	default:
+	  break;
+	}
+    }
+
   if (find_section_list (bfd_section_name (sec), false, SECTION_CONTEXT_KEEP)
       != NULL)
     return false;
@@ -1475,6 +1530,15 @@ is_hidden_symbol (asymbol *sym)
 	return true;
       }
   return false;
+}
+
+static void
+clear_visibility (asymbol *sym)
+{
+  elf_symbol_type *elf_sym = elf_symbol_from (sym);
+
+  if (elf_sym != NULL)
+    elf_sym->internal_elf_sym.st_other &= ~ELF_ST_VISIBILITY (~0);
 }
 
 /* Empty name is hopefully never a valid symbol name.  */
@@ -1710,6 +1774,7 @@ filter_symbols (bfd *abfd, bfd *obfd, asymbol **osyms,
 	    {
 	      flags &= ~(BSF_GLOBAL | BSF_WEAK);
 	      flags |= BSF_LOCAL;
+	      clear_visibility (sym);
 	    }
 
 	  else if (!undefined
@@ -1914,20 +1979,11 @@ add_redefine_syms_file (const char *filename)
    Returns TRUE upon success, FALSE otherwise.  */
 
 static bool
-copy_unknown_object (bfd *ibfd, bfd *obfd)
+copy_unknown_file (bfd *ibfd, bfd *obfd, off_t size, unsigned int mode)
 {
   char *cbuf;
   bfd_size_type tocopy;
-  off_t size;
-  struct stat buf;
 
-  if (bfd_stat_arch_elt (ibfd, &buf) != 0)
-    {
-      bfd_nonfatal_message (NULL, ibfd, NULL, NULL);
-      return false;
-    }
-
-  size = buf.st_size;
   if (size < 0)
     {
       non_fatal (_("stat returns negative size for `%s'"),
@@ -1972,8 +2028,28 @@ copy_unknown_object (bfd *ibfd, bfd *obfd)
 
   /* We should at least to be able to read it back when copying an
      unknown object in an archive.  */
-  chmod (bfd_get_filename (obfd), buf.st_mode | S_IRUSR);
+  chmod (bfd_get_filename (obfd), mode | S_IRUSR);
   free (cbuf);
+  return true;
+}
+
+/* Copy unknown object file archive member IBFD onto OBFD.
+   Returns TRUE upon success, FALSE otherwise.  */
+
+static bool
+copy_unknown_object (bfd *ibfd, bfd *obfd)
+{
+  struct stat buf;
+
+  if (bfd_stat_arch_elt (ibfd, &buf) != 0)
+    {
+      bfd_nonfatal_message (NULL, ibfd, NULL, NULL);
+      return false;
+    }
+
+  if (!copy_unknown_file (ibfd, obfd, buf.st_size, buf.st_mode))
+    return false;
+
   return true;
 }
 
@@ -2503,7 +2579,6 @@ merge_gnu_build_notes (bfd *          abfd,
 
   /* Reconstruct the ELF notes.  */
   bfd_byte *     new_contents;
-  bfd_byte *     old;
   bfd_byte *     new;
   bfd_vma        prev_start = 0;
   bfd_vma        prev_end = 0;
@@ -2511,12 +2586,8 @@ merge_gnu_build_notes (bfd *          abfd,
   /* Not sure how, but the notes might grow in size.
      (eg see PR 1774507).  Allow for this here.  */
   new = new_contents = xmalloc (size * 2);
-  for (pnote = pnotes, old = contents;
-       pnote < pnotes_end;
-       pnote ++)
+  for (pnote = pnotes; pnote < pnotes_end; pnote ++)
     {
-      bfd_size_type note_size = 12 + pnote->padded_namesz + pnote->note.descsz;
-
       if (! is_deleted_note (pnote))
 	{
 	  /* Create the note, potentially using the
@@ -2559,8 +2630,6 @@ merge_gnu_build_notes (bfd *          abfd,
 	      prev_end = pnote->end;
 	    }
 	}
-
-      old += note_size;
     }
 
 #if DEBUG_MERGE
@@ -2788,21 +2857,24 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
       && bfd_get_flavour (ibfd) != bfd_target_elf_flavour
       && bfd_get_flavour (obfd) == bfd_target_elf_flavour)
     {
-      const struct elf_backend_data *bed = get_elf_backend_data (obfd);
+      elf_backend_data *bed = get_elf_backend_data (obfd);
       iarch = bed->arch;
       imach = 0;
     }
-  if (!bfd_set_arch_mach (obfd, iarch, imach)
-      && (ibfd->target_defaulted
-	  || bfd_get_arch (ibfd) != bfd_get_arch (obfd)))
+  if (iarch == bfd_arch_unknown
+      && bfd_get_flavour (ibfd) == bfd_target_elf_flavour
+      && ibfd->target_defaulted)
     {
-      if (bfd_get_arch (ibfd) == bfd_arch_unknown)
-	non_fatal (_("Unable to recognise the format of the input file `%s'"),
-		   bfd_get_archive_filename (ibfd));
-      else
-	non_fatal (_("Output file cannot represent architecture `%s'"),
-		   bfd_printable_arch_mach (bfd_get_arch (ibfd),
-					    bfd_get_mach (ibfd)));
+      non_fatal (_("Unable to recognise the architecture of the input file `%s'"),
+		 bfd_get_archive_filename (ibfd));
+      return false;
+    }
+  if (!bfd_set_arch_mach (obfd, iarch, imach)
+      && iarch != bfd_arch_unknown)
+    {
+      non_fatal (_("Output file cannot represent architecture `%s'"),
+		 bfd_printable_arch_mach (bfd_get_arch (ibfd),
+					  bfd_get_mach (ibfd)));
       return false;
     }
 
@@ -2832,7 +2904,7 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 
       if (pe_file_alignment != (bfd_vma) -1)
 	pe->pe_opthdr.FileAlignment = pe_file_alignment;
-      else
+      else if (!is_strip)
 	pe_file_alignment = PE_DEF_FILE_ALIGNMENT;
 
       if (pe_heap_commit != (bfd_vma) -1)
@@ -2846,7 +2918,7 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 
       if (pe_section_alignment != (bfd_vma) -1)
 	pe->pe_opthdr.SectionAlignment = pe_section_alignment;
-      else
+      else if (!is_strip)
 	pe_section_alignment = PE_DEF_SECTION_ALIGNMENT;
 
       if (pe_stack_commit != (bfd_vma) -1)
@@ -3000,13 +3072,13 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
 	   pupdate = pupdate->next)
 	{
 	  pupdate->section = bfd_get_section_by_name (ibfd, pupdate->name);
-	  if (pupdate->section == NULL)
+	  if (pupdate->section == NULL
+	      || (osec = pupdate->section->output_section) == NULL)
 	    {
-	      non_fatal (_("error: %s not found, can't be updated"), pupdate->name);
+	      non_fatal (_("error: %s can't be updated"), pupdate->name);
 	      return false;
 	    }
 
-	  osec = pupdate->section->output_section;
 	  if (!bfd_set_section_size (osec, pupdate->size))
 	    {
 	      bfd_nonfatal_message (NULL, obfd, osec, NULL);
@@ -3289,8 +3361,8 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
   if (convert_debugging)
     dhandle = read_debugging_info (ibfd, isympp, symcount, false);
 
-   if ((obfd->flags & (EXEC_P | DYNAMIC)) != 0
-       && (obfd->flags & HAS_RELOC) == 0)
+  if ((obfd->flags & (EXEC_P | DYNAMIC)) != 0
+      && (obfd->flags & HAS_RELOC) == 0)
     {
       if (bfd_keep_unused_section_symbols (obfd) || keep_section_symbols)
 	{
@@ -3361,7 +3433,7 @@ copy_object (bfd *ibfd, bfd *obfd, const bfd_arch_info_type *input_arch)
     }
 
   for (long s = 0; s < symcount; s++)
-    if (!bfd_copy_private_symbol_data (ibfd, osympp[s], obfd, osympp[s]))
+    if (!bfd_copy_private_symbol_data (ibfd, osympp + s, obfd, osympp + s))
       goto fail;
 
   if (dhandle != NULL)
@@ -3722,10 +3794,8 @@ copy_archive (bfd *ibfd, bfd *obfd, const char *output_target,
       l->obfd = NULL;
       list = l;
 
+      this_element->plugin_format = bfd_plugin_no;
       ok_object = bfd_check_format (this_element, bfd_object);
-      if (!ok_object)
-	bfd_nonfatal_message (NULL, this_element, NULL,
-			      _("Unable to recognise the format of file"));
 
       /* PR binutils/3110: Cope with archives
 	 containing multiple target types.  */
@@ -3775,7 +3845,8 @@ copy_archive (bfd *ibfd, bfd *obfd, const char *output_target,
 	    set_times (output_name, &buf);
 
 	  /* Open the newly created output file and attach to our list.  */
-	  output_element = bfd_openr (output_name, output_target);
+	  const char *targ = force_output_target ? output_target : NULL;
+	  output_element = bfd_openr (output_name, targ);
 
 	  list->obfd = output_element;
 
@@ -3843,6 +3914,7 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
   char **obj_matching;
   char **core_matching;
   off_t size = get_file_size (input_filename);
+  const char *target = input_target;
 
   if (size < 1)
     {
@@ -3855,10 +3927,13 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
 
   /* To allow us to do "strip *" without dying on the first
      non-object file, failures are nonfatal.  */
-  ibfd = bfd_openr (input_filename, input_target);
+  ibfd = bfd_openr (input_filename, target);
   if (ibfd == NULL || bfd_stat (ibfd, in_stat) != 0)
     {
-      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
+      if (bfd_get_error () == bfd_error_invalid_target && target != NULL)
+	bfd_nonfatal_message (target, NULL, NULL, NULL);
+      else
+	bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
       if (ibfd != NULL)
 	bfd_close (ibfd);
       status = 1;
@@ -3906,6 +3981,8 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
       break;
     }
 
+  ibfd->plugin_format = bfd_plugin_no;
+
   if (bfd_check_format (ibfd, bfd_archive))
     {
       bool force_output_target;
@@ -3913,7 +3990,8 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
 
       /* bfd_get_target does not return the correct value until
 	 bfd_check_format succeeds.  */
-      if (output_target == NULL)
+      if (output_target == NULL
+	  || strcmp (output_target, "default") == 0)
 	{
 	  output_target = bfd_get_target (ibfd);
 	  force_output_target = false;
@@ -3930,7 +4008,10 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
 	{
 	  if (ofd >= 0)
 	    close (ofd);
-	  bfd_nonfatal_message (output_filename, NULL, NULL, NULL);
+	  if (force_output_target && bfd_get_error () == bfd_error_invalid_target)
+	    bfd_nonfatal_message (output_target, NULL, NULL, NULL);
+	  else
+	    bfd_nonfatal_message (output_filename, NULL, NULL, NULL);
 	  bfd_close (ibfd);
 	  status = 1;
 	  return;
@@ -3946,15 +4027,64 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
       if (!copy_archive (ibfd, obfd, output_target, force_output_target,
 			 input_arch))
 	status = 1;
+      return;
     }
-  else if (bfd_check_format_matches (ibfd, bfd_object, &obj_matching))
+
+  bool ok_plugin = false;
+  bool ok_object = bfd_check_format_matches (ibfd, bfd_object, &obj_matching);
+  bfd_error_type obj_error = bfd_get_error ();
+  bfd_error_type core_error = bfd_error_no_error;
+  if (!ok_object)
+    {
+      ok_object = bfd_check_format_matches (ibfd, bfd_core, &core_matching);
+      core_error = bfd_get_error ();
+      if (ok_object)
+	{
+	  if (obj_error == bfd_error_file_ambiguously_recognized)
+	    free (obj_matching);
+	  obj_error = bfd_error_no_error;
+	}
+      else if (bfd_plugin_enabled ())
+	{
+	  /* This is for LLVM bytecode files, which are not ELF objects.
+	     Since objcopy/strip does nothing with these files except
+	     copy them whole perhaps we ought to just reject them?  */
+	  bfd_find_target ("plugin", ibfd);
+	  ibfd->plugin_format = bfd_plugin_unknown;
+	  ok_plugin = bfd_check_format (ibfd, bfd_object);
+	}
+    }
+
+  if (obj_error == bfd_error_file_ambiguously_recognized)
+    {
+      if (core_error == bfd_error_file_ambiguously_recognized)
+	free (core_matching);
+      bfd_set_error (obj_error);
+      status = 1;
+      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
+      list_matching_formats (obj_matching);
+    }
+  else if (core_error == bfd_error_file_ambiguously_recognized)
+    {
+      status = 1;
+      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
+      list_matching_formats (core_matching);
+    }
+  else if (!ok_object && !ok_plugin)
+    {
+      status = 1;
+      bfd_set_error (obj_error);
+      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
+    }
+  else
     {
       bfd *obfd;
-    do_copy:
 
       /* bfd_get_target does not return the correct value until
 	 bfd_check_format succeeds.  */
-      if (output_target == NULL)
+      if (ok_object
+	  && (output_target == NULL
+	      || strcmp (output_target, "default") == 0))
 	output_target = bfd_get_target (ibfd);
 
       if (ofd >= 0)
@@ -3966,58 +4096,36 @@ copy_file (const char *input_filename, const char *output_filename, int ofd,
  	{
 	  if (ofd >= 0)
 	    close (ofd);
- 	  bfd_nonfatal_message (output_filename, NULL, NULL, NULL);
+	  if (bfd_get_error () == bfd_error_invalid_target)
+	    bfd_nonfatal_message (output_target, NULL, NULL, NULL);
+	  else
+	    bfd_nonfatal_message (output_filename, NULL, NULL, NULL);
 	  bfd_close (ibfd);
  	  status = 1;
  	  return;
  	}
 
-      if (! copy_object (ibfd, obfd, input_arch))
+      if (ok_object
+	  ? !copy_object (ibfd, obfd, input_arch)
+	  : !copy_unknown_file (ibfd, obfd,
+				in_stat->st_size, in_stat->st_mode))
 	status = 1;
 
       /* PR 17512: file: 0f15796a.
 	 If the file could not be copied it may not be in a writeable
 	 state.  So use bfd_close_all_done to avoid the possibility of
 	 writing uninitialised data into the file.  */
-      if (! (status ? bfd_close_all_done (obfd) : bfd_close (obfd)))
+      if (!(ok_object && !status ? bfd_close : bfd_close_all_done) (obfd))
 	{
 	  status = 1;
 	  bfd_nonfatal_message (output_filename, NULL, NULL, NULL);
 	}
-
-      if (!bfd_close (ibfd))
-	{
-	  status = 1;
-	  bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
-	}
     }
-  else
+
+  if (!bfd_close (ibfd))
     {
-      bfd_error_type obj_error = bfd_get_error ();
-      bfd_error_type core_error;
-
-      if (bfd_check_format_matches (ibfd, bfd_core, &core_matching))
-	{
-	  /* This probably can't happen..  */
-	  if (obj_error == bfd_error_file_ambiguously_recognized)
-	    free (obj_matching);
-	  goto do_copy;
-	}
-
-      core_error = bfd_get_error ();
-      /* Report the object error in preference to the core error.  */
-      if (obj_error != core_error)
-	bfd_set_error (obj_error);
-
-      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
-
-      if (obj_error == bfd_error_file_ambiguously_recognized)
-	list_matching_formats (obj_matching);
-      if (core_error == bfd_error_file_ambiguously_recognized)
-	list_matching_formats (core_matching);
-
-      bfd_close (ibfd);
       status = 1;
+      bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
     }
 }
 
@@ -4110,29 +4218,6 @@ power_of_two (bfd_vma val)
     return -1;
 
   return result;
-}
-
-static unsigned int
-image_scn_align (unsigned int alignment)
-{
-  switch (alignment)
-    {
-    case 8192: return IMAGE_SCN_ALIGN_8192BYTES;
-    case 4096: return IMAGE_SCN_ALIGN_4096BYTES;
-    case 2048: return IMAGE_SCN_ALIGN_2048BYTES;
-    case 1024: return IMAGE_SCN_ALIGN_1024BYTES;
-    case  512: return IMAGE_SCN_ALIGN_512BYTES;
-    case  256: return IMAGE_SCN_ALIGN_256BYTES;
-    case  128: return IMAGE_SCN_ALIGN_128BYTES;
-    case   64: return IMAGE_SCN_ALIGN_64BYTES;
-    case   32: return IMAGE_SCN_ALIGN_32BYTES;
-    case   16: return IMAGE_SCN_ALIGN_16BYTES;
-    case    8: return IMAGE_SCN_ALIGN_8BYTES;
-    case    4: return IMAGE_SCN_ALIGN_4BYTES;
-    case    2: return IMAGE_SCN_ALIGN_2BYTES;
-    case    1: return IMAGE_SCN_ALIGN_1BYTES;
-    default: return 0;
-    }
 }
 
 /* Create a section in OBFD with the same
@@ -4300,24 +4385,9 @@ setup_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
   if (p != NULL)
     alignment = p->alignment;
   else if (pe_section_alignment != (bfd_vma) -1
-	   && bfd_get_flavour (ibfd) == bfd_target_coff_flavour
-	   && bfd_get_flavour (obfd) == bfd_target_coff_flavour)
-    {
-      alignment = power_of_two (pe_section_alignment);
-
-      if (coff_section_data (ibfd, isection))
-	{
-	  struct pei_section_tdata * pei_data = pei_section_data (ibfd, isection);
-
-	  if (pei_data != NULL)
-	    {
-	      /* Set the alignment flag of the input section, which will
-		 be copied to the output section later on.  */
-	      pei_data->pe_flags &= ~IMAGE_SCN_ALIGN_POWER_BIT_MASK;
-	      pei_data->pe_flags |= image_scn_align (pe_section_alignment);
-	    }
-	}
-    }
+	   && bfd_get_flavour (obfd) == bfd_target_coff_flavour
+	   && bfd_pei_p (obfd))
+    alignment = power_of_two (pe_section_alignment);
   else
     alignment = bfd_section_alignment (isection);
 
@@ -4382,7 +4452,7 @@ setup_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
 
   /* Allow the BFD backend to copy any private data it understands
      from the input section to the output section.  */
-  if (!bfd_copy_private_section_data (ibfd, isection, obfd, osection))
+  if (!bfd_copy_private_section_data (ibfd, isection, obfd, osection, NULL))
     err = _("failed to copy private data");
 
   if (make_nobits)
@@ -4520,7 +4590,10 @@ copy_relocations_in_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
     }
 
   if (relsize == 0)
-    bfd_set_reloc (obfd, osection, NULL, 0);
+    {
+      if (!bfd_finalize_section_relocs (obfd, osection, NULL, 0))
+	return false;
+    }
   else
     {
       if (isection->orelocation != NULL)
@@ -4561,7 +4634,10 @@ copy_relocations_in_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
 	  *w_relpp = 0;
 	}
 
-      bfd_set_reloc (obfd, osection, relcount == 0 ? NULL : relpp, relcount);
+      if (!bfd_finalize_section_relocs (obfd, osection,
+					relcount == 0 ? NULL : relpp,
+					relcount))
+	return false;
     }
   return true;
 }
@@ -4634,6 +4710,7 @@ copy_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
 	  char *to = (char *) memhunk;
 	  char *end = (char *) memhunk + size;
 	  int i;
+	  bfd_size_type memhunk_size = size;
 
 	  /* If the section address is not exactly divisible by the interleave,
 	     then we must bias the from address.  If the copy_byte is less than
@@ -4653,6 +4730,11 @@ copy_section (bfd *ibfd, sec_ptr isection, bfd *obfd)
 	      }
 
 	  size = (size + interleave - 1 - copy_byte) / interleave * copy_width;
+
+	  /* Don't extend the output section size.  */
+	  if (size > memhunk_size)
+	    size = memhunk_size;
+
 	  osection->lma /= interleave;
 	  if (copy_byte < extra)
 	    osection->lma++;
@@ -4873,6 +4955,8 @@ strip_main (int argc, char *argv[])
   char *output_file = NULL;
   bool merge_notes_set = false;
 
+  bfd_plugin_set_program_name (argv[0]);
+
   while ((c = getopt_long (argc, argv, "I:O:F:K:MN:R:o:sSpdgxXHhVvwDU",
 			   strip_options, (int *) 0)) != EOF)
     {
@@ -4963,6 +5047,11 @@ strip_main (int argc, char *argv[])
 	case OPTION_KEEP_SECTION_SYMBOLS:
 	  keep_section_symbols = true;
 	  break;
+	case OPTION_PLUGIN:	/* --plugin */
+	  if (!bfd_plugin_enabled ())
+	    fatal (_("sorry - this program has been built without plugin support\n"));
+	  bfd_plugin_set_plugin (optarg);
+	  break;
 	case 0:
 	  /* We've been given a long option.  */
 	  break;
@@ -5007,6 +5096,16 @@ strip_main (int argc, char *argv[])
   if (output_target == NULL)
     output_target = input_target;
 
+  /* Check if all GCC LTO sections should be removed, assuming all LTO
+     sections will be removed with -R .gnu.lto_.*.  Remove .gnu.lto_.*
+     sections will also remove .gnu.debuglto_.* sections.
+
+     NB: Must keep .gnu.debuglto_* sections unless all GCC LTO sections
+     will be removed to avoid undefined references to symbols in GCC LTO
+     debug sections.  */
+  if (!find_section_list (".gnu.lto_.*", false, SECTION_CONTEXT_REMOVE))
+    find_section_list (".gnu.debuglto_*", true, SECTION_CONTEXT_KEEP);
+
   i = optind;
   if (i == argc
       || (output_file != NULL && (i + 1) < argc))
@@ -5038,6 +5137,7 @@ strip_main (int argc, char *argv[])
 
       if (tmpname == NULL)
 	{
+	  bfd_set_error (bfd_error_system_call);
 	  bfd_nonfatal_message (argv[i], NULL, NULL,
 				_("could not create temporary file to hold stripped copy"));
 	  status = 1;
@@ -5345,6 +5445,10 @@ copy_main (int argc, char *argv[])
 	case 'I':
 	case 's':		/* "source" - 'I' is preferred */
 	  input_target = optarg;
+	  break;
+
+	case OPTION_BINARY_SYMBOL_PREFIX:
+	  bfd_binary_symbol_prefix = optarg;
 	  break;
 
 	case 'O':
@@ -5979,6 +6083,11 @@ copy_main (int argc, char *argv[])
 
 	case OPTION_FILE_ALIGNMENT:
 	  pe_file_alignment = parse_vma (optarg, "--file-alignment");
+	  if (power_of_two (pe_file_alignment) == -1)
+	    {
+	      non_fatal (_("--file-alignment argument is not a power of two: %s - ignoring"), optarg);
+	      pe_file_alignment = (bfd_vma) -1;
+	    }
 	  break;
 
 	case OPTION_HEAP:
@@ -6222,9 +6331,11 @@ main (int argc, char *argv[])
     fatal (_("fatal error: libbfd ABI mismatch"));
   set_default_bfd_target ();
 
+#ifndef is_strip
   if (is_strip < 0)
     {
-      int i = strlen (program_name);
+      size_t i = strlen (program_name);
+
 #ifdef HAVE_DOS_BASED_FILE_SYSTEM
       /* Drop the .exe suffix, if any.  */
       if (i > 4 && FILENAME_CMP (program_name + i - 4, ".exe") == 0)
@@ -6235,6 +6346,7 @@ main (int argc, char *argv[])
 #endif
       is_strip = (i >= 5 && FILENAME_CMP (program_name + i - 5, "strip") == 0);
     }
+#endif /* is_strip */
 
   create_symbol_htabs ();
   xatexit (delete_symbol_htabs);

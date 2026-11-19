@@ -24,6 +24,18 @@ Disassembly of section .text:
  +[a-f0-9]+:	09 f6                	or     %esi,%esi
  +[a-f0-9]+:	87 0a                	xchg   %ecx,\(%edx\)
  +[a-f0-9]+:	87 11                	xchg   %edx,\(%ecx\)
+ +[a-f0-9]+:	86 c9                	xchg   %cl,%cl
+ +[a-f0-9]+:	66 87 d2             	xchg   %dx,%dx
+ +[a-f0-9]+:	87 ff                	xchg   %edi,%edi
+ +[a-f0-9]+:	66 98                	cbtw
+ +[a-f0-9]+:	66 98                	cbtw
+ +[a-f0-9]+:	98                   	cwtl
+ +[a-f0-9]+:	98                   	cwtl
+ +[a-f0-9]+:	b4 00                	mov    \$(0x)?0,%ah
+ +[a-f0-9]+:	b5 00                	mov    \$(0x)?0,%ch
+ +[a-f0-9]+:	66 98                	cbtw
+ +[a-f0-9]+:	98                   	cwtl
+ +[a-f0-9]+:	b6 00                	mov    \$(0x)?0,%dh
  +[a-f0-9]+:	d0 e2                	shl    \$1,%dl
  +[a-f0-9]+:	d0 e2                	shl    \$1,%dl
  +[a-f0-9]+:	66 d1 e2             	shl    \$1,%dx
@@ -36,6 +48,9 @@ Disassembly of section .text:
  +[a-f0-9]+:	66 d1 e2             	shl    \$1,%dx
  +[a-f0-9]+:	d1 e2                	shl    \$1,%edx
  +[a-f0-9]+:	d1 e2                	shl    \$1,%edx
+ +[a-f0-9]+:	00 c9                	add    %cl,%cl
+ +[a-f0-9]+:	66 01 d2             	add    %dx,%dx
+ +[a-f0-9]+:	01 ff                	add    %edi,%edi
  +[a-f0-9]+:	c5 f1 55 e9          	vandnpd %xmm1,%xmm1,%xmm5
  +[a-f0-9]+:	c5 f9 6f d1          	vmovdqa %xmm1,%xmm2
  +[a-f0-9]+:	c5 f9 6f d1          	vmovdqa %xmm1,%xmm2
@@ -189,4 +204,5 @@ Disassembly of section .text:
  +[a-f0-9]+:	c5 .*	vpaddq %xmm2,%xmm2,%xmm3
  +[a-f0-9]+:	62 .*	vpaddq %zmm2,%zmm2,%zmm3
  +[a-f0-9]+:	c5 .*	vpunpcklqdq %xmm2,%xmm2,%xmm0
+ +[a-f0-9]+:	c4 .*	vpbroadcastq %xmm2,%ymm0
 #pass

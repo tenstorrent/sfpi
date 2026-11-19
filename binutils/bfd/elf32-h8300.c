@@ -1,5 +1,5 @@
 /* BFD back-end for Renesas H8/300 ELF binaries.
-   Copyright (C) 1993-2025 Free Software Foundation, Inc.
+   Copyright (C) 1993-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -47,10 +47,6 @@ static bfd_reloc_status_type elf32_h8_final_link_relocate
   (unsigned long, bfd *, bfd *, asection *,
    bfd_byte *, bfd_vma, bfd_vma, bfd_vma,
    struct bfd_link_info *, asection *, int);
-static int elf32_h8_relocate_section
-  (bfd *, struct bfd_link_info *, bfd *, asection *,
-   bfd_byte *, Elf_Internal_Rela *,
-   Elf_Internal_Sym *, asection **);
 static bfd_reloc_status_type special
   (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
 
@@ -426,7 +422,7 @@ elf32_h8_final_link_relocate (unsigned long r_type, bfd *input_bfd,
 
 /* Relocate an H8 ELF section.  */
 static int
-elf32_h8_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
+elf32_h8_relocate_section (struct bfd_link_info *info,
 			   bfd *input_bfd, asection *input_section,
 			   bfd_byte *contents, Elf_Internal_Rela *relocs,
 			   Elf_Internal_Sym *local_syms,
@@ -436,7 +432,7 @@ elf32_h8_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
   struct elf_link_hash_entry **sym_hashes;
   Elf_Internal_Rela *rel, *relend;
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = elf_sym_hashes (input_bfd);
 
   rel = relocs;
@@ -466,7 +462,8 @@ elf32_h8_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 	{
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -480,12 +477,13 @@ elf32_h8_relocate_section (bfd *output_bfd, struct bfd_link_info *info,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_H8_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
 
-      r = elf32_h8_final_link_relocate (r_type, input_bfd, output_bfd,
+      r = elf32_h8_final_link_relocate (r_type, input_bfd, info->output_bfd,
 					input_section,
 					contents, rel->r_offset,
 					relocation, rel->r_addend,
@@ -646,8 +644,7 @@ elf32_h8_merge_private_bfd_data (bfd *ibfd, struct bfd_link_info *info)
 {
   bfd *obfd = info->output_bfd;
 
-  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour
-      || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+  if (bfd_get_flavour (ibfd) != bfd_target_elf_flavour)
     return true;
 
   if (bfd_get_arch (obfd) == bfd_get_arch (ibfd)
@@ -712,7 +709,7 @@ elf32_h8_relax_section (bfd *abfd, asection *sec,
       || (sec->flags & SEC_CODE) == 0)
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get a copy of the native relocations.  */
   internal_relocs = (_bfd_elf_link_read_relocs
@@ -1521,7 +1518,7 @@ elf32_h8_relax_delete_bytes (bfd *abfd, asection *sec, bfd_vma addr, int count)
     }
 
   /* Adjust the local symbols defined in this section.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   isymend = isym + symtab_hdr->sh_info;
   for (; isym < isymend; isym++)
@@ -1568,7 +1565,7 @@ elf32_h8_symbol_address_p (bfd *abfd, asection *sec, bfd_vma addr)
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
 
   /* Examine all the symbols.  */
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isym = (Elf_Internal_Sym *) symtab_hdr->contents;
   isymend = isym + symtab_hdr->sh_info;
   for (; isym < isymend; isym++)
@@ -1622,7 +1619,7 @@ elf32_h8_get_relocated_section_contents (bfd *output_bfd,
 						       relocatable,
 						       symbols);
 
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
 
   bfd_byte *orig_data = data;
   if (data == NULL)
@@ -1681,7 +1678,7 @@ elf32_h8_get_relocated_section_contents (bfd *output_bfd,
 	  *secpp = isec;
 	}
 
-      if (! elf32_h8_relocate_section (output_bfd, link_info, input_bfd,
+      if (! elf32_h8_relocate_section (link_info, input_bfd,
 				       input_section, data, internal_relocs,
 				       isymbuf, sections))
 	goto error_return;

@@ -1,6 +1,6 @@
 /* TUI display source window.
 
-   Copyright (C) 1998-2024 Free Software Foundation, Inc.
+   Copyright (C) 1998-2026 Free Software Foundation, Inc.
 
    Contributed by Hewlett-Packard Company.
 
@@ -63,10 +63,12 @@ tui_source_window::set_contents (struct gdbarch *arch,
   int nlines = height - box_size ();
 
   std::string srclines;
-  const std::vector<off_t> *offsets;
   if (!g_source_cache.get_source_lines (s, line_no, line_no + nlines,
-					&srclines)
-      || !g_source_cache.get_line_charpos (s, &offsets))
+					&srclines))
+    return false;
+
+  std::optional<int> last_lineno = last_symtab_line (s);
+  if (!last_lineno.has_value ())
     return false;
 
   int cur_line_no, cur_line;
@@ -77,7 +79,7 @@ tui_source_window::set_contents (struct gdbarch *arch,
   m_fullname = make_unique_xstrdup (symtab_to_fullname (s));
 
   cur_line = 0;
-  m_gdbarch = s->compunit ()->objfile ()->arch ();
+  m_gdbarch = s->compunit ().objfile ()->arch ();
   m_start_line_or_addr.loa = LOA_LINE;
   cur_line_no = m_start_line_or_addr.u.line_no = line_no;
 
@@ -86,7 +88,7 @@ tui_source_window::set_contents (struct gdbarch *arch,
     {
       /* Solaris 11+gcc 5.5 has ambiguous overloads of log10, so we
 	 cast to double to get the right one.  */
-      int lines_in_file = offsets->size ();
+      int lines_in_file = last_lineno.value ();
       int max_line_nr = lines_in_file;
       int digits_needed = 1 + (int)log10 ((double) max_line_nr);
       int trailing_space = 1;
@@ -156,8 +158,8 @@ tui_source_window::do_scroll_vertical (int num_to_scroll)
 
       if (cursal.symtab == NULL)
 	{
-	  frame_info_ptr fi = get_selected_frame (NULL);
-	  s = find_pc_line_symtab (get_frame_pc (fi));
+	  frame_info_ptr fi = get_selected_frame ();
+	  s = find_symtab_for_pc (get_frame_pc (fi));
 	  arch = get_frame_arch (fi);
 	}
       else
@@ -166,13 +168,12 @@ tui_source_window::do_scroll_vertical (int num_to_scroll)
       int line_no = m_start_line_or_addr.u.line_no + num_to_scroll;
       if (line_no <= 0)
 	line_no = 1;
-      const std::vector<off_t> *offsets;
-      if (g_source_cache.get_line_charpos (s, &offsets)
-	  && line_no > offsets->size ())
+      if (std::optional<int> last_lineno = last_symtab_line (s);
+	  last_lineno.has_value () && line_no > last_lineno.value ())
 	line_no = m_start_line_or_addr.u.line_no;
 
       cursal.line = line_no;
-      find_line_pc (cursal.symtab, cursal.line, &cursal.pc);
+      find_pc_for_line (cursal.symtab, cursal.line, &cursal.pc);
       for (struct tui_source_window_base *win_info : tui_source_windows ())
 	win_info->update_source_window_as_is (arch, cursal);
     }
@@ -207,7 +208,7 @@ tui_source_window::line_is_displayed (int line) const
 }
 
 void
-tui_source_window::maybe_update (const frame_info_ptr &fi, symtab_and_line sal)
+tui_source_window::maybe_update (struct gdbarch *gdbarch, symtab_and_line sal)
 {
   int start_line = (sal.line - ((height - box_size ()) / 2)) + 1;
   if (start_line <= 0)
@@ -219,7 +220,7 @@ tui_source_window::maybe_update (const frame_info_ptr &fi, symtab_and_line sal)
   if (!(source_already_displayed && line_is_displayed (sal.line)))
     {
       sal.line = start_line;
-      update_source_window (get_frame_arch (fi), sal);
+      update_source_window (gdbarch, sal);
     }
   else
     {
@@ -238,7 +239,7 @@ tui_source_window::display_start_addr (struct gdbarch **gdbarch_p,
   symtab_and_line cursal = get_current_source_symtab_and_line (current_program_space);
 
   *gdbarch_p = m_gdbarch;
-  find_line_pc (cursal.symtab, m_start_line_or_addr.u.line_no, addr_p);
+  find_pc_for_line (cursal.symtab, m_start_line_or_addr.u.line_no, addr_p);
 }
 
 /* See tui-winsource.h.  */

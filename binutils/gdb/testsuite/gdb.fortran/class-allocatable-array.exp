@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Free Software Foundation, Inc.
+# Copyright 2020-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ if {[prepare_for_testing ${testfile}.exp ${testfile} ${srcfile} \
     return -1
 }
 
-if ![fortran_runto_main] {
+if {![fortran_runto_main]} {
     return -1
 }
 
@@ -36,7 +36,7 @@ gdb_continue_to_breakpoint "Break Here"
 # If this first test fails then the Fortran compiler being used uses
 # different names, or maybe a completely different approach, for
 # representing class like structures.  The following tests are
-# cetainly going to fail.
+# certainly going to fail.
 # Hence the test case is modified for flang.
 if { [test_compiler_info {flang-*} f90] } {
     gdb_test "print this" " = \\( a = 0, b = \\(\\(1, 2, 3\\) \\(4, 5, 6\\)\\) \\)"

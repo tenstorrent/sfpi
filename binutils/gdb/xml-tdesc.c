@@ -1,6 +1,6 @@
 /* XML target description support for GDB.
 
-   Copyright (C) 2006-2024 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    Contributed by CodeSourcery.
 
@@ -25,7 +25,7 @@
 #include "xml-tdesc.h"
 #include "osabi.h"
 #include "filenames.h"
-#include <unordered_map>
+#include "gdbsupport/unordered_map.h"
 #include <string>
 
 /* Maximum sizes.
@@ -64,7 +64,7 @@ tdesc_parse_xml (const char *document, xml_fetch_another fetcher)
    then we will create unnecessary duplicate gdbarches.  See
    gdbarch_list_lookup_by_info.  */
 
-static std::unordered_map<std::string, target_desc_up> xml_cache;
+static gdb::unordered_string_map<target_desc_up> xml_cache;
 
 /* Callback data for target description parsing.  */
 
@@ -147,7 +147,7 @@ tdesc_start_target (struct gdb_xml_parser *parser,
   char *version
     = (char *) xml_find_attribute (attributes, "version")->value.get ();
 
-  if (strcmp (version, "1.0") != 0)
+  if (!streq (version, "1.0"))
     gdb_xml_error (parser,
 		   _("Target description has unsupported version \"%s\""),
 		   version);
@@ -185,28 +185,27 @@ tdesc_start_reg (struct gdb_xml_parser *parser,
   name = (char *) attributes[ix++].value.get ();
   bitsize = * (ULONGEST *) attributes[ix++].value.get ();
 
-  if (ix < length && strcmp (attributes[ix].name, "regnum") == 0)
+  if (ix < length && streq (attributes[ix].name, "regnum"))
     regnum = * (ULONGEST *) attributes[ix++].value.get ();
   else
     regnum = data->next_regnum;
 
-  if (ix < length && strcmp (attributes[ix].name, "type") == 0)
+  if (ix < length && streq (attributes[ix].name, "type"))
     type = (char *) attributes[ix++].value.get ();
   else
     type = "int";
 
-  if (ix < length && strcmp (attributes[ix].name, "group") == 0)
+  if (ix < length && streq (attributes[ix].name, "group"))
     group = (char *) attributes[ix++].value.get ();
   else
     group = NULL;
 
-  if (ix < length && strcmp (attributes[ix].name, "save-restore") == 0)
+  if (ix < length && streq (attributes[ix].name, "save-restore"))
     save_restore = * (ULONGEST *) attributes[ix++].value.get ();
   else
     save_restore = 1;
 
-  if (strcmp (type, "int") != 0
-      && strcmp (type, "float") != 0
+  if (!streq (type, "int") && !streq (type, "float")
       && tdesc_named_type (data->current_feature, type) == NULL)
     gdb_xml_error (parser, _("Register \"%s\" has unknown type \"%s\""),
 		   name, type);
@@ -381,8 +380,8 @@ tdesc_start_field (struct gdb_xml_parser *parser,
 	gdb_xml_error (parser,
 		       _("Bitfields must live in explicitly sized types"));
 
-      if (field_type_id != NULL
-	  && strcmp (field_type_id, "bool") == 0
+      if (field_type_id != nullptr
+	  && streq (field_type_id, "bool")
 	  && start != end)
 	{
 	  gdb_xml_error (parser,
@@ -578,7 +577,7 @@ static const struct gdb_xml_element feature_children[] = {
     tdesc_start_union, NULL },
   { "flags", flags_attributes, struct_union_children,
     GDB_XML_EF_OPTIONAL | GDB_XML_EF_REPEATABLE,
-    tdesc_start_flags, NULL },    
+    tdesc_start_flags, NULL },
   { "enum", enum_attributes, enum_children,
     GDB_XML_EF_OPTIONAL | GDB_XML_EF_REPEATABLE,
     tdesc_start_enum, NULL },
@@ -670,7 +669,7 @@ file_read_description_xml (const char *filename)
       return NULL;
     }
 
-  const std::string dirname = ldirname (filename);
+  const std::string dirname = gdb_ldirname (filename);
   auto fetch_another = [&dirname] (const char *name)
     {
       return xml_fetch_content_from_file (name, dirname.c_str ());

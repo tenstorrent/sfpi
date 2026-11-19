@@ -1,6 +1,6 @@
 /* Main interface for GDB, the GNU debugger.
 
-   Copyright (C) 2002-2024 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -35,7 +35,7 @@ extern int return_child_result_value;
 extern int batch_silent;
 extern int batch_flag;
 
-/* * The name of the interpreter if specified on the command line.  */
+/* The name of the interpreter if specified on the command line.  */
 extern std::string interpreter_p;
 
 /* From mingw-hdep.c, used by main.c.  */
@@ -43,6 +43,9 @@ extern std::string interpreter_p;
 /* Return argv[0] in absolute form, if possible, or ARGV0 if not.  The
    return value is in malloc'ed storage.  */
 extern char *windows_get_absolute_argv0 (const char *argv0);
+
+/* Initialize Windows console settings.  */
+extern void windows_initialize_console ();
 
 extern void set_gdb_data_directory (const char *new_data_dir);
 

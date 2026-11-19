@@ -1,4 +1,4 @@
-# Copyright 1997-2024 Free Software Foundation, Inc.
+# Copyright 1997-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,21 +30,21 @@ remote_exec build "rm -f ${binfile} ${binfile2} ${binfile3}"
 #
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
     untested "failed to compile"
-    return -1
+    return
 }
 
 # Build the in-system-call test
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile2}" "${binfile2}" executable {debug}] != "" } {
     untested "failed to compile in-system-call test"
-    return -1
+    return
 }
 
 # Build the third file, used to check attach when the exec-file has changed.
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile3}" "${binfile3}" executable {debug}] != "" } {
     untested "failed to compile attach exec-file changed test"
-    return -1
+    return
 }
 
 # This is a test of the error cases for gdb's ability to attach to a
@@ -56,7 +56,7 @@ proc_with_prefix do_attach_failure_tests {} {
     global escapedbinfile
     global srcfile
 
-    clean_restart $binfile
+    clean_restart $::testfile
 
     # Figure out a regular expression that will match the sysroot,
     # noting that the default sysroot is "target:", and also noting
@@ -83,7 +83,7 @@ proc_with_prefix do_attach_failure_tests {} {
 	}
 	-re "Attaching to.*, process .*couldn't open /proc file.*$gdb_prompt $" {
 	    # Response expected from /proc-based systems.
-	    pass "$test" 
+	    pass "$test"
 	}
 	-re "Can't attach to process..*$gdb_prompt $" {
 	    # Response expected on Cygwin
@@ -104,7 +104,7 @@ proc_with_prefix do_attach_failure_tests {} {
 	}
 	-re "Attaching to.*, process .*couldn't open /proc file.*$gdb_prompt $" {
 	    # Response expected from /proc-based systems.
-	    pass "$test" 
+	    pass "$test"
 	}
 	-re "Can't attach to process..*$gdb_prompt $" {
 	    # Response expected on Cygwin
@@ -156,19 +156,12 @@ proc_with_prefix do_attach_failure_tests {} {
 	    pass "$test"
 	}
     }
-    
+
     # Verify that we can't double attach to the process.
 
-    set test "first attach"
-    gdb_test_multiple "attach $testpid" "$test" {
-	-re "Attaching to program.*`?$escapedbinfile'?, process $testpid.*main.*at .*$srcfile:.*$gdb_prompt $" {
-	    pass "$test"
-	}
-	-re "Attaching to program.*`?$escapedbinfile\.exe'?, process $testpid.*\[Switching to thread $testpid\..*\].*$gdb_prompt $" {
-	    # Response expected on Cygwin.
-	    pass "$test"
-	}
-    }
+    gdb_test "attach $testpid" \
+	"Attaching to program.*`?${escapedbinfile}(\.exe)?'?, process $testpid.*main.*at .*$srcfile:.*" \
+	"first attach"
 
     gdb_test "add-inferior" "Added inferior 2.*" "add empty inferior 2"
     gdb_test "inferior 2" "Switching to inferior 2.*" "switch to inferior 2"
@@ -180,6 +173,10 @@ proc_with_prefix do_attach_failure_tests {} {
 	}
 	-re "Attaching to process .* failed.*$gdb_prompt $" {
 	    # Response expected when using gdbserver.
+	    pass "$test"
+	}
+	-re -wrap "Can only debug one process at a time\\." {
+	    # Response expected on Windows.
 	    pass "$test"
 	}
     }
@@ -215,7 +212,7 @@ proc_with_prefix do_attach_tests {} {
     global timeout
     global decimal
 
-    clean_restart $binfile
+    clean_restart $::testfile
 
     # Figure out a regular expression that will match the sysroot,
     # noting that the default sysroot is "target:", and also noting
@@ -240,7 +237,7 @@ proc_with_prefix do_attach_tests {} {
     # (Actually, the test system appears to do this automatically for
     # us.  So, we must also be prepared to be asked if we want to
     # discard an existing set of symbols.)
-    
+
     set test "set file, before attach1"
     gdb_test_multiple "file $binfile" "$test" {
 	-re "Load new symbol table from.*y or n. $" {
@@ -252,38 +249,31 @@ proc_with_prefix do_attach_tests {} {
 	}
     }
 
-    set test "attach1, after setting file"
-    gdb_test_multiple "attach $testpid" "$test" {
-	-re "Attaching to program.*`?$escapedbinfile'?, process $testpid.*main.*at .*$srcfile:.*$gdb_prompt $" {
-	    pass "$test"
-	}
-	-re "Attaching to program.*`?$escapedbinfile\.exe'?, process $testpid.*\[Switching to thread $testpid\..*\].*$gdb_prompt $" {
-	    # Response expected on Cygwin
-	    pass "$test"
-	}
-    }
+    gdb_test "attach $testpid" \
+	"Attaching to program.*`?${escapedbinfile}(\.exe)?'?, process $testpid.*main.*at .*$srcfile:.*" \
+	"attach1, after setting file"
 
     # Verify that we can "see" the variable "should_exit" in the
     # program, and that it is zero.
-   
+
     gdb_test "print should_exit" " = 0" "after attach1, print should_exit"
 
     # Detach the process.
-   
+
     gdb_test "detach" \
 	"Detaching from program: .*$escapedbinfile, process $testpid\r\n\\\[Inferior $decimal \\(.*\\) detached\\\]" \
 	"attach1 detach"
 
     # Wait a bit for gdb to finish detaching
-    
+
     exec sleep 5
 
     # Purge the symbols from gdb's brain.  (We want to be certain the
     # next attach, which won't be preceded by a "file" command, is
     # really getting the executable file without our help.)
-    
+
     set old_timeout $timeout
-    set timeout 15 
+    set timeout 15
     set test "attach1, purging symbols after detach"
     gdb_test_multiple "file" "$test" {
 	-re "No executable file now.*Discard symbol table.*y or n. $" {
@@ -294,7 +284,7 @@ proc_with_prefix do_attach_tests {} {
 
     # Verify that we can attach to the process just by giving the
     # process ID.
-   
+
     set test "attach2, with no file"
     set found_exec_file 0
     gdb_test_multiple "attach $testpid" "$test" {
@@ -334,7 +324,7 @@ proc_with_prefix do_attach_tests {} {
 
     # Verify that the modification really happened.
 
-    gdb_breakpoint [gdb_get_line_number "postloop"] temporary
+    gdb_breakpoint [gdb_get_line_number "postloop"] -temporary
     gdb_continue_to_breakpoint "postloop" ".* postloop .*"
 
     # Allow the test process to exit, to cleanup after ourselves.
@@ -354,7 +344,7 @@ proc_with_prefix do_attach_tests {} {
     # Verify that we can attach to the process, and find its a.out
     # when we're cd'd to some directory that doesn't contain the
     # a.out.  (We use the source path set by the "dir" command.)
-    
+
     gdb_test "dir [standard_output_file {}]" "Source directories searched: .*" \
 	"set source path"
 
@@ -387,7 +377,7 @@ proc_with_prefix do_attach_tests {} {
 	"$test" \
 	"Kill the program being debugged.*y or n. $" \
 	"y"
-    
+
     # Another "don't leave a process around"
     kill_wait_spawned_process $test_spawn_id
 }
@@ -404,7 +394,7 @@ proc_with_prefix do_call_attach_tests {} {
     set testpid [spawn_id_get_pid $test_spawn_id]
 
     # Attach
-   
+
     gdb_test "file $binfile2" ".*" "load file"
     set test "attach call"
     gdb_test_multiple "attach $testpid" "$test" {
@@ -420,7 +410,7 @@ proc_with_prefix do_call_attach_tests {} {
     }
 
     # See if other registers are problems
-    
+
     set test "info other register"
     gdb_test_multiple "i r r3" "$test" {
 	-re "warning: reading register.*$gdb_prompt $" {
@@ -432,12 +422,12 @@ proc_with_prefix do_call_attach_tests {} {
     }
 
     # Get rid of the process
-    
+
     gdb_test "p should_exit = 1"
     gdb_continue_to_end
-   
+
     # Be paranoid
-   
+
     kill_wait_spawned_process $test_spawn_id
 }
 
@@ -519,7 +509,7 @@ proc_with_prefix do_attach_exec_mismatch_handling_tests {} {
     global binfile2
     global binfile3
 
-    clean_restart $binfile
+    clean_restart $::testfile
 
     # Start two programs that can be attached to.
     # The first program contains a 'int bidule' variable, the second a 'float bidule'.
@@ -588,7 +578,7 @@ proc_with_prefix do_attach_exec_mismatch_handling_tests {} {
 	    gdb_test "y" "Reading symbols from .*attach.*" $gdb_test_name
 	}
     }
-    
+
 
     gdb_test "detach" "Detaching from program: .* detached\\\]" "$test detach attach initial exec-file"
 

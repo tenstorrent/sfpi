@@ -1,5 +1,5 @@
 /* Support for the generic parts of PE/PEI, for BFD.
-   Copyright (C) 1995-2025 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
    Written by Cygnus Solutions.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -82,6 +82,11 @@ static bool pe_bfd_copy_private_bfd_data (bfd *, bfd *);
 #define coff_mkobject_hook pe_mkobject_hook
 
 #ifdef COFF_IMAGE_WITH_PE
+
+/* For the case of linking ELF objects into a PE binary.  */
+#undef TARGET_MERGE_SECTIONS
+#define TARGET_MERGE_SECTIONS true
+
 /* This structure contains static variables used by the ILF code.  */
 typedef asection * asection_ptr;
 
@@ -1154,6 +1159,7 @@ pe_ILF_build_a_bfd (bfd *	    abfd,
 
   obj_raw_syments (abfd) = vars.native_syms;
   obj_raw_syment_count (abfd) = vars.sym_index;
+  obj_coff_keep_raw_syms (abfd) = true;
 
   obj_coff_external_syms (abfd) = (void *) vars.esym_table;
   obj_coff_keep_syms (abfd) = true;

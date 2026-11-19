@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2015-2024 Free Software Foundation, Inc.
+   Copyright 2015-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -34,14 +34,20 @@ thread_function (void *arg)
     foo ();
 }
 
+#define NTHREADS 10
+
 void
 new_thread (void)
 {
-  pthread_t thread;
-  int res;
+  pthread_t thread[NTHREADS];
+  int i;
 
-  res = pthread_create (&thread, NULL, thread_function, NULL);
-  assert (res == 0);
+  for (i = 0; i < NTHREADS; i++)
+    {
+      int res;
+      res = pthread_create (&thread[i], NULL, thread_function, NULL);
+      assert (res == 0);
+    }
 }
 
 int

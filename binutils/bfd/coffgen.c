@@ -1,5 +1,5 @@
 /* Support for the generic parts of COFF, for BFD.
-   Copyright (C) 1990-2025 Free Software Foundation, Inc.
+   Copyright (C) 1990-2026 Free Software Foundation, Inc.
    Written by Cygnus Support.
 
    This file is part of BFD, the Binary File Descriptor library.
@@ -42,7 +42,9 @@
 #include "libbfd.h"
 #include "coff/internal.h"
 #include "libcoff.h"
+#include "elf-bfd.h"
 #include "hashtab.h"
+#include "safe-ctype.h"
 
 /* Extract a long section name at STRINDEX and copy it to the bfd objstack.
    Return NULL in case of error.  */
@@ -594,12 +596,12 @@ _bfd_coff_internal_syment_name (bfd *abfd,
    value must be INTERNAL_RELOCS.  The function returns NULL on error.  */
 
 struct internal_reloc *
-_bfd_coff_read_internal_relocs (bfd *abfd,
-				asection *sec,
-				bool cache,
-				bfd_byte *external_relocs,
-				bool require_internal,
-				struct internal_reloc *internal_relocs)
+bfd_coff_read_internal_relocs (bfd *abfd,
+			       asection *sec,
+			       bool cache,
+			       bfd_byte *external_relocs,
+			       bool require_internal,
+			       struct internal_reloc *internal_relocs)
 {
   bfd_size_type relsz;
   bfd_byte *free_external = NULL;
@@ -1257,9 +1259,17 @@ coff_write_alien_symbol (bfd *abfd,
     }
   else
     {
+      asection *isec = symbol->section;
+
       native->u.syment.n_scnum = output_section->target_index;
-      native->u.syment.n_value = (symbol->value
-				  + symbol->section->output_offset);
+      native->u.syment.n_value = symbol->value;
+
+      if (isec->sec_info_type == SEC_INFO_TYPE_MERGE
+	  && !(symbol->flags & (BSF_SECTION_SYM | BSF_MERGE_RESOLVED)))
+	native->u.syment.n_value =
+	  _bfd_merged_section_offset (abfd, &isec, symbol->value);
+
+      native->u.syment.n_value += isec->output_offset;
       if (! obj_pe (abfd))
 	native->u.syment.n_value += output_section->vma;
 
@@ -1270,9 +1280,24 @@ coff_write_alien_symbol (bfd *abfd,
 	if (c != (coff_symbol_type *) NULL)
 	  native->u.syment.n_flags = bfd_asymbol_bfd (&c->symbol)->flags;
       }
+
+      const elf_symbol_type *elfsym = elf_symbol_from (symbol);
+      if (elfsym
+	  && (symbol->flags & BSF_FUNCTION)
+	  && elfsym->internal_elf_sym.st_size)
+	{
+	  /* coff_data (abfd)->local_n_btshft is what ought to be used here,
+	     just that it's set only when reading in COFF objects.  */
+	  native->u.syment.n_type = DT_FCN << 4;
+	  native->u.syment.n_numaux = 1;
+	  native[1].u.auxent.x_sym.x_misc.x_fsize
+	    = elfsym->internal_elf_sym.st_size;
+	  /* FIXME .u.auxent.x_sym.x_fcnary.x_fcn.x_endndx would better also
+	     be set, which would require updating the field once the next
+	     function is seen.  */
+	}
     }
 
-  native->u.syment.n_type = 0;
   if (symbol->flags & BSF_FILE)
     native->u.syment.n_sclass = C_FILE;
   else if (symbol->flags & BSF_LOCAL)
@@ -1846,7 +1871,7 @@ coff_get_normalized_symtab (bfd *abfd)
   const char *string_table = NULL;
   asection * debug_sec = NULL;
   char *debug_sec_data = NULL;
-  bfd_size_type size;
+  size_t size;
 
   if (obj_raw_syments (abfd) != NULL)
     return obj_raw_syments (abfd);
@@ -1854,12 +1879,14 @@ coff_get_normalized_symtab (bfd *abfd)
   if (! _bfd_coff_get_external_symbols (abfd))
     return NULL;
 
-  size = obj_raw_syment_count (abfd);
   /* Check for integer overflow.  */
-  if (size > (bfd_size_type) -1 / sizeof (combined_entry_type))
-    return NULL;
-  size *= sizeof (combined_entry_type);
-  internal = (combined_entry_type *) bfd_zalloc (abfd, size);
+  if (_bfd_mul_overflow (obj_raw_syment_count (abfd),
+			 sizeof (combined_entry_type), &size))
+    {
+      bfd_set_error (bfd_error_file_too_big);
+      return NULL;
+    }
+  internal = bfd_zalloc (abfd, size);
   if (internal == NULL && size != 0)
     return NULL;
 
@@ -1886,7 +1913,17 @@ coff_get_normalized_symtab (bfd *abfd)
 
       /* PR 17512: Prevent buffer overrun.  */
       if (sym->u.syment.n_numaux > ((raw_end - 1) - raw_src) / symesz)
-	return NULL;
+	{
+	  char buf[SYMNMLEN + 1];
+	  const char *name;
+
+	  name = _bfd_coff_internal_syment_name (abfd, &sym->u.syment, buf);
+	  _bfd_error_handler
+	    /* xgettext:c-format */
+	    (_("%pB: class %d symbol '%s' has missing aux entries"),
+	     abfd, sym->u.syment.n_sclass, name ? name : "");
+	  return NULL;
+	}
 
       for (i = 0; i < sym->u.syment.n_numaux; i++)
 	{
@@ -2767,6 +2804,8 @@ _bfd_coff_section_already_linked (bfd *abfd,
     }
 
   already_linked_list = bfd_section_already_linked_table_lookup (key);
+  if (!already_linked_list)
+    goto bad;
 
   for (l = already_linked_list->entry; l != NULL; l = l->next)
     {
@@ -2794,7 +2833,10 @@ _bfd_coff_section_already_linked (bfd *abfd,
 
   /* This is the first section with this name.  Record it.  */
   if (!bfd_section_already_linked_table_insert (already_linked_list, sec))
-    info->callbacks->einfo (_("%F%P: already_linked_table: %E\n"));
+    {
+    bad:
+      info->callbacks->fatal (_("%P: already_linked_table: %E\n"));
+    }
   return false;
 }
 
@@ -2842,8 +2884,8 @@ init_reloc_cookie_rels (struct coff_reloc_cookie *cookie,
       return true;
     }
 
-  cookie->rels = _bfd_coff_read_internal_relocs (abfd, sec, false, NULL,
-						 0, NULL);
+  cookie->rels = bfd_coff_read_internal_relocs (abfd, sec, false, NULL,
+						false, NULL);
 
   if (cookie->rels == NULL)
     return false;
@@ -2923,9 +2965,10 @@ _bfd_coff_gc_mark_hook (asection *sec,
 	      /* PE weak externals.  A weak symbol may include an auxiliary
 		 record indicating that if the weak symbol is not resolved,
 		 another external symbol is used instead.  */
-	      struct coff_link_hash_entry *h2 =
-		h->auxbfd->tdata.coff_obj_data->sym_hashes
-		[h->aux->x_sym.x_tagndx.u32];
+	      struct coff_link_hash_entry *h2 = NULL;
+	      unsigned long symndx2 = h->aux->x_sym.x_tagndx.u32;
+	      if (symndx2 < obj_raw_syment_count (h->auxbfd))
+		h2 = obj_coff_sym_hashes (h->auxbfd)[symndx2];
 
 	      if (h2 && h2->root.type != bfd_link_hash_undefined)
 		return  h2->root.u.def.section;
@@ -2952,8 +2995,11 @@ _bfd_coff_gc_mark_rsec (struct bfd_link_info *info, asection *sec,
 			struct coff_reloc_cookie *cookie)
 {
   struct coff_link_hash_entry *h;
+  unsigned long rsym = cookie->rel->r_symndx;
 
-  h = cookie->sym_hashes[cookie->rel->r_symndx];
+  if (rsym >= obj_raw_syment_count (cookie->abfd))
+    return NULL;
+  h = cookie->sym_hashes[rsym];
   if (h != NULL)
     {
       while (h->root.type == bfd_link_hash_indirect
@@ -2965,7 +3011,7 @@ _bfd_coff_gc_mark_rsec (struct bfd_link_info *info, asection *sec,
 
   return (*gc_mark_hook) (sec, info, cookie->rel, NULL,
 			  &(cookie->symbols
-			    + obj_convert (sec->owner)[cookie->rel->r_symndx])->native->u.syment);
+			    + obj_convert (sec->owner)[rsym])->native->u.syment);
 }
 
 static bool _bfd_coff_gc_mark
@@ -3099,6 +3145,19 @@ coff_gc_sweep_symbol (struct coff_link_hash_entry *h,
 typedef bool (*gc_sweep_hook_fn)
   (bfd *, struct bfd_link_info *, asection *, const struct internal_reloc *);
 
+static inline bool
+is_subsection (const char *str, const char *prefix)
+{
+  size_t n = strlen (prefix);
+  if (strncmp (str, prefix, n) != 0)
+    return false;
+  if (str[n] == 0)
+    return true;
+  else if (str[n] != '$')
+    return false;
+  return ISDIGIT (str[n + 1]) && str[n + 2] == 0;
+}
+
 static bool
 coff_gc_sweep (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
 {
@@ -3120,6 +3179,7 @@ coff_gc_sweep (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
 	  else if (startswith (o->name, ".idata")
 		   || startswith (o->name, ".pdata")
 		   || startswith (o->name, ".xdata")
+		   || is_subsection (o->name, ".didat")
 		   || startswith (o->name, ".rsrc"))
 	    o->gc_mark = 1;
 
@@ -3202,7 +3262,7 @@ _bfd_coff_gc_keep (struct bfd_link_info *info)
 /* Do mark and sweep of unused sections.  */
 
 bool
-bfd_coff_gc_sections (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
+_bfd_coff_gc_sections (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
 {
   bfd *sub;
 
@@ -3252,7 +3312,7 @@ bfd_coff_gc_sections (bfd *abfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
 /* Return name used to identify a comdat group.  */
 
 const char *
-bfd_coff_group_name (bfd *abfd, const asection *sec)
+_bfd_coff_group_name (bfd *abfd, const asection *sec)
 {
   struct coff_comdat_info *ci = bfd_coff_get_comdat_section (abfd, sec);
   if (ci != NULL)
@@ -3296,6 +3356,16 @@ _bfd_coff_free_cached_info (bfd *abfd)
 	 These may have been set by pe_ILF_build_a_bfd() indicating
 	 that the syms and strings pointers are not to be freed.  */
       _bfd_coff_free_symbols (abfd);
+
+      /* Free raw syms, and any other data bfd_alloc'd after raw syms
+	 are read.  */
+      if (!obj_coff_keep_raw_syms (abfd) && obj_raw_syments (abfd))
+	{
+	  bfd_release (abfd, obj_raw_syments (abfd));
+	  obj_raw_syments (abfd) = NULL;
+	  obj_symbols (abfd) = NULL;
+	  obj_convert (abfd) = NULL;
+	}
     }
 
   return _bfd_generic_bfd_free_cached_info (abfd);

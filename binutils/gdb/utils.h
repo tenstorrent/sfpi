@@ -1,5 +1,5 @@
 /* I/O, string, cleanup, and other random utilities for GDB.
-   Copyright (C) 1986-2024 Free Software Foundation, Inc.
+   Copyright (C) 1986-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -133,15 +133,16 @@ private:
 extern int gdb_filename_fnmatch (const char *pattern, const char *string,
 				 int flags);
 
-extern void substitute_path_component (char **stringp, const char *from,
-				       const char *to);
-
-std::string ldirname (const char *filename);
+std::string gdb_ldirname (const char *filename);
 
 extern int count_path_elements (const char *path);
 
 extern const char *strip_leading_path_elements (const char *path, int n);
-
+
+/* Wrapper around readline's tilde_expand, to return a unique pointer.  */
+
+extern gdb::unique_xmalloc_ptr<char> gdb_rl_tilde_expand (const char *path);
+
 /* GDB output, ui_file utilities.  */
 
 struct ui_file;
@@ -152,23 +153,60 @@ extern int yquery (const char *, ...) ATTRIBUTE_PRINTF (1, 2);
 
 extern void begin_line (void);
 
-extern void wrap_here (int);
-
 extern void reinitialize_more_filter (void);
 
-/* Return the number of characters in a line.  */
+/* Return the number of characters in a line.  Will never be zero, but can
+   be UINT_MAX, which indicates unlimited characters per line.  */
 
-extern int get_chars_per_line ();
+extern unsigned int get_chars_per_line ();
 
 extern bool pagination_enabled;
 
 /* A flag indicating whether to timestamp debugging messages.  */
 extern bool debug_timestamp;
 
-extern struct ui_file **current_ui_gdb_stdout_ptr (void);
-extern struct ui_file **current_ui_gdb_stdin_ptr (void);
-extern struct ui_file **current_ui_gdb_stderr_ptr (void);
-extern struct ui_file **current_ui_gdb_stdlog_ptr (void);
+/* Return the current ui_file for a given output stream.
+
+   Output in gdb is somewhat complicated.  Responsibility for it is
+   split between the interpreter and the UI, and has to allow for
+   output manipulation (like MI quoting), paging, logging, timestamps,
+   etc.
+
+   The outermost ui_file comes from the current interpreter.  (That is
+   what these functions return.)
+
+   The interpreter supplies anything that it needs.  E.g., for the
+   CLI, this is nothing, but for MI, each stream applies its own
+   quoting rule to the output.
+
+   The interpreter's pipeline ends with a ui::passthrough_file,
+   causing output to then proceed via the UI's pipeline.
+
+   The UI provides whatever is needed by that UI.  For instance, the
+   pager is handled here.  Logging is also handled here, and the
+   stdlog file also has a timestamp filter on it.
+
+   The UI is also where redirection happens.  That is, when
+   temporarily redirecting output to a different stream (like a
+   string_file), the redirectable_* streams are used -- these just
+   return pointers to fields in the current UI.  This way,
+   interpreter-specific changes are still applied before output.
+
+   When redirecting, if logging is still desired (normally it is),
+   then it is the redirector's responsibility to put a logging file
+   into the pipeline.  */
+
+extern struct ui_file *current_gdb_stdout ();
+extern struct ui_file *current_gdb_stderr ();
+extern struct ui_file *current_gdb_stdlog ();
+extern struct ui_file *current_gdb_stdtarg ();
+
+extern struct ui_file **redirectable_stdout ();
+extern struct ui_file **redirectable_stderr ();
+extern struct ui_file **redirectable_stdlog ();
+extern struct ui_file **redirectable_stdtarg ();
+
+extern struct ui_file *current_gdb_stdin ();
 
 /* Flush STREAM.  */
 extern void gdb_flush (struct ui_file *stream);
@@ -176,21 +214,17 @@ extern void gdb_flush (struct ui_file *stream);
 /* The current top level's ui_file streams.  */
 
 /* Normal results */
-#define gdb_stdout (*current_ui_gdb_stdout_ptr ())
-/* Input stream */
-#define gdb_stdin (*current_ui_gdb_stdin_ptr ())
+#define gdb_stdout (current_gdb_stdout ())
+/* Input stream.  */
+#define gdb_stdin (current_gdb_stdin ())
 /* Serious error notifications.  This bypasses the pager, if one is in
    use.  */
-#define gdb_stderr (*current_ui_gdb_stderr_ptr ())
+#define gdb_stderr (current_gdb_stderr ())
 /* Log/debug/trace messages that bypasses the pager, if one is in
    use.  */
-#define gdb_stdlog (*current_ui_gdb_stdlog_ptr ())
-
-/* Truly global ui_file streams.  These are all defined in main.c.  */
-
-/* Target output that should bypass the pager, if one is in use.  */
-extern struct ui_file *gdb_stdtarg;
-extern struct ui_file *gdb_stdtargin;
+#define gdb_stdlog (current_gdb_stdlog ())
+/* Target output.  */
+#define gdb_stdtarg (current_gdb_stdtarg ())
 
 /* Set the screen dimensions to WIDTH and HEIGHT.  */
 
@@ -207,8 +241,6 @@ extern void gdb_putc (int c, struct ui_file *);
 extern void gdb_putc (int c);
 
 extern void gdb_puts (const char *);
-
-extern void puts_tabular (char *string, int width, int right);
 
 /* Generic printf-like operations.  As an extension over plain
    printf, these support some GDB-specific format specifiers.
@@ -327,7 +359,7 @@ extern void warn_cant_dump_core (const char *reason);
 /* Dump core trying to increase the core soft limit to hard limit
    first.  */
 
-extern void dump_core (void);
+[[noreturn]] extern void dump_core ();
 
 /* Copy NBITS bits from SOURCE to DEST starting at the given bit
    offsets.  Use the bit order as specified by BITS_BIG_ENDIAN.
@@ -397,7 +429,7 @@ struct warning_hook_handler_type
     = 0;
 };
 
-typedef warning_hook_handler_type *warning_hook_handler;
+using warning_hook_handler = warning_hook_handler_type *;
 
 /* Set the thread-local warning hook, and restore the old value when
    finished.  */
@@ -406,14 +438,11 @@ class scoped_restore_warning_hook
 public:
   explicit scoped_restore_warning_hook (warning_hook_handler new_handler);
 
+  DISABLE_COPY_AND_ASSIGN (scoped_restore_warning_hook);
+
   ~scoped_restore_warning_hook ();
 
 private:
-  scoped_restore_warning_hook (const scoped_restore_warning_hook &other)
-    = delete;
-  scoped_restore_warning_hook &operator= (const scoped_restore_warning_hook &)
-    = delete;
-
   warning_hook_handler m_save;
 };
 
@@ -485,5 +514,13 @@ private:
   /* The list of all deferred warnings.  */
   std::vector<string_file> m_warnings;
 };
+
+/* Re-implementation of readline's CTRL/UNCTRL (compatible with readline's
+   CTRL_CHAR), designed to be compatible with gnulib's c_iscntrl.
+   While gnulib's c-ctype.h still uses int for character parameters and
+   results, we use unsigned char here for maximum clarity.  */
+
+extern unsigned char c_ctrl (unsigned char c);
+extern unsigned char c_unctrl (unsigned char c);
 
 #endif /* GDB_UTILS_H */

@@ -1,5 +1,5 @@
 /* Linker file opening and searching.
-   Copyright (C) 1991-2025 Free Software Foundation, Inc.
+   Copyright (C) 1991-2026 Free Software Foundation, Inc.
 
    This file is part of the GNU Binutils.
 
@@ -35,10 +35,8 @@
 #include "libiberty.h"
 #include "filenames.h"
 #include <fnmatch.h>
-#if BFD_SUPPORTS_PLUGINS
-#include "plugin-api.h"
+#include "same-inode.h"
 #include "plugin.h"
-#endif /* BFD_SUPPORTS_PLUGINS */
 
 bool ldfile_assumed_script = false;
 const char *ldfile_output_machine_name = "";
@@ -184,7 +182,7 @@ ldfile_add_remap_file (const char * file)
 
       if (*p == '\0')
 	{
-	  einfo ("%F%P: malformed remap file entry: %s\n", line);
+	  fatal ("%P: malformed remap file entry: %s\n", line);
 	  continue;
 	}
 
@@ -196,7 +194,7 @@ ldfile_add_remap_file (const char * file)
 
       if (*p == '\0')
 	{
-	  einfo ("%F%P: malformed remap file entry: %s\n", line);
+	  fatal ("%P: malformed remap file entry: %s\n", line);
 	  continue;
 	}
 
@@ -361,14 +359,12 @@ ldfile_try_open_bfd (const char *attempt,
   if (entry->the_bfd == NULL)
     {
       if (bfd_get_error () == bfd_error_invalid_target)
-	einfo (_("%F%P: invalid BFD target `%s'\n"), entry->target);
+	fatal (_("%P: invalid BFD target `%s'\n"), entry->target);
       return false;
     }
 
   /* PR 30568: Do not track lto generated temporary object files.  */
-#if BFD_SUPPORTS_PLUGINS
   if (!entry->flags.lto_output)
-#endif
     track_dependency_files (attempt);
 
   /* Linker needs to decompress sections.  */
@@ -377,10 +373,8 @@ ldfile_try_open_bfd (const char *attempt,
   /* This is a linker input BFD.  */
   entry->the_bfd->is_linker_input = 1;
 
-#if BFD_SUPPORTS_PLUGINS
   if (entry->flags.lto_output)
     entry->the_bfd->lto_output = 1;
-#endif
 
   /* If we are searching for this file, see if the architecture is
      compatible with the output file.  If it isn't, keep searching.
@@ -438,18 +432,11 @@ ldfile_try_open_bfd (const char *attempt,
 			  if (token == ',')
 			    {
 			      if ((token = yylex ()) != NAME)
-				{
-				  free (arg1);
-				  continue;
-				}
+				continue;
 			      arg2 = yylval.name;
 			      if ((token = yylex ()) != ','
 				  || (token = yylex ()) != NAME)
-				{
-				  free (arg1);
-				  free (arg2);
-				  continue;
-				}
+				continue;
 			      arg3 = yylval.name;
 			      token = yylex ();
 			    }
@@ -468,18 +455,12 @@ ldfile_try_open_bfd (const char *attempt,
 			      if (strcmp (arg, lang_get_output_target ()) != 0)
 				skip = 1;
 			    }
-			  free (arg1);
-			  free (arg2);
-			  free (arg3);
 			  break;
 			case NAME:
 			case LNAME:
 			case VERS_IDENTIFIER:
 			case VERS_TAG:
-			  free (yylval.name);
-			  break;
 			case INT:
-			  free (yylval.bigint.str);
 			  break;
 			}
 		      token = yylex ();
@@ -504,7 +485,7 @@ ldfile_try_open_bfd (const char *attempt,
 
 	  if (!entry->flags.dynamic && (entry->the_bfd->flags & DYNAMIC) != 0)
 	    {
-	      einfo (_("%F%P: attempted static link of dynamic object `%s'\n"),
+	      fatal (_("%P: attempted static link of dynamic object `%s'\n"),
 		     attempt);
 	      bfd_close (entry->the_bfd);
 	      entry->the_bfd = NULL;
@@ -531,7 +512,6 @@ ldfile_try_open_bfd (const char *attempt,
 	}
     }
  success:
-#if BFD_SUPPORTS_PLUGINS
   /* If plugins are active, they get first chance to claim
      any successfully-opened input file.  We skip archives
      here; the plugin wants us to offer it the individual
@@ -547,7 +527,6 @@ ldfile_try_open_bfd (const char *attempt,
     plugin_maybe_claim (entry);
   else
     cmdline_check_object_only_section (entry->the_bfd, false);
-#endif /* BFD_SUPPORTS_PLUGINS */
 
   /* It opened OK, the format checked out, and the plugins have had
      their chance to claim it, so this is success.  */
@@ -842,19 +821,26 @@ find_scripts_dir (void)
 
 static FILE *
 ldfile_find_command_file (const char *name,
-			  bool default_only,
+			  enum script_open_style open_how,
 			  bool *sysrooted)
 {
   search_dirs_type *search;
   FILE *result = NULL;
-  char *path;
+  char *path = NULL;
+  const char *filename = NULL;
+  struct script_name_list *script;
+  size_t len;
+  struct stat sbuf1;
 
-  if (!default_only)
+  if (open_how != script_defaultT)
     {
       /* First try raw name.  */
       result = try_open (name, sysrooted);
       if (result != NULL)
-	return result;
+	{
+	  filename = name;
+	  goto success;
+	}
     }
 
   if (!script_search)
@@ -875,19 +861,49 @@ ldfile_find_command_file (const char *name,
   *search_tail_ptr = script_search;
 
   /* Try now prefixes.  */
-  for (search = default_only ? script_search : search_head;
+  for (search = open_how == script_defaultT ? script_search : search_head;
        search != NULL;
        search = search->next)
     {
       path = concat (search->name, slash, name, (const char *) NULL);
       result = try_open (path, sysrooted);
-      free (path);
       if (result)
-	break;
+	{
+	  filename = path;
+	  break;
+	}
     }
 
   /* Restore the original path list.  */
   *search_tail_ptr = NULL;
+
+  if (!filename)
+    return NULL;
+
+ success:
+  /* PR 24576: Catch the case where the user has accidentally included
+     the same linker script twice.  */
+  if (stat (filename, &sbuf1) == 0)
+    {
+      struct stat sbuf2;
+      for (script = processed_scripts;
+	   script != NULL;
+	   script = script->next)
+	if ((open_how != script_nonT || script->open_how != script_nonT)
+	    && stat (script->name, &sbuf2) == 0
+	    && SAME_INODE (sbuf1, sbuf2))
+	  fatal (_("%P: error: linker script file '%s (%s)'"
+		   " appears multiple times\n"), filename, script->name);
+    }
+
+  len = strlen (filename);
+  script = xmalloc (sizeof (*script) + len);
+  script->next = processed_scripts;
+  script->open_how = open_how;
+  memcpy (script->name, filename, len + 1);
+  processed_scripts = script;
+
+  free (path);
 
   return result;
 }
@@ -900,36 +916,13 @@ ldfile_open_command_file_1 (const char *name, enum script_open_style open_how)
 {
   FILE *ldlex_input_stack;
   bool sysrooted;
-  struct script_name_list *script;
-  size_t len;
 
-  /* PR 24576: Catch the case where the user has accidentally included
-     the same linker script twice.  */
-  for (script = processed_scripts; script != NULL; script = script->next)
-    {
-      if ((open_how != script_nonT || script->open_how != script_nonT)
-	  && strcmp (name, script->name) == 0)
-	{
-	  einfo (_("%F%P: error: linker script file '%s'"
-		   " appears multiple times\n"), name);
-	  return;
-	}
-    }
-
-  len = strlen (name);
-  script = xmalloc (sizeof (*script) + len);
-  script->next = processed_scripts;
-  script->open_how = open_how;
-  memcpy (script->name, name, len + 1);
-  processed_scripts = script;
-
-  ldlex_input_stack = ldfile_find_command_file (name,
-						open_how == script_defaultT,
+  ldlex_input_stack = ldfile_find_command_file (name, open_how,
 						&sysrooted);
   if (ldlex_input_stack == NULL)
     {
       bfd_set_error (bfd_error_system_call);
-      einfo (_("%F%P: cannot open linker script file %s: %E\n"), name);
+      fatal (_("%P: cannot open linker script file %s: %E\n"), name);
       return;
     }
 
@@ -1023,7 +1016,7 @@ ldfile_set_output_arch (const char *string, enum bfd_architecture defarch)
   else if (defarch != bfd_arch_unknown)
     ldfile_output_architecture = defarch;
   else
-    einfo (_("%F%P: cannot represent machine `%s'\n"), string);
+    fatal (_("%P: cannot represent machine `%s'\n"), string);
 }
 
 /* Tidy up memory.  */

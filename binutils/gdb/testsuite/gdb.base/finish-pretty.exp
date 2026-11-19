@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Free Software Foundation, Inc.
+# Copyright 2018-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,11 +25,11 @@ if { [have_fvar_tracking] } {
 }
 
 if { [prepare_for_testing "failed to prepare" $testfile $srcfile $opts] } {
-    return -1
+    return
 }
 
 proc finish_pretty { } {
-    if ![runto foo] {
+    if {![runto foo]} {
 	return
     }
     gdb_test_no_output "set print pretty" \

@@ -1,4 +1,4 @@
-# Copyright 2007-2024 Free Software Foundation, Inc.
+# Copyright 2007-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ append binfile .o
 require allow_cplus_tests
 
 if { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" object {c++ debug}] != "" } {
-     untested "failed to compile"
-     return -1
+    untested "failed to compile"
+    return
 }
 
 proc get_func_address { func } {
@@ -30,7 +30,7 @@ proc get_func_address { func } {
 
     set rfunc [string_to_regexp $func]
     gdb_test_multiple "print ${func}" "get address of ${func}" {
-	-re "\\\$\[0-9\]+ = \\{.*\\} (($hex) <${rfunc}.*>)\[\r\n\]+${gdb_prompt} $" {
+	-re "${::valnum_re} = \\{.*\\} (($hex) <${rfunc}.*>)\[\r\n\]+${gdb_prompt} $" {
 	    # $1 = {int ()} 0x24 <function_bar>
 	    # But if the function is at zero, the name may be omitted.
 	    pass "get address of ${func}"
@@ -67,7 +67,7 @@ gdb_test_multiple "info functions func<.>" "info functions" {
 	    pass "info functions"
 	} else {
 	    fail "info functions"
-	    return -1
+	    return
 	}
     }
 }
@@ -105,14 +105,14 @@ gdb_test_multiple "info file" "info file" {
 	    pass "info file"
 	} else {
 	    fail "info file"
-	    return -1
+	    return
 	}
     }
 }
 
 if { $func1_sec == $func2_sec } {
     untested "cp-relocate.exp - template functions in same sections"
-    return -1
+    return
 }
 
 # Now start a clean GDB, for add-symbol-file tests.

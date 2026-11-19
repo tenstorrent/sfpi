@@ -1,5 +1,5 @@
 /* Motorola 68HC11-specific support for 32-bit ELF
-   Copyright (C) 1999-2025 Free Software Foundation, Inc.
+   Copyright (C) 1999-2026 Free Software Foundation, Inc.
    Contributed by Stephane Carrez (stcarrez@nerim.fr)
    (Heavily copied from the D10V port by Martin Hunt (hunt@cygnus.com))
 
@@ -419,7 +419,7 @@ m68hc11_elf_build_one_stub (struct bfd_hash_entry *gen_entry, void *in_arg)
      section.  The user should fix his linker script.  */
   if (stub_entry->target_section->output_section == NULL
       && info->non_contiguous_regions)
-    info->callbacks->einfo (_("%F%P: Could not assign `%pA' to an output section. "
+    info->callbacks->fatal (_("%P: Could not assign `%pA' to an output section. "
 			      "Retry without --enable-non-contiguous-regions.\n"),
 			    stub_entry->target_section);
 
@@ -715,7 +715,7 @@ m68hc11_elf_relax_section (bfd *abfd, asection *sec,
       || (sec->flags & SEC_CODE) == 0)
     return true;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
 
   /* Get a copy of the native relocations.  */
   internal_relocs = (_bfd_elf_link_read_relocs
@@ -1135,7 +1135,7 @@ m68hc11_elf_relax_delete_bytes (bfd *abfd, asection *sec,
   struct elf_link_hash_entry **end_hashes;
   unsigned int symcount;
 
-  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (abfd);
   isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
 
   sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);

@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2024 Free Software Foundation, Inc.
+# Copyright (C) 2019-2026 Free Software Foundation, Inc.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -25,7 +25,7 @@ if {[mi_gdb_start]} {
 
 if {[lsearch -exact [mi_get_features] python] < 0} {
     unsupported "python support is disabled"
-    return -1
+    return
 }
 
 standard_testfile

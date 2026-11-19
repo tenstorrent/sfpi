@@ -1,4 +1,4 @@
---  Copyright 2009-2024 Free Software Foundation, Inc.
+--  Copyright 2009-2026 Free Software Foundation, Inc.
 --
 --  This program is free software; you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,11 @@ procedure Foo is
       entry Finalize;
    end Caller;
    type Caller_Ptr is access Caller;
+
+   procedure Do_Nothing is
+   begin
+      null;
+   end Do_Nothing;
 
    procedure Break_Me is
    begin
@@ -57,7 +62,8 @@ begin
 
    --  Next, call their Call_Break_Me entry of each task, using the same
    --  order as the order used to create them.
-   for J in Task_List'Range loop  -- STOP_HERE
+   Do_Nothing;                  --  STOP_HERE
+   for J in Task_List'Range loop
       Task_List (J).Call_Break_Me;
    end loop;
 
@@ -66,6 +72,6 @@ begin
       Task_List (J).Finalize;
    end loop;
 
-   null; -- STOP_HERE_2
+   Do_Nothing; -- STOP_HERE_2
 
 end Foo;

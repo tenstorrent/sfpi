@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Free Software Foundation, Inc.
+# Copyright 2022-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# This test checks that .gdb_index is in use, which isn't the case
+# with readnow.
+require !readnow
+
 standard_testfile
 
 set flags {}
@@ -21,15 +25,15 @@ lappend flags {dwarf5}
 
 if { [prepare_for_testing "failed to prepare" ${testfile} \
 	  $srcfile $flags] } {
-    return -1
+    return
 }
 
 if { [ensure_gdb_index $binfile] != 1 } {
     untested "error adding gdb index"
-    return -1
+    return
 }
 
-clean_restart ${binfile}
+clean_restart ${::testfile}
 
 # Verify that .gdb_index section is not ignored.
 set index [have_index $binfile]

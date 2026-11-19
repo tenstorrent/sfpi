@@ -1,4 +1,4 @@
-# Copyright 2013-2024 Free Software Foundation, Inc.
+# Copyright 2013-2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ standard_ada_testfile foo
 
 set have_xfail 0
 if {[is_aarch64_target]} {
-    if { [gcc_major_version] <= 8 } {
-       set have_xfail 1
+    if { [gnat_version_compare < 9] } {
+	set have_xfail 1
     }
 }
 
@@ -30,7 +30,7 @@ foreach_gnat_encoding scenario flags {all minimal} {
     lappend flags debug optimize=-O2
 
     if {[gdb_compile_ada "${srcfile}" "${binfile}-${scenario}" executable $flags] != ""} {
-	return -1
+	return
     }
 
     clean_restart ${testfile}-${scenario}
@@ -47,18 +47,18 @@ foreach_gnat_encoding scenario flags {all minimal} {
     set re \
 	"#0.*callee\\.increment \\(val(=val@entry)?=99\\.0, msg=\\.\\.\\.\\).*"
     set re_different_entry_val \
-       "#0\\s+callee\\.increment \\(val=99.0, val@entry=.*, msg=\\.\\.\\.\\).*"
+	"#0\\s+callee\\.increment \\(val=99.0, val@entry=.*, msg=\\.\\.\\.\\).*"
     gdb_test_multiple "frame" "" {
-       -re -wrap $re {
-	   pass $gdb_test_name
-       }
-       -re -wrap $re_different_entry_val {
-	   if { $have_xfail } {
-	      # GCC PR98148
-	      xfail $gdb_test_name
-	   } else {
-	      fail $gdb_test_name
-	   }
-       }
+	-re -wrap $re {
+	    pass $gdb_test_name
+	}
+	-re -wrap $re_different_entry_val {
+	    if { $have_xfail } {
+		# GCC PR98148
+		xfail $gdb_test_name
+	    } else {
+		fail $gdb_test_name
+	    }
+	}
     }
 }

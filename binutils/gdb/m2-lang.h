@@ -1,6 +1,6 @@
 /* Modula 2 language support definitions for GDB, the GNU debugger.
 
-   Copyright (C) 1992-2024 Free Software Foundation, Inc.
+   Copyright (C) 1992-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -89,11 +89,6 @@ public:
   /* See language.h.  */
 
   int parser (struct parser_state *ps) const override;
-
-  /* See language.h.  */
-
-  void emitchar (int ch, struct type *chtype,
-		 struct ui_file *stream, int quoter) const override;
 
   /* See language.h.  */
 

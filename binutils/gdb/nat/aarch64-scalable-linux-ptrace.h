@@ -1,7 +1,7 @@
 /* Common native Linux definitions for the AArch64 scalable
    extensions: SVE and SME.
 
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,9 +30,21 @@
    these very same symbols.  When that's the case, build errors will
    result when <asm/ptrace.h> is included before <sys/ptrace.h>.  */
 #include <sys/ptrace.h>
+#include <asm/hwcap.h>
 #include <asm/ptrace.h>
 #include <stdarg.h>
 #include "aarch64-scalable-linux-sigcontext.h"
+
+/* Feature check for Scalable Matrix Extension.  */
+#ifndef HWCAP2_SME
+#define HWCAP2_SME (1 << 23)
+#endif
+
+/* Feature check for Scalable Matrix Extension 2.  */
+#ifndef HWCAP2_SME2
+#define HWCAP2_SME2   (1UL << 37)
+#define HWCAP2_SME2P1 (1UL << 38)
+#endif
 
 /* Indicates whether a SVE ptrace header is followed by SVE registers or a
    fpsimd structure.  */

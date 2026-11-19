@@ -1,6 +1,6 @@
 /* GNU/Linux/x86-64 specific target description, for the remote server
    for GDB.
-   Copyright (C) 2017-2024 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -33,8 +33,7 @@ x86_linux_post_init_tdesc (target_desc *tdesc, bool is_64bit)
      However, init_target_desc requires us to override the already set
      value.  That's fine, out new string should match the old one.  */
   gdb_assert (tdesc_osabi_name (tdesc) != nullptr);
-  gdb_assert (strcmp (tdesc_osabi_name (tdesc),
-		      gdbarch_osabi_name (osabi)) == 0);
+  gdb_assert (streq (tdesc_osabi_name (tdesc), gdbarch_osabi_name (osabi)));
 #endif /* ! IN_PROCESS_AGENT */
 
 #ifdef __x86_64__

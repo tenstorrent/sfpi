@@ -1,4 +1,4 @@
-/* Copyright (C) 2017-2024 Free Software Foundation, Inc.
+/* Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -52,11 +52,11 @@ public:
   struct rebind
   {
     /* A couple helpers just to make it a bit more readable.  */
-    typedef std::allocator_traits<A> traits_;
-    typedef typename traits_::template rebind_alloc<U> alloc_;
+    using traits_ = std::allocator_traits<A>;
+    using alloc_ = typename traits_::template rebind_alloc<U>;
 
     /* This is what we're after.  */
-    typedef default_init_allocator<U, alloc_> other;
+    using other = default_init_allocator<U, alloc_>;
   };
 
   /* Make the base allocator's construct method(s) visible.  */

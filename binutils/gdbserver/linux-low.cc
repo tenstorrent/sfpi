@@ -1,5 +1,5 @@
 /* Low level interface to ptrace, for the remote server for GDB.
-   Copyright (C) 1995-2024 Free Software Foundation, Inc.
+   Copyright (C) 1995-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -46,7 +46,6 @@
 #include <langinfo.h>
 #include <iconv.h>
 #include "gdbsupport/filestuff.h"
-#include "gdbsupport/gdb-safe-ctype.h"
 #include "tracepoint.h"
 #include <inttypes.h>
 #include "gdbsupport/common-inferior.h"
@@ -533,9 +532,9 @@ linux_process_target::handle_extended_wait (lwp_info **orig_event_lwp,
 	  if (ret == -1)
 	    perror_with_name ("waiting for new child");
 	  else if (ret != new_pid)
-	    warning ("wait returned unexpected PID %d", ret);
+	    warning (_("wait returned unexpected PID %d"), ret);
 	  else if (!WIFSTOPPED (status))
-	    warning ("wait returned unexpected status 0x%x", status);
+	    warning (_("wait returned unexpected status 0x%x"), status);
 	}
 
       if (debug_threads)
@@ -733,6 +732,40 @@ linux_process_target::handle_extended_wait (lwp_info **orig_event_lwp,
       event_ptid = event_thr->id;
       event_pid = event_ptid.pid ();
 
+      /* If GDBserver had sent the exec'ing thread a SIGSTOP and the thread
+	 exec'ed before consuming it, the SIGSTOP stays pending across the exec.
+	 The pending SIGSTOP is reported once the post-exec thread is resumed.
+	 Carry the expectation over to the new lwp_info below, so that it is
+	 filtered out instead of being reported to GDB.
+
+	 Things get interesting if a non-leader thread does the exec.  The
+	 kernel deletes the other threads, changes the exec'ing thread's id
+	 so it matches the tgid (becomes the new leader), and reports the
+	 PTRACE_EVENT_EXEC for that leader id.  If a SIGSTOP was pending on
+	 the exec'ing non-leader as the exec happened, it will still be pending
+	 post-exec, but it will be reported under leader id.
+
+	 Since EVENT_LWP was looked up using the leader id, it represents the
+	 former leader, not necessarily the exec'ing thread.  To properly carry
+	 the stop expectation from the exec'ing thread's lwp_info to the new
+	 lwp_info, use PTRACE_GETEVENTMSG to obtain the exec'ing thread's former
+	 id, and look up the lwp_info from that.
+
+	 If a SIGSTOP is pending (in the kernel) on the leader when a non-leader
+	 execs, then that SIGSTOP disappears with the thread.  */
+      unsigned long execing_tid;
+      if (ptrace (PTRACE_GETEVENTMSG, event_ptid.lwp (), (PTRACE_TYPE_ARG3) 0,
+		  &execing_tid) != 0)
+	{
+	  /* If ptrace fails, fall back to using the leader.  */
+	  execing_tid = event_ptid.lwp ();
+	}
+
+      lwp_info *execing_lwp
+	= find_lwp_pid (ptid_t (event_pid, execing_tid));
+      bool stop_expected
+	= execing_lwp != nullptr && execing_lwp->stop_expected;
+
       /* Save the syscall list from the execing process.  */
       process_info *proc = event_thr->process ();
       syscalls_to_catch = std::move (proc->syscalls_to_catch);
@@ -748,10 +781,13 @@ linux_process_target::handle_extended_wait (lwp_info **orig_event_lwp,
       gdb_assert (current_thread == event_thr);
       arch_setup_thread (event_thr);
 
+      /* Carry over a possible SIGSTOP expectation.  */
+      event_lwp->stop_expected = stop_expected;
+
       /* Set the event status.  */
       event_lwp->waitstatus.set_execd
 	(make_unique_xstrdup
-	   (linux_proc_pid_to_exec_file (event_thr->id.lwp ())));
+	   (pid_to_exec_file (event_thr->id.lwp ())));
 
       /* Mark the exec status as pending.  */
       event_lwp->stopped = 1;
@@ -1174,7 +1210,7 @@ linux_process_target::attach (unsigned long pid)
       this->remove_linux_process (proc);
 
       std::string reason = linux_ptrace_attach_fail_reason_string (ptid, err);
-      error ("Cannot attach to process %ld: %s", pid, reason.c_str ());
+      error (_("Cannot attach to process %ld: %s"), pid, reason.c_str ());
     }
 
   open_proc_mem_file (proc);
@@ -1769,21 +1805,18 @@ num_lwps (process_info *process)
 
 /* See nat/linux-nat.h.  */
 
-struct lwp_info *
-iterate_over_lwps (ptid_t filter,
-		   gdb::function_view<iterate_over_lwps_ftype> callback)
+void
+for_each_lwp (int pid, for_each_lwp_ftype callback)
 {
-  thread_info *thread = find_thread (filter, [&] (thread_info *thr_arg)
+  process_info *process = find_process_pid (pid);
+
+  if (process == nullptr)
+    return;
+
+  process->for_each_thread ([&] (thread_info *thread)
     {
-      lwp_info *lwp = get_thread_lwp (thr_arg);
-
-      return callback (lwp);
+      callback (get_thread_lwp (thread));
     });
-
-  if (thread == NULL)
-    return NULL;
-
-  return get_thread_lwp (thread);
 }
 
 bool
@@ -2194,7 +2227,7 @@ linux_process_target::check_stopped_by_watchpoint (lwp_info *child)
   if (low_stopped_by_watchpoint ())
     {
       child->stop_reason = TARGET_STOPPED_BY_WATCHPOINT;
-      child->stopped_data_address = low_stopped_data_address ();
+      child->stopped_data_addresses = low_stopped_data_addresses ();
     }
 
   return child->stop_reason == TARGET_STOPPED_BY_WATCHPOINT;
@@ -2206,10 +2239,10 @@ linux_process_target::low_stopped_by_watchpoint ()
   return false;
 }
 
-CORE_ADDR
-linux_process_target::low_stopped_data_address ()
+std::vector<CORE_ADDR>
+linux_process_target::low_stopped_data_addresses ()
 {
-  return 0;
+  return {};
 }
 
 /* Return the ptrace options that we want to try to enable.  */
@@ -4081,9 +4114,9 @@ linux_process_target::resume_one_lwp_throw (lwp_info *lwp, int step,
 	  if (fast_tp_collecting == fast_tpoint_collect_result::not_collecting)
 	    {
 	      if (step == 0)
-		warning ("BAD - reinserting but not stepping.");
+		warning (_("BAD - reinserting but not stepping."));
 	      if (lwp->suspended)
-		warning ("BAD - reinserting and suspended(%d).",
+		warning (_("BAD - reinserting and suspended(%d)."),
 				 lwp->suspended);
 	    }
 	}
@@ -5006,23 +5039,31 @@ regsets_fetch_inferior_registers (struct regsets_info *regsets_info,
       if (res < 0)
 	{
 	  if (errno == EIO
-	      || (errno == EINVAL && regset->type == OPTIONAL_REGS))
+	      || (errno == EINVAL
+		  && (regset->type == OPTIONAL_REGS
+		      || regset->type == OPTIONAL_RUNTIME_REGS)))
 	    {
 	      /* If we get EIO on a regset, or an EINVAL and the regset is
-		 optional, do not try it again for this process mode.  */
+		 optional, do not try it again for this process mode.
+		 Even if the regset can be enabled at runtime it is safe
+		 to deactivate the regset in case of EINVAL, as we know
+		 the regset itself was the invalid argument of the ptrace
+		 call which means that it's unsupported by the kernel.  */
 	      disable_regset (regsets_info, regset);
 	    }
-	  else if (errno == ENODATA)
+	  else if (errno == ENODATA
+		   || (errno == ENODEV
+		       && regset->type == OPTIONAL_RUNTIME_REGS)
+		   || errno == ESRCH)
 	    {
-	      /* ENODATA may be returned if the regset is currently
-		 not "active".  This can happen in normal operation,
-		 so suppress the warning in this case.  */
-	    }
-	  else if (errno == ESRCH)
-	    {
-	      /* At this point, ESRCH should mean the process is
-		 already gone, in which case we simply ignore attempts
-		 to read its registers.  */
+	      /* ENODATA or ENODEV may be returned if the regset is
+		 currently not "active".  For ENODEV we additionally check
+		 if the register set is of type OPTIONAL_RUNTIME_REGS.
+		 This can happen in normal operation, so suppress the
+		 warning in this case.
+		 ESRCH should mean the process is already gone at this
+		 point, in which case we simply ignore attempts to read
+		 its registers.  */
 	    }
 	  else
 	    {
@@ -5104,11 +5145,25 @@ regsets_store_inferior_registers (struct regsets_info *regsets_info,
       if (res < 0)
 	{
 	  if (errno == EIO
-	      || (errno == EINVAL && regset->type == OPTIONAL_REGS))
+	      || (errno == EINVAL
+		   && (regset->type == OPTIONAL_REGS
+		       || regset->type == OPTIONAL_RUNTIME_REGS)))
 	    {
 	      /* If we get EIO on a regset, or an EINVAL and the regset is
-		 optional, do not try it again for this process mode.  */
+		 optional, do not try it again for this process mode.
+		 Even if the regset can be enabled at runtime it is safe
+		 to deactivate the regset in case of EINVAL, as we know
+		 the regset itself was the invalid argument of the ptrace
+		 call which means that it's unsupported by the kernel.  */
 	      disable_regset (regsets_info, regset);
+	    }
+	  else if (errno == ENODEV
+		   && regset->type == OPTIONAL_RUNTIME_REGS)
+	    {
+	      /* If we get ENODEV on a regset and the regset can be
+		 enabled at runtime try it again for this process mode.
+		 This can happen in normal operation, so suppress the
+		 warning in this case.  */
 	    }
 	  else if (errno == ESRCH)
 	    {
@@ -5164,7 +5219,7 @@ register_addr (const struct usrregs_info *usrregs, int regnum)
   int addr;
 
   if (regnum < 0 || regnum >= usrregs->num_regs)
-    error ("Invalid register number %d.", regnum);
+    error (_("Invalid register number %d."), regnum);
 
   addr = usrregs->regmap[regnum];
 
@@ -5262,7 +5317,7 @@ linux_process_target::store_register (const usrregs_info *usrregs,
 
 
 	  if (!low_cannot_store_register (regno))
-	    error ("writing register %d: %s", regno, safe_strerror (errno));
+	    error (_("writing register %d: %s"), regno, safe_strerror (errno));
 	}
       regaddr += sizeof (PTRACE_XFER_TYPE);
     }
@@ -5641,12 +5696,12 @@ linux_process_target::stopped_by_watchpoint ()
   return lwp->stop_reason == TARGET_STOPPED_BY_WATCHPOINT;
 }
 
-CORE_ADDR
-linux_process_target::stopped_data_address ()
+std::vector<CORE_ADDR>
+linux_process_target::stopped_data_addresses ()
 {
   struct lwp_info *lwp = get_thread_lwp (current_thread);
 
-  return lwp->stopped_data_address;
+  return lwp->stopped_data_addresses;
 }
 
 /* This is only used for targets that define PT_TEXT_ADDR,
@@ -5876,7 +5931,7 @@ linux_process_target::async (bool enable)
 	    {
 	      gdb_sigmask (SIG_UNBLOCK, &mask, NULL);
 
-	      warning ("creating event pipe failed.");
+	      warning (_("creating event pipe failed."));
 	      return previous;
 	    }
 
@@ -5982,7 +6037,7 @@ linux_process_target::handle_new_gdb_connection ()
 }
 
 int
-linux_process_target::handle_monitor_command (char *mon)
+linux_process_target::handle_monitor_command (const char *mon)
 {
 #ifdef USE_THREAD_DB
   return thread_db_handle_monitor_command (mon);
@@ -6033,7 +6088,7 @@ linux_process_target::supports_pid_to_exec_file ()
 const char *
 linux_process_target::pid_to_exec_file (int pid)
 {
-  return linux_proc_pid_to_exec_file (pid);
+  return linux_proc_pid_to_exec_file (pid, linux_ns_same (pid, LINUX_NS_MNT));
 }
 
 bool
@@ -6047,6 +6102,12 @@ linux_process_target::multifs_open (int pid, const char *filename,
 				    int flags, mode_t mode)
 {
   return linux_mntns_open_cloexec (pid, filename, flags, mode);
+}
+
+int
+linux_process_target::multifs_lstat (int pid, const char *filename, struct stat *sb)
+{
+  return linux_mntns_lstat (pid, filename, sb);
 }
 
 int
@@ -6119,9 +6180,9 @@ linux_process_target::read_loadmap (const char *annex, CORE_ADDR offset,
   struct target_loadmap *data = NULL;
   unsigned int actual_length, copy_length;
 
-  if (strcmp (annex, "exec") == 0)
+  if (streq (annex, "exec"))
     addr = (int) LINUX_LOADMAP_EXEC;
-  else if (strcmp (annex, "interp") == 0)
+  else if (streq (annex, "interp"))
     addr = (int) LINUX_LOADMAP_INTERP;
   else
     return -1;
@@ -6285,8 +6346,8 @@ get_phdr_phnum_from_proc_auxv (const int pid, const int is_elf64,
 
   if (*phdr_memaddr == 0 || *num_phdr == 0)
     {
-      warning ("Unexpected missing AT_PHDR and/or AT_PHNUM: "
-	       "phdr_memaddr = %ld, phdr_num = %d",
+      warning (_("Unexpected missing AT_PHDR and/or AT_PHNUM: "
+		 "phdr_memaddr = %ld, phdr_num = %d"),
 	       (long) *phdr_memaddr, *num_phdr);
       return 2;
     }
@@ -6582,7 +6643,7 @@ read_link_map (std::string &document, CORE_ADDR lmid, CORE_ADDR lm_addr,
 
       if (lm_prev != l_prev)
 	{
-	  warning ("Corrupted shared library list: 0x%s != 0x%s",
+	  warning (_("Corrupted shared library list: 0x%s != 0x%s"),
 		   paddress (lm_prev), paddress (l_prev));
 	  break;
 	}
@@ -6685,13 +6746,13 @@ linux_process_target::qxfer_libraries_svr4 (const char *annex,
   else
     {
       if (lm_prev != 0)
-	warning ("ignoring prev=0x%s without start", paddress (lm_prev));
+	warning (_("ignoring prev=0x%s without start"), paddress (lm_prev));
 
       /* We could interpret LMID as 'provide only the libraries for this
 	 namespace' but GDB is currently only providing lmid, start, and
 	 prev, or nothing.  */
       if (lmid != 0)
-	warning ("ignoring lmid=0x%s without start", paddress (lmid));
+	warning (_("ignoring lmid=0x%s without start"), paddress (lmid));
 
       CORE_ADDR r_debug = priv->r_debug;
       if (r_debug == 0)
@@ -6714,21 +6775,21 @@ linux_process_target::qxfer_libraries_svr4 (const char *annex,
 				 (unsigned char *) &r_version,
 				 sizeof (r_version)) != 0)
 	    {
-	      warning ("unable to read r_version from 0x%s",
+	      warning (_("unable to read r_version from 0x%s"),
 		       paddress (r_debug + lmo->r_version_offset));
 	      break;
 	    }
 
 	  if (r_version < 1)
 	    {
-	      warning ("unexpected r_debug version %d", r_version);
+	      warning (_("unexpected r_debug version %d"), r_version);
 	      break;
 	    }
 
 	  if (read_one_ptr (r_debug + lmo->r_map_offset, &lm_addr,
 			    ptr_size) != 0)
 	    {
-	      warning ("unable to read r_map from 0x%s",
+	      warning (_("unable to read r_map from 0x%s"),
 		       paddress (r_debug + lmo->r_map_offset));
 	      break;
 	    }
@@ -6752,7 +6813,7 @@ linux_process_target::qxfer_libraries_svr4 (const char *annex,
 	      if (read_one_ptr (lm_addr + lmo->l_next_offset,
 				&lm_addr, ptr_size) != 0)
 		{
-		  warning ("unable to read l_next from 0x%s",
+		  warning (_("unable to read l_next from 0x%s"),
 			   paddress (lm_addr + lmo->l_next_offset));
 		  break;
 		}
@@ -6766,7 +6827,7 @@ linux_process_target::qxfer_libraries_svr4 (const char *annex,
 	  if (read_one_ptr (r_debug + lmo->r_next_offset, &r_debug,
 			    ptr_size) != 0)
 	    {
-	      warning ("unable to read r_next from 0x%s",
+	      warning (_("unable to read r_next from 0x%s"),
 		       paddress (r_debug + lmo->r_next_offset));
 	      break;
 	    }
@@ -6984,7 +7045,7 @@ replace_non_ascii (char *dest, const char *name)
   const char *result = dest;
   while (*name != '\0')
     {
-      if (!ISPRINT (*name))
+      if (!c_isprint (*name))
 	*dest++ = '?';
       else
 	*dest++ = *name;

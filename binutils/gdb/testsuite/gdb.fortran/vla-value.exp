@@ -1,4 +1,4 @@
-# Copyright 2015-2024 Free Software Foundation, Inc.
+# Copyright 2015-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} \
     return -1
 }
 
-if ![fortran_runto_main] {
+if {![fortran_runto_main]} {
     return -1
 }
 
@@ -112,7 +112,7 @@ gdb_test "print pvla(5, 45, 20)" \
   "print pvla(5, 45, 20) after deassociated"
 gdb_test "print pvla(7, 45, 14)" \
   "no such vector element \\\(vector not associated\\\)" \
-  "print pvla(7, 45, 14) after dissasociated"
+  "print pvla(7, 45, 14) after disassociated"
 gdb_test "print pvla" " = <not associated>" \
   "print vla1 after deassociated"
 

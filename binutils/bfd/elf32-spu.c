@@ -1,6 +1,6 @@
 /* SPU specific support for 32-bit ELF
 
-   Copyright (C) 2006-2025 Free Software Foundation, Inc.
+   Copyright (C) 2006-2026 Free Software Foundation, Inc.
 
    This file is part of BFD, the Binary File Descriptor library.
 
@@ -213,9 +213,10 @@ spu_elf_rel9 (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
     return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
 				  input_section, output_bfd, error_message);
 
-  if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
-    return bfd_reloc_outofrange;
   octets = reloc_entry->address * OCTETS_PER_BYTE (abfd, input_section);
+  if (!bfd_reloc_offset_in_range (reloc_entry->howto, abfd,
+				  input_section, octets))
+    return bfd_reloc_outofrange;
 
   /* Get symbol value.  */
   val = 0;
@@ -500,7 +501,7 @@ get_sym_h (struct elf_link_hash_entry **hp,
 	   unsigned long r_symndx,
 	   bfd *ibfd)
 {
-  Elf_Internal_Shdr *symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+  Elf_Internal_Shdr *symtab_hdr = &elf_symtab_hdr (ibfd);
 
   if (r_symndx >= symtab_hdr->sh_info)
     {
@@ -583,10 +584,10 @@ spu_elf_create_sections (struct bfd_link_info *info)
       ibfd = info->input_bfds;
       /* This should really be SEC_LINKER_CREATED, but then we'd need
 	 to write out the section ourselves.  */
-      flags = SEC_LOAD | SEC_READONLY | SEC_HAS_CONTENTS | SEC_IN_MEMORY;
+      flags = SEC_READONLY | SEC_HAS_CONTENTS | SEC_IN_MEMORY;
       s = bfd_make_section_anyway_with_flags (ibfd, SPU_PTNOTE_SPUNAME, flags);
       if (s == NULL
-	  || !bfd_set_section_alignment (s, 4))
+	  || !bfd_set_section_alignment (s, 2))
 	return false;
       /* Because we didn't set SEC_LINKER_CREATED we need to set the
 	 proper section type.  */
@@ -610,6 +611,7 @@ spu_elf_create_sections (struct bfd_link_info *info)
       memcpy (data + 12 + ((sizeof (SPU_PLUGIN_NAME) + 3) & -4),
 	      bfd_get_filename (info->output_bfd), name_len);
       s->contents = data;
+      s->alloced = 1;
     }
 
   if (htab->params->emit_fixups)
@@ -1017,7 +1019,7 @@ needs_ovl_stub (struct elf_link_hash_entry *h,
 	      else
 		{
 		  Elf_Internal_Shdr *symtab_hdr;
-		  symtab_hdr = &elf_tdata (input_section->owner)->symtab_hdr;
+		  symtab_hdr = &elf_symtab_hdr (input_section->owner);
 		  sym_name = bfd_elf_sym_name (input_section->owner,
 					       symtab_hdr,
 					       sym,
@@ -1095,7 +1097,7 @@ count_stub (struct spu_link_hash_table *htab,
     {
       if (elf_local_got_ents (ibfd) == NULL)
 	{
-	  bfd_size_type amt = (elf_tdata (ibfd)->symtab_hdr.sh_info
+	  bfd_size_type amt = (elf_symtab_hdr (ibfd).sh_info
 			       * sizeof (*elf_local_got_ents (ibfd)));
 	  elf_local_got_ents (ibfd) = bfd_zmalloc (amt);
 	  if (elf_local_got_ents (ibfd) == NULL)
@@ -1551,7 +1553,7 @@ process_stubs (struct bfd_link_info *info, bool build)
 	continue;
 
       /* We'll need the symbol table in a second.  */
-      symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (ibfd);
       if (symtab_hdr->sh_info == 0)
 	continue;
 
@@ -1965,6 +1967,7 @@ spu_elf_build_stubs (struct bfd_link_info *info)
 						      htab->stub_sec[i]->size);
 	    if (htab->stub_sec[i]->contents == NULL)
 	      return false;
+	    htab->stub_sec[i]->alloced = 1;
 	    htab->stub_sec[i]->rawsize = htab->stub_sec[i]->size;
 	    htab->stub_sec[i]->size = 0;
 	  }
@@ -1999,6 +2002,7 @@ spu_elf_build_stubs (struct bfd_link_info *info)
   htab->ovtab->contents = bfd_zalloc (htab->ovtab->owner, htab->ovtab->size);
   if (htab->ovtab->contents == NULL)
     return false;
+  htab->ovtab->alloced = 1;
 
   p = htab->ovtab->contents;
   if (htab->params->ovly_flavour == ovly_soft_icache)
@@ -2100,6 +2104,7 @@ spu_elf_build_stubs (struct bfd_link_info *info)
 					     htab->init->size);
 	  if (htab->init->contents == NULL)
 	    return false;
+	  htab->init->alloced = 1;
 
 	  h = define_ovtab_symbol (htab, "__icache_fileoff");
 	  if (h == NULL)
@@ -2505,7 +2510,7 @@ func_name (struct function_info *fun)
       return name;
     }
   ibfd = sec->owner;
-  symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (ibfd);
   return bfd_elf_sym_name (ibfd, symtab_hdr, fun->u.sym, sec);
 }
 
@@ -2707,7 +2712,7 @@ mark_functions_via_relocs (asection *sec,
   if (internal_relocs == NULL)
     return false;
 
-  symtab_hdr = &elf_tdata (sec->owner)->symtab_hdr;
+  symtab_hdr = &elf_symtab_hdr (sec->owner);
   psyms = &symtab_hdr->contents;
   irela = internal_relocs;
   irelaend = irela + sec->reloc_count;
@@ -2995,7 +3000,7 @@ discover_functions (struct bfd_link_info *info)
 	continue;
 
       /* Read all the symbols.  */
-      symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+      symtab_hdr = &elf_symtab_hdr (ibfd);
       symcount = symtab_hdr->sh_size / symtab_hdr->sh_entsize;
       if (symcount == 0)
 	{
@@ -3113,7 +3118,7 @@ discover_functions (struct bfd_link_info *info)
 
 	  psecs = sec_arr[bfd_idx];
 
-	  symtab_hdr = &elf_tdata (ibfd)->symtab_hdr;
+	  symtab_hdr = &elf_symtab_hdr (ibfd);
 	  syms = (Elf_Internal_Sym *) symtab_hdr->contents;
 
 	  gaps = false;
@@ -3424,7 +3429,7 @@ struct _mos_param {
 
 /* Set linker_mark and gc_mark on any sections that we will put in
    overlays.  These flags are used by the generic ELF linker, but we
-   won't be continuing on to bfd_elf_final_link so it is OK to use
+   won't be continuing on to _bfd_elf_final_link() so it is OK to use
    them.  linker_mark is clear before we get here.  Set segment_mark
    on sections that are part of a pasted function (excluding the last
    section).
@@ -4685,8 +4690,7 @@ spu_elf_auto_overlay (struct bfd_link_info *info)
  file_err:
   bfd_set_error (bfd_error_system_call);
  err_exit:
-  info->callbacks->einfo (_("%F%P: auto overlay error: %E\n"));
-  xexit (1);
+  info->callbacks->fatal (_("%P: auto overlay error: %E\n"));
 }
 
 /* Provide an estimate of total stack required.  */
@@ -4739,9 +4743,9 @@ spu_elf_final_link (bfd *output_bfd, struct bfd_link_info *info)
     info->callbacks->einfo (_("%X%P: stack/lrlive analysis error: %E\n"));
 
   if (!spu_elf_build_stubs (info))
-    info->callbacks->einfo (_("%F%P: can not build overlay stubs: %E\n"));
+    info->callbacks->fatal (_("%P: can not build overlay stubs: %E\n"));
 
-  return bfd_elf_final_link (output_bfd, info);
+  return _bfd_elf_final_link (output_bfd, info);
 }
 
 /* Called when not normally emitting relocs, ie. !bfd_link_relocatable (info)
@@ -4820,8 +4824,7 @@ spu_elf_emit_fixup (bfd * output_bfd, struct bfd_link_info *info,
 /* Apply RELOCS to CONTENTS of INPUT_SECTION from INPUT_BFD.  */
 
 static int
-spu_elf_relocate_section (bfd *output_bfd,
-			  struct bfd_link_info *info,
+spu_elf_relocate_section (struct bfd_link_info *info,
 			  bfd *input_bfd,
 			  asection *input_section,
 			  bfd_byte *contents,
@@ -4844,8 +4847,8 @@ spu_elf_relocate_section (bfd *output_bfd,
   stubs = (htab->stub_sec != NULL
 	   && maybe_needs_stubs (input_section));
   iovl = overlay_index (input_section);
-  ea = bfd_get_section_by_name (output_bfd, "._ea");
-  symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+  ea = bfd_get_section_by_name (info->output_bfd, "._ea");
+  symtab_hdr = &elf_symtab_hdr (input_bfd);
   sym_hashes = (struct elf_link_hash_entry **) (elf_sym_hashes (input_bfd));
 
   rel = relocs;
@@ -4877,7 +4880,8 @@ spu_elf_relocate_section (bfd *output_bfd,
 	  sym = local_syms + r_symndx;
 	  sec = local_sections[r_symndx];
 	  sym_name = bfd_elf_sym_name (input_bfd, symtab_hdr, sym, sec);
-	  relocation = _bfd_elf_rela_local_sym (output_bfd, sym, &sec, rel);
+	  relocation = _bfd_elf_rela_local_sym (info->output_bfd,
+						sym, &sec, rel);
 	}
       else
 	{
@@ -4935,7 +4939,8 @@ spu_elf_relocate_section (bfd *output_bfd,
 
       if (sec != NULL && discarded_section (sec))
 	RELOC_AGAINST_DISCARDED_SECTION (info, input_bfd, input_section,
-					 rel, 1, relend, howto, 0, contents);
+					 rel, 1, relend, R_SPU_NONE,
+					 howto, 0, contents);
 
       if (bfd_link_relocatable (info))
 	continue;
@@ -5012,7 +5017,7 @@ spu_elf_relocate_section (bfd *output_bfd,
 	  bfd_vma offset;
 	  offset = rel->r_offset + input_section->output_section->vma
 		   + input_section->output_offset;
-	  spu_elf_emit_fixup (output_bfd, info, offset);
+	  spu_elf_emit_fixup (info->output_bfd, info, offset);
 	}
 
       if (unresolved_reloc)
@@ -5039,7 +5044,7 @@ spu_elf_relocate_section (bfd *output_bfd,
 	unresolved_reloc = true;
 
       if (unresolved_reloc
-	  && _bfd_elf_section_offset (output_bfd, info, input_section,
+	  && _bfd_elf_section_offset (info->output_bfd, info, input_section,
 				      rel->r_offset) != (bfd_vma) -1)
 	{
 	  _bfd_error_handler
@@ -5130,8 +5135,8 @@ spu_elf_relocate_section (bfd *output_bfd,
 }
 
 static bool
-spu_elf_finish_dynamic_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
-				 struct bfd_link_info *info ATTRIBUTE_UNUSED)
+spu_elf_finish_dynamic_sections (struct bfd_link_info *info ATTRIBUTE_UNUSED,
+				 bfd_byte *buf ATTRIBUTE_UNUSED)
 {
   return true;
 }
@@ -5337,8 +5342,30 @@ spu_elf_fake_sections (bfd *obfd ATTRIBUTE_UNUSED,
 		       asection *sec)
 {
   if (strcmp (sec->name, SPU_PTNOTE_SPUNAME) == 0)
-    hdr->sh_type = SHT_NOTE;
+    {
+      hdr->sh_type = SHT_NOTE;
+      hdr->sh_addralign = 16;
+    }
   return true;
+}
+
+/* .note.spu_name is read by the PPU from the object, and possibly
+   needs the file offset to be aligned to 16 bytes.  We used to simply
+   call bfd_set_section_alignment to set the alignment to 16, but if
+   left like that it triggers a readelf warning.  Now for layout we
+   tweak the alignment to 16 in spu_elf_fake_sections, and restore it
+   to 4 here.  */
+
+static bool
+spu_elf_final_write_processing (bfd *abfd)
+{
+  asection *sec = bfd_get_section_by_name (abfd, SPU_PTNOTE_SPUNAME);
+  if (sec != NULL)
+    {
+      struct bfd_elf_section_data *esd = elf_section_data (sec);
+      esd->this_hdr.sh_addralign = 4;
+    }
+  return _bfd_elf_final_write_processing (abfd);
 }
 
 /* Tweak phdrs before writing them out.  */
@@ -5348,7 +5375,7 @@ spu_elf_modify_headers (bfd *abfd, struct bfd_link_info *info)
 {
   if (info != NULL)
     {
-      const struct elf_backend_data *bed;
+      elf_backend_data *bed;
       struct elf_obj_tdata *tdata;
       Elf_Internal_Phdr *phdr, *last;
       struct spu_link_hash_table *htab;
@@ -5502,6 +5529,7 @@ spu_elf_size_sections (bfd *obfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
       sfixup->contents = (bfd_byte *) bfd_zalloc (info->input_bfds, size);
       if (sfixup->contents == NULL)
 	return false;
+      sfixup->alloced = 1;
     }
   return true;
 }
@@ -5533,6 +5561,7 @@ spu_elf_size_sections (bfd *obfd ATTRIBUTE_UNUSED, struct bfd_link_info *info)
 #define elf_backend_modify_headers		spu_elf_modify_headers
 #define elf_backend_init_file_header		spu_elf_init_file_header
 #define elf_backend_fake_sections		spu_elf_fake_sections
+#define elf_backend_final_write_processing	spu_elf_final_write_processing
 #define elf_backend_special_sections		spu_elf_special_sections
 #define bfd_elf32_bfd_final_link		spu_elf_final_link
 

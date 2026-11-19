@@ -1,5 +1,5 @@
 /* Header file to load module for 'compile' command.
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ struct compile_module
 };
 
 /* A unique pointer for a compile_module.  */
-typedef std::unique_ptr<compile_module> compile_module_up;
+using compile_module_up = std::unique_ptr<compile_module>;
 
 extern compile_module_up compile_object_load
   (const compile_file_names &fnames,

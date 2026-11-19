@@ -1,6 +1,6 @@
 /* Abstract base class inherited by all process_stratum targets
 
-   Copyright (C) 2018-2024 Free Software Foundation, Inc.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -21,9 +21,8 @@
 #define GDB_PROCESS_STRATUM_TARGET_H
 
 #include "target.h"
-#include <set>
-#include "gdbsupport/intrusive_list.h"
 #include "gdbsupport/gdb-checked-static-cast.h"
+#include "gdbsupport/unordered_set.h"
 #include "gdbthread.h"
 
 /* Abstract base class inherited by all process_stratum targets.  */
@@ -79,6 +78,11 @@ public:
   void follow_fork (inferior *child_inf, ptid_t child_ptid,
 		    target_waitkind fork_kind, bool follow_child,
 		    bool detach_on_fork) override;
+
+  /* Assume sub-classes are not shareable.  Those that are need to mark
+     themselves as such.  */
+  bool is_shareable () override
+  { return false; }
 
   /* True if any thread is, or may be executing.  We need to track
      this separately because until we fully sync the thread list, we
@@ -166,7 +170,8 @@ as_process_stratum_target (target_ops *target)
 
 /* Return a collection of targets that have non-exited inferiors.  */
 
-extern std::set<process_stratum_target *> all_non_exited_process_targets ();
+extern gdb::unordered_set<process_stratum_target *>
+     all_non_exited_process_targets ();
 
 /* Switch to the first inferior (and program space) of TARGET, and
    switch to no thread selected.  */

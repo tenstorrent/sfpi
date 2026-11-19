@@ -1,6 +1,6 @@
 /* Common Target-dependent code for the Xtensa port of GDB, the GNU debugger.
 
-   Copyright (C) 2003-2024 Free Software Foundation, Inc.
+   Copyright (C) 2003-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -23,7 +23,7 @@
 /* Xtensa ELF core file register set representation ('.reg' section).
    Copied from target-side ELF header <xtensa/elf.h>.  */
 
-typedef uint32_t xtensa_elf_greg_t;
+using xtensa_elf_greg_t = uint32_t;
 
 typedef struct
 {

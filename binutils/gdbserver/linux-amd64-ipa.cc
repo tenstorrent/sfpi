@@ -1,7 +1,7 @@
 /* GNU/Linux/x86-64 specific low level interface, for the in-process
    agent library for GDB.
 
-   Copyright (C) 2010-2024 Free Software Foundation, Inc.
+   Copyright (C) 2010-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -82,7 +82,7 @@ get_raw_reg (const unsigned char *raw_regs, int regnum)
 const struct target_desc *
 get_ipa_tdesc (int idx)
 {
-  uint64_t xcr0 = x86_linux_tdesc_idx_to_xcr0 (idx);
+  uint64_t xstate_bv = x86_linux_tdesc_idx_to_xstate_bv (idx);
 
 #if defined __ILP32__
   bool is_x32 = true;
@@ -90,7 +90,7 @@ get_ipa_tdesc (int idx)
   bool is_x32 = false;
 #endif
 
-  return amd64_linux_read_description (xcr0, is_x32);
+  return amd64_linux_read_description (xstate_bv, is_x32);
 }
 
 /* Allocate buffer for the jump pads.  The branch instruction has a
@@ -159,9 +159,11 @@ initialize_low_tracepoint (void)
 {
 #if defined __ILP32__
   for (int i = 0; i < x86_linux_x32_tdesc_count (); i++)
-    amd64_linux_read_description (x86_linux_tdesc_idx_to_xcr0 (i), true);
+    amd64_linux_read_description
+      (x86_linux_tdesc_idx_to_xstate_bv (i), true);
 #else
   for (int i = 0; i < x86_linux_amd64_tdesc_count (); i++)
-    amd64_linux_read_description (x86_linux_tdesc_idx_to_xcr0 (i), false);
+    amd64_linux_read_description
+      (x86_linux_tdesc_idx_to_xstate_bv (i), false);
 #endif
 }

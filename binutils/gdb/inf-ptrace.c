@@ -1,6 +1,6 @@
 /* Low-level child interface to ptrace.
 
-   Copyright (C) 1988-2024 Free Software Foundation, Inc.
+   Copyright (C) 1988-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -175,7 +175,7 @@ inf_ptrace_target::attach (const char *args, int from_tty)
 
   /* Don't consider the thread stopped until we've processed its
      initial SIGSTOP stop.  */
-  set_executing (this, thr->ptid, true);
+  set_internal_state (this, thr->ptid, THREAD_INT_RUNNING);
 
   unpusher.release ();
 }

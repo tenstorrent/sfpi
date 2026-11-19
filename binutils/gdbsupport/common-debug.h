@@ -1,6 +1,6 @@
 /* Declarations for debug printing functions.
 
-   Copyright (C) 2014-2024 Free Software Foundation, Inc.
+   Copyright (C) 2014-2026 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -47,13 +47,13 @@ extern void debug_vprintf (const char *format, va_list ap)
    with a newline at the end.  */
 
 extern void ATTRIBUTE_PRINTF (3, 4) debug_prefixed_printf
-  (const char *module, const char *func, const char *format, ...);
+  (const char *mod, const char *func, const char *format, ...);
 
 /* Print a debug statement prefixed with the module and function name, and
    with a newline at the end.  */
 
 extern void ATTRIBUTE_PRINTF (3, 0) debug_prefixed_vprintf
-  (const char *module, const char *func, const char *format, va_list args);
+  (const char *mod, const char *func, const char *format, va_list args);
 
 /* Helper to define "_debug_print" macros.
 
@@ -63,19 +63,28 @@ extern void ATTRIBUTE_PRINTF (3, 0) debug_prefixed_vprintf
    The other arguments, as well as the name of the current function, are
    forwarded to debug_prefixed_printf.  */
 
-#define debug_prefixed_printf_cond(debug_enabled_cond, module, fmt, ...) \
+#define debug_prefixed_printf_cond(debug_enabled_cond, mod, fmt, ...) \
   do \
     { \
       if (debug_enabled_cond) \
-	debug_prefixed_printf (module, __func__, fmt, ##__VA_ARGS__); \
+	debug_prefixed_printf (mod, __func__, fmt, ##__VA_ARGS__); \
     } \
   while (0)
 
-#define debug_prefixed_printf_cond_nofunc(debug_enabled_cond, module, fmt, ...) \
+#define debug_prefixed_printf_cond_func(debug_enabled_cond, mod, func, fmt, \
+					...) \
   do \
     { \
       if (debug_enabled_cond) \
-	debug_prefixed_printf (module, nullptr, fmt, ##__VA_ARGS__); \
+	debug_prefixed_printf (mod, func, fmt, ##__VA_ARGS__); \
+    } \
+  while (0)
+
+#define debug_prefixed_printf_cond_nofunc(debug_enabled_cond, mod, fmt, ...) \
+  do \
+    { \
+      if (debug_enabled_cond) \
+	debug_prefixed_printf (mod, nullptr, fmt, ##__VA_ARGS__); \
     } \
   while (0)
 
@@ -99,23 +108,23 @@ struct scoped_debug_start_end
      DEBUG_ENABLED should either be of type 'bool &' or should be a type
      that can be invoked.
 
-     MODULE and FUNC are forwarded to debug_prefixed_printf.
+     MOD and FUNC are forwarded to debug_prefixed_printf.
 
      START_PREFIX and END_PREFIX are the statements to print on construction and
      destruction, respectively.
 
      If the FMT format string is non-nullptr, then a `: ` is appended to the
      messages, followed by the rendering of that format string with ARGS.
-     The format string is rendered during construction and is re-used as is
+     The format string is rendered during construction and is reused as is
      for the message on exit.  */
 
-  scoped_debug_start_end (PT &debug_enabled, const char *module,
+  scoped_debug_start_end (PT &debug_enabled, const char *mod,
 			  const char *func, const char *start_prefix,
 			  const char *end_prefix, const char *fmt,
 			  va_list args)
     ATTRIBUTE_NULL_PRINTF (7, 0)
     : m_debug_enabled (debug_enabled),
-      m_module (module),
+      m_module (mod),
       m_func (func),
       m_end_prefix (end_prefix),
       m_with_format (fmt != nullptr)
@@ -215,7 +224,7 @@ private:
   bool m_disabled = false;
 };
 
-/* Implementation of is_debug_enabled when PT is an invokable type.  */
+/* Implementation of is_debug_enabled when PT is an invocable type.  */
 
 template<typename PT>
 inline bool
@@ -240,13 +249,13 @@ scoped_debug_start_end<bool &>::is_debug_enabled () const
 
 template<typename PT>
 static inline scoped_debug_start_end<PT &> ATTRIBUTE_NULL_PRINTF (6, 7)
-make_scoped_debug_start_end (PT &&pred, const char *module, const char *func,
+make_scoped_debug_start_end (PT &&pred, const char *mod, const char *func,
 			     const char *start_prefix,
 			     const char *end_prefix, const char *fmt, ...)
 {
   va_list args;
   va_start (args, fmt);
-  auto res = scoped_debug_start_end<PT &> (pred, module, func, start_prefix,
+  auto res = scoped_debug_start_end<PT &> (pred, mod, func, start_prefix,
 					   end_prefix, fmt, args);
   va_end (args);
 
@@ -255,9 +264,9 @@ make_scoped_debug_start_end (PT &&pred, const char *module, const char *func,
 
 /* Helper to define a module-specific start/end debug macro.  */
 
-#define scoped_debug_start_end(debug_enabled, module, fmt, ...)		\
-  auto CONCAT(scoped_debug_start_end, __LINE__)				\
-    = make_scoped_debug_start_end (debug_enabled, module, 	\
+#define scoped_debug_start_end(debug_enabled, mod, fmt, ...)	\
+  auto CONCAT(scoped_debug_start_end, __LINE__)			\
+    = make_scoped_debug_start_end (debug_enabled, mod,		\
 				   __func__, "start", "end",	\
 				   fmt, ##__VA_ARGS__)
 
@@ -265,9 +274,9 @@ make_scoped_debug_start_end (PT &&pred, const char *module, const char *func,
    case of `scoped_debug_start_end` where the start and end messages are "enter"
    and "exit", to denote entry and exit of a function.  */
 
-#define scoped_debug_enter_exit(debug_enabled, module)	\
-  auto CONCAT(scoped_debug_start_end, __LINE__)				\
-    = make_scoped_debug_start_end (debug_enabled, module, 	\
+#define scoped_debug_enter_exit(debug_enabled, mod)		\
+  auto CONCAT(scoped_debug_start_end, __LINE__)			\
+    = make_scoped_debug_start_end (debug_enabled, mod,		\
 				   __func__, "enter", "exit",	\
 				   nullptr)
 

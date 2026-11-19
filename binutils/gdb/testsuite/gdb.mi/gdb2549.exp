@@ -1,4 +1,4 @@
-# Copyright 2008-2024 Free Software Foundation, Inc.
+# Copyright 2008-2026 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ set MIFLAGS "-i=mi"
 standard_testfile basics.c
 
 if  { [gdb_compile "${srcdir}/${subdir}/${srcfile}" "${binfile}" executable {debug}] != "" } {
-     untested "failed to compile"
-     return -1
+    untested "failed to compile"
+    return
 }
 
 proc register_tests_no_exec { } {
@@ -85,7 +85,7 @@ proc register_tests { } {
     set octal "\[0-7\]+"
     set binary "\[0-1\]+"
     set float \
-	"\\-?((\[0-9\]+(\\.\[0-9\]+)?(e\[-+\]\[0-9\]+)?)|(nan\\($hex\\)))"
+	"\\-?((${::decimal}(\\.${::decimal})?(e\[-+\]${::decimal})?)|(nan\\($hex\\)))"
 
     register_test 222 x $hex
     register_test 333 f $float
@@ -94,7 +94,7 @@ proc register_tests { } {
     register_test 666 t $binary
 }
 
-mi_clean_restart $binfile
+mi_clean_restart $::testfile
 
 register_tests_no_exec
 

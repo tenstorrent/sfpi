@@ -1,5 +1,5 @@
 /* Simulation code for the CR16 processor.
-   Copyright (C) 2008-2024 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
    Contributed by M Ranga Swami Reddy <MR.Swami.Reddy@nsc.com>
 
    This file is part of GDB, the GNU debugger.
@@ -296,7 +296,7 @@ trace_input_func (SIM_DESC sd, const char *name, enum op_types in1, enum op_type
 		}
 	      else if (filename)
 		{
-		  char *q = strrchr (filename, '/');
+		  const char *q = strrchr (filename, '/');
 		  sprintf (p, "%s ", (q) ? q+1 : filename);
 		  p += strlen (p);
 		}
