@@ -73,6 +73,7 @@ jobs:
       key: ${{matrix.arch}}-${{matrix.box}}
       build_id: ${{github.run_number}}
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
+      riscv64: ${{fromJSON(needs.plan.outputs.all) && matrix.arch == 'x86_64' && matrix.box == 'none'}}
 
   release:
     name: Artifacts

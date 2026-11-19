@@ -120,6 +120,22 @@ the submodules, their locations and hashes.
   A `.txz` tarball will be created in a `release` directory, along
   with `.deb` or `.rpm` packages. Also a `.version` file is created.
 
+  * Optionally, build and release the toolchain for another host
+    (Canadian cross), for instance riscv64 Linux, from the native
+    build:
+
+```
+  (cd gcc && ./contrib/download_prerequisites --no-isl)
+  scripts/cross-host.sh --host=riscv64-linux-gnu --native=build
+```
+
+  This needs a `riscv64-linux-gnu-gcc` cross compiler on the build
+  machine. Only the host programs (binutils, gcc's compilers, the LTO
+  plugin) are rebuilt; the Tensix libraries and headers are copied
+  from the native build, and gcc is configured exactly as the native
+  compiler was. It writes `build-riscv64/release/` with a `.txz` and
+  a `.version` file named for the riscv64 host.
+
 4) Making the release available (from github)
 
   Create an `sfpi-version` file from the hash files generated during

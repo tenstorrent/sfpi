@@ -30,6 +30,11 @@ on:
         required: false
         type: boolean
         default: true
+      riscv64:
+        description: Also build a riscv64-linux host toolchain (Canadian cross, x86_64 only)
+        required: false
+        type: boolean
+        default: false
 
 env:
   SUDO: ${{inputs.box == 'none' && 'sudo' || ''}}
@@ -91,6 +96,19 @@ jobs:
         with:
           name: build-${{inputs.arch}}-${{inputs.box}}
           path: build/release/*
+          compression-level: 0
+      - name: Build riscv64 host toolchain
+        if: ${{inputs.riscv64 && inputs.arch == 'x86_64'}}
+        run: |
+          $SUDO apt-get -y install gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+          (cd gcc && ./contrib/download_prerequisites --no-isl)
+          scripts/cross-host.sh --host=riscv64-linux-gnu --native=build --dir=build-riscv64
+      - name: Upload riscv64 artifacts
+        if: ${{inputs.riscv64 && inputs.arch == 'x86_64'}}
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-riscv64-${{inputs.box}}
+          path: build-riscv64/release/*
           compression-level: 0
       - name: Upload results
         uses: actions/upload-artifact@v6
