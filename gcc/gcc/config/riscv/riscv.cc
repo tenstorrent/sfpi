@@ -12472,6 +12472,10 @@ riscv_override_options_internal (struct gcc_options *opts)
 	{
 	  if (riscv_tt_fix_qsr_replay < 0)
 	    riscv_tt_fix_qsr_replay = 1;
+	}
+
+      if (is_cpu_kind ("tt-qsr32") || is_cpu_kind ("tt-bh"))
+	{
 	  if (!(target_flags_explicit & MASK_FDIV))
 	    {
 	      opts->x_target_flags &= ~MASK_FDIV;
