@@ -1,13 +1,19 @@
 # -*- makefile -*- tt makefile fragment
 
+# We tweak genmultilib so there is no '.' multilib -- they're all in named directories.
 MULTILIB_OPTIONS := \
 mcpu=tt-wh/mcpu=tt-bh/mcpu=tt-qsr32/mcpu=tt-qsr64 \
 mabi=ilp32/mabi=lp64 \
 
+# Sadly these don't glob
 MULTILIB_MATCHES := \
 mcpu?tt-wh=mcpu?tt-wh-tensix \
 mcpu?tt-bh=mcpu?tt-bh-tensix \
+mcpu?tt-bh=mcpu?tt-bh-vector \
+mcpu?tt-bh=mcpu?tt-bh-vector-tensix \
 mcpu?tt-qsr32=mcpu?tt-qsr32-tensix \
+mcpu?tt-qsr32=mcpu?tt-qsr32-vector \
+mcpu?tt-qsr32=mcpu?tt-qsr32-vector-tensix \
 mcpu?tt-qsr64=mcpu?tt-qsr64-rocc \
 
 MULTILIB_REQUIRED := \
