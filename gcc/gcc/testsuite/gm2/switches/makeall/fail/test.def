@@ -1,5 +1,0 @@
-DEFINITION MODULE test ;
-
-PROCEDURE IsSomeThing (a) : BOOLEAN;
-
-END test.

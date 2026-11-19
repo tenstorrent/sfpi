@@ -1,3 +1,0 @@
-begin short int j;
-      j := "joo" { dg-error "char.*short int" }
-end

@@ -1,7 +1,0 @@
-  INPUT                C0 C1 OUTPUT
-  -------------------- -- -- ----------------
-  BBB                  03 00 ZZZ
-* BBB                  03 00 ZZZ
-  ABA                  03 00 ZZZ
-* ABA                  03 00 ZZZ
-

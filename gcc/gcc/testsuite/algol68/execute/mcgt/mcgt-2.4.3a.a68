@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-# Exponentiation.  #
-BEGIN ASSERT (2 ** 3 = 8)
-END

@@ -1,6 +1,0 @@
-#?.*: in function `cc':
-.*: undefined reference to `aa'
-#?.*: undefined reference to `aa'
-.*: undefined reference to `bb'
-#?.*: undefined reference to `bb'
-#?.*: final link failed

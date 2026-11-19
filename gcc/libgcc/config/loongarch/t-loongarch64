@@ -1,3 +1,0 @@
-LIB2ADD += $(srcdir)/config/loongarch/cpuinfo.c
-
-softfp_int_modes += ti

@@ -1,5 +1,0 @@
-module Module14 =
-access Module13
-def pub proc getval = JSON_Val: skip;
-    skip
-fed

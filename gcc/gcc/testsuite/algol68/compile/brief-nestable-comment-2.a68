@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN NOTE This is a
-        { nestable } comment in brief style.
-      ETON
-      SKIP
-END

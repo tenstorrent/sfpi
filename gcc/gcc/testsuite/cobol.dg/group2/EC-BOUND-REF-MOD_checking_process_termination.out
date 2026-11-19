@@ -1,4 +1,0 @@
-sending str  abcd
-We should get here, because there is no checking
-returned str abcd
-

@@ -1,3 +1,0 @@
-This directory contains the module list for each tool.  The modules
-are ordered in to reflect the sequence of initialization and (in
-reverse their deconstruction).

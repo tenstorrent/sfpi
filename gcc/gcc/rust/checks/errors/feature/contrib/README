@@ -1,3 +1,0 @@
-This program is intended for use in generating rust-feature-defs.h
-
-To use, run `./regen`

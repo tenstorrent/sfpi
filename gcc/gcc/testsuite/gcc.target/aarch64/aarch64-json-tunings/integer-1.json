@@ -1,6 +1,0 @@
-{
-  "tune_params": {
-    "sve_width": 256,
-    "issue_rate": 4
-  }
-}

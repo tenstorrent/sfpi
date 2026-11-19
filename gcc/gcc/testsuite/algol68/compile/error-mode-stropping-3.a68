@@ -1,3 +1,0 @@
-begin union (int,real) j;
-      j := "joo" { dg-error "char.*union \\( *real *, *int *\\)" }
-end

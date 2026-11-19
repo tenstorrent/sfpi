@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-
-BEGIN puts ("hello '_ world") # { dg-error "invalid string break sequence" }  #
-END

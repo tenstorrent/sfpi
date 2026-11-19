@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper -std=algol68" }  #
-BEGIN SHORT SHORT BITS b = BIN - SHORT SHORT 2;
-      ASSERT (ABS b = SHORT SHORT INT (SKIP))
-END

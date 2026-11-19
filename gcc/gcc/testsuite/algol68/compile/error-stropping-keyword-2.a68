@@ -1,3 +1,0 @@
-# { dg-options "-fstropping=upper" } #
-BEGIN FOR i TO 10 SKIP OD # { dg-error "DO" } #
-END

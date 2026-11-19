@@ -1,6 +1,0 @@
-{ dg-options {-fstropping=supper} }
-
-begin mode Int = int;
-      Int some_int = 10;
-      skip
-end

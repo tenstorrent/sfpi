@@ -1,3 +1,0 @@
-IMPLEMENTATION MODULE foo ;
-
-END foo.

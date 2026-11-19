@@ -1,5 +1,0 @@
-
-multilibs: riscv-sim/*
-FAIL: gas/riscv/dis-partial-insn-byte
-FAIL: gas/riscv/dis-partial-insn-short
-FAIL: gas/riscv/dis-partial-insn-word

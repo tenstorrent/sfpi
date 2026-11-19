@@ -1,5 +1,0 @@
-DEFINITION MODULE straddress ;  (*!m2pim*)
-
-PROCEDURE Open (a: ARRAY OF CHAR) ;
-
-END straddress.

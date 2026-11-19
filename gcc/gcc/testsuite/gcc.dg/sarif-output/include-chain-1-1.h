@@ -1,2 +1,0 @@
-int p;
-int q;

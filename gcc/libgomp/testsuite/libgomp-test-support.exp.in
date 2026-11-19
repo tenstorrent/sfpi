@@ -1,2 +1,0 @@
-set offload_plugins "@offload_plugins@"
-set offload_targets "@offload_targets@"

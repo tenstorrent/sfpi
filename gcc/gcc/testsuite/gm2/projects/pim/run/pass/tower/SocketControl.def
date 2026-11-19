@@ -1,6 +1,0 @@
-DEFINITION MODULE SocketControl ;
-
-PROCEDURE nonBlocking (fd: INTEGER) : INTEGER ;
-PROCEDURE ignoreSignals ;
-
-END SocketControl.

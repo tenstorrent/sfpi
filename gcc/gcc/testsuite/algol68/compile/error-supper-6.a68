@@ -1,6 +1,0 @@
-# { dg-options {-fstropping=supper} }  #
-
-begin mode foo_Invalid = int; # { dg-error "Invalid" }  #
-      foo_Invalid some_int = 10; # { dg-error "Invalid" }  #
-      skip
-end

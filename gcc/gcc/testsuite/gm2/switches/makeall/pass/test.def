@@ -1,5 +1,0 @@
-DEFINITION MODULE test ;
-
-PROCEDURE IsSomeThing (a: ARRAY OF CHAR) : BOOLEAN;
-
-END test.

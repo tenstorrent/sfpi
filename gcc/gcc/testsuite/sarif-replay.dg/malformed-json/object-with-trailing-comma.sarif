@@ -1,6 +1,0 @@
-{ "foo": "bar", } /* { dg-error "expected string for object key after ','; got '\\\}'" } */
-
-{ dg-begin-multiline-output "" }
-    1 | { "foo": "bar", }
-      |                 ^
-{ dg-end-multiline-output "" }

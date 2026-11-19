@@ -1,5 +1,0 @@
-DEFINITION MODULE unboundedarray ;
-
-PROCEDURE message (m: ARRAY OF CARDINAL) ;
-
-END unboundedarray.

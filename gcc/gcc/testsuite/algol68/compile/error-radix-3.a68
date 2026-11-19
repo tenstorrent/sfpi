@@ -1,1 +1,0 @@
-(bits c = 8rab, skip) { dg-error "" }

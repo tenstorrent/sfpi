@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN INT jorl;
-      REF INT var := LOC INT;
-      var := jorl := 10;
-      ASSERT (var = 10)
-END

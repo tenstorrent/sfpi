@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN INT i := 10;
-      (i, i + 1, i + 2)
-END

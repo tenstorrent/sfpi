@@ -1,1 +1,0 @@
-	.cfi_startproc

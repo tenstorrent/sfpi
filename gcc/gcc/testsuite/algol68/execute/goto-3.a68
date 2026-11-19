@@ -1,9 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN
-   INT i := 0;
-   beginning:
-   IF (i < 5) THEN
-      i +:= 1;
-      GO TO beginning
-   FI
-END

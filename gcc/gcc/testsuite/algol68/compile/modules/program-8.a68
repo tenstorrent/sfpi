@@ -1,3 +1,0 @@
-{ dg-modules "module8" }
-
-access Module_8 ( lala ((("foo", "bar"), ("baz", "quux"))) )

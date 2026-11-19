@@ -1,4 +1,0 @@
-template unaryFun()
-{
-    static if
-}

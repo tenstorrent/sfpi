@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN INT i = 10;
-      REAL foo = i;
-      ASSERT (foo > 9.9);
-      ASSERT (foo < 10.1)
-END

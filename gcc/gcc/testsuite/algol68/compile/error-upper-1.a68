@@ -1,3 +1,0 @@
-# { dg-options {-fstropping=supper} }  #
-
-BEGIN ~ END # { dg-error "" }  #

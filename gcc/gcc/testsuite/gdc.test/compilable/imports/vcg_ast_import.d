@@ -1,4 +1,0 @@
-struct O
-{
-    invariant() {}
-}

@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN STRUCT([]INT i, REAL r) s = ((1,2,3), 3.14);
-      ASSERT ((i OF s)[1] = 1)
-END

@@ -1,3 +1,0 @@
-module Foo =
-def skip; { dg-error "fed" }
-    skip

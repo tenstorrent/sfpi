@@ -1,2 +1,0 @@
-begin for i to 10 skip od { dg-error "do" }
-end

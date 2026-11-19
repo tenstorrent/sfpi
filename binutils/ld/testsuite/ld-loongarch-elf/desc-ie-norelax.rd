@@ -1,3 +1,0 @@
-#...
-.*R_LARCH_TLS_DESC64.*
-#pass

@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-# Integer denotations.  #
-BEGIN 000; 43; 456; 0
-END

@@ -1,7 +1,0 @@
-DEFINITION MODULE opaquedefs ;  
-
-TYPE
-   OpaqueA ;
-   OpaqueB ;   
-
-END opaquedefs.

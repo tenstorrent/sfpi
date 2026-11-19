@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" } #
-BEGIN FLEX[1:0]INT j;
-      j := "joo" { dg-error "CHAR.*FLEX.*INT" }
-END

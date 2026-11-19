@@ -1,1 +1,0 @@
-int expected = 5;

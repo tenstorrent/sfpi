@@ -1,6 +1,0 @@
-#as: --gsframe
-#readelf: -S
-#name: SFrame section header in readelf output
-#...
-[ 	]*\[.*\][ 	]+\.sframe[ 	]+GNU_SFRAME.*
-#...

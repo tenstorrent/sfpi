@@ -1,1 +1,0 @@
-(bits b = 8r09; skip)  { dg-error "" }

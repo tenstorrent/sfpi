@@ -1,7 +1,0 @@
-MODULE CHAR ;
-
-IMPORT CHAR ;
-
-BEGIN
-   CHAR.Write ("h")
-END CHAR.

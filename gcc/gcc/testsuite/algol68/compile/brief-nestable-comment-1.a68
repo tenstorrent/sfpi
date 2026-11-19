@@ -1,4 +1,0 @@
-begin { This is a
-        { nestable } comment in brief style.  }
-      skip
-end

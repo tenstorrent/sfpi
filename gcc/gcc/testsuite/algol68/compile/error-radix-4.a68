@@ -1,1 +1,0 @@
-(bits d = 16rfg; skip) { dg-error "" }

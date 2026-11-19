@@ -1,3 +1,0 @@
-.*: Assembler messages:
-.*:1: Error: unrecognized [.]section attribute: .*
-.*:2: Error: unrecognized [.]pushsection attribute: .*

@@ -1,3 +1,0 @@
-if [istarget riscv*-*-*] {
-    run_dump_tests [lsort [glob -nocomplain $srcdir/$subdir/*.d]]
-}

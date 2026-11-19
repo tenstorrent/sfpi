@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN PROC(INT)INT foo = baz;
-      PROC bar = (INT i) INT: i + 1;
-      PROC baz = (INT i) INT: i - 1;
-      ASSERT (foo (10) = 9)
-END

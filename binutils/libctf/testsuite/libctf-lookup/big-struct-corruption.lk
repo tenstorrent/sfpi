@@ -1,3 +1,0 @@
-# source: big-struct-ctf.c
-# link: objects
-Large and huge structs working fine.

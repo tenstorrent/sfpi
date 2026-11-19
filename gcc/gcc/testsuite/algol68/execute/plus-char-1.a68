@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN ASSERT ("a" + "b" = "ab");
-      ASSERT ("" + "x" = "x")
-END

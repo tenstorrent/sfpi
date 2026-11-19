@@ -1,5 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN ASSERT (stdin = 0);
-      ASSERT (stdout = 1);
-      ASSERT (stderr = 2)
-END

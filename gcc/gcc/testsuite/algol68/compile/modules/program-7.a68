@@ -1,3 +1,0 @@
-{ dg-modules "module5 module6 module7" }
-
-access Module7 (skip)

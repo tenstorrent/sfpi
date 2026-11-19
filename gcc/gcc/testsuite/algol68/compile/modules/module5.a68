@@ -1,6 +1,0 @@
-module Module_5 =
-def
-    pub mode JSON_Val = union (ref JSON_Elm,int),
-             JSON_Elm = struct (int lala);
-    skip
-fed

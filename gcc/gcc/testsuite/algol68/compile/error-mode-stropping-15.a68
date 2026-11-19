@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN SHORT SHORT INT j;
-      j := "joo" { dg-error "CHAR.*SHORT SHORT INT" }
-END

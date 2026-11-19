@@ -1,6 +1,0 @@
-#as: --32
-#readelf: -h
-
-#...
-  Machine:                           Sparc v8\+
-#...

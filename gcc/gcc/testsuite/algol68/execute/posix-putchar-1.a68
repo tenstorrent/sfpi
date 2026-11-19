@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN putchar ("X");
-      putchar ("Y");
-      putchar ("Z");
-      puts ("\n")
-END

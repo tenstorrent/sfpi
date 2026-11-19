@@ -1,3 +1,0 @@
-begin posix_exit (0);
-      assert (false) { if this assert triggers then posix_exit is broken }
-end

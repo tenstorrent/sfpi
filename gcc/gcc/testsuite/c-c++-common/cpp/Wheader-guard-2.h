@@ -1,4 +1,0 @@
-#ifndef WHEADER_GUARD_2
-#define WHEADERGUARD2
-#define SOMETHING2 123
-#endif

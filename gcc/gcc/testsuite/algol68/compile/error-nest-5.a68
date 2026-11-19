@@ -1,3 +1,0 @@
-begin int lala = nest C "&lala"; { dg-error "name" }
-      skip
-end

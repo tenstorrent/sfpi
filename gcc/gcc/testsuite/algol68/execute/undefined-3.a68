@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN ASSERT (sum = 1);
-      PROC sum = INT: i + 1;
-      INT i = 10;
-      ASSERT (sum = 11)
-END

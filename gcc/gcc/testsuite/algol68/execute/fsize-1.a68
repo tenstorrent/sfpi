@@ -1,2 +1,0 @@
-begin assert (fsize (-1) = - long long 1)
-end

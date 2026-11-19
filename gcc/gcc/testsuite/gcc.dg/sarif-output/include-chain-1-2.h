@@ -1,2 +1,0 @@
-char p;
-char q;

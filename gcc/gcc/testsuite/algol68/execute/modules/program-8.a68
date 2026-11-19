@@ -1,3 +1,0 @@
-{ dg-modules "module1 module4 module8" }
-
-access Module_8 (checks)

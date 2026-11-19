@@ -1,3 +1,0 @@
-{ dg-modules "module7" }
-
-access Module_7 ( assert (2 MINUS 3 = -1) )

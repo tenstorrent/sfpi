@@ -1,7 +1,0 @@
-IMPLEMENTATION MODULE badparam2 ;
-
-PROCEDURE foo (c: CARDINAL) ;
-BEGIN
-END foo ;
-
-END badparam2.

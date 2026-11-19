@@ -1,5 +1,0 @@
-DEFINITION MODULE badparam2 ;
-
-PROCEDURE foo (VAR c: CARDINAL) ;
-
-END badparam2.

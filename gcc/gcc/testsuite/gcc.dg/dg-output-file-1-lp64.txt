@@ -1,3 +1,0 @@
-This is a test output for lp64 target
-to verify
-dg-output-file directive

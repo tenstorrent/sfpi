@@ -1,4 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN ASSERT (ABS TRUE /= 0);
-      ASSERT (ABS FALSE = 0)
-END

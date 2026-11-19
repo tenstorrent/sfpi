@@ -1,2 +1,0 @@
-begin puts ("hello '(u) world") # { dg-error "four" }  #
-end

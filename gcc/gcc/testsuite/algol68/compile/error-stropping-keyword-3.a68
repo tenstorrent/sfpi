@@ -1,2 +1,0 @@
-begin if then 10 else 20 fi { dg-error "if" }
-end

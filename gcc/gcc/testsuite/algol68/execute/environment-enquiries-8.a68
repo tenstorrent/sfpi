@@ -1,6 +1,0 @@
-# { dg-options "-fstropping=upper" }  #
-BEGIN ASSERT (flip = "T");
-      ASSERT (flop = "F");
-      ASSERT (error char = "*");
-      ASSERT (ABS replacement char = ABS 16rfffd)
-END

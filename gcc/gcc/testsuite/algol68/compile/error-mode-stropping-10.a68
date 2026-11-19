@@ -1,3 +1,0 @@
-begin long long int j;
-      j := "joo" { dg-error "char.*long long int" }
-end
