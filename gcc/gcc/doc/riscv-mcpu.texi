@@ -106,10 +106,18 @@ by particular CPU name. Permissible values for this option are:
 
 @samp{tt-bh-tensix},
 
-@samp{tt-qsr64},
+@samp{tt-bh-vector},
 
-@samp{tt-qsr64-rocc},
+@samp{tt-bh-vector-tensix},
 
 @samp{tt-qsr32},
 
-@samp{tt-qsr32-tensix}.
+@samp{tt-qsr32-tensix},
+
+@samp{tt-qsr32-vector},
+
+@samp{tt-qsr32-vector-tensix},
+
+@samp{tt-qsr64},
+
+@samp{tt-qsr64-rocc}.
