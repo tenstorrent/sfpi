@@ -1,0 +1,47 @@
+# Copyright 2018-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Regression test for a jit.c bug.  Previously it would crash if an
+# inferior that used the JIT API then exec'd a program that did not
+# use it.
+
+require {istarget "*-linux*"}
+
+standard_testfile jit-reader-exec.c
+
+set testfile2 "jit-reader-execd"
+set srcfile2 ${testfile2}.c
+set binfile2 [standard_output_file ${testfile2}]
+
+if { [build_executable "build exec'd file" $testfile2 $srcfile2] != 0 } {
+    return
+}
+
+if { [is_remote target] } {
+    set binfile2 [gdb_remote_download target $binfile2]
+}
+
+set compile_options [list debug additional_flags=-DPROGRAM=\"$binfile2\"]
+
+if { [prepare_for_testing "prepare" $testfile $srcfile $compile_options] != 0 } {
+    return
+}
+
+if {![runto_main]} {
+    return
+}
+
+delete_breakpoints
+gdb_test "continue" "Inferior .* exited normally.*"

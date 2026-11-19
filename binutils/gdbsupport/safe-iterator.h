@@ -1,0 +1,133 @@
+/* A safe iterator for GDB, the GNU debugger.
+   Copyright (C) 2018-2026 Free Software Foundation, Inc.
+
+   This file is part of GDB.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+
+#ifndef GDBSUPPORT_SAFE_ITERATOR_H
+#define GDBSUPPORT_SAFE_ITERATOR_H
+
+#include <type_traits>
+
+/* A forward iterator that wraps Iterator, such that when iterating
+   with iterator IT, it is possible to delete *IT without invalidating
+   IT.  Suitably wrapped in a range type and used with range-for, this
+   allow convenient patterns like this:
+
+     // range_safe() returns a range type whose begin()/end() methods
+     // return safe iterators.
+     for (foo *f : range_safe ())
+       {
+	 if (f->should_delete ())
+	   {
+	     // The ++it operation implicitly done by the range-for is
+	     // still OK after this.
+	     delete f;
+	   }
+       }
+*/
+
+template<typename Iterator>
+class basic_safe_iterator
+{
+public:
+  using self_type = basic_safe_iterator;
+  using value_type = typename Iterator::value_type;
+  using reference = typename Iterator::reference;
+  using pointer = typename Iterator::pointer;
+  using iterator_category = typename Iterator::iterator_category;
+  using difference_type = typename Iterator::difference_type;
+
+  /* Construct the iterator using the underlying iterator BEGIN; the end
+     iterator is default constructed.  */
+  explicit basic_safe_iterator (Iterator begin)
+    : basic_safe_iterator (std::move (begin), Iterator {})
+  {}
+
+  /* Construct the iterator using the underlying iterators BEGIN and END.  */
+  basic_safe_iterator (Iterator begin, Iterator end)
+    : m_it (std::move (begin)),
+      m_next (m_it),
+      m_end (std::move (end))
+  {
+    if (m_it != m_end)
+      ++m_next;
+  }
+
+  /* Create a one-past-end iterator.  The underlying end iterator is obtained
+     by default-constructing.  */
+  basic_safe_iterator ()
+  {}
+
+  typename std::invoke_result<decltype(&Iterator::operator*), Iterator>::type
+    operator* () const
+  { return *m_it; }
+
+  self_type &operator++ ()
+  {
+    m_it = m_next;
+    if (m_it != m_end)
+      ++m_next;
+    return *this;
+  }
+
+  bool operator== (const self_type &other) const
+  { return m_it == other.m_it; }
+
+  bool operator!= (const self_type &other) const
+  { return m_it != other.m_it; }
+
+private:
+  /* The current element.  */
+  Iterator m_it {};
+
+  /* The next element.  Always one element ahead of M_IT.  */
+  Iterator m_next {};
+
+  /* A one-past-end iterator.  */
+  Iterator m_end {};
+};
+
+/* A range adapter that wraps another range, and then returns safe
+   iterators wrapping the original range's iterators.  */
+
+template<typename Range>
+class basic_safe_range
+{
+public:
+
+  using iterator = basic_safe_iterator<typename Range::iterator>;
+
+  explicit basic_safe_range (Range range)
+    : m_range (range)
+  {
+  }
+
+  iterator begin ()
+  {
+    return iterator (m_range.begin (), m_range.end ());
+  }
+
+  iterator end ()
+  {
+    return iterator (m_range.end (), m_range.end ());
+  }
+
+private:
+
+  Range m_range;
+};
+
+#endif /* GDBSUPPORT_SAFE_ITERATOR_H */

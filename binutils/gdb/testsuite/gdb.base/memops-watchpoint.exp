@@ -1,0 +1,106 @@
+# Copyright 2024-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Test a binary that uses standard libc memory operation functions.  They are
+# frequently optimized with specialized instructions, so make sure GDB behaves
+# correctly in their presence.
+
+standard_testfile
+set options "-fno-builtin-memset -fno-builtin-memcpy -fno-builtin-memmove"
+if { [prepare_for_testing "failed to prepare" ${testfile} ${srcfile} \
+	  [list debug additional_flags=$options]] } {
+    return
+}
+
+set linespec ${srcfile}:[gdb_get_line_number "Break here"]
+if {![runto ${linespec}]} {
+    return
+}
+
+gdb_test "watch -location a\[28\]" \
+    "(Hardware w|W)atchpoint ${decimal}: -location a\\\[28\\\]" \
+    "set watch on a"
+gdb_test "watch -location b\[28\]" \
+    "(Hardware w|W)atchpoint ${decimal}: -location b\\\[28\\\]" \
+    "set watchpoint on b"
+gdb_test "watch -location c\[28\]" \
+    "(Hardware w|W)atchpoint ${decimal}: -location c\\\[28\\\]" \
+    "set watchpoint on c"
+
+# For the tests below, split the pattern matching in two parts: one for the
+# watchpoint trigger, and another for the line showing the function name.
+# This is to allow the tests to work if there's a properly named symbol for
+# the function, even if there's no libc debug info.
+
+# ARRAY_RE is the array whose modification is caught by the
+# watchpoint.  SOURCE_FUNCTION is the function that modifies the
+# array, as written in the source of the test program.  FUNCTION_RE
+# matches the name of the symbol that actually implements
+# SOURCE_FUNCTION (e.g., memcpy may be implemented with memmove, so we
+# may want to expect both).  OLD_VALUE_RE and NEW_VALUE_RE match the
+# old/new values when the watchpoint triggers.
+
+proc continue_to_watchpoint {array_re source_function function_re
+			     old_value_re new_value_re} {
+    set thread_prefix_re "(?:Thread $::decimal \[^\r\n\]*hit )?"
+
+    set saw_watch_trigger 0
+    set saw_function 0
+    set is_supported 1
+    set watch_trigger_re \
+	[multi_line \
+	     "Continuing\\." \
+	     "" \
+	     "${thread_prefix_re}(Hardware w|W)atchpoint ${::decimal}: -location ${array_re}\\\[28\\\]" \
+	     "" \
+	     "Old value = ${old_value_re}" \
+	     "New value = ${new_value_re}"]
+    gdb_test_multiple "continue" \
+	"continue until $source_function watchpoint hits" {
+	-re $watch_trigger_re {
+	    set saw_watch_trigger 1
+	    exp_continue
+	}
+	-re "${function_re}.* \\(\\) at \[^\r\n\]+:${::decimal}(?=\r\n)" {
+	    set saw_function 1
+	    exp_continue
+	}
+	-re "${function_re}.* \\(\\) from \[^\r\n\]+(?=\r\n)" {
+	    set saw_function 1
+	    exp_continue
+	}
+	-re "in \\?\\? \\(\\) from \[^\r\n\]+(?=\r\n)" {
+	    set is_supported 0
+	    unsupported "symbol for ${source_function} not found"
+	    exp_continue
+	}
+	-re -wrap "" {
+	    if { $is_supported } {
+		setup_kfail breakpoints/31665 arm*-*-linux*
+		gdb_assert { $saw_watch_trigger && $saw_function } \
+		    $gdb_test_name
+	    }
+	}
+    }
+}
+
+# Note: Some architectures use memmove for memset.
+continue_to_watchpoint "a" "memset" "(memset|memmove)" "104 'h'" "0 '\\\\000'"
+
+# Note: Some architectures use memmove for memcpy.
+continue_to_watchpoint "b" "memcpy" "(memcpy|memmove)" "101 'e'" "114 'r'"
+
+# Note: Some architectures use memcpy for memmove.
+continue_to_watchpoint "c" "memmove" "(memcpy|memmove)" "100 'd'" "114 'r'"

@@ -1,0 +1,91 @@
+# Copyright 2013-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+standard_testfile .cc
+
+require allow_cplus_tests
+
+if {[prepare_for_testing "failed to prepare" $testfile $srcfile {debug c++}]} {
+    return
+}
+
+proc do_typeid_tests {started} {
+    global hex
+
+    # We might see the standard type or gdb's internal type.
+    set type_re "(std::type_info|gdb_gnu_v3_type_info)"
+
+    # The typeinfo for some of these variables may or may not be present
+    # before the inferior has started.  Mark these by listing them in
+    # maybe_missing_var.
+    set maybe_missing_var {i cp ccp}
+    set var [concat {ca b} $maybe_missing_var]
+
+    foreach simple_var $var {
+	set maybe_missing \
+	    [expr {!$started \
+		       && ([lsearch -exact $maybe_missing_var $simple_var] \
+			       != -1)}]
+
+	set missing 0
+	set re [subst_vars { = \($type_re \*\) $hex.*}]
+	gdb_test_multiple "print &typeid($simple_var)" "" {
+	    -re -wrap $re {
+		pass $gdb_test_name
+	    }
+	    -re -wrap "could not find typeinfo symbol for '.*'" {
+		if { $maybe_missing } {
+		    unsupported $gdb_test_name
+		} else {
+		    fail $gdb_test_name
+		}
+		set missing 1
+	    }
+	}
+
+	if { $missing } {
+	    continue
+	}
+
+	# Note that we test pointer equality rather than object
+	# equality here.  That is because std::type_info's operator==
+	# is not present in the libstdc++ .so.
+	gdb_test "print &typeid($simple_var) == &typeid(typeof($simple_var))" \
+	    " = true"
+    }
+
+    # typeid for these is Derived.  Don't try these tests until the
+    # inferior has started.
+    if {$started} {
+	foreach der_var {*b *vb1 *vb2 *bv d {const Derived} {const Derived &}} {
+	    gdb_test "print &typeid($der_var)" \
+		" = \\($type_re \\*\\) $hex.*"
+	    gdb_test "print &typeid($der_var) == &typeid(d)" \
+		" = true"
+	}
+    }
+}
+
+with_test_prefix "before starting" {
+    do_typeid_tests 0
+}
+
+if {![runto_main]} {
+    return
+}
+
+with_test_prefix "after starting" {
+    do_typeid_tests 1
+}

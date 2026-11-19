@@ -1,0 +1,7 @@
+source_sh ${srcdir}/emulparams/armelf.sh
+COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+TEXT_START_ADDR=0x00001000
+TARGET2_TYPE=got-rel
+
+unset STACK_ADDR
+unset EMBEDDED

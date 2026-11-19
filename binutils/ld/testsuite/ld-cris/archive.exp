@@ -1,0 +1,175 @@
+# Test for archive handling, CRIS format switching.
+# Copyright (C) 2025-2026 Free Software Foundation, Inc.
+#
+# This file is part of the GNU Binutils.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING3. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+
+# This covers archive handling with a non-default linker emulation
+# triggering the use of a non-default archive format.
+#
+# The CRIS target is the only one nowadays that supports aout and
+# non-aout formats both at a time, and the aout BFD backend is one
+# that used to crash when incorrectly chosen by the BFD linker to
+# handle ELF archive members despite the ELF emulation explicitly
+# requested.
+#
+# For completeness this test covers the opposite situation as well
+# (except for Linux targets, which don't support linker emulation
+# switching), although it used not to cause a crash, but hits PR
+# binutils/33485 instead.  Yeah, corner cases and bitrot...
+
+if [istarget cris-*-*aout*] {
+    set asemul "--emulation=criself"
+    set aremul "--target=elf32-us-cris"
+    set ldemul "-m criself"
+} elseif { [istarget cris-*-linux*] || [istarget crisv32-*-linux*] } {
+    return
+} elseif { [istarget cris-*-*] || [istarget crisv32-*-*] } {
+    set asemul "--emulation=crisaout"
+    set aremul "--target=a.out-cris"
+    set ldemul "-m crisaout"
+} else {
+    return
+}
+
+remote_file host delete \
+    "tmpdir/ab.a" "tmpdir/abt.a" "tmpdir/abn.a" "tmpdir/abnt.a"
+
+run_ld_link_tests [list \
+    [list "CRIS regular archive create (explicit emulation)" \
+	"$aremul" "" \
+	"$asemul" {../ld-archive/a.s ../ld-archive/b.s ../ld-archive/x.s} \
+	{} \
+	"ab.a"] \
+    [list "CRIS thin archive create (explicit emulation)" \
+	"$aremul T" "" \
+	"$asemul" {../ld-archive/a.s ../ld-archive/b.s ../ld-archive/x.s} \
+	{} \
+	"abt.a"] \
+    [list "CRIS regular archive w/o index create (explicit emulation)" \
+	"$aremul S" "" \
+	"$asemul" {../ld-archive/a.s ../ld-archive/b.s ../ld-archive/x.s} \
+	{} \
+	"abn.a"] \
+    [list "CRIS thin archive w/o index create (explicit emulation)" \
+	"$aremul ST" "" \
+	"$asemul" {../ld-archive/a.s ../ld-archive/b.s ../ld-archive/x.s} \
+	{} \
+	"abnt.a"] \
+]
+
+# Single archive tests.
+run_ld_link_tests [list \
+    [list "CRIS regular archive link (explicit emulation)" \
+	"$ldemul -e ff" "tmpdir/ab.a --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abcx" \
+    ] \
+    [list "CRIS regular archive link (implicit emulation)" \
+	"-e ff" "tmpdir/ab.a --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abci" \
+    ] \
+    [list "CRIS fake archive link (explicit emulation)" \
+	"$ldemul -e ff" "--start-lib tmpdir/a.o tmpdir/b.o tmpdir/x.o\
+			 --end-lib --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abfc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abfcx" \
+    ] \
+    [list "CRIS fake archive link (implicit emulation)" \
+	"-e ff" "--start-lib tmpdir/a.o tmpdir/b.o tmpdir/x.o --end-lib\
+		 --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abfc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abfci" \
+    ] \
+]
+# PR binutils/33485 hits with the aout archive format and with this
+# test that format is used with non-aout targets, hence the reverse
+# condition.  Cf. the note at the top.
+if { ![istarget cris-*-*aout*] } {
+    setup_xfail "binutils/33485" "*-*-*"
+}
+run_ld_link_tests [list \
+    [list "CRIS thin archive link (explicit emulation)" \
+	"$ldemul -e ff" "tmpdir/abt.a --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abtc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abtcx" \
+    ] \
+]
+# PR binutils/33485 hits with the aout archive format and with this
+# test that format is used with non-aout targets, hence the reverse
+# condition.  Cf. the note at the top.
+if { ![istarget cris-*-*aout*] } {
+    setup_xfail "binutils/33485" "*-*-*"
+}
+run_ld_link_tests [list \
+    [list "CRIS thin archive link (implicit emulation)" \
+	"-e ff" "tmpdir/abt.a --verbose --print-map" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{ld ../ld-archive/abtc.vd} \
+	 {nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abtci" \
+    ] \
+]
+
+# Single non-index archive tests.
+run_ld_link_tests [list \
+    [list "CRIS regular archive w/o index link (explicit emulation)" \
+	"$ldemul -e ff" "tmpdir/abn.a" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abncx" \
+    ] \
+    [list "CRIS regular archive w/o index link (implicit emulation)" \
+	"-e ff" "tmpdir/abn.a" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abnci" \
+    ] \
+    [list "CRIS thin archive w/o index link (explicit emulation)" \
+	"$ldemul -e ff" "tmpdir/abnt.a" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abntcx" \
+    ] \
+    [list "CRIS thin archive w/o index link (implicit emulation)" \
+	"-e ff" "tmpdir/abnt.a" \
+	"$asemul" {../ld-archive/abc.s} \
+	{{nm "" ../ld-archive/abc.nd} \
+	 {nm "" ../ld-archive/nx.nd}} \
+	"abntci" \
+    ] \
+]

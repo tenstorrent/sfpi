@@ -1,0 +1,4 @@
+@set UPDATED 12 July 2026
+@set UPDATED-MONTH July 2026
+@set EDITION 2.47
+@set VERSION 2.47

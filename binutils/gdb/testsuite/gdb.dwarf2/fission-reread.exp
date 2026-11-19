@@ -1,0 +1,106 @@
+# Copyright 2012-2026 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+load_lib dwarf.exp
+
+# We run objcopy locally to split out the .dwo file.
+require {!is_remote host}
+
+# This test can only be run on targets which support DWARF-2 and use gas.
+require dwarf2_support
+
+# Some targets have leading underscores on assembly symbols.
+set additional_flags [gdb_target_symbol_prefix_flags_asm]
+
+standard_testfile .S
+
+set obj [standard_output_file "${testfile}.o"]
+set dwo [standard_output_file "${testfile}.dwo"]
+
+set options [list nodebug]
+if { $additional_flags != "" } {
+    lappend options $additional_flags
+}
+
+set dwo_options $options
+lappend dwo_options split-dwo
+lappend dwo_options additional_flags=-DDWO=\"$dwo\"
+
+if {[build_executable_and_dwo_files "$testfile.exp" "${binfile}" $options \
+	 [list $srcfile $dwo_options $obj]]} {
+    return
+}
+
+# Load FILENAME, perform some basic tests to confirm that the debug
+# information has been found, then unload FILENAME.
+proc run_test { filename } {
+    clean_restart
+    gdb_load_no_complaints $filename
+
+    gdb_test "break -q main" "Breakpoint.*at.*"
+
+    gdb_test "ptype baz" "type = class foo \{.*"
+
+    # If we get this far gdb didn't crash, nor did an error occur.
+    pass "load executable without crashing"
+
+    gdb_unload
+
+    # If we get this far gdb didn't crash, nor did an error occur.
+    pass "unload executable without crashing"
+}
+
+# Run the tests with BINFILE as it was built by default.
+run_test $binfile
+
+# Try adding a gdb-index and dwarf-5 style index, and then rerun the test.
+foreach_with_prefix index_type { gdb dwarf5 } {
+    set binfile_with_index ${binfile}-idx-${index_type}
+
+    remote_exec build "cp $binfile $binfile_with_index"
+
+    if { $index_type eq "gdb" } {
+	set style ""
+    } else {
+	set style "-dwarf-5"
+    }
+
+    # This is expected to fail if the binary already has an index.
+    if {[ensure_gdb_index $binfile_with_index $style] != 1} {
+	unsupported "couldn't add $index_type index"
+	break
+    }
+
+    run_test $binfile_with_index
+}
+
+# Test-case for PR24620: Delete the .dwo file and verify that save
+# gdb-index doesn't crash.  This uses the original compilatin result,
+# without any index added by the above block.
+remote_file target delete $dwo
+save_vars { GDBFLAGS } {
+    append GDBFLAGS " -iex \"maint set dwarf synchronous on\""
+    clean_restart $testfile
+}
+set output_dir [standard_output_file ""]
+set cmd "save gdb-index"
+gdb_test_multiple "$cmd $output_dir" $cmd {
+    -re -wrap "Cannot use an index to create the index.*" {
+	unsupported $gdb_test_name
+    }
+    -re "^$cmd \[^\r\n\]*\r\n$gdb_prompt $" {
+	pass $gdb_test_name
+    }
+}
