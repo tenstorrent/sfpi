@@ -3,7 +3,7 @@
 
 void one ()
 {
-  __builtin_rvtt_ttreplay (nullptr, 4, 0, 0, 0, 1, 1);
+  __builtin_rvtt_ttreplay (nullptr, 0, 4, 0, 0, 1, 1);
   auto x = __builtin_rvtt_sfpload (0, 0, 0, 0, 0, 0);
   x = __builtin_rvtt_sfpmul (x, x, 0);
   x = __builtin_rvtt_sfpmul (x, x, 0);
@@ -39,7 +39,7 @@ void two (volatile unsigned *ptr)
 {
   if (*ptr)
     {
-      __builtin_rvtt_ttreplay (nullptr, 2, 0, 0, 2, 1, 1);
+      __builtin_rvtt_ttreplay (nullptr, 2, 2, 0, 0, 1, 1);
       __builtin_rvtt_sfpnop ();
       __builtin_rvtt_sfpnop ();
     }
@@ -81,7 +81,7 @@ void three (volatile unsigned *ptr)
 {
   if (*ptr)
     {
-      __builtin_rvtt_ttreplay (nullptr, 4, 0, 0, 2, 1, 1);
+      __builtin_rvtt_ttreplay (nullptr, 2, 4, 0, 0, 1, 1);
       __builtin_rvtt_sfpnop ();
     }
 
