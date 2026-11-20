@@ -400,9 +400,9 @@ public:
   }
 
   // Make these void - ugly as these aren't really inc/dec
-  sfpi_inline constexpr void operator++ () const { *this += 1; }
-  sfpi_inline constexpr void operator++ (int) const { *this += 1; }
-  sfpi_inline constexpr void operator+= (int ix) const {
+  sfpi_inline void operator++ () const { *this += 1; }
+  sfpi_inline void operator++ (int) const { *this += 1; }
+  sfpi_inline void operator+= (int ix) const {
     __builtin_rvtt_ttincrwc (0, SFP_DESTREG_STRIDE * ix, 0, 0);
   }
 };
