@@ -129,15 +129,24 @@ is_replay_insn (replay_span &span, rtx_insn *insn)
     return REPLAY_none;
 
   auto pattern = PATTERN (insn);
-  span.begin = INTVAL (XVECEXP (pattern, 0, rvtt_synth::IX_src + 2));
-  span.end = 0;
+
+  span.begin = span.end = 0;
   auto type = REPLAY_fixed_capture;
-  if (CONST0_RTX (SImode) == XVECEXP (pattern, 0, rvtt_synth::IX_mem))
-    span.end = INTVAL (XVECEXP (pattern, 0, rvtt_synth::IX_src + 1));
+
+  auto start = XVECEXP (pattern, 0, rvtt_synth::IX_src + 1);
+  if (CONST_INT_P (start))
+    span.begin = INTVAL (start);
   else
     type = REPLAY_variable_capture;
+  auto len = XVECEXP (pattern, 0, rvtt_synth::IX_src + 2);
+  if (CONST_INT_P (len))
+    span.end = INTVAL (len);
+  else
+    type = REPLAY_variable_capture;
+
   if (!INTVAL (XVECEXP (pattern, 0, rvtt_synth::IX_src + 4)))
     type = REPLAY_playback;
+
   return type;
 }
 
@@ -516,9 +525,9 @@ replace_sequence (replay_sequence &seq, replay_block &block, unsigned replay_sta
   // Cannot exec while capturing on quasar
   rtx capture = gen_rvtt_ttreplay_int
     (CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode),
-     rvtt_gen_rtx_noval (XTT32SImode),
-     GEN_INT (length), GEN_INT (replay_start), GEN_INT (not_quasar_fix), GEN_INT (1),
-     CONST0_RTX (SImode), CONST0_RTX (SImode));
+     rvtt_gen_rtx_noval (XTT32SImode), GEN_INT (replay_start), GEN_INT (length),
+     GEN_INT (not_quasar_fix), GEN_INT (1), CONST0_RTX (SImode), CONST0_RTX (SImode));
+
   emit_insn_before (capture, block[seq.clones.front ().begin].insn);
 
   // Make sure we've not deleted anything in this instance already
@@ -531,9 +540,8 @@ replace_sequence (replay_sequence &seq, replay_block &block, unsigned replay_sta
     {
       rtx replay = gen_rvtt_ttreplay_int
 	(CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode),
-	 rvtt_gen_rtx_noval (XTT32SImode),
-	 GEN_INT (length), GEN_INT (replay_start), CONST0_RTX (SImode),
-	 CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode));
+	 rvtt_gen_rtx_noval (XTT32SImode), GEN_INT (replay_start), GEN_INT (length),
+	 CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode), CONST0_RTX (SImode));
       auto *insn = emit_insn_after (replay, block[clone->end - 1].insn);
       if (dump_file)
 	{
