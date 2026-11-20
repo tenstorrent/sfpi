@@ -4198,8 +4198,16 @@
   [(return)
    (unspec_volatile [(const_int 0)] UNSPECV_MRET)]
   ""
-  "mret"
-  [(set_attr "type" "ret")])
+{
+  // TT qsr32 mret erratum: if the mret is skipped, jump back to retry it.
+  // The # is due to testing regex shenanigans about labels
+  if (riscv_tt_fix_mret > 0)
+    return "#\n""1:\tmret; j 1b";
+  return "mret";
+}
+  [(set_attr "type" "ret")
+   (set (attr "length") (if_then_else (match_test "riscv_tt_fix_mret > 0")
+				      (const_int 8) (const_int 4)))])
 
 (define_insn "riscv_sret"
   [(return)

@@ -254,6 +254,10 @@ mtt-fix-whbhebreak
 Target Var(riscv_tt_fix_whbh_ebreak) Init(-1)
 Emit code to address Wormhole/Blackhole ebreak erratum
 
+mtt-fix-mret
+Target Var(riscv_tt_fix_mret) Init(-1)
+Workaround mret erratum on applicable cores
+
 mtt-fix-whraw
 Target Var(riscv_tt_fix_wh_raw) Init(-1)
 Emit code to address Wormhole RAW hazard
