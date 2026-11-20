@@ -4,8 +4,8 @@ SFPI: Tenstorrent SFPU programming interface
 This repo contains SFPI.
 
 * sfpi header files in `include`
-* TT-enhanced RISC-V `binutils` in binutils submodule
-* TT-enhanced RISC-V `gcc` in gcc submodule
+* TT-enhanced RISC-V `binutils` in binutils
+* TT-enhanced RISC-V `gcc` in gcc
 * standard newlib in `newlib` submodule
 * standard qemu cloned on demand
 * build and release scripts in `scripts`
@@ -42,7 +42,7 @@ export TT_METAL_LOGGER_FILE=$(pwd)/logger.log
 
 If you're doing something different, add `-save-temps=obj
 -fdump-tree-all -fdump-rtl-all` to the compilation line.  Tar up the
-intermediate files so-produed and record the command line you used.
+intermediate files so-produced and record the command line you used.
 
 In either case, also determine the version of the compiler you are using:
 ```
@@ -243,3 +243,27 @@ make -C build/build-gcc-newlib-stage2/gcc check-gcc \
 Alter the value passed to RUNTESTFLAGS as desired, for instance
 `riscv-sim/mcpu=tt-wh`.  Add `-v` options to get more logging to the
 resulting dejagnu log file.
+
+8) Procedure for updating from upstream:
+
+* checkout the `upstream' branch
+* rm -rf the contents of binutils or gcc, whichever is being updated
+* checkout the upstream release from the upstream repo
+* move all the files from that checkout to the gcc or binutils subdirectory *except* the .git-related directories and/or files
+* commit that, recording the release information and the original hash
+* make a note of the hash of the most recent prior update from upstream
+
+* switch to a newly-created merge branch
+* generate a diff of the contents of the gcc or binutils directory from the most-recent update to HEAD.
+* remove the gcc or binutils contents (yes, really)
+* copy the new contents of the upstream branch to the now-empty directory (the contents you just committed to the upstream branch).
+* commit that baseline
+* apply the patch, fixup any rejects, verify it works. You might want to do this in several commits.
+* flatten this series of commits to a single commit. Record the version updated to and original upstream hash. This flattening preserves the development history that we care about (ours, not upstream's).
+* merge it to main (via a PR)
+
+Note: previous updates were when binutils and gcc were submodules, so they don't show up in the history of this repo. Those updates were:
+
+* binutils: binutils-2_47 (6ce87bbc521)
+
+* gcc: releases/gcc-16.2.0 (78d4ac73dd3)
