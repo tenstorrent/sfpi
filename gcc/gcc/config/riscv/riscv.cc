@@ -12470,6 +12470,9 @@ riscv_override_options_internal (struct gcc_options *opts)
 
       if (is_cpu_kind ("tt-qsr32"))
 	{
+	  // The core can skip an mret that aliases a branch predictor entry.
+	  if (riscv_tt_fix_mret < 0)
+	    riscv_tt_fix_mret = 1;
 	  if (riscv_tt_fix_qsr_replay < 0)
 	    riscv_tt_fix_qsr_replay = 1;
 	}
