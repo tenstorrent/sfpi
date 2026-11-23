@@ -124,8 +124,11 @@ along with GCC; see the file COPYING3.  If not see
       "}}}",
       CPLUSPLUS_CPP_SPEC, 0, 0},
   {"@c++",
-      // Hack to force user to provide -mcpu option
-      "%{!B*:%{!mcpu=*:%ea '-mcpu=' option must be provided}}"
+      // Hack to force user to provide -mcpu option and not provide conflicting
+      // march & mabi
+      "%{!B*:%{!mcpu=*:%:riscv_tt_mcpu_check()}"
+	    "%{march=*:%:riscv_tt_mcpu_check(march %* %{mcpu=*:%*})}"
+	    "%{ mabi=*:%:riscv_tt_mcpu_check(mabi  %* %{mcpu=*:%*})}}"
       "%{E|M|MM:cc1plus -E %(cpp_options) %2 %(cpp_debug_options)}"
       "%{!E:%{!M:%{!MM:"
       "  %{save-temps*|no-integrated-cpp:cc1plus -E"

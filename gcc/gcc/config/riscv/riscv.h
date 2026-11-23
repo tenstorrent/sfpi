@@ -46,6 +46,7 @@ along with GCC; see the file COPYING3.  If not see
 #define RISCV_TUNE_STRING_DEFAULT "generic"
 #endif
 
+extern const char *riscv_tt_mcpu_check (int argc, const char **argv);
 extern const char *riscv_expand_arch (int argc, const char **argv);
 extern const char *riscv_expand_arch_from_cpu (int argc, const char **argv);
 extern const char *riscv_expand_abi_from_cpu (int argc, const char **argv);
@@ -54,6 +55,7 @@ extern const char *riscv_multi_lib_check (int argc, const char **argv);
 extern const char *riscv_arch_help (int argc, const char **argv);
 
 # define EXTRA_SPEC_FUNCTIONS						\
+  { "riscv_tt_mcpu_check", riscv_tt_mcpu_check },			\
   { "riscv_expand_abi_from_cpu", riscv_expand_abi_from_cpu },		\
   { "riscv_expand_arch", riscv_expand_arch },				\
   { "riscv_expand_arch_from_cpu", riscv_expand_arch_from_cpu },		\
