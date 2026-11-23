@@ -1727,6 +1727,29 @@ riscv_handle_option (struct gcc_options *opts,
     }
 }
 
+/* Tenstorrent: Check mcpu,march,mabi consistency  */
+
+const char *
+riscv_tt_mcpu_check (int argc ATTRIBUTE_UNUSED, const char **argv)
+{
+  if (!argc)
+    fatal_error (input_location, "%<-mcpu%> option must be provided");
+  else
+    {
+      // Check mabi or march matches mcpu
+      std::string other;
+      if (0 == strcmp (argv[0], "march"))
+	other = riscv_arch_str (false);
+      else if (0 == strcmp (argv[0], "mabi"))
+	other = riscv_find_cpu (argv[2])->abi;
+
+      if (0 != strcmp (other.c_str (), argv[1]))
+	fatal_error (input_location, "%<-mcpu=%s%> implies %<-%s=%s%>, do not override with %<-%s=%s%>",
+		     argv[2], argv[0], other.c_str (), argv[0], argv[1]);
+    }
+  return "";
+}
+
 /* Expand arch string with implied extensions.  */
 
 const char *
