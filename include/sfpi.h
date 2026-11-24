@@ -236,10 +236,6 @@ public:
   sfpi_inline vInt (unsigned);
 
 public:
-  __SFPI_DEPRECATED("Implicit vInt->vUInt conversion deprecated, use an explicit cast or restructure")
-  sfpi_inline operator vUInt () const = delete;
-
-public:
   sfpi_inline vInt &operator+= (vInt);
   sfpi_inline vInt &operator-= (vInt);
   sfpi_inline vInt &operator<<= (unsigned);
@@ -318,10 +314,6 @@ public:
   sfpi_inline vUInt (uint32_t);
   sfpi_inline vUInt (int);
   sfpi_inline vUInt (unsigned);
-
-public:
-  __SFPI_DEPRECATED("Implicit vUInt->vInt conversion deprecated, use an explicit cast or restructure")
-  sfpi_inline operator vInt () const = delete;
 
 public:
   // Operations
@@ -600,10 +592,6 @@ constexpr impl_::LRegFile l_reg;
 constexpr impl_::DstRegFile dst_reg;
 #if __riscv_xtttensixqsr
 template <unsigned Slice> using SrcSView = impl_::SrcSRegFile<Slice>;
-
-using UnpackSrcS __SFPI_DEPRECATED ("Use SrcSView<0>") = impl_::SrcSRegFile<0>;
-using ComputeSrcS __SFPI_DEPRECATED ("Use SrcSView<1>") = impl_::SrcSRegFile<1>;
-using PackSrcS __SFPI_DEPRECATED ("Use SrcSView<2>") = impl_::SrcSRegFile<2>;
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
