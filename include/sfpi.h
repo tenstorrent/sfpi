@@ -592,10 +592,6 @@ constexpr impl_::LRegFile l_reg;
 constexpr impl_::DstRegFile dst_reg;
 #if __riscv_xtttensixqsr
 template <unsigned Slice> using SrcSView = impl_::SrcSRegFile<Slice>;
-
-using UnpackSrcS __SFPI_DEPRECATED ("Use SrcSView<0>") = impl_::SrcSRegFile<0>;
-using ComputeSrcS __SFPI_DEPRECATED ("Use SrcSView<1>") = impl_::SrcSRegFile<1>;
-using PackSrcS __SFPI_DEPRECATED ("Use SrcSView<2>") = impl_::SrcSRegFile<2>;
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
