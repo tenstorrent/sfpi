@@ -113,7 +113,10 @@ if [[ -r /etc/os-release ]]; then
 	fedora) sfpi_pkg=rpm;;
     esac
 fi
-sfpi_arch=$(uname -m)
+# The machine we are running on
+sfpi_host_arch=$(uname -m)
+# The machine a toolchain runs on, as named in sfpi-version
+sfpi_arch=$sfpi_host_arch
 
 
 if [[ $1 != DIST ]]; then

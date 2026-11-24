@@ -127,59 +127,27 @@ if [[ -n $sfpi_base ]]; then
     fi
 fi
 
-if ! [[ -d $BUILD ]]; then
-    mkdir -p $BUILD/sfpi
-    sfpi_repo=$(git config --get remote.origin.url)
-    if [[ $sfpi_repo =~ ^git@ ]]; then
-	sfpi_repo=${sfpi_repo/://}
-	sfpi_repo=${sfpi_repo/git@/https://}
-    fi
-    cat <<EOF >$BUILD/version
-sfpi_repo='${sfpi_repo%.git}'
-sfpi_version='$sfpi_version'
-sfpi_base='$sfpi_base'
-sfpi_build='$sfpi_build'
-sfpi_hashtype=sha256
-EOF
-    if [[ -n $sfpi_base ]]; then
-	eval $($BIN/sfpi-info.sh BASE <$BUILD/version)
-	if wget -P $BUILD "$sfpi_url/$sfpi_filename.txz"; then
-	    tar xJf $BUILD/$sfpi_filename.txz -C $BUILD
-	    # Make sure we renew the sfpi headers
-	    rm -rf $BUILD/sfpi/include
-	else
-	    # No such base available
-	    sfpi_base=
-	    sed -i '/sfpi_base=/s/=.*/=/' $BUILD/version
-	fi
-    fi
+# URL of release $1's tarball for this machine
+release_url () {
+    sed -e "/^sfpi_base=/s/=.*/='$1'/" $BUILD/version \
+	| $BIN/sfpi-info.sh BASE \
+	| (eval "$(cat)"; echo "$sfpi_url/$sfpi_filename.txz")
+}
 
-    # extract git hashes for here and each submodule
-    $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.pre
-
-    # Generate a README.md
+# Generate $BUILD/sfpi/README.md, noting $1 about how it was built
+write_readme () {
     head -n 3 <README.md >$BUILD/sfpi/README.md
-    if [[ -n $sfpi_base ]]; then
-	echo Incremental build using $sfpi_base
-	echo "**Incremental build using $sfpi_base**" >>$BUILD/sfpi/README.md
+    if [[ -n $1 ]]; then
+	echo "**$1**" >>$BUILD/sfpi/README.md
     fi
     cat $BUILD/hashes.pre >>$BUILD/sfpi/README.md
     echo >>$BUILD/sfpi/README.md
     sed '/Reporting/,/###/p;d' <README.md | head -n -1 >>$BUILD/sfpi/README.md
-fi
+}
 
-# Clean the environment
-for env in $(printenv) ; do
-    var="${env%%=*}"
-    case "$var" in
-	LC_*) unset $var ;;
-    esac
-done
-export LC_ALL=C
-
-# configure, if this is the first time
-if ! [[ -e $BUILD/Makefile ]]; then
-    ident_options=()
+# Configure $BUILD, adding options "$@"
+configure_build () {
+    local ident_options=()
     if $tt_built; then
 	# Building at tenstorrent, I guess we're on the hook for it :)
 	ident_options=(--with-bugurl='https://github.com/tenstorrent/sfpi'
@@ -197,21 +165,80 @@ if ! [[ -e $BUILD/Makefile ]]; then
 		       --enable-gcc-checking="$gcc_checking" \
 		       --without-system-zlib --without-zstd \
 		       --enable-multilib \
-		       --with-arch=rv32i --with-abi=ilp32 $enable_gdb)
+		       --with-arch=rv32i --with-abi=ilp32 $enable_gdb "$@")
+}
+
+# Mark the build steps whose results are already in $BUILD/sfpi (from
+# a base release) as done. gcc's stage2 is always built, and binutils
+# too with --binutils.
+stamp_prebuilt () {
+    (set -x; make -C $BUILD stamps/check-write-permission)
+    for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
+    do
+	if [[ -f $file ]] ; then
+	    :
+	elif $binutils && [[ $file =~ -binutils- ]]; then
+	    (set -x; make -C $BUILD -j$NCPUS $small_build $file)
+	elif ! [[ $file =~ -stage2$ ]]; then
+	    mkdir -p $BUILD/$(dirname $file)
+	    echo Inremental $file
+	    echo Incremental >$BUILD/$file
+	fi
+    done
+}
+
+if ! [[ -d $BUILD ]]; then
+    mkdir -p $BUILD/sfpi
+    sfpi_repo=$(git config --get remote.origin.url)
+    if [[ $sfpi_repo =~ ^git@ ]]; then
+	sfpi_repo=${sfpi_repo/://}
+	sfpi_repo=${sfpi_repo/git@/https://}
+    fi
+    cat <<EOF >$BUILD/version
+sfpi_repo='${sfpi_repo%.git}'
+sfpi_version='$sfpi_version'
+sfpi_base='$sfpi_base'
+sfpi_build='$sfpi_build'
+sfpi_hashtype=sha256
+EOF
     if [[ -n $sfpi_base ]]; then
-	(set -x; make -C $BUILD stamps/check-write-permission)
-	for file in $(sed -e '/^stamps\/[^c].*-newlib.*:/{s/: .*$//;p}' -e d $BUILD/Makefile)
-	do
-	    if [[ -f $file ]] ; then
-		:
-	    elif $binutils && [[ $file =~ -binutils- ]]; then
-		(set -x; make -C $BUILD -j$NCPUS $small_build $file)
-	    elif ! [[ $file =~ -stage2$ ]]; then
-		mkdir -p $BUILD/$(dirname $file)
-		echo Inremental $file
-		echo Incremental >$BUILD/$file
-	    fi
-	done
+	url=$(release_url $sfpi_base)
+	if wget -P $BUILD "$url"; then
+	    tar xJf $BUILD/${url##*/} -C $BUILD
+	    # Make sure we renew the sfpi headers
+	    rm -rf $BUILD/sfpi/include
+	else
+	    # No such base available
+	    sfpi_base=
+	    sed -i '/sfpi_base=/s/=.*/=/' $BUILD/version
+	fi
+    fi
+
+    # extract git hashes for here and each submodule
+    $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.pre
+
+    note=
+    if [[ -n $sfpi_base ]]; then
+	note="Incremental build using $sfpi_base"
+	echo $note
+    fi
+    write_readme "$note"
+fi
+
+# Clean the environment
+for env in $(printenv) ; do
+    var="${env%%=*}"
+    case "$var" in
+	LC_*) unset $var ;;
+    esac
+done
+export LC_ALL=C
+
+# configure, if this is the first time
+if ! [[ -e $BUILD/Makefile ]]; then
+    configure_build
+    if [[ -n $sfpi_base ]]; then
+	stamp_prebuilt
     fi
 fi
 
