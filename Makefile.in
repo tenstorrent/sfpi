@@ -45,7 +45,13 @@ QEMU_TARGETS ?= riscv32-linux-user
 SHELL := /bin/sh
 SED := sed
 AWK := awk
+ifeq (@configure_host@,)
 PATH := $(INSTALL_DIR)/bin:$(test_infradir)/bin:$(PATH)
+else
+# Building for another host: $(INSTALL_DIR) gets programs that cannot
+# run here, the build->target tools must already be on PATH.
+PATH := $(test_infradir)/bin:$(PATH)
+endif
 export PATH
 
 MULTILIB_FLAGS := @multilib_flags@
@@ -375,6 +381,11 @@ stamps/build-gcc-newlib-stage2: stamps/build-newlib stamps/merge-newlib-nano
 		$(WITH_ISA_SPEC) \
 		CFLAGS_FOR_TARGET="-Os $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-Os $(CXXFLAGS_FOR_TARGET)"
+ifneq (@configure_host@,)
+# gcc's selftests run the new compilers, which cannot run here.
+	$(MAKE) -C $(@F) configure-gcc
+	$(SED) -i -e 's/^SELFTEST_TARGETS = .*/SELFTEST_TARGETS =/' $(@F)/gcc/Makefile
+endif
 	$(MAKE) -C $(@F)
 	$(MAKE) -C $(@F) install
 	mkdir -p $(@D) && touch $@

@@ -117,6 +117,10 @@ fi
 sfpi_host_arch=$(uname -m)
 # The machine a toolchain runs on, as named in sfpi-version
 sfpi_arch=$sfpi_host_arch
+if [[ -n $sfpi_cross_arch ]]; then
+    # built on this machine for another (build.sh --cross-arch)
+    sfpi_arch=$sfpi_cross_arch
+fi
 
 
 if [[ $1 != DIST ]]; then

@@ -14,6 +14,9 @@ binutils=false
 dejagnu=false
 enable_gdb=--disable-gdb
 gcc_checking=assert,df,extra,gimple,misc,rtl,rtlflag,tree
+cross_arch=
+full=
+native=
 sfpi_base=*
 sfpi_build=
 sfpi_version=
@@ -24,7 +27,7 @@ test_gcc=false
 test_tt=false
 tt_built=false
 
-BUILD=build
+BUILD=
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--binutils) binutils=true ;;
@@ -35,11 +38,13 @@ while [ "$#" -ne 0 ] ; do
 		      fi
 		      ;;
 	--checking=*) gcc_checking="${1#*=}" ;;
+	--cross-arch=*) cross_arch="${1#*=}" ;;
 	--dejagnu) dejagnu=true ;;
 	--dir=*) BUILD="${1#*=}" ;;
-	--full) sfpi_base= ;;
+	--full) sfpi_base= full=true ;;
 	--gdb) enable_gdb=--enable-gdb ;;
 	--infra) dejagnu=true sim=true ;;
+	--native=*) native="${1#*=}" ;;
 	--serial) NCPUS=1 ;;
 	--small) small_build=SMALL_BUILD=1 ;;
 	--test) dejagnu=true sim=true test_gcc=true test_binutils=true ;;
@@ -57,6 +62,7 @@ if [[ "$#" -ne 0 ]]; then
     echo "Unknown argument '$1'" >&2
     exit 2
 fi
+BUILD=${BUILD:-build${cross_arch:+-$cross_arch}}
 
 # figure version, now we know tt_built
 if [[ -r $BUILD/version ]]; then
@@ -127,6 +133,50 @@ if [[ -n $sfpi_base ]]; then
     fi
 fi
 
+# A toolchain for another arch (--cross-arch) is a Canadian cross:
+# built here, it runs on $cross_arch Linux and targets the Tensix.
+# That needs a toolchain of the same kind that runs here, the native
+# toolchain, both to compile the target libraries and to supply
+# newlib, as an incremental build takes it from a base release.
+# --native names its .txz (or an unpacked sfpi directory). By default
+# the most recent native release is used if it is the same gcc as
+# these sources, else a native toolchain is built first.
+if [[ -r $BUILD/cross ]]; then
+    recorded=$(source $BUILD/cross; echo $sfpi_cross_arch)
+    if [[ -n $cross_arch && $cross_arch != "$recorded" ]]; then
+	echo "$BUILD was configured for $recorded, not $cross_arch" >&2
+	exit 1
+    fi
+    source $BUILD/cross
+    cross_arch=$sfpi_cross_arch
+elif [[ -n $cross_arch && -d $BUILD ]]; then
+    echo "$BUILD was configured for this machine, use another --dir for $cross_arch" >&2
+    exit 1
+fi
+if [[ -n $native && -z $cross_arch ]]; then
+    echo "--native is only needed with --cross-arch" >&2
+    exit 2
+fi
+cross_host=
+if [[ -n $cross_arch ]]; then
+    cross_host=$cross_arch-linux-gnu
+    if $dejagnu || $sim || $test_binutils || $test_gcc || $test_tt; then
+	echo "A toolchain for $cross_arch cannot be tested on this machine" >&2
+	exit 2
+    fi
+    if [[ $enable_gdb != --disable-gdb ]]; then
+	echo "INFO: No gdb for $cross_arch"
+	enable_gdb=--disable-gdb
+    fi
+    for tool in gcc g++ ar ranlib strip; do
+	if ! command -v $cross_host-$tool >/dev/null; then
+	    echo "No $cross_host-$tool: a cross compiler for $cross_arch is needed" >&2
+	    exit 1
+	fi
+    done
+    echo "INFO: Cross: $cross_arch ($cross_host)"
+fi
+
 # URL of release $1's tarball for this machine
 release_url () {
     sed -e "/^sfpi_base=/s/=.*/='$1'/" $BUILD/version \
@@ -187,6 +237,77 @@ stamp_prebuilt () {
     done
 }
 
+# Find or make the native toolchain for a cross build, setting
+# sfpi_native and native_version
+native_toolchain () {
+    local dir=$BUILD/native
+    local src=$native
+    local want=$(cat gcc/gcc/BASE-VER)
+    mkdir -p $dir
+    if [[ -z $src ]]; then
+	local release=$(git describe --tags --abbrev=0 \
+			    --match '[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' 2>/dev/null || true)
+	if [[ -n $release ]]; then
+	    local url=$(release_url $release)
+	    echo "INFO: Native toolchain: $url"
+	    if wget -nv -P $dir "$url"; then
+		src=$dir/${url##*/}
+	    fi
+	fi
+    elif [[ -d $src ]] && ! [[ -d $src/sfpi || -d $src/compiler ]]; then
+	# A directory of release files, such as a downloaded CI artifact
+	local txz=$(eval $($BIN/sfpi-info.sh DIST </dev/null); \
+		    ls $src/sfpi_*_${sfpi_host_arch}_*.txz 2>/dev/null)
+	if [[ $(echo "$txz" | wc -w) != 1 ]]; then
+	    echo "Expected one native .txz in $src, found: ${txz:-none}" >&2
+	    exit 1
+	fi
+	src=$txz
+    fi
+    sfpi_native=
+    if [[ -n $src ]]; then
+	if [[ -f $src ]]; then
+	    tar xJf $src -C $dir
+	    sfpi_native=$dir/sfpi
+	elif [[ -d $src/sfpi/compiler ]]; then
+	    sfpi_native=$src/sfpi
+	elif [[ -d $src/compiler ]]; then
+	    sfpi_native=$src
+	else
+	    echo "$src is not an sfpi toolchain" >&2
+	    exit 1
+	fi
+    fi
+    if [[ -n $sfpi_native ]]; then
+	sfpi_native=$(realpath $sfpi_native)
+	local have=$($sfpi_native/compiler/bin/riscv-tt-elf-gcc -dumpversion 2>/dev/null || true)
+	if [[ -z $have ]]; then
+	    echo "$sfpi_native does not run on this machine" >&2
+	    exit 1
+	elif [[ $have != "$want" ]]; then
+	    # It cannot compile these sources' target libraries
+	    if [[ -n $native ]]; then
+		echo "$native is gcc $have, these sources are gcc $want" >&2
+		exit 1
+	    fi
+	    echo "INFO: Native release is gcc $have, these sources are gcc $want"
+	    sfpi_native=
+	fi
+    fi
+    if [[ -z $sfpi_native ]]; then
+	# No usable release: build the native toolchain from these sources
+	echo "INFO: Building a native toolchain in $BUILD/native-build"
+	(set -x
+	 $BIN/build.sh --dir=$BUILD/native-build --checking=$gcc_checking \
+		       ${small_build:+--small} ${full:+--full} \
+		       $($tt_built && echo --tt-built) \
+		       ${sfpi_build:+--build-id=$sfpi_build})
+	sfpi_native=$(realpath $BUILD/native-build/sfpi)
+    fi
+    native_version=$(sed -e '/^Version: /!d' -e 's///' -e q $sfpi_native/README.md)
+    echo "INFO: Native: $native_version ($sfpi_native)"
+}
+
 if ! [[ -d $BUILD ]]; then
     mkdir -p $BUILD/sfpi
     sfpi_repo=$(git config --get remote.origin.url)
@@ -201,7 +322,17 @@ sfpi_base='$sfpi_base'
 sfpi_build='$sfpi_build'
 sfpi_hashtype=sha256
 EOF
-    if [[ -n $sfpi_base ]]; then
+    if [[ -n $cross_arch ]]; then
+	native_toolchain
+	cat <<EOF >$BUILD/cross
+sfpi_cross_arch='$cross_arch'
+sfpi_native='$sfpi_native'
+EOF
+	# Take newlib from the native toolchain, as from a base release.
+	# Everything else is built for $cross_arch.
+	mkdir -p $BUILD/sfpi/compiler
+	cp -a $sfpi_native/compiler/riscv-tt-elf $BUILD/sfpi/compiler/
+    elif [[ -n $sfpi_base ]]; then
 	url=$(release_url $sfpi_base)
 	if wget -P $BUILD "$url"; then
 	    tar xJf $BUILD/${url##*/} -C $BUILD
@@ -218,7 +349,9 @@ EOF
     $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.pre
 
     note=
-    if [[ -n $sfpi_base ]]; then
+    if [[ -n $cross_arch ]]; then
+	note="Toolchain for $cross_arch Linux, newlib from $native_version"
+    elif [[ -n $sfpi_base ]]; then
 	note="Incremental build using $sfpi_base"
 	echo $note
     fi
@@ -234,16 +367,49 @@ for env in $(printenv) ; do
 done
 export LC_ALL=C
 
+if [[ -n $cross_arch ]]; then
+    # Build->target tools, to compile the target libraries. Its driver
+    # insists on -mcpu= unless given a -B, as the in-tree one always is.
+    export PATH="$sfpi_native/compiler/bin:$PATH"
+    native_B="-B$sfpi_native/compiler/riscv-tt-elf/bin/"
+    export CC_FOR_TARGET="riscv-tt-elf-gcc $native_B"
+    export CXX_FOR_TARGET="riscv-tt-elf-g++ $native_B"
+    export GCC_FOR_TARGET="$CC_FOR_TARGET"
+    # gmp, mpfr & mpc for $cross_arch are built in-tree
+    if ! [[ -e gcc/gmp && -e gcc/mpfr && -e gcc/mpc ]]; then
+	(set -x; cd gcc && ./contrib/download_prerequisites --no-isl)
+    fi
+fi
+
 # configure, if this is the first time
 if ! [[ -e $BUILD/Makefile ]]; then
-    configure_build
-    if [[ -n $sfpi_base ]]; then
+    if [[ -n $cross_arch ]]; then
+	configure_build --with-host=$cross_host
+	# binutils and gcc are built for $cross_arch, newlib is native's
+	binutils=true
 	stamp_prebuilt
+    else
+	configure_build
+	if [[ -n $sfpi_base ]]; then
+	    stamp_prebuilt
+	fi
     fi
 fi
 
 # build the toolchain
 (set -x; nice make -C $BUILD -j$NCPUS $small_build)
+
+if [[ -n $cross_arch ]]; then
+    # Every program must have been built for $cross_arch
+    native_kind=$(file -L $sfpi_native/compiler/bin/riscv-tt-elf-gcc \
+		      | sed -e 's/^[^,]*, \([^,]*\),.*/\1/')
+    leftovers=$(find $BUILD/sfpi/compiler -type f -exec file {} + \
+		    | grep -F ", $native_kind," | cut -d: -f1 || true)
+    if [[ -n $leftovers ]]; then
+	echo "ERROR: Not built for $cross_arch:" $leftovers >&2
+	exit 1
+    fi
+fi
 
 # maybe make the test infra
 dejagnu=false

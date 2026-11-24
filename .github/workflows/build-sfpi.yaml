@@ -30,6 +30,13 @@ on:
         required: false
         type: boolean
         default: true
+      native:
+        description: >
+          Artifact holding the native toolchain to build an 'arch'-hosted
+          one from, on x86_64 (a Canadian cross). Empty for a native build.
+        required: false
+        type: string
+        default: ''
 
 env:
   SUDO: ${{inputs.box == 'none' && 'sudo' || ''}}
@@ -60,6 +67,9 @@ jobs:
           eval $(./scripts/sfpi-info.sh DIST </dev/null)
           case $sfpi_dist in
             debian)
+              if [[ -n '${{inputs.native}}' ]]; then
+                pkgs+=" gcc-${{inputs.arch}}-linux-gnu g++-${{inputs.arch}}-linux-gnu"
+              fi
               $SUDO apt-get update
               $SUDO apt-get -y install $pkgs
               $SUDO apt-get -y install libexpat1-dev libgmp-dev libmpc-dev libmpfr-dev gcc g++
@@ -74,16 +84,55 @@ jobs:
           esac
       - name: Install FPM
         run: $SUDO gem install fpm
+      - name: Download native toolchain
+        if: ${{inputs.native != ''}}
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{inputs.native}}
+          path: native
       - name: Build Toolchain
         run: >
           scripts/build.sh --gdb --tt-built --small
+          ${{inputs.native != '' && format('--cross-arch={0} --dir=build --native=native', inputs.arch) || null}}
           ${{inputs.full && '--full' || null}}
           ${{!inputs.checking && '--checking=release' || null}}
           ${{inputs.build_id != '' && format('--build-id={0}', inputs.build_id) || null}}
       - name: Build Test harness
+        if: ${{inputs.native == ''}}
         run: scripts/build.sh --dejagnu --small
       - name: Run Tests
+        if: ${{inputs.native == ''}}
         run: scripts/build.sh --test-tt ${{inputs.full && '--test-binutils' || null}}
+      - name: Compare with native
+        if: ${{inputs.native != ''}}
+        run: |
+          # Run the new toolchain under qemu, it must generate what the native one does
+          $SUDO apt-get -y install qemu-user-static
+          export QEMU_LD_PREFIX=/usr/${{inputs.arch}}-linux-gnu
+          cat >sq.cc <<'EOF'
+          namespace ckernel { unsigned long *instrn_buffer; }
+          #include <sfpi.h>
+          using namespace sfpi;
+          __attribute__((noinline)) void square_plus_one() {
+            vFloat a = dst_reg[0];
+            v_if (a < 0.0f) { a = -a; }
+            v_endif;
+            dst_reg[0] = a * a + 1.0f;
+            dst_reg++;
+          }
+          int main() { for (int i = 0; i < 8; i++) square_plus_one(); return 0; }
+          EOF
+          source build/cross
+          for cpu in tt-wh-tensix tt-bh-tensix; do
+            for tc in build/sfpi $sfpi_native; do
+              (set -x
+               $tc/compiler/bin/riscv-tt-elf-g++ -mcpu=$cpu -O3 -flto -I build/sfpi/include \
+                   sq.cc -o sq-$cpu-$(basename $(dirname $tc)).elf
+               $sfpi_native/compiler/bin/riscv-tt-elf-objdump -d sq-$cpu-$(basename $(dirname $tc)).elf \
+                   | tail -n +3 >sq-$cpu-$(basename $(dirname $tc)).dis)
+            done
+            diff -u sq-$cpu-native.dis sq-$cpu-build.dis
+          done
       - name: Package toolchain
         run: scripts/release.sh --ci --tt-built ${{!inputs.txz && '--no-txz' || null}}
       - name: Upload artifacts
@@ -101,7 +150,7 @@ jobs:
         name: Record config
         shell: bash
         run: |
-          eval $(./scripts/sfpi-info.sh DIST <build/version)
+          eval $(cat build/version $(ls build/cross 2>/dev/null) | ./scripts/sfpi-info.sh DIST)
           config="$sfpi_version"
           if [[ -n ${{inputs.build_id}} ]]; then
             config+=" [${{inputs.build_id}}]"
