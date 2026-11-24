@@ -36,6 +36,11 @@ else
 fi
 echo "INFO: Version: $sfpi_version"
 
+# Ask sfpi-info.sh about this build
+sfpi_info () {
+    $BIN/sfpi-info.sh "$@" <$BUILD/version
+}
+
 if ! $ci ; then
     # extract git hashes for here and each submodule
     $BIN/git-hash.sh "$sfpi_version" >$BUILD/hashes.post
@@ -53,23 +58,26 @@ find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 rm -rf $BUILD/release
 mkdir $BUILD/release
 
-eval $($BIN/sfpi-info.sh HASH <$BUILD/version)
+eval $(sfpi_info HASH)
 version_file=$BUILD/release/$sfpi_filename.version
 cp $BUILD/version $version_file
 
 if ! $no_txz; then
     tar cJf $BUILD/release/$sfpi_filename.txz -C $BUILD sfpi
     echo "INFO: Tarball: $BUILD/release/$sfpi_filename.txz"
-    $BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.txz <$BUILD/version >>$version_file
+    sfpi_info HASH $BUILD/release/$sfpi_filename.txz >>$version_file
 fi
 
 if ! $txz_only; then
     # Get the set of shared objects we use and figure what packages they come from.
     # tuples of debian:fedora names
     pkgs=
+    # The shared objects needed by the programs named on stdin
+    shared_objects () {
+	xargs ldd | sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d
+    }
     for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-		    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs ldd | \
-		    sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d | sort -u)
+		    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | shared_objects | sort -u)
     do
 	case $so in
 	    /*/ld-linux-*.so*) ;; # loader
@@ -152,7 +160,7 @@ if ! $txz_only; then
 		    --rpm-auto-add-directories --rpm-rpmbuild-define "_build_id_links none"
 		echo "INFO: RPM: $BUILD/release/$sfpi_filename.rpm"
 	    fi
-	    $BIN/sfpi-info.sh HASH $BUILD/release/$sfpi_filename.$sfpi_pkg <$BUILD/version >>$version_file
+	    sfpi_info HASH $BUILD/release/$sfpi_filename.$sfpi_pkg >>$version_file
 	    ;;
 	*)
 	    echo "WARNING: Unknown packaging system on $sfpi_releaser" >&2
