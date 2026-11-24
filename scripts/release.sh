@@ -8,7 +8,8 @@ if ! [[ "$BIN" -ef "scripts" ]]; then
     exit 1
 fi
 
-BUILD=build
+BUILD=
+cross_arch=
 ci=false
 force=false
 no_txz=false
@@ -17,6 +18,7 @@ txz_only=false
 while [ "$#" -ne 0 ] ; do
     case "$1" in
 	--ci) ci=true ;;
+	--cross-arch=*) cross_arch="${1#*=}" ;;
 	--dir=*) BUILD="${1#*=}" ;;
 	--force) force=true ;;
 	--tt-built) tt_built=true ;;
@@ -27,6 +29,7 @@ while [ "$#" -ne 0 ] ; do
     esac
     shift
 done
+BUILD=${BUILD:-build${cross_arch:+-$cross_arch}}
 
 if [[ -r $BUILD/version ]]; then
     source $BUILD/version
@@ -36,9 +39,18 @@ else
 fi
 echo "INFO: Version: $sfpi_version"
 
+# A toolchain built for another arch (build.sh --cross-arch)
+sfpi_cross_arch=
+cross_host=
+if [[ -r $BUILD/cross ]]; then
+    source $BUILD/cross
+    cross_host=$sfpi_cross_arch-linux-gnu
+    echo "INFO: Cross: $sfpi_cross_arch"
+fi
+
 # Ask sfpi-info.sh about this build
 sfpi_info () {
-    $BIN/sfpi-info.sh "$@" <$BUILD/version
+    cat $BUILD/version ${sfpi_cross_arch:+$BUILD/cross} | $BIN/sfpi-info.sh "$@"
 }
 
 if ! $ci ; then
@@ -53,7 +65,7 @@ if ! $ci ; then
 fi
 
 find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
-    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs strip -g
+    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | xargs ${cross_host:+$cross_host-}strip -g
 
 rm -rf $BUILD/release
 mkdir $BUILD/release
@@ -74,7 +86,13 @@ if ! $txz_only; then
     pkgs=
     # The shared objects needed by the programs named on stdin
     shared_objects () {
-	xargs ldd | sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d
+	if [[ -n $cross_host ]]; then
+	    # cannot ldd them, ask for their direct dependencies
+	    xargs -n 1 $cross_host-readelf -d \
+		| sed -e '/(NEEDED)/{s/.*\[\(.*\)\]/\1/;p}' -e d
+	else
+	    xargs ldd | sed -e '/ => /{s/^'"\t"'\([^ ]*\).*/\1/;p}' -e d
+	fi
     }
     for so in $(find $BUILD/sfpi/compiler -type f -executable -exec file {} \; | \
 		    sed -e '/ELF ..-bit /{s/:.*//;p}' -e d | shared_objects | sort -u)
@@ -104,7 +122,18 @@ if ! $txz_only; then
 	deb|rpm)
 	    echo "INFO: Building $sfpi_pkg package for $sfpi_dist distro kinds"
 	    fpm_options=(-s dir -n sfpi -C $BUILD/sfpi --prefix /opt/tenstorrent/sfpi)
-	    fpm_options+=(--architecture native)
+	    fpm_arch=native
+	    cross_pkg=
+	    if [[ -n $sfpi_cross_arch ]]; then
+		fpm_arch=$sfpi_cross_arch
+		# its libraries come from the cross compiler's packages
+		case $sfpi_cross_arch in
+		    x86_64) cross_pkg=-amd64-cross ;;
+		    aarch64) cross_pkg=-arm64-cross ;;
+		    *) cross_pkg=-$sfpi_cross_arch-cross ;;
+		esac
+	    fi
+	    fpm_options+=(--architecture $fpm_arch)
 	    fpm_options+=(--license "Apache 2.0/GPL 2,3/LGPL 2.1")
 	    fpm_options+=(--url "https://github.com/tenstorrent/sfpi")
 	    fpm_options+=(--description "Tenstorrent SFPI compiler tools")
@@ -122,7 +151,7 @@ if ! $txz_only; then
 	    do
 		case $sfpi_dist in
 		    debian)
-			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/} 2>/dev/null); then
+			if version=$(dpkg-query -f '${Version}' -W ${pkg/:*/}$cross_pkg 2>/dev/null); then
 			    if [[ $version =~ ^([0-9]+:)?([0-9.]*) ]]; then
 				version=${BASH_REMATCH[2]}
 			    else

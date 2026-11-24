@@ -102,6 +102,30 @@ the submodules, their locations and hashes.
 
   See below about the various `--test` options that may also be used.
 
+  To build a toolchain that runs on another kind of Linux machine,
+  for instance riscv64, add `--cross-arch=$ARCH`. The build is then
+  in `build-$ARCH` by default:
+
+```
+  scripts/build.sh --cross-arch=riscv64
+```
+
+  This needs a cross compiler for that machine (`$ARCH-linux-gnu-gcc`
+  and friends, for instance Debian's `gcc-riscv64-linux-gnu` and
+  `g++-riscv64-linux-gnu`), and a toolchain of the same kind for this
+  machine, the native toolchain. That compiles the Tensix libraries
+  and provides newlib, much as a base release does for an
+  incremental build. By default the most recent native release is
+  used, if it is the same gcc version as the sources; otherwise a
+  native toolchain is built first, in `build-$ARCH/native-build`.
+  `--native=$TXZ` names one to use instead, such as a release built
+  from the same sources (a directory holding it, or an unpacked
+  `sfpi` directory, will also do). gmp, mpfr and mpc are built for
+  that machine in the tree (`gcc/contrib/download_prerequisites` is
+  run if needed). Such a toolchain cannot be tested here, nor has it
+  gdb or the simulator. `scripts/release.sh --cross-arch=$ARCH`
+  packages it, as a `.txz` and a `.deb` or `.rpm` for that machine.
+
 3) Create a release
 
   * Build a release as described above.

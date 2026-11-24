@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-26.04
     outputs:
       archs: ${{steps.plan.outputs.archs}}
+      cross_archs: ${{steps.plan.outputs.cross_archs}}
       full: ${{steps.plan.outputs.full}}
       all: ${{steps.plan.outputs.all}}
     steps:
@@ -38,12 +39,15 @@ jobs:
           all='${{inputs.all}}'
           full='${{inputs.full}}'
           archs='["x86_64"'
+          # Toolchains for these archs are built on x86_64, from its native one
+          cross_archs='[]'
           if [[ -n '${{inputs.tag}}' ]]; then
             all=true
             full=true
           fi
           if $all; then
             archs+=', "aarch64"'
+            cross_archs='["riscv64"]'
           fi
           archs+=']'
           echo "all=$all"
@@ -52,6 +56,7 @@ jobs:
           echo "all=$all" >>$GITHUB_OUTPUT
           echo "full=$full" >>$GITHUB_OUTPUT
           echo "archs=$archs" >>$GITHUB_OUTPUT
+          echo "cross_archs=$cross_archs" >>$GITHUB_OUTPUT
   build:
     name: Toolchains
     needs: plan
@@ -74,10 +79,30 @@ jobs:
       build_id: ${{github.run_number}}
       txz: ${{fromJSON(needs.plan.outputs.all) || (matrix.arch == 'x86_64' && matrix.box == 'none')}}
 
+  cross:
+    name: Cross toolchains
+    needs: [plan, build]
+    if: ${{needs.plan.outputs.cross_archs != '[]'}}
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: ${{fromJSON(needs.plan.outputs.cross_archs)}}
+    uses: ./.github/workflows/build-sfpi.yaml
+    with:
+      tag: ${{inputs.tag}}
+      arch: ${{matrix.arch}}
+      box: none
+      full: ${{fromJSON(needs.plan.outputs.full)}}
+      checking: ${{inputs.tag == '' && inputs.checking}}
+      key: ${{matrix.arch}}-none
+      build_id: ${{github.run_number}}
+      native: build-x86_64-none
+
   release:
     name: Artifacts
     runs-on: ubuntu-26.04
-    needs: build
+    needs: [build, cross]
+    if: ${{!cancelled() && needs.build.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.cross.result)}}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
