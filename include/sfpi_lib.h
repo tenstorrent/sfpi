@@ -269,16 +269,6 @@ sfpi_inline vFloat lut (vFloat v, LutCookie<Mode>, LutSign signedness = LutSign:
   return lut<Mode> (v, signedness);
 }
 
-__SFPI_DEPRECATED("Use sfpi::lut_init ... sfpi::lut")
-sfpi_inline vFloat lut2 (vFloat v,
-                         vUInt, vUInt, vUInt,
-                         vUInt, vUInt, vUInt, int mode = 1) = delete;
-
-__SFPI_DEPRECATED("Use sfpi::lut_init ... sfpi::lut")
-sfpi_inline vFloat lut2_sign (vFloat v,
-                              vUInt, vUInt, vUInt,
-                              vUInt, vUInt, vUInt, int mode = 1) = delete;
-
 #else
 
 sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
@@ -290,12 +280,6 @@ sfpi_inline vFloat lut (vFloat v, vLut8si si0, vLut8si si1, vLut8si si2,
   return __builtin_rvtt_sfplut (si0.get (), si1.get (), si2.get (), v.get (), mod);
 }
 
-__SFPI_DEPRECATED("Pass sfpi::vLut8si coefficients")
-sfpi_inline vFloat lut (vFloat v, vUInt si0, vUInt si1, vUInt si2) = delete;
-
-__SFPI_DEPRECATED("Pass sfpi::vLut8si coefficients and pass sfpi::LutSign::Update")
-sfpi_inline vFloat lut_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) = delete;
-
 sfpi_inline vFloat lut (vFloat v, vLut16si si0, vLut16si si1, vLut16si si2,
                         LutSign signedness = LutSign::Retain) {
   unsigned mod = SFPLUTFP32_MOD0_FP16_3ENTRY_TABLE
@@ -304,12 +288,6 @@ sfpi_inline vFloat lut (vFloat v, vLut16si si0, vLut16si si1, vLut16si si2,
          ~0);
   return __builtin_rvtt_sfplutfp32_3r (si0.get (), si1.get (), si2.get (), v.get (), mod);
 }
-
-__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut16si coefficients")
-sfpi_inline vFloat lut2 (vFloat v, vUInt si0, vUInt si1, vUInt si2) = delete;
-
-__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut16si coefficients and pass sfpi::LutSign::Update")
-sfpi_inline vFloat lut2_sign (vFloat v, vUInt si0, vUInt si1, vUInt si2) = delete;
 
 sfpi_inline vFloat lut (vFloat v, vLut32si si0, vLut32si si1, vLut32si si2,
                         LutSign signedness = LutSign::Retain) {
@@ -321,16 +299,6 @@ sfpi_inline vFloat lut (vFloat v, vLut32si si0, vLut32si si1, vLut32si si2,
                                        si0.i_get (), si1.i_get (), si2.i_get (),
                                        v.get (), mod);
 }
-
-__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut32si coefficients")
-sfpi_inline vFloat lut2 (vFloat v,
-                         vFloat s0, vFloat s1, vFloat s2,
-                         vFloat i0, vFloat i1, vFloat i2) = delete;
-
-__SFPI_DEPRECATED("Use sfpi::lut, pass sfpi::vLut32si coefficients and pass sfpi::LutSign::Update")
-sfpi_inline vFloat lut2_sign (vFloat v,
-                              vFloat s0, vFloat s1, vFloat s2,
-                              vFloat i0, vFloat i1, vFloat i2) = delete;
 
 template <LutMode Mode = LutMode::Fp16x6_HWM3>
 sfpi_inline vFloat lut (vFloat v,
@@ -349,16 +317,6 @@ sfpi_inline vFloat lut (vFloat v,
                                        i01.get (), i23.get (), i45.get (),
                                        v.get (), mod);
 }
-
-__SFPI_DEPRECATED("Use sfpi::lut specialized on LutMode::Fp16x6_HWM3 or LutMode::Fp16x6_HWM4, pass sfpi::vLut16ss & sfpi::vLut16ii coefficient pairs")
-sfpi_inline vFloat lut2 (vFloat v,
-                         vUInt s01, vUInt s23, vUInt s45,
-                         vUInt i01, vUInt i23, vUInt i45, int mode = 1) = delete;
-
-__SFPI_DEPRECATED("Use sfpi::lut specialized on LutMode::Fp16x6_HWM3 or LutMode::Fp16x6_HWM4, pass sfpi::vLut16ss & sfpi::vLut16ii coefficient pairs and pass sfpi::LutSign::Update")
-sfpi_inline vFloat lut2_sign (vFloat v,
-                              vUInt s01, vUInt s23, vUInt s45,
-                              vUInt i01, vUInt i23, vUInt i45, int mode = 1) = delete;
 #endif
 
 enum class ExponentMode {
@@ -1063,14 +1021,7 @@ sfpi_inline vInt int32_to_int8 (vInt in, unsigned descale, RoundMode rounding = 
 }
 
 __SFPI_DEPRECATED("Use sfpi::subvec_transp(vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &,vFloat &)")
-sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) {
-  auto r = __builtin_rvtt_sfptransp (a.get (), b.get (), c.get (), d.get (),
-                                     vFloat (0).get (), vFloat (0).get (), vFloat (0).get (), vFloat (0).get ());
-  a = __builtin_rvtt_sfpselect8 (r, 0);
-  b = __builtin_rvtt_sfpselect8 (r, 1);
-  c = __builtin_rvtt_sfpselect8 (r, 2);
-  d = __builtin_rvtt_sfpselect8 (r, 3);
-}
+sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d) = delete;
 
 sfpi_inline void subvec_transp (vFloat &a, vFloat &b, vFloat &c, vFloat &d,
                                 vFloat &e, vFloat &f, vFloat &g, vFloat &h) {
