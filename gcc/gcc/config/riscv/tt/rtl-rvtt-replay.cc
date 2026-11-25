@@ -793,7 +793,7 @@ transform (function *cfn, unsigned buffer_size)
 		 ++pos != spans.end ()
 		   && slot->end < pos->end;
 		 ++slot)
-	      std::swap (slot, pos);
+	      std::swap (*slot, *pos);
 
 	  if (spans.empty ())
 	    break;
