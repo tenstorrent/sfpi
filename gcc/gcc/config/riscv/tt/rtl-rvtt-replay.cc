@@ -47,8 +47,8 @@ along with GCC; see the file COPYING3.  If not see
 //    the replay buffer locations.  We do not consider this.
 // 3) If the user has explicitly used replay, we use the parts of the replay
 //    buffer that have not used (anywhere in the function).
-// 4) We use all of a discovered sequence (or none of it).  We could of course
-//    use the first N insns, if that is profitable and no room for the whole sequence.
+// 4) Because we record each sequence length, we can select a part of a longer
+//    sequence, should the longer sequence not fit.
 
 // FIXME: PR 36496 We terminate sequences if they meet a non TENSIX insn. This isn't
 // always necessary.  The non-Tensix insn could be hoisted upwards, provided it
@@ -120,7 +120,10 @@ using replay_map = std::map<unsigned, std::vector<unsigned>>;
 // It is cheaper to remove/copy pointers than sequence info itself.
 using replay_active = std::vector<replay_sequence *>;
 
-enum REPLAY_TYPE {REPLAY_none, REPLAY_playback, REPLAY_fixed_capture, REPLAY_variable_capture};
+enum REPLAY_TYPE {REPLAY_none,
+		  REPLAY_playback,
+		  REPLAY_capture_known_length,
+		  REPLAY_capture_unknown_length};
 
 static REPLAY_TYPE
 is_replay_insn (replay_span &span, rtx_insn *insn)
@@ -131,18 +134,22 @@ is_replay_insn (replay_span &span, rtx_insn *insn)
   auto pattern = PATTERN (insn);
 
   span.begin = span.end = 0;
-  auto type = REPLAY_fixed_capture;
 
+  auto type = REPLAY_capture_known_length;
   auto start = XVECEXP (pattern, 0, rvtt_synth::IX_src + 1);
   if (CONST_INT_P (start))
     span.begin = INTVAL (start);
   else
-    type = REPLAY_variable_capture;
+    span.end = 65535;
+
   auto len = XVECEXP (pattern, 0, rvtt_synth::IX_src + 2);
-  if (CONST_INT_P (len))
-    span.end = INTVAL (len);
-  else
-    type = REPLAY_variable_capture;
+  if (!CONST_INT_P (len))
+    {
+      type = REPLAY_capture_unknown_length;
+      span.end = 65535;
+    }
+  else if (!span.end)
+    span.end = span.begin + INTVAL (len);
 
   if (!INTVAL (XVECEXP (pattern, 0, rvtt_synth::IX_src + 4)))
     type = REPLAY_playback;
@@ -150,7 +157,7 @@ is_replay_insn (replay_span &span, rtx_insn *insn)
   return type;
 }
 
-// Scan insns o block computing hashes and must_end.
+// Scan insns of bb computing hashes and must_end.
 
 static bool
 scan_insns (std::vector<replay_info> &info, basic_block bb)
@@ -202,13 +209,13 @@ scan_insns (std::vector<replay_info> &info, basic_block bb)
 	replay_span span;
 	if (auto type = is_replay_insn (span, insn))
 	  {
-	    if (type == REPLAY_variable_capture)
+	    if (type == REPLAY_capture_unknown_length)
 	      // We don't know where this ends, so have to stop scanning the
 	      // BB.
 	      break;
 
-	    if (type == REPLAY_fixed_capture)
-	      shadow = span.end;
+	    if (type == REPLAY_capture_known_length)
+	      shadow = span.end - span.begin;
 	    continue;
 	  }
 
@@ -480,6 +487,16 @@ active_triage (replay_block const &block, replay_active &active, replay_list &li
     fprintf (dump_file, "%u candidates\n\n", unsigned (active.size ()));
 }
 
+static unsigned
+replay_saving (unsigned num_copies, unsigned seq_length)
+{
+  unsigned saving = (num_copies - 1) * (seq_length - 1) - 1;
+  if (riscv_tt_fix_qsr_replay > 0)
+    // Quasar exec-while-load doesn't work, so we need an extra replay
+    saving--;
+  return saving;
+}
+
 static replay_sequence *
 pick_replay (replay_active &active, unsigned limit)
 {
@@ -491,9 +508,7 @@ pick_replay (replay_active &active, unsigned limit)
       gcc_assert (seq->clones.size () > 1);
       if (seq->length > limit)
 	break;
-      // Quasar exec-while-load doesn't work, so we need an extra replay
-      unsigned saving = (seq->clones.size () - 1) * (seq->length - 1)
-	- !(riscv_tt_fix_qsr_replay > 0);
+      unsigned saving = replay_saving (seq->clones.size (), seq->length);
       if (best < saving || (best == saving && result && result->length < seq->length))
 	{
 	  best = saving;
@@ -509,10 +524,10 @@ replace_sequence (replay_sequence &seq, replay_block &block, unsigned replay_sta
 {
   unsigned length = seq.length;
   bool not_quasar_fix = !(riscv_tt_fix_qsr_replay > 0);
+  
   if (dump_file)
     {
-      unsigned saving = (seq.length - 1) * (unsigned (seq.clones.size ()) - 1)
-      - not_quasar_fix;
+      unsigned saving = replay_saving (seq.clones.size (), length);
       fprintf (dump_file, "Capturing %ssequence [%u,%u) %u instances to [%u,+%u) saving=%u\n",
 	       not_quasar_fix ? "and executing " : "",
 	       seq.clones.front ().begin, seq.clones.front ().end,
@@ -679,16 +694,8 @@ transform (function *cfn, unsigned buffer_size)
 	      return;
 	    }
 
-	  if (type == REPLAY_variable_capture)
-	    // Using remainder of the buffer.
-	    span.end = buffer_size;
-	  else
-	    {
-	      if (type == REPLAY_fixed_capture)
-		shadow = span.end;
-
-	      span.end += span.begin;
-	    }
+	  if (type != REPLAY_playback)
+	    shadow = span.end - span.begin;
 
 	  // Cut out [from,to) from replay_spans.
 	  for (auto pos = replay_spans.begin (), end = replay_spans.end (); pos != end;)
@@ -710,7 +717,7 @@ transform (function *cfn, unsigned buffer_size)
 		// punch hole, and we're done
 		unsigned e = pos->end;
 		pos->end = span.begin;
-		replay_spans.emplace (pos, span.end, e);
+		replay_spans.emplace (pos + 1, span.end, e);
 		break;
 	      }
 	}
@@ -725,6 +732,7 @@ transform (function *cfn, unsigned buffer_size)
   // Convert replay_spans to be [start, +length)
   for (auto &slot : replay_spans)
     slot.end -= slot.begin;
+
   // Sort in decreasing length
   std::sort (replay_spans.begin (), replay_spans.end (),
 	     [] (replay_span const a, replay_span const b)
@@ -732,6 +740,7 @@ transform (function *cfn, unsigned buffer_size)
 	       return a.end > b.end
 		 || (a.end == b.end && a.begin < b.begin);
 	     });
+
   // Remove spans that are too short
   while (!replay_spans.empty ()
 	 && replay_spans.back ().end < MIN_SEQUENCE)
@@ -792,7 +801,7 @@ transform (function *cfn, unsigned buffer_size)
 		 ++pos != spans.end ()
 		   && slot->end < pos->end;
 		 ++slot)
-	      std::swap (slot, pos);
+	      std::swap (*slot, *pos);
 
 	  if (spans.empty ())
 	    break;
