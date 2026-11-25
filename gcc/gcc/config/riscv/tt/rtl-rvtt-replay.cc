@@ -487,6 +487,16 @@ active_triage (replay_block const &block, replay_active &active, replay_list &li
     fprintf (dump_file, "%u candidates\n\n", unsigned (active.size ()));
 }
 
+static unsigned
+replay_saving (unsigned num_copies, unsigned seq_length)
+{
+  unsigned saving = (num_copies - 1) * (seq_length - 1) - 1;
+  if (riscv_tt_fix_qsr_replay > 0)
+    // Quasar exec-while-load doesn't work, so we need an extra replay
+    saving--;
+  return saving;
+}
+
 static replay_sequence *
 pick_replay (replay_active &active, unsigned limit)
 {
@@ -498,9 +508,7 @@ pick_replay (replay_active &active, unsigned limit)
       gcc_assert (seq->clones.size () > 1);
       if (seq->length > limit)
 	break;
-      // Quasar exec-while-load doesn't work, so we need an extra replay
-      unsigned saving = (seq->clones.size () - 1) * (seq->length - 1)
-	- !(riscv_tt_fix_qsr_replay > 0);
+      unsigned saving = replay_saving (seq->clones.size (), seq->length);
       if (best < saving || (best == saving && result && result->length < seq->length))
 	{
 	  best = saving;
@@ -516,10 +524,10 @@ replace_sequence (replay_sequence &seq, replay_block &block, unsigned replay_sta
 {
   unsigned length = seq.length;
   bool not_quasar_fix = !(riscv_tt_fix_qsr_replay > 0);
+  
   if (dump_file)
     {
-      unsigned saving = (seq.length - 1) * (unsigned (seq.clones.size ()) - 1)
-      - not_quasar_fix;
+      unsigned saving = replay_saving (seq.clones.size (), length);
       fprintf (dump_file, "Capturing %ssequence [%u,%u) %u instances to [%u,+%u) saving=%u\n",
 	       not_quasar_fix ? "and executing " : "",
 	       seq.clones.front ().begin, seq.clones.front ().end,
