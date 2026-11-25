@@ -717,7 +717,7 @@ transform (function *cfn, unsigned buffer_size)
 		// punch hole, and we're done
 		unsigned e = pos->end;
 		pos->end = span.begin;
-		replay_spans.emplace (pos, span.end, e);
+		replay_spans.emplace (pos + 1, span.end, e);
 		break;
 	      }
 	}
